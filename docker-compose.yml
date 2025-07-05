@@ -1,0 +1,81 @@
+services:
+  database:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: smartjobseeker
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/:/scripts
+      - ./db-dumps/:/db-dumps
+    ports:
+      - 5432:5432
+    command: |
+      bash -c "cp /db-dumps/latest.sql /docker-entrypoint-initdb.d/latest.sql 2>/dev/null || true && docker-entrypoint.sh postgres"
+    healthcheck:
+      test:
+        - CMD
+        - pg_isready
+        - -U
+        - postgres
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  app:
+    build: .
+    working_dir: /app
+    restart: unless-stopped
+    ports:
+      - 5173:5173
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: sh -c "npm run reinstall && npm run docker:dev"
+    depends_on:
+      database:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -o /dev/null -s http://localhost:5173/
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_interval: 2s
+      start_period: 300s
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgres://postgres:postgres@database:5432/smartjobseeker
+  admin:
+    extends:
+      file: docker-compose.directus.yml
+      service: admin
+    depends_on:
+      app:
+        condition: service_healthy
+      database:
+        condition: service_healthy
+  admin-cache:
+    extends:
+      file: docker-compose.directus.yml
+      service: admin-cache
+      # Disabled Prisma Studio, because not really using it, because we already
+      # have Directus CMS.
+      #
+      # prisma-studio:
+      #   image: node:20
+      #   working_dir: /app
+      #   ports:
+      #     - "5555:5555"
+      #   volumes:
+      #     - .:/app
+      #     - /app/node_modules
+      #   command: sh -c "npx prisma studio --port 5555 --browser none"
+      #   depends_on:
+      #     - database
+      #   environment:
+      #     DATABASE_URL: 'postgres://postgres:postgres@database:5432/smartjobseeker'
+volumes:
+  postgres_data:
