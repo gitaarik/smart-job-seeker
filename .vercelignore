@@ -1,0 +1,6 @@
+.env
+.env.keys
+.env.*
+!.env.vault
+!.env.project
+!.env.production

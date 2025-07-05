@@ -1,0 +1,134 @@
+@import 'tailwindcss';
+
+@font-face {
+	font-family: 'Noto Sans';
+	font-style: normal;
+	font-weight: 300;
+	font-display: swap;
+	src: url('/fonts/NotoSans/NotoSans-Light.ttf');
+}
+
+@font-face {
+	font-family: 'Noto Sans';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url('/fonts/NotoSans/NotoSans-Regular.ttf');
+}
+
+@font-face {
+	font-family: 'Noto Sans';
+	font-style: normal;
+	font-weight: 500;
+	font-display: swap;
+	src: url('/fonts/NotoSans/NotoSans-Medium.ttf');
+}
+
+@font-face {
+	font-family: 'Noto Sans';
+	font-style: normal;
+	font-weight: 600;
+	font-display: swap;
+	src: url('/fonts/NotoSans/NotoSans-SemiBold.ttf');
+}
+
+@font-face {
+	font-family: 'Noto Sans';
+	font-style: normal;
+	font-weight: 700;
+	font-display: swap;
+	src: url('/fonts/NotoSans/NotoSans-Bold.ttf');
+}
+
+.hoverStyles {
+	display: none;
+	@apply scale-105 -translate-15 brightness-125;
+}
+
+@theme {
+	--breakpoint-2xs: 20rem;
+	--breakpoint-xs: 30rem;
+	--breakpoint-sm: 40rem;
+	--breakpoint-md: 50rem;
+	--breakpoint-lg: 60rem;
+	--breakpoint-xl: 70rem;
+	--breakpoint-2xl: 80rem;
+	--breakpoint-3xl: 90rem;
+	
+	--color-slate: var(--text-color);
+	--color-pearl: var(--text-light-color);
+	--color-teal: var(--text-highlight-color);
+	--color-crimson: var(--text-error-color);
+	--color-mist: var(--shade-color);
+	--color-cloud: var(--light-color);
+	--color-frost: var(--lighter-color);
+	--color-ice: var(--light-bg-color);
+	--color-snow: var(--lighter-bg-color);
+	--color-ocean: var(--bright-color);
+	--color-aqua: var(--bright-highlight-color);
+	--color-navy: var(--dark-bg-color);
+	--color-midnight: var(--footer-bg-color);
+	--color-glass-light: var(--white-transparent-1);
+	--color-glass: var(--white-transparent-2);
+}
+
+* {
+	--max-content-width: 885px;
+}
+
+:root {
+	color-scheme: dark light;
+}
+
+.theme-light {
+	--text-color: #124458;
+	--text-light-color: #f8fafc;
+	--text-highlight-color: #2c708b;
+	--text-error-color: #9a0909;
+	--shade-color: #e2e8f0;
+	--light-color: #e2e8f0;
+	--lighter-color: #f8fafc;
+	--light-bg-color: #ebf1f3;
+	--lighter-bg-color: #f8fafb;
+	--bright-color: #2c708b;
+	--bright-highlight-color: rgb(87, 150, 174);
+	--dark-bg-color: #2c708b;
+	--footer-bg-color: #124458;
+	--white-transparent-1: rgba(255, 255, 255, 0.3);
+	--white-transparent-2: rgba(255, 255, 255, 0.5);
+}
+
+.theme-dark {
+	--text-color: #e4eaef;
+	--text-light-color: #e4eaef;
+	--text-highlight-color: #f7f9fa;
+	--text-error-color: #f00;
+	--shade-color: #082d3d;
+	--light-color: #334155;
+	--lighter-color: #0f172a;
+	--light-bg-color: #06212b;
+	--lighter-bg-color: #0d394a;
+	--bright-color: #247ea2;
+	--bright-highlight-color: rgb(96, 174, 206);
+	--dark-bg-color: #031a23;
+	--footer-bg-color: #010c11;
+	--white-transparent-1: rgba(255, 255, 255, 0.1);
+	--white-transparent-2: rgba(255, 255, 255, 0.2);
+}
+
+html,
+body {
+	font-family: 'Noto Sans', sans-serif;
+	color: var(--text-color);
+}
+
+@media print  {
+	html,
+	body {
+		background: none;
+	}
+}
+
+strong {
+	font-weight: 600;
+}

@@ -1,0 +1,49 @@
+# Directus Docs:
+# https://directus.io/docs/self-hosting/deploying#docker-compose-examples
+services:
+  admin:
+    image: directus/directus:latest
+    restart: unless-stopped
+    ports:
+      - 8055:8055
+    volumes:
+      - ./directus/uploads:/directus/uploads
+      - ./directus/extensions:/directus/extensions
+      - ./scripts/init-directus.sh:/docker-entrypoint.d/init-directus.sh
+    depends_on:
+      admin-cache:
+        condition: service_healthy
+    environment:
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      ADMIN_TOKEN: ${ADMIN_TOKEN}
+      SECRET: ${ADMIN_SECRET}
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET}
+      PUBLIC_URL: ${ADMIN_PUBLIC_URL}
+
+      # Database settings:
+      DB_CLIENT: ${DB_CLIENT}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_SSL: ${DB_SSL}
+      # DB_CONNECTION_TIMEOUT: 60000
+      # DB_ACQUIRE_CONNECTION_TIMEOUT: 60000
+
+      # Cache settings:
+      CACHE_ENABLED: "true"
+      CACHE_AUTO_PURGE: "true"
+      CACHE_STORE: redis
+      REDIS: redis://admin-cache:6379
+  admin-cache:
+    image: redis:6
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - '[ $$(redis-cli ping) = ''PONG'' ]'
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s

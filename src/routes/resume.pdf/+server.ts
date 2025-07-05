@@ -1,0 +1,88 @@
+import { error } from "@sveltejs/kit";
+import { dev } from "$app/environment";
+import { db } from "$lib/db";
+import { read } from "$app/server";
+import path from "path";
+import type { RequestHandler } from "./$types";
+
+const fileImports: Record<string, string> = import.meta.glob(
+  "$lib/exports/resume/**/**.{pdf,docx}",
+  {
+    eager: true,
+    import: "default",
+    query: "?url",
+  },
+);
+
+export const GET: RequestHandler = async ({ url }) => {
+  let version;
+  const urlVersion = url.searchParams.get("version");
+
+  if (dev && urlVersion) {
+    version = urlVersion;
+  } else {
+    const token = url.searchParams.get("t") || url.searchParams.get("token");
+
+    if (!token) {
+      throw error(400, "Token is required");
+    }
+
+    // Find and validate the token
+    const resumeToken = await db.resume_tokens.findUnique({
+      where: { token },
+    });
+
+    if (!resumeToken) {
+      throw error(404, "Invalid token");
+    }
+
+    if (!resumeToken.isActive) {
+      throw error(403, "Token is disabled");
+    }
+
+    // Check if token has expired
+    if (resumeToken.expiresAt && new Date() > resumeToken.expiresAt) {
+      throw error(403, "Token has expired");
+    }
+
+    // Check if max views limit has been reached
+    if (resumeToken.maxViews && resumeToken.viewCount >= resumeToken.maxViews) {
+      throw error(403, "Token view limit has been reached");
+    }
+
+    version = resumeToken.resumeType;
+
+    // Increment view count
+    await db.resume_tokens.update({
+      where: { id: resumeToken.id },
+      data: { viewCount: { increment: 1 } },
+    });
+  }
+
+  const resumeFilename =
+    "Rik Wanders - Senior Full Stack Developer - Resume.pdf";
+
+  // Construct file path based on resume type
+  const filePath: string = "/" + path.join(
+    "src",
+    "lib",
+    "exports",
+    "resume",
+    version,
+    resumeFilename,
+  );
+
+  console.log("filePath", filePath);
+  console.log("fileImports", fileImports);
+
+  if (!(filePath in fileImports)) {
+    console.log(fileImports);
+    throw error(
+      404,
+      "Resume file not found. Please contact the administrator.",
+    );
+  }
+
+  const file = fileImports[filePath];
+  return read(file);
+};
