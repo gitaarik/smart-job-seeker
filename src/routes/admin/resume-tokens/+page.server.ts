@@ -1,0 +1,150 @@
+import { prisma } from '$lib/db'
+import type { PageServerLoad, Actions } from './$types'
+
+export const load: PageServerLoad = async ({ locals }) => {
+
+  const tokens = await prisma.resumeToken.findMany({
+    include: {
+      creator: {
+        select: {
+          firstName: true,
+          lastName: true,
+          email: true
+        }
+      }
+    },
+    orderBy: { createdAt: 'desc' }
+  })
+
+  return {
+    tokens,
+    currentUser: locals.user,
+    resumeTypes: [
+      { value: 'fullstack-python', label: 'ATS Resume (Fullstack Python)' },
+      { value: 'fullstack-django', label: 'ATS Resume (Fullstack Django)' },
+      { value: 'fullstack-react', label: 'ATS Resume (Fullstack React)' },
+      { value: 'fullstack-svelte', label: 'ATS Resume (Fullstack Svelte)' },
+      { value: 'datascience', label: 'ATS Resume (Data Science)' }
+    ]
+  }
+}
+
+export const actions: Actions = {
+  createToken: async ({ request, locals }) => {
+
+    const data = await request.formData()
+    const name = data.get('name') as string
+    const description = data.get('description') as string
+    const resumeType = data.get('resumeType') as string
+    const expiresAtStr = data.get('expiresAt') as string
+    const maxViewsStr = data.get('maxViews') as string
+
+    if (!name || !resumeType) {
+      return { error: 'Name and resume type are required' }
+    }
+
+    try {
+      const token = Math.random().toString(36).substring(2, 12)
+      const expiresAt = expiresAtStr ? new Date(expiresAtStr) : null
+      const maxViews = maxViewsStr ? parseInt(maxViewsStr) : null
+
+      await prisma.resumeToken.create({
+        data: {
+          token,
+          name,
+          description: description || null,
+          resumeType,
+          expiresAt,
+          maxViews,
+          createdBy: locals.user.id
+        }
+      })
+
+      return { success: true, message: 'Token created successfully' }
+    } catch (error) {
+      console.error('Token creation error:', error)
+      return { error: 'Failed to create token' }
+    }
+  },
+
+  updateToken: async ({ request, locals }) => {
+
+    const data = await request.formData()
+    const tokenId = data.get('tokenId') as string
+    const name = data.get('name') as string
+    const description = data.get('description') as string
+    const resumeType = data.get('resumeType') as string
+    const expiresAtStr = data.get('expiresAt') as string
+    const maxViewsStr = data.get('maxViews') as string
+    const isActive = data.get('isActive') === 'true'
+
+    if (!tokenId || !name || !resumeType) {
+      return { error: 'Token ID, name, and resume type are required' }
+    }
+
+    try {
+      const expiresAt = expiresAtStr ? new Date(expiresAtStr) : null
+      const maxViews = maxViewsStr ? parseInt(maxViewsStr) : null
+
+      await prisma.resumeToken.update({
+        where: { id: tokenId },
+        data: {
+          name,
+          description: description || null,
+          resumeType,
+          expiresAt,
+          maxViews,
+          isActive
+        }
+      })
+
+      return { success: true, message: 'Token updated successfully' }
+    } catch (error) {
+      console.error('Token update error:', error)
+      return { error: 'Failed to update token' }
+    }
+  },
+
+  deleteToken: async ({ request, locals }) => {
+
+    const data = await request.formData()
+    const tokenId = data.get('tokenId') as string
+
+    if (!tokenId) {
+      return { error: 'Token ID is required' }
+    }
+
+    try {
+      await prisma.resumeToken.delete({
+        where: { id: tokenId }
+      })
+
+      return { success: true, message: 'Token deleted successfully' }
+    } catch (error) {
+      console.error('Token deletion error:', error)
+      return { error: 'Failed to delete token' }
+    }
+  },
+
+  resetViews: async ({ request, locals }) => {
+
+    const data = await request.formData()
+    const tokenId = data.get('tokenId') as string
+
+    if (!tokenId) {
+      return { error: 'Token ID is required' }
+    }
+
+    try {
+      await prisma.resumeToken.update({
+        where: { id: tokenId },
+        data: { viewCount: 0 }
+      })
+
+      return { success: true, message: 'View count reset successfully' }
+    } catch (error) {
+      console.error('View reset error:', error)
+      return { error: 'Failed to reset view count' }
+    }
+  }
+}

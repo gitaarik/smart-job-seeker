@@ -1,0 +1,41 @@
+{
+	"name": "directus-extension-phone-number-input",
+	"description": "A custom Directus extension for handling phone numbers, providing an intuitive interface for input, validation, and formatting to ensure consistency and accuracy.",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/ardeetech/directus-extension-phone-number-input"
+	},
+	"homepage": "https://github.com/ardeetech/directus-extension-phone-number-input",
+	"icon": "extension",
+	"version": "1.1.2",
+	"keywords": [
+		"directus",
+		"directus-extension",
+		"directus-extension-interface"
+	],
+	"type": "module",
+	"files": [
+		"dist"
+	],
+	"author": "Ardee Tech von@ardee.tech",
+	"license": "MIT",
+	"directus:extension": {
+		"type": "interface",
+		"path": "dist/index.js",
+		"source": "src/index.ts",
+		"host": "^10.10.0"
+	},
+	"scripts": {
+		"build": "directus-extension build",
+		"dev": "directus-extension build -w --no-minify",
+		"link": "directus-extension link"
+	},
+	"devDependencies": {
+		"@directus/extensions-sdk": "13.0.1",
+		"typescript": "^5.7.3",
+		"vue": "^3.5.13"
+	},
+	"dependencies": {
+		"node-sass": "^9.0.0"
+	}
+}
