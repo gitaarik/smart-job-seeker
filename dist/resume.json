@@ -1,0 +1,300 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jsonresume/resume-schema/v1.0.0/schema.json",
+  "basics": {
+    "name": "Rik Wanders",
+    "label": "Senior Full Stack Developer",
+    "image": "/src/lib/images/profile-pic.png",
+    "email": "rik@rikwanders.tech",
+    "phone": "+31 649118511",
+    "url": "https://www.rikwanders.tech",
+    "summary": "Dutch Senior Full Stack Developer residing in Spain, with 18+ years experience specializing in Python & Node.js ecosystems. Experienced in scaling complex & high-traffic applications and leading development teams.",
+    "location": {
+      "address": "Ronda, Spain",
+      "postalCode": "",
+      "city": "Ronda",
+      "countryCode": "ES",
+      "region": "Andalusia"
+    },
+    "profiles": [
+      {
+        "network": "LinkedIn",
+        "username": "rik-wanders-software",
+        "url": "https://www.linkedin.com/in/rik-wanders-software/"
+      }
+    ]
+  },
+  "work": [
+    {
+      "name": "Chipta",
+      "position": "Lead Developer",
+      "url": "https://www.chipta.com/",
+      "startDate": "2014-09",
+      "endDate": "2024-06",
+      "summary": "Led technical development of innovative ticketing platform for 10 years, scaling from concept to processing thousands of tickets per minute during peak events. Transformed proof of concept into robust, scalable platform serving thousands of events.",
+      "highlights": [
+        "Built and managed diverse development teams of 3-5 developers, using agile methodologies that optimized efficiency and delivery speed",
+        "Architected and optimized systems to handle extreme traffic spikes, delivering 40-60% speed improvements through strategic query optimization, caching, and infrastructure scaling",
+        "Created extensive testing suite (+80% coverage) and CI/CD system, radically improving deployment reliability & speed and enabling regular releases",
+        "Implemented and maintained payment service provider integrations with multiple providers (Mollie, Pay.nl, PayPal), ensuring reliable transaction processing for the platform",
+        "Developed custom authentication, mailing, and localization systems, supporting custom needs and backward compatibility",
+        "Created multi-language & country platform capabilities that enabled international market expansion and supported global event organizers"
+      ]
+    },
+    {
+      "name": "Tender-it",
+      "position": "Lead Developer",
+      "url": "",
+      "startDate": "2015-03",
+      "endDate": "2022-06",
+      "summary": "Built comprehensive tender discovery platform from scratch, enabling companies to efficiently find and track public procurement opportunities. Delivered complete platform with intuitive interface and administrative tools as part-time engagement.",
+      "highlights": [
+        "Designed and developed entire platform (backend and frontend) from concept to production",
+        "Implemented an extensive search engine using Elasticsearch, making it easy and time effective for users to find suitable tenders",
+        "Created automated web crawling system that index thousands of public tenders daily, providing comprehensive market coverage",
+        "Built subscription-based authentication with recurring payments that supports sustainable business model and user growth",
+        "Delivered intuitive 'saved searches' interface and email notification system that supported user engagement and retention",
+        "Successfully collaborated with frontend developer to optimize frontend experience using Vue.js"
+      ]
+    },
+    {
+      "name": "TravelBird",
+      "position": "Senior Full Stack & iOS Developer",
+      "url": "https://www.travelbird.com/",
+      "startDate": "2013-03",
+      "endDate": "2014-08",
+      "summary": "Contributed to mobile app development during rapid growth phase (50 to 250+ employees), supporting European market expansion. Delivered iOS app and mobile website during critical period for travel industry mobile adoption.",
+      "highlights": [
+        "Built and maintained iOS application as part of mobile team, supporting mobile bookings during a period of rapid company growth",
+        "Designed and implemented robust REST API using Django REST Framework, that accommodated iOS & Android apps and mobile website",
+        "Ensured consistent user experience across multiple mobile platforms and web interfaces",
+        "Worked on comprehensive email marketing system that supported customer acquisition and retention campaigns"
+      ]
+    },
+    {
+      "name": "SWIS",
+      "position": "Mid-level Web Developer",
+      "url": "https://www.swis.nl/",
+      "startDate": "2011-08",
+      "endDate": "2013-02",
+      "summary": "Delivered web solutions for high-profile clients including major e-commerce and government organizations as part of dedicated Scrum team. Maintained agency's reputation for quality while meeting diverse client requirements.",
+      "highlights": [
+        "Successfully delivered web projects for major clients including Bol.com, EP, Gemeente Amsterdam, and Gemeente Haarlemmermeer",
+        "Contributed to Scrum team that consistently met client deadlines and budget requirements",
+        "Developed advanced jQuery and UX skills that improved user engagement metrics across client projects",
+        "Mastered in-house built CMS system, enabling rapid development and client customization capabilities"
+      ]
+    },
+    {
+      "name": "Gamepoint",
+      "position": "Junior / Mid-level Web Developer",
+      "url": "https://www.gamepoint.biz/",
+      "startDate": "2007-06",
+      "endDate": "2011-06",
+      "summary": "Progressed from junior to mid-level developer at established gaming community platform serving hundreds of thousands of users. Contributed to platform stability, feature development, and system enhancements.",
+      "highlights": [
+        "Successfully implemented multiple payment integrations that supported platform monetization and user transactions",
+        "Contributed to internationalization and localization system that enabled platform expansion in other countries",
+        "Designed and optimized MySQL database structures that improved query performance and system reliability",
+        "Worked effectively in 10+ developer team environment, contributing to large-scale PHP codebase maintenance and feature development",
+        "Advanced from junior to mid-level developer, demonstrating consistent skill development and increasing responsibility"
+      ]
+    }
+  ],
+  "volunteer": [],
+  "education": [],
+  "awards": [],
+  "certificates": [],
+  "publications": [],
+  "skills": [
+    {
+      "name": "Python",
+      "level": "expert",
+      "keywords": [
+        "Django",
+        "REST Framework",
+        "Celery",
+        "Channels",
+        "Silk",
+        "REST APIs",
+        "OOP",
+        "Requests",
+        "Beautifulsoup",
+        "uv"
+      ]
+    },
+    {
+      "name": "JavaScript / Node.js",
+      "level": "expert",
+      "keywords": [
+        "React",
+        "Svelte",
+        "SvelteKit",
+        "Web Components",
+        "Lit",
+        "Drizzle",
+        "MobX",
+        "async/await"
+      ]
+    },
+    {
+      "name": "SQL Databases",
+      "level": "expert",
+      "keywords": [
+        "PostgreSQL",
+        "MySQL",
+        "MariaDB",
+        "SQLite",
+        "Schema design",
+        "indexing",
+        "optimization"
+      ]
+    },
+    {
+      "name": "Frontend Tools",
+      "level": "expert",
+      "keywords": [
+        "Webpack",
+        "Vite",
+        "ESLint",
+        "Prettier",
+        "Tailwind CSS",
+        "Sass"
+      ]
+    },
+    {
+      "name": "Git (GitHub, GitLab)",
+      "level": "expert",
+      "keywords": [
+        "GitHub",
+        "GitLab",
+        "advanced workflows",
+        "submodules"
+      ]
+    },
+    {
+      "name": "AI / LLM development tools",
+      "level": "expert",
+      "keywords": [
+        "Claude Code",
+        "Cursor"
+      ]
+    },
+    {
+      "name": "DevOps",
+      "level": "working",
+      "keywords": [
+        "CI/CD",
+        "Docker (Compose)",
+        "Ansible"
+      ]
+    },
+    {
+      "name": "Cloud Platforms",
+      "level": "working",
+      "keywords": [
+        "Vercel",
+        "Linode"
+      ]
+    },
+    {
+      "name": "JavaScript / Node.js",
+      "level": "working",
+      "keywords": [
+        "TypeScript",
+        "React Native",
+        "Vue.js"
+      ]
+    },
+    {
+      "name": "NoSQL Databases",
+      "level": "working",
+      "keywords": [
+        "Elasticsearch",
+        "Redis",
+        "MongoDB"
+      ]
+    },
+    {
+      "name": "Serving, Caching & Load Balancing",
+      "level": "working",
+      "keywords": [
+        "Nginx",
+        "Varnish",
+        "Memcached",
+        "HAProxy"
+      ]
+    },
+    {
+      "name": "Additional Languages",
+      "level": "working",
+      "keywords": [
+        "Lua",
+        "C",
+        "Objective-C",
+        "PHP"
+      ]
+    },
+    {
+      "name": "Python",
+      "level": "exploring",
+      "keywords": [
+        "FastAPI",
+        "pandas",
+        "scikit-learn",
+        "LangChain"
+      ]
+    },
+    {
+      "name": "JavaScript / Node.js",
+      "level": "exploring",
+      "keywords": [
+        "Next.js",
+        "NestJS",
+        "Zustand",
+        "Prisma",
+        "GraphQL",
+        "Jest"
+      ]
+    },
+    {
+      "name": "DevOps",
+      "level": "exploring",
+      "keywords": [
+        "Terraform",
+        "GitHub Actions",
+        "Kubernetes"
+      ]
+    },
+    {
+      "name": "Cloud Platforms",
+      "level": "exploring",
+      "keywords": [
+        "AWS",
+        "Azure",
+        "GCP"
+      ]
+    }
+  ],
+  "languages": [
+    {
+      "language": "English",
+      "fluency": "Fluent"
+    },
+    {
+      "language": "Dutch",
+      "fluency": "Native"
+    }
+  ],
+  "interests": [],
+  "references": [
+    {
+      "name": "Michaël de Groot - Founder of Chipta",
+      "reference": "Rik modernized our client-facing interfaces and implemented optimizations that delivered substantial performance improvements. His work enabled us to process thousands of tickets rapidly during our busiest periods."
+    },
+    {
+      "name": "Elmar Krack - Co-founder of Tender-it",
+      "reference": "Rik demonstrated exceptional technical leadership by designing and developing our entire platform from the ground up, handling both backend and frontend development with impressive skill."
+    }
+  ],
+  "projects": []
+}
