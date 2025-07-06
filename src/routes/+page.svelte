@@ -1,5 +1,6 @@
 <script lang="ts">
   import logo from "$lib/images/logo.svg";
+  import scrollDownIcon from "$lib/images/circle-chevron-down.svg";
 
   import ProfileLink from "./ProfileLink.svelte";
   import githubIcon from "$lib/images/github.svg";
@@ -11,7 +12,9 @@
 
 <div class="flex h-full min-h-screen flex-col justify-between">
   <div class="flex flex-col items-center">
-    <div class="px-10 py-25 w-full flex flex-col items-center bg-gray-100">
+    <div
+      class="px-10 pt-25 w-full flex flex-col items-center bg-gray-100 min-h-screen"
+    >
       <div>
         <img src={logo} alt="Logo" class="h-40 w-40" />
       </div>
@@ -31,9 +34,24 @@
       >
         Get in touch
       </button>
+
+      <div class="flex-grow"></div>
+      <button class="flex-end mb-8 flex items-center gap-2">
+        <span>
+          <img
+            src={scrollDownIcon}
+            alt="scroll down icon"
+            width="30"
+            height="30"
+          />
+        </span>
+        <span class="text-md font-semibold">
+          More Info
+        </span>
+      </button>
     </div>
 
-    <div class="p-10 w-full">
+    <div class="p-10 w-full min-h-screen">
       <div class="flex flex-col items-center">
         <h3 class="text-3xl text-center font-semibold">About</h3>
 
@@ -48,7 +66,7 @@
             </li>
 
             <li>
-              Proven track record scaling high-traffic applications
+              Creating &amp; scaling high-traffic applications
             </li>
           </ul>
         </div>
@@ -77,9 +95,15 @@
         </div>
       </div>
 
-      <div class="px-10 flex flex-col items-center">
-        Timezone: Europe/Amsterdam
-      </div>
+      <ul class="px-10 flex flex-col items-center">
+        <li>
+          Timezone: Europe/Amsterdam
+        </li>
+
+        <li class="mt-3">
+          Response time: within 2 business days
+        </li>
+      </ul>
 
       <div class="mt-10 px-10 text-sm flex flex-col items-center">
         <!-- <ul class="grid grid-cols-2 sm:grid-cols-4 gap-4"> -->
