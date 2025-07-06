@@ -3,7 +3,7 @@
   export let href: string = "";
 </script>
 
-<div class="my-4 flex items-center">
+<div class="flex items-center">
   <div class="mr-1">
     <img src={icon} alt="icon" class="h-5 w-5" />
   </div>
