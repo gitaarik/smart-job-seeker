@@ -8,6 +8,15 @@
   import npmIcon from "$lib/images/npm.svg";
   import stackOverflowIcon from "$lib/images/stack-overflow.svg";
   import InfoBox from "./InfoBox.svelte";
+
+  function scrollToAboutSection() {
+    const aboutSectionEl = document.getElementById("about-section");
+
+    aboutSectionEl.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }
 </script>
 
 <div class="flex h-full min-h-screen flex-col justify-between">
@@ -36,13 +45,16 @@
       </button>
 
       <div class="flex-grow"></div>
-      <button class="flex-end mb-8 flex items-center gap-2">
+      <button
+        class="flex-end mb-8 flex items-center gap-2 cursor-pointer p-2"
+        on:click={scrollToAboutSection}
+      >
         <span>
           <img
             src={scrollDownIcon}
             alt="scroll down icon"
-            width="30"
-            height="30"
+            width="20"
+            height="20"
           />
         </span>
         <span class="text-md font-semibold">
@@ -51,7 +63,7 @@
       </button>
     </div>
 
-    <div class="p-10 w-full min-h-screen">
+    <div id="about-section" class="p-6 pt-15 w-full min-h-screen">
       <div class="flex flex-col items-center">
         <h3 class="text-3xl text-center font-semibold">About</h3>
 
@@ -71,7 +83,7 @@
           </ul>
         </div>
 
-        <div class="mb-10 px-10 md:flex md:gap-20">
+        <div class="mb-10 sm:flex md:gap-20 sm:gap-6">
           <InfoBox headerText="Available for:">
             <ul class="mt-4 list-[circle] ml-4 px-4 pb-4 font-bold">
               <li>Application development</li>
@@ -84,12 +96,12 @@
             </ul>
           </InfoBox>
 
-          <InfoBox headerText="Key skills:" class="max-md:mt-8">
+          <InfoBox headerText="Key skills:" class="max-sm:mt-8">
             <ul class="mt-4 list-[circle] ml-4 px-4 pb-4 font-bold">
-              <li>Python / Django / FastAPI / Numpy</li>
-              <li class="my-4">Javascript / Node.js / Svelte / React</li>
+              <li>Python, Django, FastAPI, Numpy</li>
+              <li class="my-4">Javascript, Node.js, Svelte, React</li>
               <li class="my-4">SQL & NoSQL Databases</li>
-              <li>Linux / DevOps / CI/CD / Docker</li>
+              <li>Linux, DevOps, CI/CD, Docker</li>
             </ul>
           </InfoBox>
         </div>
@@ -106,7 +118,6 @@
       </ul>
 
       <div class="mt-10 px-10 text-sm flex flex-col items-center">
-        <!-- <ul class="grid grid-cols-2 sm:grid-cols-4 gap-4"> -->
         <ul class="flex flex-wrap gap-x-4 gap-y-2">
           <li>
             <ProfileLink href="https://github.com/gitaarik" icon={githubIcon}
