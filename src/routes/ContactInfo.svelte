@@ -118,7 +118,11 @@
 
 <div>
   {#if !isVerified}
-    <div>Verifying you're a human...</div>
+    {#if isLoading}
+      <div>Verifying you're a human...</div>
+    {:else}
+      <div>Loading Google reCAPTCHA...</div>
+    {/if}
   {:else}
     <ul class="mt-6 px-10 flex flex-col gap-3 items-center">
       <li>

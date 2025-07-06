@@ -13,6 +13,8 @@
 
   let aboutSectionEl: HTMLElement;
   let showGetInTouch = false;
+  const currentYear: number = (new Date()).getFullYear();
+  const devYearsExperience: number = currentYear - 2007;
 
   function handleGetInTouchClick() {
     showGetInTouch = true;
@@ -96,7 +98,8 @@
         <div>
           <ul class="my-10 list-disc font-semibold">
             <li>
-              18+ years full stack (web) development experience
+              {devYearsExperience}+ years full stack (web) development
+              experience
             </li>
 
             <li class="my-3">
