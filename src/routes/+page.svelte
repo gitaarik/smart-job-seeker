@@ -15,6 +15,7 @@
   let showGetInTouch = false;
   const currentYear: number = (new Date()).getFullYear();
   const devYearsExperience: number = currentYear - 2007;
+  const remoteWorkYearsExperience: number = currentYear - 2020;
 
   function handleGetInTouchClick() {
     showGetInTouch = true;
@@ -49,14 +50,14 @@
 
       <div class="mt-20">
         {#if showGetInTouch}
-          <h3 class="text-center text-2xl font-medium py-4 px-8">
+          <h3 class="text-center text-3xl font-medium py-4 px-8">
             Contact info
           </h3>
           <ContactInfo />
         {:else}
           <div class="text-center">
             <button
-              class="flex gap-2 bg-[rgb(28,89,112)] text-white py-4 px-8 rounded-lg text-xl font-semibold cursor-pointer hover:bg-[rgb(87,150,174)]"
+              class="flex gap-2 bg-[rgb(28,89,112)] text-white py-4 px-8 rounded-lg text-xl font-semibold cursor-pointer hover:bg-[rgb(87,150,174)] scale-100 hover:scale-105 transition"
               on:click={handleGetInTouchClick}
             >
               <img
@@ -74,7 +75,7 @@
       <div class="flex-grow"></div>
 
       <button
-        class="flex-end mt-14 mb-8 flex items-center gap-2 cursor-pointer p-2"
+        class="flex-end mt-14 mb-8 flex items-center gap-2 cursor-pointer p-2 scale-100 hover:scale-110 transition"
         on:click={handleMoreInfoClick}
       >
         <span>
@@ -85,38 +86,89 @@
             height="20"
           />
         </span>
-        <span class="text-md font-semibold">
+        <span
+          class="text-md font-semibold"
+        >
           More Info
         </span>
       </button>
     </div>
 
     <div bind:this={aboutSectionEl} class="px-6 pt-15 w-full min-h-screen">
-      <div class="flex flex-col items-center">
-        <h3 class="text-3xl text-center font-semibold">About</h3>
+      <h3 class="text-3xl text-center font-semibold mb-10">About me</h3>
 
-        <div>
-          <ul class="my-10 list-disc font-semibold">
-            <li>
-              {devYearsExperience}+ years full stack (web) development
-              experience
-            </li>
+      <div class="flex justify-center max-md:flex-col">
+        <div class="md:max-w-[50%] md:px-10">
+          <p>
+            With over {devYearsExperience} years of full-stack web development
+            experience, I specialize in building and scaling complex,
+            high-traffic applications that deliver exceptional user experiences.
+            My expertise spans the entire development lifecycle, from initial
+            architecture decisions to production deployment and optimization.
+          </p>
 
-            <li class="my-3">
-              Remote work and distributed team collaboration
-            </li>
+          <p class="my-4">
+            I bring {remoteWorkYearsExperience}+ years of remote work experience
+            and excel at collaborating with distributed teams across different
+            time zones and cultures. This background has honed my communication
+            skills and ability to work autonomously while maintaining strong
+            team alignment.
+          </p>
 
-            <li class="my-3">
-              Creating &amp; scaling complex &amp; high-traffic applications
-            </li>
+          <p class="my-4">
+            I stay at the forefront of technology by integrating AI tools into
+            my development workflow and consistently applying current industry
+            best practices. Security is paramount in everything I build—I
+            maintain up-to-date knowledge of security best practices to ensure
+            applications are both performant and secure.
+          </p>
 
-            <li>
-              Leveraging AI tools and current industry best practices
-            </li>
-          </ul>
+          <p>
+            Whether architecting scalable backend systems, crafting intuitive
+            frontend interfaces, or optimizing application performance, I
+            combine technical expertise with a deep understanding of business
+            needs to deliver solutions that drive real results.
+          </p>
         </div>
 
-        <div class="mb-10 sm:flex md:gap-20 sm:gap-6">
+        <!-- <div> -->
+        <!--   <ul class="my-10 list-disc font-semibold"> -->
+        <!--     <li> -->
+        <!--       {devYearsExperience}+ years full stack (web) development -->
+        <!--       experience -->
+        <!--     </li> -->
+        <!---->
+        <!--     <li class="my-3"> -->
+        <!--       5+ years remote work and distributed team collaboration experience -->
+        <!--     </li> -->
+        <!---->
+        <!--     <li class="my-3"> -->
+        <!--       Wide experience creating &amp; scaling complex &amp; high-traffic -->
+        <!--       applications -->
+        <!--     </li> -->
+        <!---->
+        <!--     <li class="my-3"> -->
+        <!--       Leveraging AI tools and current industry best practices -->
+        <!--     </li> -->
+        <!---->
+        <!--     <li> -->
+        <!--       Up-to-date with current security best practices -->
+        <!--     </li> -->
+        <!--   </ul> -->
+        <!-- </div> -->
+
+        <!-- <div class="mb-10 sm:flex md:gap-20 sm:gap-6"> -->
+        <div class="mb-10 flex flex-col gap-6 max-md:mt-6">
+          <!-- <InfoBox headerText="Key skills:" class="max-sm:mt-8"> -->
+          <InfoBox headerText="Key skills:">
+            <ul class="mt-4 list-disc ml-4 px-4 pb-4 font-bold">
+              <li>Python, Django, FastAPI, Numpy</li>
+              <li class="my-4">Javascript, Node.js, React, Svelte</li>
+              <li class="my-4">SQL & NoSQL Databases</li>
+              <li>Linux, DevOps, CI/CD, Docker</li>
+            </ul>
+          </InfoBox>
+
           <InfoBox headerText="Available for:">
             <ul class="mt-4 list-disc ml-4 px-4 pb-4 font-bold">
               <li>Application development</li>
@@ -129,28 +181,14 @@
             </ul>
           </InfoBox>
 
-          <InfoBox headerText="Key skills:" class="max-sm:mt-8">
-            <ul class="mt-4 list-disc ml-4 px-4 pb-4 font-bold">
-              <li>Python, Django, FastAPI, Numpy</li>
-              <li class="my-4">Javascript, Node.js, Svelte, React</li>
-              <li class="my-4">SQL & NoSQL Databases</li>
-              <li>Linux, DevOps, CI/CD, Docker</li>
-            </ul>
-          </InfoBox>
+          <ul class="px-10 flex flex-col items-center">
+            <li>
+              <strong>Timezone: </strong>
+              Europe/Amsterdam
+            </li>
+          </ul>
         </div>
       </div>
-
-      <ul class="px-10 flex flex-col items-center">
-        <li>
-          <strong>Timezone: </strong>
-          Europe/Amsterdam
-        </li>
-
-        <li class="mt-3">
-          <strong>Response time: </strong>
-          Within 2 business days
-        </li>
-      </ul>
 
       <div class="mt-10 px-10 text-sm flex flex-col items-center">
         <ul class="flex flex-wrap gap-x-4 gap-y-2">
