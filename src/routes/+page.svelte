@@ -1,6 +1,7 @@
 <script lang="ts">
   import logo from "$lib/images/logo.svg";
   import scrollDownIcon from "$lib/images/circle-chevron-down.svg";
+  import getInTouchIcon from "$lib/images/comments.svg";
 
   import ProfileLink from "./ProfileLink.svelte";
   import githubIcon from "$lib/images/github.svg";
@@ -8,10 +9,16 @@
   import npmIcon from "$lib/images/npm.svg";
   import stackOverflowIcon from "$lib/images/stack-overflow.svg";
   import InfoBox from "./InfoBox.svelte";
+  import ContactInfo from "./ContactInfo.svelte";
 
-  function scrollToAboutSection() {
-    const aboutSectionEl = document.getElementById("about-section");
+  let aboutSectionEl: HTMLElement;
+  let showGetInTouch = false;
 
+  function handleGetInTouchClick() {
+    showGetInTouch = true;
+  }
+
+  function handleMoreInfoClick() {
     aboutSectionEl.scrollIntoView({
       behavior: "smooth",
       block: "start",
@@ -38,16 +45,35 @@
         </h4>
       </div>
 
-      <button
-        class="mt-20 bg-[rgb(28,89,112)] text-white py-4 px-8 rounded-lg text-xl font-semibold"
-      >
-        Get in touch
-      </button>
+      <div class="mt-20">
+        {#if showGetInTouch}
+          <h3 class="text-center text-2xl font-medium py-4 px-8">
+            Contact info
+          </h3>
+          <ContactInfo />
+        {:else}
+          <div class="text-center">
+            <button
+              class="flex gap-2 bg-[rgb(28,89,112)] text-white py-4 px-8 rounded-lg text-xl font-semibold cursor-pointer hover:bg-[rgb(87,150,174)]"
+              on:click={handleGetInTouchClick}
+            >
+              <img
+                src={getInTouchIcon}
+                alt="get in touch icon"
+                width="20"
+                height="20"
+              />
+              Get in touch
+            </button>
+          </div>
+        {/if}
+      </div>
 
       <div class="flex-grow"></div>
+
       <button
-        class="flex-end mb-8 flex items-center gap-2 cursor-pointer p-2"
-        on:click={scrollToAboutSection}
+        class="flex-end mt-14 mb-8 flex items-center gap-2 cursor-pointer p-2"
+        on:click={handleMoreInfoClick}
       >
         <span>
           <img
@@ -63,7 +89,7 @@
       </button>
     </div>
 
-    <div id="about-section" class="px-6 pt-15 w-full min-h-screen">
+    <div bind:this={aboutSectionEl} class="px-6 pt-15 w-full min-h-screen">
       <div class="flex flex-col items-center">
         <h3 class="text-3xl text-center font-semibold">About</h3>
 
@@ -113,11 +139,13 @@
 
       <ul class="px-10 flex flex-col items-center">
         <li>
-          Timezone: Europe/Amsterdam
+          <strong>Timezone: </strong>
+          Europe/Amsterdam
         </li>
 
         <li class="mt-3">
-          Response time: within 2 business days
+          <strong>Response time: </strong>
+          Within 2 business days
         </li>
       </ul>
 
