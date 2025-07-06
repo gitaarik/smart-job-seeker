@@ -63,12 +63,12 @@
       </button>
     </div>
 
-    <div id="about-section" class="p-6 pt-15 w-full min-h-screen">
+    <div id="about-section" class="px-6 pt-15 w-full min-h-screen">
       <div class="flex flex-col items-center">
         <h3 class="text-3xl text-center font-semibold">About</h3>
 
         <div>
-          <ul class="my-10 list-[circle] font-semibold">
+          <ul class="my-10 list-disc font-semibold">
             <li>
               18+ years full stack (web) development experience
             </li>
@@ -77,15 +77,19 @@
               Remote work and distributed team collaboration
             </li>
 
-            <li>
+            <li class="my-3">
               Creating &amp; scaling high-traffic applications
+            </li>
+
+            <li>
+              Leveraging AI tools and current industry best practices
             </li>
           </ul>
         </div>
 
         <div class="mb-10 sm:flex md:gap-20 sm:gap-6">
           <InfoBox headerText="Available for:">
-            <ul class="mt-4 list-[circle] ml-4 px-4 pb-4 font-bold">
+            <ul class="mt-4 list-disc ml-4 px-4 pb-4 font-bold">
               <li>Application development</li>
 
               <li class="my-4">System optimization</li>
@@ -97,7 +101,7 @@
           </InfoBox>
 
           <InfoBox headerText="Key skills:" class="max-sm:mt-8">
-            <ul class="mt-4 list-[circle] ml-4 px-4 pb-4 font-bold">
+            <ul class="mt-4 list-disc ml-4 px-4 pb-4 font-bold">
               <li>Python, Django, FastAPI, Numpy</li>
               <li class="my-4">Javascript, Node.js, Svelte, React</li>
               <li class="my-4">SQL & NoSQL Databases</li>
@@ -144,15 +148,15 @@
           </li>
         </ul>
       </div>
-    </div>
-  </div>
 
-  <div class="mt-20 mb-1 px-4 text-right text-xs text-gray-400">
-    Logo Vector by
-    <a
-      class="underline"
-      href="https://www.vecteezy.com/free-vector/logo"
-      target="_blank"
-    >Vecteezy</a>
+      <div class="mt-20 mb-1 px-4 text-right text-xs text-gray-400">
+        Logo Vector by
+        <a
+          class="underline"
+          href="https://www.vecteezy.com/free-vector/logo"
+          target="_blank"
+        >Vecteezy</a>
+      </div>
+    </div>
   </div>
 </div>
