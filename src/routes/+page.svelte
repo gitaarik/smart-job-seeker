@@ -158,7 +158,7 @@
         <!-- </div> -->
 
         <!-- <div class="mb-10 sm:flex md:gap-20 sm:gap-6"> -->
-        <div class="mb-10 flex flex-col gap-6 max-md:mt-6">
+        <div class="mb-6 md:mb-10 flex flex-col gap-6 max-md:mt-6">
           <!-- <InfoBox headerText="Key skills:" class="max-sm:mt-8"> -->
           <InfoBox headerText="Key skills:">
             <ul class="mt-4 list-disc ml-4 px-4 pb-4 font-bold">
@@ -190,30 +190,38 @@
         </div>
       </div>
 
-      <div class="mt-10 px-10 text-sm flex flex-col items-center">
-        <ul class="flex flex-wrap gap-x-4 gap-y-2">
+      <div class="px-10 flex flex-col items-center">
+        <ul class="flex flex-wrap gap-x-6 gap-y-4">
           <li>
-            <ProfileLink href="https://github.com/gitaarik" icon={githubIcon}
-            >GitHub</ProfileLink>
+            <ProfileLink
+              href="https://github.com/gitaarik"
+              icon={githubIcon}
+              title="GitHub"
+            />
           </li>
 
           <li>
-            <ProfileLink href="https://pypi.org/user/gitaarik/" icon={pypiIcon}
-            >PyPi</ProfileLink>
+            <ProfileLink
+              href="https://pypi.org/user/gitaarik/"
+              icon={pypiIcon}
+              title="PyPi"
+            />
           </li>
 
           <li>
-            <ProfileLink href="https://www.npmjs.com/~gitaarik" icon={npmIcon}
-            >npm</ProfileLink>
+            <ProfileLink
+              href="https://www.npmjs.com/~gitaarik"
+              icon={npmIcon}
+              title="npm"
+            />
           </li>
 
           <li>
             <ProfileLink
               href="https://stackoverflow.com/users/1248175/gitaarik"
               icon={stackOverflowIcon}
-            >
-              Stack Overflow
-            </ProfileLink>
+              title="Stack Overflow"
+            />
           </li>
         </ul>
       </div>

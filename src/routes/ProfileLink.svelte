@@ -1,14 +1,13 @@
 <script lang="ts">
   export let icon: string = "";
   export let href: string = "";
+  export let title: string = "";
 </script>
 
-<div class="flex items-center">
-  <div class="mr-1">
-    <img src={icon} alt="icon" class="h-5 w-5" />
-  </div>
-
-  <div>
-    <a {href} target="_blank" class="text-l text-nowrap underline"><slot /></a>
-  </div>
-</div>
+<a {href} target="_blank" {title} class="text-l text-nowrap underline">
+  <img
+    src={icon}
+    alt="icon"
+    class="h-10 w-10 scale-100 hover:scale-115 transition"
+  />
+</a>
