@@ -104,7 +104,7 @@
             </li>
 
             <li class="my-3">
-              Creating &amp; scaling high-traffic applications
+              Creating &amp; scaling complex &amp; high-traffic applications
             </li>
 
             <li>
