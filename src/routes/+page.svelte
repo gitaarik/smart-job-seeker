@@ -48,6 +48,8 @@
       behavior: "smooth",
       block: "start",
     });
+
+    elMoreInfo.blur();
   }
 
   onMount(() => {
@@ -141,147 +143,160 @@
     </div>
 
     <div
-      bind:this={elAboutSection}
-      class="px-6 pt-10 md:pt-15 w-full min-h-screen"
+      class="flex flex-col items-stretch w-full min-h-screen bg-[var(--shade-color)]"
     >
-      <h3 class="text-3xl text-center font-semibold mb-8 md:mb-10">About me</h3>
-
-      <div class="flex justify-center max-md:flex-col max-md:items-center">
-        <div class="md:max-w-[50%] md:px-10">
-          <p>
-            With over {devYearsExperience} years of full-stack web development
-            experience, I specialize in building and scaling complex,
-            high-traffic applications that deliver exceptional user experiences.
-            My expertise spans the entire development lifecycle, from initial
-            architecture decisions to production deployment and optimization.
-          </p>
-
-          <p class="my-4">
-            I bring {remoteWorkYearsExperience}+ years of remote work experience
-            and excel at collaborating with distributed teams across different
-            time zones and cultures. This background has honed my communication
-            skills and ability to work autonomously while maintaining strong
-            team alignment.
-          </p>
-
-          <p class="my-4">
-            I stay at the forefront of technology by integrating AI tools into
-            my development workflow and consistently applying current industry
-            best practices. Security is paramount in everything I build—I
-            maintain up-to-date knowledge of security best practices to ensure
-            applications are both performant and secure.
-          </p>
-
-          <p>
-            Whether architecting scalable backend systems, crafting intuitive
-            frontend interfaces, or optimizing application performance, I
-            combine technical expertise with a deep understanding of business
-            needs to deliver solutions that drive real results.
-          </p>
-        </div>
-
+      <div class="flex flex-col items-center px-10">
         <div
-          class="flex flex-col gap-6 max-md:mt-6 max-md:w-fit"
+          bind:this={elAboutSection}
+          class="overflow-hidden max-w-[var(--max-content-width)] pt-10 md:pt-15"
         >
-          <InfoBox headerText="Key skills:">
-            <ul class="mt-4 list-disc ml-4 px-4 pb-4 font-bold">
-              <li>Python, Django, FastAPI, Numpy</li>
-              <li class="my-4">Javascript, Node.js, React, Svelte</li>
-              <li class="my-4">SQL & NoSQL Databases</li>
-              <li>Linux, DevOps, CI/CD, Docker</li>
+          <h3 class="text-3xl text-center font-semibold mb-8 md:mb-10">
+            About me
+          </h3>
+
+          <div
+            class="flex gap-10 justify-center max-md:flex-col max-md:items-center"
+          >
+            <!-- <div class="md:max-w-[50%]"> -->
+            <div class="md:max-w-[525px]">
+              <p>
+                With over {devYearsExperience} years of full-stack web
+                development experience, I specialize in building and scaling
+                complex, high-traffic applications that deliver exceptional user
+                experiences. My expertise spans the entire development
+                lifecycle, from initial architecture decisions to production
+                deployment and optimization.
+              </p>
+
+              <p class="my-4">
+                I bring {remoteWorkYearsExperience}+ years of remote work
+                experience and excel at collaborating with distributed teams
+                across different time zones and cultures. This background has
+                honed my communication skills and ability to work autonomously
+                while maintaining strong team alignment.
+              </p>
+
+              <p class="my-4">
+                I stay at the forefront of technology by integrating AI tools
+                into my development workflow and consistently applying current
+                industry best practices. Security is paramount in everything I
+                build—I maintain up-to-date knowledge of security best practices
+                to ensure applications are both performant and secure.
+              </p>
+
+              <p>
+                Whether architecting scalable backend systems, crafting
+                intuitive frontend interfaces, or optimizing application
+                performance, I combine technical expertise with a deep
+                understanding of business needs to deliver solutions that drive
+                real results.
+              </p>
+            </div>
+
+            <div
+              class="flex flex-col gap-6 max-md:mt-6 max-md:w-fit"
+            >
+              <InfoBox headerText="Key skills:">
+                <ul class="mt-4 list-disc ml-4 px-4 pb-4 font-bold">
+                  <li>Python, Django, FastAPI, Numpy</li>
+                  <li class="my-4">Javascript, Node.js, React, Svelte</li>
+                  <li class="my-4">SQL & NoSQL Databases</li>
+                  <li>Linux, DevOps, CI/CD, Docker</li>
+                </ul>
+              </InfoBox>
+
+              <InfoBox headerText="Available for:">
+                <ul class="mt-4 list-disc ml-4 px-4 pb-4 font-bold">
+                  <li>Application development</li>
+
+                  <li class="my-4">System optimization</li>
+
+                  <li class="my-4">Technical strategy consulting</li>
+
+                  <li>Short-term remote jobs</li>
+                </ul>
+              </InfoBox>
+
+              <ul class="px-10 flex flex-col gap-y-2 items-center text-center">
+                <li>
+                  <strong>Timezone: </strong>
+                  Europe/Amsterdam
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="mt-15 mb-15 px-10 flex flex-col items-center">
+            <ul
+              class="max-sm:grid max-sm:grid-cols-2 sm:flex sm:flex-wrap sm:justify-center sm:justify-between gap-15"
+            >
+              <li>
+                <ProfileLink
+                  href="https://github.com/gitaarik"
+                  icon={faGithub}
+                  title="GitHub"
+                />
+              </li>
+
+              <li>
+                <ProfileLink
+                  href="https://pypi.org/user/gitaarik/"
+                  icon={faPython}
+                  title="PyPi"
+                />
+              </li>
+
+              <li>
+                <ProfileLink
+                  href="https://www.npmjs.com/~gitaarik"
+                  icon={faNpm}
+                  title="npm"
+                />
+              </li>
+
+              <li>
+                <ProfileLink
+                  href="https://stackoverflow.com/users/1248175/gitaarik"
+                  icon={faStackOverflow}
+                  title="Stack Overflow"
+                />
+              </li>
             </ul>
-          </InfoBox>
-
-          <InfoBox headerText="Available for:">
-            <ul class="mt-4 list-disc ml-4 px-4 pb-4 font-bold">
-              <li>Application development</li>
-
-              <li class="my-4">System optimization</li>
-
-              <li class="my-4">Technical strategy consulting</li>
-
-              <li>Short-term remote jobs</li>
-            </ul>
-          </InfoBox>
-
-          <ul class="px-10 flex flex-col gap-y-2 items-center text-center">
-            <li>
-              <strong>Timezone: </strong>
-              Europe/Amsterdam
-            </li>
-          </ul>
+          </div>
         </div>
       </div>
 
-      <div class="mt-15 px-10 flex flex-col items-center">
-        <ul
-          class="max-sm:grid max-sm:grid-cols-2 sm:flex sm:flex-wrap sm:justify-center sm:justify-between gap-15"
-        >
-          <li>
-            <ProfileLink
-              href="https://github.com/gitaarik"
-              icon={faGithub}
-              title="GitHub"
-            />
-          </li>
+      <div
+        class="pt-15 px-10 flex flex-col items-center gap-2 bg-[var(--text-color)] text-[var(--light-color)]"
+      >
+        <div class="w-full max-w-[var(--max-content-width)]">
+          <h4 class="font-semibold text-lg mb-4">Rik Wanders Software</h4>
 
-          <li>
-            <ProfileLink
-              href="https://pypi.org/user/gitaarik/"
-              icon={faPython}
-              title="PyPi"
-            />
-          </li>
+          <div
+            class="grid grid-cols-[auto_auto] w-fit gap-2 flex flex-col gap-y-2 items-center"
+          >
+            <strong>VAT ID:</strong>
+            <div>NL001792484B78</div>
 
-          <li>
-            <ProfileLink
-              href="https://www.npmjs.com/~gitaarik"
-              icon={faNpm}
-              title="npm"
-            />
-          </li>
+            <strong>Address:</strong>
+            <div>Hertzogstraat 37</div>
 
-          <li>
-            <ProfileLink
-              href="https://stackoverflow.com/users/1248175/gitaarik"
-              icon={faStackOverflow}
-              title="Stack Overflow"
-            />
-          </li>
-        </ul>
-      </div>
+            <strong>City:</strong>
+            <div>Haarlem</div>
 
-      <div class="mt-15 flex flex-col gap-2 items-center">
-        <h3 class="text-3xl text-center font-semibold mb-8 md:mb-10">
-          Contact
-        </h3>
-
-        <h4 class="font-semibold text-lg mb-1">Rik Wanders Software</h4>
-
-        <div
-          class="grid grid-cols-[auto_auto] w-fit gap-2 px-10 flex flex-col gap-y-2 items-center"
-        >
-          <strong class="text-right">Address:</strong>
-          <div>Hertzogstraat 37</div>
-
-          <strong class="text-right">City:</strong>
-          <div>Haarlem</div>
-
-          <strong class="text-right">Country:</strong>
-          <div>The Netherlands</div>
-
-          <strong class="text-right">VAT ID:</strong>
-          <div>NL001792484B78</div>
+            <strong>Country:</strong>
+            <div>The Netherlands</div>
+          </div>
         </div>
-      </div>
 
-      <div class="mt-20 mb-1 px-4 text-right text-xs text-gray-400">
-        Logo Vector by
-        <a
-          class="underline"
-          href="https://www.vecteezy.com/free-vector/logo"
-          target="_blank"
-        >Vecteezy</a>
+        <div class="mt-20 mb-1 px-4 self-end text-xs text-gray-400">
+          Logo Vector by
+          <a
+            class="underline"
+            href="https://www.vecteezy.com/free-vector/logo"
+            target="_blank"
+          >Vecteezy</a>
+        </div>
       </div>
     </div>
   </div>
