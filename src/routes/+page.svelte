@@ -185,7 +185,7 @@
             class="flex gap-10 justify-center max-md:flex-col max-md:items-center"
           >
             <!-- <div class="md:max-w-[50%]"> -->
-            <div class="md:max-w-[525px]">
+            <div class="md:max-w-[525px] text-base/7">
               <p>
                 With over {devYearsExperience} years of full-stack web
                 development experience, I specialize in building and scaling
@@ -298,11 +298,12 @@
           <div>
             <h4 class="font-semibold text-lg mb-2">Rik Wanders Software</h4>
 
-            <div class="text-sm">
+            <div class="text-sm/6">
               <div>Hertzogstraat 37</div>
               <div>2021 AE&nbsp;&nbsp;Haarlem</div>
               <div>The Netherlands</div>
               <div class="mt-2">VAT ID: NL001792484B78</div>
+              <div>KVK: 75629801</div>
             </div>
           </div>
 
