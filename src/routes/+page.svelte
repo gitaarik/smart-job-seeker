@@ -21,6 +21,12 @@
   import InfoBox from "./InfoBox.svelte";
   import ContactInfo from "./ContactInfo.svelte";
 
+  const metaTitle = "Rik Wanders - Freelance Full Stack Developer";
+  const metaUrl = "https://www.rikwanders.tech/";
+  const metaDescription =
+    "Freelance Full Stack Developer available for remote projects. Available for (web) application development, system optimization, and technical strategy consulting. Focused on short-term engagements (2-6 months).";
+  const metaImg = "https://www.rikwanders.tech/images/logo.svg";
+
   let elAboutSection: HTMLElement;
   let elContactSection: HTMLElement;
   let elMoreInfo: HTMLElement;
@@ -65,10 +71,31 @@
         opacity = 0;
       }
 
-      elMoreInfo.style.opacity = opacity;
+      elMoreInfo.style.opacity = `${opacity}`;
     });
   });
 </script>
+
+<svelte:head>
+  <title>Rik Wanders - Freelance Full Stack Developer</title>
+
+  <meta name="title" content={metaTitle} />
+  <meta name="description" content={metaDescription} />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content={metaUrl} />
+  <meta property="og:title" content={metaTitle} />
+  <meta property="og:description" content={metaDescription} />
+  <meta property="og:image" content={metaImg} />
+
+  <!-- X (Twitter) -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:url" content={metaUrl} />
+  <meta property="twitter:title" content={metaTitle} />
+  <meta property="twitter:description" content={metaDescription} />
+  <meta property="twitter:image" content={metaImg} />
+</svelte:head>
 
 <div class="flex h-full min-h-screen flex-col justify-between">
   <div class="flex flex-col items-center">
