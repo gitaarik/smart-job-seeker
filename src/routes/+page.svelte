@@ -240,7 +240,7 @@
                 </ul>
               </InfoBox>
 
-              <InfoBox headerText="Available for:">
+              <InfoBox headerText="Contact for:">
                 <ul class="mt-4 list-disc ml-4 px-4 pb-4 font-bold">
                   <li>Application development</li>
 
