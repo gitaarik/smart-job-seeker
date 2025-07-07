@@ -21,6 +21,7 @@
   import ContactInfo from "./ContactInfo.svelte";
 
   let aboutSectionEl: HTMLElement;
+  let contactSectionEl: HTMLElement;
   let showGetInTouch = false;
   const currentYear: number = (new Date()).getFullYear();
   const devYearsExperience: number = currentYear - 2007;
@@ -28,6 +29,11 @@
 
   function handleGetInTouch() {
     showGetInTouch = true;
+
+    contactSectionEl.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
   }
 
   function handleCloseContactInfo() {
@@ -45,13 +51,13 @@
 <div class="flex h-full min-h-screen flex-col justify-between">
   <div class="flex flex-col items-center">
     <div
-      class="px-10 pt-10 md:pt-25 w-full flex flex-col items-center bg-gray-100 min-h-screen"
+      class="sm:px-10 pt-10 md:pt-25 w-full flex flex-col items-center bg-gray-100 min-h-screen"
     >
       <div>
         <img src={logo} alt="Logo" class="h-40 w-40" />
       </div>
 
-      <div class="mt-5 text-center">
+      <div class="px-4 mt-5 text-center">
         <h1 class="text-3xl font-medium">Rik Wanders</h1>
         <h2 class="mt-4 text-xl">Freelance Full Stack Developer</h2>
         <h3 class="mt-4">Python • Django • React • Node.js</h3>
@@ -61,10 +67,13 @@
         </h4>
       </div>
 
-      <div class="mt-15 md:mt-20">
+      <div
+        bind:this={contactSectionEl}
+        class="mt-15 max-sm:w-full md:mt-20"
+      >
         {#if showGetInTouch}
           <div
-            class="p-8 bg-white rounded-xl border-2 border-[rgb(61,135,164)] relative"
+            class="p-8 bg-white sm:rounded-xl border-y-2 sm:border-x-2 border-[rgb(61,135,164)] relative"
           >
             <button
               class="absolute right-3 top-2 cursor-pointer"
@@ -80,7 +89,7 @@
         {:else}
           <div class="text-center">
             <button
-              class="flex items-center gap-2 bg-[rgb(28,89,112)] text-white py-4 px-8 rounded-lg text-xl font-semibold cursor-pointer hover:bg-[rgb(87,150,174)] scale-100 hover:scale-105 transition"
+              class="inline-flex items-center gap-2 bg-[rgb(28,89,112)] text-white py-4 px-8 rounded-lg text-xl font-semibold cursor-pointer hover:bg-[rgb(87,150,174)] scale-100 hover:scale-105 transition"
               on:click={handleGetInTouch}
             >
               <FontAwesomeIcon icon={faComments} />

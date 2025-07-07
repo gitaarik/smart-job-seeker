@@ -4,9 +4,9 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { faCircleNotch } from "@fortawesome/free-solid-svg-icons";
 
+  let contactInfoEl: HTMLElement;
   let isVerified = false;
   let isLoading = false;
-  let widgetId: number | null = null;
 
   // Your reCAPTCHA site key (get this from Google reCAPTCHA admin)
   const RECAPTCHA_SITE_KEY = "6LeAGHorAAAAAIxXJ4hI5SoY3XOThWClotwz7E0b";
@@ -26,6 +26,9 @@
   function loadRecaptcha() {
     // Check if reCAPTCHA is already loaded
     if (window.grecaptcha) {
+      setTimeout(async () => {
+        await handleRecaptchaLoaded();
+      });
       return;
     }
 
@@ -39,24 +42,7 @@
     window.onRecaptchaLoad = async function () {
       console.log("reCAPTCHA loaded and ready");
       await handleRecaptchaLoaded();
-      // Now you can safely call execute
-      // window.grecaptcha.execute("YOUR_SITE_KEY", { action: "your_action" })
-      //   .then(function (token) {
-      //     // Handle the token
-      //     console.log("Token:", token);
-      //   });
     };
-
-    // script.onload = async function () {
-    //   console.log("wjow:");
-    //   console.log(window.grecaptcha.execute);
-    //
-    //   setTimeout(() => {
-    //     console.log("wjow2:");
-    //     console.log(window.grecaptcha.execute);
-    //   }, 0);
-    //   // await handleRecaptchaLoaded();
-    // };
 
     document.head.appendChild(script);
   }
@@ -80,6 +66,11 @@
 
       if (success) {
         isVerified = true;
+
+        contactInfoEl.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
       } else {
         alert("Verification failed. Please try again.");
       }
@@ -118,8 +109,8 @@
   }
 </script>
 
-<div>
-  {#if 0 && !isVerified}
+<div bind:this={contactInfoEl}>
+  {#if !isVerified}
     <div class="text-center mt-6">
       <FontAwesomeIcon icon={faCircleNotch} spin class="mr-1" />
 
@@ -146,7 +137,7 @@
         Europe/Amsterdam
       </span>
 
-      <strong class="text-right">Response time:</strong>
+      <strong class="text-right whitespace-nowrap">Response time:</strong>
       <span>
         Within 2 business days
       </span>
