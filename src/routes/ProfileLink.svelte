@@ -6,10 +6,9 @@
   export let title: string = "";
 </script>
 
-<a {href} target="_blank" {title} class="text-l text-nowrap underline">
+<a {href} target="_blank" {title} class="text-l text-nowrap underline text-5xl">
   <FontAwesomeIcon
     {icon}
-    size="3x"
     alt={`${title} icon`}
     class="scale-100 hover:scale-115 transition"
   />

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+
   import {
     faGithub,
     faNpm,
@@ -7,10 +8,12 @@
     faStackOverflow,
   } from "@fortawesome/free-brands-svg-icons";
 
-  import { faCircleChevronDown } from "@fortawesome/free-solid-svg-icons";
+  import {
+    faCircleChevronDown,
+    faComments,
+  } from "@fortawesome/free-solid-svg-icons";
 
   import logo from "$lib/images/logo.svg";
-  import getInTouchIcon from "$lib/images/comments.svg";
 
   import ProfileLink from "./ProfileLink.svelte";
   import InfoBox from "./InfoBox.svelte";
@@ -55,7 +58,9 @@
 
       <div class="mt-15 md:mt-20">
         {#if showGetInTouch}
-          <div class="p-8 bg-white rounded-xl border-2 border-[#7b9eac]">
+          <div
+            class="p-8 bg-white rounded-xl border-2 border-[rgb(61,135,164)]"
+          >
             <h3 class="text-center text-3xl font-medium mb-4 px-8">
               Contact info
             </h3>
@@ -64,16 +69,13 @@
         {:else}
           <div class="text-center">
             <button
-              class="flex gap-2 bg-[rgb(28,89,112)] text-white py-4 px-8 rounded-lg text-xl font-semibold cursor-pointer hover:bg-[rgb(87,150,174)] scale-100 hover:scale-105 transition"
+              class="flex items-center gap-2 bg-[rgb(28,89,112)] text-white py-4 px-8 rounded-lg text-xl font-semibold cursor-pointer hover:bg-[rgb(87,150,174)] scale-100 hover:scale-105 transition"
               on:click={handleGetInTouchClick}
             >
-              <img
-                src={getInTouchIcon}
-                alt="get in touch icon"
-                width="20"
-                height="20"
-              />
-              Get in touch
+              <FontAwesomeIcon icon={faComments} />
+              <span>
+                Get in touch
+              </span>
             </button>
           </div>
         {/if}
@@ -171,7 +173,7 @@
 
       <div class="mt-15 px-10 flex flex-col items-center">
         <ul
-          class="max-sm:grid max-sm:grid-cols-2 sm:flex sm:flex-wrap sm:justify-center sm:justify-between gap-10"
+          class="max-sm:grid max-sm:grid-cols-2 sm:flex sm:flex-wrap sm:justify-center sm:justify-between gap-15"
         >
           <li>
             <ProfileLink
