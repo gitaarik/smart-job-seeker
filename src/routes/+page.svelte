@@ -127,7 +127,7 @@
           >
             <div class="text-[var(--text-light-color)]">
               <button
-                class="absolute right-3 top-2 cursor-pointer text-2xl"
+                class="absolute right-3 top-[10px] cursor-pointer text-2xl"
                 on:click={handleCloseContactInfo}
               >
                 <FontAwesomeIcon icon={faTimes} />
