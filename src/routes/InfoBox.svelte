@@ -6,10 +6,10 @@
 </script>
 
 <div
-  class="bg-[#e8edf0] rounded-lg {classNames} border-2 border-[rgb(61,135,164)]"
+  class="bg-[#e8edf0] rounded-lg {classNames} border-2 border-[rgb(61,135,164)] overflow-hidden"
 >
   <h3
-    class="font-medium px-4 py-2 bg-[rgb(61,135,164)] text-white rounded-t-md"
+    class="font-medium px-4 py-2 bg-[rgb(61,135,164)] text-white"
   >
     {headerText}
   </h3>
