@@ -111,7 +111,7 @@
   }
 </script>
 
-<div bind:this={elContactInfo}>
+<div bind:this={elContactInfo} class="flex flex-col items-center">
   {#if !isVerified}
     <div class="text-center mt-6">
       <FontAwesomeIcon icon={faCircleNotch} spin class="mr-1" />
@@ -123,26 +123,35 @@
       {/if}
     </div>
   {:else}
-    <div class="mt-6 px-10 grid grid-cols-[auto_auto] gap-3 items-center">
-      <strong class="text-right">Email:</strong>
-      <a href="mailto:{contactInfo.email}" class="underline">{
-        contactInfo.email
-      }</a>
+    <div class="mt-6 md:px-10 w-fit">
+      <div>
+        <strong class="mr-1 sm:text-right">Email:</strong>
+        <a href="mailto:{contactInfo.email}" class="underline">{
+          contactInfo.email
+        }</a>
+      </div>
 
-      <strong class="text-right">Phone:</strong>
-      <a href="tel:{contactInfo.phone}" class="underline">{
-        contactInfo.phone
-      }</a>
+      <div class="my-3">
+        <strong class="mr-1 sm:text-right">Phone:</strong>
+        <a href="tel:{contactInfo.phone}" class="underline">{
+          contactInfo.phone
+        }</a>
+      </div>
 
-      <strong class="text-right">Timezone:</strong>
-      <span>
-        Europe/Amsterdam
-      </span>
+      <div class="my-3">
+        <strong class="mr-1 sm:text-right">Timezone:</strong>
+        <span>
+          Europe/Amsterdam
+        </span>
+      </div>
 
-      <strong class="text-right whitespace-nowrap">Response time:</strong>
-      <span>
-        Within 2 business days
-      </span>
+      <div>
+        <strong class="mr-1 sm:text-right whitespace-nowrap"
+        >Response time:</strong>
+        <span>
+          Within 2 business days
+        </span>
+      </div>
     </div>
   {/if}
 </div>
