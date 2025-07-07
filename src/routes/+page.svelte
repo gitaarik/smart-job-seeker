@@ -275,7 +275,7 @@
 
             <div class="text-sm mb-4">
               <div>Hertzogstraat 37</div>
-              <div>2021 AE, Haarlem</div>
+              <div>2021 AE&nbsp;&nbsp;Haarlem</div>
               <div>The Netherlands</div>
               <div class="mt-2">VAT ID: NL001792484B78</div>
             </div>
