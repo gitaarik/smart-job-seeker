@@ -138,7 +138,7 @@
       class="flex max-sm:flex-col gap-6 sm:gap-4 place-content-evenly text-center w-full px-4"
     >
       <div>
-        <div class="mb-2 font-semibold">
+        <div class="mb-2 text-lg font-semibold">
           <FontAwesomeIcon icon={faEnvelope} class="mr-1" />
           Email
         </div>
@@ -147,11 +147,14 @@
           contactInfo.email
         }</a>
 
-        <p class="mt-2 text-sm">Response within<br />2 business days.</p>
+        <p class="mt-2 sm:mt-4 text-sm wrap-break-word">
+          Response within<br class="max-sm:hidden" />
+          2 business days.
+        </p>
       </div>
 
       <div>
-        <div class="mb-2 font-semibold">
+        <div class="mb-2 text-lg font-semibold">
           <FontAwesomeIcon icon={faPhone} class="mr-1" />
           Phone
         </div>
