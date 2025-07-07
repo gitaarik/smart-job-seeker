@@ -269,33 +269,26 @@
       <div
         class="pt-15 px-10 flex flex-col items-center gap-2 bg-[var(--text-color)] text-[var(--light-color)]"
       >
-        <div class="w-full max-w-[var(--max-content-width)]">
-          <h4 class="font-semibold text-lg mb-4">Rik Wanders Software</h4>
+        <div class="flex flex-col w-full max-w-[var(--max-content-width)]">
+          <div>
+            <h4 class="font-semibold text-lg mb-2">Rik Wanders Software</h4>
 
-          <div
-            class="grid grid-cols-[auto_auto] w-fit gap-2 flex flex-col gap-y-2 items-center"
-          >
-            <strong>VAT ID:</strong>
-            <div>NL001792484B78</div>
-
-            <strong>Address:</strong>
-            <div>Hertzogstraat 37</div>
-
-            <strong>City:</strong>
-            <div>Haarlem</div>
-
-            <strong>Country:</strong>
-            <div>The Netherlands</div>
+            <div class="text-sm mb-4">
+              <div>Hertzogstraat 37</div>
+              <div>2021 AE, Haarlem</div>
+              <div>The Netherlands</div>
+              <div class="mt-2">VAT ID: NL001792484B78</div>
+            </div>
           </div>
-        </div>
 
-        <div class="mt-20 mb-1 px-4 self-end text-xs text-gray-400">
-          Logo Vector by
-          <a
-            class="underline"
-            href="https://www.vecteezy.com/free-vector/logo"
-            target="_blank"
-          >Vecteezy</a>
+          <div class="mt-4 mb-2 self-end text-xs text-gray-400 self-end">
+            Logo Vector by
+            <a
+              class="underline"
+              href="https://www.vecteezy.com/free-vector/logo"
+              target="_blank"
+            >Vecteezy</a>
+          </div>
         </div>
       </div>
     </div>
