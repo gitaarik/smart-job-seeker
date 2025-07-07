@@ -155,7 +155,7 @@
 
       <button
         bind:this={elMoreInfo}
-        class="flex-end mt-14 mb-8 flex items-center gap-2 cursor-pointer p-2 scale-100 hover:scale-110 focus:scale-110 hover:text-[var(--highlight-color)] focus:text-[var(--highlight-color)] transition"
+        class="flex-end mt-14 mb-15 flex items-center gap-2 cursor-pointer p-2 scale-100 hover:scale-110 focus:scale-110 hover:text-[var(--highlight-color)] focus:text-[var(--highlight-color)] transition"
         on:click={handleMoreInfo}
       >
         <span>
@@ -244,12 +244,10 @@
                 </ul>
               </InfoBox>
 
-              <ul class="px-10 flex flex-col gap-y-2 items-center text-center">
-                <li>
-                  <strong>Timezone: </strong>
-                  Europe/Amsterdam
-                </li>
-              </ul>
+              <div class="px-10 text-center text-nowrap">
+                <strong>Timezone: </strong>
+                Europe/Amsterdam
+              </div>
             </div>
           </div>
 
