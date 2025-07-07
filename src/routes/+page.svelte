@@ -100,14 +100,14 @@
 <div class="flex h-full min-h-screen flex-col justify-between">
   <div class="flex flex-col items-center">
     <div
-      class="px-5 sm:px-10 pt-10 md:pt-25 w-full flex flex-col items-center bg-gray-100 min-h-screen"
+      class="pt-10 md:pt-25 w-full flex flex-col items-center bg-gray-100 min-h-screen"
     >
-      <div>
+      <div class="px-5 sm:px-10">
         <!-- <img src={logo} alt="Logo" class="h-40 w-40" /> -->
         <Logo class="h-40 w-40" />
       </div>
 
-      <div class="px-4 mt-5 text-center">
+      <div class="px-5 sm:px-10 mt-5 text-center">
         <h1 class="text-3xl font-medium">Rik Wanders</h1>
         <h2 class="mt-4 text-xl">Freelance Full Stack Developer</h2>
         <h3 class="mt-4">Python • Django • React • Node.js</h3>
@@ -123,7 +123,7 @@
       >
         {#if showGetInTouch}
           <div
-            class="sm:p-8 bg-white sm:rounded border-y-2 sm:border-x-2 border-[var(--primary-color)] relative"
+            class="p-8 bg-white sm:rounded-xl border-y-2 sm:border-x-2 border-[var(--primary-color)] relative"
           >
             <button
               class="absolute right-3 top-2 cursor-pointer"
