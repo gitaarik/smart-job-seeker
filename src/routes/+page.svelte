@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
 
   import {
@@ -20,8 +21,10 @@
   import InfoBox from "./InfoBox.svelte";
   import ContactInfo from "./ContactInfo.svelte";
 
-  let aboutSectionEl: HTMLElement;
-  let contactSectionEl: HTMLElement;
+  let elAboutSection: HTMLElement;
+  let elContactSection: HTMLElement;
+  let elMoreInfo: HTMLElement;
+
   let showGetInTouch = false;
   const currentYear: number = (new Date()).getFullYear();
   const devYearsExperience: number = currentYear - 2007;
@@ -30,7 +33,7 @@
   function handleGetInTouch() {
     showGetInTouch = true;
 
-    contactSectionEl.scrollIntoView({
+    elContactSection.scrollIntoView({
       behavior: "smooth",
       block: "center",
     });
@@ -41,11 +44,29 @@
   }
 
   function handleMoreInfo() {
-    aboutSectionEl.scrollIntoView({
+    elAboutSection.scrollIntoView({
       behavior: "smooth",
       block: "start",
     });
   }
+
+  onMount(() => {
+    addEventListener("scroll", () => {
+      const moreInfoScrollTop = elMoreInfo.getBoundingClientRect().top;
+      const viewportHalf = window.innerHeight / 2;
+
+      let opacity = 0.7 - (viewportHalf - moreInfoScrollTop) / viewportHalf;
+
+      if (opacity > 1) {
+        opacity = 1;
+      } else if (opacity < 0) {
+        opacity = 0;
+      }
+
+      console.log(opacity);
+      elMoreInfo.style.opacity = opacity;
+    });
+  });
 </script>
 
 <div class="flex h-full min-h-screen flex-col justify-between">
@@ -68,7 +89,7 @@
       </div>
 
       <div
-        bind:this={contactSectionEl}
+        bind:this={elContactSection}
         class="mt-15 max-sm:w-full md:mt-20"
       >
         {#if showGetInTouch}
@@ -104,6 +125,7 @@
       <div class="flex-grow"></div>
 
       <button
+        bind:this={elMoreInfo}
         class="flex-end mt-14 mb-8 flex items-center gap-2 cursor-pointer p-2 scale-100 hover:scale-110 transition"
         on:click={handleMoreInfo}
       >
@@ -119,7 +141,7 @@
     </div>
 
     <div
-      bind:this={aboutSectionEl}
+      bind:this={elAboutSection}
       class="px-6 pt-10 md:pt-15 w-full min-h-screen"
     >
       <h3 class="text-3xl text-center font-semibold mb-8 md:mb-10">About me</h3>

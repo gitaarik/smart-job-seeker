@@ -4,7 +4,7 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { faCircleNotch } from "@fortawesome/free-solid-svg-icons";
 
-  let contactInfoEl: HTMLElement;
+  let elContactInfo: HTMLElement;
   let isVerified = false;
   let isLoading = false;
 
@@ -67,7 +67,7 @@
       if (success) {
         isVerified = true;
 
-        contactInfoEl.scrollIntoView({
+        elContactInfo.scrollIntoView({
           behavior: "smooth",
           block: "center",
         });
@@ -109,7 +109,7 @@
   }
 </script>
 
-<div bind:this={contactInfoEl}>
+<div bind:this={elContactInfo}>
   {#if !isVerified}
     <div class="text-center mt-6">
       <FontAwesomeIcon icon={faCircleNotch} spin class="mr-1" />
