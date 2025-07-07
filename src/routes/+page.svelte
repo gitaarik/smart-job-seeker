@@ -25,7 +25,7 @@
   const metaUrl = "https://www.rikwanders.tech/";
   const metaDescription =
     "Freelance Full Stack Developer available for remote projects. Available for (web) application development, system optimization, and technical strategy consulting. Focused on short-term engagements (2-6 months).";
-  const metaImg = "https://www.rikwanders.tech/images/logo.svg";
+  const metaImg = "https://www.rikwanders.tech/images/logo.png";
 
   let elAboutSection: HTMLElement;
   let elContactSection: HTMLElement;
