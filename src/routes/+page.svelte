@@ -100,7 +100,7 @@
 <div class="flex h-full min-h-screen flex-col justify-between">
   <div class="flex flex-col items-center">
     <div
-      class="sm:px-10 pt-10 md:pt-25 w-full flex flex-col items-center bg-gray-100 min-h-screen"
+      class="px-5 sm:px-10 pt-10 md:pt-25 w-full flex flex-col items-center bg-gray-100 min-h-screen"
     >
       <div>
         <!-- <img src={logo} alt="Logo" class="h-40 w-40" /> -->
@@ -172,7 +172,7 @@
     <div
       class="flex flex-col items-stretch w-full min-h-screen bg-[var(--shade-color)]"
     >
-      <div class="flex flex-col items-center px-10">
+      <div class="flex flex-col items-center px-5 sm:px-10">
         <div
           bind:this={elAboutSection}
           class="overflow-hidden max-w-[var(--max-content-width)] pt-10 md:pt-15"
@@ -251,7 +251,7 @@
             </div>
           </div>
 
-          <div class="mt-15 mb-15 px-10 flex flex-col items-center">
+          <div class="mt-15 mb-15 px-5 sm:px-10 flex flex-col items-center">
             <ul
               class="max-sm:grid max-sm:grid-cols-2 sm:flex sm:flex-wrap sm:justify-center sm:justify-between gap-15"
             >
@@ -292,7 +292,7 @@
       </div>
 
       <div
-        class="pt-15 px-10 flex flex-col items-center gap-2 bg-[var(--text-color)] text-[var(--light-color)]"
+        class="pt-15 px-5 sm:px-10 flex flex-col items-center gap-2 bg-[var(--text-color)] text-[var(--light-color)]"
       >
         <div class="flex flex-col w-full max-w-[var(--max-content-width)]">
           <div>
