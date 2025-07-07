@@ -3,6 +3,8 @@
   import { browser } from "$app/environment";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { faCircleNotch } from "@fortawesome/free-solid-svg-icons";
+  import Item from "./Item.svelte";
+  import InfoBox from "../InfoBox.svelte";
 
   let elContactInfo: HTMLElement;
   let isVerified = false;
@@ -113,7 +115,7 @@
 
 <div bind:this={elContactInfo} class="flex flex-col items-center">
   {#if !isVerified}
-    <div class="text-center mt-6">
+    <div class="text-center">
       <FontAwesomeIcon icon={faCircleNotch} spin class="mr-1" />
 
       {#if isLoading}
@@ -123,35 +125,26 @@
       {/if}
     </div>
   {:else}
-    <div class="mt-6 md:px-10 w-fit flex flex-col gap-2">
-      <div class="flex">
-        <strong class="mr-1 sm:text-right">Email:</strong>
+    <div class="md:px-10 w-fit flex flex-col gap-2">
+      <Item label="Email">
         <a href="mailto:{contactInfo.email}" class="underline">{
           contactInfo.email
         }</a>
-      </div>
+      </Item>
 
-      <div>
-        <strong class="mr-1 sm:text-right">Phone:</strong>
+      <Item label="Phone">
         <a href="tel:{contactInfo.phone}" class="underline">{
           contactInfo.phone
         }</a>
-      </div>
+      </Item>
 
-      <div>
-        <strong class="mr-1 sm:text-right">Timezone:</strong>
-        <span>
-          Europe/Amsterdam
-        </span>
-      </div>
+      <Item label="Timezone">
+        Europe/Amsterdam
+      </Item>
 
-      <div>
-        <strong class="mr-1 sm:text-right whitespace-nowrap"
-        >Response time:</strong>
-        <span>
-          Within 2 business days
-        </span>
-      </div>
+      <Item label="Response time">
+        Within 2 business days
+      </Item>
     </div>
   {/if}
 </div>

@@ -19,7 +19,7 @@
 
   import ProfileLink from "./ProfileLink.svelte";
   import InfoBox from "./InfoBox.svelte";
-  import ContactInfo from "./ContactInfo.svelte";
+  import ContactInfo from "./contact-info/ContactInfo.svelte";
 
   const metaTitle = "Rik Wanders - Freelance Full Stack Developer";
   const metaUrl = "https://www.rikwanders.tech/";
@@ -123,7 +123,7 @@
       >
         {#if showGetInTouch}
           <div
-            class="p-8 bg-white sm:rounded-xl border-y-2 sm:border-x-2 border-[var(--primary-color)] relative"
+            class="p-6 bg-white sm:rounded-xl border-y-2 sm:border-x-2 border-[var(--primary-color)] relative"
           >
             <button
               class="absolute right-3 top-2 cursor-pointer"
@@ -131,7 +131,7 @@
             >
               <FontAwesomeIcon icon={faTimes} />
             </button>
-            <h3 class="text-center text-3xl font-medium mb-4 px-8">
+            <h3 class="text-center text-2xl font-medium mb-5 px-8">
               Contact info
             </h3>
             <ContactInfo />
