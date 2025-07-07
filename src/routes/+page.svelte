@@ -307,13 +307,13 @@
           </div>
 
           <div
-            class="flex justify-between w-full text-xs text-gray-400 mt-8 mb-2"
+            class="flex sm:justify-between max-sm:flex-col w-full text-xs text-gray-400 mt-8 mb-2"
           >
             <div>
               Copyright © {currentYear} Rik Wanders Software
             </div>
 
-            <div>
+            <div class="max-sm:mt-2">
               Logo Vector by
               <a
                 class="underline"
