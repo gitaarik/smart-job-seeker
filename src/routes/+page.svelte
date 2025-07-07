@@ -133,7 +133,7 @@
                 <FontAwesomeIcon icon={faTimes} />
               </button>
               <h3
-                class="text-center text-xl font-semibold py-3 px-8 mb-4 bg-[var(--primary-color)] rounded-t-lg"
+                class="text-center text-xl font-semibold py-3 px-8 bg-[var(--primary-color)] rounded-t-lg"
               >
                 <FontAwesomeIcon icon={faComments} />
                 <span class="text-nowrap">
@@ -141,6 +141,11 @@
                 </span>
               </h3>
             </div>
+
+            <p class="p-6 text-center">
+              I'd love to hear about your project and discuss how we can bring
+              your ideas to life together—don't hesitate to reach out!
+            </p>
 
             <ContactInfo />
           </div>
