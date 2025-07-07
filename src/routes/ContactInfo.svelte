@@ -119,7 +119,7 @@
 </script>
 
 <div>
-  {#if !isVerified}
+  {#if 0 && !isVerified}
     <div class="text-center mt-6">
       <FontAwesomeIcon icon={faCircleNotch} spin class="mr-1" />
 
@@ -130,30 +130,26 @@
       {/if}
     </div>
   {:else}
-    <ul class="mt-6 px-10 flex flex-col gap-3 items-center">
-      <li>
-        <strong>Email:</strong>
-        <a href="mailto:{contactInfo.email}" class="underline">{
-          contactInfo.email
-        }</a>
-      </li>
+    <div class="mt-6 px-10 grid grid-cols-[auto_auto] gap-3 items-center">
+      <strong class="text-right">Email:</strong>
+      <a href="mailto:{contactInfo.email}" class="underline">{
+        contactInfo.email
+      }</a>
 
-      <li>
-        <strong>Phone:</strong>
-        <a href="tel:{contactInfo.phone}" class="underline">{
-          contactInfo.phone
-        }</a>
-      </li>
+      <strong class="text-right">Phone:</strong>
+      <a href="tel:{contactInfo.phone}" class="underline">{
+        contactInfo.phone
+      }</a>
 
-      <li>
-        <strong>Timezone:</strong>
+      <strong class="text-right">Timezone:</strong>
+      <span>
         Europe/Amsterdam
-      </li>
+      </span>
 
-      <li>
-        <strong>Response time:</strong>
+      <strong class="text-right">Response time:</strong>
+      <span>
         Within 2 business days
-      </li>
-    </ul>
+      </span>
+    </div>
   {/if}
 </div>

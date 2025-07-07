@@ -11,6 +11,7 @@
   import {
     faCircleChevronDown,
     faComments,
+    faTimes,
   } from "@fortawesome/free-solid-svg-icons";
 
   import logo from "$lib/images/logo.svg";
@@ -25,11 +26,15 @@
   const devYearsExperience: number = currentYear - 2007;
   const remoteWorkYearsExperience: number = currentYear - 2020;
 
-  function handleGetInTouchClick() {
+  function handleGetInTouch() {
     showGetInTouch = true;
   }
 
-  function handleMoreInfoClick() {
+  function handleCloseContactInfo() {
+    showGetInTouch = false;
+  }
+
+  function handleMoreInfo() {
     aboutSectionEl.scrollIntoView({
       behavior: "smooth",
       block: "start",
@@ -59,8 +64,14 @@
       <div class="mt-15 md:mt-20">
         {#if showGetInTouch}
           <div
-            class="p-8 bg-white rounded-xl border-2 border-[rgb(61,135,164)]"
+            class="p-8 bg-white rounded-xl border-2 border-[rgb(61,135,164)] relative"
           >
+            <button
+              class="absolute right-3 top-2 cursor-pointer"
+              on:click={handleCloseContactInfo}
+            >
+              <FontAwesomeIcon icon={faTimes} />
+            </button>
             <h3 class="text-center text-3xl font-medium mb-4 px-8">
               Contact info
             </h3>
@@ -70,7 +81,7 @@
           <div class="text-center">
             <button
               class="flex items-center gap-2 bg-[rgb(28,89,112)] text-white py-4 px-8 rounded-lg text-xl font-semibold cursor-pointer hover:bg-[rgb(87,150,174)] scale-100 hover:scale-105 transition"
-              on:click={handleGetInTouchClick}
+              on:click={handleGetInTouch}
             >
               <FontAwesomeIcon icon={faComments} />
               <span>
@@ -85,7 +96,7 @@
 
       <button
         class="flex-end mt-14 mb-8 flex items-center gap-2 cursor-pointer p-2 scale-100 hover:scale-110 transition"
-        on:click={handleMoreInfoClick}
+        on:click={handleMoreInfo}
       >
         <span>
           <FontAwesomeIcon icon={faCircleChevronDown} />
