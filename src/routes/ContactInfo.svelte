@@ -72,7 +72,9 @@
           block: "center",
         });
       } else {
-        alert("Verification failed. Please try again.");
+        alert(
+          "Verification failed. Please refresh the page and try again.",
+        );
       }
     } catch (error) {
       console.error("Error executing reCAPTCHA:", error);

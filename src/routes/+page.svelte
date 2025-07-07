@@ -15,7 +15,7 @@
     faTimes,
   } from "@fortawesome/free-solid-svg-icons";
 
-  import logo from "$lib/images/logo.svg";
+  import Logo from "$lib/images/Logo.svelte";
 
   import ProfileLink from "./ProfileLink.svelte";
   import InfoBox from "./InfoBox.svelte";
@@ -63,7 +63,6 @@
         opacity = 0;
       }
 
-      console.log(opacity);
       elMoreInfo.style.opacity = opacity;
     });
   });
@@ -75,7 +74,8 @@
       class="sm:px-10 pt-10 md:pt-25 w-full flex flex-col items-center bg-gray-100 min-h-screen"
     >
       <div>
-        <img src={logo} alt="Logo" class="h-40 w-40" />
+        <!-- <img src={logo} alt="Logo" class="h-40 w-40" /> -->
+        <Logo class="h-40 w-40" />
       </div>
 
       <div class="px-4 mt-5 text-center">
@@ -94,7 +94,7 @@
       >
         {#if showGetInTouch}
           <div
-            class="p-8 bg-white sm:rounded-xl border-y-2 sm:border-x-2 border-[rgb(61,135,164)] relative"
+            class="p-8 bg-white sm:rounded-xl border-y-2 sm:border-x-2 border-[var(--primary-color)] relative"
           >
             <button
               class="absolute right-3 top-2 cursor-pointer"
@@ -110,11 +110,11 @@
         {:else}
           <div class="text-center">
             <button
-              class="inline-flex items-center gap-2 bg-[rgb(28,89,112)] text-white py-4 px-8 rounded-lg text-xl font-semibold cursor-pointer hover:bg-[rgb(87,150,174)] scale-100 hover:scale-105 transition"
+              class="inline-flex items-center gap-2 bg-[var(--primary-color)] text-white py-4 px-8 rounded-lg text-xl font-semibold cursor-pointer hover:bg-[var(--highlight-color)] scale-100 hover:scale-105 transition"
               on:click={handleGetInTouch}
             >
               <FontAwesomeIcon icon={faComments} />
-              <span>
+              <span class="text-nowrap">
                 Get in touch
               </span>
             </button>
@@ -126,7 +126,7 @@
 
       <button
         bind:this={elMoreInfo}
-        class="flex-end mt-14 mb-8 flex items-center gap-2 cursor-pointer p-2 scale-100 hover:scale-110 transition"
+        class="flex-end mt-14 mb-8 flex items-center gap-2 cursor-pointer p-2 scale-100 hover:scale-110 hover:text-[var(--highlight-color)] transition"
         on:click={handleMoreInfo}
       >
         <span>

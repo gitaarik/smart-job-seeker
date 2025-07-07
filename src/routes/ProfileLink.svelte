@@ -10,6 +10,6 @@
   <FontAwesomeIcon
     {icon}
     alt={`${title} icon`}
-    class="scale-100 hover:scale-115 transition"
+    class="scale-100 hover:scale-115 hover:text-[var(--highlight-color)] transition"
   />
 </a>

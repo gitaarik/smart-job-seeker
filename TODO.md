@@ -1,0 +1,1 @@
+- Bank + VAT info page

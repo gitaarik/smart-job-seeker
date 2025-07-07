@@ -1,9 +1,12 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 * {
-  --icon-color: #0F0;
+	--text-color: #124458;
+	--primary-color: #2c708b;
+	--highlight-color: rgb(87, 150, 174);
 }
 
-.profile-icon {
-  --icon-color: #0F0;
+html,
+body {
+	color: var(--text-color);
 }
