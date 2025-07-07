@@ -125,7 +125,7 @@
       >
         {#if showGetInTouch}
           <div
-            class="pb-4 mx-6 bg-white w-full max-sm:min-w-[300px] max-w-[600px] rounded-xl border-y-2 border-x-2 border-[var(--primary-color)] relative"
+            class="pb-4 mx-6 flex flex-col bg-white w-full max-sm:min-w-[300px] max-w-[600px] rounded-xl border-y-2 border-x-2 border-[var(--primary-color)] relative"
           >
             <div class="text-[var(--text-light-color)]">
               <button
@@ -144,7 +144,7 @@
               </h3>
             </div>
 
-            <p class="p-6 text-center">
+            <p class="p-6 self-center text-center max-w-[520px]">
               I'd love to hear about your project and discuss how we can bring
               your ideas to life together—don't hesitate to reach out!
             </p>
@@ -269,7 +269,7 @@
         <div class="flex flex-col w-full max-w-[var(--max-content-width)]">
           <h4 class="font-semibold text-lg mb-2">Rik Wanders Software</h4>
           <div
-            class="flex max-[320px]:flex-col max-[320px]:gap-4 w-full justify-between"
+            class="flex max-[350px]:flex-col max-[350px]:gap-4 w-full justify-between"
           >
             <div>
               <div class="text-sm/6">
@@ -281,7 +281,7 @@
               </div>
             </div>
 
-            <div class="flex flex-col items-center self-end">
+            <div class="flex flex-col items-center max-[350px]:self-end">
               <ul class="text-sm flex flex-col gap-3 text-right">
                 <li>
                   <ProfileLink
@@ -319,13 +319,13 @@
           </div>
 
           <div
-            class="flex sm:justify-between max-sm:flex-col w-full text-xs text-gray-400 mt-8 mb-2"
+            class="flex min-[420px]:justify-between max-[420px]:flex-col w-full text-xs text-gray-400 mt-8 mb-2"
           >
             <div>
               Copyright © {currentYear} Rik Wanders Software
             </div>
 
-            <div class="max-sm:mt-2">
+            <div class="max-[420px]:mt-2">
               Logo Vector by
               <a
                 class="underline"
