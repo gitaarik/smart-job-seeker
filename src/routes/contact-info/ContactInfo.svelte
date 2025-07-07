@@ -147,9 +147,9 @@
           contactInfo.email
         }</a>
 
-        <p class="mt-2 sm:mt-4 text-sm wrap-break-word">
-          Response within<br class="max-sm:hidden" />
-          2 business days.
+        <p class="mt-2 sm:mt-4 text-sm">
+          You can expect a response<br />
+          within 2 business days.
         </p>
       </div>
 

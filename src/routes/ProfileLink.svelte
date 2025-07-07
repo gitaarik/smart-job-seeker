@@ -16,13 +16,17 @@
   {href}
   target="_blank"
   {title}
-  class="text-l text-5xl hover:text-[var(--highlight-color)] focus:text-[var(--highlight-color)] transition"
+  class="flex justify-end items-center gap-2 hover:text-white focus:text-[var(--highlight-color)] transition text-nowrap"
   bind:this={elLink}
   on:click={handleClick}
 >
   <FontAwesomeIcon
     {icon}
     alt={`${title} icon`}
-    class="scale-100 hover:scale-110 focus:text-6xl hover:text-[var(--highlight-color)] focus:text-[var(--highlight-color)] transition"
+    class="focus:text-6xl hover:text-white focus:text-white transition"
   />
+
+  <span>
+    {title}
+  </span>
 </a>

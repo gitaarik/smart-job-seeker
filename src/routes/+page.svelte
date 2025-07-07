@@ -123,7 +123,7 @@
       >
         {#if showGetInTouch}
           <div
-            class="pb-4 bg-white w-full sm:max-w-[450px] sm:rounded-xl border-y-2 sm:border-x-2 border-[var(--primary-color)] relative"
+            class="pb-4 mx-6 bg-white min-w-[300px] sm:w-full sm:max-w-[450px] rounded-xl border-y-2 border-x-2 border-[var(--primary-color)] relative"
           >
             <div class="text-[var(--text-light-color)]">
               <button
@@ -133,7 +133,7 @@
                 <FontAwesomeIcon icon={faTimes} />
               </button>
               <h3
-                class="text-center text-xl font-semibold py-3 px-8 mb-4 bg-[var(--primary-color)] sm:rounded-t-lg"
+                class="text-center text-xl font-semibold py-3 px-8 mb-4 bg-[var(--primary-color)] rounded-t-lg"
               >
                 <FontAwesomeIcon icon={faComments} />
                 <span class="text-nowrap">
@@ -190,7 +190,7 @@
           </h3>
 
           <div
-            class="flex gap-10 justify-center max-md:flex-col max-md:items-center"
+            class="mb-15 flex gap-10 justify-center max-md:flex-col max-md:items-center"
           >
             <!-- <div class="md:max-w-[50%]"> -->
             <div class="md:max-w-[525px] text-base/7">
@@ -251,50 +251,7 @@
                   <li>Short-term remote jobs</li>
                 </ul>
               </InfoBox>
-
-              <div class="px-10 text-center text-nowrap">
-                <strong>Timezone: </strong>
-                Europe/Amsterdam
-              </div>
             </div>
-          </div>
-
-          <div class="mt-15 mb-15 px-5 sm:px-10 flex flex-col items-center">
-            <ul
-              class="max-sm:grid max-sm:grid-cols-2 sm:flex sm:flex-wrap sm:justify-center sm:justify-between gap-15"
-            >
-              <li>
-                <ProfileLink
-                  href="https://github.com/gitaarik"
-                  icon={faGithub}
-                  title="GitHub"
-                />
-              </li>
-
-              <li>
-                <ProfileLink
-                  href="https://pypi.org/user/gitaarik/"
-                  icon={faPython}
-                  title="PyPi"
-                />
-              </li>
-
-              <li>
-                <ProfileLink
-                  href="https://www.npmjs.com/~gitaarik"
-                  icon={faNpm}
-                  title="npm"
-                />
-              </li>
-
-              <li>
-                <ProfileLink
-                  href="https://stackoverflow.com/users/1248175/gitaarik"
-                  icon={faStackOverflow}
-                  title="Stack Overflow"
-                />
-              </li>
-            </ul>
           </div>
         </div>
       </div>
@@ -303,15 +260,54 @@
         class="pt-15 px-5 sm:px-10 flex flex-col items-center gap-2 bg-[var(--text-color)] text-[var(--light-color)]"
       >
         <div class="flex flex-col w-full max-w-[var(--max-content-width)]">
-          <div>
-            <h4 class="font-semibold text-lg mb-2">Rik Wanders Software</h4>
+          <h4 class="font-semibold text-lg mb-2">Rik Wanders Software</h4>
+          <div
+            class="flex max-[320px]:flex-col max-[320px]:gap-4 w-full justify-between"
+          >
+            <div>
+              <div class="text-sm/6">
+                <div>Hertzogstraat 37</div>
+                <div>2021 AE&nbsp;&nbsp;Haarlem</div>
+                <div>The Netherlands</div>
+                <div class="mt-2">VAT ID: NL001792484B78</div>
+                <div>KVK: 75629801</div>
+              </div>
+            </div>
 
-            <div class="text-sm/6">
-              <div>Hertzogstraat 37</div>
-              <div>2021 AE&nbsp;&nbsp;Haarlem</div>
-              <div>The Netherlands</div>
-              <div class="mt-2">VAT ID: NL001792484B78</div>
-              <div>KVK: 75629801</div>
+            <div class="flex flex-col items-center self-end">
+              <ul class="text-sm flex flex-col gap-3 text-right">
+                <li>
+                  <ProfileLink
+                    href="https://github.com/gitaarik"
+                    icon={faGithub}
+                    title="GitHub"
+                  />
+                </li>
+
+                <li>
+                  <ProfileLink
+                    href="https://pypi.org/user/gitaarik/"
+                    icon={faPython}
+                    title="PyPi"
+                  />
+                </li>
+
+                <li>
+                  <ProfileLink
+                    href="https://www.npmjs.com/~gitaarik"
+                    icon={faNpm}
+                    title="npm"
+                  />
+                </li>
+
+                <li>
+                  <ProfileLink
+                    href="https://stackoverflow.com/users/1248175/gitaarik"
+                    icon={faStackOverflow}
+                    title="Stack Overflow"
+                  />
+                </li>
+              </ul>
             </div>
           </div>
 
