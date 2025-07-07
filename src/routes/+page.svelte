@@ -39,9 +39,11 @@
   function handleGetInTouch() {
     showGetInTouch = true;
 
-    elContactSection.scrollIntoView({
-      behavior: "smooth",
-      block: "center",
+    setTimeout(() => {
+      elContactSection.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
     });
   }
 
@@ -123,7 +125,7 @@
       >
         {#if showGetInTouch}
           <div
-            class="pb-4 mx-6 bg-white min-w-[300px] sm:w-full sm:max-w-[450px] rounded-xl border-y-2 border-x-2 border-[var(--primary-color)] relative"
+            class="pb-4 mx-6 bg-white w-full max-sm:min-w-[300px] max-w-[600px] rounded-xl border-y-2 border-x-2 border-[var(--primary-color)] relative"
           >
             <div class="text-[var(--text-light-color)]">
               <button

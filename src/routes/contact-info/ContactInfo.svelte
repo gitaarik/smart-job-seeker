@@ -78,10 +78,10 @@
       if (success) {
         isVerified = true;
 
-        elContactInfo.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
+        // elContactInfo.scrollIntoView({
+        //   behavior: "smooth",
+        //   block: "center",
+        // });
       } else {
         alert(
           "Verification failed. Please refresh the page and try again.",
@@ -124,8 +124,8 @@
 
 <div bind:this={elContactInfo} class="flex flex-col items-center">
   {#if !isVerified}
-    <div class="text-center">
-      <FontAwesomeIcon icon={faCircleNotch} spin class="mr-1" />
+    <div class="flex justify-center items-center w-full h-30">
+      <FontAwesomeIcon icon={faCircleNotch} spin class="mr-2" />
 
       {#if isLoading}
         Verifying you're a human...
@@ -183,31 +183,10 @@
           ><FontAwesomeIcon icon={faTelegram} /></a>
         </p>
 
-        <p class="mt-2 text-sm">
+        <p class="mt-1 text-sm">
           Central European Timezone
         </p>
       </div>
     </div>
-    <!-- <div class="md:px-10 w-fit flex flex-col gap-2"> -->
-    <!--   <Item label="Email"> -->
-    <!--     <a href="mailto:{contactInfo.email}" class="underline">{ -->
-    <!--       contactInfo.email -->
-    <!--     }</a> -->
-    <!--   </Item> -->
-    <!---->
-    <!--   <Item label="Phone"> -->
-    <!--     <a href="tel:{contactInfo.phone}" class="underline">{ -->
-    <!--       contactInfo.phone -->
-    <!--     }</a> -->
-    <!--   </Item> -->
-    <!---->
-    <!--   <Item label="Timezone"> -->
-    <!--     Europe/Amsterdam -->
-    <!--   </Item> -->
-    <!---->
-    <!--   <Item label="Response time"> -->
-    <!--     Within 2 business days -->
-    <!--   </Item> -->
-    <!-- </div> -->
   {/if}
 </div>
