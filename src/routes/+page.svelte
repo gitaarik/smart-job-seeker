@@ -119,21 +119,29 @@
 
       <div
         bind:this={elContactSection}
-        class="mt-15 max-sm:w-full md:mt-20"
+        class="mt-15 flex justify-center w-full md:mt-20"
       >
         {#if showGetInTouch}
           <div
-            class="p-6 bg-white sm:rounded-xl border-y-2 sm:border-x-2 border-[var(--primary-color)] relative"
+            class="pb-4 bg-white w-full sm:max-w-[450px] sm:rounded-xl border-y-2 sm:border-x-2 border-[var(--primary-color)] relative"
           >
-            <button
-              class="absolute right-3 top-2 cursor-pointer"
-              on:click={handleCloseContactInfo}
-            >
-              <FontAwesomeIcon icon={faTimes} />
-            </button>
-            <h3 class="text-center text-2xl font-medium mb-5 px-8">
-              Contact info
-            </h3>
+            <div class="text-[var(--text-light-color)]">
+              <button
+                class="absolute right-3 top-2 cursor-pointer text-2xl"
+                on:click={handleCloseContactInfo}
+              >
+                <FontAwesomeIcon icon={faTimes} />
+              </button>
+              <h3
+                class="text-center text-xl font-semibold py-3 px-8 mb-4 bg-[var(--primary-color)] sm:rounded-t-lg"
+              >
+                <FontAwesomeIcon icon={faComments} />
+                <span class="text-nowrap">
+                  Get in touch
+                </span>
+              </h3>
+            </div>
+
             <ContactInfo />
           </div>
         {:else}

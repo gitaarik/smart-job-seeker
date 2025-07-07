@@ -2,9 +2,18 @@
   import { onMount } from "svelte";
   import { browser } from "$app/environment";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { faCircleNotch } from "@fortawesome/free-solid-svg-icons";
+  import {
+    faCircleNotch,
+    faEnvelope,
+    faPhone,
+  } from "@fortawesome/free-solid-svg-icons";
   import Item from "./Item.svelte";
   import InfoBox from "../InfoBox.svelte";
+  import {
+    faSignalMessenger,
+    faTelegram,
+    faWhatsapp,
+  } from "@fortawesome/free-brands-svg-icons";
 
   let elContactInfo: HTMLElement;
   let isVerified = false;
@@ -125,26 +134,77 @@
       {/if}
     </div>
   {:else}
-    <div class="md:px-10 w-fit flex flex-col gap-2">
-      <Item label="Email">
+    <div
+      class="flex max-sm:flex-col gap-6 sm:gap-4 place-content-evenly text-center w-full px-4"
+    >
+      <div>
+        <div class="mb-2 font-semibold">
+          <FontAwesomeIcon icon={faEnvelope} class="mr-1" />
+          Email
+        </div>
+
         <a href="mailto:{contactInfo.email}" class="underline">{
           contactInfo.email
         }</a>
-      </Item>
 
-      <Item label="Phone">
+        <p class="mt-2 text-sm">Response within<br />2 business days.</p>
+      </div>
+
+      <div>
+        <div class="mb-2 font-semibold">
+          <FontAwesomeIcon icon={faPhone} class="mr-1" />
+          Phone
+        </div>
+
         <a href="tel:{contactInfo.phone}" class="underline">{
           contactInfo.phone
         }</a>
-      </Item>
 
-      <Item label="Timezone">
-        Europe/Amsterdam
-      </Item>
+        <p class="mt-2 flex justify-center gap-2">
+          <a
+            href="https://signal.me/#eu/QF8n-f_yG7oqHHgN83R1zbW8oVuBhmqOkN5W60a1vpFs-3uMvvtKaLkuUTZMqMz3"
+            target="_blank"
+            title="Signal"
+          ><FontAwesomeIcon icon={faSignalMessenger} /></a>
 
-      <Item label="Response time">
-        Within 2 business days
-      </Item>
+          <a
+            href="https://api.whatsapp.com/send?phone=+31649118511"
+            target="_blank"
+            title="WhatsApp"
+          ><FontAwesomeIcon icon={faWhatsapp} /></a>
+
+          <a
+            href="https://t.me/gitaarik"
+            target="_blank"
+            title="Telegram"
+          ><FontAwesomeIcon icon={faTelegram} /></a>
+        </p>
+
+        <p class="mt-2 text-sm">
+          Central European Timezone
+        </p>
+      </div>
     </div>
+    <!-- <div class="md:px-10 w-fit flex flex-col gap-2"> -->
+    <!--   <Item label="Email"> -->
+    <!--     <a href="mailto:{contactInfo.email}" class="underline">{ -->
+    <!--       contactInfo.email -->
+    <!--     }</a> -->
+    <!--   </Item> -->
+    <!---->
+    <!--   <Item label="Phone"> -->
+    <!--     <a href="tel:{contactInfo.phone}" class="underline">{ -->
+    <!--       contactInfo.phone -->
+    <!--     }</a> -->
+    <!--   </Item> -->
+    <!---->
+    <!--   <Item label="Timezone"> -->
+    <!--     Europe/Amsterdam -->
+    <!--   </Item> -->
+    <!---->
+    <!--   <Item label="Response time"> -->
+    <!--     Within 2 business days -->
+    <!--   </Item> -->
+    <!-- </div> -->
   {/if}
 </div>

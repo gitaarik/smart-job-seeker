@@ -6,10 +6,10 @@
 </script>
 
 <div
-  class="bg-[#e8edf0] rounded-lg {classNames} border-2 border-[var(--primary-color)] overflow-hidden min-w-[320px]"
+  class="bg-gray-100 rounded-lg {classNames} border-2 border-[var(--primary-color)] overflow-hidden sm:min-w-[320px]"
 >
   <h3
-    class="font-medium px-4 py-2 bg-[var(--primary-color)] text-white"
+    class="font-medium px-4 py-2 bg-[var(--primary-color)] text-[var(--text-light-color)]"
   >
     {headerText}
   </h3>
