@@ -123,22 +123,22 @@
       {/if}
     </div>
   {:else}
-    <div class="mt-6 md:px-10 w-fit">
-      <div>
-        <strong class="mr-1 sm:text-right">Email:</strong>
+    <div class="mt-6 md:px-10 w-fit flex flex-col gap-2">
+      <div class="flex">
+        <strong class="mr-1 sm:text-right sm:block sm:w-[50%]">Email:</strong>
         <a href="mailto:{contactInfo.email}" class="underline">{
           contactInfo.email
         }</a>
       </div>
 
-      <div class="my-3">
+      <div>
         <strong class="mr-1 sm:text-right">Phone:</strong>
         <a href="tel:{contactInfo.phone}" class="underline">{
           contactInfo.phone
         }</a>
       </div>
 
-      <div class="my-3">
+      <div>
         <strong class="mr-1 sm:text-right">Timezone:</strong>
         <span>
           Europe/Amsterdam

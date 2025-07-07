@@ -123,7 +123,7 @@
       >
         {#if showGetInTouch}
           <div
-            class="p-8 bg-white sm:rounded-xl border-y-2 sm:border-x-2 border-[var(--primary-color)] relative"
+            class="sm:p-8 bg-white sm:rounded border-y-2 sm:border-x-2 border-[var(--primary-color)] relative"
           >
             <button
               class="absolute right-3 top-2 cursor-pointer"
