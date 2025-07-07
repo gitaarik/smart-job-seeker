@@ -55,10 +55,12 @@
 
       <div class="mt-15 md:mt-20">
         {#if showGetInTouch}
-          <h3 class="text-center text-3xl font-medium py-4 px-8">
-            Contact info
-          </h3>
-          <ContactInfo />
+          <div class="p-8 bg-white rounded-xl border-2 border-[#7b9eac]">
+            <h3 class="text-center text-3xl font-medium mb-4 px-8">
+              Contact info
+            </h3>
+            <ContactInfo />
+          </div>
         {:else}
           <div class="text-center">
             <button
