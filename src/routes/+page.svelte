@@ -285,7 +285,7 @@
             class="flex justify-between w-full text-xs text-gray-400 mt-8 mb-2"
           >
             <div>
-              Copyright © 2020 Rik Wanders Software
+              Copyright © {currentYear} Rik Wanders Software
             </div>
 
             <div>
