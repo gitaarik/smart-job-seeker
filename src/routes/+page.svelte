@@ -273,7 +273,7 @@
           <div>
             <h4 class="font-semibold text-lg mb-2">Rik Wanders Software</h4>
 
-            <div class="text-sm mb-4">
+            <div class="text-sm">
               <div>Hertzogstraat 37</div>
               <div>2021 AE&nbsp;&nbsp;Haarlem</div>
               <div>The Netherlands</div>
@@ -281,13 +281,21 @@
             </div>
           </div>
 
-          <div class="mt-4 mb-2 self-end text-xs text-gray-400 self-end">
-            Logo Vector by
-            <a
-              class="underline"
-              href="https://www.vecteezy.com/free-vector/logo"
-              target="_blank"
-            >Vecteezy</a>
+          <div
+            class="flex justify-between w-full text-xs text-gray-400 mt-8 mb-2"
+          >
+            <div>
+              Copyright © 2020 Rik Wanders Software
+            </div>
+
+            <div>
+              Logo Vector by
+              <a
+                class="underline"
+                href="https://www.vecteezy.com/free-vector/logo"
+                target="_blank"
+              >Vecteezy</a>
+            </div>
           </div>
         </div>
       </div>
