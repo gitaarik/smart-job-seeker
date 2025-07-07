@@ -110,7 +110,7 @@
         {:else}
           <div class="text-center">
             <button
-              class="inline-flex items-center gap-2 bg-[var(--primary-color)] text-white py-4 px-8 rounded-lg text-xl font-semibold cursor-pointer hover:bg-[var(--highlight-color)] scale-100 hover:scale-105 transition"
+              class="inline-flex items-center gap-2 bg-[var(--primary-color)] text-white py-4 px-8 rounded-lg text-xl font-semibold cursor-pointer hover:bg-[var(--highlight-color)] focus:bg-[var(--highlight-color)] scale-100 hover:scale-105 focus:scale-105 transition"
               on:click={handleGetInTouch}
             >
               <FontAwesomeIcon icon={faComments} />
@@ -126,7 +126,7 @@
 
       <button
         bind:this={elMoreInfo}
-        class="flex-end mt-14 mb-8 flex items-center gap-2 cursor-pointer p-2 scale-100 hover:scale-110 hover:text-[var(--highlight-color)] transition"
+        class="flex-end mt-14 mb-8 flex items-center gap-2 cursor-pointer p-2 scale-100 hover:scale-110 focus:scale-110 hover:text-[var(--highlight-color)] focus:text-[var(--highlight-color)] transition"
         on:click={handleMoreInfo}
       >
         <span>
@@ -204,7 +204,7 @@
             </ul>
           </InfoBox>
 
-          <ul class="px-10 flex flex-col items-center text-center">
+          <ul class="px-10 flex flex-col gap-y-2 items-center text-center">
             <li>
               <strong>Timezone: </strong>
               Europe/Amsterdam
@@ -249,6 +249,30 @@
             />
           </li>
         </ul>
+      </div>
+
+      <div class="mt-15 flex flex-col gap-2 items-center">
+        <h3 class="text-3xl text-center font-semibold mb-8 md:mb-10">
+          Contact
+        </h3>
+
+        <h4 class="font-semibold text-lg mb-1">Rik Wanders Software</h4>
+
+        <div
+          class="grid grid-cols-[auto_auto] w-fit gap-2 px-10 flex flex-col gap-y-2 items-center"
+        >
+          <strong class="text-right">Address:</strong>
+          <div>Hertzogstraat 37</div>
+
+          <strong class="text-right">City:</strong>
+          <div>Haarlem</div>
+
+          <strong class="text-right">Country:</strong>
+          <div>The Netherlands</div>
+
+          <strong class="text-right">VAT ID:</strong>
+          <div>NL001792484B78</div>
+        </div>
       </div>
 
       <div class="mt-20 mb-1 px-4 text-right text-xs text-gray-400">
