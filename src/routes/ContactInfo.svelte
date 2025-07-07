@@ -1,6 +1,8 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { browser } from "$app/environment";
+  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+  import { faCircleNotch } from "@fortawesome/free-solid-svg-icons";
 
   let isVerified = false;
   let isLoading = false;
@@ -118,11 +120,15 @@
 
 <div>
   {#if !isVerified}
-    {#if isLoading}
-      <div>Verifying you're a human...</div>
-    {:else}
-      <div>Loading Google reCAPTCHA...</div>
-    {/if}
+    <div class="text-center mt-6">
+      <FontAwesomeIcon icon={faCircleNotch} spin class="mr-1" />
+
+      {#if isLoading}
+        Verifying you're a human...
+      {:else}
+        Loading Google reCAPTCHA...
+      {/if}
+    </div>
   {:else}
     <ul class="mt-6 px-10 flex flex-col gap-3 items-center">
       <li>
