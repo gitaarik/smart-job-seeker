@@ -125,7 +125,7 @@
   {:else}
     <div class="mt-6 md:px-10 w-fit flex flex-col gap-2">
       <div class="flex">
-        <strong class="mr-1 sm:text-right sm:block sm:w-[50%]">Email:</strong>
+        <strong class="mr-1 sm:text-right">Email:</strong>
         <a href="mailto:{contactInfo.email}" class="underline">{
           contactInfo.email
         }</a>
