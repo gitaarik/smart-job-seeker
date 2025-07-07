@@ -10,7 +10,6 @@
   import { faCircleChevronDown } from "@fortawesome/free-solid-svg-icons";
 
   import logo from "$lib/images/logo.svg";
-  import scrollDownIcon from "$lib/images/circle-chevron-down.svg";
   import getInTouchIcon from "$lib/images/comments.svg";
 
   import ProfileLink from "./ProfileLink.svelte";
