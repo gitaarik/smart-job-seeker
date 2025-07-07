@@ -1,1 +1,9 @@
 @import "tailwindcss";
+
+* {
+  --icon-color: #0F0;
+}
+
+.profile-icon {
+  --icon-color: #0F0;
+}

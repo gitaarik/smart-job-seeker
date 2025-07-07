@@ -1,13 +1,19 @@
 <script lang="ts">
+  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+  import {
+    faGithub,
+    faNpm,
+    faPython,
+    faStackOverflow,
+  } from "@fortawesome/free-brands-svg-icons";
+
+  import { faCircleChevronDown } from "@fortawesome/free-solid-svg-icons";
+
   import logo from "$lib/images/logo.svg";
   import scrollDownIcon from "$lib/images/circle-chevron-down.svg";
   import getInTouchIcon from "$lib/images/comments.svg";
 
   import ProfileLink from "./ProfileLink.svelte";
-  import githubIcon from "$lib/images/github.svg";
-  import pypiIcon from "$lib/images/pypi.svg";
-  import npmIcon from "$lib/images/npm.svg";
-  import stackOverflowIcon from "$lib/images/stack-overflow.svg";
   import InfoBox from "./InfoBox.svelte";
   import ContactInfo from "./ContactInfo.svelte";
 
@@ -32,7 +38,7 @@
 <div class="flex h-full min-h-screen flex-col justify-between">
   <div class="flex flex-col items-center">
     <div
-      class="px-10 pt-25 w-full flex flex-col items-center bg-gray-100 min-h-screen"
+      class="px-10 pt-10 md:pt-25 w-full flex flex-col items-center bg-gray-100 min-h-screen"
     >
       <div>
         <img src={logo} alt="Logo" class="h-40 w-40" />
@@ -48,7 +54,7 @@
         </h4>
       </div>
 
-      <div class="mt-20">
+      <div class="mt-15 md:mt-20">
         {#if showGetInTouch}
           <h3 class="text-center text-3xl font-medium py-4 px-8">
             Contact info
@@ -79,12 +85,7 @@
         on:click={handleMoreInfoClick}
       >
         <span>
-          <img
-            src={scrollDownIcon}
-            alt="scroll down icon"
-            width="20"
-            height="20"
-          />
+          <FontAwesomeIcon icon={faCircleChevronDown} />
         </span>
         <span
           class="text-md font-semibold"
@@ -94,10 +95,13 @@
       </button>
     </div>
 
-    <div bind:this={aboutSectionEl} class="px-6 pt-15 w-full min-h-screen">
-      <h3 class="text-3xl text-center font-semibold mb-10">About me</h3>
+    <div
+      bind:this={aboutSectionEl}
+      class="px-6 pt-10 md:pt-15 w-full min-h-screen"
+    >
+      <h3 class="text-3xl text-center font-semibold mb-8 md:mb-10">About me</h3>
 
-      <div class="flex justify-center max-md:flex-col">
+      <div class="flex justify-center max-md:flex-col max-md:items-center">
         <div class="md:max-w-[50%] md:px-10">
           <p>
             With over {devYearsExperience} years of full-stack web development
@@ -131,35 +135,9 @@
           </p>
         </div>
 
-        <!-- <div> -->
-        <!--   <ul class="my-10 list-disc font-semibold"> -->
-        <!--     <li> -->
-        <!--       {devYearsExperience}+ years full stack (web) development -->
-        <!--       experience -->
-        <!--     </li> -->
-        <!---->
-        <!--     <li class="my-3"> -->
-        <!--       5+ years remote work and distributed team collaboration experience -->
-        <!--     </li> -->
-        <!---->
-        <!--     <li class="my-3"> -->
-        <!--       Wide experience creating &amp; scaling complex &amp; high-traffic -->
-        <!--       applications -->
-        <!--     </li> -->
-        <!---->
-        <!--     <li class="my-3"> -->
-        <!--       Leveraging AI tools and current industry best practices -->
-        <!--     </li> -->
-        <!---->
-        <!--     <li> -->
-        <!--       Up-to-date with current security best practices -->
-        <!--     </li> -->
-        <!--   </ul> -->
-        <!-- </div> -->
-
-        <!-- <div class="mb-10 sm:flex md:gap-20 sm:gap-6"> -->
-        <div class="mb-6 md:mb-10 flex flex-col gap-6 max-md:mt-6">
-          <!-- <InfoBox headerText="Key skills:" class="max-sm:mt-8"> -->
+        <div
+          class="flex flex-col gap-6 max-md:mt-6 max-md:w-fit"
+        >
           <InfoBox headerText="Key skills:">
             <ul class="mt-4 list-disc ml-4 px-4 pb-4 font-bold">
               <li>Python, Django, FastAPI, Numpy</li>
@@ -181,7 +159,7 @@
             </ul>
           </InfoBox>
 
-          <ul class="px-10 flex flex-col items-center">
+          <ul class="px-10 flex flex-col items-center text-center">
             <li>
               <strong>Timezone: </strong>
               Europe/Amsterdam
@@ -190,12 +168,14 @@
         </div>
       </div>
 
-      <div class="px-10 flex flex-col items-center">
-        <ul class="flex flex-wrap gap-x-6 gap-y-4">
+      <div class="mt-15 px-10 flex flex-col items-center">
+        <ul
+          class="max-sm:grid max-sm:grid-cols-2 sm:flex sm:flex-wrap sm:justify-center sm:justify-between gap-10"
+        >
           <li>
             <ProfileLink
               href="https://github.com/gitaarik"
-              icon={githubIcon}
+              icon={faGithub}
               title="GitHub"
             />
           </li>
@@ -203,7 +183,7 @@
           <li>
             <ProfileLink
               href="https://pypi.org/user/gitaarik/"
-              icon={pypiIcon}
+              icon={faPython}
               title="PyPi"
             />
           </li>
@@ -211,7 +191,7 @@
           <li>
             <ProfileLink
               href="https://www.npmjs.com/~gitaarik"
-              icon={npmIcon}
+              icon={faNpm}
               title="npm"
             />
           </li>
@@ -219,7 +199,7 @@
           <li>
             <ProfileLink
               href="https://stackoverflow.com/users/1248175/gitaarik"
-              icon={stackOverflowIcon}
+              icon={faStackOverflow}
               title="Stack Overflow"
             />
           </li>
