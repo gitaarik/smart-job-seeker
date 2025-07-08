@@ -25,7 +25,7 @@
   const TURNSTILE_SITE_KEY = "0x4AAAAAABkW4tr8bO8w8Vi8";
 
   const contactInfo: object = {
-    email: "hcwanders@posteo.net",
+    email: "rik@rikwanders.tech",
     phone: "+316 4911 8511",
   };
 
