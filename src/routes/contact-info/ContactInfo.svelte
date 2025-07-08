@@ -136,7 +136,7 @@
     </div>
   {:else}
     <div
-      class="flex max-sm:flex-col gap-6 sm:gap-4 place-content-evenly text-center w-full px-4"
+      class="flex max-xs:flex-col gap-6 xs:gap-4 place-content-evenly text-center w-full px-4"
     >
       <div>
         <div class="mb-2 text-lg font-semibold">
@@ -149,7 +149,7 @@
           class="underline hover:text-[var(--highlight-color)]"
         >{contactInfo.email}</a>
 
-        <p class="mt-2 sm:mt-4 text-sm/6">
+        <p class="mt-2 xs:mt-4 text-sm/6">
           You can expect a response<br />
           within 2 business days.
         </p>

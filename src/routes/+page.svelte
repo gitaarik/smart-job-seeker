@@ -9,11 +9,9 @@
     faStackOverflow,
   } from "@fortawesome/free-brands-svg-icons";
 
-  import {
-    faCircleChevronDown,
-    faComments,
-    faTimes,
-  } from "@fortawesome/free-solid-svg-icons";
+  import { faCircleChevronDown } from "@fortawesome/free-solid-svg-icons";
+
+  import profilePhoto from "$lib/images/profile-photo.jpeg";
 
   import Logo from "$lib/images/Logo.svelte";
 
@@ -144,7 +142,16 @@
             class="mb-15 flex gap-10 justify-center max-md:flex-col max-md:items-center"
           >
             <!-- <div class="md:max-w-[50%]"> -->
-            <div class="md:max-w-[525px] text-base/7">
+            <div class="text-base/7">
+              <div
+                class="max-xs:hidden lg:hidden float-right w-full max-w-[200px] pl-3 pb-3"
+              >
+                <img
+                  src={profilePhoto}
+                  alt="Profile Rik Wanders"
+                />
+              </div>
+
               <p>
                 With over {devYearsExperience} years of full-stack web
                 development experience, I specialize in building and scaling
@@ -153,6 +160,16 @@
                 lifecycle, from initial architecture decisions to production
                 deployment and optimization.
               </p>
+
+              <div
+                class="xs:hidden mt-4 flex justify-center"
+              >
+                <img
+                  src={profilePhoto}
+                  alt="Profile Rik Wanders"
+                  width="200"
+                />
+              </div>
 
               <p class="my-4">
                 I bring {remoteWorkYearsExperience}+ years of remote work
@@ -179,30 +196,37 @@
               </p>
             </div>
 
-            <div
-              class="flex flex-col gap-6 max-md:mt-6 max-md:w-fit"
-            >
-              <InfoBox headerText="Key skills:">
-                <ul class="mt-4 list-disc ml-4 px-4 pb-4 font-bold">
-                  <li>Python, Django, FastAPI, Numpy</li>
-                  <li class="my-4">Javascript, Node.js, React, Svelte</li>
-                  <li class="my-4">SQL & NoSQL Databases</li>
-                  <li>Linux, DevOps, CI/CD, Docker</li>
-                </ul>
-              </InfoBox>
-
-              <InfoBox headerText="Contact for:">
-                <ul class="mt-4 list-disc ml-4 px-4 pb-4 font-bold">
-                  <li>Application development</li>
-
-                  <li class="my-4">System optimization</li>
-
-                  <li class="my-4">Technical strategy consulting</li>
-
-                  <li>Short-term remote jobs</li>
-                </ul>
-              </InfoBox>
+            <div class="max-lg:hidden">
+              <img
+                src={profilePhoto}
+                alt="Profile Rik Wanders"
+              />
             </div>
+          </div>
+
+          <div
+            class="flex flex-col items-center md:flex-row gap-6 w-full justify-evenly mb-15"
+          >
+            <InfoBox headerText="Key skills:" class="w-full 2xs:max-w-[320px]">
+              <ul class="mt-4 list-disc ml-4 px-4 pb-4 font-bold">
+                <li>Python, Django, FastAPI, Numpy</li>
+                <li class="my-4">Javascript, Node.js, React, Svelte</li>
+                <li class="my-4">SQL & NoSQL Databases</li>
+                <li>Linux, DevOps, CI/CD, Docker</li>
+              </ul>
+            </InfoBox>
+
+            <InfoBox headerText="Contact for:" class="w-full 2xs:max-w-[320px]">
+              <ul class="mt-4 list-disc ml-4 px-4 pb-4 font-bold">
+                <li>Application development</li>
+
+                <li class="my-4">System optimization</li>
+
+                <li class="my-4">Technical strategy consulting</li>
+
+                <li>Short-term remote jobs</li>
+              </ul>
+            </InfoBox>
           </div>
 
           <div class="flex justify-center mb-15">
