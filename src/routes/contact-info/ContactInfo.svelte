@@ -2,114 +2,145 @@
   import { onMount } from "svelte";
   import { browser } from "$app/environment";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+
   import {
     faCircleNotch,
     faEnvelope,
     faPhone,
   } from "@fortawesome/free-solid-svg-icons";
-  import Item from "./Item.svelte";
-  import InfoBox from "../InfoBox.svelte";
+
   import {
     faSignalMessenger,
     faTelegram,
     faWhatsapp,
   } from "@fortawesome/free-brands-svg-icons";
 
-  import { gRecaptchaValidated } from "$lib/stores/grecaptcha.ts";
+  import { isHuman } from "$lib/stores/is-human";
 
-  let elContactInfo: HTMLElement;
-  let isLoading = false;
+  let isLoading = true;
+  let isLoadError = false;
+  let isVerifyError = false;
+  let turnstileContainer: HTMLElement;
 
-  // Your reCAPTCHA site key (get this from Google reCAPTCHA admin)
-  const RECAPTCHA_SITE_KEY = "6LeAGHorAAAAAIxXJ4hI5SoY3XOThWClotwz7E0b";
+  const TURNSTILE_SITE_KEY = "0x4AAAAAABkW4tr8bO8w8Vi8";
 
-  // Contact information to show after verification
-  const contactInfo = {
+  const contactInfo: object = {
     email: "hcwanders@posteo.net",
     phone: "+316 4911 8511",
   };
 
   onMount(() => {
     if (browser) {
-      loadRecaptcha();
+      setInterval(() => {
+        if (
+          turnstileContainer &&
+          turnstileContainer.getBoundingClientRect().height > 0
+        ) {
+          isLoading = false;
+        }
+      }, 100);
+
+      loadTurnstile();
     }
   });
 
-  function loadRecaptcha() {
-    // Check if reCAPTCHA is already loaded
-    if (window.grecaptcha) {
-      setTimeout(async () => {
-        await handleRecaptchaLoaded();
+  function loadTurnstile() {
+    // Check if Turnstile is already loaded
+    if (window.turnstile) {
+      setTimeout(() => {
+        renderTurnstile();
       });
       return;
     }
 
-    // Create script tag for reCAPTCHA v3
+    // Create script tag for Turnstile
     const script = document.createElement("script");
-    script.src =
-      `https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoad&render=${RECAPTCHA_SITE_KEY}`;
+    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
     script.async = true;
     script.defer = true;
 
-    window.onRecaptchaLoad = async function () {
-      console.log("reCAPTCHA loaded and ready");
-      await handleRecaptchaLoaded();
+    script.onload = () => {
+      console.log("Turnstile loaded and ready");
+      renderTurnstile();
+    };
+
+    script.onerror = (error) => {
+      isLoadError = true;
+      console.log("error:", error);
     };
 
     document.head.appendChild(script);
   }
 
-  async function handleRecaptchaLoaded() {
-    if (!window.grecaptcha) {
-      alert("reCAPTCHA not loaded. Please refresh the page and try again.");
+  function renderTurnstile() {
+    if (!window.turnstile || !turnstileContainer) {
       return;
     }
 
-    isLoading = true;
+    window.turnstile.render(turnstileContainer, {
+      sitekey: TURNSTILE_SITE_KEY,
+      callback: handleTurnstileSuccess,
+      "error-callback": handleTurnstileError,
+      "expired-callback": handleTurnstileExpired,
+      "unsupported-callback": handleTurnstileUnsupported,
+      "before-interactive-callback": () => {
+        console.log("before-interactive-callback");
+      },
+      theme: "auto", // or "light" or "dark"
+      size: "normal", // or "compact"
+    });
+  }
+
+  async function handleTurnstileSuccess(token: string) {
+    console.log("Turnstile verification successful");
 
     try {
-      // Execute reCAPTCHA v3
-      const token = await window.grecaptcha.execute(RECAPTCHA_SITE_KEY, {
-        action: "view_contact",
-      });
-
-      // Verify the token
-      const success = await verifyRecaptcha(token);
+      // Verify the token with your backend
+      const success = await verifyTurnstile(token);
 
       if (success) {
-        gRecaptchaValidated.set(true);
-
-        // elContactInfo.scrollIntoView({
-        //   behavior: "smooth",
-        //   block: "center",
-        // });
+        isHuman.set(true);
       } else {
-        alert(
-          "Verification failed. Please refresh the page and try again.",
-        );
+        isVerifyError = true;
+        // Reset the widget
+        window.turnstile.reset(turnstileContainer);
       }
     } catch (error) {
-      console.error("Error executing reCAPTCHA:", error);
-      alert("An error occurred. Please try again.");
-    } finally {
-      isLoading = false;
+      console.error("Error verifying Turnstile:", error);
+      isVerifyError = true;
+      window.turnstile.reset(turnstileContainer);
     }
   }
 
-  async function verifyRecaptcha(token: string): Promise<boolean> {
+  function handleTurnstileError(error: any) {
+    console.error("Turnstile error:", error);
+    if (!$isHuman) {
+      isVerifyError = true;
+    }
+  }
+
+  function handleTurnstileExpired() {
+    isHuman.set(false);
+  }
+
+  function handleTurnstileUnsupported() {
+    console.log("wajooo!!!!");
+  }
+
+  async function verifyTurnstile(token: string): Promise<boolean> {
     try {
-      const response = await fetch("/api/verify-recaptcha", {
+      const response = await fetch("/api/verify-turnstile", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ token, action: "view_contact" }),
+        body: JSON.stringify({ token }),
       });
 
       const result = await response.json();
       return result.success;
     } catch (error) {
-      console.error("Error verifying reCAPTCHA:", error);
+      console.error("Error verifying Turnstile:", error);
       return false;
     }
   }
@@ -117,22 +148,39 @@
   // Extend the Window interface for TypeScript
   declare global {
     interface Window {
-      grecaptcha: any;
-      onRecaptchaLoad: () => void;
+      turnstile: {
+        render: (container: HTMLElement, options: any) => void;
+        reset: (container: HTMLElement) => void;
+        remove: (container: HTMLElement) => void;
+      };
     }
   }
 </script>
 
-<div bind:this={elContactInfo} class="flex flex-col items-center">
-  {#if !$gRecaptchaValidated}
-    <div class="flex justify-center items-center w-full h-30">
-      <FontAwesomeIcon icon={faCircleNotch} spin class="mr-2" />
+<div class="flex flex-col items-center">
+  {#if !$isHuman}
+    {#if isLoadError || isVerifyError}
+      <div class="px-4 md:px-8 text-center text-red-900">
+        <p>
+          Human Verification failed. Please refresh<br />
+          the page and try again, or check your ad blocker.
+        </p>
 
-      {#if isLoading}
-        Verifying you're a human...
-      {:else}
-        Loading Google reCAPTCHA...
-      {/if}
+        <p class="mt-2">
+          Make sure external scripts from<br />
+          challenges.cloudflare.com are allowed.
+        </p>
+      </div>
+    {:else if isLoading}
+      <div class="flex items-center">
+        <FontAwesomeIcon icon={faCircleNotch} spin class="mr-2" />
+        <span>Loading Human Verification</span>
+      </div>
+    {/if}
+
+    <div class="flex flex-col justify-center items-center w-full">
+      <!-- Turnstile widget container -->
+      <div bind:this={turnstileContainer} class="cf-turnstile"></div>
     </div>
   {:else}
     <div
