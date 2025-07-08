@@ -143,11 +143,12 @@
           Email
         </div>
 
-        <a href="mailto:{contactInfo.email}" class="underline">{
-          contactInfo.email
-        }</a>
+        <a
+          href="mailto:{contactInfo.email}"
+          class="underline hover:text-[var(--highlight-color)]"
+        >{contactInfo.email}</a>
 
-        <p class="mt-2 sm:mt-4 text-sm">
+        <p class="mt-2 sm:mt-4 text-sm/6">
           You can expect a response<br />
           within 2 business days.
         </p>
@@ -159,31 +160,35 @@
           Phone
         </div>
 
-        <a href="tel:{contactInfo.phone}" class="underline">{
-          contactInfo.phone
-        }</a>
+        <a
+          href="tel:{contactInfo.phone}"
+          class="underline hover:text-[var(--highlight-color)]"
+        >{contactInfo.phone}</a>
 
-        <p class="mt-2 flex justify-center gap-2">
+        <p class="mt-2 flex justify-center gap-4 text-xl">
           <a
             href="https://signal.me/#eu/QF8n-f_yG7oqHHgN83R1zbW8oVuBhmqOkN5W60a1vpFs-3uMvvtKaLkuUTZMqMz3"
             target="_blank"
             title="Signal"
+            class="hover:text-[var(--highlight-color)]"
           ><FontAwesomeIcon icon={faSignalMessenger} /></a>
 
           <a
             href="https://api.whatsapp.com/send?phone=+31649118511"
             target="_blank"
             title="WhatsApp"
+            class="hover:text-[var(--highlight-color)]"
           ><FontAwesomeIcon icon={faWhatsapp} /></a>
 
           <a
             href="https://t.me/gitaarik"
             target="_blank"
             title="Telegram"
+            class="hover:text-[var(--highlight-color)]"
           ><FontAwesomeIcon icon={faTelegram} /></a>
         </p>
 
-        <p class="mt-1 text-sm">
+        <p class="mt-2 text-sm">
           Central European Timezone
         </p>
       </div>
