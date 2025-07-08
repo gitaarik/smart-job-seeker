@@ -12,7 +12,6 @@
   import { faCircleChevronDown } from "@fortawesome/free-solid-svg-icons";
 
   import profilePhoto from "$lib/images/profile-photo.jpeg";
-
   import Logo from "$lib/images/Logo.svelte";
 
   import ProfileLink from "./ProfileLink.svelte";
@@ -26,7 +25,6 @@
   const metaImg = "https://www.rikwanders.tech/images/logo.png";
 
   let elAboutSection: HTMLElement;
-  let elContactSection: HTMLElement;
   let elMoreInfo: HTMLElement;
 
   const currentYear: number = (new Date()).getFullYear();
@@ -101,10 +99,7 @@
         </h4>
       </div>
 
-      <div
-        bind:this={elContactSection}
-        class="mt-15 md:mt-20 px-4 flex justify-center w-full"
-      >
+      <div class="mt-15 md:mt-20 px-4 flex justify-center w-full">
         <GetInTouchButton />
       </div>
 
