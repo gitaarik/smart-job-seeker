@@ -129,11 +129,12 @@
           >
             <div class="text-[var(--text-light-color)]">
               <button
-                class="absolute right-3 top-[10px] cursor-pointer text-2xl"
+                class="absolute right-4 top-[10px] cursor-pointer text-2xl"
                 on:click={handleCloseContactInfo}
               >
                 <FontAwesomeIcon icon={faTimes} />
               </button>
+
               <h3
                 class="text-center text-xl font-semibold py-3 px-8 bg-[var(--primary-color)] rounded-t-lg"
               >
@@ -158,6 +159,7 @@
               on:click={handleGetInTouch}
             >
               <FontAwesomeIcon icon={faComments} />
+
               <span class="text-nowrap">
                 Get in touch
               </span>

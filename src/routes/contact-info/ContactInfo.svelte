@@ -15,8 +15,9 @@
     faWhatsapp,
   } from "@fortawesome/free-brands-svg-icons";
 
+  import { gRecaptchaValidated } from "$lib/stores/grecaptcha.ts";
+
   let elContactInfo: HTMLElement;
-  let isVerified = false;
   let isLoading = false;
 
   // Your reCAPTCHA site key (get this from Google reCAPTCHA admin)
@@ -76,7 +77,7 @@
       const success = await verifyRecaptcha(token);
 
       if (success) {
-        isVerified = true;
+        gRecaptchaValidated.set(true);
 
         // elContactInfo.scrollIntoView({
         //   behavior: "smooth",
@@ -123,7 +124,7 @@
 </script>
 
 <div bind:this={elContactInfo} class="flex flex-col items-center">
-  {#if !isVerified}
+  {#if !$gRecaptchaValidated}
     <div class="flex justify-center items-center w-full h-30">
       <FontAwesomeIcon icon={faCircleNotch} spin class="mr-2" />
 
