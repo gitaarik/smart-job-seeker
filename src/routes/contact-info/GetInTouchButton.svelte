@@ -42,7 +42,7 @@
         >
           <FontAwesomeIcon icon={faComments} />
           <span class="text-nowrap">
-            Get in touch
+            Get in Touch
           </span>
         </h3>
       </div>
@@ -63,7 +63,7 @@
         <FontAwesomeIcon icon={faComments} />
 
         <span class="text-nowrap">
-          Get in touch
+          Get in Touch
         </span>
       </button>
     </div>
