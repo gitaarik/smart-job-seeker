@@ -4,6 +4,7 @@
 
   import {
     faGithub,
+    faLinkedin,
     faNpm,
     faPython,
     faStackOverflow,
@@ -249,7 +250,16 @@
             </div>
 
             <div class="flex flex-col items-center max-[350px]:self-end">
-              <ul class="text-sm flex flex-col gap-3 text-right">
+              <ul class="text-sm flex flex-col gap-2 text-right">
+
+                <li>
+                  <ProfileLink
+                    href="https://www.linkedin.com/in/rik-wanders-software"
+                    icon={faLinkedin}
+                    title="LinkedIn"
+                  />
+                </li>
+
                 <li>
                   <ProfileLink
                     href="https://github.com/gitaarik"
