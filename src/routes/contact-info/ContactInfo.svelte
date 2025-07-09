@@ -26,7 +26,7 @@
 
   const contactInfo: object = {
     email: "rik@rikwanders.tech",
-    phone: "+316 4911 8511",
+    phone: "+31 649118511",
   };
 
   onMount(() => {

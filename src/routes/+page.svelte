@@ -88,7 +88,7 @@
     >
       <div class="px-5 sm:px-10">
         <!-- <img src={logo} alt="Logo" class="h-40 w-40" /> -->
-        <Logo class="h-40 w-40" />
+        <Logo class="h-45 w-45" />
       </div>
 
       <div class="px-5 sm:px-10 mt-5 text-center">
