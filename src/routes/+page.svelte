@@ -18,6 +18,7 @@
   import ProfileLink from "./ProfileLink.svelte";
   import InfoBox from "./InfoBox.svelte";
   import GetInTouchButton from "./contact-info/GetInTouchButton.svelte";
+  import References from "./references/References.svelte";
 
   const metaTitle = "Rik Wanders - Freelance Full Stack Developer";
   const metaUrl = "https://www.rikwanders.tech/";
@@ -123,14 +124,16 @@
     </div>
 
     <div
-      class="flex flex-col items-stretch w-full min-h-screen bg-[var(--shade-color)]"
+      class="w-full min-h-screen bg-[var(--shade-color)]"
     >
       <div class="flex flex-col items-center px-5 sm:px-10">
         <div
           bind:this={elAboutSection}
           class="overflow-hidden max-w-[var(--max-content-width)] pt-10 md:pt-15"
         >
-          <h3 class="text-3xl text-center font-semibold mb-8 md:mb-10">
+          <h3
+            class="text-3xl text-center font-semibold mb-8 md:mb-10 capitalize"
+          >
             About me
           </h3>
 
@@ -230,86 +233,89 @@
           </div>
         </div>
       </div>
+    </div>
 
-      <div
-        class="pt-15 px-5 sm:px-10 flex flex-col items-center gap-2 bg-[var(--text-color)] text-[var(--light-color)]"
-      >
-        <div class="flex flex-col w-full max-w-[var(--max-content-width)]">
-          <h4 class="font-semibold text-lg mb-2">Rik Wanders Software</h4>
-          <div
-            class="flex max-[350px]:flex-col max-[350px]:gap-4 w-full justify-between"
-          >
-            <div>
-              <div class="text-sm/6">
-                <div>Hertzogstraat 37</div>
-                <div>2021 AE&nbsp;&nbsp;Haarlem</div>
-                <div>The Netherlands</div>
-                <div class="mt-2">VAT ID: NL001792484B78</div>
-                <div>KVK: 75629801</div>
-              </div>
-            </div>
+    <div class="w-full">
+      <References />
+    </div>
 
-            <div class="flex flex-col items-center max-[350px]:self-end">
-              <ul class="text-sm flex flex-col gap-2 text-right">
-
-                <li>
-                  <ProfileLink
-                    href="https://www.linkedin.com/in/rik-wanders-software"
-                    icon={faLinkedin}
-                    title="LinkedIn"
-                  />
-                </li>
-
-                <li>
-                  <ProfileLink
-                    href="https://github.com/gitaarik"
-                    icon={faGithub}
-                    title="GitHub"
-                  />
-                </li>
-
-                <li>
-                  <ProfileLink
-                    href="https://pypi.org/user/gitaarik/"
-                    icon={faPython}
-                    title="PyPi"
-                  />
-                </li>
-
-                <li>
-                  <ProfileLink
-                    href="https://www.npmjs.com/~gitaarik"
-                    icon={faNpm}
-                    title="npm"
-                  />
-                </li>
-
-                <li>
-                  <ProfileLink
-                    href="https://stackoverflow.com/users/1248175/gitaarik"
-                    icon={faStackOverflow}
-                    title="Stack Overflow"
-                  />
-                </li>
-              </ul>
+    <div
+      class="pt-15 px-5 sm:px-10 flex flex-col w-full items-center gap-2 bg-[var(--text-color)] text-[var(--light-color)]"
+    >
+      <div class="flex flex-col w-full max-w-[var(--max-content-width)]">
+        <h4 class="font-semibold text-lg mb-2">Rik Wanders Software</h4>
+        <div
+          class="flex max-[350px]:flex-col max-[350px]:gap-4 w-full justify-between"
+        >
+          <div>
+            <div class="text-sm/6">
+              <div>Hertzogstraat 37</div>
+              <div>2021 AE&nbsp;&nbsp;Haarlem</div>
+              <div>The Netherlands</div>
+              <div class="mt-2">VAT ID: NL001792484B78</div>
+              <div>KVK: 75629801</div>
             </div>
           </div>
 
-          <div
-            class="flex min-[420px]:justify-between max-[420px]:flex-col w-full text-xs text-gray-400 mt-8 mb-2"
-          >
-            <div>
-              Copyright © {currentYear} Rik Wanders Software
-            </div>
+          <div class="flex flex-col items-center max-[350px]:self-end">
+            <ul class="text-sm flex flex-col gap-2 text-right">
+              <li>
+                <ProfileLink
+                  href="https://www.linkedin.com/in/rik-wanders-software"
+                  icon={faLinkedin}
+                  title="LinkedIn"
+                />
+              </li>
 
-            <div class="max-[420px]:mt-2">
-              Logo Vector by
-              <a
-                class="underline"
-                href="https://www.vecteezy.com/free-vector/logo"
-                target="_blank"
-              >Vecteezy</a>
-            </div>
+              <li>
+                <ProfileLink
+                  href="https://github.com/gitaarik"
+                  icon={faGithub}
+                  title="GitHub"
+                />
+              </li>
+
+              <li>
+                <ProfileLink
+                  href="https://pypi.org/user/gitaarik/"
+                  icon={faPython}
+                  title="PyPi"
+                />
+              </li>
+
+              <li>
+                <ProfileLink
+                  href="https://www.npmjs.com/~gitaarik"
+                  icon={faNpm}
+                  title="npm"
+                />
+              </li>
+
+              <li>
+                <ProfileLink
+                  href="https://stackoverflow.com/users/1248175/gitaarik"
+                  icon={faStackOverflow}
+                  title="Stack Overflow"
+                />
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div
+          class="flex min-[420px]:justify-between max-[420px]:flex-col w-full text-xs text-gray-400 mt-8 mb-2"
+        >
+          <div>
+            Copyright © {currentYear} Rik Wanders Software
+          </div>
+
+          <div class="max-[420px]:mt-2">
+            Logo Vector by
+            <a
+              class="underline"
+              href="https://www.vecteezy.com/free-vector/logo"
+              target="_blank"
+            >Vecteezy</a>
           </div>
         </div>
       </div>
