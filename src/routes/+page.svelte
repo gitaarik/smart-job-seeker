@@ -188,10 +188,10 @@
 
               <p>
                 Whether architecting scalable backend systems, crafting
-                intuitive frontend interfaces, or optimizing application
-                performance, I combine technical expertise with a deep
-                understanding of business needs to deliver solutions that drive
-                real results.
+                intuitive frontend interfaces, optimizing application
+                performance or processing large amounts of data, I combine
+                technical expertise with a deep understanding of business needs
+                to deliver solutions that drive real results.
               </p>
             </div>
 
