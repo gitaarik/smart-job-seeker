@@ -81,9 +81,9 @@
   <meta property="twitter:image" content={metaImg} />
 </svelte:head>
 
-<div class="flex h-full min-h-screen flex-col justify-between">
+<article class="flex h-full min-h-screen flex-col justify-between">
   <div class="flex flex-col items-center">
-    <div
+    <header
       class="pt-10 md:pt-25 w-full flex flex-col items-center bg-gray-100 min-h-screen"
     >
       <div class="px-5 sm:px-10">
@@ -121,9 +121,9 @@
           More Info
         </span>
       </button>
-    </div>
+    </header>
 
-    <div
+    <section
       class="w-full min-h-screen bg-[var(--shade-color)]"
     >
       <div class="flex flex-col items-center px-5 sm:px-10">
@@ -233,13 +233,13 @@
           </div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <div class="w-full">
+    <section class="w-full">
       <References />
-    </div>
+    </section>
 
-    <div
+    <footer
       class="pt-15 px-5 sm:px-10 flex flex-col w-full items-center gap-2 bg-[var(--text-color)] text-[var(--light-color)]"
     >
       <div class="flex flex-col w-full max-w-[var(--max-content-width)]">
@@ -319,6 +319,6 @@
           </div>
         </div>
       </div>
-    </div>
+    </footer>
   </div>
-</div>
+</article>
