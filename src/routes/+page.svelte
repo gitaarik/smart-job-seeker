@@ -85,6 +85,7 @@
   <article class="flex flex-col items-center">
     <header
       class="pt-10 md:pt-25 w-full flex flex-col items-center bg-gray-100 min-h-screen"
+      aria-labelledby="header-heading"
     >
       <div class="px-5 sm:px-10">
         <!-- <img src={logo} alt="Logo" class="h-40 w-40"> -->
@@ -92,7 +93,7 @@
       </div>
 
       <div class="px-5 sm:px-10 mt-5 text-center">
-        <h1 class="text-3xl font-medium">Rik Wanders</h1>
+        <h1 id="header-heading" class="text-3xl font-medium">Rik Wanders</h1>
         <h2 class="mt-4 text-xl">Freelance Full Stack Developer</h2>
         <h3 class="mt-4">Python • Django • React • Node.js</h3>
 
@@ -125,6 +126,7 @@
 
     <section
       class="w-full min-h-screen bg-[var(--shade-color)]"
+      aria-labelledby="about-me-heading"
     >
       <div class="flex flex-col items-center px-5 sm:px-10">
         <div
@@ -132,6 +134,7 @@
           class="overflow-hidden max-w-[var(--max-content-width)] pt-10 md:pt-15"
         >
           <h3
+            id="about-me-heading"
             class="text-3xl text-center font-semibold mb-8 md:mb-10 capitalize"
           >
             About me
@@ -235,15 +238,18 @@
       </div>
     </section>
 
-    <section class="w-full">
+    <section class="w-full" aria-label="References">
       <References />
     </section>
 
     <footer
       class="pt-15 px-5 sm:px-10 flex flex-col w-full items-center gap-2 bg-[var(--text-color)] text-[var(--light-color)]"
+      aria-labelledby="footer-heading"
     >
       <div class="flex flex-col w-full max-w-[var(--max-content-width)]">
-        <h4 class="font-semibold text-lg mb-2">Rik Wanders Software</h4>
+        <h4 class="font-semibold text-lg mb-2" id="footer-heading">
+          Rik Wanders Software
+        </h4>
         <div
           class="flex max-[350px]:flex-col max-[350px]:gap-4 w-full justify-between"
         >
