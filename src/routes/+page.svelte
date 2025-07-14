@@ -81,8 +81,8 @@
   <meta property="twitter:image" content={metaImg} />
 </svelte:head>
 
-<article class="flex h-full min-h-screen flex-col justify-between">
-  <div class="flex flex-col items-center">
+<main class="flex h-full min-h-screen flex-col justify-between">
+  <article class="flex flex-col items-center">
     <header
       class="pt-10 md:pt-25 w-full flex flex-col items-center bg-gray-100 min-h-screen"
     >
@@ -320,5 +320,5 @@
         </div>
       </div>
     </footer>
-  </div>
-</article>
+  </article>
+</main>
