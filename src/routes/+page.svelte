@@ -87,7 +87,7 @@
       class="pt-10 md:pt-25 w-full flex flex-col items-center bg-gray-100 min-h-screen"
     >
       <div class="px-5 sm:px-10">
-        <!-- <img src={logo} alt="Logo" class="h-40 w-40" /> -->
+        <!-- <img src={logo} alt="Logo" class="h-40 w-40"> -->
         <Logo class="h-45 w-45" />
       </div>
 
@@ -148,7 +148,7 @@
                 <img
                   src={profilePhoto}
                   alt="Profile Rik Wanders"
-                />
+                >
               </div>
 
               <p>
@@ -167,7 +167,7 @@
                   src={profilePhoto}
                   alt="Profile Rik Wanders"
                   width="200"
-                />
+                >
               </div>
 
               <p class="my-4">
@@ -199,7 +199,7 @@
               <img
                 src={profilePhoto}
                 alt="Profile Rik Wanders"
-              />
+              >
             </div>
           </div>
 
