@@ -243,7 +243,7 @@
     </section>
 
     <footer
-      class="pt-15 px-5 sm:px-10 flex flex-col w-full items-center gap-2 bg-[var(--text-color)] text-[var(--light-color)]"
+      class="pt-15 px-5 sm:px-10 flex flex-col w-full items-center gap-2 bg-[var(--text-color)] text-[var(--text-light-color)]"
       aria-labelledby="footer-heading"
     >
       <div class="flex flex-col w-full max-w-[var(--max-content-width)]">
@@ -309,7 +309,7 @@
         </div>
 
         <div
-          class="flex min-[420px]:justify-between max-[420px]:flex-col w-full text-xs text-[var(--text-light-color)] opacity-70 mt-8 mb-2"
+          class="flex min-[420px]:justify-between max-[420px]:flex-col w-full text-xs opacity-70 mt-8 mb-2"
         >
           <div>
             Copyright © {currentYear} Rik Wanders Software
