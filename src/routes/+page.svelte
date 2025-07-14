@@ -309,7 +309,7 @@
         </div>
 
         <div
-          class="flex min-[420px]:justify-between max-[420px]:flex-col w-full text-xs text-gray-400 mt-8 mb-2"
+          class="flex min-[420px]:justify-between max-[420px]:flex-col w-full text-xs text-[var(--text-light-color)] opacity-70 mt-8 mb-2"
         >
           <div>
             Copyright © {currentYear} Rik Wanders Software
