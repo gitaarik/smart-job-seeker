@@ -19,7 +19,7 @@
   import InfoBox from "./InfoBox.svelte";
   import GetInTouchButton from "./contact-info/GetInTouchButton.svelte";
   import References from "./references/References.svelte";
-  import { theme } from "$lib/stores/theme";
+  import { theme, switchTheme } from "$lib/stores/theme";
 
   const metaTitle = "Rik Wanders - Freelance Full Stack Developer";
   const metaUrl = "https://www.rikwanders.tech/";
@@ -44,7 +44,7 @@
   }
 
   function handleToggleTheme() {
-    theme.update((t) => t === "light" ? "dark" : "light");
+    switchTheme();
   }
 
   onMount(() => {
