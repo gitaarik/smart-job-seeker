@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { browser } from "$app/environment";
-  import { track } from "@vercel/analytics";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
 
   import {
@@ -16,6 +15,7 @@
     faWhatsapp,
   } from "@fortawesome/free-brands-svg-icons";
 
+  import { track } from "$lib/tools/analytics";
   import { isHuman } from "$lib/stores/is-human";
 
   let isLoading = true;

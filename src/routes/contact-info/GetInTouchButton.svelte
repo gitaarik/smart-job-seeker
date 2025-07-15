@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { track } from "@vercel/analytics";
+  import { track } from "$lib/tools/analytics";
   import { faComments, faTimes } from "@fortawesome/free-solid-svg-icons";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import ContactInfo from "./ContactInfo.svelte";
