@@ -19,6 +19,7 @@
   import InfoBox from "./InfoBox.svelte";
   import GetInTouchButton from "./contact-info/GetInTouchButton.svelte";
   import References from "./references/References.svelte";
+  import { theme } from "$lib/stores/theme";
 
   const metaTitle = "Rik Wanders - Freelance Full Stack Developer";
   const metaUrl = "https://www.rikwanders.tech/";
@@ -64,7 +65,11 @@
   <title>Rik Wanders - Freelance Full Stack Developer</title>
 
   <!-- Umami Analytics -->
-  <script defer src="https://umami-analytics-nu-self.vercel.app/script.js" data-website-id="38a6004b-e9a0-4dbc-bdd6-ae6102196497"></script>
+  <script
+    defer
+    src="https://umami-analytics-nu-self.vercel.app/script.js"
+    data-website-id="38a6004b-e9a0-4dbc-bdd6-ae6102196497"
+  ></script>
 
   <meta name="title" content={metaTitle}>
   <meta name="description" content={metaDescription}>
@@ -84,10 +89,23 @@
   <meta property="twitter:image" content={metaImg}>
 </svelte:head>
 
+<!-- Floating theme toggle button -->
+<!-- <button -->
+<!--   class="fixed top-4 right-4 z-50 p-2 rounded border border-gray-300 bg-white cursor-pointer dark:bg-gray-800 dark:text-white shadow transition focus:outline-none" -->
+<!--   aria-label="Toggle light/dark mode" -->
+<!--   on:click={() => theme.update((t) => t === "light" ? "dark" : "light")} -->
+<!-- > -->
+<!--   {#if $theme === "dark"} -->
+<!--     🌙 -->
+<!--   {:else} -->
+<!--     ☀️ -->
+<!--   {/if} -->
+<!-- </button> -->
+
 <main class="flex h-full min-h-screen flex-col justify-between">
   <article class="flex flex-col items-center">
     <header
-      class="pt-10 md:pt-25 w-full flex flex-col items-center bg-gray-100 min-h-screen"
+      class="pt-10 md:pt-25 w-full flex flex-col items-center bg-[var(--light-bg-color)] min-h-screen"
       aria-labelledby="header-heading"
     >
       <div class="px-5 sm:px-10">
@@ -246,7 +264,7 @@
     </section>
 
     <footer
-      class="pt-15 px-5 sm:px-10 flex flex-col w-full items-center gap-2 bg-[var(--text-color)] text-[var(--text-light-color)]"
+      class="pt-15 px-5 sm:px-10 flex flex-col w-full items-center gap-2 bg-[var(--footer-bg-color)] text-[var(--text-light-color)]"
       aria-labelledby="footer-heading"
     >
       <div class="flex flex-col w-full max-w-[var(--max-content-width)]">

@@ -6,7 +6,7 @@ export function track(name: string): void {
 
   const umami = getWindowVariable('umami')
 
-  if (typeof umami.track === "function") {
+  if (umami && typeof umami.track === "function") {
     umami.track(name);
   }
 }
