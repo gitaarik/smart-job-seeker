@@ -124,7 +124,7 @@
       </div>
 
       <div class="mt-15 md:mt-20 px-4 flex justify-center w-full">
-        <GetInTouchButton />
+        <GetInTouchButton class="bg-[var(--lighter-bg-color)]" />
       </div>
 
       <div class="flex-grow"></div>
@@ -253,7 +253,7 @@
           </div>
 
           <div class="flex justify-center mb-15">
-            <GetInTouchButton />
+            <GetInTouchButton class="bg-[var(--light-bg-color)]" />
           </div>
         </div>
       </div>

@@ -25,12 +25,15 @@
     track("GetInTouch_close");
     showGetInTouch = false;
   }
+
+  let classNames: string = "";
+  export { classNames as class };
 </script>
 
 <div bind:this={containerEl}>
   {#if showGetInTouch}
     <div
-      class="pb-4 flex flex-col bg-[var(--lighter-bg-color)] w-full max-w-[600px] rounded-xl border-y-2 border-x-2 border-[var(--bright-color)] relative"
+      class="pb-4 flex flex-col w-full max-w-[600px] rounded-xl border-y-2 border-x-2 border-[var(--bright-color)] relative {classNames}"
     >
       <div class="text-[var(--text-light-color)]">
         <button
