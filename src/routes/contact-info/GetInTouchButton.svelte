@@ -1,6 +1,6 @@
 <script lang="ts">
+  import { track } from "@vercel/analytics";
   import { faComments, faTimes } from "@fortawesome/free-solid-svg-icons";
-
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import ContactInfo from "./ContactInfo.svelte";
 
@@ -11,6 +11,8 @@
   function handleGetInTouch() {
     showGetInTouch = true;
 
+    track("GetInTouch_open");
+
     setTimeout(() => {
       containerEl.scrollIntoView({
         behavior: "smooth",
@@ -20,6 +22,7 @@
   }
 
   function handleCloseContactInfo() {
+    track("GetInTouch_close");
     showGetInTouch = false;
   }
 </script>
