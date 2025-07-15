@@ -1,9 +1,12 @@
+import { getWindowVariable } from '$lib/tools/window';
 import { writable } from 'svelte/store';
 
 // Detect system preference
 function getPreferredTheme() {
-  if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
-    return localStorage.getItem('theme');
+  const sessionStorageObj = getWindowVariable('sessionStorage');
+
+  if (sessionStorageObj && sessionStorageObj.getItem('theme')) {
+    return sessionStorageObj.getItem('theme');
   }
   if (typeof window !== 'undefined' && window.matchMedia) {
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -13,11 +16,17 @@ function getPreferredTheme() {
 
 export const theme = writable(getPreferredTheme());
 
-// Persist theme changes to localStorage
-if (typeof window !== 'undefined') {
-  theme.subscribe((value) => {
-    localStorage.setItem('theme', value);
-    document.documentElement.classList.remove('theme-light', 'theme-dark');
-    document.documentElement.classList.add(`theme-${value}`);
-  });
-} 
+theme.subscribe((value) => {
+  const documentObj = getWindowVariable('document');
+
+  if (documentObj) {
+    documentObj.documentElement.classList.remove('theme-light', 'theme-dark');
+    documentObj.documentElement.classList.add(`theme-${value}`);
+  }
+
+  const sessionStorageObj = getWindowVariable('sessionStorage');
+
+  if (sessionStorageObj) {
+    sessionStorageObj.setItem('theme', value);
+  }
+});
