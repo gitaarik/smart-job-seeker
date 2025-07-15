@@ -15,6 +15,10 @@
 	--max-content-width: 885px;
 }
 
+:root {
+	color-scheme: dark light;
+}
+
 .theme-light {
 	--text-color: #124458;
 	--text-light-color: #f8fafc;
