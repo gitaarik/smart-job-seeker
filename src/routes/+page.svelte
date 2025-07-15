@@ -330,7 +330,7 @@
         </div>
 
         <div
-          class="flex min-[420px]:justify-between max-[420px]:flex-col w-full text-xs opacity-70 mt-8 mb-2"
+          class="flex min-[420px]:justify-between max-[420px]:flex-col w-full text-xs opacity-70 mt-8 mb-4"
         >
           <div>
             Copyright © {currentYear} Rik Wanders Software
