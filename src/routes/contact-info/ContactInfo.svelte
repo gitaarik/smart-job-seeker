@@ -17,6 +17,7 @@
 
   import { track } from "$lib/tools/analytics";
   import { isHuman } from "$lib/stores/is-human";
+  import { theme } from "$lib/stores/theme";
 
   let isLoading = true;
   let isLoadError = false;
@@ -86,7 +87,7 @@
       "before-interactive-callback": () => {
         console.log("before-interactive-callback");
       },
-      theme: "auto", // or "light" or "dark"
+      theme: $theme || "auto", // "light", "dark" or "auto"
       size: "normal", // or "compact"
     });
   }
@@ -193,7 +194,7 @@
 
         <a
           href="mailto:{contactInfo.email}"
-          class="underline hover:text-[var(--bright-highlight-color)]"
+          class="underline hover:text-[var(--text-highlight-color)]"
         >{contactInfo.email}</a>
 
         <p class="mt-2 xs:mt-4 text-sm/6">
@@ -210,7 +211,7 @@
 
         <a
           href="tel:{contactInfo.phone}"
-          class="underline hover:text-[var(--bright-highlight-color)]"
+          class="underline hover:text-[var(--text-highlight-color)]"
         >{contactInfo.phone}</a>
 
         <p class="mt-2 flex justify-center gap-4 text-xl">
@@ -218,21 +219,21 @@
             href="https://signal.me/#eu/QF8n-f_yG7oqHHgN83R1zbW8oVuBhmqOkN5W60a1vpFs-3uMvvtKaLkuUTZMqMz3"
             target="_blank"
             title="Signal"
-            class="hover:text-[var(--bright-highlight-color)]"
+            class="hover:text-[var(--text-highlight-color)]"
           ><FontAwesomeIcon icon={faSignalMessenger} /></a>
 
           <a
             href="https://api.whatsapp.com/send?phone=+31649118511"
             target="_blank"
             title="WhatsApp"
-            class="hover:text-[var(--bright-highlight-color)]"
+            class="hover:text-[var(--text-highlight-color)]"
           ><FontAwesomeIcon icon={faWhatsapp} /></a>
 
           <a
             href="https://t.me/gitaarik"
             target="_blank"
             title="Telegram"
-            class="hover:text-[var(--bright-highlight-color)]"
+            class="hover:text-[var(--text-highlight-color)]"
           ><FontAwesomeIcon icon={faTelegram} /></a>
         </p>
 
