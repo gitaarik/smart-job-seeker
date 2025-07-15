@@ -63,6 +63,9 @@
 <svelte:head>
   <title>Rik Wanders - Freelance Full Stack Developer</title>
 
+  <!-- Umami Analytics -->
+  <script defer src="https://umami-analytics-nu-self.vercel.app/script.js" data-website-id="38a6004b-e9a0-4dbc-bdd6-ae6102196497"></script>
+
   <meta name="title" content={metaTitle}>
   <meta name="description" content={metaDescription}>
 
