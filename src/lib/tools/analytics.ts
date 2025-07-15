@@ -8,8 +8,5 @@ export function track(name: string): void {
 
   if (typeof umami.track === "function") {
     umami.track(name);
-    console.log('umami track successful!')
-  } else {
-    console.log('could not track umami')
   }
 }
