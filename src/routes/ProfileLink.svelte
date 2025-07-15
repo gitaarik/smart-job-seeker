@@ -16,7 +16,7 @@
   {href}
   target="_blank"
   {title}
-  class="flex justify-end items-center gap-2 hover:text-white hover:underline focus:text-[var(--highlight-color)] transition text-nowrap"
+  class="flex justify-end items-center gap-2 hover:text-white hover:underline focus:text-[var(--bright-highlight-color)] transition text-nowrap"
   bind:this={elLink}
   on:click={handleClick}
 >

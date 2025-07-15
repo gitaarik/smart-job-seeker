@@ -43,6 +43,10 @@
     elMoreInfo.blur();
   }
 
+  function handleToggleTheme() {
+    theme.update((t) => t === "light" ? "dark" : "light");
+  }
+
   onMount(() => {
     addEventListener("scroll", () => {
       const moreInfoScrollTop = elMoreInfo.getBoundingClientRect().top;
@@ -90,17 +94,13 @@
 </svelte:head>
 
 <!-- Floating theme toggle button -->
-<!-- <button -->
-<!--   class="fixed top-4 right-4 z-50 p-2 rounded border border-gray-300 bg-white cursor-pointer dark:bg-gray-800 dark:text-white shadow transition focus:outline-none" -->
-<!--   aria-label="Toggle light/dark mode" -->
-<!--   on:click={() => theme.update((t) => t === "light" ? "dark" : "light")} -->
-<!-- > -->
-<!--   {#if $theme === "dark"} -->
-<!--     🌙 -->
-<!--   {:else} -->
-<!--     ☀️ -->
-<!--   {/if} -->
-<!-- </button> -->
+<button
+  class="block w-10 h-10 fixed top-4 right-4 z-50 rounded border bg-[var(--white-transparent-1)] border-[var(--white-transparent-2)] cursor-pointer shadow transition focus:outline-none"
+  aria-label="Toggle light/dark mode"
+  on:click={handleToggleTheme}
+>
+  {#if $theme === "dark"}🌙{:else}☀️{/if}
+</button>
 
 <main class="flex h-full min-h-screen flex-col justify-between">
   <article class="flex flex-col items-center">
@@ -131,7 +131,7 @@
 
       <button
         bind:this={elMoreInfo}
-        class="flex-end mt-14 mb-15 flex items-center gap-2 cursor-pointer p-2 scale-100 hover:scale-110 focus:scale-110 hover:text-[var(--highlight-color)] focus:text-[var(--highlight-color)] transition"
+        class="flex-end mt-14 mb-15 flex items-center gap-2 cursor-pointer p-2 scale-100 hover:scale-110 focus:scale-110 hover:text-[var(--text-highlight-color)] focus:text-[var(--text-highlight-color)] transition"
         on:click={handleMoreInfo}
       >
         <span>

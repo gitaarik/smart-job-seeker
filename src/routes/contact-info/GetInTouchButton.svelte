@@ -30,7 +30,7 @@
 <div bind:this={containerEl}>
   {#if showGetInTouch}
     <div
-      class="pb-4 flex flex-col bg-[var(--lighter-bg-color)] w-full max-w-[600px] rounded-xl border-y-2 border-x-2 border-[var(--primary-color)] relative"
+      class="pb-4 flex flex-col bg-[var(--lighter-bg-color)] w-full max-w-[600px] rounded-xl border-y-2 border-x-2 border-[var(--bright-color)] relative"
     >
       <div class="text-[var(--text-light-color)]">
         <button
@@ -41,7 +41,7 @@
         </button>
 
         <h3
-          class="text-center text-xl font-semibold py-3 px-8 bg-[var(--primary-color)] rounded-t-lg"
+          class="text-center text-xl font-semibold py-3 px-8 bg-[var(--bright-color)] rounded-t-lg"
         >
           <FontAwesomeIcon icon={faComments} />
           <span class="text-nowrap">
@@ -60,7 +60,7 @@
   {:else}
     <div class="text-center">
       <button
-        class="inline-flex items-center gap-2 bg-[var(--primary-color)] text-white py-4 px-8 rounded-lg text-xl font-semibold cursor-pointer hover:bg-[var(--highlight-color)] focus:bg-[var(--highlight-color)] scale-100 hover:scale-105 focus:scale-105 transition"
+        class="inline-flex items-center gap-2 bg-[var(--bright-color)] text-white py-4 px-8 rounded-lg text-xl font-semibold cursor-pointer hover:bg-[var(--bright-highlight-color)] focus:bg-[var(--bright-highlight-color)] scale-100 hover:scale-105 focus:scale-105 transition"
         on:click={handleGetInTouch}
       >
         <FontAwesomeIcon icon={faComments} />

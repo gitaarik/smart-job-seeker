@@ -159,7 +159,7 @@
 <div class="flex flex-col items-center">
   {#if !$isHuman}
     {#if isLoadError || isVerifyError}
-      <div class="px-4 md:px-8 text-center text-red-900">
+      <div class="px-4 md:px-8 text-center text-[var(--text-error-color)]">
         <p>
           Human Verification failed. Please refresh<br />
           the page and try again, or check your ad blocker.
@@ -193,7 +193,7 @@
 
         <a
           href="mailto:{contactInfo.email}"
-          class="underline hover:text-[var(--highlight-color)]"
+          class="underline hover:text-[var(--bright-highlight-color)]"
         >{contactInfo.email}</a>
 
         <p class="mt-2 xs:mt-4 text-sm/6">
@@ -210,7 +210,7 @@
 
         <a
           href="tel:{contactInfo.phone}"
-          class="underline hover:text-[var(--highlight-color)]"
+          class="underline hover:text-[var(--bright-highlight-color)]"
         >{contactInfo.phone}</a>
 
         <p class="mt-2 flex justify-center gap-4 text-xl">
@@ -218,21 +218,21 @@
             href="https://signal.me/#eu/QF8n-f_yG7oqHHgN83R1zbW8oVuBhmqOkN5W60a1vpFs-3uMvvtKaLkuUTZMqMz3"
             target="_blank"
             title="Signal"
-            class="hover:text-[var(--highlight-color)]"
+            class="hover:text-[var(--bright-highlight-color)]"
           ><FontAwesomeIcon icon={faSignalMessenger} /></a>
 
           <a
             href="https://api.whatsapp.com/send?phone=+31649118511"
             target="_blank"
             title="WhatsApp"
-            class="hover:text-[var(--highlight-color)]"
+            class="hover:text-[var(--bright-highlight-color)]"
           ><FontAwesomeIcon icon={faWhatsapp} /></a>
 
           <a
             href="https://t.me/gitaarik"
             target="_blank"
             title="Telegram"
-            class="hover:text-[var(--highlight-color)]"
+            class="hover:text-[var(--bright-highlight-color)]"
           ><FontAwesomeIcon icon={faTelegram} /></a>
         </p>
 

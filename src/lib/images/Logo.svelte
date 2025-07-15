@@ -6,7 +6,7 @@
 <svg
   xmlns="http://www.w3.org/2000/svg"
   viewBox="-200 0 2559.5601 1568.96"
-  fill="var(--primary-color, currentColor)"
+  fill="var(--bright-color, currentColor)"
   class={classNames}
 >
   <g transform="translate(-101.76 -135.84)">
@@ -30,7 +30,7 @@
 <!-- <svg -->
 <!--   xmlns="http://www.w3.org/2000/svg" -->
 <!--   viewBox="0 0 2159.5601 1568.96" -->
-<!--   fill="var(--primary-color, currentColor)" -->
+<!--   fill="var(--bright-color, currentColor)" -->
 <!--   class="scale-100 hover:scale-110 transition {classNames}" -->
 <!-- > -->
 <!--   <g transform="translate(-101.76 -135.84)"> -->
@@ -48,7 +48,7 @@
 <svg
   xmlns="http://www.w3.org/2000/svg"
   viewBox="0 0 2159.5601 1568.96"
-  fill="var(--primary-color, currentColor)"
+  fill="var(--bright-color, currentColor)"
 >
   <g transform="translate(-101.76 -135.84)">
     <g transform="translate(-169.65 163.8)">

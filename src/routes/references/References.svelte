@@ -2,7 +2,7 @@
   import Quote from "./Quote.svelte";
 </script>
 <div
-  class="pt-20 pb-10 px-4 md:px-6 flex justify-center bg-[var(--primary-color)] text-[var(--text-light-color)]"
+  class="pt-20 pb-10 px-4 md:px-6 flex justify-center bg-[var(--dark-bg-color)] text-[var(--text-light-color)]"
 >
   <div class="max-w-[600px]">
     <h3 class="text-3xl font-semibold mb-8 md:mb-10 capitalize text-center">
