@@ -232,7 +232,7 @@
           >
             <InfoBox headerText="Key skills:" class="w-full 2xs:max-w-[320px]">
               <ul class="mt-4 list-disc ml-4 px-4 pb-4 font-bold">
-                <li>Python, Django, FastAPI, Numpy</li>
+                <li>Python, Django, DRF, FastAPI</li>
                 <li class="my-4">Javascript, Node.js, React, Svelte</li>
                 <li class="my-4">SQL & NoSQL Databases</li>
                 <li>Linux, DevOps, CI/CD, Docker</li>
