@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { browser } from "$app/environment";
+  import { track } from "@vercel/analytics";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
 
   import {
@@ -60,7 +61,6 @@
     script.defer = true;
 
     script.onload = () => {
-      console.log("Turnstile loaded and ready");
       renderTurnstile();
     };
 
@@ -92,14 +92,13 @@
   }
 
   async function handleTurnstileSuccess(token: string) {
-    console.log("Turnstile verification successful");
-
     try {
       // Verify the token with your backend
       const success = await verifyTurnstile(token);
 
       if (success) {
         isHuman.set(true);
+        track("HumanValidated");
       } else {
         isVerifyError = true;
         // Reset the widget
@@ -124,7 +123,7 @@
   }
 
   function handleTurnstileUnsupported() {
-    console.log("wajooo!!!!");
+    isVerifyError = true;
   }
 
   async function verifyTurnstile(token: string): Promise<boolean> {
