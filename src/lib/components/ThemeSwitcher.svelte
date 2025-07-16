@@ -1,10 +1,12 @@
 <script lang="ts">
-  import { theme, switchTheme } from "$lib/stores/theme";
-	import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { faSun, faMoon } from "@fortawesome/free-regular-svg-icons";
+  import { switchTheme, theme } from "$lib/stores/theme";
+  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+  import { faMoon, faSun } from "@fortawesome/free-regular-svg-icons";
+  import { track } from "$lib/tools/analytics";
 
   function handleToggleTheme() {
     switchTheme();
+    track("SwitchTheme");
   }
 </script>
 
@@ -19,3 +21,4 @@
     <FontAwesomeIcon icon={faSun} />
   {/if}
 </button>
+
