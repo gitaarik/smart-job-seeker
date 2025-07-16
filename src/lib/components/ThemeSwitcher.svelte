@@ -1,5 +1,7 @@
 <script lang="ts">
   import { theme, switchTheme } from "$lib/stores/theme";
+	import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+  import { faSun, faMoon } from "@fortawesome/free-regular-svg-icons";
 
   function handleToggleTheme() {
     switchTheme();
@@ -11,5 +13,9 @@
   aria-label="Toggle light/dark mode"
   on:click={handleToggleTheme}
 >
-  {#if $theme === "dark"}🌙{:else}☀️{/if}
-</button> 
+  {#if $theme === "dark"}
+    <FontAwesomeIcon icon={faMoon} />
+  {:else}
+    <FontAwesomeIcon icon={faSun} />
+  {/if}
+</button>
