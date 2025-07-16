@@ -13,8 +13,7 @@
   import { faCircleChevronDown } from "@fortawesome/free-solid-svg-icons";
 
   import profilePhoto from "$lib/images/profile-photo.jpeg";
-  import Logo from "$lib/images/Logo.svelte";
-
+  import Logo from "$lib/components/Logo.svelte";
   import ProfileLink from "$lib/components/ProfileLink.svelte";
   import InfoBox from "$lib/components/InfoBox.svelte";
   import GetInTouchButton from "$lib/components/contact-info/GetInTouchButton.svelte";
