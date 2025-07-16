@@ -15,11 +15,13 @@
   import profilePhoto from "$lib/images/profile-photo.jpeg";
   import Logo from "$lib/images/Logo.svelte";
 
-  import ProfileLink from "./ProfileLink.svelte";
-  import InfoBox from "./InfoBox.svelte";
+  import ProfileLink from "$lib/components/ProfileLink.svelte";
+  import InfoBox from "$lib/components/InfoBox.svelte";
   import GetInTouchButton from "./contact-info/GetInTouchButton.svelte";
   import References from "./references/References.svelte";
   import { theme, switchTheme } from "$lib/stores/theme";
+
+  import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
 
   const metaTitle = "Rik Wanders - Freelance Full Stack Developer";
   const metaUrl = "https://www.rikwanders.tech/";
@@ -41,10 +43,6 @@
     });
 
     elMoreInfo.blur();
-  }
-
-  function handleToggleTheme() {
-    switchTheme();
   }
 
   onMount(() => {
@@ -93,14 +91,7 @@
   <meta property="twitter:image" content={metaImg}>
 </svelte:head>
 
-<!-- Floating theme toggle button -->
-<button
-  class="block w-10 h-10 fixed top-4 right-4 z-50 rounded border bg-[var(--white-transparent-1)] border-[var(--white-transparent-2)] cursor-pointer shadow transition focus:outline-none"
-  aria-label="Toggle light/dark mode"
-  on:click={handleToggleTheme}
->
-  {#if $theme === "dark"}🌙{:else}☀️{/if}
-</button>
+<ThemeSwitcher />
 
 <main class="flex h-full min-h-screen flex-col justify-between">
   <article class="flex flex-col items-center">
