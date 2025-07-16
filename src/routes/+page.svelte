@@ -17,8 +17,8 @@
 
   import ProfileLink from "$lib/components/ProfileLink.svelte";
   import InfoBox from "$lib/components/InfoBox.svelte";
-  import GetInTouchButton from "./contact-info/GetInTouchButton.svelte";
-  import References from "./references/References.svelte";
+  import GetInTouchButton from "$lib/components/contact-info/GetInTouchButton.svelte";
+  import References from "$lib/components/references/References.svelte";
   import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
 
   const metaTitle = "Rik Wanders - Freelance Full Stack Developer";
