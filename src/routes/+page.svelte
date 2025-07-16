@@ -19,8 +19,6 @@
   import InfoBox from "$lib/components/InfoBox.svelte";
   import GetInTouchButton from "./contact-info/GetInTouchButton.svelte";
   import References from "./references/References.svelte";
-  import { theme, switchTheme } from "$lib/stores/theme";
-
   import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
 
   const metaTitle = "Rik Wanders - Freelance Full Stack Developer";
