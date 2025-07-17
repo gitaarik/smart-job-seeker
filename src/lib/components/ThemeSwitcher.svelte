@@ -8,17 +8,30 @@
     switchTheme();
     track("SwitchTheme");
   }
+
+  function getTopOffset() {
+    if ($theme === "dark") {
+      return "-top-10";
+    } else {
+      return "top-0";
+    }
+  }
 </script>
 
 <button
-  class="block w-10 h-10 fixed top-4 right-4 z-50 rounded border bg-[var(--white-transparent-1)] border-[var(--white-transparent-2)] cursor-pointer shadow transition focus:outline-none"
+  class="block w-10 h-10 fixed top-4 right-4 z-50 rounded border bg-[var(--white-transparent-1)] border-[var(--white-transparent-2)] cursor-pointer shadow transition focus:outline-none overflow-hidden"
   aria-label="Toggle light/dark mode"
   on:click={handleToggleTheme}
 >
-  {#if $theme === "dark"}
-    <FontAwesomeIcon icon={faMoon} />
-  {:else}
-    <FontAwesomeIcon icon={faSun} />
-  {/if}
-</button>
+  <span
+    class="block absolute {getTopOffset()} transition-[top] duration-250"
+  >
+    <span class="flex w-10 h-10 items-center justify-center">
+      <FontAwesomeIcon icon={faSun} />
+    </span>
 
+    <span class="flex w-10 h-10 items-center justify-center">
+      <FontAwesomeIcon icon={faMoon} />
+    </span>
+  </span>
+</button>
