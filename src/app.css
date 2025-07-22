@@ -1,5 +1,10 @@
 @import 'tailwindcss';
 
+.hoverStyles {
+	display: none;
+  @apply scale-105 -translate-15 brightness-125;
+}
+
 @theme {
 	--breakpoint-2xs: 20rem;
 	--breakpoint-xs: 30rem;
