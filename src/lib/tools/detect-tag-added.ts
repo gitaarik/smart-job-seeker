@@ -4,12 +4,13 @@ export function detectTagAdded(targetElement: HTMLElement, tagName: string, call
     // Check each mutation for added nodes
     mutations.forEach((mutation) => {
       if (mutation.addedNodes.length) {
-        // Check if any added node or its descendants contain an <iframe>
-        mutation.addedNodes.forEach((node) => {
+        // Check if any added node or its descendants contain `tagName`
+        mutation.addedNodes.forEach((node: Node) => {
           // Only process element nodes (skip text nodes, etc.)
           if (node.nodeType === Node.ELEMENT_NODE) {
-            // Check if node itself is an iframe or contains an iframe
-            if (node.tagName.toLowerCase() === tagName.toLowerCase() || node.querySelector('iframe')) {
+            const element = node as HTMLElement; // Type assertion to HTMLElement
+            // Check if node itself is `tagName` or contains `tagName`
+            if (element.tagName.toLowerCase() === tagName.toLowerCase() || element.querySelector(tagName)) {
               callback();
             }
           }

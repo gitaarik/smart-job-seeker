@@ -18,6 +18,7 @@
   import { track } from "$lib/tools/analytics";
   import { isHuman } from "$lib/stores/is-human";
   import { theme } from "$lib/stores/theme";
+  import { getWindowVariable } from "$lib/tools/window";
 
   let isLoading = true;
   let isLoadError = false;
@@ -26,7 +27,12 @@
 
   const TURNSTILE_SITE_KEY = "0x4AAAAAABkW4tr8bO8w8Vi8";
 
-  const contactInfo: object = {
+  interface ContactInfo {
+    email: string;
+    phone: string;
+  }
+
+  const contactInfo: ContactInfo = {
     email: "rik@rikwanders.tech",
     phone: "+31 649118511",
   };
@@ -47,8 +53,9 @@
   });
 
   function loadTurnstile() {
-    // Check if Turnstile is already loaded
-    if (window.turnstile) {
+    const turnstile = getWindowVariable("turnstile");
+
+    if (turnstile) {
       setTimeout(() => {
         renderTurnstile();
       });
@@ -74,11 +81,13 @@
   }
 
   function renderTurnstile() {
-    if (!window.turnstile || !turnstileContainer) {
+    const turnstile = getWindowVariable("turnstile");
+
+    if (!turnstile || !turnstileContainer) {
       return;
     }
 
-    window.turnstile.render(turnstileContainer, {
+    turnstile.render(turnstileContainer, {
       sitekey: TURNSTILE_SITE_KEY,
       callback: handleTurnstileSuccess,
       "error-callback": handleTurnstileError,
@@ -93,6 +102,12 @@
   }
 
   async function handleTurnstileSuccess(token: string) {
+    const turnstile = getWindowVariable("turnstile");
+
+    if (!turnstile || !turnstileContainer) {
+      return;
+    }
+
     try {
       // Verify the token with your backend
       const success = await verifyTurnstile(token);
@@ -103,12 +118,12 @@
       } else {
         isVerifyError = true;
         // Reset the widget
-        window.turnstile.reset(turnstileContainer);
+        turnstile.reset(turnstileContainer);
       }
     } catch (error) {
       console.error("Error verifying Turnstile:", error);
       isVerifyError = true;
-      window.turnstile.reset(turnstileContainer);
+      turnstile.reset(turnstileContainer);
     }
   }
 
@@ -142,17 +157,6 @@
     } catch (error) {
       console.error("Error verifying Turnstile:", error);
       return false;
-    }
-  }
-
-  // Extend the Window interface for TypeScript
-  declare global {
-    interface Window {
-      turnstile: {
-        render: (container: HTMLElement, options: any) => void;
-        reset: (container: HTMLElement) => void;
-        remove: (container: HTMLElement) => void;
-      };
     }
   }
 </script>
