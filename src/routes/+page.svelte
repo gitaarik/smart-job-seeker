@@ -12,7 +12,7 @@
 
   import { faCircleChevronDown } from "@fortawesome/free-solid-svg-icons";
 
-  import profilePhoto from "$lib/images/profile-photo.jpeg";
+  import profilePhoto from "$lib/images/profile-photo.jpeg?enhanced";
   import Logo from "$lib/components/Logo.svelte";
   import ProfileLink from "$lib/components/ProfileLink.svelte";
   import InfoBox from "$lib/components/InfoBox.svelte";
@@ -97,7 +97,6 @@
       aria-labelledby="header-heading"
     >
       <div class="px-5 sm:px-10">
-        <!-- <img src={logo} alt="Logo" class="h-40 w-40"> -->
         <Logo class="h-45 w-45" />
       </div>
 
@@ -152,16 +151,15 @@
           <div
             class="mb-15 flex gap-10 justify-center max-md:flex-col max-md:items-center"
           >
-            <!-- <div class="md:max-w-[50%]"> -->
             <div class="text-base/7">
               <div
                 class="max-xs:hidden lg:hidden float-right w-full max-w-[200px] pl-3 pb-3"
               >
-                <img
+                <enhanced:img
                   src={profilePhoto}
-                  alt=""
-                  aria-hidden="true"
-                >
+                  alt="Rik Wanders"
+                  width="200"
+                />
               </div>
 
               <p>
@@ -176,11 +174,12 @@
               <div
                 class="xs:hidden mt-4 flex justify-center"
               >
-                <img
+                <enhanced:img
                   src={profilePhoto}
-                  alt="Rik Wanders"
+                  alt=""
+                  aria-hidden="true"
                   width="200"
-                >
+                />
               </div>
 
               <p class="my-4">
@@ -209,10 +208,11 @@
             </div>
 
             <div class="max-lg:hidden">
-              <img
+              <enhanced:img
                 src={profilePhoto}
-                alt="Profile Rik Wanders"
-              >
+                alt=""
+                aria-hidden="true"
+              />
             </div>
           </div>
 
