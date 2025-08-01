@@ -159,7 +159,8 @@
               >
                 <img
                   src={profilePhoto}
-                  alt="Profile Rik Wanders"
+                  alt=""
+                  aria-hidden="true"
                 >
               </div>
 
@@ -177,7 +178,7 @@
               >
                 <img
                   src={profilePhoto}
-                  alt="Profile Rik Wanders"
+                  alt="Rik Wanders"
                   width="200"
                 >
               </div>
