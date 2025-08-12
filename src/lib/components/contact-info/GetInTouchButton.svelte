@@ -88,7 +88,7 @@
 
     {#if expandContent}
       <button
-        class="absolute right-4 top-[14px] cursor-pointer text-2xl"
+        class="absolute right-4 top-[14px] cursor-pointer text-2xl hover:rotate-90 transition"
         on:click={handleCloseContactInfo}
         transition:fade
       >

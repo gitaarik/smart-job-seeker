@@ -185,9 +185,10 @@
               </div>
 
               <p class="my-4">
-                I have been working <strong>fully remote for the last
-                  {remoteWorkYearsExperience} years</strong>, collaborating
-                with, and <strong>leading distributed agile teams</strong>
+                I have been working <strong>fully remote</strong> for the last
+                <strong>{remoteWorkYearsExperience} years</strong>,
+                collaborating with, and
+                <strong>leading distributed agile teams</strong>
                 across different time zones and cultures. This experience has
                 refined my <strong>communication skills</strong> and ability to
                 <strong>work independently</strong> while maintaining
@@ -195,9 +196,9 @@
               </p>
 
               <p class="my-4">
-                I'm always interested in the <strong>latest
-                  developments</strong> in the software industry. By
-                <strong>integrating AI</strong> into my development workflow,
+                I'm always interested in the
+                <strong>latest developments</strong> in the software industry.
+                By <strong>integrating AI</strong> into my development workflow,
                 I'm able to <strong>speed up</strong> repetitive development
                 tasks and focus on <strong>quality</strong> and
                 <strong>architecture</strong>. All this while maintaining
@@ -205,14 +206,14 @@
               </p>
 
               <p>
-                I like to be <strong>challenged</strong> with <strong>unique
-                  technical problems</strong>, where I can use my <strong
-                >creativity</strong> and
-                <strong>analytical reasoning</strong> to develop <strong>custom
-                  made solutions</strong>. Together with my <strong>business
-                  insights</strong> I can <strong>timely deliver complete
-                  technical solutions</strong> that produce
-                <strong>real results</strong>.
+                I like to be <strong>challenged</strong> with
+                <strong>unique technical problems</strong>, where I can use my
+                <strong>creativity</strong> and
+                <strong>analytical reasoning</strong> to develop
+                <strong>custom made solutions</strong>. Together with my
+                <strong>business insights</strong> I can
+                <strong>timely deliver complete technical solutions</strong>
+                that produce <strong>real results</strong>.
               </p>
             </div>
 
