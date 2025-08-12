@@ -5,7 +5,7 @@
   import { fade, slide } from "svelte/transition";
   import ContactInfo from "./ContactInfo.svelte";
 
-  export let bg: string = "";
+  export let contentClass: string = "";
   const animationSpeed = 250;
 
   let expandButton: boolean = false;
@@ -110,7 +110,7 @@
 
   {#if expandContent}
     <div
-      class="flex flex-col pb-4 w-full border-r-2 border-b-2 border-l-2 rounded-b-xl border-[var(--bright-color)] transition-all duration-{animationSpeed} bg-[{bg}] overflow-hidden {contentStyle}"
+      class="flex flex-col pb-4 w-full border-r-2 border-b-2 border-l-2 rounded-b-xl border-[var(--bright-color)] transition-all duration-{animationSpeed} overflow-hidden {contentClass} {contentStyle}"
       bind:this={contentEl}
       transition:slide={{ duration: animationSpeed }}
     >
