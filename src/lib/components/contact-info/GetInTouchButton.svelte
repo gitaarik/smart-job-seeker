@@ -2,6 +2,7 @@
   import { track } from "$lib/tools/analytics";
   import { faComments, faTimes } from "@fortawesome/free-solid-svg-icons";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+  import { slide } from "svelte/transition";
   import ContactInfo from "./ContactInfo.svelte";
 
   let showGetInTouch = false;
@@ -33,14 +34,14 @@
 
   $: {
     if (showGetInTouch) {
-      containerStyle = "border-y-2 border-x-2 border-[var(--bright-color)]";
-      buttonStyle = "block w-full";
-      buttonContainerStyle = "rounded-t-lg";
+      containerStyle = "border-y-2 border-x-2 border-[var(--bright-color)] transition-all duration-300";
+      buttonStyle = "";
+      buttonContainerStyle = "rounded-t-lg transition-all duration-300";
     } else {
-      containerStyle = "";
+      containerStyle = "transition-all duration-300";
       buttonStyle = "cursor-pointer";
       buttonContainerStyle =
-        "rounded-lg cursor-pointer hover:bg-[var(--bright-highlight-color)] focus:bg-[var(--bright-highlight-color)] scale-100 hover:scale-105 focus:scale-105 transition text-[var(--text-light-color)]";
+        "rounded-lg cursor-pointer hover:bg-[var(--bright-highlight-color)] focus:bg-[var(--bright-highlight-color)] scale-100 hover:scale-105 focus:scale-105 transition-all duration-300 text-[var(--text-light-color)]";
     }
   }
 
@@ -50,7 +51,7 @@
 
 <div bind:this={containerEl}>
   <div
-    class="flex flex-col w-full max-w-[600px] rounded-xl relative {containerStyle} {classNames}"
+    class="flex flex-col w-full max-w-[600px] rounded-xl relative transition {containerStyle} {classNames}"
   >
     <div
       class="inline-flex items-center gap-2 bg-[var(--bright-color)] text-white text-xl font-semibold {buttonContainerStyle}"
@@ -65,7 +66,7 @@
       {/if}
 
       <button
-        class="py-4 px-8 {buttonStyle}"
+        class="py-4 px-8 block w-full {buttonStyle}"
         on:click={handleGetInTouch}
       >
         <FontAwesomeIcon icon={faComments} />
@@ -77,7 +78,7 @@
     </div>
 
     {#if showGetInTouch}
-      <div class="mb-4">
+      <div class="mb-4" transition:slide={{ duration: 300 }}>
         <p class="p-6 self-center text-center max-w-[520px]">
           I'd love to hear about your project and discuss how we can bring your
           ideas to life together. Don't hesitate to reach out!
