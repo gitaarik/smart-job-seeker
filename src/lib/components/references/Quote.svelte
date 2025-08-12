@@ -3,7 +3,7 @@
 </script>
 
 <blockquote class="py-15 text-lg">
-  <p class="italic">
+  <p class="italic tracking-[0.5px] leading-8">
     “<slot />”
   </p>
 

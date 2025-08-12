@@ -151,7 +151,7 @@
           <div
             class="mb-15 flex gap-10 justify-center max-md:flex-col max-md:items-center"
           >
-            <div class="text-base/7">
+            <div class="text-base/7 tracking-[0.1px]">
               <div
                 class="max-xs:hidden lg:hidden float-right w-full max-w-[200px] pl-3 pb-3"
               >
@@ -195,12 +195,13 @@
               </p>
 
               <p class="my-4">
-                I'm always interested in the <strong>latest developments in the
-                  software industry</strong>. By <strong>integrating AI</strong>
-                into my development workflow, I'm able to <strong>speed
-                  up</strong> repetitive development tasks and focus on <strong
-                >quality and architecture</strong>. All this while maintaining
-                <strong>current security best practices</strong>.
+                I'm always interested in the <strong>latest
+                  developments</strong> in the software industry. By
+                <strong>integrating AI</strong> into my development workflow,
+                I'm able to <strong>speed up</strong> repetitive development
+                tasks and focus on <strong>quality</strong> and
+                <strong>architecture</strong>. All this while maintaining
+                current <strong>security best practices</strong>.
               </p>
 
               <p>
@@ -209,9 +210,9 @@
                 >creativity</strong> and
                 <strong>analytical reasoning</strong> to develop <strong>custom
                   made solutions</strong>. Together with my <strong>business
-                  insights</strong> I can <strong>timely deliver</strong>
-                complete technical solutions that produce <strong>real
-                  results</strong>.
+                  insights</strong> I can <strong>timely deliver complete
+                  technical solutions</strong> that produce
+                <strong>real results</strong>.
               </p>
             </div>
 
