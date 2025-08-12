@@ -38,7 +38,7 @@
       buttonStyle = "";
       buttonContainerStyle = "rounded-t-lg";
     } else {
-      containerStyle = "";
+      containerStyle = "w-[220px]";
       buttonStyle = "cursor-pointer";
       buttonContainerStyle =
         "rounded-lg cursor-pointer hover:bg-[var(--bright-highlight-color)] focus:bg-[var(--bright-highlight-color)] scale-100 hover:scale-105 focus:scale-105 text-[var(--text-light-color)]";
@@ -49,44 +49,42 @@
   export { classNames as class };
 </script>
 
-<div bind:this={containerEl}>
+<div
+  class="flex flex-col max-w-[600px] rounded-xl relative {containerStyle} {classNames}"
+  bind:this={containerEl}
+>
   <div
-    class="flex flex-col w-full max-w-[600px] rounded-xl relative transition-all duration-600 {containerStyle} {classNames}"
-    transition:slide={{ duration: 300 }}
+    class="inline-flex items-center gap-2 bg-[var(--bright-color)] text-white text-xl font-semibold {buttonContainerStyle}"
   >
-    <div
-      class="inline-flex items-center gap-2 bg-[var(--bright-color)] text-white text-xl font-semibold {buttonContainerStyle}"
-    >
-      {#if showGetInTouch}
-        <button
-          class="absolute right-4 top-[14px] cursor-pointer text-2xl"
-          on:click={handleCloseContactInfo}
-        >
-          <FontAwesomeIcon icon={faTimes} />
-        </button>
-      {/if}
-
-      <button
-        class="py-4 px-8 block w-full {buttonStyle}"
-        on:click={handleGetInTouch}
-      >
-        <FontAwesomeIcon icon={faComments} />
-
-        <span class="text-nowrap">
-          Get in Touch
-        </span>
-      </button>
-    </div>
-
     {#if showGetInTouch}
-      <div class="mb-4" transition:slide={{ duration: 300 }}>
-        <p class="p-6 self-center text-center max-w-[520px]">
-          I'd love to hear about your project and discuss how we can bring your
-          ideas to life together. Don't hesitate to reach out!
-        </p>
-
-        <ContactInfo />
-      </div>
+      <button
+        class="absolute right-4 top-[14px] cursor-pointer text-2xl"
+        on:click={handleCloseContactInfo}
+      >
+        <FontAwesomeIcon icon={faTimes} />
+      </button>
     {/if}
+
+    <button
+      class="py-4 px-8 block w-full {buttonStyle}"
+      on:click={handleGetInTouch}
+    >
+      <FontAwesomeIcon icon={faComments} />
+
+      <span class="text-nowrap">
+        Get in Touch
+      </span>
+    </button>
   </div>
+
+  {#if showGetInTouch}
+    <div class="min-h-[170px] mb-4" transition:slide={{ duration: 300 }}>
+      <p class="p-6 self-center text-center max-w-[520px]">
+        I'd love to hear about your project and discuss how we can bring your
+        ideas to life together. Don't hesitate to reach out!
+      </p>
+
+      <ContactInfo />
+    </div>
+  {/if}
 </div>
