@@ -165,10 +165,10 @@
               <p>
                 With over {devYearsExperience} years of full-stack web
                 development experience, I specialize in building and scaling
-                complex, high-traffic applications that deliver exceptional user
-                experiences. My expertise spans the entire development
-                lifecycle, from initial architecture decisions to production
-                deployment and optimization.
+                complex, high-traffic applications with great user experience.
+                My expertise spans the entire development lifecycle, from
+                initial architecture decisions to production deployment and
+                optimization.
               </p>
 
               <div
@@ -183,19 +183,19 @@
               </div>
 
               <p class="my-4">
-                I bring {remoteWorkYearsExperience}+ years of remote work
-                experience and excel at collaborating with distributed teams
-                across different time zones and cultures. This background has
-                honed my communication skills and ability to work autonomously
-                while maintaining strong team alignment.
+                I have been working fully remote for the last
+                {remoteWorkYearsExperience} years, collaborating with
+                distributed teams across different time zones and cultures. This
+                experience has refined my communication skills and ability to
+                work independently while maintaining strong team alignment.
               </p>
 
               <p class="my-4">
-                I stay at the forefront of technology by integrating AI tools
-                into my development workflow and consistently applying current
-                industry best practices. Security is paramount in everything I
-                build—I maintain up-to-date knowledge of security best practices
-                to ensure applications are both performant and secure.
+                I stay at the forefront of technology, integrate AI tools into
+                my development workflow and consistently apply current industry
+                best practices. Security is essential in everything I build. I
+                maintain up-to-date knowledge of security best practices to
+                ensure applications are both performant and secure.
               </p>
 
               <p>
