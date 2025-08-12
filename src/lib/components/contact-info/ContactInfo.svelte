@@ -189,23 +189,6 @@
     >
       <div>
         <div class="mb-2 text-lg font-semibold">
-          <FontAwesomeIcon icon={faEnvelope} class="mr-1" />
-          Email
-        </div>
-
-        <a
-          href="mailto:{contactInfo.email}"
-          class="underline hover:text-[var(--text-highlight-color)]"
-        >{contactInfo.email}</a>
-
-        <p class="mt-2 xs:mt-4 text-sm/6">
-          You can expect a response<br />
-          within 2 business days.
-        </p>
-      </div>
-
-      <div>
-        <div class="mb-2 text-lg font-semibold">
           <FontAwesomeIcon icon={faPhone} class="mr-1" />
           Phone
         </div>
@@ -240,6 +223,23 @@
 
         <p class="mt-2 text-sm">
           Central European Timezone
+        </p>
+      </div>
+
+      <div>
+        <div class="mb-2 text-lg font-semibold">
+          <FontAwesomeIcon icon={faEnvelope} class="mr-1" />
+          Email
+        </div>
+
+        <a
+          href="mailto:{contactInfo.email}"
+          class="underline hover:text-[var(--text-highlight-color)]"
+        >{contactInfo.email}</a>
+
+        <p class="mt-2 xs:mt-4 text-sm/6">
+          You can expect a response<br />
+          within 2 business days.
         </p>
       </div>
     </div>
