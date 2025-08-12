@@ -1,1 +1,1 @@
-- Bank + VAT info page
+- Generate static version of site so maybe reader view in firefox works

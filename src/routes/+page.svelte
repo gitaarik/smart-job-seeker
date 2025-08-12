@@ -165,11 +165,12 @@
               <p>
                 With over <strong>{devYearsExperience} years of full-stack
                   development</strong>
-                experience, I specialize in building and scaling complex,
-                high-traffic web applications with perfect user experience. My
-                skills cover the entire development process, from initial
-                architecture decisions to production deployment and
-                optimization.
+                experience, I specialize in building and <strong>scaling
+                  complex, high-traffic web applications</strong> with <strong
+                >perfect user experience</strong>. My skills cover the <strong
+                >entire development process</strong>, from initial
+                <strong>architecture decisions</strong> to <strong>production
+                  deployment</strong> and <strong>optimization</strong>.
               </p>
 
               <div
@@ -184,27 +185,33 @@
               </div>
 
               <p class="my-4">
-                I have been working fully remote for the last
-                {remoteWorkYearsExperience} years, collaborating with, and
-                leading distributed agile teams across different time zones and
-                cultures. This experience has refined my communication skills
-                and ability to work independently while maintaining strong team
-                alignment.
+                I have been working <strong>fully remote for the last
+                  {remoteWorkYearsExperience} years</strong>, collaborating
+                with, and <strong>leading distributed agile teams</strong>
+                across different time zones and cultures. This experience has
+                refined my <strong>communication skills</strong> and ability to
+                <strong>work independently</strong> while <strong>maintaining
+                  strong team alignment</strong>.
               </p>
 
               <p class="my-4">
-                I'm always interested in the latest developments in the software
-                industry. By integrating AI into my development workflow, I'm
-                able to speed up repetitive development tasks and focus on
-                quality and architecture. All this while maintaining current
-                security best practices.
+                I'm always interested in the <strong>latest developments in the
+                  software industry</strong>. By <strong>integrating AI</strong>
+                into my development workflow, I'm able to <strong>speed
+                  up</strong> repetitive development tasks and focus on <strong
+                >quality and architecture</strong>. All this while maintaining
+                <strong>current security best practices</strong>.
               </p>
 
               <p>
-                I like to be challenged with unique technical problems, where I
-                can use my creativity and analytical reasoning to develop custom
-                made solutions. Together with my business insights I can timely
-                deliver complete technical solutions that produce real results.
+                I like to be <strong>challenged</strong> with <strong>unique
+                  technical problems</strong>, where I can use my <strong
+                >creativity</strong> and
+                <strong>analytical reasoning</strong> to develop <strong>custom
+                  made solutions</strong>. Together with my <strong>business
+                  insights</strong> I can <strong>timely deliver</strong>
+                complete technical solutions that produce <strong>real
+                  results</strong>.
               </p>
             </div>
 

@@ -1,5 +1,45 @@
 @import 'tailwindcss';
 
+@font-face {
+	font-family: 'Noto Sans';
+	font-style: normal;
+	font-weight: 300;
+	font-display: swap;
+	src: url('/fonts/NotoSans-Light.woff2') format('woff2');
+}
+
+@font-face {
+	font-family: 'Noto Sans';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url('/fonts/NotoSans-Regular.woff2') format('woff2');
+}
+
+@font-face {
+	font-family: 'Noto Sans';
+	font-style: normal;
+	font-weight: 500;
+	font-display: swap;
+	src: url('/fonts/NotoSans-Medium.woff2') format('woff2');
+}
+
+@font-face {
+	font-family: 'Noto Sans';
+	font-style: normal;
+	font-weight: 600;
+	font-display: swap;
+	src: url('/fonts/NotoSans-SemiBold.woff2') format('woff2');
+}
+
+@font-face {
+	font-family: 'Noto Sans';
+	font-style: normal;
+	font-weight: 700;
+	font-display: swap;
+	src: url('/fonts/NotoSans-Bold.woff2') format('woff2');
+}
+
 .hoverStyles {
 	display: none;
   @apply scale-105 -translate-15 brightness-125;
@@ -62,10 +102,11 @@
 
 html,
 body {
+	font-family: 'Noto Sans', sans-serif;
 	color: var(--text-color);
 	background: var(--lighter-color);
 }
 
 strong {
-	font-weight: 400;
+	font-weight: 600;
 }
