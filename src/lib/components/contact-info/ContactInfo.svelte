@@ -161,7 +161,7 @@
   }
 </script>
 
-<div class="flex flex-col items-center">
+<div class="flex flex-col items-center h-full">
   {#if !$isHuman}
     {#if isLoadError || isVerifyError}
       <div class="px-4 md:px-8 text-center text-[var(--text-error-color)]">
@@ -182,7 +182,7 @@
       </div>
     {/if}
 
-    <div class="flex flex-col justify-center items-center w-full">
+    <div class="flex flex-col justify-center items-center w-full h-full">
       <!-- Turnstile widget container -->
       <div bind:this={turnstileContainer} class="cf-turnstile"></div>
     </div>

@@ -16,10 +16,15 @@
     track("GetInTouch_open");
 
     setTimeout(() => {
-      containerEl.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+      console.log(containerEl.getBoundingClientRect());
+      if (
+        containerEl.getBoundingClientRect().top > window.innerHeight / 2
+      ) {
+        containerEl.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }
     });
   }
 
@@ -34,14 +39,14 @@
 
   $: {
     if (showGetInTouch) {
-      containerStyle = "border-y-2 border-x-2 border-[var(--bright-color)]";
+      containerStyle = "w-[523px]";
       buttonStyle = "";
-      buttonContainerStyle = "rounded-t-lg";
+      buttonContainerStyle = "w-[523px] rounded-t-lg";
     } else {
       containerStyle = "w-[220px]";
       buttonStyle = "cursor-pointer";
       buttonContainerStyle =
-        "rounded-lg cursor-pointer hover:bg-[var(--bright-highlight-color)] focus:bg-[var(--bright-highlight-color)] scale-100 hover:scale-105 focus:scale-105 text-[var(--text-light-color)]";
+        "w-[220px] rounded-lg cursor-pointer hover:bg-[var(--bright-highlight-color)] focus:bg-[var(--bright-highlight-color)] scale-100 hover:scale-105 focus:scale-105 text-[var(--text-light-color)]";
     }
   }
 
@@ -50,11 +55,11 @@
 </script>
 
 <div
-  class="flex flex-col max-w-[600px] rounded-xl relative {containerStyle} {classNames}"
+  class="flex flex-col items-center rounded-xl relative transition-all duration-1000 {containerStyle} {classNames}"
   bind:this={containerEl}
 >
   <div
-    class="inline-flex items-center gap-2 bg-[var(--bright-color)] text-white text-xl font-semibold {buttonContainerStyle}"
+    class="inline-flex items-center gap-2 bg-[var(--bright-color)] text-white text-xl font-semibold transition-all duration-1000 {buttonContainerStyle}"
   >
     <button
       class="py-4 px-8 block w-full {buttonStyle}"
@@ -78,7 +83,11 @@
   </div>
 
   {#if showGetInTouch}
-    <div class="min-h-[170px] mb-4" transition:slide={{ duration: 300 }}>
+    <!-- <div class="min-h-[170px] mb-4" transition:slide={{ duration: 1000 }}> -->
+    <div
+      class="flex flex-col h-[250px] pb-4 w-full border-r-2 border-b-2 border-l-2 rounded-b-xl border-[var(--bright-color)]"
+      transition:slide={{ duration: 1000 }}
+    >
       <p class="p-6 self-center text-center max-w-[520px]">
         I'd love to hear about your project and discuss how we can bring your
         ideas to life together. Don't hesitate to reach out!
