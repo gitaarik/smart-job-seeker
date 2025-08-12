@@ -190,8 +190,8 @@
                 with, and <strong>leading distributed agile teams</strong>
                 across different time zones and cultures. This experience has
                 refined my <strong>communication skills</strong> and ability to
-                <strong>work independently</strong> while <strong>maintaining
-                  strong team alignment</strong>.
+                <strong>work independently</strong> while maintaining
+                <strong>strong team alignment</strong>.
               </p>
 
               <p class="my-4">
