@@ -65,3 +65,7 @@ body {
 	color: var(--text-color);
 	background: var(--lighter-color);
 }
+
+strong {
+	font-weight: 400;
+}

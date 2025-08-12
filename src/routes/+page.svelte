@@ -163,7 +163,8 @@
               </div>
 
               <p>
-                With over {devYearsExperience} years of full-stack development
+                With over <strong>{devYearsExperience} years of full-stack
+                  development</strong>
                 experience, I specialize in building and scaling complex,
                 high-traffic web applications with perfect user experience. My
                 skills cover the entire development process, from initial
