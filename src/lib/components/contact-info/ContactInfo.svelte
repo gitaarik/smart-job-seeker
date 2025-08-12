@@ -93,9 +93,6 @@
       "error-callback": handleTurnstileError,
       "expired-callback": handleTurnstileExpired,
       "unsupported-callback": handleTurnstileUnsupported,
-      "before-interactive-callback": () => {
-        console.log("before-interactive-callback");
-      },
       theme: $theme || "auto", // "light", "dark" or "auto"
       size: "normal", // or "compact"
     });
