@@ -8,11 +8,9 @@
   export let contentClass: string = "";
   const animationSpeed = 250;
 
+  let containerEl: HTMLElement;
   let expandButton: boolean = false;
   let expandContent: boolean = false;
-
-  let containerEl: HTMLElement;
-  let contentEl: HTMLElement;
 
   function handleGetInTouch() {
     if (expandButton) return;
@@ -49,29 +47,18 @@
   let containerStyle: string = "";
   let buttonStyle: string = "";
   let buttonContainerStyle: string = "";
-  let contentStyle: string = "";
 
   $: {
     if (expandButton) {
       containerStyle = "max-w-[523px]";
       buttonStyle = "";
       buttonContainerStyle = "max-w-[523px] rounded-t-lg";
-      contentStyle += " opacity-100";
     } else {
       containerStyle = "max-w-[220px]";
       buttonStyle = "cursor-pointer";
       buttonContainerStyle = "max-w-[220px] rounded-lg cursor-pointer";
       buttonContainerStyle +=
         " hover:bg-[var(--bright-highlight-color)] focus:bg-[var(--bright-highlight-color)] hover:scale-105 focus:scale-105";
-    }
-
-    if (expandContent) {
-      contentStyle = "w-full max-w-[523px]";
-      // contentStyle += " h-[250px]";
-    } else {
-      contentStyle = "w-[220px]";
-      // contentStyle += " h-[0px]";
-      contentStyle += " opacity-0";
     }
   }
 
@@ -90,11 +77,13 @@
       class="py-4 px-8 block w-full {buttonStyle}"
       on:click={handleGetInTouch}
     >
-      <FontAwesomeIcon icon={faComments} />
+      <div class="inline-flex">
+        <FontAwesomeIcon icon={faComments} class="w-6 h-5 mr-2" />
 
-      <span class="text-nowrap">
-        Get in Touch
-      </span>
+        <span class="text-nowrap">
+          Get in Touch
+        </span>
+      </div>
     </button>
 
     {#if expandContent}
@@ -110,8 +99,7 @@
 
   {#if expandContent}
     <div
-      class="flex flex-col pb-4 w-full border-r-2 border-b-2 border-l-2 rounded-b-xl border-[var(--bright-color)] transition-all duration-{animationSpeed} overflow-hidden {contentClass} {contentStyle}"
-      bind:this={contentEl}
+      class="flex flex-col pb-4 w-full border-r-2 border-b-2 border-l-2 rounded-b-xl border-[var(--bright-color)] transition-all duration-{animationSpeed} overflow-hidden {contentClass}"
       transition:slide={{ duration: animationSpeed }}
     >
       <p class="p-6 self-center text-center max-w-[520px]">

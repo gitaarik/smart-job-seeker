@@ -23,7 +23,7 @@
   <FontAwesomeIcon
     {icon}
     alt={`${title} icon`}
-    class="hover:text-white focus:text-white transition"
+    class="w-3 hover:text-white focus:text-white transition"
   />
 
   <span>

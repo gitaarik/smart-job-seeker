@@ -27,11 +27,11 @@
     class="block absolute {getTopOffset()} transition-[top] duration-250"
   >
     <span class="flex w-10 h-10 items-center justify-center">
-      <FontAwesomeIcon icon={faSun} />
+      <FontAwesomeIcon icon={faSun} class="w-4" />
     </span>
 
     <span class="flex w-10 h-10 items-center justify-center">
-      <FontAwesomeIcon icon={faMoon} />
+      <FontAwesomeIcon icon={faMoon} class="w-4" />
     </span>
   </span>
 </button>

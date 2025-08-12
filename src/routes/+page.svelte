@@ -93,7 +93,7 @@
 <main class="flex h-full min-h-screen flex-col justify-between">
   <article class="flex flex-col items-center">
     <header
-      class="pt-10 md:pt-25 w-full flex flex-col items-center bg-[var(--light-bg-color)] min-h-screen"
+      class="pt-10 md:pt-25 w-full flex flex-col items-center bg-[var(--light-bg-color)] min-h-screen transition-colors"
       aria-labelledby="header-heading"
     >
       <div class="px-5 sm:px-10">
@@ -122,7 +122,7 @@
         on:click={handleMoreInfo}
       >
         <span>
-          <FontAwesomeIcon icon={faCircleChevronDown} />
+          <FontAwesomeIcon icon={faCircleChevronDown} class="w-4" />
         </span>
         <span
           class="text-md font-semibold"
@@ -133,7 +133,7 @@
     </header>
 
     <section
-      class="w-full min-h-screen bg-[var(--shade-color)]"
+      class="w-full min-h-screen bg-[var(--shade-color)] transition-colors"
       aria-labelledby="about-me-heading"
     >
       <div class="flex flex-col items-center px-5 sm:px-10">
@@ -253,7 +253,7 @@
     </section>
 
     <footer
-      class="pt-15 px-5 sm:px-10 flex flex-col w-full items-center gap-2 bg-[var(--footer-bg-color)] text-[var(--text-light-color)]"
+      class="pt-15 px-5 sm:px-10 flex flex-col w-full items-center gap-2 bg-[var(--footer-bg-color)] text-[var(--text-light-color)] transition-colors"
       aria-labelledby="footer-heading"
     >
       <div class="flex flex-col w-full max-w-[var(--max-content-width)]">
