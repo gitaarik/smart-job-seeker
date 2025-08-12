@@ -34,14 +34,14 @@
 
   $: {
     if (showGetInTouch) {
-      containerStyle = "border-y-2 border-x-2 border-[var(--bright-color)] transition-all duration-300";
+      containerStyle = "border-y-2 border-x-2 border-[var(--bright-color)]";
       buttonStyle = "";
-      buttonContainerStyle = "rounded-t-lg transition-all duration-300";
+      buttonContainerStyle = "rounded-t-lg";
     } else {
-      containerStyle = "transition-all duration-300";
+      containerStyle = "";
       buttonStyle = "cursor-pointer";
       buttonContainerStyle =
-        "rounded-lg cursor-pointer hover:bg-[var(--bright-highlight-color)] focus:bg-[var(--bright-highlight-color)] scale-100 hover:scale-105 focus:scale-105 transition-all duration-300 text-[var(--text-light-color)]";
+        "rounded-lg cursor-pointer hover:bg-[var(--bright-highlight-color)] focus:bg-[var(--bright-highlight-color)] scale-100 hover:scale-105 focus:scale-105 text-[var(--text-light-color)]";
     }
   }
 
@@ -51,7 +51,8 @@
 
 <div bind:this={containerEl}>
   <div
-    class="flex flex-col w-full max-w-[600px] rounded-xl relative transition {containerStyle} {classNames}"
+    class="flex flex-col w-full max-w-[600px] rounded-xl relative transition-all duration-600 {containerStyle} {classNames}"
+    transition:slide={{ duration: 300 }}
   >
     <div
       class="inline-flex items-center gap-2 bg-[var(--bright-color)] text-white text-xl font-semibold {buttonContainerStyle}"
