@@ -2,21 +2,30 @@
   import { track } from "$lib/tools/analytics";
   import { faComments, faTimes } from "@fortawesome/free-solid-svg-icons";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { slide } from "svelte/transition";
+  import { fade, slide } from "svelte/transition";
   import ContactInfo from "./ContactInfo.svelte";
 
-  let showGetInTouch = false;
+  export let bg: string = "";
+  const animationSpeed = 250;
+
+  let expandButton: boolean = false;
+  let expandContent: boolean = false;
 
   let containerEl: HTMLElement;
+  let contentEl: HTMLElement;
 
   function handleGetInTouch() {
-    if (showGetInTouch) return;
-    showGetInTouch = true;
+    if (expandButton) return;
+
+    expandButton = true;
 
     track("GetInTouch_open");
 
     setTimeout(() => {
-      console.log(containerEl.getBoundingClientRect());
+      expandContent = true;
+    }, animationSpeed);
+
+    setTimeout(() => {
       if (
         containerEl.getBoundingClientRect().top > window.innerHeight / 2
       ) {
@@ -30,23 +39,39 @@
 
   function handleCloseContactInfo() {
     track("GetInTouch_close");
-    showGetInTouch = false;
+
+    expandContent = false;
+    setTimeout(() => {
+      expandButton = false;
+    }, animationSpeed);
   }
 
   let containerStyle: string = "";
   let buttonStyle: string = "";
   let buttonContainerStyle: string = "";
+  let contentStyle: string = "";
 
   $: {
-    if (showGetInTouch) {
-      containerStyle = "w-[523px]";
+    if (expandButton) {
+      containerStyle = "max-w-[523px]";
       buttonStyle = "";
-      buttonContainerStyle = "w-[523px] rounded-t-lg";
+      buttonContainerStyle = "max-w-[523px] rounded-t-lg";
+      contentStyle += " opacity-100";
     } else {
-      containerStyle = "w-[220px]";
+      containerStyle = "max-w-[220px]";
       buttonStyle = "cursor-pointer";
-      buttonContainerStyle =
-        "w-[220px] rounded-lg cursor-pointer hover:bg-[var(--bright-highlight-color)] focus:bg-[var(--bright-highlight-color)] scale-100 hover:scale-105 focus:scale-105 text-[var(--text-light-color)]";
+      buttonContainerStyle = "max-w-[220px] rounded-lg cursor-pointer";
+      buttonContainerStyle +=
+        " hover:bg-[var(--bright-highlight-color)] focus:bg-[var(--bright-highlight-color)] hover:scale-105 focus:scale-105";
+    }
+
+    if (expandContent) {
+      contentStyle = "w-full max-w-[523px]";
+      // contentStyle += " h-[250px]";
+    } else {
+      contentStyle = "w-[220px]";
+      // contentStyle += " h-[0px]";
+      contentStyle += " opacity-0";
     }
   }
 
@@ -55,11 +80,11 @@
 </script>
 
 <div
-  class="flex flex-col items-center rounded-xl relative transition-all duration-1000 {containerStyle} {classNames}"
+  class="flex flex-col items-center rounded-xl relative w-full transition-all duration-{animationSpeed} {containerStyle} {classNames}"
   bind:this={containerEl}
 >
   <div
-    class="inline-flex items-center gap-2 bg-[var(--bright-color)] text-white text-xl font-semibold transition-all duration-1000 {buttonContainerStyle}"
+    class="inline-flex items-center gap-2 bg-[var(--bright-color)] text-white text-xl font-semibold text-[var(--text-light-color)] w-full scale-100 transition-all duration-{animationSpeed} {buttonContainerStyle}"
   >
     <button
       class="py-4 px-8 block w-full {buttonStyle}"
@@ -72,21 +97,22 @@
       </span>
     </button>
 
-    {#if showGetInTouch}
+    {#if expandContent}
       <button
         class="absolute right-4 top-[14px] cursor-pointer text-2xl"
         on:click={handleCloseContactInfo}
+        transition:fade
       >
         <FontAwesomeIcon icon={faTimes} />
       </button>
     {/if}
   </div>
 
-  {#if showGetInTouch}
-    <!-- <div class="min-h-[170px] mb-4" transition:slide={{ duration: 1000 }}> -->
+  {#if expandContent}
     <div
-      class="flex flex-col h-[250px] pb-4 w-full border-r-2 border-b-2 border-l-2 rounded-b-xl border-[var(--bright-color)]"
-      transition:slide={{ duration: 1000 }}
+      class="flex flex-col pb-4 w-full border-r-2 border-b-2 border-l-2 rounded-b-xl border-[var(--bright-color)] transition-all duration-{animationSpeed} bg-[{bg}] overflow-hidden {contentStyle}"
+      bind:this={contentEl}
+      transition:slide={{ duration: animationSpeed }}
     >
       <p class="p-6 self-center text-center max-w-[520px]">
         I'd love to hear about your project and discuss how we can bring your
