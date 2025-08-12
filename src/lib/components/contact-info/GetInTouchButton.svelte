@@ -56,15 +56,6 @@
   <div
     class="inline-flex items-center gap-2 bg-[var(--bright-color)] text-white text-xl font-semibold {buttonContainerStyle}"
   >
-    {#if showGetInTouch}
-      <button
-        class="absolute right-4 top-[14px] cursor-pointer text-2xl"
-        on:click={handleCloseContactInfo}
-      >
-        <FontAwesomeIcon icon={faTimes} />
-      </button>
-    {/if}
-
     <button
       class="py-4 px-8 block w-full {buttonStyle}"
       on:click={handleGetInTouch}
@@ -75,6 +66,15 @@
         Get in Touch
       </span>
     </button>
+
+    {#if showGetInTouch}
+      <button
+        class="absolute right-4 top-[14px] cursor-pointer text-2xl"
+        on:click={handleCloseContactInfo}
+      >
+        <FontAwesomeIcon icon={faTimes} />
+      </button>
+    {/if}
   </div>
 
   {#if showGetInTouch}
