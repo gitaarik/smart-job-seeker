@@ -78,7 +78,7 @@
       on:click={handleGetInTouch}
     >
       <div class="inline-flex">
-        <FontAwesomeIcon icon={faComments} class="w-6 h-5 mr-2" />
+        <FontAwesomeIcon icon={faComments} class="w-6 h-5 mr-3 mt-1" />
 
         <span class="text-nowrap">
           Get in Touch
