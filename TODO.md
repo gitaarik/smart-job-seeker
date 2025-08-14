@@ -1,1 +1,2 @@
+- Enhance portfolio, inspiration: https://youtu.be/Y2kGqbzvAn4
 - Generate static version of site so maybe reader view in firefox works
