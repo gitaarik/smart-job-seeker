@@ -1,8 +1,8 @@
-<script>
-  import TechTag from './TechTag.svelte';
-  import BulletList from './BulletList.svelte';
-  import BulletItem from './BulletItem.svelte';
-  
+<script lang="ts">
+  import TechTag from "./TechTag.svelte";
+  import BulletList from "./BulletList.svelte";
+  import BulletItem from "./BulletItem.svelte";
+
   export let company;
   export let role;
   export let industry;
@@ -22,44 +22,67 @@
     <div class="flex items-start justify-between mb-4">
       <div class="flex-1">
         <h3 class="text-2xl font-semibold text-cyan-700 mb-2">{company}</h3>
-        
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="space-y-2">
             <div class="flex items-center">
-              <svg width="12" height="12" class="mr-2 flex-shrink-0"><use href="#user-tie-icon" /></svg>
+              <svg width="12" height="12" class="mr-2 flex-shrink-0">
+                <use href="#user-tie-icon" />
+              </svg>
               <span>{role}</span>
             </div>
-            
+
             <div class="flex items-center">
-              <svg width="12" height="12" class="mr-2 flex-shrink-0"><use href="#company-icon" /></svg>
+              <svg width="12" height="12" class="mr-2 flex-shrink-0">
+                <use href="#company-icon" />
+              </svg>
               <span>{industry}</span>
             </div>
-            
+
             {#if website}
               <div class="flex items-center">
-                <svg width="12" height="12" class="mr-2 flex-shrink-0"><use href="#link-icon" /></svg>
-                <a href={website} target="_blank" class="text-cyan-700 hover:text-cyan-600">{website.replace('https://', '').replace('www.', '')}</a>
+                <svg width="12" height="12" class="mr-2 flex-shrink-0">
+                  <use href="#link-icon" />
+                </svg>
+                <a
+                  href={website}
+                  target="_blank"
+                  class="text-cyan-700 hover:text-cyan-600"
+                >{
+                  website.replace("https://", "").replace(
+                    "www.",
+                    "",
+                  )
+                }</a>
               </div>
             {/if}
           </div>
-          
+
           <div class="space-y-2">
             <div class="flex items-center">
-              <svg width="12" height="12" class="mr-2 flex-shrink-0"><use href="#calendar-icon" /></svg>
+              <svg width="12" height="12" class="mr-2 flex-shrink-0">
+                <use href="#calendar-icon" />
+              </svg>
               <span>{period}</span>
             </div>
-            
+
             <div class="flex items-center">
-              <svg width="12" height="12" class="mr-2 flex-shrink-0"><use href="#location-icon" /></svg>
+              <svg width="12" height="12" class="mr-2 flex-shrink-0">
+                <use href="#location-icon" />
+              </svg>
               <span>{location}</span>
             </div>
           </div>
         </div>
       </div>
-      
+
       {#if logo}
         <div class="ml-4 flex-shrink-0">
-          <img src={logo} alt="{company} Logo" class="h-20 w-auto border border-gray-400 rounded" />
+          <img
+            src={logo}
+            alt="{company} Logo"
+            class="h-20 w-auto border border-gray-400 rounded"
+          />
         </div>
       {/if}
     </div>
@@ -67,7 +90,7 @@
 
   <div class="space-y-4">
     <p class="leading-relaxed">{description}</p>
-    
+
     {#if note}
       <p class="text-sm italic text-gray-700"><strong>Note:</strong> {note}</p>
     {/if}
@@ -87,11 +110,11 @@
 
     <div>
       <h4 class="text-lg font-semibold mb-3">
-        {#if company === 'TravelBird'}
+        {#if company === "TravelBird"}
           Industry Impact:
-        {:else if company === 'SWIS'}
+        {:else if company === "SWIS"}
           Client Impact:
-        {:else if company === 'Gamepoint'}
+        {:else if company === "Gamepoint"}
           Platform Impact:
         {:else}
           Technical Impact:

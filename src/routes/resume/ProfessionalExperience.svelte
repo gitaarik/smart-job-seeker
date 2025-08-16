@@ -1,185 +1,309 @@
-<script>
-  import ResumeSection from './ResumeSection.svelte';
-  import EmploymentSection from './EmploymentSection.svelte';
-  
+<script lang="ts">
+  import ResumeSection from "./ResumeSection.svelte";
+  import EmploymentSection from "./EmploymentSection.svelte";
+
   const employmentHistory = [
     {
-      company: 'Chipta',
-      role: 'Lead Developer',
-      industry: 'Ticketing Service',
-      website: 'https://www.chipta.com/',
-      period: 'September 2014 – June 2024',
-      location: 'Amsterdam, The Netherlands',
-      logo: 'images/chipta-logo.png',
-      description: 'Joined this innovative ticketing startup as Lead Developer, scaling the platform from concept to processing thousands of tickets per minute during peak events. Successfully led technical development through 10 years of growth, making Chipta a competitive alternative for independent event organizers.',
+      company: "Chipta",
+      role: "Lead Developer",
+      industry: "Ticketing Service",
+      website: "https://www.chipta.com/",
+      period: "September 2014 – June 2024",
+      location: "Amsterdam, The Netherlands",
+      logo: "images/chipta-logo.png",
+      description:
+        "Joined this innovative ticketing startup as Lead Developer, scaling the platform from concept to processing thousands of tickets per minute during peak events. Successfully led technical development through 10 years of growth, making Chipta a competitive alternative for independent event organizers.",
       achievements: [
         {
-          title: 'Team Leadership',
-          description: 'Built and managed diverse development teams of 3-5 developers, using agile methodologies that optimized efficiency and delivery speed'
+          title: "Team Leadership",
+          description:
+            "Built and managed diverse development teams of 3-5 developers, using agile methodologies that optimized efficiency and delivery speed",
         },
         {
-          title: 'Platform Scalability',
-          description: 'Architected and optimized systems to handle extreme traffic spikes, enabling the platform to process thousands of ticket sales per minute without downtime'
+          title: "Platform Scalability",
+          description:
+            "Architected and optimized systems to handle extreme traffic spikes, enabling the platform to process thousands of ticket sales per minute without downtime",
         },
         {
-          title: 'Performance Optimization',
-          description: 'Delivered 40-60% speed improvements on high-traffic pages through strategic query optimization and caching implementation'
+          title: "Performance Optimization",
+          description:
+            "Delivered 40-60% speed improvements on high-traffic pages through strategic query optimization and caching implementation",
         },
         {
-          title: 'System Reliability',
-          description: 'Created extensive testing suite (+80% coverage) and CI/CD system, radically improving deployment reliability & speed and enabling regular releases'
+          title: "System Reliability",
+          description:
+            "Created extensive testing suite (+80% coverage) and CI/CD system, radically improving deployment reliability & speed and enabling regular releases",
         },
         {
-          title: 'Revenue Growth',
-          description: 'Built essential payment integrations with multiple providers (Mollie, Pay.nl, PayPal) that processed millions in ticket sales over the platform\'s lifetime'
+          title: "Revenue Growth",
+          description:
+            "Built essential payment integrations with multiple providers (Mollie, Pay.nl, PayPal) that processed millions in ticket sales over the platform's lifetime",
         },
         {
-          title: 'Technical Innovation',
-          description: 'Developed custom authentication, mailing, and localization systems, supporting custom needs and backward compatibility'
+          title: "Technical Innovation",
+          description:
+            "Developed custom authentication, mailing, and localization systems, supporting custom needs and backward compatibility",
         },
         {
-          title: 'Market Expansion',
-          description: 'Created multi-language & country platform capabilities that enabled international market expansion and supported global event organizers'
-        }
+          title: "Market Expansion",
+          description:
+            "Created multi-language & country platform capabilities that enabled international market expansion and supported global event organizers",
+        },
       ],
-      impact: 'Transformed a proof of concept into a robust, scalable ticketing platform serving thousands of events and processing high-volume traffic reliably.',
-      technologies: ['Python', 'Django', 'Django REST Framework', 'Django Channels', 'Django Debug Toolbar', 'Django Silk', 'Jinja2', 'Weasyprint', 'MySQL', 'Ansible', 'Python Fabric', 'Linode', 'Nginx', 'Redis', 'Selenium', 'OAuth', 'Node.js', 'React', 'MobX', 'Lit', 'Web Components', 'Web Sockets', 'Webpack', 'React Native']
+      impact:
+        "Transformed a proof of concept into a robust, scalable ticketing platform serving thousands of events and processing high-volume traffic reliably.",
+      technologies: [
+        "Python",
+        "Django",
+        "Django REST Framework",
+        "Django Channels",
+        "Django Debug Toolbar",
+        "Django Silk",
+        "Jinja2",
+        "Weasyprint",
+        "MySQL",
+        "Ansible",
+        "Python Fabric",
+        "Linode",
+        "Nginx",
+        "Redis",
+        "Selenium",
+        "OAuth",
+        "Node.js",
+        "React",
+        "MobX",
+        "Lit",
+        "Web Components",
+        "Web Sockets",
+        "Webpack",
+        "React Native",
+      ],
     },
     {
-      company: 'Tender-it',
-      role: 'Lead Developer',
-      industry: 'Tender Discovery Platform',
-      period: 'March 2015 – June 2022',
-      location: 'Amsterdam, The Netherlands',
-      description: 'Built a comprehensive tender discovery platform from scratch, enabling companies to efficiently find and track public procurement opportunities. Delivered a complete solution that automated manual tender search processes for businesses.',
-      note: 'This was a part-time engagement that I combined with my main focus on Chipta.',
+      company: "Tender-it",
+      role: "Lead Developer",
+      industry: "Tender Discovery Platform",
+      period: "March 2015 – June 2022",
+      location: "Amsterdam, The Netherlands",
+      description:
+        "Built a comprehensive tender discovery platform from scratch, enabling companies to efficiently find and track public procurement opportunities. Delivered a complete solution that automated manual tender search processes for businesses.",
+      note:
+        "This was a part-time engagement that I combined with my main focus on Chipta.",
       achievements: [
         {
-          title: 'Product Development',
-          description: 'Designed and developed entire platform (backend and frontend) from concept to production'
+          title: "Product Development",
+          description:
+            "Designed and developed entire platform (backend and frontend) from concept to production",
         },
         {
-          title: 'Search Innovation',
-          description: 'Implemented an extensive search engine using Elasticsearch, making it easy and time effective for users to find suitable tenders'
+          title: "Search Innovation",
+          description:
+            "Implemented an extensive search engine using Elasticsearch, making it easy and time effective for users to find suitable tenders",
         },
         {
-          title: 'Data Automation',
-          description: 'Created automated web crawling system that index thousands of public tenders daily, providing comprehensive market coverage'
+          title: "Data Automation",
+          description:
+            "Created automated web crawling system that index thousands of public tenders daily, providing comprehensive market coverage",
         },
         {
-          title: 'Revenue Model',
-          description: 'Built subscription-based authentication and payment system that supports sustainable business model and user growth'
+          title: "Revenue Model",
+          description:
+            "Built subscription-based authentication and payment system that supports sustainable business model and user growth",
         },
         {
-          title: 'User Experience',
-          description: 'Delivered intuitive "saved searches" interface and email notification system that supported user engagement and retention'
+          title: "User Experience",
+          description:
+            'Delivered intuitive "saved searches" interface and email notification system that supported user engagement and retention',
         },
         {
-          title: 'Frontend Optimization',
-          description: 'Successfully colaborated with frontend developer to optimize frontend experience using Vue.js'
-        }
+          title: "Frontend Optimization",
+          description:
+            "Successfully colaborated with frontend developer to optimize frontend experience using Vue.js",
+        },
       ],
-      impact: 'Transformed a startup idea into a complete, extensible tender platform with a intuitive interface and solid administrative tools.',
-      technologies: ['Python', 'Django', 'Django REST Framework', 'Django Celery', 'Python Requests', 'MySQL', 'Beautifulsoup', 'Elasticsearch', 'Linode', 'Nginx', 'Node.js', 'React', 'Vue.js', 'Webpack']
+      impact:
+        "Transformed a startup idea into a complete, extensible tender platform with a intuitive interface and solid administrative tools.",
+      technologies: [
+        "Python",
+        "Django",
+        "Django REST Framework",
+        "Django Celery",
+        "Python Requests",
+        "MySQL",
+        "Beautifulsoup",
+        "Elasticsearch",
+        "Linode",
+        "Nginx",
+        "Node.js",
+        "React",
+        "Vue.js",
+        "Webpack",
+      ],
     },
     {
-      company: 'TravelBird',
-      role: 'Senior Full Stack & iOS Developer',
-      industry: 'Online Travel Agent',
-      website: 'https://www.travelbird.com/',
-      period: 'March 2013 – August 2014',
-      location: 'Amsterdam, The Netherlands',
-      description: 'Joined during rapid growth phase (50 to 250+ employees) and contributed to scaling mobile presence during the company\'s expansion across European markets.',
+      company: "TravelBird",
+      role: "Senior Full Stack & iOS Developer",
+      industry: "Online Travel Agent",
+      website: "https://www.travelbird.com/",
+      period: "March 2013 – August 2014",
+      location: "Amsterdam, The Netherlands",
+      description:
+        "Joined during rapid growth phase (50 to 250+ employees) and contributed to scaling mobile presence during the company's expansion across European markets.",
       achievements: [
         {
-          title: 'Mobile Development',
-          description: 'Built and maintained iOS application as part of mobile team, supporting mobile bookings during a period of rapid company growth'
+          title: "Mobile Development",
+          description:
+            "Built and maintained iOS application as part of mobile team, supporting mobile bookings during a period of rapid company growth",
         },
         {
-          title: 'API Architecture',
-          description: 'Designed and implemented robust REST API using Django REST Framework, that accommodated iOS & Android apps and mobile website'
+          title: "API Architecture",
+          description:
+            "Designed and implemented robust REST API using Django REST Framework, that accommodated iOS & Android apps and mobile website",
         },
         {
-          title: 'Cross-Platform Integration',
-          description: 'Ensured consistent user experience across multiple mobile platforms and web interfaces'
+          title: "Cross-Platform Integration",
+          description:
+            "Ensured consistent user experience across multiple mobile platforms and web interfaces",
         },
         {
-          title: 'Email Marketing Platform',
-          description: 'Worked on comprehensive email marketing system that supported customer acquisition and retention campaigns'
-        }
+          title: "Email Marketing Platform",
+          description:
+            "Worked on comprehensive email marketing system that supported customer acquisition and retention campaigns",
+        },
       ],
-      impact: 'Successfully delivered mobile apps and mobile website as part of an agile team during a critical period when mobile app presence was becoming essential for travel industry competitiveness.',
-      technologies: ['Objective-C', 'Xcode', 'Python', 'Django', 'Django REST Framework', 'Django Celery', 'Django South', 'Django Compressor', 'Sendgrid', 'PostgreSQL', 'Linode', 'Nginx', 'JavaScript', 'gulp.js', 'Sass']
+      impact:
+        "Successfully delivered mobile apps and mobile website as part of an agile team during a critical period when mobile app presence was becoming essential for travel industry competitiveness.",
+      technologies: [
+        "Objective-C",
+        "Xcode",
+        "Python",
+        "Django",
+        "Django REST Framework",
+        "Django Celery",
+        "Django South",
+        "Django Compressor",
+        "Sendgrid",
+        "PostgreSQL",
+        "Linode",
+        "Nginx",
+        "JavaScript",
+        "gulp.js",
+        "Sass",
+      ],
     },
     {
-      company: 'SWIS',
-      role: 'Mid-level Web Developer',
-      industry: 'Web Development Agency',
-      website: 'https://www.swis.nl/',
-      period: 'August 2011 – February 2013',
-      location: 'Leiden, The Netherlands',
-      description: 'Delivered web solutions for high-profile clients including major e-commerce and government organizations, working as part of a dedicated Scrum team in a fast-paced agency environment with diverse project requirements.',
+      company: "SWIS",
+      role: "Mid-level Web Developer",
+      industry: "Web Development Agency",
+      website: "https://www.swis.nl/",
+      period: "August 2011 – February 2013",
+      location: "Leiden, The Netherlands",
+      description:
+        "Delivered web solutions for high-profile clients including major e-commerce and government organizations, working as part of a dedicated Scrum team in a fast-paced agency environment with diverse project requirements.",
       achievements: [
         {
-          title: 'Client Success',
-          description: 'Successfully delivered web projects for major clients including Bol.com, EP, Gemeente Amsterdam, and Gemeente Haarlemmermeer'
+          title: "Client Success",
+          description:
+            "Successfully delivered web projects for major clients including Bol.com, EP, Gemeente Amsterdam, and Gemeente Haarlemmermeer",
         },
         {
-          title: 'Agile Workflow',
-          description: 'Contributed to Scrum team that consistently met client deadlines and budget requirements'
+          title: "Agile Workflow",
+          description:
+            "Contributed to Scrum team that consistently met client deadlines and budget requirements",
         },
         {
-          title: 'Frontend Skills',
-          description: 'Developed advanced jQuery and UX skills that improved user engagement metrics across client projects'
+          title: "Frontend Skills",
+          description:
+            "Developed advanced jQuery and UX skills that improved user engagement metrics across client projects",
         },
         {
-          title: 'Custom CMS Expertise',
-          description: 'Mastered in-house built CMS system, enabling rapid development and client customization capabilities'
-        }
+          title: "Custom CMS Expertise",
+          description:
+            "Mastered in-house built CMS system, enabling rapid development and client customization capabilities",
+        },
       ],
-      impact: 'Delivered high-quality web solutions that met diverse client needs while maintaining agency\'s reputation for quality and reliability.',
-      technologies: ['PHP', 'MySQL', 'Apache', 'Linux', 'XAMPP', 'HTML5', 'CSS3', 'JavaScript', 'AJAX', 'jQuery', 'jQuery UI', 'Underscore.js', 'Bootstrap', 'Responsive design', 'Firebug']
+      impact:
+        "Delivered high-quality web solutions that met diverse client needs while maintaining agency's reputation for quality and reliability.",
+      technologies: [
+        "PHP",
+        "MySQL",
+        "Apache",
+        "Linux",
+        "XAMPP",
+        "HTML5",
+        "CSS3",
+        "JavaScript",
+        "AJAX",
+        "jQuery",
+        "jQuery UI",
+        "Underscore.js",
+        "Bootstrap",
+        "Responsive design",
+        "Firebug",
+      ],
     },
     {
-      company: 'Gamepoint',
-      role: 'Junior / Mid-level Web Developer',
-      industry: 'Casual Gaming / Community',
-      website: 'https://www.gamepoint.biz/',
-      period: 'June 2007 – June 2011',
-      location: 'The Hague, The Netherlands',
-      description: 'Started career at established gaming community platform, progressing from junior to mid-level developer while contributing to platform stability and feature development.',
+      company: "Gamepoint",
+      role: "Junior / Mid-level Web Developer",
+      industry: "Casual Gaming / Community",
+      website: "https://www.gamepoint.biz/",
+      period: "June 2007 – June 2011",
+      location: "The Hague, The Netherlands",
+      description:
+        "Started career at established gaming community platform, progressing from junior to mid-level developer while contributing to platform stability and feature development.",
       achievements: [
         {
-          title: 'Payment Systems',
-          description: 'Successfully implemented multiple payment integrations that supported platform monetization and user transactions'
+          title: "Payment Systems",
+          description:
+            "Successfully implemented multiple payment integrations that supported platform monetization and user transactions",
         },
         {
-          title: 'International Expansion',
-          description: 'Contributed to internationalization and localization efforts that enabled platform expansion in other countries'
+          title: "International Expansion",
+          description:
+            "Contributed to internationalization and localization efforts that enabled platform expansion in other countries",
         },
         {
-          title: 'Database Design',
-          description: 'Designed and optimized MySQL database structures that improved query performance and system reliability'
+          title: "Database Design",
+          description:
+            "Designed and optimized MySQL database structures that improved query performance and system reliability",
         },
         {
-          title: 'Team Collaboration',
-          description: 'Worked effectively in 10+ developer team environment, contributing to large-scale PHP codebase maintenance and feature development'
+          title: "Team Collaboration",
+          description:
+            "Worked effectively in 10+ developer team environment, contributing to large-scale PHP codebase maintenance and feature development",
         },
         {
-          title: 'Career Growth',
-          description: 'Advanced from junior to mid-level developer, demonstrating consistent skill development and increasing responsibility'
-        }
+          title: "Career Growth",
+          description:
+            "Advanced from junior to mid-level developer, demonstrating consistent skill development and increasing responsibility",
+        },
       ],
-      impact: 'Supported stable operation and feature enhancement of established gaming community serving hundreds of thousands of active users.',
-      technologies: ['PHP', 'MySQL', 'nginx', 'HTML', 'CSS', 'JavaScript', 'jQuery', 'AJAX', 'YUI Library']
-    }
+      impact:
+        "Supported stable operation and feature enhancement of established gaming community serving hundreds of thousands of active users.",
+      technologies: [
+        "PHP",
+        "MySQL",
+        "nginx",
+        "HTML",
+        "CSS",
+        "JavaScript",
+        "jQuery",
+        "AJAX",
+        "YUI Library",
+      ],
+    },
   ];
 </script>
 
-<ResumeSection title="Employment History" iconName="world-icon" iconWidth="24" iconHeight="23">
+<ResumeSection
+  title="Employment History"
+  iconName="world-icon"
+  iconWidth="24"
+  iconHeight="23"
+>
   <div class="space-y-8">
     {#each employmentHistory as job (job.company)}
-      <EmploymentSection 
+      <EmploymentSection
         company={job.company}
         role={job.role}
         industry={job.industry}
