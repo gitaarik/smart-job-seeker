@@ -6,24 +6,24 @@
   export let company;
   export let role;
   export let industry;
-  export let website = null;
+  export let website;
   export let period;
   export let location;
-  export let logo = null;
+  export let logo;
   export let description;
-  export let note = null;
+  export let note;
   export let achievements = [];
   export let impact;
   export let technologies = [];
 </script>
 
-<section class="mb-12 break-inside-avoid print:mb-8">
+<section class="mb-12 break-inside-avoid">
   <header class="mb-6">
     <div class="flex items-start justify-between mb-4">
       <div class="flex-1">
-        <h3 class="text-2xl font-semibold text-cyan-700 mb-2 print:text-xl">{company}</h3>
+        <h3 class="text-2xl font-semibold text-cyan-700 mb-2">{company}</h3>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm print:text-xs">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="space-y-2">
             <div class="flex items-center">
               <svg width="12" height="12" class="mr-2 flex-shrink-0"><use href="#user-tie-icon" /></svg>
@@ -66,15 +66,15 @@
   </header>
 
   <div class="space-y-4">
-    <p class="text-sm leading-relaxed print:text-xs">{description}</p>
+    <p class="leading-relaxed">{description}</p>
     
     {#if note}
-      <p class="text-sm italic text-gray-700 print:text-xs"><strong>Note:</strong> {note}</p>
+      <p class="text-sm italic text-gray-700"><strong>Note:</strong> {note}</p>
     {/if}
 
     {#if achievements.length > 0}
       <div>
-        <h4 class="text-lg font-semibold mb-3 print:text-base">Key Achievements:</h4>
+        <h4 class="text-lg font-semibold mb-3">Key Achievements:</h4>
         <BulletList>
           {#each achievements as achievement}
             <BulletItem>
@@ -86,7 +86,7 @@
     {/if}
 
     <div>
-      <h4 class="text-lg font-semibold mb-3 print:text-base">
+      <h4 class="text-lg font-semibold mb-3">
         {#if company === 'TravelBird'}
           Industry Impact:
         {:else if company === 'SWIS'}
@@ -97,12 +97,12 @@
           Technical Impact:
         {/if}
       </h4>
-      <p class="text-sm leading-relaxed print:text-xs">{impact}</p>
+      <p class="text-sm leading-relaxed">{impact}</p>
     </div>
 
     {#if technologies.length > 0}
       <div>
-        <h4 class="text-lg font-semibold mb-3 print:text-base">Technologies Used:</h4>
+        <h4 class="text-lg font-semibold mb-3">Technologies Used:</h4>
         <div class="flex flex-wrap gap-2">
           {#each technologies as tech}
             <TechTag>{tech}</TechTag>

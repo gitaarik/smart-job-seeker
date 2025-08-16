@@ -11,10 +11,9 @@
   ];
 </script>
 
-
 <ResumeSection title="Profile" iconName="person-icon" iconWidth="21" iconHeight="20">
   <ul class="columns-2 gap-6">
-    {#each profileData as item}
+    {#each profileData as item (item.icon)}
       <li class="flex items-start mb-3 break-inside-avoid">
         <div class="mr-2 flex-shrink-0">
           <svg width="18" height="18"><use href="#{item.icon}" /></svg>
