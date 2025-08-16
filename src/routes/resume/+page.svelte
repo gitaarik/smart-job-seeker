@@ -55,43 +55,7 @@
     src: url("/fonts/NotoSans-Bold.woff2") format("woff2");
   }
 
-  /* Custom component classes */
-  .resume-article {
-    @apply bg-gray-50 border-2 border-cyan-700 rounded-xl p-6 mb-8 break-inside-avoid print:border-0 print:p-0 print:mb-2;
-  }
-
-  .section-heading {
-    @apply relative border-b-2 border-cyan-700 pb-1 mb-5 print:pb-1 print:mb-4;
-  }
-
-  .section-title {
-    @apply text-xl font-semibold pr-12 print:text-lg;
-  }
-
-  .section-icon {
-    @apply absolute right-1 top-2;
-  }
-
-  .subsection-heading {
-    @apply flex items-center pt-4 pb-2 mb-5 border-b border-cyan-700;
-  }
-
-  .subsection-title {
-    @apply text-lg print:text-base;
-  }
-
-  .profile-list-item {
-    @apply flex items-start mb-3 break-inside-avoid;
-  }
-
-  .profile-icon {
-    @apply mr-2 flex-shrink-0;
-  }
-
-  .contact-link {
-    @apply text-cyan-900 hover:text-cyan-600;
-  }
-
+  /* Styles for employment section components (TODO: move to EmploymentHistorySection component) */
   .employment-section {
     @apply my-12 break-inside-avoid print:my-8;
   }

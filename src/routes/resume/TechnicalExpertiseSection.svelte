@@ -24,6 +24,16 @@
   ];
 </script>
 
+<style>
+  .subsection-heading {
+    @apply flex items-center pt-4 pb-2 mb-5 border-b border-cyan-700;
+  }
+
+  .subsection-title {
+    @apply text-lg print:text-base;
+  }
+</style>
+
 <ResumeSection title="Technical Expertise" iconName="code-icon" iconWidth="30" iconHeight="17">
   <h3 class="subsection-heading">
     <span class="subsection-title">Expert Knowledge</span>

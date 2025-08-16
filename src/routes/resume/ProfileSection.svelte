@@ -11,6 +11,20 @@
   ];
 </script>
 
+<style>
+  .profile-list-item {
+    @apply flex items-start mb-3 break-inside-avoid;
+  }
+
+  .profile-icon {
+    @apply mr-2 flex-shrink-0;
+  }
+
+  .contact-link {
+    @apply text-cyan-900 hover:text-cyan-600;
+  }
+</style>
+
 <ResumeSection title="Profile" iconName="person-icon" iconWidth="21" iconHeight="20">
   <ul class="columns-2 gap-6">
     {#each profileData as item}
