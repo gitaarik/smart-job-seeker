@@ -4,7 +4,7 @@
   import SummarySection from "./SummarySection.svelte";
   import KeyQualificationsSection from "./KeyQualificationsSection.svelte";
   import TechnicalExpertiseSection from "./TechnicalExpertiseSection.svelte";
-  import MethodologiesAndTraitsSection from "./MethodologiesAndTraitsSection.svelte";
+  import PersonalityAndMethodologies from "./PersonalityAndMethodologies.svelte";
   import ProfessionalExperience from "./ProfessionalExperience.svelte";
   import ReferencesSection from "./ReferencesSection.svelte";
 </script>
@@ -27,7 +27,7 @@
       <SummarySection />
       <KeyQualificationsSection />
       <TechnicalExpertiseSection />
-      <MethodologiesAndTraitsSection />
+      <PersonalityAndMethodologies />
       <ProfessionalExperience />
       <ReferencesSection />
     </div>

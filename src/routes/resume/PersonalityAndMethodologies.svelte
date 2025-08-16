@@ -2,7 +2,10 @@
   import ResumeSection from "./ResumeSection.svelte";
   import CircleList from "./CircleList.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { faProjectDiagram, faEye } from "@fortawesome/free-solid-svg-icons";
+  import {
+    faEye,
+    faProjectDiagram,
+  } from "@fortawesome/free-solid-svg-icons";
 
   const methodologies = [
     "Agile, Scrum, Kanban, Extreme Programming (XP)",
@@ -29,10 +32,12 @@
   ];
 </script>
 
-<ResumeSection title="Methodologies & Personality" icon={faProjectDiagram}>
+<ResumeSection title="Personality & Methodologies " icon={faProjectDiagram}>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
     <div>
-      <h3 class="flex items-center justify-between pt-4 pb-2 mb-5 border-b border-cyan-700">
+      <h3
+        class="flex items-center justify-between pt-4 pb-2 mb-5 border-b border-cyan-700"
+      >
         <span class="text-lg font-medium">Personality Traits</span>
         <FontAwesomeIcon icon={faEye} class="w-4 h-4" />
       </h3>
@@ -46,7 +51,9 @@
     </div>
 
     <div>
-      <h3 class="flex items-center justify-between pt-4 pb-2 mb-5 border-b border-cyan-700">
+      <h3
+        class="flex items-center justify-between pt-4 pb-2 mb-5 border-b border-cyan-700"
+      >
         <span class="text-lg font-medium">Development Methodologies</span>
         <FontAwesomeIcon icon={faProjectDiagram} class="w-4 h-4" />
       </h3>
@@ -60,3 +67,4 @@
     </div>
   </div>
 </ResumeSection>
+
