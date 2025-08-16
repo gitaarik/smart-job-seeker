@@ -178,7 +178,7 @@
 
 <ResumeSection title="Employment History" iconName="world-icon" iconWidth="24" iconHeight="23">
   <div class="space-y-8">
-    {#each employmentHistory as job}
+    {#each employmentHistory as job (job.company)}
       <EmploymentSection 
         company={job.company}
         role={job.role}
