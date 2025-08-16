@@ -1,6 +1,6 @@
 <script lang="ts">
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  
+
   export let title;
   export let icon;
 </script>
@@ -12,8 +12,8 @@
     class="relative border-b-2 border-cyan-700 pb-1 mb-5 print:pb-1 print:mb-4"
   >
     <span class="text-xl font-semibold pr-12 print:text-lg">{title}</span>
-    <div class="absolute right-1 top-2">
-      <FontAwesomeIcon {icon} class="w-5 h-5" />
+    <div class="absolute right-1 top-1">
+      <FontAwesomeIcon {icon} size="lg" />
     </div>
   </h2>
 
