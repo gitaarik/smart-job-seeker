@@ -1,5 +1,6 @@
 <script lang="ts">
   import ResumeSection from "./ResumeSection.svelte";
+  import CircleList from "./CircleList.svelte";
   import { faEye } from "@fortawesome/free-solid-svg-icons";
 
   const traits = [
@@ -16,11 +17,11 @@
 </script>
 
 <ResumeSection title="Personality Traits" icon={faEye}>
-  <ul class="grid grid-cols-3 gap-2">
+  <CircleList class="grid grid-cols-3 gap-2">
     {#each traits as trait}
-      <li class="ml-8 list-disc">
+      <li>
         <strong>{trait}</strong>
       </li>
     {/each}
-  </ul>
+  </CircleList>
 </ResumeSection>
