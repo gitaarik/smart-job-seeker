@@ -3,6 +3,6 @@
   export { className as class };
 </script>
 
-<ul class="space-y-2 {className}">
+<ul class="space-y-2 list-[circle] list-inside {className}">
   <slot />
 </ul>

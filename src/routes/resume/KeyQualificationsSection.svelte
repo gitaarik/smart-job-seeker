@@ -1,6 +1,6 @@
 <script lang="ts">
   import ResumeSection from "./ResumeSection.svelte";
-  import BulletList from "./BulletList.svelte";
+  import CircleList from "./CircleList.svelte";
   import BulletItem from "./BulletItem.svelte";
   import { faStar } from "@fortawesome/free-solid-svg-icons";
 
@@ -16,11 +16,11 @@
 </script>
 
 <ResumeSection title="Key Qualifications" icon={faStar}>
-  <BulletList>
+  <CircleList>
     {#each qualifications as qualification}
       <BulletItem>
         {@html qualification}
       </BulletItem>
     {/each}
-  </BulletList>
+  </CircleList>
 </ResumeSection>

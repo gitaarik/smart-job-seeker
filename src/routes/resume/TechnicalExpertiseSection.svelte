@@ -1,9 +1,13 @@
 <script lang="ts">
   import ResumeSection from "./ResumeSection.svelte";
-  import BulletList from "./BulletList.svelte";
+  import CircleList from "./CircleList.svelte";
   import BulletItem from "./BulletItem.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { faCode, faCrown, faHardHat } from "@fortawesome/free-solid-svg-icons";
+  import {
+    faCode,
+    faCrown,
+    faHardHat,
+  } from "@fortawesome/free-solid-svg-icons";
 
   const expertKnowledge = [
     { title: "Python", details: "Django, Django REST Framework, Celery" },
@@ -68,27 +72,34 @@
     <FontAwesomeIcon icon={faCrown} class="ml-2 w-4 h-4" />
   </h3>
 
-  <BulletList class="mb-6">
-    {#each expertKnowledge as item}
+  <CircleList class="mb-6">
+    {#each expertKnowledge as item (item.title)}
       <BulletItem>
-        <h5 class="font-semibold inline">{item.title}</h5>
-        {item.details}
+        <span class="inline-flex flex-col">
+          <h5 class="font-semibold inline">{item.title}</h5>
+          <span>
+            {item.details}
+          </span>
+        </span>
       </BulletItem>
     {/each}
-  </BulletList>
+  </CircleList>
 
   <h3 class="flex items-center pt-4 pb-2 mb-5 border-b border-cyan-700">
     <span class="text-lg print:text-base">Working Knowledge</span>
     <FontAwesomeIcon icon={faHardHat} class="ml-2 w-4 h-4" />
   </h3>
 
-  <BulletList>
-    {#each workingKnowledge as item}
+  <CircleList>
+    {#each workingKnowledge as item (item.title)}
       <BulletItem>
-        <h5 class="font-semibold inline">{item.title}</h5>
-        {item.details}
+        <span class="inline-flex flex-col">
+          <h5 class="font-semibold inline">{item.title}</h5>
+          <span>
+            {item.details}
+          </span>
+        </span>
       </BulletItem>
     {/each}
-  </BulletList>
+  </CircleList>
 </ResumeSection>
-
