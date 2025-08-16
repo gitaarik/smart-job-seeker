@@ -11,30 +11,17 @@
   ];
 </script>
 
-<style>
-  .profile-list-item {
-    @apply flex items-start mb-3 break-inside-avoid;
-  }
-
-  .profile-icon {
-    @apply mr-2 flex-shrink-0;
-  }
-
-  .contact-link {
-    @apply text-cyan-900 hover:text-cyan-600;
-  }
-</style>
 
 <ResumeSection title="Profile" iconName="person-icon" iconWidth="21" iconHeight="20">
   <ul class="columns-2 gap-6">
     {#each profileData as item}
-      <li class="profile-list-item">
-        <div class="profile-icon">
+      <li class="flex items-start mb-3 break-inside-avoid">
+        <div class="mr-2 flex-shrink-0">
           <svg width="18" height="18"><use href="#{item.icon}" /></svg>
         </div>
         <p>
           {#if item.href}
-            <a href={item.href} class="contact-link" target={item.target || undefined}>
+            <a href={item.href} class="text-cyan-900 hover:text-cyan-600" target={item.target || ""}>
               {item.text}
             </a>
           {:else}

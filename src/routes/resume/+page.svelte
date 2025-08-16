@@ -54,31 +54,6 @@
     font-display: swap;
     src: url("/fonts/NotoSans-Bold.woff2") format("woff2");
   }
-
-  /* Styles for employment section components (TODO: move to EmploymentHistorySection component) */
-  .employment-section {
-    @apply my-12 break-inside-avoid print:my-8;
-  }
-
-  .employment-header {
-    @apply pb-4;
-  }
-
-  .company-title {
-    @apply text-lg font-semibold border-b border-cyan-700 pb-1 mb-2;
-  }
-
-  .job-detail {
-    @apply flex items-center text-sm mb-1;
-  }
-
-  .job-detail-icon {
-    @apply mr-1;
-  }
-
-  .section-subheading {
-    @apply text-base font-semibold pb-2 print:text-sm;
-  }
 </style>
 
 <!-- SVG Icons -->
