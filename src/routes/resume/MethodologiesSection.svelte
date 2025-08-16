@@ -1,7 +1,6 @@
 <script lang="ts">
   import ResumeSection from "./ResumeSection.svelte";
   import CircleList from "./CircleList.svelte";
-  import BulletItem from "./BulletItem.svelte";
   import { faProjectDiagram } from "@fortawesome/free-solid-svg-icons";
 
   const methodologies = [
@@ -20,9 +19,9 @@
 <ResumeSection title="Project & Development Methodologies" icon={faProjectDiagram}>
   <CircleList>
     {#each methodologies as methodology}
-      <BulletItem>
+      <li>
         <strong>{methodology}</strong>
-      </BulletItem>
+      </li>
     {/each}
   </CircleList>
 </ResumeSection>

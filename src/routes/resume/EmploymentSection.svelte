@@ -1,7 +1,6 @@
 <script lang="ts">
   import TechTag from "./TechTag.svelte";
   import CircleList from "./CircleList.svelte";
-  import BulletItem from "./BulletItem.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { faUser, faBuilding, faLink, faCalendar, faMapMarkerAlt } from "@fortawesome/free-solid-svg-icons";
 
@@ -92,9 +91,9 @@
         <h4 class="text-lg font-semibold mb-3">Key Achievements:</h4>
         <CircleList>
           {#each achievements as achievement}
-            <BulletItem>
+            <li>
               <strong>{achievement.title}:</strong> {achievement.description}
-            </BulletItem>
+            </li>
           {/each}
         </CircleList>
       </div>
