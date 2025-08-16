@@ -2,6 +2,7 @@
   import ResumeSection from "./ResumeSection.svelte";
   import BulletList from "./BulletList.svelte";
   import BulletItem from "./BulletItem.svelte";
+  import { faStar } from "@fortawesome/free-solid-svg-icons";
 
   const qualifications = [
     "<strong>18+ years</strong> of <strong>full stack development experience</strong>.",
@@ -14,12 +15,7 @@
   ];
 </script>
 
-<ResumeSection
-  title="Key Qualifications"
-  iconName="star-icon"
-  iconWidth="21"
-  iconHeight="20"
->
+<ResumeSection title="Key Qualifications" icon={faStar}>
   <BulletList>
     {#each qualifications as qualification}
       <BulletItem>

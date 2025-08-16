@@ -2,6 +2,8 @@
   import TechTag from "./TechTag.svelte";
   import BulletList from "./BulletList.svelte";
   import BulletItem from "./BulletItem.svelte";
+  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+  import { faUser, faBuilding, faLink, faCalendar, faMapMarkerAlt } from "@fortawesome/free-solid-svg-icons";
 
   export let company;
   export let role;
@@ -26,24 +28,18 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="space-y-2">
             <div class="flex items-center">
-              <svg width="12" height="12" class="mr-2 flex-shrink-0">
-                <use href="#user-tie-icon" />
-              </svg>
+              <FontAwesomeIcon icon={faUser} class="mr-2 flex-shrink-0 w-3 h-3" />
               <span>{role}</span>
             </div>
 
             <div class="flex items-center">
-              <svg width="12" height="12" class="mr-2 flex-shrink-0">
-                <use href="#company-icon" />
-              </svg>
+              <FontAwesomeIcon icon={faBuilding} class="mr-2 flex-shrink-0 w-3 h-3" />
               <span>{industry}</span>
             </div>
 
             {#if website}
               <div class="flex items-center">
-                <svg width="12" height="12" class="mr-2 flex-shrink-0">
-                  <use href="#link-icon" />
-                </svg>
+                <FontAwesomeIcon icon={faLink} class="mr-2 flex-shrink-0 w-3 h-3" />
                 <a
                   href={website}
                   target="_blank"
@@ -60,16 +56,12 @@
 
           <div class="space-y-2">
             <div class="flex items-center">
-              <svg width="12" height="12" class="mr-2 flex-shrink-0">
-                <use href="#calendar-icon" />
-              </svg>
+              <FontAwesomeIcon icon={faCalendar} class="mr-2 flex-shrink-0 w-3 h-3" />
               <span>{period}</span>
             </div>
 
             <div class="flex items-center">
-              <svg width="12" height="12" class="mr-2 flex-shrink-0">
-                <use href="#location-icon" />
-              </svg>
+              <FontAwesomeIcon icon={faMapMarkerAlt} class="mr-2 flex-shrink-0 w-3 h-3" />
               <span>{location}</span>
             </div>
           </div>

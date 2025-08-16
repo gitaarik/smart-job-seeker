@@ -2,6 +2,7 @@
   import ResumeSection from "./ResumeSection.svelte";
   import BulletList from "./BulletList.svelte";
   import BulletItem from "./BulletItem.svelte";
+  import { faProjectDiagram } from "@fortawesome/free-solid-svg-icons";
 
   const methodologies = [
     "Agile, Scrum, Kanban, Extreme Programming (XP)",
@@ -16,12 +17,7 @@
   ];
 </script>
 
-<ResumeSection
-  title="Project & Development Methodologies"
-  iconName="chart-icon"
-  iconWidth="33"
-  iconHeight="16"
->
+<ResumeSection title="Project & Development Methodologies" icon={faProjectDiagram}>
   <BulletList>
     {#each methodologies as methodology}
       <BulletItem>

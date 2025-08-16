@@ -1,5 +1,6 @@
 <script lang="ts">
   import ResumeSection from "./ResumeSection.svelte";
+  import { faEye } from "@fortawesome/free-solid-svg-icons";
 
   const traits = [
     "Responsible",
@@ -14,12 +15,7 @@
   ];
 </script>
 
-<ResumeSection
-  title="Personality Traits"
-  iconName="eye-icon"
-  iconWidth="33"
-  iconHeight="16"
->
+<ResumeSection title="Personality Traits" icon={faEye}>
   <ul class="grid grid-cols-3 gap-2">
     {#each traits as trait}
       <li class="ml-8 list-disc">

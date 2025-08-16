@@ -1,5 +1,6 @@
 <script lang="ts">
   import ResumeSection from "./ResumeSection.svelte";
+  import { faComments } from "@fortawesome/free-solid-svg-icons";
 
   const references = [
     {
@@ -15,12 +16,7 @@
   ];
 </script>
 
-<ResumeSection
-  title="References"
-  iconName="references-icon"
-  iconWidth="24"
-  iconHeight="23"
->
+<ResumeSection title="References" icon={faComments}>
   <p class="mb-6 text-sm print:text-xs">
     To confirm my experience with full stack development in dynamic, agile and
     startup environments, my most recent employers are willing to provide

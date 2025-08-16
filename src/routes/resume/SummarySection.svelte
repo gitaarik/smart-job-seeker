@@ -1,13 +1,9 @@
 <script lang="ts">
   import ResumeSection from "./ResumeSection.svelte";
+  import { faCompass } from "@fortawesome/free-solid-svg-icons";
 </script>
 
-<ResumeSection
-  title="Summary"
-  iconName="compass-icon"
-  iconWidth="21"
-  iconHeight="20"
->
+<ResumeSection title="Summary" icon={faCompass}>
   <p class="mb-4">
     Dutch Senior Full Stack Developer, currently residing in Spain. Specialized
     in Python & Node.js ecosystems, with a wide background in full stack

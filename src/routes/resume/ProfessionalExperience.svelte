@@ -1,6 +1,7 @@
 <script lang="ts">
   import ResumeSection from "./ResumeSection.svelte";
   import EmploymentSection from "./EmploymentSection.svelte";
+  import { faGlobe } from "@fortawesome/free-solid-svg-icons";
 
   const employmentHistory = [
     {
@@ -295,12 +296,7 @@
   ];
 </script>
 
-<ResumeSection
-  title="Employment History"
-  iconName="world-icon"
-  iconWidth="24"
-  iconHeight="23"
->
+<ResumeSection title="Employment History" icon={faGlobe}>
   <div class="space-y-8">
     {#each employmentHistory as job (job.company)}
       <EmploymentSection

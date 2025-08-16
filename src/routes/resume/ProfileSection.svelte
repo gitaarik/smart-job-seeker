@@ -1,23 +1,33 @@
 <script lang="ts">
   import ResumeSection from "./ResumeSection.svelte";
+  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+  import {
+    faEnvelope,
+    faGlobe,
+    faLanguage,
+    faMapMarkerAlt,
+    faPhone,
+    faUser,
+  } from "@fortawesome/free-solid-svg-icons";
+  import { faLinkedin } from "@fortawesome/free-brands-svg-icons";
 
   const profileData = [
-    { icon: "location-icon", text: "Ronda, Spain" },
-    { icon: "languages-icon", text: "English: Fluent    Dutch: Native" },
-    { icon: "phone-icon", text: "+31 649118511", href: "tel:+31649118511" },
+    { icon: faMapMarkerAlt, text: "Ronda, Spain" },
+    { icon: faLanguage, text: "English: Fluent    Dutch: Native" },
+    { icon: faPhone, text: "+31 649118511", href: "tel:+31649118511" },
     {
-      icon: "email-icon",
+      icon: faEnvelope,
       text: "rik@rikwanders.tech",
       href: "mailto:rik@rikwanders.tech",
     },
     {
-      icon: "website-icon",
+      icon: faGlobe,
       text: "www.rikwanders.tech",
       href: "https://www.rikwanders.tech",
       target: "_blank",
     },
     {
-      icon: "linkedin-icon",
+      icon: faLinkedin,
       text: "linkedin.com/in/rik-wanders-software/",
       href: "https://www.linkedin.com/in/rik-wanders-software/",
       target: "_blank",
@@ -25,17 +35,12 @@
   ];
 </script>
 
-<ResumeSection
-  title="Profile"
-  iconName="person-icon"
-  iconWidth="21"
-  iconHeight="20"
->
+<ResumeSection title="Profile" icon={faUser}>
   <ul class="columns-2 gap-6">
     {#each profileData as item (item.icon)}
       <li class="flex items-start mb-3 break-inside-avoid">
         <div class="mr-2 flex-shrink-0">
-          <svg width="18" height="18"><use href="#{item.icon}" /></svg>
+          <FontAwesomeIcon icon={item.icon} class="w-4 h-4 mt-1" />
         </div>
         <p>
           {#if item.href}

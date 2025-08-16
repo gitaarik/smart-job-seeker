@@ -2,6 +2,8 @@
   import ResumeSection from "./ResumeSection.svelte";
   import BulletList from "./BulletList.svelte";
   import BulletItem from "./BulletItem.svelte";
+  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+  import { faCode, faCrown, faHardHat } from "@fortawesome/free-solid-svg-icons";
 
   const expertKnowledge = [
     { title: "Python", details: "Django, Django REST Framework, Celery" },
@@ -60,15 +62,10 @@
   ];
 </script>
 
-<ResumeSection
-  title="Technical Expertise"
-  iconName="code-icon"
-  iconWidth="30"
-  iconHeight="17"
->
+<ResumeSection title="Technical Expertise" icon={faCode}>
   <h3 class="flex items-center pt-4 pb-2 mb-5 border-b border-cyan-700">
     <span class="text-lg print:text-base">Expert Knowledge</span>
-    <svg width="18" height="18" class="ml-2"><use href="#crown-icon" /></svg>
+    <FontAwesomeIcon icon={faCrown} class="ml-2 w-4 h-4" />
   </h3>
 
   <BulletList class="mb-6">
@@ -82,9 +79,7 @@
 
   <h3 class="flex items-center pt-4 pb-2 mb-5 border-b border-cyan-700">
     <span class="text-lg print:text-base">Working Knowledge</span>
-    <svg width="18" height="18" class="ml-2">
-      <use href="#helmet-safety-icon" />
-    </svg>
+    <FontAwesomeIcon icon={faHardHat} class="ml-2 w-4 h-4" />
   </h3>
 
   <BulletList>
