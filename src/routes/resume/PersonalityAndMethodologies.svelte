@@ -33,8 +33,8 @@
 </script>
 
 <ResumeSection title="Personality & Methodologies " icon={faProjectDiagram}>
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-    <div>
+  <div class="grid grid-cols-1 md:grid-cols-5 gap-8">
+    <div class="md:col-span-2">
       <h3
         class="flex items-center justify-between pt-4 pb-2 mb-5 border-b border-cyan-700"
       >
@@ -50,7 +50,7 @@
       </CircleList>
     </div>
 
-    <div>
+    <div class="md:col-span-3">
       <h3
         class="flex items-center justify-between pt-4 pb-2 mb-5 border-b border-cyan-700"
       >
