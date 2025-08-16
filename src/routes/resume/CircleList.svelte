@@ -1,8 +1,8 @@
 <script lang="ts">
-  let className = "";
-  export { className as class };
+  let classNames = "";
+  export { classNames as class };
 </script>
 
-<ul class="space-y-2 list-[circle] list-inside {className}">
+<ul class="list-[circle] space-y-2 ml-4 {classNames}">
   <slot />
 </ul>

@@ -18,7 +18,7 @@
 
 <ResumeSection title="Personality Traits" icon={faEye}>
   <CircleList class="grid grid-cols-3 gap-2">
-    {#each traits as trait}
+    {#each traits as trait (trait)}
       <li>
         <strong>{trait}</strong>
       </li>

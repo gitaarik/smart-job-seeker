@@ -67,14 +67,14 @@
 
 <ResumeSection title="Technical Expertise" icon={faCode}>
   <h3 class="flex items-center pt-4 pb-2 mb-5 border-b border-cyan-700">
-    <span class="text-lg print:text-base">Expert Knowledge</span>
+    <span class="text-lg font-medium">Expert Knowledge</span>
     <FontAwesomeIcon icon={faCrown} class="ml-2 w-4 h-4" />
   </h3>
 
-  <TechnicalSkillsList skills={expertKnowledge} className="mb-6" />
+  <TechnicalSkillsList skills={expertKnowledge} class="mb-6" />
 
   <h3 class="flex items-center pt-4 pb-2 mb-5 border-b border-cyan-700">
-    <span class="text-lg print:text-base">Working Knowledge</span>
+    <span class="text-lg font-medium">Working Knowledge</span>
     <FontAwesomeIcon icon={faHardHat} class="ml-2 w-4 h-4" />
   </h3>
 

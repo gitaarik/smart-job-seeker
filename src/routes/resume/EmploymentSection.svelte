@@ -2,7 +2,13 @@
   import TechTag from "./TechTag.svelte";
   import CircleList from "./CircleList.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { faUser, faBuilding, faLink, faCalendar, faMapMarkerAlt } from "@fortawesome/free-solid-svg-icons";
+  import {
+    faBuilding,
+    faCalendar,
+    faLink,
+    faMapMarkerAlt,
+    faUser,
+  } from "@fortawesome/free-solid-svg-icons";
 
   export let company;
   export let role;
@@ -13,9 +19,9 @@
   export let logo;
   export let description;
   export let note;
-  export let achievements = [];
+  export let achievements;
   export let impact;
-  export let technologies = [];
+  export let technologies;
 </script>
 
 <section class="mb-12 break-inside-avoid">
@@ -27,18 +33,27 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="space-y-2">
             <div class="flex items-center">
-              <FontAwesomeIcon icon={faUser} class="mr-2 flex-shrink-0 w-3 h-3" />
+              <FontAwesomeIcon
+                icon={faUser}
+                class="mr-2 flex-shrink-0 w-3 h-3"
+              />
               <span>{role}</span>
             </div>
 
             <div class="flex items-center">
-              <FontAwesomeIcon icon={faBuilding} class="mr-2 flex-shrink-0 w-3 h-3" />
+              <FontAwesomeIcon
+                icon={faBuilding}
+                class="mr-2 flex-shrink-0 w-3 h-3"
+              />
               <span>{industry}</span>
             </div>
 
             {#if website}
               <div class="flex items-center">
-                <FontAwesomeIcon icon={faLink} class="mr-2 flex-shrink-0 w-3 h-3" />
+                <FontAwesomeIcon
+                  icon={faLink}
+                  class="mr-2 flex-shrink-0 w-3 h-3"
+                />
                 <a
                   href={website}
                   target="_blank"
@@ -55,12 +70,18 @@
 
           <div class="space-y-2">
             <div class="flex items-center">
-              <FontAwesomeIcon icon={faCalendar} class="mr-2 flex-shrink-0 w-3 h-3" />
+              <FontAwesomeIcon
+                icon={faCalendar}
+                class="mr-2 flex-shrink-0 w-3 h-3"
+              />
               <span>{period}</span>
             </div>
 
             <div class="flex items-center">
-              <FontAwesomeIcon icon={faMapMarkerAlt} class="mr-2 flex-shrink-0 w-3 h-3" />
+              <FontAwesomeIcon
+                icon={faMapMarkerAlt}
+                class="mr-2 flex-shrink-0 w-3 h-3"
+              />
               <span>{location}</span>
             </div>
           </div>
@@ -89,7 +110,7 @@
     {#if achievements.length > 0}
       <div>
         <h4 class="text-lg font-semibold mb-3">Key Achievements:</h4>
-        <CircleList>
+        <CircleList class="ml-8">
           {#each achievements as achievement}
             <li>
               <strong>{achievement.title}:</strong> {achievement.description}
@@ -118,8 +139,8 @@
       <div>
         <h4 class="text-lg font-semibold mb-3">Technologies Used:</h4>
         <div class="flex flex-wrap gap-2">
-          {#each technologies as tech}
-            <TechTag>{tech}</TechTag>
+          {#each technologies as tech (tech)}
+            <TechTag {tech} />
           {/each}
         </div>
       </div>
