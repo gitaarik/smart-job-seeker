@@ -22,9 +22,10 @@
   export let achievements;
   export let impact;
   export let technologies;
+  export let isLast = false;
 </script>
 
-<section class="mb-12 break-inside-avoid">
+<section class="{isLast ? '' : 'mb-12'} break-inside-avoid">
   <header class="mb-6">
     <div class="flex items-start justify-between mb-4">
       <div class="flex-1">

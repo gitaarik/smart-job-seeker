@@ -312,6 +312,7 @@
         achievements={job.achievements}
         impact={job.impact}
         technologies={job.technologies}
+        isLast={index === employmentHistory.length - 1}
       />
       {#if index < employmentHistory.length - 1}
         <hr class="border-gray-300 my-8" />
