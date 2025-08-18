@@ -7,6 +7,7 @@
   import PersonalityAndMethodologies from "./PersonalityAndMethodologies.svelte";
   import ProfessionalExperience from "./ProfessionalExperience.svelte";
   import ReferencesSection from "./ReferencesSection.svelte";
+  import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
 </script>
 
 <svelte:head>
@@ -16,6 +17,10 @@
     content="width=device-width, initial-scale=1.0, user-scalable=no"
   />
 </svelte:head>
+
+<div class="print:hidden">
+  <ThemeSwitcher />
+</div>
 
 <div
   class="min-h-screen bg-mist print:bg-white text-slate font-['Noto_Sans',sans-serif]"
