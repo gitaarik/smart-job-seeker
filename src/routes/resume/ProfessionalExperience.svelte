@@ -82,6 +82,7 @@
             "Created multi-language & country platform capabilities that enabled international market expansion and supported global event organizers",
         },
       ],
+      impactTitle: "Technical Impact",
       impact:
         "Transformed a proof of concept into a robust, scalable ticketing platform serving thousands of events and processing high-volume traffic reliably.",
       technologies: [
@@ -160,6 +161,7 @@
             "Successfully colaborated with frontend developer to optimize frontend experience using Vue.js",
         },
       ],
+      impactTitle: "Technical Impact",
       impact:
         "Transformed a startup idea into a complete, extensible tender platform with a intuitive interface and solid administrative tools.",
       technologies: [
@@ -215,6 +217,7 @@
             "Worked on comprehensive email marketing system that supported customer acquisition and retention campaigns",
         },
       ],
+      impactTitle: "Industry Impact",
       impact:
         "Successfully delivered mobile apps and mobile website as part of an agile team during a critical period when mobile app presence was becoming essential for travel industry competitiveness.",
       technologies: [
@@ -271,6 +274,7 @@
             "Mastered in-house built CMS system, enabling rapid development and client customization capabilities",
         },
       ],
+      impactTitle: "Client Impact",
       impact:
         "Delivered high-quality web solutions that met diverse client needs while maintaining agency's reputation for quality and reliability.",
       technologies: [
@@ -333,6 +337,7 @@
             "Advanced from junior to mid-level developer, demonstrating consistent skill development and increasing responsibility",
         },
       ],
+      impactTitle: "Platform Impact",
       impact:
         "Supported stable operation and feature enhancement of established gaming community serving hundreds of thousands of active users.",
       technologies: [
@@ -363,6 +368,7 @@
       description={job.description}
       note={job.note}
       achievements={job.achievements}
+      impactTitle={job.impactTitle}
       impact={job.impact}
       technologies={job.technologies}
       isFirst={index === 0}

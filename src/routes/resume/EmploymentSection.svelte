@@ -20,6 +20,7 @@
   export let description;
   export let note;
   export let achievements;
+  export let impactTitle;
   export let impact;
   export let technologies;
   export let isFirst: boolean;
@@ -129,17 +130,7 @@
     {/if}
 
     <div>
-      <h4 class="text-lg font-semibold mb-3 print:mb-2">
-        {#if company === "TravelBird"}
-          Industry Impact:
-        {:else if company === "SWIS"}
-          Client Impact:
-        {:else if company === "Gamepoint"}
-          Platform Impact:
-        {:else}
-          Technical Impact:
-        {/if}
-      </h4>
+      <h4 class="text-lg font-semibold mb-3 print:mb-2">{impactTitle}:</h4>
       <p class="leading-relaxed">{impact}</p>
     </div>
 
