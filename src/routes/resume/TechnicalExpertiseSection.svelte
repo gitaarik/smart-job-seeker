@@ -9,7 +9,7 @@
   } from "@fortawesome/free-solid-svg-icons";
 
   const expertKnowledge = [
-    { title: "Python", details: "Django, Django REST Framework, Celery" },
+    { title: "Python", details: "Django, REST Framework, Celery, Channels, Silk" },
     {
       title: "JavaScript / Node.js",
       details: "React, Svelte, Web Components",
@@ -66,7 +66,7 @@
 </script>
 
 <ResumeSection title="Technical Expertise" icon={faCode}>
-  <div class="grid grid-cols-1 md:grid-cols-5 gap-8 relative">
+  <div class="grid grid-cols-1 md:grid-cols-5 gap-4 relative">
     <div class="md:col-span-3">
       <h3
         class="flex items-center justify-between pt-4 pb-2 mb-5 border-b border-cyan-700"
@@ -77,7 +77,7 @@
       <TechnicalSkillsList skills={expertKnowledge} />
     </div>
 
-    <div class="md:col-span-2 md:border-l md:border-gray-500 md:pl-8">
+    <div class="md:col-span-2 md:border-l md:border-gray-500 md:pl-4">
       <h3
         class="flex items-center justify-between pt-4 pb-2 mb-5 border-b border-cyan-700"
       >

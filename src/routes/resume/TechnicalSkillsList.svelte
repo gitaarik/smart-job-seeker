@@ -1,6 +1,4 @@
 <script lang="ts">
-  import CircleList from "./CircleList.svelte";
-
   type Skill = {
     title: string;
     details: string;
@@ -12,16 +10,14 @@
   export { classNames as class };
 </script>
 
-<CircleList class={classNames}>
+<div class="space-y-3 {classNames}">
   {#each skills as skill (skill.title)}
-    <li>
-      <span class="inline-flex flex-col">
-        <h5 class="font-semibold inline">{skill.title}</h5>
-        <span>
-          {skill.details}
-        </span>
-      </span>
-    </li>
+    <div class="bg-gray-50 border border-gray-400 rounded-md hover:bg-gray-100 transition-colors duration-200">
+      <h5 class="text-sm font-semibold mb-1 px-2 py-2 bg-gray-200 rounded-t-md border-b-1 border-gray-400">{skill.title}</h5>
+      <p class="text-sm px-2 pb-2">
+        {skill.details}
+      </p>
+    </div>
   {/each}
-</CircleList>
+</div>
 
