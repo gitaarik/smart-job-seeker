@@ -1,0 +1,6 @@
+{
+  "scripts": {
+    "export:resume": "node scripts/export-resume-pdf.js",
+    "export:resume:with-server": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && npm run export:resume\" --kill-others --success first"
+  }
+}
