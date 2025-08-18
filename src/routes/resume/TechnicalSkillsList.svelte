@@ -13,7 +13,7 @@
   export { classNames as class };
 </script>
 
-<div class="grid grid-cols-1 md:grid-cols-2 print:grid-cols-1 gap-3 print:gap-2 {classNames}">
+<div class="grid grid-cols-1 md:grid-cols-2 print:grid-cols-2 gap-3 print:gap-2 {classNames}">
   {#each skills as skill (skill.title)}
     <div
       class="bg-gray-50 print:bg-white border border-[#5996ae] print:border-gray-300 rounded-md hover:bg-gray-100 transition-colors duration-200 print:mb-2"
