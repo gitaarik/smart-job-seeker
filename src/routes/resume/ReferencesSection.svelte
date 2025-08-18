@@ -30,7 +30,7 @@
         <p class="text-cyan-700 font-medium mt-1">
           {reference.company}
         </p>
-        <p class="text-gray-700 mt-1">
+        <p class="text-sm mt-1">
           {reference.note}
         </p>
       </div>

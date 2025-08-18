@@ -22,16 +22,16 @@
   export let achievements;
   export let impact;
   export let technologies;
-  export let isLast = false;
+  export let isFirst: boolean;
 </script>
 
-<section class="{isLast ? '' : 'mb-12'} break-inside-avoid">
+<section class="break-inside-avoid {isFirst ? 'mt-12' : ''}">
   <header class="mb-6">
     <div class="flex items-start justify-between mb-4">
       <div class="flex-1">
         <h3 class="text-2xl font-semibold text-cyan-700 mb-2">{company}</h3>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           <div class="space-y-2">
             <div class="flex items-center">
               <FontAwesomeIcon

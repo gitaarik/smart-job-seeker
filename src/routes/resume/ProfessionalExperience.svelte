@@ -301,26 +301,24 @@
 </script>
 
 <ResumeSection title="Employment History" icon={faGlobe}>
-  <div class="space-y-8">
-    {#each employmentHistory as job, index (job.company)}
-      <EmploymentSection
-        company={job.company}
-        role={job.role}
-        industry={job.industry}
-        website={job.website}
-        period={job.period}
-        location={job.location}
-        logo={job.logo}
-        description={job.description}
-        note={job.note}
-        achievements={job.achievements}
-        impact={job.impact}
-        technologies={job.technologies}
-        isLast={index === employmentHistory.length - 1}
-      />
-      {#if index < employmentHistory.length - 1}
-        <hr class="border-gray-300 my-8" />
-      {/if}
-    {/each}
-  </div>
+  {#each employmentHistory as job, index (job.company)}
+    <EmploymentSection
+      company={job.company}
+      role={job.role}
+      industry={job.industry}
+      website={job.website}
+      period={job.period}
+      location={job.location}
+      logo={job.logo}
+      description={job.description}
+      note={job.note}
+      achievements={job.achievements}
+      impact={job.impact}
+      technologies={job.technologies}
+      isFirst={index === 0}
+    />
+    {#if index < employmentHistory.length - 1}
+      <hr class="border-gray-300 my-12" />
+    {/if}
+  {/each}
 </ResumeSection>

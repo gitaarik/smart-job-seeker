@@ -2,9 +2,11 @@
 
 ## Upcoming
 
-- Add company logos
+- Add company logos in references section
+- Maybe add icons at technologies
 - Make PDF generation script
 
 ## Done
 
-- crown and helmet icon align after heading text
+- Add company logos
+- Crown and helmet icon align after heading text
