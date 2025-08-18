@@ -46,16 +46,10 @@
             "Built and managed diverse development teams of 3-5 developers, using agile methodologies that optimized efficiency and delivery speed",
         },
         {
-          title: "Platform Scalability",
+          title: "Platform Scalability & Performance",
           icon: faArrowUp,
           description:
-            "Architected and optimized systems to handle extreme traffic spikes, enabling the platform to process thousands of ticket sales per minute without downtime",
-        },
-        {
-          title: "Performance Optimization",
-          icon: faTachometerAlt,
-          description:
-            "Delivered 40-60% speed improvements on high-traffic pages through strategic query optimization and caching implementation",
+            "Architected and optimized systems to handle extreme traffic spikes, delivering 40-60% speed improvements through strategic query optimization, caching, and infrastructure scaling",
         },
         {
           title: "System Reliability",
