@@ -31,7 +31,7 @@
       <div class="flex-1">
         <h3 class="text-2xl font-semibold text-cyan-700 mb-2">{company}</h3>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+        <div class="grid grid-cols-1 md:grid-cols-2 print:grid-cols-1 gap-4 print:gap-2 text-sm">
           <div class="space-y-2">
             <div class="flex items-center">
               <FontAwesomeIcon

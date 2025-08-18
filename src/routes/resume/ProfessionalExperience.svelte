@@ -318,7 +318,7 @@
       isFirst={index === 0}
     />
     {#if index < employmentHistory.length - 1}
-      <hr class="border-gray-300 my-12" />
+      <hr class="border-gray-300 my-12 print:hidden" />
     {/if}
   {/each}
 </ResumeSection>
