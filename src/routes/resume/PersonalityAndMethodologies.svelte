@@ -2,16 +2,16 @@
   import ResumeSection from "./ResumeSection.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
+    faCogs,
     faUser,
     faUserCog,
-    faCogs,
   } from "@fortawesome/free-solid-svg-icons";
 
   const methodologies = [
     "Agile, Scrum, Kanban, Extreme Programming (XP)",
     "AI-accelerated development",
-    "Test-driven development (TDD)",
     "Secure by design",
+    "Test-driven development (TDD)",
     "User experience design (UXD)",
     "Component-based development",
     "Extensive code reviewing",
@@ -43,7 +43,9 @@
       </h3>
       <div class="flex flex-wrap gap-2">
         {#each traits as trait (trait)}
-          <div class="text-sm font-semibold px-2 py-2 bg-gray-200 rounded-md border border-gray-400 hover:bg-gray-300 transition-colors duration-200 text-center">
+          <div
+            class="text-sm font-semibold px-2 py-2 bg-gray-200 rounded-md border border-gray-400 hover:bg-gray-300 transition-colors duration-200 text-center"
+          >
             {trait}
           </div>
         {/each}
@@ -59,7 +61,9 @@
       </h3>
       <div class="flex flex-wrap gap-2">
         {#each methodologies as methodology (methodology)}
-          <div class="text-sm font-semibold px-2 py-2 bg-gray-200 rounded-md border border-gray-400 hover:bg-gray-300 transition-colors duration-200 text-center">
+          <div
+            class="text-sm font-semibold px-2 py-2 bg-gray-200 rounded-md border border-gray-400 hover:bg-gray-300 transition-colors duration-200 text-center"
+          >
             {methodology}
           </div>
         {/each}
@@ -67,4 +71,3 @@
     </div>
   </div>
 </ResumeSection>
-

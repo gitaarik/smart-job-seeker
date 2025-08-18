@@ -298,7 +298,7 @@
 
 <ResumeSection title="Employment History" icon={faGlobe}>
   <div class="space-y-8">
-    {#each employmentHistory as job (job.company)}
+    {#each employmentHistory as job, index (job.company)}
       <EmploymentSection
         company={job.company}
         role={job.role}
@@ -313,6 +313,9 @@
         impact={job.impact}
         technologies={job.technologies}
       />
+      {#if index < employmentHistory.length - 1}
+        <hr class="border-gray-300 my-8" />
+      {/if}
     {/each}
   </div>
 </ResumeSection>
