@@ -1,7 +1,31 @@
 <script lang="ts">
   import ResumeSection from "./ResumeSection.svelte";
   import EmploymentSection from "./EmploymentSection.svelte";
-  import { faGlobe } from "@fortawesome/free-solid-svg-icons";
+  import {
+    faGlobe,
+    faUsers,
+    faArrowUp,
+    faTachometerAlt,
+    faShieldAlt,
+    faDollarSign,
+    faMicrochip,
+    faCog,
+    faSearch,
+    faLaptopCode,
+    faChartLine,
+    faCrown,
+    faPaintBrush,
+    faMobile,
+    faPlug,
+    faProjectDiagram,
+    faEnvelope,
+    faHandshake,
+    faBullseye,
+    faFileCode,
+    faShoppingCart,
+    faDatabase,
+    faRocket,
+  } from "@fortawesome/free-solid-svg-icons";
 
   const employmentHistory = [
     {
@@ -17,36 +41,43 @@
       achievements: [
         {
           title: "Team Leadership",
+          icon: faUsers,
           description:
             "Built and managed diverse development teams of 3-5 developers, using agile methodologies that optimized efficiency and delivery speed",
         },
         {
           title: "Platform Scalability",
+          icon: faArrowUp,
           description:
             "Architected and optimized systems to handle extreme traffic spikes, enabling the platform to process thousands of ticket sales per minute without downtime",
         },
         {
           title: "Performance Optimization",
+          icon: faTachometerAlt,
           description:
             "Delivered 40-60% speed improvements on high-traffic pages through strategic query optimization and caching implementation",
         },
         {
           title: "System Reliability",
+          icon: faShieldAlt,
           description:
             "Created extensive testing suite (+80% coverage) and CI/CD system, radically improving deployment reliability & speed and enabling regular releases",
         },
         {
           title: "Revenue Growth",
+          icon: faDollarSign,
           description:
             "Built essential payment integrations with multiple providers (Mollie, Pay.nl, PayPal) that processed tens of millions in ticket sales over the platform's lifetime",
         },
         {
           title: "Technical Innovation",
+          icon: faMicrochip,
           description:
             "Developed custom authentication, mailing, and localization systems, supporting custom needs and backward compatibility",
         },
         {
           title: "Market Expansion",
+          icon: faGlobe,
           description:
             "Created multi-language & country platform capabilities that enabled international market expansion and supported global event organizers",
         },
@@ -94,31 +125,37 @@
       achievements: [
         {
           title: "Product Development",
+          icon: faCog,
           description:
             "Designed and developed entire platform (backend and frontend) from concept to production",
         },
         {
           title: "Search Innovation",
+          icon: faSearch,
           description:
             "Implemented an extensive search engine using Elasticsearch, making it easy and time effective for users to find suitable tenders",
         },
         {
           title: "Data Automation",
+          icon: faLaptopCode,
           description:
             "Created automated web crawling system that index thousands of public tenders daily, providing comprehensive market coverage",
         },
         {
           title: "Revenue Model",
+          icon: faChartLine,
           description:
             "Built subscription-based authentication and payment system that supports sustainable business model and user growth",
         },
         {
           title: "User Experience",
+          icon: faCrown,
           description:
             'Delivered intuitive "saved searches" interface and email notification system that supported user engagement and retention',
         },
         {
           title: "Frontend Optimization",
+          icon: faPaintBrush,
           description:
             "Successfully colaborated with frontend developer to optimize frontend experience using Vue.js",
         },
@@ -155,21 +192,25 @@
       achievements: [
         {
           title: "Mobile Development",
+          icon: faMobile,
           description:
             "Built and maintained iOS application as part of mobile team, supporting mobile bookings during a period of rapid company growth",
         },
         {
           title: "API Architecture",
+          icon: faPlug,
           description:
             "Designed and implemented robust REST API using Django REST Framework, that accommodated iOS & Android apps and mobile website",
         },
         {
           title: "Cross-Platform Integration",
+          icon: faProjectDiagram,
           description:
             "Ensured consistent user experience across multiple mobile platforms and web interfaces",
         },
         {
           title: "Email Marketing Platform",
+          icon: faEnvelope,
           description:
             "Worked on comprehensive email marketing system that supported customer acquisition and retention campaigns",
         },
@@ -207,21 +248,25 @@
       achievements: [
         {
           title: "Client Success",
+          icon: faHandshake,
           description:
             "Successfully delivered web projects for major clients including Bol.com, EP, Gemeente Amsterdam, and Gemeente Haarlemmermeer",
         },
         {
           title: "Agile Workflow",
+          icon: faBullseye,
           description:
             "Contributed to Scrum team that consistently met client deadlines and budget requirements",
         },
         {
           title: "Frontend Skills",
+          icon: faFileCode,
           description:
             "Developed advanced jQuery and UX skills that improved user engagement metrics across client projects",
         },
         {
           title: "Custom CMS Expertise",
+          icon: faCog,
           description:
             "Mastered in-house built CMS system, enabling rapid development and client customization capabilities",
         },
@@ -259,26 +304,31 @@
       achievements: [
         {
           title: "Payment Systems",
+          icon: faShoppingCart,
           description:
             "Successfully implemented multiple payment integrations that supported platform monetization and user transactions",
         },
         {
           title: "International Expansion",
+          icon: faGlobe,
           description:
             "Contributed to internationalization and localization efforts that enabled platform expansion in other countries",
         },
         {
           title: "Database Design",
+          icon: faDatabase,
           description:
             "Designed and optimized MySQL database structures that improved query performance and system reliability",
         },
         {
           title: "Team Collaboration",
+          icon: faUsers,
           description:
             "Worked effectively in 10+ developer team environment, contributing to large-scale PHP codebase maintenance and feature development",
         },
         {
           title: "Career Growth",
+          icon: faRocket,
           description:
             "Advanced from junior to mid-level developer, demonstrating consistent skill development and increasing responsibility",
         },

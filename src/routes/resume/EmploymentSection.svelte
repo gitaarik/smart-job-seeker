@@ -8,32 +8,6 @@
     faLink,
     faMapMarkerAlt,
     faUser,
-    faUsers,
-    faRocket,
-    faTachometerAlt,
-    faShieldAlt,
-    faDollarSign,
-    faCog,
-    faGlobe,
-    faLaptopCode,
-    faChartLine,
-    faBullseye,
-    faAward,
-    faStar,
-    faTrophy,
-    faSearch,
-    faTrendUp,
-    faMicrochip,
-    faCrown,
-    faPlug,
-    faShoppingCart,
-    faDatabase,
-    faHandshake,
-    faProjectDiagram,
-    faPaintBrush,
-    faMobile,
-    faEnvelope,
-    faFileCode,
   } from "@fortawesome/free-solid-svg-icons";
 
   export let company;
@@ -50,64 +24,6 @@
   export let technologies;
   export let isFirst: boolean;
 
-  function getAchievementIcon(title: string) {
-    switch (title) {
-      case "Team Leadership":
-        return faUsers;
-      case "Platform Scalability":
-        return faTrendUp;
-      case "Performance Optimization":
-        return faTachometerAlt;
-      case "System Reliability":
-        return faShieldAlt;
-      case "Revenue Growth":
-        return faDollarSign;
-      case "Technical Innovation":
-        return faMicrochip;
-      case "Market Expansion":
-        return faGlobe;
-      case "Product Development":
-        return faCog;
-      case "Search Innovation":
-        return faSearch;
-      case "Data Automation":
-        return faLaptopCode;
-      case "Revenue Model":
-        return faChartLine;
-      case "User Experience":
-        return faCrown;
-      case "Frontend Optimization":
-        return faPaintBrush;
-      case "Mobile Development":
-        return faMobile;
-      case "API Architecture":
-        return faPlug;
-      case "Cross-Platform Integration":
-        return faProjectDiagram;
-      case "Email Marketing Platform":
-        return faEnvelope;
-      case "Client Success":
-        return faHandshake;
-      case "Agile Workflow":
-        return faBullseye;
-      case "Frontend Skills":
-        return faFileCode;
-      case "Custom CMS Expertise":
-        return faCog;
-      case "Payment Systems":
-        return faShoppingCart;
-      case "International Expansion":
-        return faGlobe;
-      case "Database Design":
-        return faDatabase;
-      case "Team Collaboration":
-        return faUsers;
-      case "Career Growth":
-        return faRocket;
-      default:
-        return faStar;
-    }
-  }
 </script>
 
 <section class="break-inside-avoid {isFirst ? 'mt-12 print:mt-0' : ''}">
@@ -200,7 +116,7 @@
           {#each achievements as achievement (achievement)}
             <li class="flex items-start">
               <FontAwesomeIcon 
-                icon={getAchievementIcon(achievement.title)} 
+                icon={achievement.icon} 
                 class="w-4 h-4 mr-3 mt-1 flex-shrink-0 text-ocean"
               />
               <span>
