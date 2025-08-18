@@ -18,7 +18,7 @@
 </svelte:head>
 
 <div
-  class="min-h-screen bg-slate-200 print:bg-white text-cyan-900 font-['Noto_Sans',sans-serif]"
+  class="min-h-screen bg-mist print:bg-white text-slate font-['Noto_Sans',sans-serif]"
 >
   <div class="flex flex-col gap-10 py-6 px-4 print:p-0 max-w-[800px] mx-auto">
     <HeaderSection />

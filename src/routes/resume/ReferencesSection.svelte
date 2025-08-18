@@ -27,11 +27,11 @@
 
   <div class="space-y-4">
     {#each references as reference (reference.name)}
-      <div class="border-l-4 border-cyan-700 pl-4 py-2">
+      <div class="border-l-4 border-ocean pl-4 py-2">
         <div class="flex items-start justify-between">
           <div class="flex-1">
             <h4 class="font-semibold text-base print:text-sm">{reference.name}</h4>
-            <p class="text-sm text-cyan-700 font-medium mt-1">
+            <p class="text-sm text-ocean font-medium mt-1">
               {reference.company}
             </p>
             <p class="text-sm mt-1">
@@ -43,7 +43,7 @@
               <img
                 src={reference.logo}
                 alt="{reference.company} Logo"
-                class="h-20 w-auto border border-gray-400 print:border-0 rounded"
+                class="h-20 w-auto border border-cloud print:border-0 rounded"
               />
             </div>
           {/if}

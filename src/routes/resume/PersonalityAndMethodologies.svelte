@@ -36,7 +36,7 @@
   <div class="space-y-8">
     <div>
       <h3
-        class="flex items-center pt-4 pb-2 mb-5 border-b border-cyan-700"
+        class="flex items-center pt-4 pb-2 mb-5 border-b border-ocean"
       >
         <span class="text-lg font-medium">Personality Traits</span>
         <FontAwesomeIcon icon={faUser} class="w-4 h-4 ml-2" />
@@ -44,7 +44,7 @@
       <div class="flex flex-wrap gap-2">
         {#each traits as trait (trait)}
           <div
-            class="text-sm font-semibold px-2 py-2 bg-[#e2e8f0] rounded-md border border-[#5996ae] print:border-gray-300 hover:bg-[#d3dce8] transition-colors duration-200 text-center"
+            class="text-sm font-semibold px-2 py-2 bg-mist rounded-md border border-aqua print:border-gray-300 hover:bg-cloud transition-colors duration-200 text-center"
           >
             {trait}
           </div>
@@ -54,7 +54,7 @@
 
     <div>
       <h3
-        class="flex items-center pt-4 pb-2 mb-5 border-b border-cyan-700"
+        class="flex items-center pt-4 pb-2 mb-5 border-b border-ocean"
       >
         <span class="text-lg font-medium">Development Methodologies</span>
         <FontAwesomeIcon icon={faCogs} class="w-4 h-4 ml-2" />
@@ -62,7 +62,7 @@
       <div class="flex flex-wrap gap-2">
         {#each methodologies as methodology (methodology)}
           <div
-            class="text-sm font-semibold px-2 py-2 bg-[#e2e8f0] rounded-md border border-[#5996ae] print:border-gray-300 hover:bg-[#d3dce8] transition-colors duration-200 text-center"
+            class="text-sm font-semibold px-2 py-2 bg-mist rounded-md border border-aqua print:border-gray-300 hover:bg-cloud transition-colors duration-200 text-center"
           >
             {methodology}
           </div>

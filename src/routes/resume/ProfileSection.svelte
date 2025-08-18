@@ -46,7 +46,7 @@
           {#if item.href}
             <a
               href={item.href}
-              class="underline text-cyan-900 hover:text-cyan-600"
+              class="underline text-slate hover:text-teal"
               target={item.target || ""}
             >
               {item.text}

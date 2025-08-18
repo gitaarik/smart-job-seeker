@@ -29,7 +29,7 @@
   <header class="mb-6 print:mb-4">
     <div class="flex items-start justify-between">
       <div class="flex-1">
-        <h3 class="text-2xl font-semibold text-cyan-700 mb-2">{company}</h3>
+        <h3 class="text-2xl font-semibold text-ocean mb-2">{company}</h3>
 
         <div class="grid grid-cols-1 md:grid-cols-2 print:grid-cols-2 gap-4 print:gap-2 text-sm">
           <div class="space-y-2">
@@ -58,7 +58,7 @@
                 <a
                   href={website}
                   target="_blank"
-                  class="text-cyan-700 hover:text-cyan-600"
+                  class="text-ocean hover:text-teal"
                 >{
                   website.replace("https://", "").replace(
                     "www.",
@@ -94,7 +94,7 @@
           <img
             src={logo}
             alt="{company} Logo"
-            class="h-22 w-auto border border-gray-400 rounded print:border-0 print:mt-2"
+            class="h-22 w-auto border border-cloud rounded print:border-0 print:mt-2"
           />
         </div>
       {/if}

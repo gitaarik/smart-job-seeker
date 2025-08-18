@@ -88,7 +88,7 @@
   <div class="space-y-8">
     <div>
       <h3
-        class="flex items-center pt-4 pb-2 mb-5 border-b border-cyan-700"
+        class="flex items-center pt-4 pb-2 mb-5 border-b border-ocean"
       >
         <span class="text-lg font-medium">Expert Knowledge</span>
         <FontAwesomeIcon icon={faCrown} class="w-4 h-4 ml-2" />
@@ -98,7 +98,7 @@
 
     <div>
       <h3
-        class="flex items-center pt-4 pb-2 mb-5 border-b border-cyan-700"
+        class="flex items-center pt-4 pb-2 mb-5 border-b border-ocean"
       >
         <span class="text-lg font-medium">Working Knowledge</span>
         <FontAwesomeIcon icon={faHardHat} class="w-4 h-4 ml-2" />
