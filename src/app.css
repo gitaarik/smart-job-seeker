@@ -54,6 +54,22 @@
 	--breakpoint-xl: 70rem;
 	--breakpoint-2xl: 80rem;
 	--breakpoint-3xl: 90rem;
+	
+	--color-slate: var(--text-color);
+	--color-pearl: var(--text-light-color);
+	--color-teal: var(--text-highlight-color);
+	--color-crimson: var(--text-error-color);
+	--color-mist: var(--shade-color);
+	--color-cloud: var(--light-color);
+	--color-frost: var(--lighter-color);
+	--color-ice: var(--light-bg-color);
+	--color-snow: var(--lighter-bg-color);
+	--color-ocean: var(--bright-color);
+	--color-aqua: var(--bright-highlight-color);
+	--color-navy: var(--dark-bg-color);
+	--color-midnight: var(--footer-bg-color);
+	--color-glass-light: var(--white-transparent-1);
+	--color-glass: var(--white-transparent-2);
 }
 
 * {

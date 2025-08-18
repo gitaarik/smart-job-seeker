@@ -93,7 +93,7 @@
 <main class="flex h-full min-h-screen flex-col justify-between">
   <article class="flex flex-col items-center">
     <header
-      class="pt-10 md:pt-25 w-full flex flex-col items-center bg-[var(--light-bg-color)] min-h-screen transition-colors"
+      class="pt-10 md:pt-25 w-full flex flex-col items-center bg-ice min-h-screen transition-colors"
       aria-labelledby="header-heading"
     >
       <div class="px-5 sm:px-10">
@@ -111,14 +111,14 @@
       </div>
 
       <div class="mt-15 md:mt-20 px-4 flex justify-center w-full">
-        <GetInTouchButton contentClass="bg-[var(--lighter-bg-color)]" />
+        <GetInTouchButton contentClass="bg-snow" />
       </div>
 
       <div class="flex-grow"></div>
 
       <button
         bind:this={elMoreInfo}
-        class="flex-end mt-14 mb-15 flex items-center gap-2 cursor-pointer p-2 scale-100 hover:scale-110 focus:scale-110 hover:text-[var(--text-highlight-color)] focus:text-[var(--text-highlight-color)] transition"
+        class="flex-end mt-14 mb-15 flex items-center gap-2 cursor-pointer p-2 scale-100 hover:scale-110 focus:scale-110 hover:text-teal focus:text-teal transition"
         on:click={handleMoreInfo}
       >
         <span>
@@ -133,7 +133,7 @@
     </header>
 
     <section
-      class="w-full min-h-screen bg-[var(--shade-color)] transition-colors"
+      class="w-full min-h-screen bg-mist transition-colors"
       aria-labelledby="about-me-heading"
     >
       <div class="flex flex-col items-center px-5 sm:px-10">
@@ -252,7 +252,7 @@
           </div>
 
           <div class="flex justify-center mb-15">
-            <GetInTouchButton contentClass="bg-[var(--light-bg-color)]" />
+            <GetInTouchButton contentClass="bg-ice" />
           </div>
         </div>
       </div>
@@ -263,7 +263,7 @@
     </section>
 
     <footer
-      class="pt-15 px-5 sm:px-10 flex flex-col w-full items-center gap-2 bg-[var(--footer-bg-color)] text-[var(--text-light-color)] transition-colors"
+      class="pt-15 px-5 sm:px-10 flex flex-col w-full items-center gap-2 bg-midnight text-pearl transition-colors"
       aria-labelledby="footer-heading"
     >
       <div class="flex flex-col w-full max-w-[var(--max-content-width)]">

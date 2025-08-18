@@ -58,7 +58,7 @@
       buttonStyle = "cursor-pointer";
       buttonContainerStyle = "max-w-[220px] rounded-lg cursor-pointer";
       buttonContainerStyle +=
-        " hover:bg-[var(--bright-highlight-color)] focus:bg-[var(--bright-highlight-color)] hover:scale-105 focus:scale-105";
+        " hover:bg-aqua focus:bg-aqua hover:scale-105 focus:scale-105";
     }
   }
 
@@ -71,7 +71,7 @@
   bind:this={containerEl}
 >
   <div
-    class="inline-flex items-center gap-2 bg-[var(--bright-color)] text-white text-xl font-semibold text-[var(--text-light-color)] w-full scale-100 transition-all duration-{animationSpeed} {buttonContainerStyle}"
+    class="inline-flex items-center gap-2 bg-ocean text-white text-xl font-semibold text-pearl w-full scale-100 transition-all duration-{animationSpeed} {buttonContainerStyle}"
   >
     <button
       class="py-4 px-8 block w-full {buttonStyle}"
@@ -99,7 +99,7 @@
 
   {#if expandContent}
     <div
-      class="flex flex-col pb-4 w-full border-r-2 border-b-2 border-l-2 rounded-b-xl border-[var(--bright-color)] transition-all duration-{animationSpeed} overflow-hidden {contentClass}"
+      class="flex flex-col pb-4 w-full border-r-2 border-b-2 border-l-2 rounded-b-xl border-ocean transition-all duration-{animationSpeed} overflow-hidden {contentClass}"
       transition:slide={{ duration: animationSpeed }}
     >
       <p class="p-6 self-center text-center max-w-[520px]">
