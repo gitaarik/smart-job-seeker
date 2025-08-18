@@ -12,7 +12,6 @@
     faTerminal,
     faRobot,
     faCloud,
-    faLanguage,
     faServer,
   } from "@fortawesome/free-solid-svg-icons";
   import { faPython, faNodeJs, faGitAlt, faLinux } from "@fortawesome/free-brands-svg-icons";

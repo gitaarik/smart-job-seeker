@@ -16,10 +16,10 @@
 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 {classNames}">
   {#each skills as skill (skill.title)}
     <div
-      class="bg-gray-50 border border-gray-400 rounded-md hover:bg-gray-100 transition-colors duration-200"
+      class="bg-gray-50 border border-[#5996ae] rounded-md hover:bg-gray-100 transition-colors duration-200"
     >
       <h5
-        class="text-sm font-semibold mb-1 px-2 py-2 bg-gray-900/10 rounded-t-md border-b-1 border-gray-400 flex items-center"
+        class="text-sm font-semibold mb-1 px-2 py-2 bg-[#486b99]/13 rounded-t-md border-b-1 border-[#5996ae] flex items-center"
       >
         {#if skill.icon}
           <FontAwesomeIcon icon={skill.icon} class="w-3 h-3 mr-2 flex-shrink-0" />

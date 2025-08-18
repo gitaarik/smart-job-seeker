@@ -31,7 +31,7 @@
         <div class="flex items-start justify-between">
           <div class="flex-1">
             <h4 class="font-semibold text-base print:text-sm">{reference.name}</h4>
-            <p class="text-cyan-700 font-medium mt-1">
+            <p class="text-sm text-cyan-700 font-medium mt-1">
               {reference.company}
             </p>
             <p class="text-sm mt-1">

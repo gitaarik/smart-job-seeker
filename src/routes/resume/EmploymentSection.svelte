@@ -112,7 +112,7 @@
       <div>
         <h4 class="text-lg font-semibold mb-3">Key Achievements:</h4>
         <CircleList class="ml-8">
-          {#each achievements as achievement}
+          {#each achievements as achievement (achievement)}
             <li>
               <strong>{achievement.title}:</strong> {achievement.description}
             </li>
