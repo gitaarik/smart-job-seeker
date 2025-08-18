@@ -2,8 +2,9 @@
   import ResumeSection from "./ResumeSection.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
-    faEye,
-    faProjectDiagram,
+    faUser,
+    faUserCog,
+    faCogs,
   } from "@fortawesome/free-solid-svg-icons";
 
   const methodologies = [
@@ -31,14 +32,14 @@
   ];
 </script>
 
-<ResumeSection title="Personality & Methodologies " icon={faProjectDiagram}>
+<ResumeSection title="Personality & Methodologies " icon={faUserCog}>
   <div class="space-y-8">
     <div>
       <h3
         class="flex items-center justify-between pt-4 pb-2 mb-5 border-b border-cyan-700"
       >
         <span class="text-lg font-medium">Personality Traits</span>
-        <FontAwesomeIcon icon={faEye} class="w-4 h-4" />
+        <FontAwesomeIcon icon={faUser} class="w-4 h-4" />
       </h3>
       <div class="flex flex-wrap gap-2">
         {#each traits as trait (trait)}
@@ -54,7 +55,7 @@
         class="flex items-center justify-between pt-4 pb-2 mb-5 border-b border-cyan-700"
       >
         <span class="text-lg font-medium">Development Methodologies</span>
-        <FontAwesomeIcon icon={faProjectDiagram} class="w-4 h-4" />
+        <FontAwesomeIcon icon={faCogs} class="w-4 h-4" />
       </h3>
       <div class="flex flex-wrap gap-2">
         {#each methodologies as methodology (methodology)}
