@@ -7,6 +7,21 @@ function getSystemTheme(request: Request): 'light' | 'dark' {
     return 'dark';
   }
   
+  // Check Accept header for dark mode preference
+  const accept = request.headers.get('accept');
+  if (accept && accept.includes('dark')) {
+    return 'dark';
+  }
+  
+  // Time-based heuristic as fallback
+  const now = new Date();
+  const hour = now.getHours();
+  
+  // If it's between 6 PM and 6 AM, lean towards dark theme
+  if (hour >= 18 || hour <= 6) {
+    return 'dark';
+  }
+  
   return 'light';
 }
 

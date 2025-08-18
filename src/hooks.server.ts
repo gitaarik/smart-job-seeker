@@ -7,9 +7,22 @@ function getSystemTheme(request: Request): 'light' | 'dark' {
     return 'dark';
   }
   
-  // Check user agent for hints (less reliable)
+  // Check Accept header for dark mode preference
+  const accept = request.headers.get('accept');
+  if (accept && accept.includes('dark')) {
+    return 'dark';
+  }
+  
+  // Check for common dark mode indicators in user agent
   const userAgent = request.headers.get('user-agent')?.toLowerCase() || '';
-  if (userAgent.includes('dark')) {
+  
+  // Check for time-based heuristics (rough estimate)
+  // This is a fallback when no other indicators are available
+  const now = new Date();
+  const hour = now.getHours();
+  
+  // If it's between 6 PM and 6 AM, lean towards dark theme
+  if (hour >= 18 || hour <= 6) {
     return 'dark';
   }
   
