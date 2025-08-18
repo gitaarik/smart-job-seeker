@@ -10,7 +10,7 @@
   export { classNames as class };
 </script>
 
-<div class="space-y-3 {classNames}">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-3 {classNames}">
   {#each skills as skill (skill.title)}
     <div class="bg-gray-50 border border-gray-400 rounded-md hover:bg-gray-100 transition-colors duration-200">
       <h5 class="text-sm font-semibold mb-1 px-2 py-2 bg-gray-200 rounded-t-md border-b-1 border-gray-400">{skill.title}</h5>

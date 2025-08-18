@@ -21,7 +21,7 @@
     },
     {
       title: "Web Technologies",
-      details: "HTML5, CSS (Tailwind), REST APIs",
+      details: "HTML5, CSS3 (Tailwind), REST APIs",
     },
     {
       title: "Web Protocols",
@@ -66,8 +66,8 @@
 </script>
 
 <ResumeSection title="Technical Expertise" icon={faCode}>
-  <div class="grid grid-cols-1 md:grid-cols-5 gap-4 relative">
-    <div class="md:col-span-3">
+  <div class="space-y-8">
+    <div>
       <h3
         class="flex items-center justify-between pt-4 pb-2 mb-5 border-b border-cyan-700"
       >
@@ -77,7 +77,7 @@
       <TechnicalSkillsList skills={expertKnowledge} />
     </div>
 
-    <div class="md:col-span-2 md:border-l md:border-gray-500 md:pl-4">
+    <div>
       <h3
         class="flex items-center justify-between pt-4 pb-2 mb-5 border-b border-cyan-700"
       >
