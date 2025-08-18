@@ -43,7 +43,7 @@
     {
       title: "Linux & DevOps",
       details:
-        "System administration, CI/CD, Docker, Ansible, Nginx, Apache",
+        "System administration, CI/CD, Docker (Compose), Ansible, Nginx, Apache",
     },
     {
       title: "Cloud Platforms",
@@ -60,7 +60,7 @@
     },
     {
       title: "Additional Languages",
-      details: "Lua, C, Objective-C, Java, PHP",
+      details: "Lua, C, Objective-C, PHP",
     },
   ];
 </script>
