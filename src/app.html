@@ -4,7 +4,7 @@
 		<meta charset="utf-8" />
 		<link rel="icon" href="%sveltekit.assets%/favicon.svg" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<meta name="color-scheme" content="dark light">
+		<meta name="color-scheme" content="dark light" />
 		<script>
 			// Early theme detection to prevent flash
 			(function() {
@@ -19,11 +19,11 @@
 							return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 						}
 					}
-					
+
 					// No saved preference - check system preference (default to auto)
 					return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 				}
-				
+
 				const theme = getTheme();
 				document.documentElement.className = document.documentElement.className.replace(/theme-\w+/, 'theme-' + theme);
 			})();
