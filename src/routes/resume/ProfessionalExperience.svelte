@@ -25,6 +25,7 @@
     faShoppingCart,
     faDatabase,
     faRocket,
+    faWrench,
   } from "@fortawesome/free-solid-svg-icons";
 
   const employmentHistory = [
@@ -119,7 +120,7 @@
       achievements: [
         {
           title: "Product Development",
-          icon: faCog,
+          icon: faWrench,
           description:
             "Designed and developed entire platform (backend and frontend) from concept to production",
         },
@@ -198,7 +199,7 @@
         },
         {
           title: "Cross-Platform Integration",
-          icon: faProjectDiagram,
+          icon: faLaptopCode,
           description:
             "Ensured consistent user experience across multiple mobile platforms and web interfaces",
         },
