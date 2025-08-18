@@ -43,7 +43,7 @@
               <img
                 src={reference.logo}
                 alt="{reference.company} Logo"
-                class="h-20 w-auto border border-gray-400 rounded"
+                class="h-20 w-auto border border-gray-400 print:border-0 rounded"
               />
             </div>
           {/if}
