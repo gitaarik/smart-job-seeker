@@ -13,7 +13,7 @@
 
   const profileData = [
     { icon: faMapMarkerAlt, text: "Ronda, Spain" },
-    { icon: faLanguage, text: "English: Fluent    Dutch: Native" },
+    { icon: faLanguage, text: "Fluent English, Native Dutch" },
     { icon: faPhone, text: "+31 649118511", href: "tel:+31649118511" },
     {
       icon: faEnvelope,
