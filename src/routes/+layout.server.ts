@@ -1,8 +1,20 @@
 import type { LayoutServerLoad } from './$types';
 
-function getThemeFromRequest(request: Request): string {
-  // First check for theme cookie
+function getSystemTheme(request: Request): 'light' | 'dark' {
+  // Try to detect system preference from headers
+  const acceptHeader = request.headers.get('sec-ch-prefers-color-scheme');
+  if (acceptHeader === 'dark') {
+    return 'dark';
+  }
+  
+  return 'light';
+}
+
+function getThemeData(request: Request) {
+  // First check for theme preference cookie
   const cookies = request.headers.get('cookie');
+  let themePref: 'light' | 'dark' | 'auto' = 'auto'; // Default to auto for new users
+  
   if (cookies) {
     const themeCookie = cookies
       .split(';')
@@ -10,26 +22,28 @@ function getThemeFromRequest(request: Request): string {
     
     if (themeCookie) {
       const theme = themeCookie.split('=')[1]?.trim();
-      if (theme === 'dark' || theme === 'light') {
-        return theme;
+      if (theme === 'dark' || theme === 'light' || theme === 'auto') {
+        themePref = theme as 'light' | 'dark' | 'auto';
       }
     }
   }
 
-  // Fallback to Accept header to detect system preference
-  const acceptHeader = request.headers.get('sec-ch-prefers-color-scheme');
-  if (acceptHeader === 'dark') {
-    return 'dark';
-  }
-
-  // Default to light theme
-  return 'light';
+  const systemTheme = getSystemTheme(request);
+  const actualTheme = themePref === 'auto' ? systemTheme : themePref;
+  
+  return {
+    themePreference: themePref,
+    actualTheme,
+    systemTheme
+  };
 }
 
 export const load: LayoutServerLoad = async ({ request }) => {
-  const serverTheme = getThemeFromRequest(request);
+  const themeData = getThemeData(request);
   
   return {
-    serverTheme
+    themePreference: themeData.themePreference,
+    actualTheme: themeData.actualTheme,
+    systemTheme: themeData.systemTheme
   };
 };

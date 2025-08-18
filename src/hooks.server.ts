@@ -1,8 +1,26 @@
 import type { Handle } from '@sveltejs/kit';
 
+function getSystemTheme(request: Request): 'light' | 'dark' {
+  // Try to detect system preference from headers
+  const acceptHeader = request.headers.get('sec-ch-prefers-color-scheme');
+  if (acceptHeader === 'dark') {
+    return 'dark';
+  }
+  
+  // Check user agent for hints (less reliable)
+  const userAgent = request.headers.get('user-agent')?.toLowerCase() || '';
+  if (userAgent.includes('dark')) {
+    return 'dark';
+  }
+  
+  return 'light';
+}
+
 function getThemeFromRequest(request: Request): string {
-  // First check for theme cookie
+  // First check for theme preference cookie
   const cookies = request.headers.get('cookie');
+  let themePref = 'auto'; // Default to auto for new users
+  
   if (cookies) {
     const themeCookie = cookies
       .split(';')
@@ -10,20 +28,18 @@ function getThemeFromRequest(request: Request): string {
     
     if (themeCookie) {
       const theme = themeCookie.split('=')[1]?.trim();
-      if (theme === 'dark' || theme === 'light') {
-        return theme;
+      if (theme === 'dark' || theme === 'light' || theme === 'auto') {
+        themePref = theme;
       }
     }
   }
 
-  // Fallback to Accept header to detect system preference
-  const acceptHeader = request.headers.get('sec-ch-prefers-color-scheme');
-  if (acceptHeader === 'dark') {
-    return 'dark';
+  // If auto, determine actual theme based on system preference
+  if (themePref === 'auto') {
+    return getSystemTheme(request);
   }
-
-  // Default to light theme
-  return 'light';
+  
+  return themePref;
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
