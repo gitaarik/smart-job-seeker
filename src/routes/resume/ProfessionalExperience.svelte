@@ -11,7 +11,7 @@
       website: "https://www.chipta.com/",
       period: "September 2014 – June 2024",
       location: "Amsterdam, The Netherlands",
-      logo: "images/chipta-logo.png",
+      logo: "/src/lib/images/company-logos/chipta-logo.png",
       description:
         "Joined this innovative ticketing startup as Lead Developer, scaling the platform from concept to processing thousands of tickets per minute during peak events. Successfully led technical development through 10 years of growth, making Chipta a competitive alternative for independent event organizers.",
       achievements: [
@@ -86,6 +86,7 @@
       industry: "Tender Discovery Platform",
       period: "March 2015 – June 2022",
       location: "Amsterdam, The Netherlands",
+      logo: "/src/lib/images/company-logos/tender-it-logo.png",
       description:
         "Built a comprehensive tender discovery platform from scratch, enabling companies to efficiently find and track public procurement opportunities. Delivered a complete solution that automated manual tender search processes for businesses.",
       note:
@@ -148,6 +149,7 @@
       website: "https://www.travelbird.com/",
       period: "March 2013 – August 2014",
       location: "Amsterdam, The Netherlands",
+      logo: "/src/lib/images/company-logos/travelbird-logo.png",
       description:
         "Joined during rapid growth phase (50 to 250+ employees) and contributed to scaling mobile presence during the company's expansion across European markets.",
       achievements: [
@@ -199,6 +201,7 @@
       website: "https://www.swis.nl/",
       period: "August 2011 – February 2013",
       location: "Leiden, The Netherlands",
+      logo: "/src/lib/images/company-logos/swis-logo.png",
       description:
         "Delivered web solutions for high-profile clients including major e-commerce and government organizations, working as part of a dedicated Scrum team in a fast-paced agency environment with diverse project requirements.",
       achievements: [
@@ -250,6 +253,7 @@
       website: "https://www.gamepoint.biz/",
       period: "June 2007 – June 2011",
       location: "The Hague, The Netherlands",
+      logo: "/src/lib/images/company-logos/gamepoint-logo.png",
       description:
         "Started career at established gaming community platform, progressing from junior to mid-level developer while contributing to platform stability and feature development.",
       achievements: [

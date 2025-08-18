@@ -94,7 +94,7 @@
           <img
             src={logo}
             alt="{company} Logo"
-            class="h-20 w-auto border border-gray-400 rounded"
+            class="h-25 w-auto border border-gray-400 rounded"
           />
         </div>
       {/if}
