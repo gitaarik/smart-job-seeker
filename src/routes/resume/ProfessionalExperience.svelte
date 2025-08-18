@@ -64,10 +64,10 @@
             "Created extensive testing suite (+80% coverage) and CI/CD system, radically improving deployment reliability & speed and enabling regular releases",
         },
         {
-          title: "Revenue Growth",
+          title: "Payment Integration",
           icon: faDollarSign,
           description:
-            "Built essential payment integrations with multiple providers (Mollie, Pay.nl, PayPal) that processed tens of millions in ticket sales over the platform's lifetime",
+            "Implemented and maintained payment service provider integrations with multiple providers (Mollie, Pay.nl, PayPal), ensuring reliable transaction processing for the platform",
         },
         {
           title: "Technical Innovation",
