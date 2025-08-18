@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { page } from "$app/stores";
   import HeaderSection from "./HeaderSection.svelte";
   import ProfileSection from "./ProfileSection.svelte";
   import SummarySection from "./SummarySection.svelte";
@@ -8,10 +9,13 @@
   import ProfessionalExperience from "./ProfessionalExperience.svelte";
   import ReferencesSection from "./ReferencesSection.svelte";
   import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
+
+  // Check for compact mode via query parameter
+  $: isCompact = $page.url.searchParams.get('version') === 'compact';
 </script>
 
 <svelte:head>
-  <title>Rik Wanders - Senior Full Stack Developer</title>
+  <title>Rik Wanders - Senior Full Stack Developer{isCompact ? ' (Compact)' : ''}</title>
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1.0, user-scalable=no"
@@ -31,8 +35,12 @@
     <SummarySection />
     <KeyQualificationsSection />
     <TechnicalExpertiseSection />
-    <PersonalityAndMethodologies />
-    <ProfessionalExperience />
-    <ReferencesSection />
+    {#if !isCompact}
+      <PersonalityAndMethodologies />
+    {/if}
+    <ProfessionalExperience {isCompact} />
+    {#if !isCompact}
+      <ReferencesSection />
+    {/if}
   </div>
 </div>

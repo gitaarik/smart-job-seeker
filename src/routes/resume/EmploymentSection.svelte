@@ -23,6 +23,17 @@
   export let impact;
   export let technologies;
   export let isFirst: boolean;
+  export let isCompact: boolean = false;
+
+  // Limit achievements in compact mode
+  $: displayedAchievements = isCompact 
+    ? achievements.slice(0, 3) // Show only first 3 achievements
+    : achievements;
+
+  // Limit technologies in compact mode
+  $: displayedTechnologies = isCompact 
+    ? technologies.slice(0, 8) // Show only first 8 technologies
+    : technologies;
 
 </script>
 
@@ -109,11 +120,11 @@
       <p class="text-sm italic"><strong>Note:</strong> {note}</p>
     {/if}
 
-    {#if achievements.length > 0}
+    {#if displayedAchievements.length > 0}
       <div>
         <h4 class="text-lg font-semibold mb-3 print:mb-2">Key Achievements:</h4>
         <ul class="space-y-2 ml-4">
-          {#each achievements as achievement (achievement)}
+          {#each displayedAchievements as achievement (achievement)}
             <li class="flex items-start">
               <FontAwesomeIcon 
                 icon={achievement.icon} 
@@ -133,13 +144,16 @@
       <p class="leading-relaxed">{impact}</p>
     </div>
 
-    {#if technologies.length > 0}
+    {#if displayedTechnologies.length > 0}
       <div>
         <h4 class="text-lg font-semibold mb-3 print:mb-2">Technologies Used:</h4>
         <div class="flex flex-wrap gap-2 print:gap-[4px]">
-          {#each technologies as tech (tech)}
+          {#each displayedTechnologies as tech (tech)}
             <TechTag {tech} />
           {/each}
+          {#if isCompact && technologies.length > displayedTechnologies.length}
+            <span class="px-2 py-1 text-sm text-slate italic">+{technologies.length - displayedTechnologies.length} more</span>
+          {/if}
         </div>
       </div>
     {/if}

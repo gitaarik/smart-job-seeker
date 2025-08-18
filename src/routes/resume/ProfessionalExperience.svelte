@@ -1,6 +1,8 @@
 <script lang="ts">
   import ResumeSection from "./ResumeSection.svelte";
   import EmploymentSection from "./EmploymentSection.svelte";
+
+  export let isCompact: boolean = false;
   import {
     faGlobe,
     faUsers,
@@ -343,10 +345,15 @@
       ],
     },
   ];
+
+  // Filter employment history for compact version
+  $: displayedJobs = isCompact 
+    ? employmentHistory.slice(0, 3) // Show only first 3 jobs (most recent/important)
+    : employmentHistory;
 </script>
 
 <ResumeSection title="Employment History" icon={faGlobe}>
-  {#each employmentHistory as job, index (job.company)}
+  {#each displayedJobs as job, index (job.company)}
     <EmploymentSection
       company={job.company}
       role={job.role}
@@ -361,8 +368,9 @@
       impact={job.impact}
       technologies={job.technologies}
       isFirst={index === 0}
+      {isCompact}
     />
-    {#if index < employmentHistory.length - 1}
+    {#if index < displayedJobs.length - 1}
       <hr class="border-cloud my-12 print:hidden" />
       <div class="hidden print:block print:break-before-page"></div>
     {/if}
