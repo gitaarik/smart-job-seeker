@@ -26,7 +26,7 @@
     {
       title: "SQL Databases",
       details:
-        "PostgreSQL, MySQL/MariaDB, SQLite - schema design, indexing, optimization",
+        "PostgreSQL, MySQL/MariaDB, SQLite<br />Schema design, indexing, optimization",
       icon: faDatabase,
     },
     {
@@ -42,7 +42,7 @@
     {
       title: "Shell Scripting / CLI Tools",
       details:
-        "bash, advanced CLI tools (find, grep, vim, sed, awk, curl, rsync)",
+        "bash, advanced CLI tools<br />(find, grep, vim, sed, awk, curl, rsync)",
       icon: faTerminal,
     },
     { title: "AI / LLM development tools", details: "Claude Code, Cursor, VSCode", icon: faRobot },

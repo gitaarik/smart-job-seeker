@@ -26,8 +26,8 @@
         {/if}
         {skill.title}
       </h5>
-      <p class="text-sm px-2 pb-2">
-        {skill.details}
+      <p class="text-sm px-2 pb-2 leading-relaxed">
+        {@html skill.details}
       </p>
     </div>
   {/each}
