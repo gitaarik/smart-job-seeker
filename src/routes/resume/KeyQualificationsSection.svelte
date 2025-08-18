@@ -45,7 +45,7 @@
 </script>
 
 <ResumeSection title="Key Qualifications" icon={faStar}>
-  <ul class="space-y-4 ml-1">
+  <ul class="space-y-4 print:space-y-2 ml-1">
     {#each qualifications as qualification (qualification.text)}
       <li class="flex items-start">
         <FontAwesomeIcon 

@@ -20,16 +20,14 @@
 <div
   class="min-h-screen bg-slate-200 print:bg-white text-cyan-900 font-['Noto_Sans',sans-serif]"
 >
-  <div class="py-6 px-4 print:p-0">
-    <div class="max-w-[800px] mx-auto">
-      <HeaderSection />
-      <ProfileSection />
-      <SummarySection />
-      <KeyQualificationsSection />
-      <TechnicalExpertiseSection />
-      <PersonalityAndMethodologies />
-      <ProfessionalExperience />
-      <ReferencesSection />
-    </div>
+  <div class="flex flex-col gap-10 py-6 px-4 print:p-0 max-w-[800px] mx-auto">
+    <HeaderSection />
+    <ProfileSection />
+    <SummarySection />
+    <KeyQualificationsSection />
+    <TechnicalExpertiseSection />
+    <PersonalityAndMethodologies />
+    <ProfessionalExperience />
+    <ReferencesSection />
   </div>
 </div>

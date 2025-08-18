@@ -107,6 +107,13 @@ body {
 	background: var(--lighter-color);
 }
 
+@media print  {
+	html,
+	body {
+		background: white;
+	}
+}
+
 strong {
 	font-weight: 600;
 }
