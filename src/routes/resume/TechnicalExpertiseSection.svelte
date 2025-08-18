@@ -3,21 +3,30 @@
   import TechnicalSkillsList from "./TechnicalSkillsList.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
+    faCloud,
     faCode,
     faCrown,
-    faHardHat,
     faDatabase,
     faGlobe,
+    faHardHat,
     faNetworkWired,
-    faTerminal,
     faRobot,
-    faCloud,
     faServer,
+    faTerminal,
   } from "@fortawesome/free-solid-svg-icons";
-  import { faPython, faNodeJs, faGitAlt, faLinux } from "@fortawesome/free-brands-svg-icons";
+  import {
+    faGitAlt,
+    faLinux,
+    faNodeJs,
+    faPython,
+  } from "@fortawesome/free-brands-svg-icons";
 
   const expertKnowledge = [
-    { title: "Python", details: "Django, REST Framework, Celery, Channels, Silk", icon: faPython },
+    {
+      title: "Python",
+      details: "Django, REST Framework, Celery, Channels, Silk",
+      icon: faPython,
+    },
     {
       title: "JavaScript / Node.js",
       details: "React, Svelte, Web Components",
@@ -45,11 +54,15 @@
         "bash, advanced CLI tools<br />(find, grep, vim, sed, awk, curl, rsync)",
       icon: faTerminal,
     },
-    { title: "AI / LLM development tools", details: "Claude Code, Cursor, VSCode", icon: faRobot },
     {
       title: "Git (GitHub, GitLab)",
       details: "GitHub, GitLab, advanced workflows, submodules",
       icon: faGitAlt,
+    },
+    {
+      title: "AI / LLM development tools",
+      details: "Claude Code, Cursor",
+      icon: faRobot,
     },
   ];
 
@@ -70,7 +83,11 @@
       details: "TypeScript, React Native, Vue.js",
       icon: faNodeJs,
     },
-    { title: "NoSQL Databases", details: "Elasticsearch, Redis, MongoDB", icon: faDatabase },
+    {
+      title: "NoSQL Databases",
+      details: "Elasticsearch, Redis, MongoDB",
+      icon: faDatabase,
+    },
     {
       title: "Caching & Load Balancing",
       details: "Varnish, Memcached, HAProxy",

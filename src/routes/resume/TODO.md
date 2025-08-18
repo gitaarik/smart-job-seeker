@@ -3,6 +3,8 @@
 ## Upcoming
 
 - Fix weird switch for Achievements
+- Fix mobile view
+  - Fix "Profile" section list on small screen
 
 ## Done
 
