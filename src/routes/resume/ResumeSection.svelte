@@ -3,10 +3,13 @@
 
   export let title;
   export let icon;
+
+  let classNames = "";
+  export { classNames as class };
 </script>
 
 <article
-  class="bg-[#fcfcfc] border-[1.2px] border-cyan-700 rounded-xl p-6 mb-8 break-inside-avoid print:border-0 print:p-0 print:mb-2"
+  class="bg-[#fcfcfc] border-[1.2px] border-cyan-700 rounded-xl p-6 mb-8 break-inside-avoid print:border-0 print:p-0 print:mb-2 {classNames}"
 >
   <h2
     class="relative border-b-2 border-cyan-700 pb-1 mb-5 print:pb-1 print:mb-4"

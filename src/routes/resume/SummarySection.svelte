@@ -3,7 +3,7 @@
   import { faCompass } from "@fortawesome/free-solid-svg-icons";
 </script>
 
-<ResumeSection title="Summary" icon={faCompass}>
+<ResumeSection title="Summary" icon={faCompass} class="leading-relaxed">
   <p class="mb-4">
     Dutch Senior Full Stack Developer, currently residing in Spain. Specialized
     in Python & Node.js ecosystems, with a wide background in full stack
@@ -19,4 +19,3 @@
     realize innovative ideas into real world products.
   </p>
 </ResumeSection>
-

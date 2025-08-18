@@ -104,7 +104,7 @@
     <p class="leading-relaxed">{description}</p>
 
     {#if note}
-      <p class="text-sm italic text-gray-700"><strong>Note:</strong> {note}</p>
+      <p class="text-sm italic"><strong>Note:</strong> {note}</p>
     {/if}
 
     {#if achievements.length > 0}
@@ -132,7 +132,7 @@
           Technical Impact:
         {/if}
       </h4>
-      <p class="text-sm leading-relaxed">{impact}</p>
+      <p class="leading-relaxed">{impact}</p>
     </div>
 
     {#if technologies.length > 0}
