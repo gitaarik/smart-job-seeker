@@ -319,6 +319,7 @@
     />
     {#if index < employmentHistory.length - 1}
       <hr class="border-gray-300 my-12 print:hidden" />
+      <div class="hidden print:block print:break-before-page"></div>
     {/if}
   {/each}
 </ResumeSection>
