@@ -3,7 +3,7 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { 
     faStar, 
-    faCalendarAlt, 
+    faGem, 
     faCode, 
     faServer, 
     faUsers, 
@@ -15,7 +15,7 @@
   const qualifications = [
     {
       text: "<strong>18+ years</strong> of <strong>full stack development experience</strong>.",
-      icon: faCalendarAlt
+      icon: faGem
     },
     {
       text: "Expertise in modern <strong>Python, JavaScript & Node.js</strong> ecosystems.",
