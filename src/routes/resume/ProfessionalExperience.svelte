@@ -137,7 +137,7 @@
         },
         {
           title: "Revenue Model",
-          icon: faChartLine,
+          icon: faDollarSign,
           description:
             "Built subscription-based authentication and payment system that supports sustainable business model and user growth",
         },
@@ -298,7 +298,7 @@
       achievements: [
         {
           title: "Payment Systems",
-          icon: faShoppingCart,
+          icon: faDollarSign,
           description:
             "Successfully implemented multiple payment integrations that supported platform monetization and user transactions",
         },
