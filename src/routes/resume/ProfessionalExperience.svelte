@@ -38,7 +38,7 @@
         {
           title: "Revenue Growth",
           description:
-            "Built essential payment integrations with multiple providers (Mollie, Pay.nl, PayPal) that processed millions in ticket sales over the platform's lifetime",
+            "Built essential payment integrations with multiple providers (Mollie, Pay.nl, PayPal) that processed tens of millions in ticket sales over the platform's lifetime",
         },
         {
           title: "Technical Innovation",
