@@ -1,0 +1,1 @@
+- crown and helmet icon align after heading text

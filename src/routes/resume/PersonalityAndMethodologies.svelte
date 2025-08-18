@@ -1,6 +1,5 @@
 <script lang="ts">
   import ResumeSection from "./ResumeSection.svelte";
-  import CircleList from "./CircleList.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faEye,
@@ -33,37 +32,37 @@
 </script>
 
 <ResumeSection title="Personality & Methodologies " icon={faProjectDiagram}>
-  <div class="grid grid-cols-1 md:grid-cols-5 gap-8">
-    <div class="md:col-span-2">
+  <div class="space-y-8">
+    <div>
       <h3
         class="flex items-center justify-between pt-4 pb-2 mb-5 border-b border-cyan-700"
       >
         <span class="text-lg font-medium">Personality Traits</span>
         <FontAwesomeIcon icon={faEye} class="w-4 h-4" />
       </h3>
-      <CircleList>
+      <div class="flex flex-wrap gap-2">
         {#each traits as trait (trait)}
-          <li>
-            <strong>{trait}</strong>
-          </li>
+          <div class="text-sm font-semibold px-2 py-2 bg-gray-200 rounded-md border border-gray-400 hover:bg-gray-300 transition-colors duration-200 text-center">
+            {trait}
+          </div>
         {/each}
-      </CircleList>
+      </div>
     </div>
 
-    <div class="md:col-span-3">
+    <div>
       <h3
         class="flex items-center justify-between pt-4 pb-2 mb-5 border-b border-cyan-700"
       >
         <span class="text-lg font-medium">Development Methodologies</span>
         <FontAwesomeIcon icon={faProjectDiagram} class="w-4 h-4" />
       </h3>
-      <CircleList>
+      <div class="flex flex-wrap gap-2">
         {#each methodologies as methodology (methodology)}
-          <li>
-            <strong>{methodology}</strong>
-          </li>
+          <div class="text-sm font-semibold px-2 py-2 bg-gray-200 rounded-md border border-gray-400 hover:bg-gray-300 transition-colors duration-200 text-center">
+            {methodology}
+          </div>
         {/each}
-      </CircleList>
+      </div>
     </div>
   </div>
 </ResumeSection>
