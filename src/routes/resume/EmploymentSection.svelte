@@ -25,9 +25,9 @@
   export let isFirst: boolean;
 </script>
 
-<section class="break-inside-avoid {isFirst ? 'mt-12' : ''}">
-  <header class="mb-6">
-    <div class="flex items-start justify-between mb-4">
+<section class="break-inside-avoid {isFirst ? 'mt-12 print:mt-0' : ''}">
+  <header class="mb-6 print:mb-4">
+    <div class="flex items-start justify-between">
       <div class="flex-1">
         <h3 class="text-2xl font-semibold text-cyan-700 mb-2">{company}</h3>
 
@@ -94,14 +94,14 @@
           <img
             src={logo}
             alt="{company} Logo"
-            class="h-25 w-auto border border-gray-400 print:border-0 rounded"
+            class="h-22 w-auto border border-gray-400 print:border-0 rounded"
           />
         </div>
       {/if}
     </div>
   </header>
 
-  <div class="space-y-4">
+  <div class="space-y-4 print:space-y-3">
     <p class="leading-relaxed">{description}</p>
 
     {#if note}
@@ -110,7 +110,7 @@
 
     {#if achievements.length > 0}
       <div>
-        <h4 class="text-lg font-semibold mb-3">Key Achievements:</h4>
+        <h4 class="text-lg font-semibold mb-3 print:mb-2">Key Achievements:</h4>
         <CircleList class="ml-8">
           {#each achievements as achievement (achievement)}
             <li>
@@ -122,7 +122,7 @@
     {/if}
 
     <div>
-      <h4 class="text-lg font-semibold mb-3">
+      <h4 class="text-lg font-semibold mb-3 print:mb-2">
         {#if company === "TravelBird"}
           Industry Impact:
         {:else if company === "SWIS"}
@@ -138,8 +138,8 @@
 
     {#if technologies.length > 0}
       <div>
-        <h4 class="text-lg font-semibold mb-3">Technologies Used:</h4>
-        <div class="flex flex-wrap gap-2">
+        <h4 class="text-lg font-semibold mb-3 print:mb-2">Technologies Used:</h4>
+        <div class="flex flex-wrap gap-2 print:gap-[4px]">
           {#each technologies as tech (tech)}
             <TechTag {tech} />
           {/each}
