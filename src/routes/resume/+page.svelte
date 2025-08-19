@@ -31,7 +31,7 @@
 
 <svelte:head>
   <title>
-    Rik Wanders - Senior Full Stack Developer{isCompact ? " (Compact)" : ""}
+    Rik Wanders - Senior Full Stack Developer
   </title>
   <meta
     name="viewport"
