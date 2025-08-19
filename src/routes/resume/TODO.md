@@ -2,7 +2,14 @@
 
 ## Upcoming
 
+- Process "recurring payments" in Tender-it story
+- Split up "Agile, Scrum, Kanban, Extreme Programming (XP)"
 - Fix weird switch for Achievements
+- Make different versions:
+    - Short version
+    - Full-time remote aimed vesion
+    - Front-end focussed one
+    - Back-end focussed one
 - Fix mobile view
   - Fix "Profile" section list on small screen
 

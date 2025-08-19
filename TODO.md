@@ -1,2 +1,7 @@
-- Enhance portfolio, inspiration: https://youtu.be/Y2kGqbzvAn4
+- Change slogan
+    - Instead of "Python • Django • React • Node.js"
+    - Something like:
+        - "Python • Node.js • Web • DevOps"
+        - "Python & Node.js ecosystems"
 - Generate static version of site so maybe reader view in firefox works
+- Enhance portfolio, inspiration: https://youtu.be/Y2kGqbzvAn4
