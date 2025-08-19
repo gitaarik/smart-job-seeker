@@ -22,24 +22,24 @@
       icon: faCode
     },
     {
-      text: "Additional experience in <strong>Linux, DevOps & CI/CD.</strong>",
-      icon: faServer
-    },
-    {
       text: "<strong>Team leadership</strong> and <strong>project management</strong> experience.",
       icon: faUsers
     },
     {
-      text: "Skilled in <strong>AI-accelerated development</strong>, with business security in mind.",
-      icon: faRobot
+      text: "Additional experience in <strong>Linux, DevOps & CI/CD.</strong>",
+      icon: faServer
+    },
+    {
+      text: "Skilled in developing scalable solutions for <strong>high-traffic applications</strong>.",
+      icon: faRocket
     },
     {
       text: "<strong>5+ years remote work</strong> and distributed team collaboration experience.",
       icon: faHome
     },
     {
-      text: "Skilled in developing scalable solutions for <strong>high-traffic applications</strong>.",
-      icon: faRocket
+      text: "<strong>AI-accelerated development</strong> skills, with business security in mind.",
+      icon: faRobot
     },
   ];
 </script>
