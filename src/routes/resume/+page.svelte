@@ -23,11 +23,9 @@
   let includesPartTime = timingOptions.includes("part-time");
   let includesFullTime = timingOptions.includes("full-time");
 
-  $: {
-    if (!includesProject && !includesPartTime && !includesFullTime) {
-      includesProject = true;
-      includesPartTime = true;
-    }
+  if (!includesProject && !includesPartTime && !includesFullTime) {
+    includesProject = true;
+    includesPartTime = true;
   }
 </script>
 
