@@ -47,7 +47,7 @@
       <div class="flex flex-wrap gap-2">
         {#each traits as trait (trait)}
           <div
-            class="text-sm font-semibold px-2 py-2 bg-mist rounded-md border border-aqua print:border-gray-300 hover:bg-cloud transition-colors duration-200 text-center"
+            class="text-sm font-semibold px-2 py-2 bg-mist hover:bg-ice rounded-md border border-aqua print:border-gray-300 transition-colors duration-200 text-center"
           >
             {trait}
           </div>
@@ -65,7 +65,7 @@
       <div class="flex flex-wrap gap-2">
         {#each methodologies as methodology (methodology)}
           <div
-            class="text-sm font-semibold px-2 py-2 bg-mist rounded-md border border-aqua print:border-gray-300 hover:bg-cloud transition-colors duration-200 text-center"
+            class="text-sm font-semibold px-2 py-2 bg-mist hover:bg-ice rounded-md border border-aqua print:border-gray-300 transition-colors duration-200 text-center"
           >
             {methodology}
           </div>

@@ -1,6 +1,6 @@
 <script lang="ts">
   import TechTag from "./TechTag.svelte";
-  import IconList from "./IconList.svelte";
+  import InfoBoxes from "./InfoBoxes.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faBuilding,
@@ -30,7 +30,7 @@
     ? achievements.slice(0, 3) // Show only first 3 achievements
     : achievements;
 
-  // Transform achievements for IconList component
+  // Transform achievements for InfoBoxes component
   $: achievementItems = displayedAchievements.map(achievement => ({
     title: achievement.title,
     details: achievement.description,
@@ -130,7 +130,7 @@
     {#if achievementItems.length > 0}
       <div>
         <h4 class="text-lg print:text-md font-semibold mb-3 print:mb-2">Key Achievements:</h4>
-        <IconList items={achievementItems} />
+        <InfoBoxes items={achievementItems} />
       </div>
     {/if}
 

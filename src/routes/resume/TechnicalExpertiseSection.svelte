@@ -1,6 +1,6 @@
 <script lang="ts">
   import ResumeSection from "./ResumeSection.svelte";
-  import IconList from "./IconList.svelte";
+  import InfoBoxes from "./InfoBoxes.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faCloud,
@@ -110,7 +110,7 @@
         <span class="text-lg font-medium">Expert Knowledge</span>
         <FontAwesomeIcon icon={faCrown} class="w-4 h-4 ml-2" />
       </h3>
-      <IconList items={expertKnowledge} />
+      <InfoBoxes items={expertKnowledge} />
     </div>
 
     <div>
@@ -120,7 +120,7 @@
         <span class="text-lg font-medium">Working Knowledge</span>
         <FontAwesomeIcon icon={faHardHat} class="w-4 h-4 ml-2" />
       </h3>
-      <IconList items={workingKnowledge} />
+      <InfoBoxes items={workingKnowledge} />
     </div>
   </div>
 </ResumeSection>
