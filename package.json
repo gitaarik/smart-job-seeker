@@ -12,8 +12,7 @@
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "format": "prettier --write .",
     "lint": "prettier --check . && eslint .",
-    "export:resume": "node scripts/export-resume-pdf.js",
-    "export:resume:with-server": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && npm run export:resume\" --kill-others --success first"
+    "export-resume": "node scripts/export-resume-pdf.js"
   },
   "devDependencies": {
     "@eslint/compat": "^1.2.5",
