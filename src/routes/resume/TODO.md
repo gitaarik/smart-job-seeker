@@ -2,7 +2,6 @@
 
 ## Upcoming
 
-- Process "recurring payments" in Tender-it story
 - Split up "Agile, Scrum, Kanban, Extreme Programming (XP)"
 - Fix weird switch for Achievements
 - Make icons at "Key Achievements" bigger, vertically center on text
@@ -11,6 +10,7 @@
 
 ## Done
 
+- Process "recurring payments" in Tender-it story
 - Maybe change Language icon to something more clear
 - Make different versions:
     - Short version

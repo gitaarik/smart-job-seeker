@@ -8,7 +8,10 @@
   } from "@fortawesome/free-solid-svg-icons";
 
   const methodologies = [
-    "Agile, Scrum, Kanban, Extreme Programming (XP)",
+    "Agile",
+    "Scrum",
+    "Kanban",
+    "Extreme Programming (XP)",
     "AI-accelerated development",
     "Secure by design",
     "Test-driven development (TDD)",
