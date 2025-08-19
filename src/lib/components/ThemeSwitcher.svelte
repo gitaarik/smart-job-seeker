@@ -59,23 +59,37 @@
         return "Unknown";
     }
   }
+
+  function getThemeIcon() {
+    switch ($themePreference) {
+      case "light":
+        return faSun;
+      case "dark":
+        return faMoon;
+      case "auto":
+        return faCircleHalfStroke;
+      default:
+        return faSun;
+    }
+  }
+
 </script>
 
 <div class="fixed top-4 right-4 z-50">
-  <!-- Theme indicator -->
+  <!-- Stylish theme indicator with slide-in animation -->
   {#if showThemeIndicator}
     <div
-      class="absolute right-14 top-0 px-3 py-2 bg-glass-light border border-glass rounded shadow-lg text-sm font-medium transition-opacity duration-500 whitespace-nowrap"
-      class:opacity-0={!showThemeIndicator}
-      class:opacity-100={showThemeIndicator}
+      class="absolute right-14 top-1/2 -translate-y-1/2 flex items-center gap-2 px-3 py-2 bg-glass-light border border-glass rounded-lg shadow-lg backdrop-blur-md transition-all duration-300 ease-out animate-pulse"
+      style="animation: slideInFromRight 0.3s ease-out forwards, fadeOut 0.5s ease-in 1.5s forwards;"
     >
-      {getThemeDisplayName()}
+      <FontAwesomeIcon icon={getThemeIcon()} class="w-3 h-3 text-current" />
+      <span class="text-sm font-medium whitespace-nowrap">{getThemeDisplayName()}</span>
     </div>
   {/if}
 
   <!-- Theme switcher button -->
   <button
-    class="relative block w-10 h-10 rounded border bg-glass-light border-glass cursor-pointer shadow transition focus:outline-none overflow-hidden"
+    class="relative block w-10 h-10 rounded border bg-glass-light border-glass cursor-pointer shadow transition-all duration-200 focus:outline-none overflow-hidden hover:scale-105 active:scale-95"
     aria-label={getAriaLabel()}
     title={getAriaLabel()}
     on:click={handleToggleTheme}
@@ -100,3 +114,25 @@
     </span>
   </button>
 </div>
+
+<style>
+  @keyframes slideInFromRight {
+    from {
+      opacity: 0;
+      transform: translateX(20px) translateY(-50%);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0) translateY(-50%);
+    }
+  }
+
+  @keyframes fadeOut {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+</style>
