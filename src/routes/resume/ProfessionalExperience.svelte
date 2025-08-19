@@ -6,8 +6,6 @@
   import {
     faGlobe,
     faUsers,
-    faArrowUp,
-    faTachometerAlt,
     faShieldAlt,
     faDollarSign,
     faMicrochip,
@@ -19,18 +17,16 @@
     faPaintBrush,
     faMobile,
     faPlug,
-    faProjectDiagram,
     faEnvelope,
     faHandshake,
     faBullseye,
     faFileCode,
-    faShoppingCart,
     faDatabase,
     faRocket,
     faWrench,
   } from "@fortawesome/free-solid-svg-icons";
 
-  const employmentHistory = [
+  const experiences = [
     {
       company: "Chipta",
       role: "Lead Developer",
@@ -348,11 +344,11 @@
 
   // Filter employment history for compact size
   $: displayedJobs = isCompact 
-    ? employmentHistory.slice(0, 3) // Show only first 3 jobs (most recent/important)
-    : employmentHistory;
+    ? experiences.slice(0, 3) // Show only first 3 jobs (most recent/important)
+    : experiences;
 </script>
 
-<ResumeSection title="Employment History" icon={faGlobe}>
+<ResumeSection title="Professional Experience" icon={faGlobe}>
   {#each displayedJobs as job, index (job.company)}
     <EmploymentSection
       company={job.company}

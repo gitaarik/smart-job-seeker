@@ -1,6 +1,5 @@
 <script lang="ts">
   import TechTag from "./TechTag.svelte";
-  import CircleList from "./CircleList.svelte";
   import IconList from "./IconList.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
@@ -122,7 +121,7 @@
   </header>
 
   <div class="space-y-4 print:space-y-3">
-    <p class="leading-relaxed">{description}</p>
+    <p class="leading-relaxed print:text-sm">{description}</p>
 
     {#if note}
       <p class="text-sm italic"><strong>Note:</strong> {note}</p>
@@ -130,19 +129,19 @@
 
     {#if achievementItems.length > 0}
       <div>
-        <h4 class="text-lg font-semibold mb-3 print:mb-2">Key Achievements:</h4>
+        <h4 class="text-lg print:text-md font-semibold mb-3 print:mb-2">Key Achievements:</h4>
         <IconList items={achievementItems} />
       </div>
     {/if}
 
     <div>
-      <h4 class="text-lg font-semibold mb-3 print:mb-2">Impact:</h4>
-      <p class="leading-relaxed">{impact}</p>
+      <h4 class="text-lg print:text-md font-semibold mb-3 print:mb-2">Impact:</h4>
+      <p class="leading-relaxed print:text-sm">{impact}</p>
     </div>
 
     {#if displayedTechnologies.length > 0}
       <div>
-        <h4 class="text-lg font-semibold mb-3 print:mb-2">Technologies Used:</h4>
+        <h4 class="text-lg print:text-md font-semibold mb-3 print:mb-2">Technologies Used:</h4>
         <div class="flex flex-wrap gap-2 print:gap-[4px]">
           {#each displayedTechnologies as tech (tech)}
             <TechTag {tech} />
