@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 
+// This script must be run from the root dir:
+//
+//     node scripts/export-resume-pdf.js
+//
+// But you can just use `npm run export-resume` (package.json script)
+
 import puppeteer from "puppeteer";
 import path from "path";
 import fs from "fs";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 async function exportResumeToPDF() {
   console.log("🚀 Starting resume PDF export...");
