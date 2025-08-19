@@ -8,7 +8,7 @@
 
   function getLookingForText() {
     function getText() {
-      return `I'm currently looking for an exciting and challenging remote ${getTiming()}, where I can apply my expertise and creativity. I thrive in dynamic agile teams or startup environments that realize innovative ideas into real world products.`;
+      return `Seeking challenging remote ${getTiming()} in a dynamic agile team building innovative products.`;
     }
 
     function getTiming() {
@@ -47,11 +47,10 @@
 
 <ResumeSection title="Summary" icon={faCompass} class="leading-relaxed">
   <p class="mb-4">
-    Dutch Senior Full Stack Developer, currently residing in Spain. Specialized
-    in Python & Node.js ecosystems, with a wide background in full stack
-    engineering, designing complex and high-traffic applications. Through past
-    leadership roles developed strong skills for product responsibility, project
-    management and team leadership.
+    Dutch Senior Full Stack Developer residing in Spain, with 18+ years
+    experience specializing in Python & Node.js ecosystems. Experienced in
+    scaling complex &amp; high-traffic applications and leading development
+    teams.
   </p>
 
   <p>
