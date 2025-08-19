@@ -34,6 +34,19 @@
     }
   }
 
+  function getIndicatorTopOffset() {
+    switch ($themePreference) {
+      case "light":
+        return "top-0";
+      case "dark":
+        return "-top-3";
+      case "auto":
+        return "-top-6";
+      default:
+        return "top-0";
+    }
+  }
+
   function getAriaLabel() {
     switch ($themePreference) {
       case "light":
@@ -60,18 +73,6 @@
     }
   }
 
-  function getThemeIcon() {
-    switch ($themePreference) {
-      case "light":
-        return faSun;
-      case "dark":
-        return faMoon;
-      case "auto":
-        return faCircleHalfStroke;
-      default:
-        return faSun;
-    }
-  }
 
 </script>
 
@@ -79,10 +80,27 @@
   <!-- Stylish theme indicator with slide-in animation -->
   {#if showThemeIndicator}
     <div
-      class="absolute right-14 top-1/2 -translate-y-1/2 flex items-center gap-2 px-3 py-2 bg-glass-light border border-glass rounded-lg shadow-lg backdrop-blur-md transition-all duration-300 ease-out animate-pulse"
+      class="absolute right-14 top-1/2 -translate-y-1/2 flex items-center gap-2 px-3 py-2 bg-glass-light border border-glass rounded-lg shadow-lg backdrop-blur-md transition-all duration-300 ease-out animate-pulse overflow-hidden"
       style="animation: slideInFromRight 0.3s ease-out forwards, fadeOut 0.5s ease-in 1.5s forwards;"
     >
-      <FontAwesomeIcon icon={getThemeIcon()} class="w-3 h-3 text-current" />
+      <div class="relative w-3 h-3 overflow-hidden">
+        <span class="block absolute {getIndicatorTopOffset()} transition-[top] duration-250">
+          <!-- Light theme icon -->
+          <span class="flex w-3 h-3 items-center justify-center">
+            <FontAwesomeIcon icon={faSun} class="w-3 h-3" />
+          </span>
+          
+          <!-- Dark theme icon -->
+          <span class="flex w-3 h-3 items-center justify-center">
+            <FontAwesomeIcon icon={faMoon} class="w-3 h-3" />
+          </span>
+          
+          <!-- Auto theme icon -->
+          <span class="flex w-3 h-3 items-center justify-center">
+            <FontAwesomeIcon icon={faCircleHalfStroke} class="w-3 h-3" />
+          </span>
+        </span>
+      </div>
       <span class="text-sm font-medium whitespace-nowrap">{getThemeDisplayName()}</span>
     </div>
   {/if}
