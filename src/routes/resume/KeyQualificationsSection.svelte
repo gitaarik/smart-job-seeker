@@ -38,7 +38,7 @@
       icon: faHome
     },
     {
-      text: "Proven track record scaling <strong>high-traffic applications</strong>.",
+      text: "Skilled in developing scalable solutions for <strong>high-traffic applications</strong>.",
       icon: faRocket
     },
   ];
