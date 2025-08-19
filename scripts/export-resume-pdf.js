@@ -71,7 +71,7 @@ async function exportResumeToPDF() {
       });
 
       // Wait for fonts and icons to load
-      console.log("⏳ Waiting for page to fully load...");
+      console.log("⏳ Waiting 2 seconds for page to fully load...");
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
       // Ensure all images are loaded
