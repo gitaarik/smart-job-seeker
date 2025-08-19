@@ -2,7 +2,6 @@
 
 ## Upcoming
 
-- Maybe change Language icon to something more clear
 - Process "recurring payments" in Tender-it story
 - Split up "Agile, Scrum, Kanban, Extreme Programming (XP)"
 - Fix weird switch for Achievements
@@ -12,6 +11,7 @@
 
 ## Done
 
+- Maybe change Language icon to something more clear
 - Make different versions:
     - Short version
     - Full-time remote aimed vesion

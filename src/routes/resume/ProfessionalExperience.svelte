@@ -142,7 +142,7 @@
           title: "Revenue Model",
           icon: faDollarSign,
           description:
-            "Built subscription-based authentication and payment system that supports sustainable business model and user growth",
+            "Built subscription-based authentication with recurring payments that supports sustainable business model and user growth",
         },
         {
           title: "User Experience",
