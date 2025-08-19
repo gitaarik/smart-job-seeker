@@ -46,7 +46,9 @@
 <div
   class="min-h-screen bg-mist print:bg-white text-slate font-['Noto_Sans',sans-serif]"
 >
-  <div class="flex flex-col gap-10 py-6 px-4 print:p-0 max-w-[800px] mx-auto">
+  <div
+    class="flex flex-col gap-10 print:gap-5 py-6 px-4 print:p-0 max-w-[800px] mx-auto"
+  >
     <HeaderSection />
     <ProfileSection />
     <SummarySection {includesProject} {includesPartTime} {includesFullTime} />
