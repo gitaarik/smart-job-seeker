@@ -11,11 +11,30 @@
   import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
 
   // Check for compact mode via query parameter
-  $: isCompact = $page.url.searchParams.get('size') === 'compact';
+  const isCompact = $page.url.searchParams.get("size") === "compact";
+
+  // Parse timing parameter
+  const timingParam = $page.url.searchParams.get("timing") || "";
+  const timingOptions = timingParam
+    ? timingParam.split(",").map((t) => t.trim())
+    : [];
+
+  let includesProject = timingOptions.includes("project");
+  let includesPartTime = timingOptions.includes("part-time");
+  let includesFullTime = timingOptions.includes("full-time");
+
+  $: {
+    if (!includesProject && !includesPartTime && !includesFullTime) {
+      includesProject = true;
+      includesPartTime = true;
+    }
+  }
 </script>
 
 <svelte:head>
-  <title>Rik Wanders - Senior Full Stack Developer{isCompact ? ' (Compact)' : ''}</title>
+  <title>
+    Rik Wanders - Senior Full Stack Developer{isCompact ? " (Compact)" : ""}
+  </title>
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1.0, user-scalable=no"
@@ -32,7 +51,7 @@
   <div class="flex flex-col gap-10 py-6 px-4 print:p-0 max-w-[800px] mx-auto">
     <HeaderSection />
     <ProfileSection />
-    <SummarySection />
+    <SummarySection {includesProject} {includesPartTime} {includesFullTime} />
     <KeyQualificationsSection />
     <TechnicalExpertiseSection />
     {#if !isCompact}
