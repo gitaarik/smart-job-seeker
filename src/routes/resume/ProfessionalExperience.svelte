@@ -346,7 +346,7 @@
     },
   ];
 
-  // Filter employment history for compact version
+  // Filter employment history for compact size
   $: displayedJobs = isCompact 
     ? employmentHistory.slice(0, 3) // Show only first 3 jobs (most recent/important)
     : employmentHistory;

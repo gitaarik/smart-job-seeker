@@ -11,7 +11,7 @@
   import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
 
   // Check for compact mode via query parameter
-  $: isCompact = $page.url.searchParams.get('version') === 'compact';
+  $: isCompact = $page.url.searchParams.get('size') === 'compact';
 </script>
 
 <svelte:head>
