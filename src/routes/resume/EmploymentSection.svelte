@@ -1,6 +1,7 @@
 <script lang="ts">
   import TechTag from "./TechTag.svelte";
   import CircleList from "./CircleList.svelte";
+  import IconList from "./IconList.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faBuilding,
@@ -29,6 +30,13 @@
   $: displayedAchievements = isCompact 
     ? achievements.slice(0, 3) // Show only first 3 achievements
     : achievements;
+
+  // Transform achievements for IconList component
+  $: achievementItems = displayedAchievements.map(achievement => ({
+    title: achievement.title,
+    details: achievement.description,
+    icon: achievement.icon
+  }));
 
   // Limit technologies in compact mode
   $: displayedTechnologies = isCompact 
@@ -120,22 +128,10 @@
       <p class="text-sm italic"><strong>Note:</strong> {note}</p>
     {/if}
 
-    {#if displayedAchievements.length > 0}
+    {#if achievementItems.length > 0}
       <div>
         <h4 class="text-lg font-semibold mb-3 print:mb-2">Key Achievements:</h4>
-        <ul class="space-y-2 ml-4">
-          {#each displayedAchievements as achievement (achievement)}
-            <li class="flex items-start">
-              <FontAwesomeIcon 
-                icon={achievement.icon} 
-                class="w-4 h-4 mr-3 mt-1 flex-shrink-0 text-ocean"
-              />
-              <span>
-                <strong>{achievement.title}:</strong> {achievement.description}
-              </span>
-            </li>
-          {/each}
-        </ul>
+        <IconList items={achievementItems} />
       </div>
     {/if}
 
