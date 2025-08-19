@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { page } from "$app/stores";
+  import { page } from "$app/state";
   import HeaderSection from "./HeaderSection.svelte";
   import ProfileSection from "./ProfileSection.svelte";
   import SummarySection from "./SummarySection.svelte";
@@ -11,10 +11,10 @@
   import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
 
   // Check for compact mode via query parameter
-  const isCompact = $page.url.searchParams.get("size") === "compact";
+  const isCompact = page.url.searchParams.get("size") === "compact";
 
   // Parse timing parameter
-  const timingParam = $page.url.searchParams.get("timing") || "";
+  const timingParam = page.url.searchParams.get("timing") || "";
   const timingOptions = timingParam
     ? timingParam.split(",").map((t) => t.trim())
     : [];
