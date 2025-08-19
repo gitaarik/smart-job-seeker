@@ -75,7 +75,7 @@
 
   <!-- Theme switcher button -->
   <button
-    class="block w-10 h-10 rounded border bg-glass-light border-glass cursor-pointer shadow transition focus:outline-none overflow-hidden"
+    class="relative block w-10 h-10 rounded border bg-glass-light border-glass cursor-pointer shadow transition focus:outline-none overflow-hidden"
     aria-label={getAriaLabel()}
     title={getAriaLabel()}
     on:click={handleToggleTheme}
