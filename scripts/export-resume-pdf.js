@@ -122,7 +122,7 @@ async function exportResumeToPDF() {
           </div>
 
           <div>
-            Rik Wanders – Full Stack Developer
+            Rik Wanders – Senior Full Stack Developer
             (<span class="pageNumber"></span>/<span class="totalPages"></span>)
         </div>
       `;

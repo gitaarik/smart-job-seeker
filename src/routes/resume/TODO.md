@@ -2,19 +2,21 @@
 
 ## Upcoming
 
+- Maybe change Language icon to something more clear
 - Process "recurring payments" in Tender-it story
 - Split up "Agile, Scrum, Kanban, Extreme Programming (XP)"
 - Fix weird switch for Achievements
-- Make different versions:
-    - Short version
-    - Full-time remote aimed vesion
-    - Front-end focussed one
-    - Back-end focussed one
+- Make icons at "Key Achievements" bigger, vertically center on text
 - Fix mobile view
   - Fix "Profile" section list on small screen
 
 ## Done
 
+- Make different versions:
+    - Short version
+    - Full-time remote aimed vesion
+    - Front-end focussed one
+    - Back-end focussed one
 - Make PDF generation script
 - Maybe add icons at technologies
 - Icons at items in "Key Qualifications"
