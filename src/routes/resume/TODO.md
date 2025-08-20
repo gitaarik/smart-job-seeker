@@ -4,6 +4,8 @@
 
 - Add "REST API Development" to "Expert Knowledge"
 - Add GraphQL to "Exploring"
+- Check Resume with AI resume parser:
+  - https://duckduckgo.com/?t=ffab&q=ai%20resume%20parser&ia=web
 - Fix mobile view
   - Fix "Profile" section list on small screen
 
