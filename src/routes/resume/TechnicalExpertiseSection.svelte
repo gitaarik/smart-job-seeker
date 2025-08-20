@@ -26,13 +26,13 @@
     {
       title: "Python",
       details:
-        "Django, REST Framework, Celery, Channels, Silk<br>REST APIs, OOP, Requests, Beautifulsoup",
+        "Django, REST Framework, Celery, Channels, Silk<br>REST APIs, OOP, Requests, Beautifulsoup, uv",
       icon: faPython,
     },
     {
       title: "JavaScript / Node.js",
       details:
-        "React, Svelte / Sveltekit, Web Components, Lit, Drizzle, MobX",
+        "React, Svelte / Sveltekit, Web Components, Lit, Drizzle, MobX, async / await",
       icon: faNodeJs,
     },
     {
@@ -99,7 +99,7 @@
     },
     {
       title: "JavaScript / Node.js",
-      details: "Next.js, NestJS, Zustand, Prisma, Jest, Vitest",
+      details: "Next.js, NestJS, Zustand, Prisma, GraphQL, Jest",
       icon: faNodeJs,
     },
     {
@@ -141,7 +141,7 @@
       <h3
         class="flex items-center pt-4 pb-2 mb-5 border-b border-ocean"
       >
-        <span class="text-lg font-medium">Exploring</span>
+        <span class="text-lg font-medium">Exploring / Interested</span>
         <FontAwesomeIcon icon={faMagnifyingGlass} class="w-4 h-4 ml-2" />
       </h3>
       <InfoBoxes items={exploring} />
