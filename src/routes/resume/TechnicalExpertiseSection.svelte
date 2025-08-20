@@ -7,6 +7,7 @@
     faCode,
     faCrown,
     faDatabase,
+    faEye,
     faGlobe,
     faHardHat,
     faNetworkWired,
@@ -99,6 +100,29 @@
       icon: faTerminal,
     },
   ];
+
+  const exploring = [
+    {
+      title: "Python",
+      details: "FastAPI, pandas, scikit-learn, langchain",
+      icon: faPython,
+    },
+    {
+      title: "JavaScript / Node.js",
+      details: "Next.js, Jest, Zustand",
+      icon: faNodeJs,
+    },
+    {
+      title: "Cloud Platforms",
+      details: "AWS, Azure, GCP",
+      icon: faCloud,
+    },
+    {
+      title: "DevOps",
+      details: "Kubernetes, Terraform, GitHub Actions",
+      icon: faServer,
+    },
+  ];
 </script>
 
 <ResumeSection title="Technical Expertise" icon={faCode}>
@@ -121,6 +145,16 @@
         <FontAwesomeIcon icon={faHardHat} class="w-4 h-4 ml-2" />
       </h3>
       <InfoBoxes items={workingKnowledge} />
+    </div>
+
+    <div>
+      <h3
+        class="flex items-center pt-4 pb-2 mb-5 border-b border-ocean"
+      >
+        <span class="text-lg font-medium">Exploring</span>
+        <FontAwesomeIcon icon={faEye} class="w-4 h-4 ml-2" />
+      </h3>
+      <InfoBoxes items={exploring} />
     </div>
   </div>
 </ResumeSection>
