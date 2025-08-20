@@ -92,7 +92,7 @@
   const exploring = [
     {
       title: "Python",
-      details: "FastAPI, pandas, scikit-learn, langchain",
+      details: "FastAPI, pandas, scikit-learn, LangChain",
       icon: faPython,
     },
     {

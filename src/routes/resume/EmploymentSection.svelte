@@ -26,22 +26,21 @@
   export let isCompact: boolean = false;
 
   // Limit achievements in compact mode
-  $: displayedAchievements = isCompact 
+  $: displayedAchievements = isCompact
     ? achievements.slice(0, 3) // Show only first 3 achievements
     : achievements;
 
   // Transform achievements for InfoBoxes component
-  $: achievementItems = displayedAchievements.map(achievement => ({
+  $: achievementItems = displayedAchievements.map((achievement) => ({
     title: achievement.title,
     details: achievement.description,
-    icon: achievement.icon
+    icon: achievement.icon,
   }));
 
   // Limit technologies in compact mode
-  $: displayedTechnologies = isCompact 
+  $: displayedTechnologies = isCompact
     ? technologies.slice(0, 8) // Show only first 8 technologies
     : technologies;
-
 </script>
 
 <section class="break-inside-avoid {isFirst ? 'mt-12 print:mt-0' : ''}">
@@ -50,7 +49,9 @@
       <div class="flex-1">
         <h3 class="text-2xl font-semibold text-ocean mb-2">{company}</h3>
 
-        <div class="grid grid-cols-1 md:grid-cols-[max-content_1fr] print:grid-cols-[max-content_1fr] gap-4 md:gap-6 print:gap-4 text-sm">
+        <div
+          class="grid grid-cols-1 md:grid-cols-[max-content_1fr] print:grid-cols-[max-content_1fr] gap-4 md:gap-6 print:gap-4 text-sm"
+        >
           <div class="space-y-2">
             <div class="flex items-center">
               <FontAwesomeIcon
@@ -129,25 +130,33 @@
 
     {#if achievementItems.length > 0}
       <div>
-        <h4 class="text-lg print:text-base font-semibold mb-3 print:mb-2">Key Achievements:</h4>
+        <h4 class="text-lg print:text-base font-semibold mb-3 print:mb-2">
+          Key Achievements:
+        </h4>
         <InfoBoxes items={achievementItems} />
       </div>
     {/if}
 
     <div>
-      <h4 class="text-lg print:text-base font-semibold mb-3 print:mb-2">Impact:</h4>
+      <h4 class="text-lg print:text-base font-semibold mb-3 print:mb-2">
+        Impact:
+      </h4>
       <p class="leading-relaxed print:text-sm">{impact}</p>
     </div>
 
     {#if displayedTechnologies.length > 0}
       <div>
-        <h4 class="text-lg print:text-base font-semibold mb-3 print:mb-2">Technologies Used:</h4>
+        <h4 class="text-lg print:text-base font-semibold mb-3 print:mb-2">
+          Technologies Used:
+        </h4>
         <div class="flex flex-wrap gap-2 print:gap-[5px]">
           {#each displayedTechnologies as tech (tech)}
             <TechTag {tech} />
           {/each}
-          {#if isCompact && technologies.length > displayedTechnologies.length}
-            <span class="px-2 py-1 text-sm text-slate italic">+{technologies.length - displayedTechnologies.length} more</span>
+          {#if           isCompact &&
+            technologies.length > displayedTechnologies.length}
+            <span class="px-2 py-1 text-sm text-slate italic"
+            >+{technologies.length - displayedTechnologies.length} more</span>
           {/if}
         </div>
       </div>

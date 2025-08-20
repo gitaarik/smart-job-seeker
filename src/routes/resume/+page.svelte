@@ -44,7 +44,7 @@
 </div>
 
 <div
-  class="min-h-screen bg-mist print:bg-white text-slate font-['Noto_Sans',sans-serif]"
+  class="min-h-screen bg-mist print:bg-transparent print:my-15 print:mx-10 text-slate"
 >
   <div
     class="flex flex-col gap-10 print:gap-7 py-6 px-4 print:p-0 max-w-[800px] mx-auto"
@@ -53,13 +53,25 @@
     <ProfileSection />
     <SummarySection {includesProject} {includesPartTime} {includesFullTime} />
     <KeyQualificationsSection />
-    <TechnicalExpertiseSection />
+
+    <div class="print:py-10 print:break-inside-avoid">
+      <TechnicalExpertiseSection />
+    </div>
+
     {#if !isCompact}
-      <PersonalityAndMethodologies />
+      <div class="print:py-10 print:break-inside-avoid">
+        <PersonalityAndMethodologies />
+      </div>
     {/if}
-    <ProfessionalExperience {isCompact} />
+
+    <div class="print:py-10 print:break-inside-avoid">
+      <ProfessionalExperience {isCompact} />
+    </div>
+
     {#if !isCompact}
-      <ReferencesSection />
+      <div class="print:py-10 print:break-inside-avoid">
+        <ReferencesSection />
+      </div>
     {/if}
   </div>
 </div>

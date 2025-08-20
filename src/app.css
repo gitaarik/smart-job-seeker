@@ -126,7 +126,7 @@ body {
 @media print  {
 	html,
 	body {
-		background: white;
+		background: var(--color-frost);
 	}
 }
 

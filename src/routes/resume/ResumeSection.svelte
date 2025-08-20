@@ -9,7 +9,7 @@
 </script>
 
 <article
-  class="bg-frost print:bg-white border-[1.2px] border-ocean rounded-xl p-6 break-inside-avoid print:border-0 print:p-0 {classNames}"
+  class="bg-frost print:bg-transparent border-[1.2px] border-ocean rounded-xl p-6 break-inside-avoid print:border-0 print:p-0 {classNames}"
 >
   <h2
     class="relative border-b-2 border-ocean pb-1 mb-5"
