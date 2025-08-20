@@ -13,11 +13,9 @@
     faNetworkWired,
     faRobot,
     faServer,
-    faTerminal,
   } from "@fortawesome/free-solid-svg-icons";
   import {
     faGitAlt,
-    faLinux,
     faNodeJs,
     faPython,
   } from "@fortawesome/free-brands-svg-icons";
@@ -87,7 +85,7 @@
     {
       title: "Additional Languages",
       details: "Lua, C, Objective-C, PHP",
-      icon: faTerminal,
+      icon: faCode,
     },
   ];
 
