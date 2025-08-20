@@ -1,10 +1,12 @@
 <script lang="ts">
   import TechTag from "./TechTag.svelte";
   import InfoBoxes from "./InfoBoxes.svelte";
+  import SectionHeader from "./SectionHeader.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faBuilding,
     faCalendar,
+    faGlobe,
     faLink,
     faMapMarkerAlt,
     faUser,
@@ -44,6 +46,13 @@
 </script>
 
 <section class="break-inside-avoid {isFirst ? 'mt-12 print:mt-0' : ''}">
+  {#if !isFirst}
+    <!-- Professional Experience header for print version -->
+    <div class="hidden print:block print:mt-10 print:mb-4">
+      <SectionHeader title="Professional Experience" icon={faGlobe} />
+    </div>
+  {/if}
+
   <header class="mb-6 print:mb-4">
     <div class="flex items-start justify-between">
       <div class="flex-1">
@@ -114,7 +123,7 @@
           <img
             src={logo}
             alt="{company} Logo"
-            class="h-22 w-auto border border-cloud rounded print:border-0 print:mt-2"
+            class="h-22 w-auto border border-aqua rounded"
           />
         </div>
       {/if}
