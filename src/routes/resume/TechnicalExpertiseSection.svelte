@@ -107,7 +107,7 @@
     },
     {
       title: "DevOps",
-      details: "Kubernetes, Terraform, GitHub Actions",
+      details: "Terraform, GitHub Actions, Kubernetes",
       icon: faServer,
     },
   ];
