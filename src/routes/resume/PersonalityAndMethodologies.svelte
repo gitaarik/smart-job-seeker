@@ -45,15 +45,15 @@
         <span class="text-lg font-medium">Personality Traits</span>
         <FontAwesomeIcon icon={faUser} class="w-4 h-4 ml-2" />
       </h3>
-      <div class="flex flex-wrap gap-2">
+      <ul class="flex flex-wrap gap-2">
         {#each traits as trait (trait)}
-          <div
+          <li
             class="text-sm font-semibold px-2 py-2 bg-mist hover:bg-ice rounded-md border border-aqua transition-colors duration-200 text-center"
           >
             {trait}
-          </div>
+          </li>
         {/each}
-      </div>
+      </ul>
     </div>
 
     <div>
@@ -63,15 +63,15 @@
         <span class="text-lg font-medium">Development Methodologies</span>
         <FontAwesomeIcon icon={faCogs} class="w-4 h-4 ml-2" />
       </h3>
-      <div class="flex flex-wrap gap-2">
+      <ul class="flex flex-wrap gap-2">
         {#each methodologies as methodology (methodology)}
-          <div
+          <li
             class="text-sm font-semibold px-2 py-2 bg-mist hover:bg-ice rounded-md border border-aqua transition-colors duration-200 text-center"
           >
             {methodology}
-          </div>
+          </li>
         {/each}
-      </div>
+      </ul>
     </div>
   </div>
 </ResumeSection>

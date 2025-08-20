@@ -158,16 +158,17 @@
         <h4 class="text-lg print:text-base font-semibold mb-3 print:mb-2">
           Technologies Used:
         </h4>
-        <div class="flex flex-wrap gap-2 print:gap-[5px]">
+        <ul class="flex flex-wrap gap-2 print:gap-[5px]">
           {#each displayedTechnologies as tech (tech)}
             <TechTag {tech} />
           {/each}
           {#if           isCompact &&
             technologies.length > displayedTechnologies.length}
-            <span class="px-2 py-1 text-sm text-slate italic"
-            >+{technologies.length - displayedTechnologies.length} more</span>
+            <li class="px-2 py-1 text-sm text-slate italic">
+              +{technologies.length - displayedTechnologies.length} more
+            </li>
           {/if}
-        </div>
+        </ul>
       </div>
     {/if}
   </div>
