@@ -82,7 +82,6 @@
         "Django",
         "Django REST Framework",
         "Django Channels",
-        "Django Debug Toolbar",
         "Django Silk",
         "Jinja2",
         "Weasyprint",

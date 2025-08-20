@@ -120,7 +120,7 @@
     </div>
   </header>
 
-  <div class="space-y-4 print:space-y-3">
+  <div class="space-y-4">
     <p class="leading-relaxed print:text-sm">{description}</p>
 
     {#if note}
@@ -129,20 +129,20 @@
 
     {#if achievementItems.length > 0}
       <div>
-        <h4 class="text-lg print:text-md font-semibold mb-3 print:mb-2">Key Achievements:</h4>
+        <h4 class="text-lg print:text-base font-semibold mb-3 print:mb-2">Key Achievements:</h4>
         <InfoBoxes items={achievementItems} />
       </div>
     {/if}
 
     <div>
-      <h4 class="text-lg print:text-md font-semibold mb-3 print:mb-2">Impact:</h4>
+      <h4 class="text-lg print:text-base font-semibold mb-3 print:mb-2">Impact:</h4>
       <p class="leading-relaxed print:text-sm">{impact}</p>
     </div>
 
     {#if displayedTechnologies.length > 0}
       <div>
-        <h4 class="text-lg print:text-md font-semibold mb-3 print:mb-2">Technologies Used:</h4>
-        <div class="flex flex-wrap gap-2 print:gap-[4px]">
+        <h4 class="text-lg print:text-base font-semibold mb-3 print:mb-2">Technologies Used:</h4>
+        <div class="flex flex-wrap gap-2 print:gap-[5px]">
           {#each displayedTechnologies as tech (tech)}
             <TechTag {tech} />
           {/each}

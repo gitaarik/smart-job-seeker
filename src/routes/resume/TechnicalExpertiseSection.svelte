@@ -80,7 +80,7 @@
     {
       title: "Serving, Caching & Load Balancing",
       details: "Nginx, Varnish, Memcached, HAProxy",
-      icon: faServer,
+      icon: faNetworkWired,
     },
     {
       title: "Additional Languages",

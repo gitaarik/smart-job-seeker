@@ -2,6 +2,6 @@
   export let tech: string;
 </script>
 
-<span class="px-2 print:px-[5px] py-1 print:py-[3px] text-sm border border-aqua rounded bg-mist hover:bg-ice">
+<span class="px-2 print:px-[6px] py-1 print:py-[4px] text-sm border border-aqua rounded bg-mist hover:bg-ice">
   {tech}
 </span>
