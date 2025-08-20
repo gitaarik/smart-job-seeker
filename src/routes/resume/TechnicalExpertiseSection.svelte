@@ -25,18 +25,20 @@
   const expertKnowledge = [
     {
       title: "Python",
-      details: "Django, REST Framework, Celery, Channels, Silk",
+      details:
+        "Django, REST Framework, Celery, Channels, Silk<br>REST APIs, OOP, Requests, Beautifulsoup",
       icon: faPython,
     },
     {
       title: "JavaScript / Node.js",
-      details: "React, Svelte, Web Components",
+      details:
+        "React, Svelte / Sveltekit, Web Components, Lit, Drizzle, MobX",
       icon: faNodeJs,
     },
     {
       title: "SQL Databases",
       details:
-        "PostgreSQL, MySQL/MariaDB, SQLite<br />Schema design, indexing, optimization",
+        "PostgreSQL, MySQL/MariaDB, SQLite<br>Schema design, indexing, optimization",
       icon: faDatabase,
     },
     {
@@ -97,7 +99,7 @@
     },
     {
       title: "JavaScript / Node.js",
-      details: "Next.js, NestJS, Zustand, Prisma, Jest",
+      details: "Next.js, NestJS, Zustand, Prisma, Jest, Vitest",
       icon: faNodeJs,
     },
     {
