@@ -7,9 +7,9 @@
     faCode,
     faCrown,
     faDatabase,
-    faEye,
     faGlobe,
     faHardHat,
+    faMagnifyingGlass,
     faNetworkWired,
     faRobot,
     faServer,
@@ -76,7 +76,7 @@
     },
     {
       title: "Cloud Platforms",
-      details: "Vercel, Linode, Amazon Web Services (AWS)",
+      details: "Vercel, Linode",
       icon: faCloud,
     },
     {
@@ -152,7 +152,7 @@
         class="flex items-center pt-4 pb-2 mb-5 border-b border-ocean"
       >
         <span class="text-lg font-medium">Exploring</span>
-        <FontAwesomeIcon icon={faEye} class="w-4 h-4 ml-2" />
+        <FontAwesomeIcon icon={faMagnifyingGlass} class="w-4 h-4 ml-2" />
       </h3>
       <InfoBoxes items={exploring} />
     </div>
