@@ -40,8 +40,8 @@
       icon: faDatabase,
     },
     {
-      title: "Web Technologies",
-      details: "HTML5, CSS3 (Tailwind), REST APIs",
+      title: "Frontend Tools",
+      details: "Webpack, Vite, ESLint, Prettier, Tailwind CSS, Sass",
       icon: faGlobe,
     },
     {
