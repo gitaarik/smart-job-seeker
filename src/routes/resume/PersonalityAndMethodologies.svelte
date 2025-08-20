@@ -16,6 +16,7 @@
     "Secure by design",
     "Test-driven development (TDD)",
     "User experience design (UXD)",
+    "Asynchronous Workflows",
     "Component-based development",
     "Extensive code reviewing",
     "Writing and maintaining documentation",
