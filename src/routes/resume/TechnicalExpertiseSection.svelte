@@ -45,17 +45,6 @@
       icon: faGlobe,
     },
     {
-      title: "Web Protocols",
-      details: "HTTP/HTTPS, DNS, TLS/SSL, SSH, FTP/SFTP",
-      icon: faNetworkWired,
-    },
-    {
-      title: "Shell Scripting / CLI Tools",
-      details:
-        "bash, advanced CLI tools<br />(find, grep, vim, sed, awk, curl, rsync)",
-      icon: faTerminal,
-    },
-    {
       title: "Git (GitHub, GitLab)",
       details: "GitHub, GitLab, advanced workflows, submodules",
       icon: faGitAlt,
@@ -69,10 +58,9 @@
 
   const workingKnowledge = [
     {
-      title: "Linux & DevOps",
-      details:
-        "System administration, CI/CD, Docker (Compose), Ansible, Nginx, Apache",
-      icon: faLinux,
+      title: "DevOps",
+      details: "CI/CD, Docker (Compose), Ansible",
+      icon: faServer,
     },
     {
       title: "Cloud Platforms",
@@ -90,8 +78,8 @@
       icon: faDatabase,
     },
     {
-      title: "Caching & Load Balancing",
-      details: "Varnish, Memcached, HAProxy",
+      title: "Serving, Caching & Load Balancing",
+      details: "Nginx, Varnish, Memcached, HAProxy",
       icon: faServer,
     },
     {
@@ -109,7 +97,7 @@
     },
     {
       title: "JavaScript / Node.js",
-      details: "Next.js, Jest, Zustand",
+      details: "Next.js, Zustand, Jest, Prisma",
       icon: faNodeJs,
     },
     {
@@ -126,7 +114,7 @@
 </script>
 
 <ResumeSection title="Technical Expertise" icon={faCode}>
-  <div class="space-y-8">
+  <div class="space-y-8 print:space-y-4">
     <div>
       <h3
         class="flex items-center pt-4 pb-2 mb-5 border-b border-ocean"
