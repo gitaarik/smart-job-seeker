@@ -97,18 +97,18 @@
     },
     {
       title: "JavaScript / Node.js",
-      details: "Next.js, Zustand, Jest, Prisma",
+      details: "Next.js, NestJS, Zustand, Prisma, Jest",
       icon: faNodeJs,
-    },
-    {
-      title: "Cloud Platforms",
-      details: "AWS, Azure, GCP",
-      icon: faCloud,
     },
     {
       title: "DevOps",
       details: "Terraform, GitHub Actions, Kubernetes",
       icon: faServer,
+    },
+    {
+      title: "Cloud Platforms",
+      details: "AWS, Azure, GCP",
+      icon: faCloud,
     },
   ];
 </script>
