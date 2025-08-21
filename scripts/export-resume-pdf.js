@@ -26,7 +26,7 @@ async function exportResumeToPDF() {
       description: "Visual Resume",
     },
     {
-      route: "resume-text",
+      route: "resume-ats",
       dirName: "resume-ats",
       description: "ATS Resume",
     },
@@ -91,7 +91,7 @@ async function exportResumeToPDF() {
       const outputPath = path.join(versionDir, "Resume Rik Wanders.pdf");
 
       // Configure different settings for ATS vs Visual resume
-      const isATS = version.route === "resume-text";
+      const isATS = version.route === "resume-ats";
       
       const footerTemplate = `
         <div style="
