@@ -32,6 +32,7 @@
       "startDate": "2014-09",
       "endDate": "2024-06",
       "summary": "Joined this innovative ticketing startup as Lead Developer, scaling the platform from concept to processing thousands of tickets per minute during peak events. Successfully led technical development through 10 years of growth, making Chipta a competitive alternative for independent event organizers.",
+      "logo": "/src/lib/images/company-logos/chipta-logo.png",
       "highlights": [
         "Built and managed diverse development teams of 3-5 developers, using agile methodologies that optimized efficiency and delivery speed",
         "Architected and optimized systems to handle extreme traffic spikes, delivering 40-60% speed improvements through strategic query optimization, caching, and infrastructure scaling",
@@ -49,6 +50,7 @@
       "startDate": "2015-03",
       "endDate": "2022-06",
       "summary": "Built a comprehensive tender discovery platform from scratch, enabling companies to efficiently find and track public procurement opportunities. Delivered a complete solution that automated manual tender search processes for businesses. This was a part-time engagement that I combined with my main focus on Chipta.",
+      "logo": "/src/lib/images/company-logos/tender-it-logo.png",
       "highlights": [
         "Designed and developed entire platform (backend and frontend) from concept to production",
         "Implemented an extensive search engine using Elasticsearch, making it easy and time effective for users to find suitable tenders",
@@ -67,6 +69,7 @@
       "startDate": "2013-03",
       "endDate": "2014-08",
       "summary": "Joined during rapid growth phase (50 to 250+ employees) and contributed to scaling mobile presence during the company's expansion across European markets.",
+      "logo": "/src/lib/images/company-logos/travelbird-logo.png",
       "highlights": [
         "Built and maintained iOS application as part of mobile team, supporting mobile bookings during a period of rapid company growth",
         "Designed and implemented robust REST API using Django REST Framework, that accommodated iOS & Android apps and mobile website",
@@ -83,6 +86,7 @@
       "startDate": "2011-08",
       "endDate": "2013-02",
       "summary": "Delivered web solutions for high-profile clients including major e-commerce and government organizations, working as part of a dedicated Scrum team in a fast-paced agency environment with diverse project requirements.",
+      "logo": "/src/lib/images/company-logos/swis-logo.png",
       "highlights": [
         "Successfully delivered web projects for major clients including Bol.com, EP, Gemeente Amsterdam, and Gemeente Haarlemmermeer",
         "Contributed to Scrum team that consistently met client deadlines and budget requirements",
@@ -99,6 +103,7 @@
       "startDate": "2007-06",
       "endDate": "2011-06",
       "summary": "Started career at established gaming community platform, progressing from junior to mid-level developer while contributing to platform stability and feature development.",
+      "logo": "/src/lib/images/company-logos/gamepoint-logo.png",
       "highlights": [
         "Successfully implemented multiple payment integrations that supported platform monetization and user transactions",
         "Contributed to internationalization and localization system that enabled platform expansion in other countries",
