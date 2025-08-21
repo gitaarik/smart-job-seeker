@@ -58,11 +58,11 @@
       <TechnicalExpertiseSection />
     </div>
 
-    {#if !isCompact}
-      <div class="print:py-10 print:break-inside-avoid">
-        <PersonalityAndMethodologies />
-      </div>
-    {/if}
+    <!-- {#if !isCompact} -->
+    <!--   <div class="print:py-10 print:break-inside-avoid"> -->
+    <!--     <PersonalityAndMethodologies /> -->
+    <!--   </div> -->
+    <!-- {/if} -->
 
     <div class="print:py-10 print:break-inside-avoid">
       <ProfessionalExperience {isCompact} />
