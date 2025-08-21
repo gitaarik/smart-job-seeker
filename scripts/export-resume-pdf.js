@@ -18,6 +18,20 @@ async function exportResumeToPDF() {
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
 
+  // Define the two versions to create
+  const versions = [
+    {
+      route: "resume",
+      dirName: "resume",
+      description: "Visual Resume",
+    },
+    {
+      route: "resume-text",
+      dirName: "resume-ats",
+      description: "ATS Resume",
+    },
+  ];
+
   try {
     const page = await browser.newPage();
 
@@ -28,43 +42,53 @@ async function exportResumeToPDF() {
       deviceScaleFactor: 2,
     });
 
-    // Create output directory if it doesn't exist
-    const outputDir = path.join(process.cwd(), "dist");
-    if (!fs.existsSync(outputDir)) {
-      fs.mkdirSync(outputDir, { recursive: true });
+    // Create base output directory if it doesn't exist
+    const baseOutputDir = path.join(process.cwd(), "dist");
+    if (!fs.existsSync(baseOutputDir)) {
+      fs.mkdirSync(baseOutputDir, { recursive: true });
     }
 
-    console.log(`\n📄 Processing resume...`);
-    const resumeUrl = `http://localhost:5173/resume`;
-    console.log(`🔗 Loading resume from: ${resumeUrl}`);
+    // Process each version
+    for (const version of versions) {
+      console.log(`\n📄 Processing ${version.description}...`);
 
-    await page.goto(resumeUrl, {
-      waitUntil: "networkidle0",
-      timeout: 30000,
-    });
+      // Create version-specific directory
+      const versionDir = path.join(baseOutputDir, version.dirName);
+      if (!fs.existsSync(versionDir)) {
+        fs.mkdirSync(versionDir, { recursive: true });
+      }
 
-    // Wait for fonts and icons to load
-    console.log("⏳ Waiting 2 seconds for page to fully load...");
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Load resume page
+      const resumeUrl = `http://localhost:5173/${version.route}`;
+      console.log(`🔗 Loading resume from: ${resumeUrl}`);
 
-    // Ensure all images are loaded
-    await page.evaluate(async () => {
-      const images = Array.from(document.querySelectorAll("img"));
-      await Promise.all(
-        images.map((img) => {
-          return new Promise((resolve) => {
-            if (img.complete) {
-              resolve();
-            } else {
-              img.onload = resolve;
-              img.onerror = resolve;
-            }
-          });
-        }),
-      );
-    });
+      await page.goto(resumeUrl, {
+        waitUntil: "networkidle0",
+        timeout: 30000,
+      });
 
-    const outputPath = path.join(outputDir, "Resume Rik Wanders.pdf");
+      // Wait for fonts and icons to load
+      console.log("⏳ Waiting 2 seconds for page to fully load...");
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // Ensure all images are loaded
+      await page.evaluate(async () => {
+        const images = Array.from(document.querySelectorAll("img"));
+        await Promise.all(
+          images.map((img) => {
+            return new Promise((resolve) => {
+              if (img.complete) {
+                resolve();
+              } else {
+                img.onload = resolve;
+                img.onerror = resolve;
+              }
+            });
+          }),
+        );
+      });
+
+      const outputPath = path.join(versionDir, "Resume Rik Wanders.pdf");
 
     const footerTemplate = `
         <div style="
@@ -104,24 +128,26 @@ async function exportResumeToPDF() {
       footerTemplate,
     };
 
-    // Generate PDF
-    console.log("📝 Generating PDF...");
-    await page.pdf({
-      path: outputPath,
-      format: "A4",
-      margin: {
-        top: "0px",
-        right: "0px",
-        bottom: "0px",
-        left: "0px",
-      },
-      printBackground: true,
-      preferCSSPageSize: false,
-      ...options,
-    });
+      // Generate PDF
+      console.log("📝 Generating PDF...");
+      await page.pdf({
+        path: outputPath,
+        format: "A4",
+        margin: {
+          top: "0px",
+          right: "0px",
+          bottom: "0px",
+          left: "0px",
+        },
+        printBackground: true,
+        preferCSSPageSize: false,
+        ...options,
+      });
 
-    console.log(`✅ Resume exported to: ${outputPath}`);
-    console.log("\n🎉 Resume exported successfully!");
+      console.log(`✅ ${version.description} exported to: ${outputPath}`);
+    }
+
+    console.log("\n🎉 All resume versions exported successfully!");
   } catch (error) {
     console.error("❌ Error exporting resume to PDF:", error);
     process.exit(1);
