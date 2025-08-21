@@ -88,7 +88,7 @@ export const resume = {
           "description": "Created multi-language & country platform capabilities that enabled international market expansion and supported global event organizers"
         }
       ],
-      "keywords": [
+      "technologies": [
         "Python",
         "Django",
         "Django REST Framework",
@@ -156,7 +156,7 @@ export const resume = {
           "description": "Successfully collaborated with frontend developer to optimize frontend experience using Vue.js"
         }
       ],
-      "keywords": [
+      "technologies": [
         "Python",
         "Django",
         "Django REST Framework",
@@ -205,7 +205,7 @@ export const resume = {
           "description": "Worked on comprehensive email marketing system that supported customer acquisition and retention campaigns"
         }
       ],
-      "keywords": [
+      "technologies": [
         "Objective-C",
         "Xcode",
         "Python",
@@ -257,7 +257,7 @@ export const resume = {
           "description": "Mastered in-house built CMS system, enabling rapid development and client customization capabilities"
         }
       ],
-      "keywords": [
+      "technologies": [
         "PHP",
         "MySQL",
         "Apache",
@@ -312,7 +312,7 @@ export const resume = {
           "description": "Advanced from junior to mid-level developer, demonstrating consistent skill development and increasing responsibility"
         }
       ],
-      "keywords": [
+      "technologies": [
         "PHP",
         "MySQL",
         "nginx",
@@ -330,7 +330,7 @@ export const resume = {
     {
       "name": "Python",
       "level": "Expert",
-      "keywords": [
+      "technologies": [
         "Django",
         "REST Framework",
         "Celery",
@@ -350,7 +350,7 @@ export const resume = {
     {
       "name": "JavaScript / Node.js",
       "level": "Expert",
-      "keywords": [
+      "technologies": [
         "React",
         "Svelte",
         "SvelteKit",
@@ -373,7 +373,7 @@ export const resume = {
     {
       "name": "SQL Databases",
       "level": "Expert",
-      "keywords": [
+      "technologies": [
         "PostgreSQL",
         "MySQL",
         "MariaDB",
@@ -386,7 +386,7 @@ export const resume = {
     {
       "name": "Frontend Tools",
       "level": "Expert",
-      "keywords": [
+      "technologies": [
         "Webpack",
         "Vite",
         "ESLint",
@@ -398,7 +398,7 @@ export const resume = {
     {
       "name": "Git",
       "level": "Expert",
-      "keywords": [
+      "technologies": [
         "GitHub",
         "GitLab",
         "advanced workflows",
@@ -408,7 +408,7 @@ export const resume = {
     {
       "name": "AI/LLM Development Tools",
       "level": "Expert",
-      "keywords": [
+      "technologies": [
         "Claude Code",
         "Cursor"
       ]
@@ -416,7 +416,7 @@ export const resume = {
     {
       "name": "DevOps",
       "level": "Intermediate",
-      "keywords": [
+      "technologies": [
         "CI/CD",
         "Docker",
         "Docker Compose",
@@ -429,7 +429,7 @@ export const resume = {
     {
       "name": "Cloud Platforms",
       "level": "Intermediate",
-      "keywords": [
+      "technologies": [
         "Vercel",
         "Linode",
         "AWS",
@@ -440,7 +440,7 @@ export const resume = {
     {
       "name": "NoSQL Databases",
       "level": "Intermediate",
-      "keywords": [
+      "technologies": [
         "Elasticsearch",
         "Redis",
         "MongoDB"
@@ -449,7 +449,7 @@ export const resume = {
     {
       "name": "Serving, Caching & Load Balancing",
       "level": "Intermediate",
-      "keywords": [
+      "technologies": [
         "Nginx",
         "Varnish",
         "Memcached",
@@ -459,7 +459,7 @@ export const resume = {
     {
       "name": "Additional Languages",
       "level": "Intermediate",
-      "keywords": [
+      "technologies": [
         "Lua",
         "C",
         "Objective-C",
@@ -500,7 +500,7 @@ export const resume = {
         "Integrated multiple payment providers (Mollie, Pay.nl, PayPal)",
         "Enabled international market expansion"
       ],
-      "keywords": [
+      "technologies": [
         "Python",
         "Django",
         "React",
@@ -526,7 +526,7 @@ export const resume = {
         "Created automated web crawling system",
         "Built subscription-based authentication with recurring payments"
       ],
-      "keywords": [
+      "technologies": [
         "Python",
         "Django",
         "Elasticsearch",
