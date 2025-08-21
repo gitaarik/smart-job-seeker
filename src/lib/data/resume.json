@@ -39,13 +39,13 @@
           "description": "Built and managed diverse development teams of 3-5 developers, using agile methodologies that optimized efficiency and delivery speed"
         },
         {
-          "title": "Platform Scalability", 
+          "title": "Platform Scalability",
           "icon": "faChartLine",
           "description": "Architected and optimized systems to handle extreme traffic spikes, delivering 40-60% speed improvements through strategic query optimization, caching, and infrastructure scaling"
         },
         {
           "title": "System Reliability",
-          "icon": "faShieldAlt", 
+          "icon": "faShieldAlt",
           "description": "Created extensive testing suite (+80% coverage) and CI/CD system, radically improving deployment reliability & speed and enabling regular releases"
         },
         {
@@ -60,11 +60,11 @@
         },
         {
           "title": "Market Expansion",
-          "icon": "faGlobe", 
+          "icon": "faGlobe",
           "description": "Created multi-language & country platform capabilities that enabled international market expansion and supported global event organizers"
         }
       ],
-      "keywords": [
+      "technologies": [
         "Python",
         "Django",
         "Django REST Framework",
@@ -113,7 +113,7 @@
           "description": "Implemented an extensive search engine using Elasticsearch, making it easy and time effective for users to find suitable tenders"
         },
         {
-          "title": "Data Automation", 
+          "title": "Data Automation",
           "icon": "faLaptopCode",
           "description": "Created automated web crawling system that index thousands of public tenders daily, providing comprehensive market coverage"
         },
@@ -133,7 +133,7 @@
           "description": "Successfully collaborated with frontend developer to optimize frontend experience using Vue.js"
         }
       ],
-      "keywords": [
+      "technologies": [
         "Python",
         "Django",
         "Django REST Framework",
@@ -168,7 +168,7 @@
         },
         {
           "title": "API Architecture",
-          "icon": "faPlug", 
+          "icon": "faPlug",
           "description": "Designed and implemented robust REST API using Django REST Framework, that accommodated iOS & Android apps and mobile website"
         },
         {
@@ -182,7 +182,7 @@
           "description": "Worked on comprehensive email marketing system that supported customer acquisition and retention campaigns"
         }
       ],
-      "keywords": [
+      "technologies": [
         "Objective-C",
         "Xcode",
         "Python",
@@ -234,7 +234,7 @@
           "description": "Mastered in-house built CMS system, enabling rapid development and client customization capabilities"
         }
       ],
-      "keywords": [
+      "technologies": [
         "PHP",
         "MySQL",
         "Apache",
@@ -289,7 +289,7 @@
           "description": "Advanced from junior to mid-level developer, demonstrating consistent skill development and increasing responsibility"
         }
       ],
-      "keywords": [
+      "technologies": [
         "PHP",
         "MySQL",
         "nginx",

@@ -52,37 +52,15 @@
 
   // Pre-load all unique icons
   Promise.all(uniqueIcons.map((iconName) => getIcon(iconName)));
-
-  // Add formatted period to each job for display
-  const displayedJobs = resume.work.map((job) => ({
-    ...job,
-    period: formatPeriod(job.startDate, job.endDate),
-    achievements: job.highlights?.map((highlight) => ({
-      title: highlight.title,
-      icon: iconCache[highlight.icon] || faRocket,
-      description: highlight.description,
-    })) || [],
-    technologies: job.keywords || [],
-  }));
 </script>
 
 <ResumeSection title="Professional Experience" icon={faGlobe}>
-  {#each displayedJobs as job, index (job.name)}
+  {#each resume.work as work, index (work.name)}
     <EmploymentSection
-      name={job.name}
-      position={job.position}
-      description={job.description}
-      url={job.url}
-      period={job.period}
-      location={job.location}
-      logo={job.logo}
-      summary={job.summary}
-      note={job.note}
-      highlights={job.achievements}
-      keywords={job.technologies}
+      data={work}
       isFirst={index === 0}
     />
-    {#if index < displayedJobs.length - 1}
+    {#if index < resume.work.length - 1}
       <hr class="border-cloud my-12 print:hidden" />
       <div class="hidden print:block print:break-before-page"></div>
     {/if}
