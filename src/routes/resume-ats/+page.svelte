@@ -38,7 +38,7 @@
 </svelte:head>
 
 <div
-  class="max-w-3xl mx-auto py-8 print:p-0 bg-white text-black text-xs leading-relaxed"
+  class="max-w-xl print:max-w-auto mx-auto py-8 print:p-0 bg-white text-black text-xs leading-relaxed"
 >
   <!-- Header Section -->
   <div class="mb-6">
