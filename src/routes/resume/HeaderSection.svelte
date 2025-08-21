@@ -17,8 +17,4 @@
   <h2 class="text-xl">
     {resume.basics.label}
   </h2>
-  <!---->
-  <!-- <h3> -->
-  <!--   Python • Django • React • Node.js -->
-  <!-- </h3> -->
 </header>
