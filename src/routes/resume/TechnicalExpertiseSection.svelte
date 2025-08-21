@@ -3,114 +3,27 @@
   import InfoBoxes from "./InfoBoxes.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
-    faCloud,
     faCode,
     faCrown,
-    faDatabase,
-    faGlobe,
     faHardHat,
     faMagnifyingGlass,
-    faNetworkWired,
-    faRobot,
-    faServer,
   } from "@fortawesome/free-solid-svg-icons";
-  import {
-    faGitAlt,
-    faNodeJs,
-    faPython,
-  } from "@fortawesome/free-brands-svg-icons";
+  import { resume } from "$lib/data/resume";
 
-  const expertKnowledge = [
-    {
-      title: "Python",
-      details:
-        "Django, REST Framework, Celery, Channels, Silk<br>REST APIs, OOP, Requests, Beautifulsoup, uv",
-      icon: faPython,
-    },
-    {
-      title: "JavaScript / Node.js",
-      details:
-        "React, Svelte / Sveltekit, Web Components, Lit, Drizzle, MobX, async / await",
-      icon: faNodeJs,
-    },
-    {
-      title: "SQL Databases",
-      details:
-        "PostgreSQL, MySQL/MariaDB, SQLite<br>Schema design, indexing, optimization",
-      icon: faDatabase,
-    },
-    {
-      title: "Frontend Tools",
-      details: "Webpack, Vite, ESLint, Prettier, Tailwind CSS, Sass",
-      icon: faGlobe,
-    },
-    {
-      title: "Git (GitHub, GitLab)",
-      details: "GitHub, GitLab, advanced workflows, submodules",
-      icon: faGitAlt,
-    },
-    {
-      title: "AI / LLM development tools",
-      details: "Claude Code, Cursor",
-      icon: faRobot,
-    },
-  ];
+  // Function to transform skills by level to InfoBoxes format
+  function getSkillsByLevel(level: string) {
+    return resume.skills
+      .filter(skill => skill.level === level)
+      .map(skill => ({
+        title: skill.name,
+        description: skill.keywords.join(", "),
+        icon: skill.icon
+      }));
+  }
 
-  const workingKnowledge = [
-    {
-      title: "DevOps",
-      details: "CI/CD, Docker (Compose), Ansible",
-      icon: faServer,
-    },
-    {
-      title: "Cloud Platforms",
-      details: "Vercel, Linode",
-      icon: faCloud,
-    },
-    {
-      title: "JavaScript / Node.js",
-      details: "TypeScript, React Native, Vue.js",
-      icon: faNodeJs,
-    },
-    {
-      title: "NoSQL Databases",
-      details: "Elasticsearch, Redis, MongoDB",
-      icon: faDatabase,
-    },
-    {
-      title: "Serving, Caching & Load Balancing",
-      details: "Nginx, Varnish, Memcached, HAProxy",
-      icon: faNetworkWired,
-    },
-    {
-      title: "Additional Languages",
-      details: "Lua, C, Objective-C, PHP",
-      icon: faCode,
-    },
-  ];
-
-  const exploring = [
-    {
-      title: "Python",
-      details: "FastAPI, pandas, scikit-learn, LangChain",
-      icon: faPython,
-    },
-    {
-      title: "JavaScript / Node.js",
-      details: "Next.js, NestJS, Zustand, Prisma, GraphQL, Jest",
-      icon: faNodeJs,
-    },
-    {
-      title: "DevOps",
-      details: "Terraform, GitHub Actions, Kubernetes",
-      icon: faServer,
-    },
-    {
-      title: "Cloud Platforms",
-      details: "AWS, Azure, GCP",
-      icon: faCloud,
-    },
-  ];
+  const expertKnowledge = getSkillsByLevel("expert");
+  const workingKnowledge = getSkillsByLevel("working");
+  const exploring = getSkillsByLevel("exploring");
 </script>
 
 <ResumeSection title="Technical Expertise" icon={faCode}>
