@@ -13,7 +13,7 @@
             <h4 class="font-semibold text-base print:text-sm">
               {reference.name}
             </h4>
-            <p class="text-sm mt-1 italic">
+            <p class="mt-1 italic">
               “{reference.reference}”
             </p>
           </div>
