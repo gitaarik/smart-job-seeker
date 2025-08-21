@@ -10,8 +10,6 @@
   import ReferencesSection from "./ReferencesSection.svelte";
   import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
 
-  // Check for compact mode via query parameter
-  const isCompact = page.url.searchParams.get("size") === "compact";
 
   // Parse timing parameter
   const timingParam = page.url.searchParams.get("timing") || "";
@@ -58,20 +56,13 @@
       <TechnicalExpertiseSection />
     </div>
 
-    <!-- {#if !isCompact} -->
-    <!--   <div class="print:py-10 print:break-inside-avoid"> -->
-    <!--     <PersonalityAndMethodologies /> -->
-    <!--   </div> -->
-    <!-- {/if} -->
 
     <div class="print:py-10 print:break-inside-avoid">
-      <ProfessionalExperience {isCompact} />
+      <ProfessionalExperience />
     </div>
 
-    {#if !isCompact}
-      <div class="print:py-10 print:break-inside-avoid">
-        <ReferencesSection />
-      </div>
-    {/if}
+    <div class="print:py-10 print:break-inside-avoid">
+      <ReferencesSection />
+    </div>
   </div>
 </div>

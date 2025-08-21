@@ -24,24 +24,15 @@
   export let highlights;
   export let keywords;
   export let isFirst: boolean;
-  export let isCompact: boolean = false;
 
-  // Limit highlights in compact mode
-  $: displayedHighlights = isCompact
-    ? highlights.slice(0, 3) // Show only first 3 highlights
-    : highlights;
 
   // Transform highlights for InfoBoxes component
-  $: highlightItems = displayedHighlights.map((highlight) => ({
+  $: highlightItems = highlights.map((highlight) => ({
     title: highlight.title,
     details: highlight.description,
     icon: highlight.icon,
   }));
 
-  // Limit keywords in compact mode
-  $: displayedKeywords = isCompact
-    ? keywords.slice(0, 8) // Show only first 8 keywords
-    : keywords;
 </script>
 
 <section class="break-inside-avoid {isFirst ? 'mt-12 print:mt-0' : ''}">
@@ -145,21 +136,15 @@
       </div>
     {/if}
 
-    {#if displayedKeywords.length > 0}
+    {#if keywords.length > 0}
       <div>
         <h4 class="text-lg print:text-base font-semibold mb-3 print:mb-2">
           Technologies Used:
         </h4>
         <ul class="flex flex-wrap gap-2 print:gap-[5px]">
-          {#each displayedKeywords as tech (tech)}
+          {#each keywords as tech (tech)}
             <TechTag {tech} />
           {/each}
-          {#if           isCompact &&
-            keywords.length > displayedKeywords.length}
-            <li class="px-2 py-1 text-sm text-slate italic">
-              +{keywords.length - displayedKeywords.length} more
-            </li>
-          {/if}
         </ul>
       </div>
     {/if}

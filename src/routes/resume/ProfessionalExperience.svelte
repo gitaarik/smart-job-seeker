@@ -3,7 +3,6 @@
   import EmploymentSection from "./EmploymentSection.svelte";
   import resume from "$lib/data/resume.json";
 
-  export let isCompact: boolean = false;
   import { faGlobe, faRocket } from "@fortawesome/free-solid-svg-icons";
 
   // Icon cache to prevent multiple imports of the same icon
@@ -65,15 +64,10 @@
     })) || [],
     technologies: job.keywords || [],
   }));
-
-  // Filter employment history for compact size
-  $: filteredJobs = isCompact
-    ? displayedJobs.slice(0, 3) // Show only first 3 jobs (most recent/important)
-    : displayedJobs;
 </script>
 
 <ResumeSection title="Professional Experience" icon={faGlobe}>
-  {#each filteredJobs as job, index (job.name)}
+  {#each displayedJobs as job, index (job.name)}
     <EmploymentSection
       name={job.name}
       position={job.position}
@@ -87,9 +81,8 @@
       highlights={job.achievements}
       keywords={job.technologies}
       isFirst={index === 0}
-      {isCompact}
     />
-    {#if index < filteredJobs.length - 1}
+    {#if index < displayedJobs.length - 1}
       <hr class="border-cloud my-12 print:hidden" />
       <div class="hidden print:block print:break-before-page"></div>
     {/if}
