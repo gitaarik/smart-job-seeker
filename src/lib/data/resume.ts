@@ -105,7 +105,7 @@ export const resume = {
       startDate: "2014-09",
       endDate: "2024-06",
       summary:
-        "Joined this innovative ticketing startup as Lead Developer, scaling the platform from concept to processing thousands of tickets per minute during peak events. Successfully led technical development through 10 years of growth, transforming a proof of concept into a robust, scalable ticketing platform serving thousands of events and processing high-volume traffic reliably.",
+        "Led technical development of innovative ticketing platform for 10 years, scaling from concept to processing thousands of tickets per minute during peak events. Transformed proof of concept into robust, scalable platform serving thousands of events.",
       logo: "/src/lib/images/company-logos/chipta-logo.png",
       highlights: [
         {
@@ -180,7 +180,7 @@ export const resume = {
       startDate: "2015-03",
       endDate: "2022-06",
       summary:
-        "Built a comprehensive tender discovery platform from scratch, enabling companies to efficiently find and track public procurement opportunities. Transformed a startup idea into a complete, extensible tender platform with an intuitive interface and solid administrative tools. This was a part-time engagement combined with my main focus on Chipta.",
+        "Built comprehensive tender discovery platform from scratch, enabling companies to efficiently find and track public procurement opportunities. Delivered complete platform with intuitive interface and administrative tools as part-time engagement.",
       logo: "/src/lib/images/company-logos/tender-it-logo.png",
       highlights: [
         {
@@ -246,7 +246,7 @@ export const resume = {
       startDate: "2013-03",
       endDate: "2014-08",
       summary:
-        "Joined during rapid growth phase (50 to 250+ employees) and contributed to scaling mobile presence during the company's expansion across European markets. Successfully delivered mobile apps and mobile website as part of an agile team during a critical period when mobile app presence was becoming essential for travel industry competitiveness.",
+        "Contributed to mobile app development during rapid growth phase (50 to 250+ employees), supporting European market expansion. Delivered iOS app and mobile website during critical period for travel industry mobile adoption.",
       logo: "/src/lib/images/company-logos/travelbird-logo.png",
       highlights: [
         {
@@ -303,7 +303,7 @@ export const resume = {
       startDate: "2011-08",
       endDate: "2013-02",
       summary:
-        "Delivered web solutions for high-profile clients including major e-commerce and government organizations, working as part of a dedicated Scrum team in a fast-paced agency environment. Delivered high-quality web solutions that met diverse client needs while maintaining agency's reputation for quality and reliability.",
+        "Delivered web solutions for high-profile clients including major e-commerce and government organizations as part of dedicated Scrum team. Maintained agency's reputation for quality while meeting diverse client requirements.",
       logo: "/src/lib/images/company-logos/swis-logo.png",
       highlights: [
         {
@@ -358,7 +358,7 @@ export const resume = {
       startDate: "2007-06",
       endDate: "2011-06",
       summary:
-        "Started career at established gaming community platform, progressing from junior to mid-level developer while contributing to platform stability and feature development. Supported stable operation and feature enhancement of established gaming community serving hundreds of thousands of active users.",
+        "Progressed from junior to mid-level developer at established gaming community platform serving hundreds of thousands of users. Contributed to platform stability, feature development, and system enhancements.",
       logo: "/src/lib/images/company-logos/gamepoint-logo.png",
       highlights: [
         {
