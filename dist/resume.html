@@ -1,0 +1,407 @@
+<!doctype html>
+    <html lang="en" style="">
+      <head>
+        <meta charset="utf-8" />
+        
+    <title>Rik Wanders</title>
+    <meta name="description" content="Dutch Senior Full Stack Developer residing in Spain, with 18+ years experience specializing in Python &amp; Node.js ecosystems. Experienced in scaling complex &amp; high-traffic applications and leading development teams." />
+  
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:400,700&display=swap" />
+        <style>
+          :root{color-scheme:light dark;--color-background-light: #ffffff;--color-dimmed-light: #f3f4f5;--color-primary-light: #191e23;--color-secondary-light: #6c7781;--color-accent-light: #0073aa;--color-background-dark: #191e23;--color-dimmed-dark: #23282d;--color-primary-dark: #fbfbfc;--color-secondary-dark: #ccd0d4;--color-accent-dark: #00a0d2;--color-background: var(--color-background-light);--color-dimmed: var(--color-dimmed-light);--color-primary: var(--color-primary-light);--color-secondary: var(--color-secondary-light);--color-accent: var(--color-accent-light);--scale-ratio: 1.25;--scale0: 1rem;--scale1: calc(var(--scale0) * var(--scale-ratio));--scale2: calc(var(--scale1) * var(--scale-ratio));--scale3: calc(var(--scale2) * var(--scale-ratio));--scale4: calc(var(--scale3) * var(--scale-ratio));--scale5: calc(var(--scale4) * var(--scale-ratio))}@media (prefers-color-scheme: dark){:root{--color-background: var(--color-background-dark);--color-dimmed: var(--color-dimmed-dark);--color-primary: var(--color-primary-dark);--color-secondary: var(--color-secondary-dark);--color-accent: var(--color-accent-dark)}}*{box-sizing:border-box;margin:0;padding:0}html{font-size:14px}body{background:var(--color-background);color:var(--color-primary);display:grid;font:1em/1.5 Lato,sans-serif;gap:2em;grid-template-columns:[full-start] 1fr [main-start side-start] minmax(min-content,12em) [side-end content-start] minmax(min-content,36em) [main-end content-end] 1fr [full-end];grid-template-rows:auto [content] 0;margin-bottom:4em}body:before{content:"";grid-column:full;grid-row:content}ol,ul{padding-left:1em}:not(.icon-list,.tag-list)>li+li{margin-top:.4em}li::marker,.network{color:var(--color-secondary)}a{color:var(--color-accent);text-decoration:none}a:focus,a:hover{text-decoration:underline}h1,h2,h3,h5{font-weight:400}h1,h2,h3{line-height:1.2}h1{font-size:var(--scale5)}h2{color:var(--color-secondary);font-size:var(--scale4)}h3{color:var(--color-secondary);font-size:var(--scale3);grid-column:side;margin-bottom:1rem}h4{font-size:var(--scale2)}h5{font-size:var(--scale1)}h6{font-size:var(--scale0)}blockquote{border-left:.2em solid var(--color-dimmed);padding-left:1em}cite{color:var(--color-secondary);font-style:inherit}cite:before{content:"— "}svg{margin-right:.2em;vertical-align:text-bottom}.masthead{background:var(--color-dimmed);display:inherit;gap:inherit;grid-column:full;grid-template-columns:inherit;padding:4em 0;text-align:center}.masthead>*,section{grid-column:main}.masthead>img{border:4px solid;border-radius:50%;margin:0 auto;max-width:12em}article>*+*,blockquote>*+*,.timeline>div>*+*{margin-top:.6em}.meta{color:var(--color-secondary)}.stack{display:grid;gap:1.5em}.icon-list{display:flex;flex-wrap:wrap;gap:.4em 1em;justify-content:center;list-style:none;padding:0}.grid-list{display:grid;gap:1em}.tag-list{display:flex;flex-wrap:wrap;gap:.4em;list-style:none;padding:0}.tag-list>li{background:var(--color-dimmed);border-radius:.2em;padding:.2em .6em}.timeline>div{position:relative}.timeline>div:not(:last-child){padding-bottom:1rem}.timeline>div:not(:last-child):before{content:"";position:absolute;top:1rem;left:-15px;width:2px;height:100%;background:var(--color-secondary)}.timeline>div:not(:only-child):after{content:"";position:absolute;top:.6rem;left:-20px;width:8px;height:8px;background:var(--color-secondary);border:2px solid var(--color-background);border-radius:50%}@media print,(min-width: 48em){h3{text-align:right;margin-bottom:inherit}.masthead{text-align:inherit}.masthead>*,section{grid-column:content}.masthead img{grid-column:side;grid-row:span 2;max-width:100%}section{display:contents}.icon-list{flex-direction:column}.grid-list{grid-template-columns:repeat(auto-fit,minmax(calc((100% - 1em)/2),1fr))}}@media print{.duration{display:none}}
+        </style>
+        <script type="module">
+          const pluralize = (num, str) => `${num} ${num === 1 ? str : str.concat('s')}`
+
+class TimeDuration extends HTMLElement {
+  connectedCallback() {
+    const [from, to] = this.querySelectorAll('time')
+    if (!from) return
+
+    const startDate = new Date(from.dateTime || from.textContent)
+    const endDate = new Date(to ? to.dateTime || to.textContent : Date.now())
+    const diffDate = new Date(endDate - startDate)
+
+    const years = diffDate.getFullYear() - 1970
+    const months = diffDate.getMonth()
+    const days = diffDate.getDate() - 1
+
+    const segments = [
+      years && pluralize(years, 'yr'),
+      months && pluralize(months, 'mo'),
+      days && !years && !months && pluralize(days, 'day'),
+    ].filter(Boolean)
+    if (!segments.length) return
+
+    const duration = document.createElement('time')
+    duration.classList.add('duration')
+    duration.textContent = '· '.concat(segments.join(' '))
+
+    this.append(' ', duration)
+  }
+}
+
+customElements.define('time-duration', TimeDuration)
+
+        </script>
+      </head>
+      <body>
+        
+    <header class="masthead">
+      <img src="/src/lib/images/profile-photo.jpeg" alt="" />
+      <div><h1>Rik Wanders</h1> <h2>Senior Full Stack Developer</h2></div>
+      <article><p>Dutch Senior Full Stack Developer residing in Spain, with 18+ years experience specializing in Python &amp; Node.js ecosystems. Experienced in scaling complex &amp; high-traffic applications and leading development teams.</p></article>
+      <ul class="icon-list">
+        
+          <li>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-map-pin"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> Ronda, Spain
+          </li>
+        
+        
+          <li>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-mail"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            <a href="mailto:rik@rikwanders.tech">rik@rikwanders.tech</a>
+          </li>
+        
+        
+          <li>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-phone"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+            <a href="tel:+31649118511">+31 649118511</a>
+          </li>
+        
+        <li><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg> <a href="https://www.rikwanders.tech">www.rikwanders.tech</a></li>
+        
+            <li>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-linkedin"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg> <a href="https://www.linkedin.com/in/rik-wanders-software/">rik-wanders-software</a>
+              <span class="network">(LinkedIn)</span>
+            </li>
+          
+      </ul>
+    </header>
+   
+      <section id="work">
+        <h3>Work</h3>
+        <div class="stack">
+          
+              <article>
+                <header>
+                  <h4><a href="https://www.chipta.com/">Chipta</a></h4>
+                  <div class="meta"></div>
+                </header>
+                <div class="timeline">
+                  
+                      <div>
+                        <div>
+                          <h5>Lead Developer</h5>
+                          <div class="meta">
+                            <div><time-duration><time datetime="2014-09">Sep 2014</time> – <time datetime="2024-06">Jun 2024</time></time-duration></div>
+                            
+                          </div>
+                        </div>
+                        <p>Led technical development of innovative ticketing platform for 10 years, scaling from concept to processing thousands of tickets per minute during peak events. Transformed proof of concept into robust, scalable platform serving thousands of events.</p>
+                        
+                          <ul>
+                            <li><p>Built and managed diverse development teams of 3-5 developers, using agile methodologies that optimized efficiency and delivery speed</p></li><li><p>Architected and optimized systems to handle extreme traffic spikes, delivering 40-60% speed improvements through strategic query optimization, caching, and infrastructure scaling</p></li><li><p>Created extensive testing suite (+80% coverage) and CI/CD system, radically improving deployment reliability &amp; speed and enabling regular releases</p></li><li><p>Implemented and maintained payment service provider integrations with multiple providers (Mollie, Pay.nl, PayPal), ensuring reliable transaction processing for the platform</p></li><li><p>Developed custom authentication, mailing, and localization systems, supporting custom needs and backward compatibility</p></li><li><p>Created multi-language &amp; country platform capabilities that enabled international market expansion and supported global event organizers</p></li>
+                          </ul>
+                        
+                      </div>
+                    
+                </div>
+              </article>
+            
+              <article>
+                <header>
+                  <h4>Tender-it</h4>
+                  <div class="meta"></div>
+                </header>
+                <div class="timeline">
+                  
+                      <div>
+                        <div>
+                          <h5>Lead Developer</h5>
+                          <div class="meta">
+                            <div><time-duration><time datetime="2015-03">Mar 2015</time> – <time datetime="2022-06">Jun 2022</time></time-duration></div>
+                            
+                          </div>
+                        </div>
+                        <p>Built comprehensive tender discovery platform from scratch, enabling companies to efficiently find and track public procurement opportunities. Delivered complete platform with intuitive interface and administrative tools as part-time engagement.</p>
+                        
+                          <ul>
+                            <li><p>Designed and developed entire platform (backend and frontend) from concept to production</p></li><li><p>Implemented an extensive search engine using Elasticsearch, making it easy and time effective for users to find suitable tenders</p></li><li><p>Created automated web crawling system that index thousands of public tenders daily, providing comprehensive market coverage</p></li><li><p>Built subscription-based authentication with recurring payments that supports sustainable business model and user growth</p></li><li><p>Delivered intuitive 'saved searches' interface and email notification system that supported user engagement and retention</p></li><li><p>Successfully collaborated with frontend developer to optimize frontend experience using Vue.js</p></li>
+                          </ul>
+                        
+                      </div>
+                    
+                </div>
+              </article>
+            
+              <article>
+                <header>
+                  <h4><a href="https://www.travelbird.com/">TravelBird</a></h4>
+                  <div class="meta"></div>
+                </header>
+                <div class="timeline">
+                  
+                      <div>
+                        <div>
+                          <h5>Senior Full Stack & iOS Developer</h5>
+                          <div class="meta">
+                            <div><time-duration><time datetime="2013-03">Mar 2013</time> – <time datetime="2014-08">Aug 2014</time></time-duration></div>
+                            
+                          </div>
+                        </div>
+                        <p>Contributed to mobile app development during rapid growth phase (50 to 250+ employees), supporting European market expansion. Delivered iOS app and mobile website during critical period for travel industry mobile adoption.</p>
+                        
+                          <ul>
+                            <li><p>Built and maintained iOS application as part of mobile team, supporting mobile bookings during a period of rapid company growth</p></li><li><p>Designed and implemented robust REST API using Django REST Framework, that accommodated iOS &amp; Android apps and mobile website</p></li><li><p>Ensured consistent user experience across multiple mobile platforms and web interfaces</p></li><li><p>Worked on comprehensive email marketing system that supported customer acquisition and retention campaigns</p></li>
+                          </ul>
+                        
+                      </div>
+                    
+                </div>
+              </article>
+            
+              <article>
+                <header>
+                  <h4><a href="https://www.swis.nl/">SWIS</a></h4>
+                  <div class="meta"></div>
+                </header>
+                <div class="timeline">
+                  
+                      <div>
+                        <div>
+                          <h5>Mid-level Web Developer</h5>
+                          <div class="meta">
+                            <div><time-duration><time datetime="2011-08">Aug 2011</time> – <time datetime="2013-02">Feb 2013</time></time-duration></div>
+                            
+                          </div>
+                        </div>
+                        <p>Delivered web solutions for high-profile clients including major e-commerce and government organizations as part of dedicated Scrum team. Maintained agency's reputation for quality while meeting diverse client requirements.</p>
+                        
+                          <ul>
+                            <li><p>Successfully delivered web projects for major clients including Bol.com, EP, Gemeente Amsterdam, and Gemeente Haarlemmermeer</p></li><li><p>Contributed to Scrum team that consistently met client deadlines and budget requirements</p></li><li><p>Developed advanced jQuery and UX skills that improved user engagement metrics across client projects</p></li><li><p>Mastered in-house built CMS system, enabling rapid development and client customization capabilities</p></li>
+                          </ul>
+                        
+                      </div>
+                    
+                </div>
+              </article>
+            
+              <article>
+                <header>
+                  <h4><a href="https://www.gamepoint.biz/">Gamepoint</a></h4>
+                  <div class="meta"></div>
+                </header>
+                <div class="timeline">
+                  
+                      <div>
+                        <div>
+                          <h5>Junior / Mid-level Web Developer</h5>
+                          <div class="meta">
+                            <div><time-duration><time datetime="2007-06">Jun 2007</time> – <time datetime="2011-06">Jun 2011</time></time-duration></div>
+                            
+                          </div>
+                        </div>
+                        <p>Progressed from junior to mid-level developer at established gaming community platform serving hundreds of thousands of users. Contributed to platform stability, feature development, and system enhancements.</p>
+                        
+                          <ul>
+                            <li><p>Successfully implemented multiple payment integrations that supported platform monetization and user transactions</p></li><li><p>Contributed to internationalization and localization system that enabled platform expansion in other countries</p></li><li><p>Designed and optimized MySQL database structures that improved query performance and system reliability</p></li><li><p>Worked effectively in 10+ developer team environment, contributing to large-scale PHP codebase maintenance and feature development</p></li><li><p>Advanced from junior to mid-level developer, demonstrating consistent skill development and increasing responsibility</p></li>
+                          </ul>
+                        
+                      </div>
+                    
+                </div>
+              </article>
+            
+        </div>
+      </section>
+      
+          
+         
+      <section id="skills">
+        <h3>Skills</h3>
+        <div class="grid-list">
+          
+              <div>
+                <h4>Python</h4>
+                
+                  <ul class="tag-list">
+                    <li>Django</li><li>REST Framework</li><li>Celery</li><li>Channels</li><li>Silk</li><li>REST APIs</li><li>OOP</li><li>Requests</li><li>Beautifulsoup</li><li>uv</li>
+                  </ul>
+                
+              </div>
+            
+              <div>
+                <h4>JavaScript / Node.js</h4>
+                
+                  <ul class="tag-list">
+                    <li>React</li><li>Svelte</li><li>SvelteKit</li><li>Web Components</li><li>Lit</li><li>Drizzle</li><li>MobX</li><li>async/await</li>
+                  </ul>
+                
+              </div>
+            
+              <div>
+                <h4>SQL Databases</h4>
+                
+                  <ul class="tag-list">
+                    <li>PostgreSQL</li><li>MySQL</li><li>MariaDB</li><li>SQLite</li><li>Schema design</li><li>indexing</li><li>optimization</li>
+                  </ul>
+                
+              </div>
+            
+              <div>
+                <h4>Frontend Tools</h4>
+                
+                  <ul class="tag-list">
+                    <li>Webpack</li><li>Vite</li><li>ESLint</li><li>Prettier</li><li>Tailwind CSS</li><li>Sass</li>
+                  </ul>
+                
+              </div>
+            
+              <div>
+                <h4>Git (GitHub, GitLab)</h4>
+                
+                  <ul class="tag-list">
+                    <li>GitHub</li><li>GitLab</li><li>advanced workflows</li><li>submodules</li>
+                  </ul>
+                
+              </div>
+            
+              <div>
+                <h4>AI / LLM development tools</h4>
+                
+                  <ul class="tag-list">
+                    <li>Claude Code</li><li>Cursor</li>
+                  </ul>
+                
+              </div>
+            
+              <div>
+                <h4>DevOps</h4>
+                
+                  <ul class="tag-list">
+                    <li>CI/CD</li><li>Docker (Compose)</li><li>Ansible</li>
+                  </ul>
+                
+              </div>
+            
+              <div>
+                <h4>Cloud Platforms</h4>
+                
+                  <ul class="tag-list">
+                    <li>Vercel</li><li>Linode</li>
+                  </ul>
+                
+              </div>
+            
+              <div>
+                <h4>JavaScript / Node.js</h4>
+                
+                  <ul class="tag-list">
+                    <li>TypeScript</li><li>React Native</li><li>Vue.js</li>
+                  </ul>
+                
+              </div>
+            
+              <div>
+                <h4>NoSQL Databases</h4>
+                
+                  <ul class="tag-list">
+                    <li>Elasticsearch</li><li>Redis</li><li>MongoDB</li>
+                  </ul>
+                
+              </div>
+            
+              <div>
+                <h4>Serving, Caching & Load Balancing</h4>
+                
+                  <ul class="tag-list">
+                    <li>Nginx</li><li>Varnish</li><li>Memcached</li><li>HAProxy</li>
+                  </ul>
+                
+              </div>
+            
+              <div>
+                <h4>Additional Languages</h4>
+                
+                  <ul class="tag-list">
+                    <li>Lua</li><li>C</li><li>Objective-C</li><li>PHP</li>
+                  </ul>
+                
+              </div>
+            
+              <div>
+                <h4>Python</h4>
+                
+                  <ul class="tag-list">
+                    <li>FastAPI</li><li>pandas</li><li>scikit-learn</li><li>LangChain</li>
+                  </ul>
+                
+              </div>
+            
+              <div>
+                <h4>JavaScript / Node.js</h4>
+                
+                  <ul class="tag-list">
+                    <li>Next.js</li><li>NestJS</li><li>Zustand</li><li>Prisma</li><li>GraphQL</li><li>Jest</li>
+                  </ul>
+                
+              </div>
+            
+              <div>
+                <h4>DevOps</h4>
+                
+                  <ul class="tag-list">
+                    <li>Terraform</li><li>GitHub Actions</li><li>Kubernetes</li>
+                  </ul>
+                
+              </div>
+            
+              <div>
+                <h4>Cloud Platforms</h4>
+                
+                  <ul class="tag-list">
+                    <li>AWS</li><li>Azure</li><li>GCP</li>
+                  </ul>
+                
+              </div>
+            
+        </div>
+      </section>
+     
+      <section id="languages">
+        <h3>Languages</h3>
+        <div class="grid-list">
+          <div><h4>English</h4> Fluent</div><div><h4>Dutch</h4> Native</div>
+        </div>
+      </section>
+    
+         
+      <section id="references">
+        <h3>References</h3>
+        <div class="stack">
+          
+              <blockquote>
+                <p>Rik modernized our client-facing interfaces and implemented optimizations that delivered substantial performance improvements. His work enabled us to process thousands of tickets rapidly during our busiest periods.</p>
+                
+                  <p>
+                    <cite>Michaël de Groot - Founder of Chipta</cite>
+                  </p>
+                
+              </blockquote>
+            
+              <blockquote>
+                <p>Rik demonstrated exceptional technical leadership by designing and developing our entire platform from the ground up, handling both backend and frontend development with impressive skill.</p>
+                
+                  <p>
+                    <cite>Elmar Krack - Co-founder of Tender-it</cite>
+                  </p>
+                
+              </blockquote>
+            
+        </div>
+      </section>
+    
+      </body>
+    </html>
