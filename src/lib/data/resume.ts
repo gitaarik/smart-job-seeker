@@ -168,7 +168,6 @@ export const resume = {
         "Lit",
         "Web Components",
         "Web Sockets",
-        "Webpack",
         "React Native",
       ],
     },
@@ -459,8 +458,6 @@ export const resume = {
       level: "Expert",
       icon: faGlobe,
       keywords: [
-        "Webpack",
-        "Vite",
         "ESLint",
         "Prettier",
         "Tailwind CSS",

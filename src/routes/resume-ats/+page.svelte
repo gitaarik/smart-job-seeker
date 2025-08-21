@@ -38,7 +38,7 @@
 </svelte:head>
 
 <div
-  class="max-w-3xl mx-auto py-8 print:p-0 bg-white text-black font-mono text-xs leading-relaxed"
+  class="max-w-3xl mx-auto py-8 print:p-0 bg-white text-black text-xs leading-relaxed"
 >
   <!-- Header Section -->
   <div class="mb-6">
@@ -109,7 +109,7 @@
     </h2>
     <ul class="list-none">
       {#each resume.basics.highlights as highlight, index (index)}
-        <li class="mb-2">• {@html highlight.description}</li>
+        <li class="mb-1">• {@html highlight.description}</li>
       {/each}
     </ul>
   </div>
@@ -120,7 +120,7 @@
       Technical Skills
     </h2>
     {#each resume.skills as skillGroup, index (index)}
-      <div class="mb-3">
+      <div class="mb-2">
         <h3 class="font-bold">{skillGroup.name} ({skillGroup.level})</h3>
         <p>{skillGroup.keywords.join(", ")}</p>
       </div>
