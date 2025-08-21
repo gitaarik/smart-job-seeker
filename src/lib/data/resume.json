@@ -1,0 +1,330 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jsonresume/resume-schema/v1.0.0/schema.json",
+  "basics": {
+    "name": "Rik Wanders",
+    "label": "Senior Full Stack Developer",
+    "image": "/src/lib/images/profile-photo.jpeg",
+    "email": "rik@rikwanders.tech",
+    "phone": "+31 649118511",
+    "url": "https://www.rikwanders.tech",
+    "summary": "Dutch Senior Full Stack Developer residing in Spain, with 18+ years experience specializing in Python & Node.js ecosystems. Experienced in scaling complex & high-traffic applications and leading development teams.",
+    "location": {
+      "city": "Ronda",
+      "region": "Andalusia",
+      "countryCode": "ES",
+      "address": "Ronda, Spain"
+    },
+    "profiles": [
+      {
+        "network": "LinkedIn",
+        "username": "rik-wanders-software",
+        "url": "https://www.linkedin.com/in/rik-wanders-software/"
+      }
+    ]
+  },
+  "work": [
+    {
+      "name": "Chipta",
+      "location": "Amsterdam, The Netherlands",
+      "description": "Ticketing Service",
+      "position": "Lead Developer",
+      "url": "https://www.chipta.com/",
+      "startDate": "2014-09",
+      "endDate": "2024-06",
+      "summary": "Joined this innovative ticketing startup as Lead Developer, scaling the platform from concept to processing thousands of tickets per minute during peak events. Successfully led technical development through 10 years of growth, making Chipta a competitive alternative for independent event organizers.",
+      "highlights": [
+        "Built and managed diverse development teams of 3-5 developers, using agile methodologies that optimized efficiency and delivery speed",
+        "Architected and optimized systems to handle extreme traffic spikes, delivering 40-60% speed improvements through strategic query optimization, caching, and infrastructure scaling",
+        "Created extensive testing suite (+80% coverage) and CI/CD system, radically improving deployment reliability & speed and enabling regular releases",
+        "Implemented and maintained payment service provider integrations with multiple providers (Mollie, Pay.nl, PayPal), ensuring reliable transaction processing for the platform",
+        "Developed custom authentication, mailing, and localization systems, supporting custom needs and backward compatibility",
+        "Created multi-language & country platform capabilities that enabled international market expansion and supported global event organizers"
+      ]
+    },
+    {
+      "name": "Tender-it",
+      "location": "Amsterdam, The Netherlands",
+      "description": "Tender Discovery Platform",
+      "position": "Lead Developer",
+      "startDate": "2015-03",
+      "endDate": "2022-06",
+      "summary": "Built a comprehensive tender discovery platform from scratch, enabling companies to efficiently find and track public procurement opportunities. Delivered a complete solution that automated manual tender search processes for businesses. This was a part-time engagement that I combined with my main focus on Chipta.",
+      "highlights": [
+        "Designed and developed entire platform (backend and frontend) from concept to production",
+        "Implemented an extensive search engine using Elasticsearch, making it easy and time effective for users to find suitable tenders",
+        "Created automated web crawling system that index thousands of public tenders daily, providing comprehensive market coverage",
+        "Built subscription-based authentication with recurring payments that supports sustainable business model and user growth",
+        "Delivered intuitive 'saved searches' interface and email notification system that supported user engagement and retention",
+        "Successfully collaborated with frontend developer to optimize frontend experience using Vue.js"
+      ]
+    },
+    {
+      "name": "TravelBird",
+      "location": "Amsterdam, The Netherlands",
+      "description": "Online Travel Agent",
+      "position": "Senior Full Stack & iOS Developer",
+      "url": "https://www.travelbird.com/",
+      "startDate": "2013-03",
+      "endDate": "2014-08",
+      "summary": "Joined during rapid growth phase (50 to 250+ employees) and contributed to scaling mobile presence during the company's expansion across European markets.",
+      "highlights": [
+        "Built and maintained iOS application as part of mobile team, supporting mobile bookings during a period of rapid company growth",
+        "Designed and implemented robust REST API using Django REST Framework, that accommodated iOS & Android apps and mobile website",
+        "Ensured consistent user experience across multiple mobile platforms and web interfaces",
+        "Worked on comprehensive email marketing system that supported customer acquisition and retention campaigns"
+      ]
+    },
+    {
+      "name": "SWIS",
+      "location": "Leiden, The Netherlands",
+      "description": "Web Development Agency",
+      "position": "Mid-level Web Developer",
+      "url": "https://www.swis.nl/",
+      "startDate": "2011-08",
+      "endDate": "2013-02",
+      "summary": "Delivered web solutions for high-profile clients including major e-commerce and government organizations, working as part of a dedicated Scrum team in a fast-paced agency environment with diverse project requirements.",
+      "highlights": [
+        "Successfully delivered web projects for major clients including Bol.com, EP, Gemeente Amsterdam, and Gemeente Haarlemmermeer",
+        "Contributed to Scrum team that consistently met client deadlines and budget requirements",
+        "Developed advanced jQuery and UX skills that improved user engagement metrics across client projects",
+        "Mastered in-house built CMS system, enabling rapid development and client customization capabilities"
+      ]
+    },
+    {
+      "name": "Gamepoint",
+      "location": "The Hague, The Netherlands",
+      "description": "Casual Gaming / Community",
+      "position": "Junior / Mid-level Web Developer",
+      "url": "https://www.gamepoint.biz/",
+      "startDate": "2007-06",
+      "endDate": "2011-06",
+      "summary": "Started career at established gaming community platform, progressing from junior to mid-level developer while contributing to platform stability and feature development.",
+      "highlights": [
+        "Successfully implemented multiple payment integrations that supported platform monetization and user transactions",
+        "Contributed to internationalization and localization system that enabled platform expansion in other countries",
+        "Designed and optimized MySQL database structures that improved query performance and system reliability",
+        "Worked effectively in 10+ developer team environment, contributing to large-scale PHP codebase maintenance and feature development",
+        "Advanced from junior to mid-level developer, demonstrating consistent skill development and increasing responsibility"
+      ]
+    }
+  ],
+  "skills": [
+    {
+      "name": "Python",
+      "level": "Expert",
+      "keywords": [
+        "Django",
+        "REST Framework",
+        "Celery",
+        "Channels",
+        "Silk",
+        "REST APIs",
+        "OOP",
+        "Requests",
+        "Beautifulsoup",
+        "uv",
+        "FastAPI",
+        "pandas",
+        "scikit-learn",
+        "LangChain"
+      ]
+    },
+    {
+      "name": "JavaScript / Node.js",
+      "level": "Expert",
+      "keywords": [
+        "React",
+        "Svelte",
+        "SvelteKit",
+        "Web Components",
+        "Lit",
+        "Drizzle",
+        "MobX",
+        "async/await",
+        "TypeScript",
+        "React Native",
+        "Vue.js",
+        "Next.js",
+        "NestJS",
+        "Zustand",
+        "Prisma",
+        "GraphQL",
+        "Jest"
+      ]
+    },
+    {
+      "name": "SQL Databases",
+      "level": "Expert",
+      "keywords": [
+        "PostgreSQL",
+        "MySQL",
+        "MariaDB",
+        "SQLite",
+        "Schema design",
+        "indexing",
+        "optimization"
+      ]
+    },
+    {
+      "name": "Frontend Tools",
+      "level": "Expert",
+      "keywords": [
+        "Webpack",
+        "Vite",
+        "ESLint",
+        "Prettier",
+        "Tailwind CSS",
+        "Sass"
+      ]
+    },
+    {
+      "name": "Git",
+      "level": "Expert",
+      "keywords": [
+        "GitHub",
+        "GitLab",
+        "advanced workflows",
+        "submodules"
+      ]
+    },
+    {
+      "name": "AI/LLM Development Tools",
+      "level": "Expert",
+      "keywords": [
+        "Claude Code",
+        "Cursor"
+      ]
+    },
+    {
+      "name": "DevOps",
+      "level": "Intermediate",
+      "keywords": [
+        "CI/CD",
+        "Docker",
+        "Docker Compose",
+        "Ansible",
+        "Terraform",
+        "GitHub Actions",
+        "Kubernetes"
+      ]
+    },
+    {
+      "name": "Cloud Platforms",
+      "level": "Intermediate",
+      "keywords": [
+        "Vercel",
+        "Linode",
+        "AWS",
+        "Azure",
+        "GCP"
+      ]
+    },
+    {
+      "name": "NoSQL Databases",
+      "level": "Intermediate",
+      "keywords": [
+        "Elasticsearch",
+        "Redis",
+        "MongoDB"
+      ]
+    },
+    {
+      "name": "Serving, Caching & Load Balancing",
+      "level": "Intermediate",
+      "keywords": [
+        "Nginx",
+        "Varnish",
+        "Memcached",
+        "HAProxy"
+      ]
+    },
+    {
+      "name": "Additional Languages",
+      "level": "Intermediate",
+      "keywords": [
+        "Lua",
+        "C",
+        "Objective-C",
+        "PHP"
+      ]
+    }
+  ],
+  "languages": [
+    {
+      "language": "Dutch",
+      "fluency": "Native"
+    },
+    {
+      "language": "English",
+      "fluency": "Fluent"
+    }
+  ],
+  "references": [
+    {
+      "name": "Michaël de Groot - Founder of Chipta",
+      "reference": "Rik modernized our client-facing interfaces and implemented optimizations that delivered substantial performance improvements. His work enabled us to process thousands of tickets rapidly during our busiest periods."
+    },
+    {
+      "name": "Elmar Krack - Co-founder of Tender-it", 
+      "reference": "Rik demonstrated exceptional technical leadership by designing and developing our entire platform from the ground up, handling both backend and frontend development with impressive skill."
+    }
+  ],
+  "projects": [
+    {
+      "name": "Chipta Ticketing Platform",
+      "description": "Scaled a ticketing platform from concept to processing thousands of tickets per minute",
+      "highlights": [
+        "Led team of 3-5 developers using agile methodologies",
+        "Achieved 40-60% speed improvements through optimization",
+        "Built extensive testing suite with +80% coverage",
+        "Integrated multiple payment providers (Mollie, Pay.nl, PayPal)",
+        "Enabled international market expansion"
+      ],
+      "keywords": [
+        "Python",
+        "Django",
+        "React",
+        "MySQL",
+        "Redis",
+        "Nginx"
+      ],
+      "startDate": "2014-09",
+      "endDate": "2024-06",
+      "url": "https://www.chipta.com/",
+      "roles": [
+        "Lead Developer"
+      ],
+      "entity": "Chipta",
+      "type": "application"
+    },
+    {
+      "name": "Tender Discovery Platform", 
+      "description": "Built comprehensive tender discovery platform from scratch",
+      "highlights": [
+        "Designed and developed entire platform from concept to production",
+        "Implemented Elasticsearch search engine",
+        "Created automated web crawling system",
+        "Built subscription-based authentication with recurring payments"
+      ],
+      "keywords": [
+        "Python",
+        "Django",
+        "Elasticsearch",
+        "Vue.js",
+        "MySQL"
+      ],
+      "startDate": "2015-03",
+      "endDate": "2022-06",
+      "roles": [
+        "Lead Developer"
+      ],
+      "entity": "Tender-it",
+      "type": "application"
+    }
+  ],
+  "meta": {
+    "canonical": "https://www.rikwanders.tech/resume",
+    "version": "v1.0.0",
+    "lastModified": "2025-08-21T00:00:00.000Z"
+  }
+}

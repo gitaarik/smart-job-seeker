@@ -10,26 +10,31 @@
     faUser,
   } from "@fortawesome/free-solid-svg-icons";
   import { faLinkedin } from "@fortawesome/free-brands-svg-icons";
+  import resume from "$lib/data/resume.json";
+
+  const languageText = resume.languages.map(lang => `${lang.language}: ${lang.fluency}`).join(", ");
+
+  const linkedInProfile = resume.basics.profiles.find(p => p.network === 'LinkedIn');
 
   const profileData = [
-    { icon: faMapMarkerAlt, text: "Ronda, Spain" },
-    { icon: faLanguage, text: "Fluent English, Native Dutch" },
-    { icon: faPhone, text: "+31 649118511", href: "tel:+31649118511" },
+    { icon: faMapMarkerAlt, text: resume.basics.location.address },
+    { icon: faLanguage, text: languageText },
+    { icon: faPhone, text: resume.basics.phone, href: `tel:${resume.basics.phone}` },
     {
       icon: faEnvelope,
-      text: "rik@rikwanders.tech",
-      href: "mailto:rik@rikwanders.tech",
+      text: resume.basics.email,
+      href: `mailto:${resume.basics.email}`,
     },
     {
       icon: faGlobe,
-      text: "www.rikwanders.tech",
-      href: "https://www.rikwanders.tech",
+      text: resume.basics.url.replace('https://', ''),
+      href: resume.basics.url,
       target: "_blank",
     },
     {
       icon: faLinkedin,
-      text: "linkedin.com/in/rik-wanders-software/",
-      href: "https://www.linkedin.com/in/rik-wanders-software/",
+      text: linkedInProfile?.url.replace('https://www.', '') || '',
+      href: linkedInProfile?.url || '',
       target: "_blank",
     },
   ];

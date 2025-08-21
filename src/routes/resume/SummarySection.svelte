@@ -1,6 +1,7 @@
 <script lang="ts">
   import ResumeSection from "./ResumeSection.svelte";
   import { faCompass } from "@fortawesome/free-solid-svg-icons";
+  import resume from "$lib/data/resume.json";
 
   export let includesProject: boolean = false;
   export let includesPartTime: boolean = false;
@@ -47,10 +48,7 @@
 
 <ResumeSection title="Summary" icon={faCompass} class="leading-relaxed">
   <p class="mb-4">
-    Dutch Senior Full Stack Developer residing in Spain, with 18+ years
-    experience specializing in Python & Node.js ecosystems. Experienced in
-    scaling complex &amp; high-traffic applications and leading development
-    teams.
+    {resume.basics.summary}
   </p>
 
   <p>

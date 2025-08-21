@@ -1,5 +1,6 @@
 <script lang="ts">
   import Logo from "$lib/components/Logo.svelte";
+  import resume from "$lib/data/resume.json";
 </script>
 
 <header class="flex flex-col items-center">
@@ -10,11 +11,11 @@
   <h1
     class="text-3xl font-medium mt-2 mb-4"
   >
-    Rik Wanders
+    {resume.basics.name}
   </h1>
 
   <h2 class="text-xl">
-    Senior Full Stack Developer
+    {resume.basics.label}
   </h2>
   <!---->
   <!-- <h3> -->

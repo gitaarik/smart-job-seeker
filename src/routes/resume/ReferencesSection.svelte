@@ -1,21 +1,7 @@
 <script lang="ts">
   import ResumeSection from "./ResumeSection.svelte";
   import { faComments } from "@fortawesome/free-solid-svg-icons";
-
-  const references = [
-    {
-      name: "Michaël de Groot",
-      company: "Founder of Chipta",
-      logo: "/src/lib/images/company-logos/chipta-logo.png",
-      note: "Former employer - willing to provide references by telephone",
-    },
-    {
-      name: "Elmar Krack",
-      company: "Co-founder of Tender-it",
-      logo: "/src/lib/images/company-logos/tender-it-logo.png",
-      note: "Former employer - willing to provide references by telephone",
-    },
-  ];
+  import resume from "$lib/data/resume.json";
 </script>
 
 <ResumeSection title="References" icon={faComments}>
@@ -26,30 +12,14 @@
   </p>
 
   <div class="space-y-4">
-    {#each references as reference (reference.name)}
+    {#each resume.references as reference (reference.name)}
       <div class="border-l-4 border-ocean pl-4 py-2">
-        <div class="flex items-start justify-between">
-          <div class="flex-1">
-            <h4 class="font-semibold text-base print:text-sm">
-              {reference.name}
-            </h4>
-            <p class="text-sm text-ocean font-medium mt-1">
-              {reference.company}
-            </p>
-            <p class="text-sm mt-1">
-              {reference.note}
-            </p>
-          </div>
-          {#if reference.logo}
-            <div class="ml-4 flex-shrink-0">
-              <img
-                src={reference.logo}
-                alt="{reference.company} Logo"
-                class="h-20 w-auto border border-agua rounded"
-              />
-            </div>
-          {/if}
-        </div>
+        <h4 class="font-semibold text-base print:text-sm">
+          {reference.name}
+        </h4>
+        <p class="text-sm mt-1">
+          {reference.reference}
+        </p>
       </div>
     {/each}
   </div>
