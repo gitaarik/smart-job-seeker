@@ -5,10 +5,10 @@
       "Bash(mv:*)",
       "Bash(rm:*)",
       "WebFetch(domain:jsonresume.org)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": []
   }
 }
-
