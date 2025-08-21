@@ -29,11 +29,11 @@
 </script>
 
 <svelte:head>
-  <title>Rik Wanders - Senior Full Stack Developer - Text Resume</title>
+  <title>{resume.basics.name}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta
     name="description"
-    content="ATS-friendly text resume for Rik Wanders, Senior Full Stack Developer"
+    content={resume.basics.name}
   />
 </svelte:head>
 
@@ -46,12 +46,36 @@
     <h2 class="text-xl mb-4">{resume.basics.label}</h2>
 
     <div class="mb-4">
-      <p>Email: {resume.basics.email}</p>
-      <p>Phone: {resume.basics.phone}</p>
-      <p>Website: {resume.basics.url}</p>
+      <p>
+        Email: <a
+          href="mailto:{resume.basics.email}"
+          class="underline text-blue-600"
+        >{resume.basics.email}</a>
+      </p>
+      <p>
+        Phone: <a
+          href="tel:{resume.basics.phone}"
+          class="underline text-blue-600"
+        >{resume.basics.phone}</a>
+      </p>
+      <p>
+        Website: <a
+          href={resume.basics.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="underline text-blue-600"
+        >{resume.basics.url}</a>
+      </p>
       <p>Location: {resume.basics.location.address}</p>
       {#each resume.basics.profiles as profile (profile)}
-        <p>{profile.network}: {profile.url}</p>
+        <p>
+          {profile.network}: <a
+            href={profile.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="underline text-blue-600"
+          >{profile.url}</a>
+        </p>
       {/each}
     </div>
   </div>

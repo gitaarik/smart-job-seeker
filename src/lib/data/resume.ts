@@ -40,7 +40,7 @@ export const resume = {
     label: "Senior Full Stack Developer",
     image: "/src/lib/images/profile-photo.jpeg",
     email: "rik@rikwanders.tech",
-    phone: "+31 649118511",
+    phone: "+31649118511",
     url: "https://www.rikwanders.tech",
     summary:
       "Dutch Senior Full Stack Developer residing in Spain, with 18+ years experience specializing in Python & Node.js ecosystems. Experienced in scaling complex & high-traffic applications and leading development teams.",
