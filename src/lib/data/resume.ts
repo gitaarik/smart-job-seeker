@@ -19,7 +19,17 @@ import {
   faCog,
   faDatabase,
   faRocket,
+  faCloud,
+  faCode,
+  faNetworkWired,
+  faRobot,
+  faServer,
 } from "@fortawesome/free-solid-svg-icons";
+import {
+  faGitAlt,
+  faNodeJs,
+  faPython,
+} from "@fortawesome/free-brands-svg-icons";
 
 export const resume = {
   "$schema": "https://raw.githubusercontent.com/jsonresume/resume-schema/v1.0.0/schema.json",
@@ -329,8 +339,9 @@ export const resume = {
   "skills": [
     {
       "name": "Python",
-      "level": "Expert",
-      "technologies": [
+      "level": "expert",
+      "icon": faPython,
+      "keywords": [
         "Django",
         "REST Framework",
         "Celery",
@@ -340,17 +351,14 @@ export const resume = {
         "OOP",
         "Requests",
         "Beautifulsoup",
-        "uv",
-        "FastAPI",
-        "pandas",
-        "scikit-learn",
-        "LangChain"
+        "uv"
       ]
     },
     {
       "name": "JavaScript / Node.js",
-      "level": "Expert",
-      "technologies": [
+      "level": "expert",
+      "icon": faNodeJs,
+      "keywords": [
         "React",
         "Svelte",
         "SvelteKit",
@@ -358,22 +366,14 @@ export const resume = {
         "Lit",
         "Drizzle",
         "MobX",
-        "async/await",
-        "TypeScript",
-        "React Native",
-        "Vue.js",
-        "Next.js",
-        "NestJS",
-        "Zustand",
-        "Prisma",
-        "GraphQL",
-        "Jest"
+        "async/await"
       ]
     },
     {
       "name": "SQL Databases",
-      "level": "Expert",
-      "technologies": [
+      "level": "expert",
+      "icon": faDatabase,
+      "keywords": [
         "PostgreSQL",
         "MySQL",
         "MariaDB",
@@ -385,8 +385,9 @@ export const resume = {
     },
     {
       "name": "Frontend Tools",
-      "level": "Expert",
-      "technologies": [
+      "level": "expert",
+      "icon": faGlobe,
+      "keywords": [
         "Webpack",
         "Vite",
         "ESLint",
@@ -396,9 +397,10 @@ export const resume = {
       ]
     },
     {
-      "name": "Git",
-      "level": "Expert",
-      "technologies": [
+      "name": "Git (GitHub, GitLab)",
+      "level": "expert",
+      "icon": faGitAlt,
+      "keywords": [
         "GitHub",
         "GitLab",
         "advanced workflows",
@@ -406,41 +408,48 @@ export const resume = {
       ]
     },
     {
-      "name": "AI/LLM Development Tools",
-      "level": "Expert",
-      "technologies": [
+      "name": "AI / LLM development tools",
+      "level": "expert",
+      "icon": faRobot,
+      "keywords": [
         "Claude Code",
         "Cursor"
       ]
     },
     {
       "name": "DevOps",
-      "level": "Intermediate",
-      "technologies": [
+      "level": "working",
+      "icon": faServer,
+      "keywords": [
         "CI/CD",
-        "Docker",
-        "Docker Compose",
-        "Ansible",
-        "Terraform",
-        "GitHub Actions",
-        "Kubernetes"
+        "Docker (Compose)",
+        "Ansible"
       ]
     },
     {
       "name": "Cloud Platforms",
-      "level": "Intermediate",
-      "technologies": [
+      "level": "working",
+      "icon": faCloud,
+      "keywords": [
         "Vercel",
-        "Linode",
-        "AWS",
-        "Azure",
-        "GCP"
+        "Linode"
+      ]
+    },
+    {
+      "name": "JavaScript / Node.js",
+      "level": "working",
+      "icon": faNodeJs,
+      "keywords": [
+        "TypeScript",
+        "React Native",
+        "Vue.js"
       ]
     },
     {
       "name": "NoSQL Databases",
-      "level": "Intermediate",
-      "technologies": [
+      "level": "working",
+      "icon": faDatabase,
+      "keywords": [
         "Elasticsearch",
         "Redis",
         "MongoDB"
@@ -448,8 +457,9 @@ export const resume = {
     },
     {
       "name": "Serving, Caching & Load Balancing",
-      "level": "Intermediate",
-      "technologies": [
+      "level": "working",
+      "icon": faNetworkWired,
+      "keywords": [
         "Nginx",
         "Varnish",
         "Memcached",
@@ -458,12 +468,57 @@ export const resume = {
     },
     {
       "name": "Additional Languages",
-      "level": "Intermediate",
-      "technologies": [
+      "level": "working",
+      "icon": faCode,
+      "keywords": [
         "Lua",
         "C",
         "Objective-C",
         "PHP"
+      ]
+    },
+    {
+      "name": "Python",
+      "level": "exploring",
+      "icon": faPython,
+      "keywords": [
+        "FastAPI",
+        "pandas",
+        "scikit-learn",
+        "LangChain"
+      ]
+    },
+    {
+      "name": "JavaScript / Node.js",
+      "level": "exploring",
+      "icon": faNodeJs,
+      "keywords": [
+        "Next.js",
+        "NestJS",
+        "Zustand",
+        "Prisma",
+        "GraphQL",
+        "Jest"
+      ]
+    },
+    {
+      "name": "DevOps",
+      "level": "exploring",
+      "icon": faServer,
+      "keywords": [
+        "Terraform",
+        "GitHub Actions",
+        "Kubernetes"
+      ]
+    },
+    {
+      "name": "Cloud Platforms",
+      "level": "exploring",
+      "icon": faCloud,
+      "keywords": [
+        "AWS",
+        "Azure",
+        "GCP"
       ]
     }
   ],
