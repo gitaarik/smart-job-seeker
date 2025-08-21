@@ -38,12 +38,14 @@
 </svelte:head>
 
 <div
-  class="max-w-4xl mx-auto p-8 bg-white text-black font-mono text-sm leading-relaxed"
+  class="max-w-3xl mx-auto py-8 print:p-0 bg-white text-black font-mono text-xs leading-relaxed"
 >
   <!-- Header Section -->
-  <div class="mb-8">
-    <h1 class="text-2xl font-bold mb-2">{resume.basics.name}</h1>
-    <h2 class="text-xl mb-4">{resume.basics.label}</h2>
+  <div class="mb-6">
+    <header>
+      <h1 class="text-xl font-bold mb-2">{resume.basics.name}</h1>
+      <h2 class="text-base mb-4">{resume.basics.label}</h2>
+    </header>
 
     <div class="mb-4">
       <p>
@@ -81,16 +83,16 @@
   </div>
 
   <!-- Professional Summary -->
-  <div class="mb-8">
-    <h2 class="text-lg font-bold mb-3 border-b-2 border-black uppercase">
+  <div class="mb-6">
+    <h2 class="text-sm font-bold mb-3 border-b-2 border-black uppercase">
       Professional Summary
     </h2>
     <p class="mb-4">{resume.basics.summary}</p>
   </div>
 
   <!-- Technical Highlights -->
-  <div class="mb-8">
-    <h2 class="text-lg font-bold mb-3 border-b-2 border-black uppercase">
+  <div class="mb-6">
+    <h2 class="text-sm font-bold mb-3 border-b-2 border-black uppercase">
       Technical Highlights
     </h2>
     <ul class="list-none">
@@ -101,8 +103,8 @@
   </div>
 
   <!-- Technical Skills -->
-  <div class="mb-8">
-    <h2 class="text-lg font-bold mb-3 border-b-2 border-black uppercase">
+  <div class="mb-6">
+    <h2 class="text-sm font-bold mb-3 border-b-2 border-black uppercase">
       Technical Skills
     </h2>
     {#each resume.skills as skillGroup, index (index)}
@@ -114,14 +116,14 @@
   </div>
 
   <!-- Professional Experience -->
-  <div class="mb-8">
-    <h2 class="text-lg font-bold mb-3 border-b-2 border-black uppercase">
+  <div class="mb-6">
+    <h2 class="text-sm font-bold mb-3 border-b-2 border-black uppercase">
       Professional Experience
     </h2>
     {#each resume.work as job, index (index)}
       <div class="mb-10">
         <div class="mb-2">
-          <h3 class="text-base font-bold">{job.position}</h3>
+          <h3 class="font-bold">{job.position}</h3>
           <p class="font-bold">{job.name} | {job.location}</p>
           <p>{formatDateRange(job.startDate, job.endDate)}</p>
           {#if job.description}
@@ -155,8 +157,8 @@
   </div>
 
   <!-- Languages -->
-  <div class="mb-8">
-    <h2 class="text-lg font-bold mb-3 border-b-2 border-black uppercase">
+  <div class="mb-6">
+    <h2 class="text-sm font-bold mb-3 border-b-2 border-black uppercase">
       Languages
     </h2>
     {#each resume.languages as language, index (index)}
@@ -165,8 +167,8 @@
   </div>
 
   <!-- References -->
-  <div class="mb-8">
-    <h2 class="text-lg font-bold mb-3 border-b-2 border-black uppercase">
+  <div class="mb-6">
+    <h2 class="text-sm font-bold mb-3 border-b-2 border-black uppercase">
       References
     </h2>
     {#each resume.references as reference, index (index)}
