@@ -10,7 +10,6 @@
   import ReferencesSection from "./ReferencesSection.svelte";
   import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
 
-
   // Parse timing parameter
   const timingParam = page.url.searchParams.get("timing") || "";
   const timingOptions = timingParam
@@ -55,7 +54,6 @@
     <div class="print:py-10 print:break-inside-avoid">
       <TechnicalExpertiseSection />
     </div>
-
 
     <div class="print:py-10 print:break-inside-avoid">
       <ProfessionalExperience />
