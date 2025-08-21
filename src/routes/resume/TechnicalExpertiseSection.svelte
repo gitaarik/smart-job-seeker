@@ -6,7 +6,6 @@
     faCode,
     faCrown,
     faHardHat,
-    faMagnifyingGlass,
   } from "@fortawesome/free-solid-svg-icons";
   import { resume } from "$lib/data/resume";
 
@@ -21,8 +20,8 @@
       }));
   }
 
-  const expertKnowledge = getSkillsByLevel("expert");
-  const workingKnowledge = getSkillsByLevel("working");
+  const expertKnowledge = getSkillsByLevel("Expert");
+  const workingKnowledge = getSkillsByLevel("Proficient");
 </script>
 
 <ResumeSection title="Technical Expertise" icon={faCode}>

@@ -409,7 +409,7 @@ export const resume = {
   skills: [
     {
       name: "Python",
-      level: "expert",
+      level: "Expert",
       icon: faPython,
       keywords: [
         "Django",
@@ -426,7 +426,7 @@ export const resume = {
     },
     {
       name: "JavaScript / Node.js",
-      level: "expert",
+      level: "Expert",
       icon: faNodeJs,
       keywords: [
         "React",
@@ -441,7 +441,7 @@ export const resume = {
     },
     {
       name: "SQL Databases",
-      level: "expert",
+      level: "Expert",
       icon: faDatabase,
       keywords: [
         "PostgreSQL",
@@ -455,7 +455,7 @@ export const resume = {
     },
     {
       name: "Frontend Tools",
-      level: "expert",
+      level: "Expert",
       icon: faGlobe,
       keywords: [
         "Webpack",
@@ -468,7 +468,7 @@ export const resume = {
     },
     {
       name: "Git (GitHub, GitLab)",
-      level: "expert",
+      level: "Expert",
       icon: faGitAlt,
       keywords: [
         "GitHub",
@@ -479,7 +479,7 @@ export const resume = {
     },
     {
       name: "AI / LLM development tools",
-      level: "expert",
+      level: "Expert",
       icon: faRobot,
       keywords: [
         "Claude Code",
@@ -488,7 +488,7 @@ export const resume = {
     },
     {
       name: "DevOps",
-      level: "working",
+      level: "Proficient",
       icon: faServer,
       keywords: [
         "CI/CD",
@@ -498,7 +498,7 @@ export const resume = {
     },
     {
       name: "Cloud Platforms",
-      level: "working",
+      level: "Proficient",
       icon: faCloud,
       keywords: [
         "Vercel",
@@ -507,7 +507,7 @@ export const resume = {
     },
     {
       name: "JavaScript / Node.js",
-      level: "working",
+      level: "Proficient",
       icon: faNodeJs,
       keywords: [
         "TypeScript",
@@ -517,7 +517,7 @@ export const resume = {
     },
     {
       name: "NoSQL Databases",
-      level: "working",
+      level: "Proficient",
       icon: faDatabase,
       keywords: [
         "Elasticsearch",
@@ -527,7 +527,7 @@ export const resume = {
     },
     {
       name: "Serving, Caching & Load Balancing",
-      level: "working",
+      level: "Proficient",
       icon: faNetworkWired,
       keywords: [
         "Nginx",
@@ -538,7 +538,7 @@ export const resume = {
     },
     {
       name: "Additional Languages",
-      level: "working",
+      level: "Proficient",
       icon: faCode,
       keywords: [
         "Lua",
