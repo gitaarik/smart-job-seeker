@@ -8,21 +8,6 @@
   import ProfessionalExperience from "./ProfessionalExperience.svelte";
   import ReferencesSection from "./ReferencesSection.svelte";
   import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
-
-  // Parse timing parameter
-  const timingParam = page.url.searchParams.get("timing") || "";
-  const timingOptions = timingParam
-    ? timingParam.split(",").map((t) => t.trim())
-    : [];
-
-  let includesProject = timingOptions.includes("project");
-  let includesPartTime = timingOptions.includes("part-time");
-  let includesFullTime = timingOptions.includes("full-time");
-
-  if (!includesProject && !includesPartTime && !includesFullTime) {
-    includesProject = true;
-    includesPartTime = true;
-  }
 </script>
 
 <svelte:head>
@@ -47,7 +32,7 @@
   >
     <HeaderSection />
     <ProfileSection />
-    <SummarySection {includesProject} {includesPartTime} {includesFullTime} />
+    <SummarySection />
     <KeyQualificationsSection />
 
     <div class="print:py-10 print:break-inside-avoid">
