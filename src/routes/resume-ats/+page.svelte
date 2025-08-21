@@ -54,22 +54,14 @@
           class="underline text-blue-600"
         >{resume.basics.email}</a>
       </p>
+
       <p>
         Phone: <a
           href="tel:{resume.basics.phone}"
           class="underline text-blue-600"
         >{resume.basics.phone}</a>
       </p>
-      <p>
-        Website: <a
-          href={resume.basics.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          class="underline text-blue-600"
-        >{resume.basics.url}</a>
-      </p>
 
-      <!-- Languages -->
       <p>
         Languages:
         {#each resume.languages as language, index (index)}
@@ -79,6 +71,16 @@
       </p>
 
       <p>Location: {resume.basics.location.address}</p>
+
+      <p>
+        Website: <a
+          href={resume.basics.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="underline text-blue-600"
+        >{resume.basics.url}</a>
+      </p>
+
       {#each resume.basics.profiles as profile (profile)}
         <p>
           {profile.network}: <a
@@ -141,8 +143,6 @@
           {/if}
         </div>
 
-        <p class="mb-3">{job.summary}</p>
-
         {#if job.highlights && job.highlights.length > 0}
           <div class="mb-3">
             <h4 class="font-bold mb-2">Key Achievements:</h4>
@@ -153,13 +153,6 @@
                 </li>
               {/each}
             </ul>
-          </div>
-        {/if}
-
-        {#if job.technologies && job.technologies.length > 0}
-          <div class="mb-3">
-            <h4 class="font-bold mb-1">Technologies Used:</h4>
-            <p>{job.technologies.join(", ")}</p>
           </div>
         {/if}
       </div>
