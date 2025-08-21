@@ -616,6 +616,7 @@ export const resume = {
       logo: "/src/lib/images/company-logos/tender-it-logo.png",
     },
   ],
+  referencesDescription: "Contact details available upon request.",
   projects: [
     {
       name: "Chipta Ticketing Platform",
@@ -647,8 +648,7 @@ export const resume = {
     },
     {
       name: "Tender Discovery Platform",
-      description:
-        "Built comprehensive tender discovery platform from scratch",
+      description: "Built comprehensive tender discovery platform from scratch",
       highlights: [
         "Designed and developed entire platform from concept to production",
         "Implemented Elasticsearch search engine",
@@ -672,4 +672,3 @@ export const resume = {
     },
   ],
 };
-
