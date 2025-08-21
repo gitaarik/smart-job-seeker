@@ -1,374 +1,95 @@
 <script lang="ts">
   import ResumeSection from "./ResumeSection.svelte";
   import EmploymentSection from "./EmploymentSection.svelte";
+  import resume from "$lib/data/resume.json";
 
   export let isCompact: boolean = false;
-  import {
-    faGlobe,
-    faUsers,
-    faShieldAlt,
-    faDollarSign,
-    faMicrochip,
-    faCog,
-    faSearch,
-    faLaptopCode,
-    faChartLine,
-    faCrown,
-    faPaintBrush,
-    faMobile,
-    faPlug,
-    faEnvelope,
-    faHandshake,
-    faBullseye,
-    faFileCode,
-    faDatabase,
-    faRocket,
-    faWrench,
-  } from "@fortawesome/free-solid-svg-icons";
+  import { faGlobe, faRocket } from "@fortawesome/free-solid-svg-icons";
 
-  const experiences = [
-    {
-      company: "Chipta",
-      role: "Lead Developer",
-      industry: "Ticketing Service",
-      website: "https://www.chipta.com/",
-      period: "September 2014 – June 2024",
-      location: "Amsterdam, The Netherlands",
-      logo: "/src/lib/images/company-logos/chipta-logo.png",
-      description:
-        "Joined this innovative ticketing startup as Lead Developer, scaling the platform from concept to processing thousands of tickets per minute during peak events. Successfully led technical development through 10 years of growth, making Chipta a competitive alternative for independent event organizers.",
-      achievements: [
-        {
-          title: "Team Leadership",
-          icon: faUsers,
-          description:
-            "Built and managed diverse development teams of 3-5 developers, using agile methodologies that optimized efficiency and delivery speed",
-        },
-        {
-          title: "Platform Scalability",
-          icon: faChartLine,
-          description:
-            "Architected and optimized systems to handle extreme traffic spikes, delivering 40-60% speed improvements through strategic query optimization, caching, and infrastructure scaling",
-        },
-        {
-          title: "System Reliability",
-          icon: faShieldAlt,
-          description:
-            "Created extensive testing suite (+80% coverage) and CI/CD system, radically improving deployment reliability & speed and enabling regular releases",
-        },
-        {
-          title: "Payment Integration",
-          icon: faDollarSign,
-          description:
-            "Implemented and maintained payment service provider integrations with multiple providers (Mollie, Pay.nl, PayPal), ensuring reliable transaction processing for the platform",
-        },
-        {
-          title: "Technical Innovation",
-          icon: faMicrochip,
-          description:
-            "Developed custom authentication, mailing, and localization systems, supporting custom needs and backward compatibility",
-        },
-        {
-          title: "Market Expansion",
-          icon: faGlobe,
-          description:
-            "Created multi-language & country platform capabilities that enabled international market expansion and supported global event organizers",
-        },
-      ],
-      impact:
-        "Transformed a proof of concept into a robust, scalable ticketing platform serving thousands of events and processing high-volume traffic reliably.",
-      technologies: [
-        "Python",
-        "Django",
-        "Django REST Framework",
-        "Django Channels",
-        "Django Silk",
-        "Jinja2",
-        "Weasyprint",
-        "MySQL",
-        "Ansible",
-        "Python Fabric",
-        "Linode",
-        "Nginx",
-        "Redis",
-        "HAProxy",
-        "Selenium",
-        "OAuth",
-        "Node.js",
-        "React",
-        "MobX",
-        "Lit",
-        "Web Components",
-        "Web Sockets",
-        "Webpack",
-        "React Native",
-      ],
-    },
-    {
-      company: "Tender-it",
-      role: "Lead Developer",
-      industry: "Tender Discovery Platform",
-      period: "March 2015 – June 2022",
-      location: "Amsterdam, The Netherlands",
-      logo: "/src/lib/images/company-logos/tender-it-logo.png",
-      description:
-        "Built a comprehensive tender discovery platform from scratch, enabling companies to efficiently find and track public procurement opportunities. Delivered a complete solution that automated manual tender search processes for businesses.",
-      note:
-        "This was a part-time engagement that I combined with my main focus on Chipta.",
-      achievements: [
-        {
-          title: "Product Development",
-          icon: faWrench,
-          description:
-            "Designed and developed entire platform (backend and frontend) from concept to production",
-        },
-        {
-          title: "Search Innovation",
-          icon: faSearch,
-          description:
-            "Implemented an extensive search engine using Elasticsearch, making it easy and time effective for users to find suitable tenders",
-        },
-        {
-          title: "Data Automation",
-          icon: faLaptopCode,
-          description:
-            "Created automated web crawling system that index thousands of public tenders daily, providing comprehensive market coverage",
-        },
-        {
-          title: "Revenue Model",
-          icon: faDollarSign,
-          description:
-            "Built subscription-based authentication with recurring payments that supports sustainable business model and user growth",
-        },
-        {
-          title: "User Experience",
-          icon: faCrown,
-          description:
-            'Delivered intuitive "saved searches" interface and email notification system that supported user engagement and retention',
-        },
-        {
-          title: "Frontend Optimization",
-          icon: faPaintBrush,
-          description:
-            "Successfully colaborated with frontend developer to optimize frontend experience using Vue.js",
-        },
-      ],
-      impact:
-        "Transformed a startup idea into a complete, extensible tender platform with a intuitive interface and solid administrative tools.",
-      technologies: [
-        "Python",
-        "Django",
-        "Django REST Framework",
-        "Django Celery",
-        "Python Requests",
-        "MySQL",
-        "Beautifulsoup",
-        "Elasticsearch",
-        "Linode",
-        "Nginx",
-        "Node.js",
-        "React",
-        "Vue.js",
-        "Webpack",
-      ],
-    },
-    {
-      company: "TravelBird",
-      role: "Senior Full Stack & iOS Developer",
-      industry: "Online Travel Agent",
-      website: "https://www.travelbird.com/",
-      period: "March 2013 – August 2014",
-      location: "Amsterdam, The Netherlands",
-      logo: "/src/lib/images/company-logos/travelbird-logo.png",
-      description:
-        "Joined during rapid growth phase (50 to 250+ employees) and contributed to scaling mobile presence during the company's expansion across European markets.",
-      achievements: [
-        {
-          title: "Mobile Development",
-          icon: faMobile,
-          description:
-            "Built and maintained iOS application as part of mobile team, supporting mobile bookings during a period of rapid company growth",
-        },
-        {
-          title: "API Architecture",
-          icon: faPlug,
-          description:
-            "Designed and implemented robust REST API using Django REST Framework, that accommodated iOS & Android apps and mobile website",
-        },
-        {
-          title: "Cross-Platform Integration",
-          icon: faLaptopCode,
-          description:
-            "Ensured consistent user experience across multiple mobile platforms and web interfaces",
-        },
-        {
-          title: "Email Marketing Platform",
-          icon: faEnvelope,
-          description:
-            "Worked on comprehensive email marketing system that supported customer acquisition and retention campaigns",
-        },
-      ],
-      impact:
-        "Successfully delivered mobile apps and mobile website as part of an agile team during a critical period when mobile app presence was becoming essential for travel industry competitiveness.",
-      technologies: [
-        "Objective-C",
-        "Xcode",
-        "Python",
-        "Django",
-        "Django REST Framework",
-        "Django Celery",
-        "Django South",
-        "Django Compressor",
-        "Sendgrid",
-        "PostgreSQL",
-        "MongoDB",
-        "Linode",
-        "Nginx",
-        "Varnish",
-        "JavaScript",
-        "gulp.js",
-        "Sass",
-      ],
-    },
-    {
-      company: "SWIS",
-      role: "Mid-level Web Developer",
-      industry: "Web Development Agency",
-      website: "https://www.swis.nl/",
-      period: "August 2011 – February 2013",
-      location: "Leiden, The Netherlands",
-      logo: "/src/lib/images/company-logos/swis-logo.png",
-      description:
-        "Delivered web solutions for high-profile clients including major e-commerce and government organizations, working as part of a dedicated Scrum team in a fast-paced agency environment with diverse project requirements.",
-      achievements: [
-        {
-          title: "Client Success",
-          icon: faHandshake,
-          description:
-            "Successfully delivered web projects for major clients including Bol.com, EP, Gemeente Amsterdam, and Gemeente Haarlemmermeer",
-        },
-        {
-          title: "Agile Workflow",
-          icon: faBullseye,
-          description:
-            "Contributed to Scrum team that consistently met client deadlines and budget requirements",
-        },
-        {
-          title: "Frontend Skills",
-          icon: faFileCode,
-          description:
-            "Developed advanced jQuery and UX skills that improved user engagement metrics across client projects",
-        },
-        {
-          title: "Custom CMS Expertise",
-          icon: faCog,
-          description:
-            "Mastered in-house built CMS system, enabling rapid development and client customization capabilities",
-        },
-      ],
-      impact:
-        "Delivered high-quality web solutions that met diverse client needs while maintaining agency's reputation for quality and reliability.",
-      technologies: [
-        "PHP",
-        "MySQL",
-        "Apache",
-        "Linux",
-        "XAMPP",
-        "HTML5",
-        "CSS3",
-        "JavaScript",
-        "AJAX",
-        "jQuery",
-        "jQuery UI",
-        "Underscore.js",
-        "Bootstrap",
-        "Responsive design",
-        "Firebug",
-      ],
-    },
-    {
-      company: "Gamepoint",
-      role: "Junior / Mid-level Web Developer",
-      industry: "Casual Gaming / Community",
-      website: "https://www.gamepoint.biz/",
-      period: "June 2007 – June 2011",
-      location: "The Hague, The Netherlands",
-      logo: "/src/lib/images/company-logos/gamepoint-logo.png",
-      description:
-        "Started career at established gaming community platform, progressing from junior to mid-level developer while contributing to platform stability and feature development.",
-      achievements: [
-        {
-          title: "Payment Systems",
-          icon: faDollarSign,
-          description:
-            "Successfully implemented multiple payment integrations that supported platform monetization and user transactions",
-        },
-        {
-          title: "International Expansion",
-          icon: faGlobe,
-          description:
-            "Contributed to internationalization and localization system that enabled platform expansion in other countries",
-        },
-        {
-          title: "Database Design",
-          icon: faDatabase,
-          description:
-            "Designed and optimized MySQL database structures that improved query performance and system reliability",
-        },
-        {
-          title: "Team Collaboration",
-          icon: faUsers,
-          description:
-            "Worked effectively in 10+ developer team environment, contributing to large-scale PHP codebase maintenance and feature development",
-        },
-        {
-          title: "Career Growth",
-          icon: faRocket,
-          description:
-            "Advanced from junior to mid-level developer, demonstrating consistent skill development and increasing responsibility",
-        },
-      ],
-      impact:
-        "Supported stable operation and feature enhancement of established gaming community serving hundreds of thousands of active users.",
-      technologies: [
-        "PHP",
-        "MySQL",
-        "nginx",
-        "Memcached",
-        "HTML",
-        "CSS",
-        "JavaScript",
-        "jQuery",
-        "AJAX",
-        "YUI Library",
-      ],
-    },
+  // Icon cache to prevent multiple imports of the same icon
+  const iconCache: { string?: object } = {};
+
+  // Dynamic icon import function with caching
+  async function getIcon(iconName: string) {
+    if (iconCache[iconName]) {
+      return iconCache[iconName];
+    }
+
+    try {
+      const icons = await import("@fortawesome/free-solid-svg-icons");
+      const icon = icons[iconName] || faRocket; // fallback to faRocket if icon not found
+      iconCache[iconName] = icon;
+      return icon;
+    } catch {
+      iconCache[iconName] = faRocket; // cache fallback icon too
+      return faRocket;
+    }
+  }
+
+  // Format date range from JSON Resume format (YYYY-MM) to readable format
+  function formatPeriod(startDate: string, endDate: string) {
+    const start = new Date(startDate + "-01");
+    const end = endDate ? new Date(endDate + "-01") : null;
+
+    const startMonth = start.toLocaleString("en-US", {
+      month: "long",
+      year: "numeric",
+    });
+    const endMonth = end
+      ? end.toLocaleString("en-US", { month: "long", year: "numeric" })
+      : "Present";
+
+    return `${startMonth} – ${endMonth}`;
+  }
+
+  // Collect all unique icons needed and pre-load them
+  const uniqueIcons = [
+    ...new Set(
+      resume.work.flatMap((job) =>
+        job.highlights?.map((highlight) => highlight.icon) || []
+      ),
+    ),
   ];
 
+  // Pre-load all unique icons
+  Promise.all(uniqueIcons.map((iconName) => getIcon(iconName)));
+
+  // Add formatted period to each job for display
+  const displayedJobs = resume.work.map((job) => ({
+    ...job,
+    period: formatPeriod(job.startDate, job.endDate),
+    achievements: job.highlights?.map((highlight) => ({
+      title: highlight.title,
+      icon: iconCache[highlight.icon] || faRocket,
+      description: highlight.description,
+    })) || [],
+    technologies: job.keywords || [],
+  }));
+
   // Filter employment history for compact size
-  $: displayedJobs = isCompact 
-    ? experiences.slice(0, 3) // Show only first 3 jobs (most recent/important)
-    : experiences;
+  $: filteredJobs = isCompact
+    ? displayedJobs.slice(0, 3) // Show only first 3 jobs (most recent/important)
+    : displayedJobs;
 </script>
 
 <ResumeSection title="Professional Experience" icon={faGlobe}>
-  {#each displayedJobs as job, index (job.company)}
+  {#each filteredJobs as job, index (job.name)}
     <EmploymentSection
-      company={job.company}
-      role={job.role}
-      industry={job.industry}
-      website={job.website}
+      name={job.name}
+      position={job.position}
+      description={job.description}
+      url={job.url}
       period={job.period}
       location={job.location}
       logo={job.logo}
-      description={job.description}
+      summary={job.summary}
       note={job.note}
-      achievements={job.achievements}
-      technologies={job.technologies}
+      highlights={job.achievements}
+      keywords={job.technologies}
       isFirst={index === 0}
       {isCompact}
     />
-    {#if index < displayedJobs.length - 1}
+    {#if index < filteredJobs.length - 1}
       <hr class="border-cloud my-12 print:hidden" />
       <div class="hidden print:block print:break-before-page"></div>
     {/if}

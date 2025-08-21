@@ -12,36 +12,36 @@
     faUser,
   } from "@fortawesome/free-solid-svg-icons";
 
-  export let company;
-  export let role;
-  export let industry;
-  export let website;
+  export let name;
+  export let position;
+  export let description;
+  export let url;
   export let period;
   export let location;
   export let logo;
-  export let description;
+  export let summary;
   export let note;
-  export let achievements;
-  export let technologies;
+  export let highlights;
+  export let keywords;
   export let isFirst: boolean;
   export let isCompact: boolean = false;
 
-  // Limit achievements in compact mode
-  $: displayedAchievements = isCompact
-    ? achievements.slice(0, 3) // Show only first 3 achievements
-    : achievements;
+  // Limit highlights in compact mode
+  $: displayedHighlights = isCompact
+    ? highlights.slice(0, 3) // Show only first 3 highlights
+    : highlights;
 
-  // Transform achievements for InfoBoxes component
-  $: achievementItems = displayedAchievements.map((achievement) => ({
-    title: achievement.title,
-    details: achievement.description,
-    icon: achievement.icon,
+  // Transform highlights for InfoBoxes component
+  $: highlightItems = displayedHighlights.map((highlight) => ({
+    title: highlight.title,
+    details: highlight.description,
+    icon: highlight.icon,
   }));
 
-  // Limit technologies in compact mode
-  $: displayedTechnologies = isCompact
-    ? technologies.slice(0, 8) // Show only first 8 technologies
-    : technologies;
+  // Limit keywords in compact mode
+  $: displayedKeywords = isCompact
+    ? keywords.slice(0, 8) // Show only first 8 keywords
+    : keywords;
 </script>
 
 <section class="break-inside-avoid {isFirst ? 'mt-12 print:mt-0' : ''}">
@@ -55,7 +55,7 @@
   <header class="mb-6 print:mb-4">
     <div class="flex items-start justify-between">
       <div class="flex-1">
-        <h3 class="text-2xl font-semibold text-ocean mb-2">{company}</h3>
+        <h3 class="text-2xl font-semibold text-ocean mb-2">{name}</h3>
 
         <div
           class="grid grid-cols-1 md:grid-cols-[max-content_1fr] print:grid-cols-[max-content_1fr] gap-4 md:gap-6 print:gap-4 text-sm"
@@ -66,7 +66,7 @@
                 icon={faUser}
                 class="mr-2 flex-shrink-0 w-3 h-3"
               />
-              <span>{role}</span>
+              <span>{position}</span>
             </div>
 
             <div class="flex items-center">
@@ -74,21 +74,21 @@
                 icon={faBuilding}
                 class="mr-2 flex-shrink-0 w-3 h-3"
               />
-              <span>{industry}</span>
+              <span>{description}</span>
             </div>
 
-            {#if website}
+            {#if url}
               <div class="flex items-center">
                 <FontAwesomeIcon
                   icon={faLink}
                   class="mr-2 flex-shrink-0 w-3 h-3"
                 />
                 <a
-                  href={website}
+                  href={url}
                   target="_blank"
                   class="text-ocean hover:text-teal"
                 >{
-                  website.replace("https://", "").replace(
+                  url.replace("https://", "").replace(
                     "www.",
                     "",
                   )
@@ -121,7 +121,7 @@
         <div class="ml-4 flex-shrink-0">
           <img
             src={logo}
-            alt="{company} Logo"
+            alt="{name} Logo"
             class="h-22 w-auto border border-aqua rounded"
           />
         </div>
@@ -130,34 +130,34 @@
   </header>
 
   <div class="space-y-4">
-    <p class="leading-relaxed print:text-sm">{description}</p>
+    <p class="leading-relaxed print:text-sm">{summary}</p>
 
     {#if note}
       <p class="text-sm italic"><strong>Note:</strong> {note}</p>
     {/if}
 
-    {#if achievementItems.length > 0}
+    {#if highlightItems.length > 0}
       <div>
         <h4 class="text-lg print:text-base font-semibold mb-3 print:mb-2">
           Key Achievements:
         </h4>
-        <InfoBoxes items={achievementItems} />
+        <InfoBoxes items={highlightItems} />
       </div>
     {/if}
 
-    {#if displayedTechnologies.length > 0}
+    {#if displayedKeywords.length > 0}
       <div>
         <h4 class="text-lg print:text-base font-semibold mb-3 print:mb-2">
           Technologies Used:
         </h4>
         <ul class="flex flex-wrap gap-2 print:gap-[5px]">
-          {#each displayedTechnologies as tech (tech)}
+          {#each displayedKeywords as tech (tech)}
             <TechTag {tech} />
           {/each}
           {#if           isCompact &&
-            technologies.length > displayedTechnologies.length}
+            keywords.length > displayedKeywords.length}
             <li class="px-2 py-1 text-sm text-slate italic">
-              +{technologies.length - displayedTechnologies.length} more
+              +{keywords.length - displayedKeywords.length} more
             </li>
           {/if}
         </ul>
