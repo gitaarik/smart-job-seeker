@@ -5,7 +5,6 @@
   import SummarySection from "./SummarySection.svelte";
   import KeyQualificationsSection from "./KeyQualificationsSection.svelte";
   import TechnicalExpertiseSection from "./TechnicalExpertiseSection.svelte";
-  import PersonalityAndMethodologies from "./PersonalityAndMethodologies.svelte";
   import ProfessionalExperience from "./ProfessionalExperience.svelte";
   import ReferencesSection from "./ReferencesSection.svelte";
   import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";

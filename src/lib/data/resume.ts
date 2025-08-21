@@ -9,8 +9,10 @@ import {
   faDollarSign,
   faEnvelope,
   faFileCode,
+  faGem,
   faGlobe,
   faHandshake,
+  faHome,
   faLaptopCode,
   faMicrochip,
   faMobile,
@@ -25,6 +27,7 @@ import {
   faUsers,
   faWrench,
 } from "@fortawesome/free-solid-svg-icons";
+
 import {
   faGitAlt,
   faNodeJs,
@@ -41,6 +44,43 @@ export const resume = {
     "url": "https://www.rikwanders.tech",
     "summary":
       "Dutch Senior Full Stack Developer residing in Spain, with 18+ years experience specializing in Python & Node.js ecosystems. Experienced in scaling complex & high-traffic applications and leading development teams.",
+    "qualifications": [
+      {
+        description:
+          "<strong>18+ years</strong> of <strong>full stack development experience</strong>.",
+        icon: faGem,
+      },
+      {
+        description:
+          "Expertise in modern <strong>Python, JavaScript & Node.js</strong> ecosystems.",
+        icon: faCode,
+      },
+      {
+        description:
+          "<strong>Team leadership</strong> and <strong>project management</strong> experience.",
+        icon: faUsers,
+      },
+      {
+        description:
+          "Additional experience in <strong>Linux, DevOps & CI/CD.</strong>",
+        icon: faServer,
+      },
+      {
+        description:
+          "Skilled in developing scalable solutions for <strong>high-traffic applications</strong>.",
+        icon: faRocket,
+      },
+      {
+        description:
+          "<strong>5+ years remote work</strong> and distributed team collaboration experience.",
+        icon: faHome,
+      },
+      {
+        description:
+          "<strong>AI-accelerated development</strong> skills, with business security in mind.",
+        icon: faRobot,
+      },
+    ],
     "location": {
       "city": "Ronda",
       "region": "Andalusia",

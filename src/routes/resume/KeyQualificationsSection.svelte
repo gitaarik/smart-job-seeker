@@ -1,58 +1,22 @@
 <script lang="ts">
   import ResumeSection from "./ResumeSection.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { 
-    faStar, 
-    faGem, 
-    faCode, 
-    faServer, 
-    faUsers, 
-    faRobot, 
-    faHome, 
-    faRocket 
-  } from "@fortawesome/free-solid-svg-icons";
-
-  const qualifications = [
-    {
-      text: "<strong>18+ years</strong> of <strong>full stack development experience</strong>.",
-      icon: faGem
-    },
-    {
-      text: "Expertise in modern <strong>Python, JavaScript & Node.js</strong> ecosystems.",
-      icon: faCode
-    },
-    {
-      text: "<strong>Team leadership</strong> and <strong>project management</strong> experience.",
-      icon: faUsers
-    },
-    {
-      text: "Additional experience in <strong>Linux, DevOps & CI/CD.</strong>",
-      icon: faServer
-    },
-    {
-      text: "Skilled in developing scalable solutions for <strong>high-traffic applications</strong>.",
-      icon: faRocket
-    },
-    {
-      text: "<strong>5+ years remote work</strong> and distributed team collaboration experience.",
-      icon: faHome
-    },
-    {
-      text: "<strong>AI-accelerated development</strong> skills, with business security in mind.",
-      icon: faRobot
-    },
-  ];
+  import { faStar } from "@fortawesome/free-solid-svg-icons";
+  import { resume } from "$lib/data/resume";
 </script>
 
 <ResumeSection title="Key Qualifications" icon={faStar}>
   <ul class="space-y-4 print:space-y-2 ml-1">
-    {#each qualifications as qualification (qualification.text)}
+    {#each resume.basics.qualifications as
+      qualification
+      (qualification.description)
+    }
       <li class="flex items-start">
-        <FontAwesomeIcon 
-          icon={qualification.icon} 
-          class="mr-3 mt-1 w-4 h-4" 
+        <FontAwesomeIcon
+          icon={qualification.icon}
+          class="mr-3 mt-1 w-4 h-4"
         />
-        <span>{@html qualification.text}</span>
+        <span>{@html qualification.description}</span>
       </li>
     {/each}
   </ul>
