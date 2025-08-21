@@ -594,12 +594,12 @@ export const resume = {
   ],
   languages: [
     {
-      language: "Dutch",
-      fluency: "Native",
-    },
-    {
       language: "English",
       fluency: "Fluent",
+    },
+    {
+      language: "Dutch",
+      fluency: "Native",
     },
   ],
   references: [
@@ -617,58 +617,5 @@ export const resume = {
     },
   ],
   referencesDescription: "Contact details available upon request.",
-  projects: [
-    {
-      name: "Chipta Ticketing Platform",
-      description:
-        "Scaled a ticketing platform from concept to processing thousands of tickets per minute",
-      highlights: [
-        "Led team of 3-5 developers using agile methodologies",
-        "Achieved 40-60% speed improvements through optimization",
-        "Built extensive testing suite with +80% coverage",
-        "Integrated multiple payment providers (Mollie, Pay.nl, PayPal)",
-        "Enabled international market expansion",
-      ],
-      technologies: [
-        "Python",
-        "Django",
-        "React",
-        "MySQL",
-        "Redis",
-        "Nginx",
-      ],
-      startDate: "2014-09",
-      endDate: "2024-06",
-      url: "https://www.chipta.com/",
-      roles: [
-        "Lead Developer",
-      ],
-      entity: "Chipta",
-      type: "application",
-    },
-    {
-      name: "Tender Discovery Platform",
-      description: "Built comprehensive tender discovery platform from scratch",
-      highlights: [
-        "Designed and developed entire platform from concept to production",
-        "Implemented Elasticsearch search engine",
-        "Created automated web crawling system",
-        "Built subscription-based authentication with recurring payments",
-      ],
-      technologies: [
-        "Python",
-        "Django",
-        "Elasticsearch",
-        "Vue.js",
-        "MySQL",
-      ],
-      startDate: "2015-03",
-      endDate: "2022-06",
-      roles: [
-        "Lead Developer",
-      ],
-      entity: "Tender-it",
-      type: "application",
-    },
-  ],
+  projects: [],
 };
