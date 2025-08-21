@@ -2,14 +2,15 @@
 
 ## Upcoming
 
-- Add GraphQL to "Exploring"
 - Check Resume with AI resume parser:
   - https://duckduckgo.com/?t=ffab&q=ai%20resume%20parser&ia=web
+- Make Resume ATS-friendly
 - Fix mobile view
   - Fix "Profile" section list on small screen
 
 ## Done
 
+- Add GraphQL to "Exploring"
 - Add "REST API Development" to "Expert Knowledge"
 - Make icons at "Key Achievements" bigger, vertically center on text
 - Fix weird switch for Impact
