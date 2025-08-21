@@ -90,7 +90,10 @@ async function exportResumeToPDF() {
 
       const outputPath = path.join(versionDir, "Resume Rik Wanders.pdf");
 
-    const footerTemplate = `
+      // Configure different settings for ATS vs Visual resume
+      const isATS = version.route === "resume-text";
+      
+      const footerTemplate = `
         <div style="
           display: flex;
           justify-content: end;
@@ -122,18 +125,25 @@ async function exportResumeToPDF() {
         </div>
       `;
 
-    const options = {
-      displayHeaderFooter: true,
-      headerTemplate: `<div style="display: none;"></div>`,
-      footerTemplate,
-    };
+      const options = isATS ? {
+        displayHeaderFooter: false,
+      } : {
+        displayHeaderFooter: true,
+        headerTemplate: `<div style="display: none;"></div>`,
+        footerTemplate,
+      };
 
       // Generate PDF
       console.log("📝 Generating PDF...");
       await page.pdf({
         path: outputPath,
         format: "A4",
-        margin: {
+        margin: isATS ? {
+          top: "1in",
+          right: "1in",
+          bottom: "1in",
+          left: "1in",
+        } : {
           top: "0px",
           right: "0px",
           bottom: "0px",
