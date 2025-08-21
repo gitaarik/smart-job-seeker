@@ -262,11 +262,13 @@
   "references": [
     {
       "name": "Michaël de Groot - Founder of Chipta",
-      "reference": "Rik modernized our client-facing interfaces and implemented optimizations that delivered substantial performance improvements. His work enabled us to process thousands of tickets rapidly during our busiest periods."
+      "reference": "Rik modernized our client-facing interfaces and implemented optimizations that delivered substantial performance improvements. His work enabled us to process thousands of tickets rapidly during our busiest periods.",
+      "logo": "/src/lib/images/company-logos/chipta-logo.png"
     },
     {
       "name": "Elmar Krack - Co-founder of Tender-it", 
-      "reference": "Rik demonstrated exceptional technical leadership by designing and developing our entire platform from the ground up, handling both backend and frontend development with impressive skill."
+      "reference": "Rik demonstrated exceptional technical leadership by designing and developing our entire platform from the ground up, handling both backend and frontend development with impressive skill.",
+      "logo": "/src/lib/images/company-logos/tender-it-logo.png"
     }
   ],
   "projects": [
