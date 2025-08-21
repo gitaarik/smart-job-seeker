@@ -1,7 +1,7 @@
 <script lang="ts">
   import ResumeSection from "./ResumeSection.svelte";
   import { faComments } from "@fortawesome/free-solid-svg-icons";
-  import resume from "$lib/data/resume.json";
+  import { resume } from "$lib/data/resume";
 </script>
 
 <ResumeSection title="References" icon={faComments}>

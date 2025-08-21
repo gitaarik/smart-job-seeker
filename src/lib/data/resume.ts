@@ -1,4 +1,28 @@
-{
+import {
+  faUsers,
+  faChartLine,
+  faShieldAlt,
+  faDollarSign,
+  faMicrochip,
+  faGlobe,
+  faWrench,
+  faSearch,
+  faLaptopCode,
+  faCrown,
+  faPaintBrush,
+  faMobile,
+  faPlug,
+  faEnvelope,
+  faHandshake,
+  faBullseye,
+  faFileCode,
+  faCog,
+  faDatabase,
+  faRocket,
+} from "@fortawesome/free-solid-svg-icons";
+
+export const resume = {
+  "$schema": "https://raw.githubusercontent.com/jsonresume/resume-schema/v1.0.0/schema.json",
   "basics": {
     "name": "Rik Wanders",
     "label": "Senior Full Stack Developer",
@@ -35,36 +59,36 @@
       "highlights": [
         {
           "title": "Team Leadership",
-          "icon": "faUsers",
+          "icon": faUsers,
           "description": "Built and managed diverse development teams of 3-5 developers, using agile methodologies that optimized efficiency and delivery speed"
         },
         {
           "title": "Platform Scalability",
-          "icon": "faChartLine",
+          "icon": faChartLine,
           "description": "Architected and optimized systems to handle extreme traffic spikes, delivering 40-60% speed improvements through strategic query optimization, caching, and infrastructure scaling"
         },
         {
           "title": "System Reliability",
-          "icon": "faShieldAlt",
+          "icon": faShieldAlt,
           "description": "Created extensive testing suite (+80% coverage) and CI/CD system, radically improving deployment reliability & speed and enabling regular releases"
         },
         {
           "title": "Payment Integration",
-          "icon": "faDollarSign",
+          "icon": faDollarSign,
           "description": "Implemented and maintained payment service provider integrations with multiple providers (Mollie, Pay.nl, PayPal), ensuring reliable transaction processing for the platform"
         },
         {
           "title": "Technical Innovation",
-          "icon": "faMicrochip",
+          "icon": faMicrochip,
           "description": "Developed custom authentication, mailing, and localization systems, supporting custom needs and backward compatibility"
         },
         {
           "title": "Market Expansion",
-          "icon": "faGlobe",
+          "icon": faGlobe,
           "description": "Created multi-language & country platform capabilities that enabled international market expansion and supported global event organizers"
         }
       ],
-      "technologies": [
+      "keywords": [
         "Python",
         "Django",
         "Django REST Framework",
@@ -99,41 +123,40 @@
       "startDate": "2015-03",
       "endDate": "2022-06",
       "summary": "Built a comprehensive tender discovery platform from scratch, enabling companies to efficiently find and track public procurement opportunities. Transformed a startup idea into a complete, extensible tender platform with an intuitive interface and solid administrative tools. This was a part-time engagement combined with my main focus on Chipta.",
-      "note": "This was a part-time engagement that I combined with my main focus on Chipta.",
       "logo": "/src/lib/images/company-logos/tender-it-logo.png",
       "highlights": [
         {
           "title": "Product Development",
-          "icon": "faWrench",
+          "icon": faWrench,
           "description": "Designed and developed entire platform (backend and frontend) from concept to production"
         },
         {
           "title": "Search Innovation",
-          "icon": "faSearch",
+          "icon": faSearch,
           "description": "Implemented an extensive search engine using Elasticsearch, making it easy and time effective for users to find suitable tenders"
         },
         {
           "title": "Data Automation",
-          "icon": "faLaptopCode",
+          "icon": faLaptopCode,
           "description": "Created automated web crawling system that index thousands of public tenders daily, providing comprehensive market coverage"
         },
         {
           "title": "Revenue Model",
-          "icon": "faDollarSign",
+          "icon": faDollarSign,
           "description": "Built subscription-based authentication with recurring payments that supports sustainable business model and user growth"
         },
         {
           "title": "User Experience",
-          "icon": "faCrown",
+          "icon": faCrown,
           "description": "Delivered intuitive 'saved searches' interface and email notification system that supported user engagement and retention"
         },
         {
           "title": "Frontend Optimization",
-          "icon": "faPaintBrush",
+          "icon": faPaintBrush,
           "description": "Successfully collaborated with frontend developer to optimize frontend experience using Vue.js"
         }
       ],
-      "technologies": [
+      "keywords": [
         "Python",
         "Django",
         "Django REST Framework",
@@ -163,26 +186,26 @@
       "highlights": [
         {
           "title": "Mobile Development",
-          "icon": "faMobile",
+          "icon": faMobile,
           "description": "Built and maintained iOS application as part of mobile team, supporting mobile bookings during a period of rapid company growth"
         },
         {
           "title": "API Architecture",
-          "icon": "faPlug",
+          "icon": faPlug,
           "description": "Designed and implemented robust REST API using Django REST Framework, that accommodated iOS & Android apps and mobile website"
         },
         {
           "title": "Cross-Platform Integration",
-          "icon": "faLaptopCode",
+          "icon": faLaptopCode,
           "description": "Ensured consistent user experience across multiple mobile platforms and web interfaces"
         },
         {
           "title": "Email Marketing Platform",
-          "icon": "faEnvelope",
+          "icon": faEnvelope,
           "description": "Worked on comprehensive email marketing system that supported customer acquisition and retention campaigns"
         }
       ],
-      "technologies": [
+      "keywords": [
         "Objective-C",
         "Xcode",
         "Python",
@@ -215,26 +238,26 @@
       "highlights": [
         {
           "title": "Client Success",
-          "icon": "faHandshake",
+          "icon": faHandshake,
           "description": "Successfully delivered web projects for major clients including Bol.com, EP, Gemeente Amsterdam, and Gemeente Haarlemmermeer"
         },
         {
           "title": "Agile Workflow",
-          "icon": "faBullseye",
+          "icon": faBullseye,
           "description": "Contributed to Scrum team that consistently met client deadlines and budget requirements"
         },
         {
           "title": "Frontend Skills",
-          "icon": "faFileCode",
+          "icon": faFileCode,
           "description": "Developed advanced jQuery and UX skills that improved user engagement metrics across client projects"
         },
         {
           "title": "Custom CMS Expertise",
-          "icon": "faCog",
+          "icon": faCog,
           "description": "Mastered in-house built CMS system, enabling rapid development and client customization capabilities"
         }
       ],
-      "technologies": [
+      "keywords": [
         "PHP",
         "MySQL",
         "Apache",
@@ -265,31 +288,31 @@
       "highlights": [
         {
           "title": "Payment Systems",
-          "icon": "faDollarSign",
+          "icon": faDollarSign,
           "description": "Successfully implemented multiple payment integrations that supported platform monetization and user transactions"
         },
         {
           "title": "International Expansion",
-          "icon": "faGlobe",
+          "icon": faGlobe,
           "description": "Contributed to internationalization and localization system that enabled platform expansion in other countries"
         },
         {
           "title": "Database Design",
-          "icon": "faDatabase",
+          "icon": faDatabase,
           "description": "Designed and optimized MySQL database structures that improved query performance and system reliability"
         },
         {
           "title": "Team Collaboration",
-          "icon": "faUsers",
+          "icon": faUsers,
           "description": "Worked effectively in 10+ developer team environment, contributing to large-scale PHP codebase maintenance and feature development"
         },
         {
           "title": "Career Growth",
-          "icon": "faRocket",
+          "icon": faRocket,
           "description": "Advanced from junior to mid-level developer, demonstrating consistent skill development and increasing responsibility"
         }
       ],
-      "technologies": [
+      "keywords": [
         "PHP",
         "MySQL",
         "nginx",
@@ -466,5 +489,62 @@
       "logo": "/src/lib/images/company-logos/tender-it-logo.png"
     }
   ],
-  "projects": []
-}
+  "projects": [
+    {
+      "name": "Chipta Ticketing Platform",
+      "description": "Scaled a ticketing platform from concept to processing thousands of tickets per minute",
+      "highlights": [
+        "Led team of 3-5 developers using agile methodologies",
+        "Achieved 40-60% speed improvements through optimization",
+        "Built extensive testing suite with +80% coverage",
+        "Integrated multiple payment providers (Mollie, Pay.nl, PayPal)",
+        "Enabled international market expansion"
+      ],
+      "keywords": [
+        "Python",
+        "Django",
+        "React",
+        "MySQL",
+        "Redis",
+        "Nginx"
+      ],
+      "startDate": "2014-09",
+      "endDate": "2024-06",
+      "url": "https://www.chipta.com/",
+      "roles": [
+        "Lead Developer"
+      ],
+      "entity": "Chipta",
+      "type": "application"
+    },
+    {
+      "name": "Tender Discovery Platform",
+      "description": "Built comprehensive tender discovery platform from scratch",
+      "highlights": [
+        "Designed and developed entire platform from concept to production",
+        "Implemented Elasticsearch search engine",
+        "Created automated web crawling system",
+        "Built subscription-based authentication with recurring payments"
+      ],
+      "keywords": [
+        "Python",
+        "Django",
+        "Elasticsearch",
+        "Vue.js",
+        "MySQL"
+      ],
+      "startDate": "2015-03",
+      "endDate": "2022-06",
+      "roles": [
+        "Lead Developer"
+      ],
+      "entity": "Tender-it",
+      "type": "application"
+    }
+  ],
+  "meta": {
+    "canonical": "https://www.rikwanders.tech/resume",
+    "version": "v1.0.0",
+    "lastModified": "2025-08-21T00:00:00.000Z"
+  }
+};

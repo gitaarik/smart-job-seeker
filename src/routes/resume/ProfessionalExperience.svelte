@@ -1,29 +1,9 @@
 <script lang="ts">
   import ResumeSection from "./ResumeSection.svelte";
   import EmploymentSection from "./EmploymentSection.svelte";
-  import resume from "$lib/data/resume.json";
+  import { resume } from "$lib/data/resume";
 
-  import { faGlobe, faRocket } from "@fortawesome/free-solid-svg-icons";
-
-  // Icon cache to prevent multiple imports of the same icon
-  const iconCache: { string?: object } = {};
-
-  // Dynamic icon import function with caching
-  async function getIcon(iconName: string) {
-    if (iconCache[iconName]) {
-      return iconCache[iconName];
-    }
-
-    try {
-      const icons = await import("@fortawesome/free-solid-svg-icons");
-      const icon = icons[iconName] || faRocket; // fallback to faRocket if icon not found
-      iconCache[iconName] = icon;
-      return icon;
-    } catch {
-      iconCache[iconName] = faRocket; // cache fallback icon too
-      return faRocket;
-    }
-  }
+  import { faGlobe } from "@fortawesome/free-solid-svg-icons";
 
   // Format date range from JSON Resume format (YYYY-MM) to readable format
   function formatPeriod(startDate: string, endDate: string) {
@@ -40,18 +20,6 @@
 
     return `${startMonth} – ${endMonth}`;
   }
-
-  // Collect all unique icons needed and pre-load them
-  const uniqueIcons = [
-    ...new Set(
-      resume.work.flatMap((job) =>
-        job.highlights?.map((highlight) => highlight.icon) || []
-      ),
-    ),
-  ];
-
-  // Pre-load all unique icons
-  Promise.all(uniqueIcons.map((iconName) => getIcon(iconName)));
 </script>
 
 <ResumeSection title="Professional Experience" icon={faGlobe}>

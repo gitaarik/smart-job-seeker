@@ -1,6 +1,6 @@
 <script lang="ts">
   import Logo from "$lib/components/Logo.svelte";
-  import resume from "$lib/data/resume.json";
+  import { resume } from "$lib/data/resume";
 </script>
 
 <header class="flex flex-col items-center">
