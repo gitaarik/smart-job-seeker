@@ -51,7 +51,7 @@
     {resume.basics.summary}
   </p>
 
-  <p>
-    {getLookingForText()}
-  </p>
+  <!-- <p> -->
+  <!--   {getLookingForText()} -->
+  <!-- </p> -->
 </ResumeSection>
