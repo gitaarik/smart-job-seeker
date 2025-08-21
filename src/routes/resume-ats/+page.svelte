@@ -68,6 +68,16 @@
           class="underline text-blue-600"
         >{resume.basics.url}</a>
       </p>
+
+      <!-- Languages -->
+      <p>
+        Languages:
+        {#each resume.languages as language, index (index)}
+          {#if index > 0},{/if}
+          {language.language}: {language.fluency}
+        {/each}
+      </p>
+
       <p>Location: {resume.basics.location.address}</p>
       {#each resume.basics.profiles as profile (profile)}
         <p>
@@ -153,16 +163,6 @@
           </div>
         {/if}
       </div>
-    {/each}
-  </div>
-
-  <!-- Languages -->
-  <div class="mb-6">
-    <h2 class="text-sm font-bold mb-3 border-b-2 border-black uppercase">
-      Languages
-    </h2>
-    {#each resume.languages as language, index (index)}
-      <p>{language.language}: {language.fluency}</p>
     {/each}
   </div>
 
