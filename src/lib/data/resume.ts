@@ -35,16 +35,16 @@ import {
 } from "@fortawesome/free-brands-svg-icons";
 
 export const resume = {
-  "basics": {
-    "name": "Rik Wanders",
-    "label": "Senior Full Stack Developer",
-    "image": "/src/lib/images/profile-photo.jpeg",
-    "email": "rik@rikwanders.tech",
-    "phone": "+31 649118511",
-    "url": "https://www.rikwanders.tech",
-    "summary":
+  basics: {
+    name: "Rik Wanders",
+    label: "Senior Full Stack Developer",
+    image: "/src/lib/images/profile-photo.jpeg",
+    email: "rik@rikwanders.tech",
+    phone: "+31 649118511",
+    url: "https://www.rikwanders.tech",
+    summary:
       "Dutch Senior Full Stack Developer residing in Spain, with 18+ years experience specializing in Python & Node.js ecosystems. Experienced in scaling complex & high-traffic applications and leading development teams.",
-    "qualifications": [
+    qualifications: [
       {
         description:
           "<strong>18+ years</strong> of <strong>full stack development experience</strong>.",
@@ -81,71 +81,71 @@ export const resume = {
         icon: faRobot,
       },
     ],
-    "location": {
-      "city": "Ronda",
-      "region": "Andalusia",
-      "countryCode": "ES",
-      "address": "Ronda, Spain",
+    location: {
+      city: "Ronda",
+      region: "Andalusia",
+      countryCode: "ES",
+      address: "Ronda, Spain",
     },
-    "profiles": [
+    profiles: [
       {
-        "network": "LinkedIn",
-        "username": "rik-wanders-software",
-        "url": "https://www.linkedin.com/in/rik-wanders-software/",
+        network: "LinkedIn",
+        username: "rik-wanders-software",
+        url: "https://www.linkedin.com/in/rik-wanders-software/",
       },
     ],
   },
-  "work": [
+  work: [
     {
-      "name": "Chipta",
-      "location": "Amsterdam, The Netherlands",
-      "description": "Ticketing Service",
-      "position": "Lead Developer",
-      "url": "https://www.chipta.com/",
-      "startDate": "2014-09",
-      "endDate": "2024-06",
-      "summary":
+      name: "Chipta",
+      location: "Amsterdam, The Netherlands",
+      description: "Ticketing Service",
+      position: "Lead Developer",
+      url: "https://www.chipta.com/",
+      startDate: "2014-09",
+      endDate: "2024-06",
+      summary:
         "Joined this innovative ticketing startup as Lead Developer, scaling the platform from concept to processing thousands of tickets per minute during peak events. Successfully led technical development through 10 years of growth, transforming a proof of concept into a robust, scalable ticketing platform serving thousands of events and processing high-volume traffic reliably.",
-      "logo": "/src/lib/images/company-logos/chipta-logo.png",
-      "highlights": [
+      logo: "/src/lib/images/company-logos/chipta-logo.png",
+      highlights: [
         {
-          "title": "Team Leadership",
-          "icon": faUsers,
-          "description":
+          title: "Team Leadership",
+          icon: faUsers,
+          description:
             "Built and managed diverse development teams of 3-5 developers, using agile methodologies that optimized efficiency and delivery speed",
         },
         {
-          "title": "Platform Scalability",
-          "icon": faChartLine,
-          "description":
+          title: "Platform Scalability",
+          icon: faChartLine,
+          description:
             "Architected and optimized systems to handle extreme traffic spikes, delivering 40-60% speed improvements through strategic query optimization, caching, and infrastructure scaling",
         },
         {
-          "title": "System Reliability",
-          "icon": faShieldAlt,
-          "description":
+          title: "System Reliability",
+          icon: faShieldAlt,
+          description:
             "Created extensive testing suite (+80% coverage) and CI/CD system, radically improving deployment reliability & speed and enabling regular releases",
         },
         {
-          "title": "Payment Integration",
-          "icon": faDollarSign,
-          "description":
+          title: "Payment Integration",
+          icon: faDollarSign,
+          description:
             "Implemented and maintained payment service provider integrations with multiple providers (Mollie, Pay.nl, PayPal), ensuring reliable transaction processing for the platform",
         },
         {
-          "title": "Technical Innovation",
-          "icon": faMicrochip,
-          "description":
+          title: "Technical Innovation",
+          icon: faMicrochip,
+          description:
             "Developed custom authentication, mailing, and localization systems, supporting custom needs and backward compatibility",
         },
         {
-          "title": "Market Expansion",
-          "icon": faGlobe,
-          "description":
+          title: "Market Expansion",
+          icon: faGlobe,
+          description:
             "Created multi-language & country platform capabilities that enabled international market expansion and supported global event organizers",
         },
       ],
-      "technologies": [
+      technologies: [
         "Python",
         "Django",
         "Django REST Framework",
@@ -173,54 +173,54 @@ export const resume = {
       ],
     },
     {
-      "name": "Tender-it",
-      "location": "Amsterdam, The Netherlands",
-      "description": "Tender Discovery Platform",
-      "position": "Lead Developer",
-      "startDate": "2015-03",
-      "endDate": "2022-06",
-      "summary":
+      name: "Tender-it",
+      location: "Amsterdam, The Netherlands",
+      description: "Tender Discovery Platform",
+      position: "Lead Developer",
+      startDate: "2015-03",
+      endDate: "2022-06",
+      summary:
         "Built a comprehensive tender discovery platform from scratch, enabling companies to efficiently find and track public procurement opportunities. Transformed a startup idea into a complete, extensible tender platform with an intuitive interface and solid administrative tools. This was a part-time engagement combined with my main focus on Chipta.",
-      "logo": "/src/lib/images/company-logos/tender-it-logo.png",
-      "highlights": [
+      logo: "/src/lib/images/company-logos/tender-it-logo.png",
+      highlights: [
         {
-          "title": "Product Development",
-          "icon": faWrench,
-          "description":
+          title: "Product Development",
+          icon: faWrench,
+          description:
             "Designed and developed entire platform (backend and frontend) from concept to production",
         },
         {
-          "title": "Search Innovation",
-          "icon": faSearch,
-          "description":
+          title: "Search Innovation",
+          icon: faSearch,
+          description:
             "Implemented an extensive search engine using Elasticsearch, making it easy and time effective for users to find suitable tenders",
         },
         {
-          "title": "Data Automation",
-          "icon": faLaptopCode,
-          "description":
+          title: "Data Automation",
+          icon: faLaptopCode,
+          description:
             "Created automated web crawling system that index thousands of public tenders daily, providing comprehensive market coverage",
         },
         {
-          "title": "Revenue Model",
-          "icon": faDollarSign,
-          "description":
+          title: "Revenue Model",
+          icon: faDollarSign,
+          description:
             "Built subscription-based authentication with recurring payments that supports sustainable business model and user growth",
         },
         {
-          "title": "User Experience",
-          "icon": faCrown,
-          "description":
+          title: "User Experience",
+          icon: faCrown,
+          description:
             "Delivered intuitive 'saved searches' interface and email notification system that supported user engagement and retention",
         },
         {
-          "title": "Frontend Optimization",
-          "icon": faPaintBrush,
-          "description":
+          title: "Frontend Optimization",
+          icon: faPaintBrush,
+          description:
             "Successfully collaborated with frontend developer to optimize frontend experience using Vue.js",
         },
       ],
-      "technologies": [
+      technologies: [
         "Python",
         "Django",
         "Django REST Framework",
@@ -238,43 +238,43 @@ export const resume = {
       ],
     },
     {
-      "name": "TravelBird",
-      "location": "Amsterdam, The Netherlands",
-      "description": "Online Travel Agent",
-      "position": "Senior Full Stack & iOS Developer",
-      "url": "https://www.travelbird.com/",
-      "startDate": "2013-03",
-      "endDate": "2014-08",
-      "summary":
+      name: "TravelBird",
+      location: "Amsterdam, The Netherlands",
+      description: "Online Travel Agent",
+      position: "Senior Full Stack & iOS Developer",
+      url: "https://www.travelbird.com/",
+      startDate: "2013-03",
+      endDate: "2014-08",
+      summary:
         "Joined during rapid growth phase (50 to 250+ employees) and contributed to scaling mobile presence during the company's expansion across European markets. Successfully delivered mobile apps and mobile website as part of an agile team during a critical period when mobile app presence was becoming essential for travel industry competitiveness.",
-      "logo": "/src/lib/images/company-logos/travelbird-logo.png",
-      "highlights": [
+      logo: "/src/lib/images/company-logos/travelbird-logo.png",
+      highlights: [
         {
-          "title": "Mobile Development",
-          "icon": faMobile,
-          "description":
+          title: "Mobile Development",
+          icon: faMobile,
+          description:
             "Built and maintained iOS application as part of mobile team, supporting mobile bookings during a period of rapid company growth",
         },
         {
-          "title": "API Architecture",
-          "icon": faPlug,
-          "description":
+          title: "API Architecture",
+          icon: faPlug,
+          description:
             "Designed and implemented robust REST API using Django REST Framework, that accommodated iOS & Android apps and mobile website",
         },
         {
-          "title": "Cross-Platform Integration",
-          "icon": faLaptopCode,
-          "description":
+          title: "Cross-Platform Integration",
+          icon: faLaptopCode,
+          description:
             "Ensured consistent user experience across multiple mobile platforms and web interfaces",
         },
         {
-          "title": "Email Marketing Platform",
-          "icon": faEnvelope,
-          "description":
+          title: "Email Marketing Platform",
+          icon: faEnvelope,
+          description:
             "Worked on comprehensive email marketing system that supported customer acquisition and retention campaigns",
         },
       ],
-      "technologies": [
+      technologies: [
         "Objective-C",
         "Xcode",
         "Python",
@@ -295,43 +295,43 @@ export const resume = {
       ],
     },
     {
-      "name": "SWIS",
-      "location": "Leiden, The Netherlands",
-      "description": "Web Development Agency",
-      "position": "Mid-level Web Developer",
-      "url": "https://www.swis.nl/",
-      "startDate": "2011-08",
-      "endDate": "2013-02",
-      "summary":
+      name: "SWIS",
+      location: "Leiden, The Netherlands",
+      description: "Web Development Agency",
+      position: "Mid-level Web Developer",
+      url: "https://www.swis.nl/",
+      startDate: "2011-08",
+      endDate: "2013-02",
+      summary:
         "Delivered web solutions for high-profile clients including major e-commerce and government organizations, working as part of a dedicated Scrum team in a fast-paced agency environment. Delivered high-quality web solutions that met diverse client needs while maintaining agency's reputation for quality and reliability.",
-      "logo": "/src/lib/images/company-logos/swis-logo.png",
-      "highlights": [
+      logo: "/src/lib/images/company-logos/swis-logo.png",
+      highlights: [
         {
-          "title": "Client Success",
-          "icon": faHandshake,
-          "description":
+          title: "Client Success",
+          icon: faHandshake,
+          description:
             "Successfully delivered web projects for major clients including Bol.com, EP, Gemeente Amsterdam, and Gemeente Haarlemmermeer",
         },
         {
-          "title": "Agile Workflow",
-          "icon": faBullseye,
-          "description":
+          title: "Agile Workflow",
+          icon: faBullseye,
+          description:
             "Contributed to Scrum team that consistently met client deadlines and budget requirements",
         },
         {
-          "title": "Frontend Skills",
-          "icon": faFileCode,
-          "description":
+          title: "Frontend Skills",
+          icon: faFileCode,
+          description:
             "Developed advanced jQuery and UX skills that improved user engagement metrics across client projects",
         },
         {
-          "title": "Custom CMS Expertise",
-          "icon": faCog,
-          "description":
+          title: "Custom CMS Expertise",
+          icon: faCog,
+          description:
             "Mastered in-house built CMS system, enabling rapid development and client customization capabilities",
         },
       ],
-      "technologies": [
+      technologies: [
         "PHP",
         "MySQL",
         "Apache",
@@ -350,49 +350,49 @@ export const resume = {
       ],
     },
     {
-      "name": "Gamepoint",
-      "location": "The Hague, The Netherlands",
-      "description": "Casual Gaming / Community",
-      "position": "Junior / Mid-level Web Developer",
-      "url": "https://www.gamepoint.biz/",
-      "startDate": "2007-06",
-      "endDate": "2011-06",
-      "summary":
+      name: "Gamepoint",
+      location: "The Hague, The Netherlands",
+      description: "Casual Gaming / Community",
+      position: "Junior / Mid-level Web Developer",
+      url: "https://www.gamepoint.biz/",
+      startDate: "2007-06",
+      endDate: "2011-06",
+      summary:
         "Started career at established gaming community platform, progressing from junior to mid-level developer while contributing to platform stability and feature development. Supported stable operation and feature enhancement of established gaming community serving hundreds of thousands of active users.",
-      "logo": "/src/lib/images/company-logos/gamepoint-logo.png",
-      "highlights": [
+      logo: "/src/lib/images/company-logos/gamepoint-logo.png",
+      highlights: [
         {
-          "title": "Payment Systems",
-          "icon": faDollarSign,
-          "description":
+          title: "Payment Systems",
+          icon: faDollarSign,
+          description:
             "Successfully implemented multiple payment integrations that supported platform monetization and user transactions",
         },
         {
-          "title": "International Expansion",
-          "icon": faGlobe,
-          "description":
+          title: "International Expansion",
+          icon: faGlobe,
+          description:
             "Contributed to internationalization and localization system that enabled platform expansion in other countries",
         },
         {
-          "title": "Database Design",
-          "icon": faDatabase,
-          "description":
+          title: "Database Design",
+          icon: faDatabase,
+          description:
             "Designed and optimized MySQL database structures that improved query performance and system reliability",
         },
         {
-          "title": "Team Collaboration",
-          "icon": faUsers,
-          "description":
+          title: "Team Collaboration",
+          icon: faUsers,
+          description:
             "Worked effectively in 10+ developer team environment, contributing to large-scale PHP codebase maintenance and feature development",
         },
         {
-          "title": "Career Growth",
-          "icon": faRocket,
-          "description":
+          title: "Career Growth",
+          icon: faRocket,
+          description:
             "Advanced from junior to mid-level developer, demonstrating consistent skill development and increasing responsibility",
         },
       ],
-      "technologies": [
+      technologies: [
         "PHP",
         "MySQL",
         "nginx",
@@ -406,12 +406,12 @@ export const resume = {
       ],
     },
   ],
-  "skills": [
+  skills: [
     {
-      "name": "Python",
-      "level": "expert",
-      "icon": faPython,
-      "keywords": [
+      name: "Python",
+      level: "expert",
+      icon: faPython,
+      keywords: [
         "Django",
         "REST Framework",
         "Celery",
@@ -425,10 +425,10 @@ export const resume = {
       ],
     },
     {
-      "name": "JavaScript / Node.js",
-      "level": "expert",
-      "icon": faNodeJs,
-      "keywords": [
+      name: "JavaScript / Node.js",
+      level: "expert",
+      icon: faNodeJs,
+      keywords: [
         "React",
         "Svelte",
         "SvelteKit",
@@ -440,10 +440,10 @@ export const resume = {
       ],
     },
     {
-      "name": "SQL Databases",
-      "level": "expert",
-      "icon": faDatabase,
-      "keywords": [
+      name: "SQL Databases",
+      level: "expert",
+      icon: faDatabase,
+      keywords: [
         "PostgreSQL",
         "MySQL",
         "MariaDB",
@@ -454,10 +454,10 @@ export const resume = {
       ],
     },
     {
-      "name": "Frontend Tools",
-      "level": "expert",
-      "icon": faGlobe,
-      "keywords": [
+      name: "Frontend Tools",
+      level: "expert",
+      icon: faGlobe,
+      keywords: [
         "Webpack",
         "Vite",
         "ESLint",
@@ -467,10 +467,10 @@ export const resume = {
       ],
     },
     {
-      "name": "Git (GitHub, GitLab)",
-      "level": "expert",
-      "icon": faGitAlt,
-      "keywords": [
+      name: "Git (GitHub, GitLab)",
+      level: "expert",
+      icon: faGitAlt,
+      keywords: [
         "GitHub",
         "GitLab",
         "advanced workflows",
@@ -478,58 +478,58 @@ export const resume = {
       ],
     },
     {
-      "name": "AI / LLM development tools",
-      "level": "expert",
-      "icon": faRobot,
-      "keywords": [
+      name: "AI / LLM development tools",
+      level: "expert",
+      icon: faRobot,
+      keywords: [
         "Claude Code",
         "Cursor",
       ],
     },
     {
-      "name": "DevOps",
-      "level": "working",
-      "icon": faServer,
-      "keywords": [
+      name: "DevOps",
+      level: "working",
+      icon: faServer,
+      keywords: [
         "CI/CD",
         "Docker (Compose)",
         "Ansible",
       ],
     },
     {
-      "name": "Cloud Platforms",
-      "level": "working",
-      "icon": faCloud,
-      "keywords": [
+      name: "Cloud Platforms",
+      level: "working",
+      icon: faCloud,
+      keywords: [
         "Vercel",
         "Linode",
       ],
     },
     {
-      "name": "JavaScript / Node.js",
-      "level": "working",
-      "icon": faNodeJs,
-      "keywords": [
+      name: "JavaScript / Node.js",
+      level: "working",
+      icon: faNodeJs,
+      keywords: [
         "TypeScript",
         "React Native",
         "Vue.js",
       ],
     },
     {
-      "name": "NoSQL Databases",
-      "level": "working",
-      "icon": faDatabase,
-      "keywords": [
+      name: "NoSQL Databases",
+      level: "working",
+      icon: faDatabase,
+      keywords: [
         "Elasticsearch",
         "Redis",
         "MongoDB",
       ],
     },
     {
-      "name": "Serving, Caching & Load Balancing",
-      "level": "working",
-      "icon": faNetworkWired,
-      "keywords": [
+      name: "Serving, Caching & Load Balancing",
+      level: "working",
+      icon: faNetworkWired,
+      keywords: [
         "Nginx",
         "Varnish",
         "Memcached",
@@ -537,10 +537,10 @@ export const resume = {
       ],
     },
     {
-      "name": "Additional Languages",
-      "level": "working",
-      "icon": faCode,
-      "keywords": [
+      name: "Additional Languages",
+      level: "working",
+      icon: faCode,
+      keywords: [
         "Lua",
         "C",
         "Objective-C",
@@ -548,10 +548,10 @@ export const resume = {
       ],
     },
     {
-      "name": "Python",
-      "level": "exploring",
-      "icon": faPython,
-      "keywords": [
+      name: "Python",
+      level: "exploring",
+      icon: faPython,
+      keywords: [
         "FastAPI",
         "pandas",
         "scikit-learn",
@@ -559,10 +559,10 @@ export const resume = {
       ],
     },
     {
-      "name": "JavaScript / Node.js",
-      "level": "exploring",
-      "icon": faNodeJs,
-      "keywords": [
+      name: "JavaScript / Node.js",
+      level: "exploring",
+      icon: faNodeJs,
+      keywords: [
         "Next.js",
         "NestJS",
         "Zustand",
@@ -572,63 +572,63 @@ export const resume = {
       ],
     },
     {
-      "name": "DevOps",
-      "level": "exploring",
-      "icon": faServer,
-      "keywords": [
+      name: "DevOps",
+      level: "exploring",
+      icon: faServer,
+      keywords: [
         "Terraform",
         "GitHub Actions",
         "Kubernetes",
       ],
     },
     {
-      "name": "Cloud Platforms",
-      "level": "exploring",
-      "icon": faCloud,
-      "keywords": [
+      name: "Cloud Platforms",
+      level: "exploring",
+      icon: faCloud,
+      keywords: [
         "AWS",
         "Azure",
         "GCP",
       ],
     },
   ],
-  "languages": [
+  languages: [
     {
-      "language": "Dutch",
-      "fluency": "Native",
+      language: "Dutch",
+      fluency: "Native",
     },
     {
-      "language": "English",
-      "fluency": "Fluent",
+      language: "English",
+      fluency: "Fluent",
     },
   ],
-  "references": [
+  references: [
     {
-      "name": "Michaël de Groot - Founder of Chipta",
-      "reference":
+      name: "Michaël de Groot - Founder of Chipta",
+      reference:
         "Rik modernized our client-facing interfaces and implemented optimizations that delivered substantial performance improvements. His work enabled us to process thousands of tickets rapidly during our busiest periods.",
-      "logo": "/src/lib/images/company-logos/chipta-logo.png",
+      logo: "/src/lib/images/company-logos/chipta-logo.png",
     },
     {
-      "name": "Elmar Krack - Co-founder of Tender-it",
-      "reference":
+      name: "Elmar Krack - Co-founder of Tender-it",
+      reference:
         "Rik demonstrated exceptional technical leadership by designing and developing our entire platform from the ground up, handling both backend and frontend development with impressive skill.",
-      "logo": "/src/lib/images/company-logos/tender-it-logo.png",
+      logo: "/src/lib/images/company-logos/tender-it-logo.png",
     },
   ],
-  "projects": [
+  projects: [
     {
-      "name": "Chipta Ticketing Platform",
-      "description":
+      name: "Chipta Ticketing Platform",
+      description:
         "Scaled a ticketing platform from concept to processing thousands of tickets per minute",
-      "highlights": [
+      highlights: [
         "Led team of 3-5 developers using agile methodologies",
         "Achieved 40-60% speed improvements through optimization",
         "Built extensive testing suite with +80% coverage",
         "Integrated multiple payment providers (Mollie, Pay.nl, PayPal)",
         "Enabled international market expansion",
       ],
-      "technologies": [
+      technologies: [
         "Python",
         "Django",
         "React",
@@ -636,39 +636,39 @@ export const resume = {
         "Redis",
         "Nginx",
       ],
-      "startDate": "2014-09",
-      "endDate": "2024-06",
-      "url": "https://www.chipta.com/",
-      "roles": [
+      startDate: "2014-09",
+      endDate: "2024-06",
+      url: "https://www.chipta.com/",
+      roles: [
         "Lead Developer",
       ],
-      "entity": "Chipta",
-      "type": "application",
+      entity: "Chipta",
+      type: "application",
     },
     {
-      "name": "Tender Discovery Platform",
-      "description":
+      name: "Tender Discovery Platform",
+      description:
         "Built comprehensive tender discovery platform from scratch",
-      "highlights": [
+      highlights: [
         "Designed and developed entire platform from concept to production",
         "Implemented Elasticsearch search engine",
         "Created automated web crawling system",
         "Built subscription-based authentication with recurring payments",
       ],
-      "technologies": [
+      technologies: [
         "Python",
         "Django",
         "Elasticsearch",
         "Vue.js",
         "MySQL",
       ],
-      "startDate": "2015-03",
-      "endDate": "2022-06",
-      "roles": [
+      startDate: "2015-03",
+      endDate: "2022-06",
+      roles: [
         "Lead Developer",
       ],
-      "entity": "Tender-it",
-      "type": "application",
+      entity: "Tender-it",
+      type: "application",
     },
   ],
 };
