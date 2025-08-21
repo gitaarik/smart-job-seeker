@@ -1,5 +1,4 @@
 {
-  "$schema": "https://raw.githubusercontent.com/jsonresume/resume-schema/v1.0.0/schema.json",
   "basics": {
     "name": "Rik Wanders",
     "label": "Senior Full Stack Developer",
@@ -76,6 +75,7 @@
       "startDate": "2015-03",
       "endDate": "2022-06",
       "summary": "Built a comprehensive tender discovery platform from scratch, enabling companies to efficiently find and track public procurement opportunities. Transformed a startup idea into a complete, extensible tender platform with an intuitive interface and solid administrative tools. This was a part-time engagement combined with my main focus on Chipta.",
+      "note": "This was a part-time engagement that I combined with my main focus on Chipta.",
       "logo": "/src/lib/images/company-logos/tender-it-logo.png",
       "highlights": [
         "Designed and developed entire platform (backend and frontend) from concept to production",
@@ -361,67 +361,10 @@
       "logo": "/src/lib/images/company-logos/chipta-logo.png"
     },
     {
-      "name": "Elmar Krack - Co-founder of Tender-it", 
+      "name": "Elmar Krack - Co-founder of Tender-it",
       "reference": "Rik demonstrated exceptional technical leadership by designing and developing our entire platform from the ground up, handling both backend and frontend development with impressive skill.",
       "logo": "/src/lib/images/company-logos/tender-it-logo.png"
     }
   ],
-  "projects": [
-    {
-      "name": "Chipta Ticketing Platform",
-      "description": "Scaled a ticketing platform from concept to processing thousands of tickets per minute",
-      "highlights": [
-        "Led team of 3-5 developers using agile methodologies",
-        "Achieved 40-60% speed improvements through optimization",
-        "Built extensive testing suite with +80% coverage",
-        "Integrated multiple payment providers (Mollie, Pay.nl, PayPal)",
-        "Enabled international market expansion"
-      ],
-      "keywords": [
-        "Python",
-        "Django",
-        "React",
-        "MySQL",
-        "Redis",
-        "Nginx"
-      ],
-      "startDate": "2014-09",
-      "endDate": "2024-06",
-      "url": "https://www.chipta.com/",
-      "roles": [
-        "Lead Developer"
-      ],
-      "entity": "Chipta",
-      "type": "application"
-    },
-    {
-      "name": "Tender Discovery Platform", 
-      "description": "Built comprehensive tender discovery platform from scratch",
-      "highlights": [
-        "Designed and developed entire platform from concept to production",
-        "Implemented Elasticsearch search engine",
-        "Created automated web crawling system",
-        "Built subscription-based authentication with recurring payments"
-      ],
-      "keywords": [
-        "Python",
-        "Django",
-        "Elasticsearch",
-        "Vue.js",
-        "MySQL"
-      ],
-      "startDate": "2015-03",
-      "endDate": "2022-06",
-      "roles": [
-        "Lead Developer"
-      ],
-      "entity": "Tender-it",
-      "type": "application"
-    }
-  ],
-  "meta": {
-    "canonical": "https://www.rikwanders.tech/resume",
-    "version": "v1.0.0",
-    "lastModified": "2025-08-21T00:00:00.000Z"
-  }
+  "projects": []
 }

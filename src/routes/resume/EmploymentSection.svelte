@@ -22,7 +22,6 @@
   export let description;
   export let note;
   export let achievements;
-  export let impact;
   export let technologies;
   export let isFirst: boolean;
   export let isCompact: boolean = false;
@@ -145,13 +144,6 @@
         <InfoBoxes items={achievementItems} />
       </div>
     {/if}
-
-    <div>
-      <h4 class="text-lg print:text-base font-semibold mb-3 print:mb-2">
-        Impact:
-      </h4>
-      <p class="leading-relaxed print:text-sm">{impact}</p>
-    </div>
 
     {#if displayedTechnologies.length > 0}
       <div>

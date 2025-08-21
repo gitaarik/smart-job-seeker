@@ -364,7 +364,6 @@
       description={job.description}
       note={job.note}
       achievements={job.achievements}
-      impact={job.impact}
       technologies={job.technologies}
       isFirst={index === 0}
       {isCompact}
