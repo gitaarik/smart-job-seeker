@@ -40,6 +40,32 @@
         "Implemented and maintained payment service provider integrations with multiple providers (Mollie, Pay.nl, PayPal), ensuring reliable transaction processing for the platform",
         "Developed custom authentication, mailing, and localization systems, supporting custom needs and backward compatibility",
         "Created multi-language & country platform capabilities that enabled international market expansion and supported global event organizers"
+      ],
+      "keywords": [
+        "Python",
+        "Django",
+        "Django REST Framework",
+        "Django Channels",
+        "Django Silk",
+        "Jinja2",
+        "Weasyprint",
+        "MySQL",
+        "Ansible",
+        "Python Fabric",
+        "Linode",
+        "Nginx",
+        "Redis",
+        "HAProxy",
+        "Selenium",
+        "OAuth",
+        "Node.js",
+        "React",
+        "MobX",
+        "Lit",
+        "Web Components",
+        "Web Sockets",
+        "Webpack",
+        "React Native"
       ]
     },
     {
@@ -58,6 +84,22 @@
         "Built subscription-based authentication with recurring payments that supports sustainable business model and user growth",
         "Delivered intuitive 'saved searches' interface and email notification system that supported user engagement and retention",
         "Successfully collaborated with frontend developer to optimize frontend experience using Vue.js"
+      ],
+      "keywords": [
+        "Python",
+        "Django",
+        "Django REST Framework",
+        "Django Celery",
+        "Python Requests",
+        "MySQL",
+        "Beautifulsoup",
+        "Elasticsearch",
+        "Linode",
+        "Nginx",
+        "Node.js",
+        "React",
+        "Vue.js",
+        "Webpack"
       ]
     },
     {
@@ -75,6 +117,25 @@
         "Designed and implemented robust REST API using Django REST Framework, that accommodated iOS & Android apps and mobile website",
         "Ensured consistent user experience across multiple mobile platforms and web interfaces",
         "Worked on comprehensive email marketing system that supported customer acquisition and retention campaigns"
+      ],
+      "keywords": [
+        "Objective-C",
+        "Xcode",
+        "Python",
+        "Django",
+        "Django REST Framework",
+        "Django Celery",
+        "Django South",
+        "Django Compressor",
+        "Sendgrid",
+        "PostgreSQL",
+        "MongoDB",
+        "Linode",
+        "Nginx",
+        "Varnish",
+        "JavaScript",
+        "gulp.js",
+        "Sass"
       ]
     },
     {
@@ -92,6 +153,23 @@
         "Contributed to Scrum team that consistently met client deadlines and budget requirements",
         "Developed advanced jQuery and UX skills that improved user engagement metrics across client projects",
         "Mastered in-house built CMS system, enabling rapid development and client customization capabilities"
+      ],
+      "keywords": [
+        "PHP",
+        "MySQL",
+        "Apache",
+        "Linux",
+        "XAMPP",
+        "HTML5",
+        "CSS3",
+        "JavaScript",
+        "AJAX",
+        "jQuery",
+        "jQuery UI",
+        "Underscore.js",
+        "Bootstrap",
+        "Responsive design",
+        "Firebug"
       ]
     },
     {
@@ -110,6 +188,18 @@
         "Designed and optimized MySQL database structures that improved query performance and system reliability",
         "Worked effectively in 10+ developer team environment, contributing to large-scale PHP codebase maintenance and feature development",
         "Advanced from junior to mid-level developer, demonstrating consistent skill development and increasing responsibility"
+      ],
+      "keywords": [
+        "PHP",
+        "MySQL",
+        "nginx",
+        "Memcached",
+        "HTML",
+        "CSS",
+        "JavaScript",
+        "jQuery",
+        "AJAX",
+        "YUI Library"
       ]
     }
   ],
