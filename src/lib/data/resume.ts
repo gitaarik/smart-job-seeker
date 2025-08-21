@@ -47,7 +47,7 @@ export const resume = {
     highlights: [
       {
         description:
-          "<strong>18+ years</strong> of <strong>full stack development experience</strong>.",
+          "<strong>18+ years</strong> of full stack development experience.",
         icon: faGem,
       },
       {
@@ -62,7 +62,7 @@ export const resume = {
       },
       {
         description:
-          "Additional experience in <strong>Linux, DevOps & CI/CD.</strong>",
+          "Additional experience in <strong>DevOps & CI/CD.</strong>",
         icon: faServer,
       },
       {
@@ -77,7 +77,7 @@ export const resume = {
       },
       {
         description:
-          "<strong>AI-accelerated development</strong> skills, with business security in mind.",
+          "<strong>AI-accelerated development</strong> skills with security best practices.",
         icon: faRobot,
       },
     ],
@@ -395,6 +395,7 @@ export const resume = {
       technologies: [
         "PHP",
         "MySQL",
+        "Linux",
         "nginx",
         "Memcached",
         "HTML",

@@ -26,11 +26,6 @@
     const end = endDate ? formatDate(endDate) : "Present";
     return `${start} - ${end}`;
   }
-
-  // Helper function to strip HTML tags for ATS compatibility
-  function stripHTML(text: string): string {
-    return text.replace(/<[^>]*>/g, "");
-  }
 </script>
 
 <svelte:head>
@@ -76,7 +71,7 @@
     </h2>
     <ul class="list-none">
       {#each resume.basics.highlights as highlight, index (index)}
-        <li class="mb-2">• {stripHTML(highlight.description)}</li>
+        <li class="mb-2">• {@html highlight.description}</li>
       {/each}
     </ul>
   </div>
@@ -156,7 +151,7 @@
         <p class="italic">"{reference.reference}"</p>
       </div>
     {/each}
-    <p class="mt-4">{resume.referencesDescription}</p>
+    <p class="mt-4 font-semibold">{resume.referencesDescription}</p>
   </div>
 </div>
 
