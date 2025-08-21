@@ -507,7 +507,7 @@ export const resume = {
       ],
     },
     {
-      name: "JavaScript / Node.js",
+      name: "Additional JavaScript / Node.js",
       level: "Proficient",
       icon: faNodeJs,
       keywords: [
