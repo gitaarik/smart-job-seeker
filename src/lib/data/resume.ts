@@ -44,7 +44,7 @@ export const resume = {
     url: "https://www.rikwanders.tech",
     summary:
       "Dutch Senior Full Stack Developer residing in Spain, with 18+ years experience specializing in Python & Node.js ecosystems. Experienced in scaling complex & high-traffic applications and leading development teams.",
-    qualifications: [
+    highlights: [
       {
         description:
           "<strong>18+ years</strong> of <strong>full stack development experience</strong>.",
@@ -545,50 +545,6 @@ export const resume = {
         "C",
         "Objective-C",
         "PHP",
-      ],
-    },
-    {
-      name: "Python",
-      level: "exploring",
-      icon: faPython,
-      keywords: [
-        "FastAPI",
-        "pandas",
-        "scikit-learn",
-        "LangChain",
-      ],
-    },
-    {
-      name: "JavaScript / Node.js",
-      level: "exploring",
-      icon: faNodeJs,
-      keywords: [
-        "Next.js",
-        "NestJS",
-        "Zustand",
-        "Prisma",
-        "GraphQL",
-        "Jest",
-      ],
-    },
-    {
-      name: "DevOps",
-      level: "exploring",
-      icon: faServer,
-      keywords: [
-        "Terraform",
-        "GitHub Actions",
-        "Kubernetes",
-      ],
-    },
-    {
-      name: "Cloud Platforms",
-      level: "exploring",
-      icon: faCloud,
-      keywords: [
-        "AWS",
-        "Azure",
-        "GCP",
       ],
     },
   ],

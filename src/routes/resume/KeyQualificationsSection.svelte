@@ -5,9 +5,9 @@
   import { resume } from "$lib/data/resume";
 </script>
 
-<ResumeSection title="Key Qualifications" icon={faStar}>
+<ResumeSection title="Technical Highlights" icon={faStar}>
   <ul class="space-y-4 print:space-y-2 ml-1">
-    {#each resume.basics.qualifications as
+    {#each resume.basics.highlights as
       qualification
       (qualification.description)
     }

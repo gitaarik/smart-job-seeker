@@ -13,17 +13,16 @@
   // Function to transform skills by level to InfoBoxes format
   function getSkillsByLevel(level: string) {
     return resume.skills
-      .filter(skill => skill.level === level)
-      .map(skill => ({
+      .filter((skill) => skill.level === level)
+      .map((skill) => ({
         title: skill.name,
         description: skill.keywords.join(", "),
-        icon: skill.icon
+        icon: skill.icon,
       }));
   }
 
   const expertKnowledge = getSkillsByLevel("expert");
   const workingKnowledge = getSkillsByLevel("working");
-  const exploring = getSkillsByLevel("exploring");
 </script>
 
 <ResumeSection title="Technical Expertise" icon={faCode}>
@@ -46,16 +45,6 @@
         <FontAwesomeIcon icon={faHardHat} class="w-4 h-4 ml-2" />
       </h3>
       <InfoBoxes items={workingKnowledge} />
-    </div>
-
-    <div>
-      <h3
-        class="flex items-center pt-4 pb-2 mb-5 border-b border-ocean"
-      >
-        <span class="text-lg font-medium">Exploring / Interested</span>
-        <FontAwesomeIcon icon={faMagnifyingGlass} class="w-4 h-4 ml-2" />
-      </h3>
-      <InfoBoxes items={exploring} />
     </div>
   </div>
 </ResumeSection>
