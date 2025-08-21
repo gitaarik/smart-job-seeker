@@ -100,7 +100,7 @@
       Professional Experience
     </h2>
     {#each resume.work as job, index (index)}
-      <div class="mb-6">
+      <div class="mb-10">
         <div class="mb-2">
           <h3 class="text-base font-bold">{job.position}</h3>
           <p class="font-bold">{job.name} | {job.location}</p>
