@@ -413,6 +413,7 @@ export const resume = {
       icon: faNodeJs,
       keywords: [
         "JavaScript",
+        "Node.js",
         "TypeScript",
         "React",
         "React Native",
@@ -434,7 +435,6 @@ export const resume = {
         "Python",
         "Django",
         "FastAPI",
-        "Node.js",
         "Celery",
         "Silk",
         "Beautifulsoup",
