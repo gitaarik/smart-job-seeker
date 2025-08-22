@@ -120,6 +120,11 @@ export const resume = {
             "Architected scalable systems handling extreme traffic spikes, processing thousands of orders per minute",
         },
         {
+          icon: faGlobe,
+          description:
+            "Modernized frontend using React and responsive CSS, increasing user engagement by over 30%",
+        },
+        {
           title: "System Reliability",
           icon: faShieldAlt,
           description:
@@ -142,6 +147,10 @@ export const resume = {
           icon: faGlobe,
           description:
             "Created internationalization capabilities enabling market expansion to Eurozone countries",
+        },
+        {
+          icon: faGlobe,
+          description: "Led mobile app creation",
         },
       ],
       technologies: [
@@ -247,16 +256,24 @@ export const resume = {
       logo: "/src/lib/images/company-logos/travelbird-logo.png",
       highlights: [
         {
-          title: "Mobile & API Development",
+          title: "Mobile App Development",
           icon: faMobile,
           description:
-            "Built iOS app in scrum team and led REST API using Django REST Framework for mobile platforms",
+            "Built iOS travel booking app in scrum team (4) in matter of months during period of travel industry mobile adoption",
         },
+
+        {
+          title: "Mobile App Development",
+          icon: faMobile,
+          description:
+            "Designed REST API using Django REST Framework, accommodating new iOS & Android apps and mobile website",
+        },
+
         {
           title: "Email Marketing Platform",
           icon: faEnvelope,
           description:
-            "Developed comprehensive email marketing system for customer acquisition and retention",
+            "Timely delivered mobile app booking solution delivering 15%+ of bookings in over 3 months",
         },
       ],
       technologies: [
@@ -296,13 +313,13 @@ export const resume = {
           title: "Client Delivery",
           icon: faHandshake,
           description:
-            "Delivered web projects for major clients (Bol.com, Gemeente Amsterdam) using Scrum methodology",
+            "Delivered web projects for major clients (Bol.com, Gemeente Amsterdam) as part of company's top Scrum team",
         },
         {
           title: "Frontend & CMS Development",
           icon: faFileCode,
           description:
-            "Developed advanced jQuery/UX skills and mastered in-house CMS for rapid implementations",
+            "Developed advanced frontend & UI / UX skills supporting user engagement & client satisfaction",
         },
       ],
       technologies: [
@@ -339,7 +356,7 @@ export const resume = {
           title: "Platform Development",
           icon: faDatabase,
           description:
-            "Implemented payment integrations, internationalization, and optimized MySQL database structures",
+            "Implemented payment integrations, internationalization, and optimized MySQL database structures & queries",
         },
         {
           title: "Team Collaboration & Growth",
