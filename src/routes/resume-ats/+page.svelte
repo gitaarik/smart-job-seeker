@@ -22,33 +22,33 @@
       <h2 class="text-base mb-4">{resume.basics.label}</h2>
     </header>
 
-    <ul class="mb-4">
+    <ul class="list-disc ml-4 mb-4">
       <li>
-        - Email: <a
+        Email: <a
           href="mailto:{resume.basics.email}"
           class="underline text-blue-600"
         >{resume.basics.email}</a>
       </li>
 
       <li>
-        - Phone: <a
+        Phone: <a
           href="tel:{resume.basics.phone}"
           class="underline text-blue-600"
         >{resume.basics.phone}</a>
       </li>
 
       <li>
-        - Languages:
+        Languages:
         {#each resume.languages as language, index (index)}
           {#if index > 0},{/if}
           {language.language}: {language.fluency}
         {/each}
       </li>
 
-      <li>- Location: {resume.basics.location.address}</li>
+      <li>Location: {resume.basics.location.address}</li>
 
       <li>
-        - Website: <a
+        Website: <a
           href={resume.basics.url}
           target="_blank"
           rel="noopener norefeprrer"
@@ -58,7 +58,7 @@
 
       {#each resume.basics.profiles as profile (profile)}
         <li>
-          - {profile.network}: <a
+          {profile.network}: <a
             href={profile.url}
             target="_blank"
             rel="noopener noreferrer"
@@ -82,9 +82,9 @@
     <h2 class="text-sm font-bold mb-3 border-b-2 border-black">
       TECHNICAL HIGHLIGHTS
     </h2>
-    <ul>
+    <ul class="list-disc ml-4">
       {#each resume.basics.highlights as highlight, index (index)}
-        <li class="mb-1">- {@html highlight.description}</li>
+        <li class="mb-1">{@html highlight.description}</li>
       {/each}
     </ul>
   </div>
@@ -94,11 +94,11 @@
     <h2 class="text-sm font-bold mb-3 border-b-2 border-black">
       TECHNICAL SKILLS
     </h2>
-    <ul>
+    <ul class="list-disc ml-4">
       {#each resume.skills as skillGroup, index (index)}
         <li class="mb-2">
-          <h3 class="font-bold">- {skillGroup.name}:</h3>
-          <p class="ml-2">{skillGroup.keywords.join(", ")}</p>
+          <h3 class="font-bold">{skillGroup.name}:</h3>
+          <p>{skillGroup.keywords.join(", ")}</p>
         </li>
       {/each}
     </ul>
@@ -113,21 +113,19 @@
       <div class="mb-10">
         <div class="mb-2">
           <h3 class="font-bold text-sm mb-2">{job.name}</h3>
-          <p>- <strong>Role:</strong> {job.position}</p>
-          <p>- <strong>Location:</strong> {job.location}</p>
+          <p><strong>Role:</strong> {job.position}</p>
+          <p><strong>Location:</strong> {job.location}</p>
           <p>
-            - <strong>Time:</strong> {
-              formatDateRange(job.startDate, job.endDate)
-            }
+            <strong>Time:</strong> {formatDateRange(job.startDate, job.endDate)}
           </p>
         </div>
 
         {#if job.highlights && job.highlights.length > 0}
           <div class="mb-3">
-            <ul>
+            <ul class="list-disc ml-4">
               {#each job.highlights as highlight, index (index)}
                 <li class="mb-1">
-                  - <strong>{highlight.title}:</strong> {highlight.description}
+                  {highlight.description}
                 </li>
               {/each}
             </ul>
