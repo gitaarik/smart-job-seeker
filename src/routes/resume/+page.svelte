@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { page } from "$app/state";
   import HeaderSection from "./HeaderSection.svelte";
   import ProfileSection from "./ProfileSection.svelte";
   import SummarySection from "./SummarySection.svelte";

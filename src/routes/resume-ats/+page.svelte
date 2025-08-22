@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { resume } from "$lib/data/resume";
   import { formatDateRange } from "$lib/tools/date-utils";
 </script>
@@ -22,86 +23,46 @@
       <h2 class="text-base mb-4">{resume.basics.label}</h2>
     </header>
 
-    <ul class="list-disc ml-4 mb-4">
+    <ul class="mb-4">
       <li>
-        Email: <a
+        <a
           href="mailto:{resume.basics.email}"
-          class="underline text-blue-600"
+          class="underline"
         >{resume.basics.email}</a>
       </li>
 
       <li>
-        Phone: <a
+        <a
           href="tel:{resume.basics.phone}"
-          class="underline text-blue-600"
+          class="underline"
         >{resume.basics.phone}</a>
       </li>
 
-      <li>
-        Languages:
-        {#each resume.languages as language, index (index)}
-          {#if index > 0},{/if}
-          {language.language}: {language.fluency}
-        {/each}
-      </li>
-
-      <li>Location: {resume.basics.location.address}</li>
+      <li>{resume.basics.location.address}</li>
 
       <li>
-        Website: <a
+        <a
           href={resume.basics.url}
           target="_blank"
           rel="noopener norefeprrer"
-          class="underline text-blue-600"
+          class="underline"
         >{resume.basics.url}</a>
       </li>
 
       {#each resume.basics.profiles as profile (profile)}
-        <li>
-          {profile.network}: <a
+        <li class="flex items-center">
+          <FontAwesomeIcon icon={profile.icon} class="max-w-3 mr-1" />
+          <a
             href={profile.url}
             target="_blank"
             rel="noopener noreferrer"
-            class="underline text-blue-600"
+            class="underline"
           >{profile.url}</a>
         </li>
       {/each}
     </ul>
-  </div>
 
-  <!-- Professional Summary -->
-  <div class="mb-6">
-    <h2 class="text-sm font-bold mb-3 border-b-2 border-black">
-      PROFESSIONAL SUMMARY
-    </h2>
-    <p class="mb-4">{resume.basics.summary}</p>
-  </div>
-
-  <!-- Technical Highlights -->
-  <div class="mb-6">
-    <h2 class="text-sm font-bold mb-3 border-b-2 border-black">
-      TECHNICAL HIGHLIGHTS
-    </h2>
-    <ul class="list-disc ml-4">
-      {#each resume.basics.highlights as highlight, index (index)}
-        <li class="mb-1">{@html highlight.description}</li>
-      {/each}
-    </ul>
-  </div>
-
-  <!-- Technical Skills -->
-  <div class="mb-6">
-    <h2 class="text-sm font-bold mb-3 border-b-2 border-black">
-      TECHNICAL SKILLS
-    </h2>
-    <ul class="list-disc ml-4">
-      {#each resume.skills as skillGroup, index (index)}
-        <li class="mb-2">
-          <h3 class="font-bold">{skillGroup.name}:</h3>
-          <p>{skillGroup.keywords.join(", ")}</p>
-        </li>
-      {/each}
-    </ul>
+    <p>{resume.basics.summary}</p>
   </div>
 
   <!-- Professional Experience -->
@@ -135,19 +96,34 @@
     {/each}
   </div>
 
-  <!-- References -->
+  <!-- Technical Skills -->
   <div class="mb-6">
     <h2 class="text-sm font-bold mb-3 border-b-2 border-black">
-      REFERENCES
+      TECHNICAL SKILLS
     </h2>
-    {#each resume.references as reference, index (index)}
-      <div class="mb-4">
-        <h3 class="font-bold">{reference.name}</h3>
-        <p class="italic">"{reference.reference}"</p>
-      </div>
-    {/each}
-    <p class="mt-4 font-semibold">{resume.referencesDescription}</p>
+    <ul class="list-disc ml-4">
+      {#each resume.skills as skillGroup, index (index)}
+        <li class="mb-2">
+          <h3 class="font-bold">{skillGroup.name}:</h3>
+          <p>{skillGroup.keywords.join(", ")}</p>
+        </li>
+      {/each}
+    </ul>
   </div>
+
+  <!-- References -->
+  <!-- <div class="mb-6"> -->
+  <!--   <h2 class="text-sm font-bold mb-3 border-b-2 border-black"> -->
+  <!--     REFERENCES -->
+  <!--   </h2> -->
+  <!--   {#each resume.references as reference, index (index)} -->
+  <!--     <div class="mb-4"> -->
+  <!--       <h3 class="font-bold">{reference.name}</h3> -->
+  <!--       <p class="italic">"{reference.reference}"</p> -->
+  <!--     </div> -->
+  <!--   {/each} -->
+  <!--   <p class="mt-4 font-semibold">{resume.referencesDescription}</p> -->
+  <!-- </div> -->
 </div>
 
 <style>

@@ -28,11 +28,8 @@ import {
   faWrench,
 } from "@fortawesome/free-solid-svg-icons";
 
-import {
-  faGitAlt,
-  faNodeJs,
-  faPython,
-} from "@fortawesome/free-brands-svg-icons";
+import { faNodeJs, faPython } from "@fortawesome/free-brands-svg-icons";
+import { faLinkedin } from "@fortawesome/free-brands-svg-icons";
 
 export const resume = {
   basics: {
@@ -92,6 +89,7 @@ export const resume = {
         network: "LinkedIn",
         username: "rik-wanders-software",
         url: "https://www.linkedin.com/in/rik-wanders-software/",
+        icon: faLinkedin,
       },
     ],
   },
@@ -240,7 +238,7 @@ export const resume = {
       name: "TravelBird",
       location: "Amsterdam, The Netherlands",
       description: "Online Travel Agent",
-      position: "Senior Full Stack & iOS Developer",
+      position: "Senior Full Stack",
       url: "https://www.travelbird.com/",
       startDate: "2013-03",
       endDate: "2014-08",
@@ -419,10 +417,10 @@ export const resume = {
         "React",
         "React Native",
         "Svelte",
+        "Jest",
         "Web Components",
         "Tailwind CSS",
         "Sass",
-        "Jest",
         // "Lit",
         // "Drizzle",
         // "MobX",
@@ -471,7 +469,7 @@ export const resume = {
         "Claude Code",
         "Cursor",
         "VSCode",
-        "Neovim"
+        "Neovim",
       ],
     },
 
@@ -484,7 +482,7 @@ export const resume = {
         "CI/CD",
         "Ansible",
         "GitHub Actions",
-        "Serverless functions"
+        "Serverless functions",
       ],
     },
 
