@@ -118,7 +118,7 @@ export const resume = {
           title: "Platform Scalability",
           icon: faChartLine,
           description:
-            "Architected and optimized systems to handle extreme traffic spikes, delivering 40-60% speed improvements through strategic query optimization, caching, and infrastructure scaling",
+            "Architected and optimized systems to handle extreme traffic spikes, delivering 30-60% speed improvements through strategic query optimization, caching, and infrastructure scaling",
         },
         {
           title: "System Reliability",
