@@ -18,7 +18,7 @@
 >
   {#each items as item (item.title)}
     <div
-      class="bg-frost border border-aqua rounded-md hover:bg-cloud/50 transition-colors duration-200"
+      class="bg-frost border border-aqua rounded-md hover:bg-cloud/30 transition-colors duration-200"
     >
       <h5
         class="text-sm font-semibold mb-1 px-2 py-2 bg-aqua/13 rounded-t-md border-b-1 border-aqua flex items-center"
