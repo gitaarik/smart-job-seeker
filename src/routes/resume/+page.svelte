@@ -35,6 +35,10 @@
     <SummarySection />
     <KeyQualificationsSection />
 
+    <!-- <div class="print:my-15 print:break-inside-avoid"> -->
+    <!--   <PersonalityAndMethodologies /> -->
+    <!-- </div> -->
+
     <div class="print:py-10 print:break-inside-avoid">
       <TechnicalExpertiseSection />
     </div>

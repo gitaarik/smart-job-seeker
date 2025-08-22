@@ -13,7 +13,7 @@
 </svelte:head>
 
 <div
-  class="max-w-xl print:max-w-auto mx-auto py-8 print:p-0 bg-white text-black text-xs leading-relaxed"
+  class="max-w-xl print:max-w-[initial] mx-auto py-8 print:py-0 bg-white text-black text-xs leading-relaxed"
 >
   <!-- Header Section -->
   <div class="mb-6">
@@ -103,7 +103,7 @@
   </div>
 
   <!-- Professional Experience -->
-  <div class="mb-6">
+  <div class="mb-6 break-before-page">
     <h2 class="text-sm font-bold mb-3 border-b-2 border-black">
       PROFESSIONAL EXPERIENCE
     </h2>
