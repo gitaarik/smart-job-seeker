@@ -408,21 +408,6 @@ export const resume = {
   ],
   skills: [
     {
-      name: "Backend",
-      level: "Expert",
-      icon: faPython,
-      keywords: [
-        "Python",
-        "Django",
-        "FastAPI",
-        "Node.js",
-        "Celery",
-        "Silk",
-        "Beautifulsoup",
-      ],
-    },
-
-    {
       name: "Frontend",
       level: "Expert",
       icon: faNodeJs,
@@ -438,6 +423,21 @@ export const resume = {
         // "Lit",
         // "Drizzle",
         // "MobX",
+      ],
+    },
+
+    {
+      name: "Backend",
+      level: "Expert",
+      icon: faPython,
+      keywords: [
+        "Python",
+        "Django",
+        "FastAPI",
+        "Node.js",
+        "Celery",
+        "Silk",
+        "Beautifulsoup",
       ],
     },
 
