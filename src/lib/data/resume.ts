@@ -142,7 +142,7 @@ export const resume = {
           title: "Market Expansion",
           icon: faGlobe,
           description:
-            "Created multi-language platform capabilities enabling international market expansion",
+            "Created internationalization capabilities enabling market expansion",
         },
       ],
       technologies: [
