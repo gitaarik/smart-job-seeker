@@ -434,6 +434,7 @@ export const resume = {
       keywords: [
         "Python",
         "Django",
+        "Flask",
         "FastAPI",
         "API & LLM integrations",
         "Celery",

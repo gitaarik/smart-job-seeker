@@ -51,11 +51,11 @@
         Website: <a
           href={resume.basics.url}
           target="_blank"
-          rel="noopener noreferrer"
+          rel="noopener norefeprrer"
           class="underline text-blue-600"
         >{resume.basics.url}</a>
       </p>
-
+                              a
       {#each resume.basics.profiles as profile (profile)}
         <p>
           {profile.network}: <a
@@ -66,7 +66,7 @@
           >{profile.url}</a>
         </p>
       {/each}
-    </div>
+    </div>                     n
   </div>
 
   <!-- Professional Summary -->
@@ -110,9 +110,9 @@
     {#each resume.work as job, index (index)}
       <div class="mb-10">
         <div class="mb-2">
-          <h3 class="font-bold">{job.position}</h3>
-          <p class="font-bold">{job.name} | {job.location}</p>
-          <p>{formatDateRange(job.startDate, job.endDate)}</p>
+          <h3 class="font-bold">Role: {job.position}</h3>
+          <p class="font-bold">Company: {job.name} | Location: {job.location}</p>
+          <p>Time: {formatDateRange(job.startDate, job.endDate)}</p>
           {#if job.description}
             <p class="italic">{job.description}</p>
           {/if}
@@ -120,7 +120,6 @@
 
         {#if job.highlights && job.highlights.length > 0}
           <div class="mb-3">
-            <h4 class="font-bold mb-2">Key Achievements:</h4>
             <ul class="list-none">
               {#each job.highlights as highlight, index (index)}
                 <li class="mb-2">
