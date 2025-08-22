@@ -130,7 +130,7 @@ export const resume = {
           title: "Payment Integration",
           icon: faDollarSign,
           description:
-            "Implemented and maintained payment service provider integrations with multiple providers (Mollie, Pay.nl, PayPal), ensuring reliable transaction processing for the platform",
+            "Implemented and maintained payment service provider integrations with multiple providers (Mollie, Pay.nl, PayPal), processing tens of millions in transactions reliably",
         },
         {
           title: "Technical Innovation",
