@@ -39,6 +39,7 @@ export const resume = {
     email: "rik@rikwanders.tech",
     phone: "+31649118511",
     url: "https://www.rikwanders.tech",
+    url_label: "rikwanders.tech",
     summary:
       "Dutch Senior Full Stack Developer residing in Spain, with 18+ years experience specializing in Python & Node.js ecosystems. Experienced in scaling complex & high-traffic applications and leading development teams.",
     highlights: [
@@ -89,6 +90,7 @@ export const resume = {
         network: "LinkedIn",
         username: "rik-wanders-software",
         url: "https://www.linkedin.com/in/rik-wanders-software/",
+        label: "/in/rik-wanders-software/",
         icon: faLinkedin,
       },
     ],

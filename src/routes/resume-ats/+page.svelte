@@ -2,6 +2,12 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { resume } from "$lib/data/resume";
   import { formatDateRange } from "$lib/tools/date-utils";
+  import {
+    faEnvelope,
+    faGlobe,
+    faLocationDot,
+    faPhone,
+  } from "@fortawesome/free-solid-svg-icons";
 </script>
 
 <svelte:head>
@@ -14,21 +20,23 @@
 </svelte:head>
 
 <div
-  class="max-w-xl print:max-w-[initial] mx-auto py-8 print:py-0 bg-white text-black text-xs leading-relaxed"
+  class="max-w-2xl print:max-w-[initial] mx-auto py-8 print:py-0 bg-white text-black text-xs leading-relaxed"
 >
   <!-- Header Section -->
-  <div class="mb-6">
-    <header>
-      <h1 class="text-xl font-bold mb-2">{resume.basics.name}</h1>
-      <h2 class="text-base mb-4">{resume.basics.label}</h2>
-    </header>
+  <header class="flex justify-between w-full mb-4">
+    <div class="w-120">
+      <h1 class="text-xl font-bold">{resume.basics.name}</h1>
+      <h2 class="text-base">{resume.basics.label}</h2>
+      <p class="mt-1 text-xs">{resume.basics.summary}</p>
+    </div>
 
-    <ul class="mb-4">
+    <ul class="text-xs text-right leading-[1.7]">
       <li>
         <a
           href="mailto:{resume.basics.email}"
           class="underline"
         >{resume.basics.email}</a>
+        <FontAwesomeIcon icon={faEnvelope} class="w-3 ml-1" />
       </li>
 
       <li>
@@ -36,9 +44,13 @@
           href="tel:{resume.basics.phone}"
           class="underline"
         >{resume.basics.phone}</a>
+        <FontAwesomeIcon icon={faPhone} class="w-3 ml-1" />
       </li>
 
-      <li>{resume.basics.location.address}</li>
+      <li>
+        {resume.basics.location.address}
+        <FontAwesomeIcon icon={faLocationDot} class="w-3 ml-1" />
+      </li>
 
       <li>
         <a
@@ -46,51 +58,50 @@
           target="_blank"
           rel="noopener norefeprrer"
           class="underline"
-        >{resume.basics.url}</a>
+        >{resume.basics.url_label}</a>
+        <FontAwesomeIcon icon={faGlobe} class="w-3 ml-1" />
       </li>
 
       {#each resume.basics.profiles as profile (profile)}
         <li class="flex items-center">
-          <FontAwesomeIcon icon={profile.icon} class="max-w-3 mr-1" />
           <a
             href={profile.url}
             target="_blank"
             rel="noopener noreferrer"
             class="underline"
-          >{profile.url}</a>
+          >{profile.label}</a>
+          <FontAwesomeIcon icon={profile.icon} class="w-3 ml-1" />
         </li>
       {/each}
     </ul>
-
-    <p>{resume.basics.summary}</p>
-  </div>
+  </header>
 
   <!-- Professional Experience -->
-  <div class="mb-6 break-before-page">
+  <div class="mt-6 mb-6">
     <h2 class="text-sm font-bold mb-3 border-b-2 border-black">
-      PROFESSIONAL EXPERIENCE
+      EXPERIENCE
     </h2>
     {#each resume.work as job, index (index)}
       <div class="mb-10">
-        <div class="mb-2">
-          <h3 class="font-bold text-sm mb-2">{job.name}</h3>
-          <p><strong>Role:</strong> {job.position}</p>
-          <p><strong>Location:</strong> {job.location}</p>
-          <p>
-            <strong>Time:</strong> {formatDateRange(job.startDate, job.endDate)}
-          </p>
+        <div class="flex justify-between mb-2">
+          <div>
+            <h3 class="font-bold text-sm">{job.position}</h3>
+            <p>{job.name} · {job.location}</p>
+          </div>
+
+          <div>
+            {formatDateRange(job.startDate, job.endDate)}
+          </div>
         </div>
 
         {#if job.highlights && job.highlights.length > 0}
-          <div class="mb-3">
-            <ul class="list-disc ml-4">
-              {#each job.highlights as highlight, index (index)}
-                <li class="mb-1">
-                  {highlight.description}
-                </li>
-              {/each}
-            </ul>
-          </div>
+          <ul class="list-disc ml-4 grid grid-cols-2 gap-x-8">
+            {#each job.highlights as highlight, index (index)}
+              <li class="mb-1">
+                {highlight.description}
+              </li>
+            {/each}
+          </ul>
         {/if}
       </div>
     {/each}
@@ -101,7 +112,7 @@
     <h2 class="text-sm font-bold mb-3 border-b-2 border-black">
       TECHNICAL SKILLS
     </h2>
-    <ul class="list-disc ml-4">
+    <ul class="list-disc ml-4 grid grid-cols-2 gap-x-8">
       {#each resume.skills as skillGroup, index (index)}
         <li class="mb-2">
           <h3 class="font-bold">{skillGroup.name}:</h3>
