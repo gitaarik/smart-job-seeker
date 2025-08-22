@@ -23,7 +23,7 @@
   class="max-w-2xl print:max-w-[initial] mx-auto py-8 print:py-0 bg-white text-black text-xs leading-relaxed"
 >
   <!-- Header Section -->
-  <header class="flex justify-between w-full mb-4">
+  <header class="flex justify-between w-full">
     <div class="w-120">
       <h1 class="text-xl font-bold">{resume.basics.name}</h1>
       <h2 class="text-base">{resume.basics.label}</h2>
@@ -77,13 +77,14 @@
   </header>
 
   <!-- Professional Experience -->
-  <div class="mt-6 mb-6">
+  <div class="my-4">
     <h2 class="text-sm font-bold mb-3 border-b-2 border-black">
       EXPERIENCE
     </h2>
+
     {#each resume.work as job, index (index)}
-      <div class="mb-6">
-        <div class="flex justify-between mb-2">
+      <div class="mb-3">
+        <div class="flex justify-between mb-1">
           <div>
             <h3 class="font-bold text-sm">{job.position}</h3>
             <p>{job.name} · {job.location}</p>
@@ -112,11 +113,12 @@
     <h2 class="text-sm font-bold mb-3 border-b-2 border-black">
       TECHNICAL SKILLS
     </h2>
+
     <ul class="list-disc ml-4 grid grid-cols-2 gap-x-8">
       {#each resume.skills as skillGroup, index (index)}
-        <li class="mb-2">
+        <li class="mb-1">
           <h3 class="font-bold">{skillGroup.name}:</h3>
-          <p>{skillGroup.keywords.join(", ")}</p>
+          <p class="text-xs">{skillGroup.keywords.join(", ")}</p>
         </li>
       {/each}
     </ul>
