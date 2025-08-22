@@ -96,16 +96,16 @@
 
   <!-- Professional Summary -->
   <div class="mb-6">
-    <h2 class="text-sm font-bold mb-3 border-b-2 border-black uppercase">
-      Professional Summary
+    <h2 class="text-sm font-bold mb-3 border-b-2 border-black">
+      PROFESSIONAL SUMMARY
     </h2>
     <p class="mb-4">{resume.basics.summary}</p>
   </div>
 
   <!-- Technical Highlights -->
   <div class="mb-6">
-    <h2 class="text-sm font-bold mb-3 border-b-2 border-black uppercase">
-      Technical Highlights
+    <h2 class="text-sm font-bold mb-3 border-b-2 border-black">
+      TECHNICAL HIGHLIGHTS
     </h2>
     <ul class="list-none">
       {#each resume.basics.highlights as highlight, index (index)}
@@ -116,8 +116,8 @@
 
   <!-- Technical Skills -->
   <div class="mb-6">
-    <h2 class="text-sm font-bold mb-3 border-b-2 border-black uppercase">
-      Technical Skills
+    <h2 class="text-sm font-bold mb-3 border-b-2 border-black">
+      TECHNICAL SKILLS
     </h2>
     {#each resume.skills as skillGroup, index (index)}
       <div class="mb-2">
@@ -129,8 +129,8 @@
 
   <!-- Professional Experience -->
   <div class="mb-6">
-    <h2 class="text-sm font-bold mb-3 border-b-2 border-black uppercase">
-      Professional Experience
+    <h2 class="text-sm font-bold mb-3 border-b-2 border-black">
+      PROFESSIONAL EXPERIENCE
     </h2>
     {#each resume.work as job, index (index)}
       <div class="mb-10">
@@ -161,8 +161,8 @@
 
   <!-- References -->
   <div class="mb-6">
-    <h2 class="text-sm font-bold mb-3 border-b-2 border-black uppercase">
-      References
+    <h2 class="text-sm font-bold mb-3 border-b-2 border-black">
+      REFERENCES
     </h2>
     {#each resume.references as reference, index (index)}
       <div class="mb-4">
