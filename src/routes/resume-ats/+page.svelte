@@ -82,7 +82,7 @@
       EXPERIENCE
     </h2>
     {#each resume.work as job, index (index)}
-      <div class="mb-10">
+      <div class="mb-6">
         <div class="flex justify-between mb-2">
           <div>
             <h3 class="font-bold text-sm">{job.position}</h3>
@@ -95,9 +95,9 @@
         </div>
 
         {#if job.highlights && job.highlights.length > 0}
-          <ul class="list-disc ml-4 grid grid-cols-2 gap-x-8">
+          <ul class="list-disc ml-4">
             {#each job.highlights as highlight, index (index)}
-              <li class="mb-1">
+              <li>
                 {highlight.description}
               </li>
             {/each}
