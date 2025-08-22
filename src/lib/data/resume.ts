@@ -435,6 +435,7 @@ export const resume = {
         "Python",
         "Django",
         "FastAPI",
+        "API &amp; LLM integrations",
         "Celery",
         "Silk",
         "Beautifulsoup",
@@ -457,6 +458,21 @@ export const resume = {
     },
 
     {
+      name: "Development tools",
+      level: "Expert",
+      icon: faRobot,
+      keywords: [
+        "Git",
+        "GitHub",
+        "GitHub Flow",
+        "Claude Code",
+        "Cursor",
+        "VSCode",
+        "Neovim"
+      ],
+    },
+
+    {
       name: "DevOps",
       level: "Proficient",
       icon: faServer,
@@ -464,18 +480,8 @@ export const resume = {
         "Docker (Compose)",
         "CI/CD",
         "Ansible",
-      ],
-    },
-
-    {
-      name: "Development tools",
-      level: "Expert",
-      icon: faRobot,
-      keywords: [
-        "Git",
-        "GitHub",
-        "Claude Code",
-        "Cursor",
+        "GitHub Actions",
+        "Serverless functions"
       ],
     },
 
@@ -487,7 +493,6 @@ export const resume = {
         "Vercel",
         "Linode",
         "AWS",
-        "Azure",
       ],
     },
 
