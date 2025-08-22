@@ -32,7 +32,7 @@
         {item.title}
       </h5>
       <p class="text-sm px-2 pb-2 leading-relaxed">
-        {@html item.description}
+        {item.description}
       </p>
     </div>
   {/each}

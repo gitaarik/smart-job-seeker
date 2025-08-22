@@ -210,7 +210,7 @@ export const resume = {
           title: "User Experience",
           icon: faCrown,
           description:
-            "Delivered intuitive 'saved searches' interface and email notification system that supported user engagement and retention",
+            'Delivered intuitive "saved searches" interface and email notification system that supported user engagement and retention',
         },
         {
           title: "Frontend Optimization",
@@ -435,7 +435,7 @@ export const resume = {
         "Python",
         "Django",
         "FastAPI",
-        "API &amp; LLM integrations",
+        "API & LLM integrations",
         "Celery",
         "Silk",
         "Beautifulsoup",
@@ -514,6 +514,7 @@ export const resume = {
       level: "Proficient",
       icon: faCode,
       keywords: [
+        "Shell / Bash",
         "Lua",
         "C",
         "Objective-C",
