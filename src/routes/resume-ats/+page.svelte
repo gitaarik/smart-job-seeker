@@ -55,7 +55,7 @@
           class="underline text-blue-600"
         >{resume.basics.url}</a>
       </p>
-                              a
+
       {#each resume.basics.profiles as profile (profile)}
         <p>
           {profile.network}: <a
@@ -66,7 +66,7 @@
           >{profile.url}</a>
         </p>
       {/each}
-    </div>                     n
+    </div>
   </div>
 
   <!-- Professional Summary -->
