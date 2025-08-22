@@ -122,7 +122,7 @@
           <div class="mb-3">
             <ul class="list-none">
               {#each job.highlights as highlight, index (index)}
-                <li class="mb-2">
+                <li class="mb-1">
                   • <strong>{highlight.title}:</strong> {highlight.description}
                 </li>
               {/each}
