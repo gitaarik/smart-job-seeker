@@ -162,7 +162,6 @@ html,
 body {
 	font-family: 'Noto Sans', sans-serif;
 	color: var(--text-color);
-	background: var(--lighter-color);
 }
 
 @media print  {

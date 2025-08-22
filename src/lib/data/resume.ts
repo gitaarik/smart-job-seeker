@@ -112,13 +112,13 @@ export const resume = {
           title: "Team Leadership",
           icon: faUsers,
           description:
-            "Managed development teams of 3-5 developers using agile methodologies and code reviews",
+            "Managed development teams of 3-5 developers using agile methodologies and extensive code review processes",
         },
         {
           title: "Platform Scalability",
           icon: faChartLine,
           description:
-            "Architected scalable systems handling extreme traffic spikes, delivering 30-60% performance improvements",
+            "Architected scalable systems handling extreme traffic spikes, processing thousands of orders per minute",
         },
         {
           title: "System Reliability",
@@ -136,13 +136,13 @@ export const resume = {
           title: "Technical Innovation",
           icon: faMicrochip,
           description:
-            "Developed custom authentication, mailing, and localization systems with backward compatibility",
+            "Customized Django codebase for maintaining backward compatibility with old PHP system & database",
         },
         {
           title: "Market Expansion",
           icon: faGlobe,
           description:
-            "Created internationalization capabilities enabling market expansion",
+            "Created internationalization capabilities enabling market expansion to Eurozone countries",
         },
       ],
       technologies: [

@@ -138,20 +138,3 @@
   <!--   <p class="mt-4 font-semibold">{resume.referencesDescription}</p> -->
   <!-- </div> -->
 </div>
-
-<style>
-  /* Ensure high contrast and clean formatting for ATS systems */
-  :global(body) {
-    background: white;
-    color: black;
-  }
-
-  /* Print-friendly styles */
-  @media print {
-    .max-w-4xl {
-      max-width: none;
-      margin: 0;
-      padding: 0;
-    }
-  }
-</style>
