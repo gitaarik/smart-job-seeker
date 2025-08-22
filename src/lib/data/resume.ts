@@ -282,6 +282,7 @@ export const resume = {
         "Django Celery",
         "Django South",
         "Django Compressor",
+        "AWS",
         "Sendgrid",
         "PostgreSQL",
         "MongoDB",
