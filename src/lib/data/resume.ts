@@ -112,7 +112,7 @@ export const resume = {
           title: "Team Leadership",
           icon: faUsers,
           description:
-            "Built and managed diverse development teams of 3-5 developers, using agile methodologies that optimized efficiency and delivery speed",
+            "Built and managed diverse development teams of 3-5 developers, using agile methodologies and code reviewing processes that optimized efficiency and delivery speed",
         },
         {
           title: "Platform Scalability",
@@ -408,39 +408,41 @@ export const resume = {
   ],
   skills: [
     {
-      name: "Python",
+      name: "Backend",
       level: "Expert",
       icon: faPython,
       keywords: [
+        "Python",
         "Django",
-        "REST Framework",
+        "FastAPI",
+        "Node.js",
         "Celery",
-        "Channels",
         "Silk",
-        "REST APIs",
-        "OOP",
-        "Requests",
         "Beautifulsoup",
-        "uv",
       ],
     },
+
     {
-      name: "JavaScript / Node.js",
+      name: "Frontend",
       level: "Expert",
       icon: faNodeJs,
       keywords: [
+        "JavaScript",
+        "TypeScript",
         "React",
+        "React Native",
         "Svelte",
-        "SvelteKit",
         "Web Components",
-        "Lit",
-        "Drizzle",
-        "MobX",
-        "async/await",
+        "Tailwind CSS",
+        "Sass",
+        // "Lit",
+        // "Drizzle",
+        // "MobX",
       ],
     },
+
     {
-      name: "SQL Databases",
+      name: "Databases",
       level: "Expert",
       icon: faDatabase,
       keywords: [
@@ -448,52 +450,35 @@ export const resume = {
         "MySQL",
         "MariaDB",
         "SQLite",
-        "Schema design",
-        "indexing",
-        "optimization",
+        "SQL optimization",
+        "MongoDB",
+        "Elasticsearch",
       ],
     },
-    {
-      name: "Frontend Tools",
-      level: "Expert",
-      icon: faGlobe,
-      keywords: [
-        "ESLint",
-        "Prettier",
-        "Tailwind CSS",
-        "Sass",
-      ],
-    },
-    {
-      name: "Git (GitHub, GitLab)",
-      level: "Expert",
-      icon: faGitAlt,
-      keywords: [
-        "GitHub",
-        "GitLab",
-        "advanced workflows",
-        "submodules",
-      ],
-    },
-    {
-      name: "AI / LLM development tools",
-      level: "Expert",
-      icon: faRobot,
-      keywords: [
-        "Claude Code",
-        "Cursor",
-      ],
-    },
+
     {
       name: "DevOps",
       level: "Proficient",
       icon: faServer,
       keywords: [
-        "CI/CD",
         "Docker (Compose)",
+        "CI/CD",
         "Ansible",
       ],
     },
+
+    {
+      name: "Development tools",
+      level: "Expert",
+      icon: faRobot,
+      keywords: [
+        "Git",
+        "GitHub",
+        "Claude Code",
+        "Cursor",
+      ],
+    },
+
     {
       name: "Cloud Platforms",
       level: "Proficient",
@@ -501,28 +486,11 @@ export const resume = {
       keywords: [
         "Vercel",
         "Linode",
+        "AWS",
+        "Azure",
       ],
     },
-    {
-      name: "Additional JavaScript / Node.js",
-      level: "Proficient",
-      icon: faNodeJs,
-      keywords: [
-        "TypeScript",
-        "React Native",
-        "Vue.js",
-      ],
-    },
-    {
-      name: "NoSQL Databases",
-      level: "Proficient",
-      icon: faDatabase,
-      keywords: [
-        "Elasticsearch",
-        "Redis",
-        "MongoDB",
-      ],
-    },
+
     {
       name: "Serving, Caching & Load Balancing",
       level: "Proficient",
@@ -530,10 +498,12 @@ export const resume = {
       keywords: [
         "Nginx",
         "Varnish",
+        "Redis",
         "Memcached",
         "HAProxy",
       ],
     },
+
     {
       name: "Additional Languages",
       level: "Proficient",

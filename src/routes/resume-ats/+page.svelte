@@ -121,7 +121,7 @@
     </h2>
     {#each resume.skills as skillGroup, index (index)}
       <div class="mb-2">
-        <h3 class="font-bold">{skillGroup.name} ({skillGroup.level})</h3>
+        <h3 class="font-bold">{skillGroup.name}</h3>
         <p>{skillGroup.keywords.join(", ")}</p>
       </div>
     {/each}
