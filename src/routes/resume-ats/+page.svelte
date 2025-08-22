@@ -95,6 +95,10 @@
           </div>
         </div>
 
+        {#if job.note}
+          <p class="text-sm italic"><strong>Note:</strong> {job.note}</p>
+        {/if}
+
         {#if job.highlights && job.highlights.length > 0}
           <ul class="list-disc ml-4">
             {#each job.highlights as highlight, index (index)}

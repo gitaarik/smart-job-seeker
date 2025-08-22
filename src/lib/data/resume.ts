@@ -18,7 +18,6 @@ import {
   faMobile,
   faNetworkWired,
   faPaintBrush,
-  faPlug,
   faRobot,
   faRocket,
   faSearch,
@@ -175,7 +174,7 @@ export const resume = {
       name: "Tender-it",
       location: "Amsterdam, The Netherlands",
       description: "Tender Discovery Platform",
-      position: "Lead Developer",
+      position: "Lead Developer - Part-time",
       startDate: "2015-03",
       endDate: "2022-06",
       summary:
@@ -186,37 +185,37 @@ export const resume = {
           title: "Product Development",
           icon: faWrench,
           description:
-            "Designed and developed complete platform from concept to production",
+            "Leading agile/scrum methodology while designing complete platform in consultation with non-technical founders",
         },
         {
           title: "Search Innovation",
           icon: faSearch,
           description:
-            "Implemented Elasticsearch-powered search engine for efficient tender discovery",
+            "Implemented industry-first Elasticsearch-powered search engine for efficient tender discovery",
         },
         {
           title: "Data Automation",
           icon: faLaptopCode,
           description:
-            "Created automated web crawling system indexing thousands of tenders daily",
+            "Created automated web crawling system indexing thousands of tenders daily into structured data",
         },
         {
           title: "Revenue Model",
           icon: faDollarSign,
           description:
-            "Built subscription-based authentication with recurring payments supporting business growth",
+            "Built subscription-based authentication system with recurring payments supporting business model",
         },
-        {
-          title: "User Experience",
-          icon: faCrown,
-          description:
-            'Delivered intuitive "saved searches" and email notifications for user retention',
-        },
-        {
-          title: "Frontend Optimization",
-          icon: faPaintBrush,
-          description: "Collaborated on frontend optimization using Vue.js",
-        },
+        // {
+        //   title: "User Experience",
+        //   icon: faCrown,
+        //   description:
+        //     'Delivered intuitive "saved searches" and email notifications for user service & retention',
+        // },
+        // {
+        //   title: "Frontend Optimization",
+        //   icon: faPaintBrush,
+        //   description: "Collaborated on frontend optimization using Vue.js",
+        // },
       ],
       technologies: [
         "Python",
@@ -251,7 +250,7 @@ export const resume = {
           title: "Mobile & API Development",
           icon: faMobile,
           description:
-            "Built iOS app and robust REST API using Django REST Framework for mobile platforms",
+            "Built iOS app in scrum team and led REST API using Django REST Framework for mobile platforms",
         },
         {
           title: "Email Marketing Platform",
@@ -303,7 +302,7 @@ export const resume = {
           title: "Frontend & CMS Development",
           icon: faFileCode,
           description:
-            "Developed advanced jQuery/UX skills and mastered in-house CMS for rapid customization",
+            "Developed advanced jQuery/UX skills and mastered in-house CMS for rapid implementations",
         },
       ],
       technologies: [
