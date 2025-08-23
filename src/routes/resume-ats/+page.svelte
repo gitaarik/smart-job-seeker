@@ -20,7 +20,7 @@
 </svelte:head>
 
 <div
-  class="max-w-2xl print:max-w-[initial] mx-auto py-8 print:py-0 bg-white text-black text-xs leading-relaxed"
+  class="w-[700px] print:w-[initial] mx-auto py-8 print:py-0 bg-white text-black text-xs leading-relaxed"
 >
   <!-- Header Section -->
   <header class="flex justify-between w-full">

@@ -111,24 +111,31 @@ export const resume = {
           title: "Team Leadership",
           icon: faUsers,
           description:
-            "Managed development teams of 3-5 developers using agile methodologies and extensive code review processes",
+            "Managed development teams of 3-5 developers using agile methodologies and strict code review processes",
         },
         {
           title: "Platform Scalability",
           icon: faChartLine,
           description:
-            "Architected scalable systems handling extreme traffic spikes, processing thousands of orders per minute",
+            "Optimized queries and processes with 30-60%, enabling platform to process thousands of orders per minute",
         },
         {
           icon: faGlobe,
           description:
-            "Modernized frontend using React and responsive CSS, increasing user engagement by over 30%",
+            "Led ticket scan app creation using React Native, enabling indefinite scalability and improving revenue by 40%",
+          // "Led ticket scan app creation using React Native, reducing hardware costs while improving business scalability",
+          // "Led mobile app creation, deciding on React Native architecture, guiding developer in process",
+        },
+        {
+          icon: faGlobe,
+          description:
+            "Modernized frontend using React and responsive design, increasing user engagement by over 30%",
         },
         {
           title: "System Reliability",
           icon: faShieldAlt,
           description:
-            "Created comprehensive testing suite (+80% coverage) and CI/CD system enabling reliable regular releases",
+            "Established comprehensive testing suite (+80% coverage) and CI/CD system enabling reliable regular releases",
         },
         {
           title: "Payment Integration",
@@ -147,10 +154,6 @@ export const resume = {
           icon: faGlobe,
           description:
             "Created internationalization capabilities enabling market expansion to Eurozone countries",
-        },
-        {
-          icon: faGlobe,
-          description: "Led mobile app creation",
         },
       ],
       technologies: [
@@ -194,25 +197,25 @@ export const resume = {
           title: "Product Development",
           icon: faWrench,
           description:
-            "Leading agile/scrum methodology while designing complete platform in consultation with non-technical founders",
+            "Directed agile/scrum methodology while designing complete platform in consultation with non-technical founders",
         },
         {
           title: "Search Innovation",
           icon: faSearch,
           description:
-            "Implemented industry-first Elasticsearch-powered search engine for efficient tender discovery",
+            "Developed industry-first Elasticsearch-powered search engine filtering & sorting hundreds of thousands of tenders",
         },
         {
           title: "Data Automation",
           icon: faLaptopCode,
           description:
-            "Created automated web crawling system indexing thousands of tenders daily into structured data",
+            "Engineered automated web crawling system importing & transforming thousands of tenders daily into structured data",
         },
         {
           title: "Revenue Model",
           icon: faDollarSign,
           description:
-            "Built subscription-based authentication system with recurring payments supporting business model",
+            "Built subscription-based authentication system with recurring payments supporting business market entry",
         },
         // {
         //   title: "User Experience",
