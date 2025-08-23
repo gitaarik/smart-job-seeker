@@ -262,7 +262,7 @@ export const resume = {
           title: "Mobile App Development",
           icon: faMobile,
           description:
-            "Built iOS travel booking app in scrum team (4) in matter of months during period of travel industry mobile adoption",
+            "Delivered native iOS booking app in scrum team (4) in 5 months handling 15%+ of bookings within first 3 months",
         },
 
         {
@@ -276,7 +276,7 @@ export const resume = {
           title: "Email Marketing Platform",
           icon: faEnvelope,
           description:
-            "Timely delivered mobile app booking solution delivering 15%+ of bookings in over 3 months",
+            "Worked on comprehensive email marketing system supporting customer acquisition and retention campaigns",
         },
       ],
       technologies: [
