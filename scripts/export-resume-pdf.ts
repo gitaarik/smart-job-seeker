@@ -142,9 +142,9 @@ async function exportResumeToPDF() {
         format: "A4",
         margin: isATS
           ? {
-            top: "0.5in",
+            top: "0.4in",
             right: "0.5in",
-            bottom: "0.5in",
+            bottom: "0.4in",
             left: "0.5in",
           }
           : {

@@ -186,7 +186,7 @@ export const resume = {
       name: "Tender-it",
       location: "Amsterdam, The Netherlands",
       description: "Tender Discovery Platform",
-      position: "Lead Developer - Part-time",
+      position: "Lead Developer (part time)",
       startDate: "2015-03",
       endDate: "2022-06",
       summary:
