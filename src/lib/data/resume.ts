@@ -262,7 +262,7 @@ export const resume = {
           title: "Mobile App Development",
           icon: faMobile,
           description:
-            "Delivered native iOS booking app in scrum team (4) in 5 months handling 15%+ of bookings within first 3 months",
+            "Delivered native iOS booking app in scrum team (4) within 5 months handling 15%+ of bookings within first 3 months",
         },
 
         {
@@ -316,13 +316,13 @@ export const resume = {
           title: "Client Delivery",
           icon: faHandshake,
           description:
-            "Delivered web projects for major clients (Bol.com, Gemeente Amsterdam) as part of company's top Scrum team",
+            "Delivered web projects for major clients (Bol.com, Gemeente Amsterdam) as part of company's best of 5 Scrum teams",
         },
         {
           title: "Frontend & CMS Development",
           icon: faFileCode,
           description:
-            "Developed advanced frontend & UI / UX skills supporting user engagement & client satisfaction",
+            "Developed advanced frontend & UI / UX skills supporting user product engagement & client satisfaction",
         },
       ],
       technologies: [
