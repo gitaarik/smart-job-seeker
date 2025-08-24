@@ -212,7 +212,7 @@ export const resume = {
           title: "Search Innovation",
           icon: faSearch,
           description:
-            "Developed industry-first Elasticsearch-powered search engine filtering & sorting hundreds of thousands of tenders",
+            "Developed industry-first Elasticsearch-powered search engine for filtering & scoring hundreds of thousands of tenders",
         },
         {
           title: "Data Automation",
@@ -225,6 +225,12 @@ export const resume = {
           icon: faDollarSign,
           description:
             "Built subscription-based authentication system with monthly & yearly recurring payments supporting business model",
+        },
+        {
+          title: "Revenue Model",
+          icon: faDollarSign,
+          description:
+            "Enhanced frontend UX design in coordination with frontend developer using Vue.js, fostering professional aesthetic",
         },
         // {
         //   title: "User Experience",
@@ -331,7 +337,7 @@ export const resume = {
           title: "Frontend & CMS Development",
           icon: faFileCode,
           description:
-            "Cultivated advanced frontend & UI / UX skills supporting user product engagement & client satisfaction",
+            "Cultivated advanced frontend & UI / UX skills with jQuery, supporting user product engagement & client satisfaction",
         },
       ],
       technologies: [
@@ -374,7 +380,7 @@ export const resume = {
           title: "Team Collaboration & Growth",
           icon: faUsers,
           description:
-            "Advanced from junior to mid-level in 10+ developer team, contributing to large-scale PHP codebase",
+            "Advanced from junior to mid-level in 10+ developer team, contributing to large-scale PHP codebase & Linux servers setup",
         },
       ],
       technologies: [
