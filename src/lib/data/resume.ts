@@ -119,7 +119,7 @@ export const resume = {
         {
           icon: faGlobe,
           description:
-            "Led ticket scan app creation using React Native & WebSockets, supercharging scalability and increasing revenue by 40%",
+            "Led ticket scan app creation using React Native & WebSockets, supercharging scalability and increasing revenue by +40%",
             // "Led ticket scan app creation using React Native, reducing hardware costs while improving business scalability",
             // "Led mobile app creation, deciding on React Native architecture, guiding developer in process",
         },
@@ -132,7 +132,7 @@ export const resume = {
           title: "System Reliability",
           icon: faShieldAlt,
           description:
-            "Established testing suite using Django and Selenium (+80% coverage) boosting development delivery speed with 30%",
+            "Established quality testing suite using Django and Selenium (+80% coverage) decreasing regression bugs by about 95%",
         },
         {
           title: "System Reliability",
@@ -150,7 +150,7 @@ export const resume = {
           title: "Payment Integration",
           icon: faDollarSign,
           description:
-            "Integrated payment service providers (Mollie, Pay.nl, Paypal), processing tens of millions in payment transactions",
+            "Assisted payment service integrations (Mollie, Pay.nl, Paypal), processing tens of millions in payment transactions",
         },
         {
           title: "Technical Innovation",
@@ -162,7 +162,19 @@ export const resume = {
           title: "Market Expansion",
           icon: faGlobe,
           description:
-            "Created internationalization capabilities enabling market expansion to Eurozone countries",
+            "Integrated TicketSwap SecureSwap protocol using REST APIs allowing users to validate authenticity of 2nd hand tickets",
+        },
+        {
+          title: "Market Expansion",
+          icon: faGlobe,
+          description:
+            "Implemented OAuth integration with Zoom, enabling clients to organize automatically managed online events with Zoom",
+        },
+        {
+          title: "Market Expansion",
+          icon: faGlobe,
+          description:
+            "Expanded internationalization capabilities enabling market expansion to Eurozone countries",
         },
       ],
       technologies: [

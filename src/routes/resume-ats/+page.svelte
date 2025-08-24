@@ -98,7 +98,7 @@
         <div class="flex justify-between mb-1">
           <div>
             <h3 class="font-bold text-sm">{job.position}</h3>
-            <p>{job.name} ({job.description}) · {job.location}</p>
+            <p><strong>{job.name}</strong> ({job.description}) · {job.location}</p>
           </div>
 
           <div>
