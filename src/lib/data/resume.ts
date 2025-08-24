@@ -130,7 +130,7 @@ export const resume = {
         {
           icon: faGlobe,
           description:
-            "Modernized frontend using React, responsive design & web components, increasing user engagement by 30%",
+            "Modernized frontend using React, MobX, responsive design & web components, increasing user engagement by 30%",
         },
         {
           title: "System Reliability",
