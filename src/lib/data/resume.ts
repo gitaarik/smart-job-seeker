@@ -248,7 +248,7 @@ export const resume = {
           title: "Revenue Model",
           icon: faDollarSign,
           description:
-            "Enhanced frontend UX design in coordination with frontend developer using Vue.js, fostering professional aesthetic",
+            "Enhanced frontend in coordination with frontend developer using Vue.js, providing professional platform aesthetics",
         },
         // {
         //   title: "User Experience",
