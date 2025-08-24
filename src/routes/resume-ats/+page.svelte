@@ -214,17 +214,17 @@
     {/each}
   </div>
 
-  <!-- References -->
-  <!-- <div class="mb-6"> -->
-  <!--   <h2 class="text-sm font-bold mb-3 border-b-2 border-black"> -->
-  <!--     REFERENCES -->
-  <!--   </h2> -->
-  <!--   {#each resume.references as reference, index (index)} -->
-  <!--     <div class="mb-4"> -->
-  <!--       <h3 class="font-bold">{reference.name}</h3> -->
-  <!--       <p class="italic">"{reference.reference}"</p> -->
-  <!--     </div> -->
-  <!--   {/each} -->
-  <!--   <p class="mt-4 font-semibold">{resume.referencesDescription}</p> -->
-  <!-- </div> -->
+  References
+  <div class="mb-6">
+    <h2 class="text-sm font-bold mb-3 border-b-2 border-black">
+      REFERENCES
+    </h2>
+    {#each resume.references as reference, index (index)}
+      <div class="mb-4">
+        <h3 class="font-bold">{reference.name}</h3>
+        <p class="italic">"{reference.reference}"</p>
+      </div>
+    {/each}
+    <p class="mt-4 font-semibold">{resume.referencesDescription}</p>
+  </div>
 </div>
