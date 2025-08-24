@@ -296,7 +296,7 @@ export const resume = {
           title: "Mobile App Development",
           icon: faMobile,
           description:
-            "Designed REST API using Django REST Framework, accommodating new iOS & Android apps and mobile website",
+            "Designed REST API using DRF, deployed on AWS, accommodating new iOS & Android apps and mobile website",
         },
 
         {
