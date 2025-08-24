@@ -79,7 +79,7 @@
   <!-- Professional Experience -->
   <div class="my-4">
     <h2 class="text-sm font-bold mb-3 border-b-2 border-black">
-      EXPERIENCE
+      WORK EXPERIENCE
     </h2>
 
     {#each resume.work as job, index (index)}
@@ -87,7 +87,7 @@
         <div class="flex justify-between mb-1">
           <div>
             <h3 class="font-bold text-sm">{job.position}</h3>
-            <p>{job.name} · {job.location}</p>
+            <p>{job.name} ({job.description}) · {job.location}</p>
           </div>
 
           <div>

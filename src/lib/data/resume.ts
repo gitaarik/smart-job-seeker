@@ -141,7 +141,7 @@ export const resume = {
           title: "Payment Integration",
           icon: faDollarSign,
           description:
-            "Implemented payment integrations with multiple providers, processing tens of millions in transactions",
+            "Integrated multiple payment service providers, processing tens of millions in payment transactions",
         },
         {
           title: "Technical Innovation",
@@ -215,7 +215,7 @@ export const resume = {
           title: "Revenue Model",
           icon: faDollarSign,
           description:
-            "Built subscription-based authentication system with recurring payments supporting business market entry",
+            "Built subscription-based authentication system with monthly & yearly recurring payments supporting business model",
         },
         // {
         //   title: "User Experience",
@@ -316,13 +316,13 @@ export const resume = {
           title: "Client Delivery",
           icon: faHandshake,
           description:
-            "Delivered web projects for major clients (Bol.com, Gemeente Amsterdam) as part of company's best of 5 Scrum teams",
+            "Completed web projects for major clients (Bol.com, Gemeente Amsterdam) as part of company's best of 5 Scrum teams",
         },
         {
           title: "Frontend & CMS Development",
           icon: faFileCode,
           description:
-            "Developed advanced frontend & UI / UX skills supporting user product engagement & client satisfaction",
+            "Cultivated advanced frontend & UI / UX skills supporting user product engagement & client satisfaction",
         },
       ],
       technologies: [
@@ -346,7 +346,7 @@ export const resume = {
     {
       name: "Gamepoint",
       location: "The Hague, The Netherlands",
-      description: "Casual Gaming / Community",
+      description: "Casual Gaming Community",
       position: "Junior / Mid-level Web Developer",
       url: "https://www.gamepoint.biz/",
       startDate: "2007-06",
@@ -418,6 +418,7 @@ export const resume = {
         "Celery",
         "Silk",
         "Beautifulsoup",
+        "pytest",
       ],
     },
 
