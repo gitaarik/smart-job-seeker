@@ -23,58 +23,69 @@
   class="w-[700px] print:w-[initial] mx-auto py-8 print:py-0 bg-white text-black text-xs leading-relaxed"
 >
   <!-- Header Section -->
-  <header class="flex justify-between w-full">
+  <header>
     <div class="w-120">
-      <h1 class="text-xl font-bold">{resume.basics.name}</h1>
-      <h2 class="text-base">{resume.basics.label}</h2>
-      <p class="mt-1 text-xs">{resume.basics.summary}</p>
+      <h1 class="text-2xl font-bold">{resume.basics.name}</h1>
+      <h2 class="text-sm">{resume.basics.label}</h2>
     </div>
 
-    <ul class="text-xs text-right leading-[1.7]">
+    <ul class="flex justify-between text-xs mt-2">
       <li>
+        <FontAwesomeIcon icon={faEnvelope} class="w-3 mr-1" />
         <a
           href="mailto:{resume.basics.email}"
           class="underline"
         >{resume.basics.email}</a>
-        <FontAwesomeIcon icon={faEnvelope} class="w-3 ml-1" />
       </li>
 
       <li>
+        <FontAwesomeIcon icon={faPhone} class="w-3 mr-1" />
         <a
           href="tel:{resume.basics.phone}"
           class="underline"
         >{resume.basics.phone}</a>
-        <FontAwesomeIcon icon={faPhone} class="w-3 ml-1" />
       </li>
 
       <li>
-        {resume.basics.location.address}
-        <FontAwesomeIcon icon={faLocationDot} class="w-3 ml-1" />
+        <FontAwesomeIcon icon={faLocationDot} class="w-3 mr-1" />
+        <a
+          href={resume.basics.location.url}
+          class="underline"
+          target="_blank"
+        >
+          {resume.basics.location.address}
+        </a>
       </li>
 
       <li>
+        <FontAwesomeIcon icon={faGlobe} class="w-3 mr-1" />
         <a
           href={resume.basics.url}
           target="_blank"
-          rel="noopener norefeprrer"
           class="underline"
         >{resume.basics.url_label}</a>
-        <FontAwesomeIcon icon={faGlobe} class="w-3 ml-1" />
       </li>
 
       {#each resume.basics.profiles as profile (profile)}
         <li class="flex items-center">
+          <FontAwesomeIcon icon={profile.icon} class="w-3 mr-1" />
           <a
             href={profile.url}
             target="_blank"
-            rel="noopener noreferrer"
             class="underline"
           >{profile.label}</a>
-          <FontAwesomeIcon icon={profile.icon} class="w-3 ml-1" />
         </li>
       {/each}
     </ul>
   </header>
+
+  <!-- Summary -->
+  <div class="my-4">
+    <h2 class="text-sm font-bold mb-3 border-b-2 border-black">
+      SUMMARY
+    </h2>
+    <p class="mt-1 text-xs">{resume.basics.summary}</p>
+  </div>
 
   <!-- Professional Experience -->
   <div class="my-4">

@@ -40,7 +40,7 @@ export const resume = {
     url: "https://www.rikwanders.tech",
     url_label: "rikwanders.tech",
     summary:
-      "Dutch Senior Full Stack Developer residing in Spain, with 18+ years experience specializing in Python & Node.js ecosystems. Experienced in scaling complex & high-traffic applications and leading development teams.",
+      "Dutch Senior Full Stack Developer residing in Spain, with 18+ years experience specializing in Python & Node.js ecosystems. Experienced in scaling complex, high-traffic & data heavy applications and leading development teams. Additional experience designing DevOps & CI/CD systems.",
     highlights: [
       {
         description:
@@ -83,13 +83,14 @@ export const resume = {
       region: "Andalusia",
       countryCode: "ES",
       address: "Ronda, Spain",
+      url: "https://maps.app.goo.gl/WefqeUxUYBD6Q1qF8",
     },
     profiles: [
       {
         network: "LinkedIn",
         username: "rik-wanders-software",
         url: "https://www.linkedin.com/in/rik-wanders-software/",
-        label: "/in/rik-wanders-software/",
+        label: "rik-wanders-software",
         icon: faLinkedin,
       },
     ],
@@ -117,7 +118,7 @@ export const resume = {
           title: "Platform Scalability",
           icon: faChartLine,
           description:
-            "Optimized queries and processes with 30-60%, enabling platform to process thousands of orders per minute",
+            "Optimized SQL queries & Python processes with 30-60%, enabling platform to process thousands of orders per minute",
         },
         {
           icon: faGlobe,
@@ -135,7 +136,13 @@ export const resume = {
           title: "System Reliability",
           icon: faShieldAlt,
           description:
-            "Established comprehensive testing suite (+80% coverage) and CI/CD system enabling reliable regular releases",
+            "Established quality testing suite with Django (+80% coverage, Selenium integration tests) optimizing development",
+        },
+        {
+          title: "System Reliability",
+          icon: faShieldAlt,
+          description:
+            "Ochestrated CI/CD system (Ansible & Python) enabling reliable regular releases",
         },
         {
           title: "Payment Integration",
