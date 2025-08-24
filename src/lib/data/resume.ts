@@ -36,7 +36,7 @@ export const resume = {
     url: "https://www.rikwanders.tech",
     url_label: "rikwanders.tech",
     summary:
-      "Dutch Senior Full Stack Developer residing in Spain, with 18+ years experience specializing in Python & Node.js ecosystems. Experienced in scaling complex, high-traffic & data heavy applications and leading development teams. Passionate about UX design and a love for designing DevOps & CI/CD systems. Thrives in agile teams and/or startup environments. 5+ years remote work experience.",
+      "Dutch Senior Full Stack Developer residing in Spain, with 18+ years experience specializing in Python & Node.js ecosystems. Experienced in scaling complex, high-traffic & data heavy applications and leading development teams. Passionate about UX design and a love for designing DevOps & CI/CD systems. Always interested in the latest tech & security updates. Thrives in agile teams and/or startup environments. 5+ years remote work experience.",
     highlights: [
       {
         description:
@@ -554,6 +554,57 @@ export const resume = {
       startDate: "2006-03",
       endDate: "2006-08",
       score: 4,
+    },
+  ],
+  projects: [
+    {
+      "name": "LitState",
+      "startDate": "2020-11",
+      "endDate": "2023-01",
+      "description": "Lightweight State Management for Lit ",
+      "highlights": [
+        "Conceived Open-Source NPM package providing reactive state management for Lit Web Components library",
+        "Received appreciation in community with 143 GitHub stars during time of Lit & Web Components popularity",
+        "Engaged with users handling GitHub Issues and Pull Requests",
+        "Employed library succesfully in projects at Chipta",
+      ],
+      "url": "https://github.com/gitaarik/lit-state",
+    },
+    {
+      "name": "Django Admin Relation Links",
+      "startDate": "2017-03",
+      "endDate": "2020-12",
+      "description": "Django Admin Navigation Enhancement",
+      "highlights": [
+        "Conceived Open-Source Python package providing navigation enhancements in Django Admin",
+        "Received appreciation in community with 108 GitHub stars",
+        "Engaged with users handling GitHub Issues and Pull Requests",
+        "Employed library succesfully in projects at Chipta",
+      ],
+      "url": "https://github.com/gitaarik/django-admin-relation-links",
+    },
+    {
+      "name": "Adyengo",
+      "startDate": "2013-08",
+      "endDate": "2020-05",
+      "description": "Django Adyen Payment Integration",
+      "highlights": [
+        "Conceived Open-Source Python package providing Adyen payment integrations for Django",
+        "Received appreciation in community with 10 GitHub stars",
+        "Engaged with users handling GitHub Issues and Pull Requests",
+        "Employed library succesfully in project at Tender-it",
+      ],
+      "url": "https://github.com/gitaarik/adyengo",
+    },
+    {
+      "name": "Jazzchords",
+      "startDate": "2013-06",
+      "endDate": "2017-12",
+      "description": "Easy Chord Chart Creation Tool",
+      "highlights": [
+        "Succesfully employed self-created tool to create chord charts and print them for musical projects",
+      ],
+      "url": "https://github.com/gitaarik/jazzchords",
     },
   ],
   languages: [
