@@ -36,7 +36,7 @@ export const resume = {
     url: "https://www.rikwanders.tech",
     url_label: "rikwanders.tech",
     summary:
-      "Dutch Senior Full Stack Developer residing in Spain, with 18+ years experience specializing in Python & Node.js ecosystems. Experienced in scaling complex, high-traffic & data heavy applications and leading development teams. Passionate about UX design and a love for designing DevOps & CI/CD systems. 5+ years remote work experience.",
+      "Dutch Senior Full Stack Developer residing in Spain, with 18+ years experience specializing in Python & Node.js ecosystems. Experienced in scaling complex, high-traffic & data heavy applications and leading development teams. Passionate about UX design and a love for designing DevOps & CI/CD systems. Thrives in agile teams or startup environments. 5+ years remote work experience.",
     highlights: [
       {
         description:
@@ -126,7 +126,7 @@ export const resume = {
         {
           icon: faGlobe,
           description:
-            "Modernized frontend using React, MobX, responsive design & web components, increasing user engagement by 30%",
+            "Modernized frontend using React, MobX, responsive design & web components, increasing user engagement by +30%",
         },
         {
           title: "System Reliability",
@@ -162,19 +162,19 @@ export const resume = {
           title: "Market Expansion",
           icon: faGlobe,
           description:
-            "Integrated TicketSwap SecureSwap protocol using REST APIs allowing users to validate authenticity of 2nd hand tickets",
+            "Implemented TicketSwap SecureSwap protocol using REST APIs allowing users to validate authenticity of 2nd hand tickets",
         },
         {
           title: "Market Expansion",
           icon: faGlobe,
           description:
-            "Implemented OAuth integration with Zoom, enabling clients to organize automatically managed online events with Zoom",
+            "Integrated Zoom with OAuth, enabling clients to organize automatically managed online events with Zoom",
         },
         {
           title: "Market Expansion",
           icon: faGlobe,
           description:
-            "Expanded internationalization capabilities enabling market expansion to Eurozone countries",
+            "Improved internationalization features (language, country & timezone) enabling market expansion to Eurozone countries",
         },
       ],
       technologies: [
@@ -289,7 +289,7 @@ export const resume = {
           title: "Mobile App Development",
           icon: faMobile,
           description:
-            "Delivered native iOS booking app in scrum team (4) within 5 months handling 15%+ of bookings within first 3 months",
+            "Delivered native iOS booking app in scrum team (4) within 5 months, handling 15%+ of bookings within first 3 months",
         },
 
         {
@@ -303,7 +303,8 @@ export const resume = {
           title: "Email Marketing Platform",
           icon: faEnvelope,
           description:
-            "Worked on comprehensive email marketing system supporting customer acquisition and retention campaigns",
+            "Worked on email marketing system using Python & SendGrid, processing thousands of emails, supporting acquisition",
+            // "Worked on email marketing system using Python & SendGrid, supporting customer acquisition and retention campaigns",
         },
       ],
       technologies: [
@@ -349,7 +350,7 @@ export const resume = {
           title: "Frontend & CMS Development",
           icon: faFileCode,
           description:
-            "Cultivated advanced frontend & UI / UX skills with jQuery, supporting user product engagement & client satisfaction",
+            "Cultivated advanced frontend & UX skills with jQuery & CSS3, increasing user product engagement & client satisfaction",
         },
       ],
       technologies: [
