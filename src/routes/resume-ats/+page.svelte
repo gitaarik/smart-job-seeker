@@ -7,7 +7,9 @@
     faGlobe,
     faLocationDot,
     faPhone,
+    faStar,
   } from "@fortawesome/free-solid-svg-icons";
+  import { faGithub } from "@fortawesome/free-brands-svg-icons";
 </script>
 
 <svelte:head>
@@ -143,6 +145,7 @@
     </ul>
   </div>
 
+  <!-- Education -->
   <div class="my-6 page-break-before">
     <h2 class="text-sm font-bold mb-3 border-b-2 border-black">
       EDUCATION
@@ -167,6 +170,46 @@
         <div>
           {formatDateRange(education.startDate, education.endDate)}
         </div>
+      </div>
+    {/each}
+  </div>
+
+  <!-- Open-Source Projects -->
+  <div class="my-6 page-break-before">
+    <h2 class="text-sm font-bold mb-3 border-b-2 border-black">
+      OPEN-SOURCE PROJECTS
+    </h2>
+
+    {#each resume.projects as project (project.name)}
+      <div class="mb-3">
+        <div class="flex items-center gap-2">
+          <h3 class="font-bold text-sm">{project.name}</h3>
+          <a
+            href={project.url}
+            target="_blank"
+            class="flex items-center"
+          >
+            <FontAwesomeIcon icon={faGithub} class="w-3 mr-1" />
+            <FontAwesomeIcon icon={faStar} class="w-3 mr-1" />
+            <span class="underline">
+              {project.stars}
+            </span>
+          </a>
+        </div>
+
+        <div>
+          {project.description}
+        </div>
+
+        <!-- {#if project.highlights && project.highlights.length > 0} -->
+        <!--   <ul class="list-disc ml-4"> -->
+        <!--     {#each project.highlights as highlight, index (index)} -->
+        <!--       <li> -->
+        <!--         {highlight} -->
+        <!--       </li> -->
+        <!--     {/each} -->
+        <!--   </ul> -->
+        <!-- {/if} -->
       </div>
     {/each}
   </div>
