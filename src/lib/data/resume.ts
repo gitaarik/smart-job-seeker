@@ -36,7 +36,7 @@ export const resume = {
     url: "https://www.rikwanders.tech",
     url_label: "rikwanders.tech",
     summary:
-      "Dutch Senior Full Stack Developer residing in Spain, with 18+ years experience specializing in Python & Node.js ecosystems. Experienced in scaling complex, high-traffic & data heavy applications and leading development teams. Passionate about UX design and a love for designing DevOps & CI/CD systems. Thrives in agile teams or startup environments. 5+ years remote work experience.",
+      "Dutch Senior Full Stack Developer residing in Spain, with 18+ years experience specializing in Python & Node.js ecosystems. Experienced in scaling complex, high-traffic & data heavy applications and leading development teams. Passionate about UX design and a love for designing DevOps & CI/CD systems. Thrives in agile teams and/or startup environments. 5+ years remote work experience.",
     highlights: [
       {
         description:
@@ -206,7 +206,7 @@ export const resume = {
     {
       name: "Tender-it",
       location: "Amsterdam, The Netherlands",
-      description: "Tender Discovery Platform",
+      description: "Tender/Procurement Discovery Platform",
       position: "Lead Developer (part time)",
       startDate: "2015-03",
       endDate: "2022-06",
@@ -237,6 +237,12 @@ export const resume = {
           icon: faDollarSign,
           description:
             "Built subscription-based authentication system with monthly & yearly recurring payments supporting business model",
+        },
+        {
+          title: "Revenue Model",
+          icon: faDollarSign,
+          description:
+            "Created automatic notification mailing system for user configured tender preferences and saved searches",
         },
         {
           title: "Revenue Model",
@@ -277,7 +283,7 @@ export const resume = {
       name: "TravelBird",
       location: "Amsterdam, The Netherlands",
       description: "Online Travel Agent",
-      position: "Senior Full Stack",
+      position: "Senior Full Stack Developer",
       url: "https://www.travelbird.com/",
       startDate: "2013-03",
       endDate: "2014-08",
@@ -303,7 +309,7 @@ export const resume = {
           title: "Email Marketing Platform",
           icon: faEnvelope,
           description:
-            "Worked on email marketing system using Python & SendGrid, processing thousands of emails, supporting acquisition",
+            "Worked on email marketing system using Python & SendGrid, sending thousands of emails, supporting acquisition",
             // "Worked on email marketing system using Python & SendGrid, supporting customer acquisition and retention campaigns",
         },
       ],
@@ -413,6 +419,23 @@ export const resume = {
   ],
   skills: [
     {
+      name: "Backend",
+      level: "Expert",
+      icon: faPython,
+      keywords: [
+        "Python",
+        "Django",
+        "Flask",
+        "FastAPI",
+        "RESTful API & LLM integrations",
+        "Celery",
+        "Silk",
+        "Beautifulsoup",
+        "pytest",
+      ],
+    },
+
+    {
       name: "Frontend",
       level: "Expert",
       icon: faNodeJs,
@@ -430,23 +453,6 @@ export const resume = {
         // "Lit",
         // "Drizzle",
         // "MobX",
-      ],
-    },
-
-    {
-      name: "Backend",
-      level: "Expert",
-      icon: faPython,
-      keywords: [
-        "Python",
-        "Django",
-        "Flask",
-        "FastAPI",
-        "RESTful API & LLM integrations",
-        "Celery",
-        "Silk",
-        "Beautifulsoup",
-        "pytest",
       ],
     },
 
@@ -489,7 +495,7 @@ export const resume = {
         "CI/CD",
         "Ansible",
         "GitHub Actions",
-        "Serverless functions",
+        // "Serverless functions",
       ],
     },
 

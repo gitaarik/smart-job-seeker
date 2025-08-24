@@ -80,7 +80,7 @@
   </header>
 
   <!-- Summary -->
-  <div class="my-4">
+  <div class="my-6">
     <h2 class="text-sm font-bold mb-3 border-b-2 border-black">
       SUMMARY
     </h2>
@@ -88,7 +88,7 @@
   </div>
 
   <!-- Professional Experience -->
-  <div class="my-4">
+  <div class="my-6">
     <h2 class="text-sm font-bold mb-3 border-b-2 border-black">
       WORK EXPERIENCE
     </h2>
@@ -98,7 +98,7 @@
         <div class="flex justify-between mb-1">
           <div>
             <h3 class="font-bold text-sm">{job.position}</h3>
-            <p><strong>{job.name}</strong> ({job.description}) · {job.location}</p>
+            <p><strong>{job.name}</strong> ({job.description}) - {job.location}</p>
           </div>
 
           <div>
@@ -124,7 +124,7 @@
   </div>
 
   <!-- Technical Skills -->
-  <div class="mb-6">
+  <div class="my-6 page-break-before">
     <h2 class="text-sm font-bold mb-3 border-b-2 border-black">
       TECHNICAL SKILLS
     </h2>
