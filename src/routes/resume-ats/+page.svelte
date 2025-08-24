@@ -98,7 +98,9 @@
         <div class="flex justify-between mb-1">
           <div>
             <h3 class="font-bold text-sm">{job.position}</h3>
-            <p><strong>{job.name}</strong> ({job.description}) - {job.location}</p>
+            <p>
+              <strong>{job.name}</strong> ({job.description}) - {job.location}
+            </p>
           </div>
 
           <div>
@@ -129,14 +131,44 @@
       TECHNICAL SKILLS
     </h2>
 
-    <ul class="list-disc ml-4 grid grid-cols-2 gap-x-8">
+    <ul class="list-disc ml-4">
       {#each resume.skills as skillGroup, index (index)}
-        <li class="mb-1">
-          <h3 class="font-bold">{skillGroup.name}:</h3>
-          <p class="text-xs">{skillGroup.keywords.join(", ")}</p>
+        <li>
+          <div class="flex mb-0 gap-1 items-center">
+            <h3 class="font-bold">{skillGroup.name}:</h3>
+            <p class="text-xs">{skillGroup.keywords.join(", ")}</p>
+          </div>
         </li>
       {/each}
     </ul>
+  </div>
+
+  <div class="my-6 page-break-before">
+    <h2 class="text-sm font-bold mb-3 border-b-2 border-black">
+      EDUCATION
+    </h2>
+
+    <!-- <p> -->
+    <!--   Mainly self-thaught because of interests, with a relevant background in -->
+    <!--   Network Engineering (Dutch secondary vocational education @ Nova College -->
+    <!--   in Hoofddorp) and a half year internship as a PHP & MySQL developer at -->
+    <!--   Festivalinfo.nl -->
+    <!-- </p> -->
+
+    {#each resume.education as education (education.area)}
+      <div class="flex justify-between mb-3">
+        <div>
+          <h3 class="font-bold text-sm">{education.area}</h3>
+          <p>
+            <strong>{education.institution}</strong> ({education.studyType})
+          </p>
+        </div>
+
+        <div>
+          {formatDateRange(education.startDate, education.endDate)}
+        </div>
+      </div>
+    {/each}
   </div>
 
   <!-- References -->

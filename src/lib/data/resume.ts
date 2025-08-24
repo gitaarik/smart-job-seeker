@@ -120,8 +120,8 @@ export const resume = {
           icon: faGlobe,
           description:
             "Led ticket scan app creation using React Native & WebSockets, supercharging scalability and increasing revenue by +40%",
-            // "Led ticket scan app creation using React Native, reducing hardware costs while improving business scalability",
-            // "Led mobile app creation, deciding on React Native architecture, guiding developer in process",
+          // "Led ticket scan app creation using React Native, reducing hardware costs while improving business scalability",
+          // "Led mobile app creation, deciding on React Native architecture, guiding developer in process",
         },
         {
           icon: faGlobe,
@@ -310,7 +310,7 @@ export const resume = {
           icon: faEnvelope,
           description:
             "Worked on email marketing system using Python & SendGrid, sending thousands of emails, supporting acquisition",
-            // "Worked on email marketing system using Python & SendGrid, supporting customer acquisition and retention campaigns",
+          // "Worked on email marketing system using Python & SendGrid, supporting customer acquisition and retention campaigns",
         },
       ],
       technologies: [
@@ -383,7 +383,7 @@ export const resume = {
       description: "Casual Gaming Community",
       position: "Junior / Mid-level Web Developer",
       url: "https://www.gamepoint.biz/",
-      startDate: "2007-06",
+      startDate: "2007-08",
       endDate: "2011-06",
       summary:
         "Progressed from junior to mid-level developer at established gaming community platform serving hundreds of thousands of users. Contributed to platform stability, feature development, and system enhancements.",
@@ -531,9 +531,29 @@ export const resume = {
         "Shell / Bash",
         "Lua",
         "C",
-        "Objective-C",
         "PHP",
+        "Objective-C",
       ],
+    },
+  ],
+  education: [
+    {
+      institution: "Nova College",
+      url: "https://www.novacollege.nl/",
+      area: "Network Management",
+      studyType: "Dutch secondary vocational education",
+      startDate: "2004-08",
+      endDate: "2007-06",
+      score: 4,
+    },
+    {
+      institution: "Festivalinfo.nl",
+      url: "https://www.festivalinfo.nl/",
+      area: "Internship Web Developer",
+      studyType: "Festival info website",
+      startDate: "2006-03",
+      endDate: "2006-08",
+      score: 4,
     },
   ],
   languages: [
