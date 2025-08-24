@@ -1,10 +1,7 @@
 import {
-  faBullseye,
   faChartLine,
   faCloud,
   faCode,
-  faCog,
-  faCrown,
   faDatabase,
   faDollarSign,
   faEnvelope,
@@ -17,7 +14,6 @@ import {
   faMicrochip,
   faMobile,
   faNetworkWired,
-  faPaintBrush,
   faRobot,
   faRocket,
   faSearch,
@@ -124,8 +120,8 @@ export const resume = {
           icon: faGlobe,
           description:
             "Led ticket scan app creation using React Native & WebSockets, supercharging scalability and increasing revenue by 40%",
-          // "Led ticket scan app creation using React Native, reducing hardware costs while improving business scalability",
-          // "Led mobile app creation, deciding on React Native architecture, guiding developer in process",
+            // "Led ticket scan app creation using React Native, reducing hardware costs while improving business scalability",
+            // "Led mobile app creation, deciding on React Native architecture, guiding developer in process",
         },
         {
           icon: faGlobe,
