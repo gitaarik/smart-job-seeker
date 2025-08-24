@@ -162,7 +162,7 @@ export const resume = {
           title: "Market Expansion",
           icon: faGlobe,
           description:
-            "Implemented TicketSwap SecureSwap protocol using REST APIs allowing users to validate authenticity of 2nd hand tickets",
+            "Implemented TicketSwap REST APIs using DRF, allowing users to validate authenticity of 2nd hand tickets",
         },
         {
           title: "Market Expansion",
