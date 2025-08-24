@@ -141,6 +141,12 @@ export const resume = {
             "Ochestrated CI/CD systems on Linode, using Ansible & Python, enabling reliable regular deployment and releases",
         },
         {
+          title: "System Reliability",
+          icon: faShieldAlt,
+          description:
+            "Coordinated development environment setup of 4 Docker microservices in Docker Compose, streamlining onboarding",
+        },
+        {
           title: "Payment Integration",
           icon: faDollarSign,
           description:
