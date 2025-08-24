@@ -40,7 +40,7 @@ export const resume = {
     url: "https://www.rikwanders.tech",
     url_label: "rikwanders.tech",
     summary:
-      "Dutch Senior Full Stack Developer residing in Spain, with 18+ years experience specializing in Python & Node.js ecosystems. Experienced in scaling complex, high-traffic & data heavy applications and leading development teams. Additional experience designing DevOps & CI/CD systems.",
+      "Dutch Senior Full Stack Developer residing in Spain, with 18+ years experience specializing in Python & Node.js ecosystems. Experienced in scaling complex, high-traffic & data heavy applications and leading development teams. Passionate about UX design and a love for designing DevOps & CI/CD systems. 5+ years remote work experience.",
     highlights: [
       {
         description:
@@ -123,32 +123,32 @@ export const resume = {
         {
           icon: faGlobe,
           description:
-            "Led ticket scan app creation using React Native, enabling indefinite scalability and improving revenue by 40%",
+            "Led ticket scan app creation using React Native, enabling indefinite scalability and increasing revenue by 40%",
           // "Led ticket scan app creation using React Native, reducing hardware costs while improving business scalability",
           // "Led mobile app creation, deciding on React Native architecture, guiding developer in process",
         },
         {
           icon: faGlobe,
           description:
-            "Modernized frontend using React and responsive design, increasing user engagement by over 30%",
+            "Modernized frontend using React, responsive design & web components, increasing user engagement by 30%",
         },
         {
           title: "System Reliability",
           icon: faShieldAlt,
           description:
-            "Established quality testing suite with Django (+80% coverage, Selenium integration tests) optimizing development",
+            "Established testing suite using Django and Selenium (+80% coverage) boosting development delivery speed with 30%",
         },
         {
           title: "System Reliability",
           icon: faShieldAlt,
           description:
-            "Ochestrated CI/CD system (Ansible & Python) enabling reliable regular releases",
+            "Ochestrated CI/CD systems on Linode, using Ansible & Python, enabling reliable regular deployment and releases",
         },
         {
           title: "Payment Integration",
           icon: faDollarSign,
           description:
-            "Integrated multiple payment service providers, processing tens of millions in payment transactions",
+            "Integrated payment service providers (Mollie, Pay.nl, Paypal), processing tens of millions in payment transactions",
         },
         {
           title: "Technical Innovation",
