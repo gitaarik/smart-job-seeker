@@ -214,7 +214,6 @@
     {/each}
   </div>
 
-  References
   <div class="mb-6">
     <h2 class="text-sm font-bold mb-3 border-b-2 border-black">
       REFERENCES
