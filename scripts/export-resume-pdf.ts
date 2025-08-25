@@ -26,11 +26,13 @@ async function exportResumeToPDF() {
       route: "resume",
       dirName: "resume",
       description: "Visual Resume",
+      isATS: false,
     },
     ...resumeTypes.map(type => ({
       route: `resume-ats?type=${type}`,
       dirName: `resume-ats/${type}`,
       description: `ATS Resume (${type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())})`,
+      isATS: true,
     })),
   ];
 
@@ -90,7 +92,7 @@ async function exportResumeToPDF() {
       const outputPath = path.join(versionDir, "Resume Rik Wanders.pdf");
 
       // Configure different settings for ATS vs Visual resume
-      const isATS = version.route === "resume-ats";
+      const isATS = version.isATS;
 
       const footerTemplate = `
         <div style="
