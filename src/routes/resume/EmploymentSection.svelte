@@ -11,7 +11,7 @@
     faMapMarkerAlt,
     faUser,
   } from "@fortawesome/free-solid-svg-icons";
-  import { formatDateRange } from "$lib/tools/date-utils";
+  import { formatDateRangeVerbose } from "$lib/tools/date-utils";
 
   export let data;
   export let isFirst = false;
@@ -76,7 +76,12 @@
                 icon={faCalendar}
                 class="mr-2 flex-shrink-0 w-3 h-3"
               />
-              <span>{formatDateRange(data.startDate, data.endDate)}</span>
+              <span>{
+                formatDateRangeVerbose(
+                  data.startDate,
+                  data.endDate,
+                )
+              }</span>
             </div>
 
             <div class="flex items-center">

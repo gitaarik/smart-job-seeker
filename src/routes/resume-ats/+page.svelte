@@ -92,21 +92,21 @@
   </header>
 
   <!-- Summary -->
-  <div class="my-6">
-    <h2 class="text-sm font-bold mb-3 border-b-2 border-black">
+  <div class="my-3">
+    <h2 class="text-sm font-bold mb-2 border-b-2 border-black">
       SUMMARY
     </h2>
     <p class="mt-1 text-xs">{resume.basics.summary}</p>
   </div>
 
   <!-- Professional Experience -->
-  <div class="my-6">
-    <h2 class="text-sm font-bold mb-3 border-b-2 border-black">
+  <div class="my-3">
+    <h2 class="text-sm font-bold mb-2 border-b-2 border-black">
       WORK EXPERIENCE
     </h2>
 
     {#each resume.work as job, index (index)}
-      <div class="mb-3">
+      <div class="mb-2">
         <div class="text-xs font-bold mb-1">
           {job.name} |
           {job.location} |
@@ -145,8 +145,8 @@
   </div>
 
   <!-- Skills -->
-  <div class="my-6 page-break-before">
-    <h2 class="text-sm font-bold mb-3 border-b-2 border-black">
+  <div class="my-3 page-break-before">
+    <h2 class="text-sm font-bold mb-2 border-b-2 border-black">
       SKILLS
     </h2>
 
@@ -163,8 +163,8 @@
   </div>
 
   <!-- Education -->
-  <div class="my-6 page-break-before">
-    <h2 class="text-sm font-bold mb-3 border-b-2 border-black">
+  <div class="my-3 page-break-before">
+    <h2 class="text-sm font-bold mb-2 border-b-2 border-black">
       EDUCATION
     </h2>
 
@@ -211,10 +211,10 @@
     {/each}
   </div>
 
-  <!-- Open-Source Projects -->
-  <div class="my-6 page-break-before">
-    <h2 class="text-sm font-bold mb-3 border-b-2 border-black">
-      OPEN-SOURCE PROJECTS
+  <!-- Projects -->
+  <div class="my-3 page-break-before">
+    <h2 class="text-sm font-bold mb-2 border-b-2 border-black">
+      PROJECTS
     </h2>
 
     {#each resume.projects as project (project.name)}
@@ -252,7 +252,7 @@
   </div>
 
   <div class="mb-6">
-    <h2 class="text-sm font-bold mb-3 border-b-2 border-black">
+    <h2 class="text-sm font-bold mb-2 border-b-2 border-black">
       REFERENCES
     </h2>
     {#each resume.references as reference, index (index)}
