@@ -107,18 +107,25 @@
 
     {#each resume.work as job, index (index)}
       <div class="mb-3">
-        <div class="flex justify-between mb-1">
-          <div>
-            <h3 class="font-bold text-sm">{job.position}</h3>
-            <p>
-              <strong>{job.name}</strong> ({job.description}) - {job.location}
-            </p>
-          </div>
-
-          <div>
-            {formatDateRange(job.startDate, job.endDate)}
-          </div>
+        <div class="text-xs font-bold mb-1">
+          {job.name} |
+          {job.location} |
+          {job.position} |
+          {formatDateRange(job.startDate, job.endDate)}
         </div>
+
+        <!-- <div class="flex justify-between mb-1"> -->
+        <!--   <div> -->
+        <!--     <h3 class="font-bold text-sm">{job.position}</h3> -->
+        <!--     <p> -->
+        <!--       <strong>{job.name}</strong> ({job.description}) - {job.location} -->
+        <!--     </p> -->
+        <!--   </div> -->
+        <!---->
+        <!--   <div> -->
+        <!--     {formatDateRange(job.startDate, job.endDate)} -->
+        <!--   </div> -->
+        <!-- </div> -->
 
         {#if job.note}
           <p class="text-sm italic"><strong>Note:</strong> {job.note}</p>
@@ -137,10 +144,10 @@
     {/each}
   </div>
 
-  <!-- Technical Skills -->
+  <!-- Skills -->
   <div class="my-6 page-break-before">
     <h2 class="text-sm font-bold mb-3 border-b-2 border-black">
-      TECHNICAL SKILLS
+      SKILLS
     </h2>
 
     <ul class="list-disc ml-3 print:ml-4">

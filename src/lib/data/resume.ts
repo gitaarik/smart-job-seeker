@@ -41,7 +41,7 @@ export const resume = {
     url: "https://www.rikwanders.tech",
     url_label: "rikwanders.tech",
     summary:
-      "Dutch Senior Full Stack Developer residing in Spain, with 18+ years experience specializing in Python & Node.js ecosystems. Experienced in scaling complex, high-traffic & data heavy applications and leading agile development teams. Passionate about UX design and a love for designing DevOps & CI/CD systems. Always interested in the latest tech & security updates. Thrives in agile teams and/or startup environments. 5+ years remote work experience.",
+      "Dutch Senior Full Stack Developer residing in Spain, with 18+ years experience specializing in Python & Node.js ecosystems. Experienced in scaling complex, high-traffic & data heavy applications and leading agile development teams. Passionate about UX design and a love for engineering DevOps & CI/CD systems. Always interested in the latest AI, tech & security industry updates. Thrives in agile teams and/or startup environments. 5+ years remote work experience.",
     highlights: [
       {
         description:
@@ -107,7 +107,7 @@ export const resume = {
   work: [
     {
       name: "Chipta",
-      location: "Amsterdam, The Netherlands",
+      location: "Amsterdam, NL",
       description: "Ticketing Service",
       position: "Lead Developer",
       url: "https://www.chipta.com/",
@@ -218,7 +218,7 @@ export const resume = {
     },
     {
       name: "Tender-it",
-      location: "Amsterdam, The Netherlands",
+      location: "Amsterdam, NL",
       description: "Tender/Procurement Discovery Platform",
       position: "Lead Developer (part time)",
       startDate: "2015-03",
@@ -294,7 +294,7 @@ export const resume = {
     },
     {
       name: "TravelBird",
-      location: "Amsterdam, The Netherlands",
+      location: "Amsterdam, NL",
       description: "Online Travel Agent",
       position: "Senior Full Stack Developer",
       url: "https://www.travelbird.com/",
@@ -349,7 +349,7 @@ export const resume = {
     },
     {
       name: "SWIS",
-      location: "Leiden, The Netherlands",
+      location: "Leiden, NL",
       description: "Web Development Agency",
       position: "Mid-level Web Developer",
       url: "https://www.swis.nl/",
@@ -392,7 +392,7 @@ export const resume = {
     },
     {
       name: "Gamepoint",
-      location: "The Hague, The Netherlands",
+      location: "The Hague, NL",
       description: "Casual Gaming Community",
       position: "Junior / Mid-level Web Developer",
       url: "https://www.gamepoint.biz/",
@@ -575,7 +575,7 @@ export const resume = {
       startDate: "2020-11",
       endDate: "2023-01",
       description:
-        "Lightweight State Management library for Lit (Web Components library). Succesfully employed in for Chipta projects.",
+        "Lightweight State Management library for Lit (Web Components library). Succesfully employed in Chipta frontend projects.",
       highlights: [
         "Conceived Open-Source NPM package providing reactive state management for Lit Web Components library",
         "Received appreciation in community with 143 GitHub stars during time of Lit & Web Components popularity",

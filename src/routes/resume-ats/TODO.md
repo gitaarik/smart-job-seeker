@@ -2,14 +2,23 @@
 
 ## Upcoming
 
-- Check Resume with AI resume parser:
-  - https://duckduckgo.com/?t=ffab&q=ai%20resume%20parser&ia=web
 - Make Resume ATS-friendly
+  - https://www.techinterviewhandbook.org/resume/
+  - Consider:
+    - Using Arial instead of Noto
+    - Generating from docx instead of html
+    - Adding Stack Overflow profile
+    - Adding URL to online (mobile friendly) resume & full CV
+- Add Git Submodules Gist as separate section ("Publications"?)
+- Expand texts in "Projects" section
+  - https://claude.ai/chat/50689acf-7610-4e14-9d4e-0895b2e5d3ba
 - Fix mobile view
   - Fix "Profile" section list on small screen
 
 ## Done
 
+- Check Resume with AI resume parser:
+  - https://duckduckgo.com/?t=ffab&q=ai%20resume%20parser&ia=web
 - Add GraphQL to "Exploring"
 - Add "REST API Development" to "Expert Knowledge"
 - Make icons at "Key Achievements" bigger, vertically center on text
