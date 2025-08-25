@@ -34,7 +34,7 @@
 
     <ul class="text-xs mt-2 grid grid-cols-2 grid-cols-[170px_110px] gap-x-8">
       <li>
-        <FontAwesomeIcon icon={faEnvelope} class="w-3 mr-1" />
+        <FontAwesomeIcon icon={faEnvelope} class="w-3 mr-1" title="Email" />
         <a
           href="mailto:{resume.basics.email}"
           class="underline"
@@ -42,7 +42,7 @@
       </li>
 
       <li>
-        <FontAwesomeIcon icon={faPhone} class="w-3 mr-1" />
+        <FontAwesomeIcon icon={faPhone} class="w-3 mr-1" title="Phone" />
         <a
           href="tel:{resume.basics.phone}"
           class="underline"
@@ -50,7 +50,11 @@
       </li>
 
       <li>
-        <FontAwesomeIcon icon={faLocationDot} class="w-3 mr-1" />
+        <FontAwesomeIcon
+          icon={faLocationDot}
+          class="w-3 mr-1"
+          title="Location"
+        />
         <a
           href={resume.basics.location.url}
           class="underline"
@@ -62,7 +66,7 @@
       </li>
 
       <li>
-        <FontAwesomeIcon icon={faGlobe} class="w-3 mr-1" />
+        <FontAwesomeIcon icon={faGlobe} class="w-3 mr-1" title="Website" />
         <a
           href={resume.basics.url}
           target="_blank"
@@ -72,7 +76,11 @@
 
       {#each resume.basics.profiles as profile (profile)}
         <li>
-          <FontAwesomeIcon icon={profile.icon} class="w-3 mr-1" />
+          <FontAwesomeIcon
+            icon={profile.icon}
+            class="w-3 mr-1"
+            title={profile.network}
+          />
           <a
             href={profile.url}
             target="_blank"
