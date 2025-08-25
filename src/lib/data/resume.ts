@@ -128,64 +128,75 @@ export const resume = {
           icon: faChartLine,
           description:
             "Optimized SQL queries & Python processes with 30-60%, enabling platform to process thousands of orders per minute",
+          tags: ["fullstack-python", "fullstack-react", "fullstack-svelte"],
         },
         {
           icon: faGlobe,
           description:
             "Led ticket scan app creation using React Native & WebSockets, supercharging scalability and increasing revenue by +40%",
+          tags: ["fullstack-react", "fullstack-svelte"],
         },
         {
           icon: faGlobe,
           description:
             "Modernized frontend using React, MobX, responsive design & web components, increasing user engagement by +30%",
+          tags: ["fullstack-react", "fullstack-svelte"],
         },
         {
           title: "System Reliability",
           icon: faShieldAlt,
           description:
             "Established quality testing suite using Django and Selenium (+80% coverage) decreasing regression bugs by about 95%",
+          tags: ["fullstack-python", "fullstack-react", "fullstack-svelte"],
         },
         {
           title: "System Reliability",
           icon: faShieldAlt,
           description:
             "Orchestrated CI/CD systems on Linode using Ansible & Python, reducing deploy time by +60%, enabling regular releases",
+          tags: ["fullstack-python", "fullstack-react", "fullstack-svelte"],
         },
         {
           title: "System Reliability",
           icon: faShieldAlt,
           description:
             "Coordinated development environment setup of 4 Docker microservices in Docker Compose, streamlining onboarding",
-        },
-        {
-          title: "Payment Integration",
-          icon: faDollarSign,
-          description:
-            "Guided payment service integrations (Mollie, Pay.nl, Paypal), processing tens of millions in payment transactions",
+          tags: ["fullstack-python", "fullstack-react", "fullstack-svelte"],
         },
         {
           title: "Technical Innovation",
           icon: faMicrochip,
           description:
             "Customized Django codebase for maintaining backward compatibility with old PHP system & database",
-        },
-        {
-          title: "Market Expansion",
-          icon: faGlobe,
-          description:
-            "Implemented TicketSwap REST APIs using DRF, allowing users to validate authenticity of 2nd hand tickets",
+          tags: ["fullstack-python"],
         },
         {
           title: "Market Expansion",
           icon: faGlobe,
           description:
             "Integrated Zoom with OAuth, enabling clients to organize automatically managed online events with Zoom",
+          tags: ["fullstack-python"],
+        },
+        {
+          title: "Market Expansion",
+          icon: faGlobe,
+          description:
+            "Implemented TicketSwap REST APIs using DRF, allowing users to validate authenticity of 2nd hand tickets",
+          tags: [],
+        },
+        {
+          title: "Payment Integration",
+          icon: faDollarSign,
+          description:
+            "Guided payment service integrations (Mollie, Pay.nl, Paypal), processing tens of millions in payment transactions",
+          tags: [],
         },
         {
           title: "Market Expansion",
           icon: faGlobe,
           description:
             "Improved internationalization features (language, country & timezone) enabling market expansion to Eurozone countries",
+          tags: [],
         },
       ],
       technologies: [
@@ -248,18 +259,21 @@ export const resume = {
           icon: faDollarSign,
           description:
             "Built subscription-based authentication system with monthly & yearly recurring payments supporting business model",
+          tags: ["fullstack-python"],
         },
         {
           title: "Revenue Model",
           icon: faDollarSign,
           description:
             "Created automatic notification mailing system for user configured tender preferences and saved searches",
+          tags: [],
         },
         {
           title: "Revenue Model",
           icon: faDollarSign,
           description:
             "Enhanced frontend in coordination with frontend developer using Vue.js, providing professional platform aesthetics",
+          tags: ["fullstack-react", "fullstack-svelte"],
         },
       ],
       technologies: [

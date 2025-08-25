@@ -7,9 +7,24 @@
     faGlobe,
     faLocationDot,
     faPhone,
-    faStar,
+    // faStar,
   } from "@fortawesome/free-solid-svg-icons";
-  import { faGithub } from "@fortawesome/free-brands-svg-icons";
+  // import { faGithub } from "@fortawesome/free-brands-svg-icons";
+  import { page } from "$app/state";
+
+  const type = page.url.searchParams.get("type");
+
+  function filterHighlights(highlights: any[]) {
+    if (!type) return highlights;
+
+    return highlights.filter((highlight) => {
+      if ("tags" in highlight) {
+        return highlight.tags.includes(type);
+      } else {
+        return true;
+      }
+    });
+  }
 </script>
 
 <svelte:head>
@@ -132,13 +147,16 @@
         {/if}
 
         {#if job.highlights && job.highlights.length > 0}
-          <ul class="list-disc ml-3 print:ml-4">
-            {#each job.highlights as highlight, index (index)}
-              <li class="print:indent-[-6px]">
-                {highlight.description}
-              </li>
-            {/each}
-          </ul>
+          {@const filteredHighlights = filterHighlights(job.highlights)}
+          {#if filteredHighlights.length > 0}
+            <ul class="list-disc ml-3 print:ml-4">
+              {#each filteredHighlights as highlight, index (index)}
+                <li class="print:indent-[-6px]">
+                  {highlight.description}
+                </li>
+              {/each}
+            </ul>
+          {/if}
         {/if}
       </div>
     {/each}
