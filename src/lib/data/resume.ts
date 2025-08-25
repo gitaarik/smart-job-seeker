@@ -114,7 +114,7 @@ export const resume = {
       startDate: "2014-09",
       endDate: "2024-06",
       summary:
-        "Led technical development of innovative ticketing platform for 10 years, scaling from concept to processing thousands of tickets per minute during peak events. Transformed proof of concept into robust, scalable platform serving thousands of events.",
+        "Led technical development and team management for innovative ticketing platform over 10 years, scaling from concept to processing thousands of orders per minute. Managed development teams of 3-5 developers while optimizing platform performance by 30-60%, implementing comprehensive testing suites, and orchestrating CI/CD systems. Built React Native mobile apps that increased revenue by 40%, modernized frontend interfaces increasing user engagement by 30%, and integrated critical payment systems processing tens of millions in transactions.",
       logo: "/src/lib/images/company-logos/chipta-logo.png",
       highlights: [
         {
@@ -233,7 +233,7 @@ export const resume = {
       startDate: "2015-03",
       endDate: "2022-06",
       summary:
-        "Built comprehensive tender discovery platform from scratch, enabling companies to efficiently find and track public procurement opportunities. Delivered complete platform with intuitive interface and administrative tools as part-time engagement.",
+        "Built comprehensive tender discovery platform from scratch as part-time lead developer, designing complete platform using agile methodology in consultation with non-technical founders. Developed industry-first Elasticsearch-powered search engine filtering hundreds of thousands of tenders, engineered automated web crawling systems importing thousands of tenders daily, and implemented subscription-based revenue model with recurring payments and automated notification systems.",
       logo: "/src/lib/images/company-logos/tender-it-logo.png",
       highlights: [
         {
@@ -302,7 +302,7 @@ export const resume = {
       startDate: "2013-03",
       endDate: "2014-08",
       summary:
-        "Contributed to mobile app development during rapid growth phase (50 to 250+ employees), supporting European market expansion. Delivered iOS app and mobile website during critical period for travel industry mobile adoption.",
+        "Contributed to mobile app development during time of travel industry mobile adoption, shipping native iOS booking app in scrum team that handled 15%+ of bookings within first 3 months. Designed REST API using Django REST Framework deployed on AWS to accommodate new iOS & Android apps and mobile website.",
       logo: "/src/lib/images/company-logos/travelbird-logo.png",
       highlights: [
         {
@@ -356,7 +356,7 @@ export const resume = {
       startDate: "2011-08",
       endDate: "2013-02",
       summary:
-        "Delivered web solutions for high-profile clients including major e-commerce and government organizations as part of dedicated Scrum team. Maintained agency's reputation for quality while meeting diverse client requirements.",
+        "Delivered web projects for major clients including Bol.com and Gemeente Amsterdam as part of company's best performing Scrum team out of 5 teams. Cultivated advanced frontend & UX skills with jQuery & CSS3, significantly increasing user product engagement and client satisfaction while maintaining agency's reputation for quality delivery.",
       logo: "/src/lib/images/company-logos/swis-logo.png",
       highlights: [
         {
@@ -399,7 +399,7 @@ export const resume = {
       startDate: "2007-08",
       endDate: "2011-06",
       summary:
-        "Progressed from junior to mid-level developer at established gaming community platform serving hundreds of thousands of users. Contributed to platform stability, feature development, and system enhancements.",
+        "Progressed from junior to mid-level developer within a 10+ developer team at established gaming community platform serving hundreds of thousands of users. Implemented payment integrations and internationalization features, optimized MySQL database structures & queries, and maintained large-scale PHP codebase & Linux server setup while contributing to platform stability and feature development.",
       logo: "/src/lib/images/company-logos/gamepoint-logo.png",
       highlights: [
         {

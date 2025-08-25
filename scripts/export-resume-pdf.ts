@@ -19,8 +19,14 @@ async function exportResumeToPDF() {
   });
 
   // Define the versions to create
-  const resumeTypes = ["fullstack-python", "fullstack-react", "fullstack-svelte", "datascience"];
-  
+  const resumeTypes = [
+    "",
+    "fullstack-python",
+    "fullstack-react",
+    "fullstack-svelte",
+    "datascience",
+  ];
+
   const versions = [
     {
       route: "resume",
@@ -28,10 +34,12 @@ async function exportResumeToPDF() {
       description: "Visual Resume",
       isATS: false,
     },
-    ...resumeTypes.map(type => ({
+    ...resumeTypes.map((type) => ({
       route: `resume-ats?type=${type}`,
       dirName: `resume-ats/${type}`,
-      description: `ATS Resume (${type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())})`,
+      description: `ATS Resume (${
+        type.replace("-", " ").replace(/\b\w/g, (l) => l.toUpperCase())
+      })`,
       isATS: true,
     })),
   ];
@@ -70,7 +78,6 @@ async function exportResumeToPDF() {
         waitUntil: "networkidle0",
         timeout: 30000,
       });
-
 
       // Ensure all images are loaded
       await page.evaluate(async () => {
