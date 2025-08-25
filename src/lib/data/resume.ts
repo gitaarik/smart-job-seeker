@@ -114,7 +114,7 @@ export const resume = {
       startDate: "2014-09",
       endDate: "2024-06",
       summary:
-        "Led technical development and team management for innovative ticketing platform over 10 years, scaling from concept to processing thousands of orders per minute. Managed development teams of 3-5 developers while optimizing platform performance by 30-60%, implementing comprehensive testing suites, and orchestrating CI/CD systems. Built React Native mobile apps that increased revenue by 40%, modernized frontend interfaces increasing user engagement by 30%, and integrated critical payment systems processing tens of millions in transactions.",
+        "Led teams of 3-5 developers at innovative ticketing platform for over 10 years, scaling the platform from concept to processing thousands of orders per minute. Optimed platform performance by 30-60%, implemented comprehensive testing suites, and orchestrated CI/CD systems. Built React Native mobile apps that increased revenue by 40%, modernized frontend interfaces with React, increasing user engagement by 30%. And integrated critical payment systems processing tens of millions in transactions.",
       logo: "/src/lib/images/company-logos/chipta-logo.png",
       highlights: [
         {
@@ -133,20 +133,20 @@ export const resume = {
         {
           icon: faGlobe,
           description:
-            "Led ticket scan app creation using React Native & WebSockets, supercharging scalability and increasing revenue by +40%",
+            "Modernized frontend using React, responsive design & web components, increasing user engagement by +30%",
           tags: ["fullstack-react", "fullstack-svelte"],
         },
         {
           icon: faGlobe,
           description:
-            "Modernized frontend using React, MobX, responsive design & web components, increasing user engagement by +30%",
+            "Led ticket scan app creation using React Native & WebSockets, supercharging scalability and increasing revenue by +40%",
           tags: ["fullstack-react", "fullstack-svelte"],
         },
         {
           title: "System Reliability",
           icon: faShieldAlt,
           description:
-            "Established quality testing suite using Django and Selenium (+80% coverage) decreasing regression bugs by about 95%",
+            "Established quality testing suite using Django and Selenium (+80% coverage) decreasing regression bugs by about 90%",
           tags: ["fullstack-python", "fullstack-react", "fullstack-svelte"],
         },
         {
