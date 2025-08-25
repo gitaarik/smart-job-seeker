@@ -151,7 +151,7 @@ export const resume = {
           title: "System Reliability",
           icon: faShieldAlt,
           description:
-            "Orchestrated CI/CD systems on Linode using Ansible & Python, reducing deploy time by 60%, enabling regular releases",
+            "Orchestrated CI/CD systems on Linode using Ansible & Python, reducing deploy time by +60%, enabling regular releases",
         },
         {
           title: "System Reliability",
@@ -163,7 +163,7 @@ export const resume = {
           title: "Payment Integration",
           icon: faDollarSign,
           description:
-            "Assisted payment service integrations (Mollie, Pay.nl, Paypal), processing tens of millions in payment transactions",
+            "Guided payment service integrations (Mollie, Pay.nl, Paypal), processing tens of millions in payment transactions",
         },
         {
           title: "Technical Innovation",
@@ -308,7 +308,7 @@ export const resume = {
           title: "Mobile App Development",
           icon: faMobile,
           description:
-            "Delivered native iOS booking app in scrum team (4) within 5 months, handling 15%+ of bookings within first 3 months",
+            "Shipped native iOS booking app in scrum team (4) within 5 months, handling 15%+ of bookings within first 3 months",
         },
 
         {
@@ -322,7 +322,7 @@ export const resume = {
           title: "Email Marketing Platform",
           icon: faEnvelope,
           description:
-            "Worked on email marketing system using Python & SendGrid, sending thousands of emails, supporting acquisition",
+            "Built email marketing system using Python & SendGrid, sending thousands of emails, supporting acquisition",
           // "Worked on email marketing system using Python & SendGrid, supporting customer acquisition and retention campaigns",
         },
       ],
@@ -363,7 +363,7 @@ export const resume = {
           title: "Client Delivery",
           icon: faHandshake,
           description:
-            "Completed web projects for major clients (Bol.com, Gemeente Amsterdam) as part of company's best of 5 Scrum teams",
+            "Delivered web projects for major clients (Bol.com, Gemeente Amsterdam) as part of company's best of 5 Scrum teams",
         },
         {
           title: "Frontend & CMS Development",
@@ -412,7 +412,7 @@ export const resume = {
           title: "Team Collaboration & Growth",
           icon: faUsers,
           description:
-            "Advanced from junior to mid-level in 10+ developer team, contributing to large-scale PHP codebase & Linux servers setup",
+            "Promoted to mid-level developer in 10+ developer team, maintaining large-scale PHP codebase & Linux servers setup",
         },
       ],
       technologies: [
