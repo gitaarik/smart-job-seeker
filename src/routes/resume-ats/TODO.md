@@ -9,6 +9,7 @@
     - Generating from docx instead of html
     - Adding Stack Overflow profile
     - Adding URL to online (mobile friendly) resume & full CV
+    - Adding short "Interests" section
 - Add Git Submodules Gist as separate section ("Publications"?)
 - Expand texts in "Projects" section
   - https://claude.ai/chat/50689acf-7610-4e14-9d4e-0895b2e5d3ba

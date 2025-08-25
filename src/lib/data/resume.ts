@@ -519,7 +519,7 @@ export const resume = {
       keywords: [
         "Vercel",
         "Linode",
-        "AWS",
+        "Amazon Web Services (AWS)",
       ],
     },
 

@@ -93,9 +93,9 @@
 
   <!-- Summary -->
   <div class="my-3">
-    <h2 class="text-sm font-bold mb-2 border-b-2 border-black">
-      SUMMARY
-    </h2>
+    <!-- <h2 class="text-sm font-bold mb-2 border-b-2 border-black"> -->
+    <!--   SUMMARY -->
+    <!-- </h2> -->
     <p class="mt-1 text-xs">{resume.basics.summary}</p>
   </div>
 
@@ -251,16 +251,16 @@
     {/each}
   </div>
 
-  <div class="mb-6">
-    <h2 class="text-sm font-bold mb-2 border-b-2 border-black">
-      REFERENCES
-    </h2>
-    {#each resume.references as reference, index (index)}
-      <div class="mb-4">
-        <h3 class="font-bold">{reference.name}</h3>
-        <p class="italic">"{reference.reference}"</p>
-      </div>
-    {/each}
-    <p class="mt-4 font-semibold">{resume.referencesDescription}</p>
-  </div>
+  <!-- <div class="mb-6"> -->
+  <!--   <h2 class="text-sm font-bold mb-2 border-b-2 border-black"> -->
+  <!--     REFERENCES -->
+  <!--   </h2> -->
+  <!--   {#each resume.references as reference, index (index)} -->
+  <!--     <div class="mb-4"> -->
+  <!--       <h3 class="font-bold">{reference.name}</h3> -->
+  <!--       <p class="italic">"{reference.reference}"</p> -->
+  <!--     </div> -->
+  <!--   {/each} -->
+  <!--   <p class="mt-4 font-semibold">{resume.referencesDescription}</p> -->
+  <!-- </div> -->
 </div>
