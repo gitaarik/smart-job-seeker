@@ -23,13 +23,18 @@ import {
   faWrench,
 } from "@fortawesome/free-solid-svg-icons";
 
-import { faNodeJs, faPython } from "@fortawesome/free-brands-svg-icons";
+import {
+  faGithub,
+  faNodeJs,
+  faPython,
+} from "@fortawesome/free-brands-svg-icons";
 import { faLinkedin } from "@fortawesome/free-brands-svg-icons";
 
 export const resume = {
   basics: {
     name: "Rik Wanders",
     label: "Senior Full Stack Developer",
+    subLabel: "Available for international remote collaboration",
     image: "/src/lib/images/profile-photo.jpeg",
     email: "rik@rikwanders.tech",
     phone: "+31649118511",
@@ -79,6 +84,7 @@ export const resume = {
       region: "Andalusia",
       countryCode: "ES",
       address: "Ronda, Spain",
+      timezone: "CET/GMT+1",
       url: "https://maps.app.goo.gl/WefqeUxUYBD6Q1qF8",
     },
     profiles: [
@@ -88,6 +94,13 @@ export const resume = {
         url: "https://www.linkedin.com/in/rik-wanders-software/",
         label: "rik-wanders-software",
         icon: faLinkedin,
+      },
+      {
+        network: "GitHub",
+        username: "gitaarik",
+        url: "https://github.com/gitaarik",
+        label: "gitaarik",
+        icon: faGithub,
       },
     ],
   },

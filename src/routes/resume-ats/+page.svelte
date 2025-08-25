@@ -25,30 +25,34 @@
   class="w-[699px] print:w-[initial] mx-auto py-8 print:py-0 bg-white text-black text-xs leading-relaxed"
 >
   <!-- Header Section -->
-  <header>
+  <header class="flex justify-between">
     <div class="w-120">
       <h1 class="text-2xl font-bold">{resume.basics.name}</h1>
       <h2 class="text-sm">{resume.basics.label}</h2>
+      <h2 class="text-xs mt-1">{resume.basics.subLabel}</h2>
     </div>
 
-    <ul class="flex justify-between text-xs mt-2">
-      <li>
+    <!-- <ul class="text-xs mt-2 grid grid-cols-2 gap-x-4 w-125"> -->
+    <ul class="text-xs mt-1" style="column-count: 2">
+      <li class="mb-2">
         <FontAwesomeIcon icon={faEnvelope} class="w-3 mr-1" />
         <a
           href="mailto:{resume.basics.email}"
           class="underline"
         >{resume.basics.email}</a>
+        <!-- <FontAwesomeIcon icon={faEnvelope} class="w-3 ml-1" /> -->
       </li>
 
-      <li>
+      <li class="mb-2">
         <FontAwesomeIcon icon={faPhone} class="w-3 mr-1" />
         <a
           href="tel:{resume.basics.phone}"
           class="underline"
         >{resume.basics.phone}</a>
+        <!-- <FontAwesomeIcon icon={faPhone} class="w-3 ml-1" /> -->
       </li>
 
-      <li>
+      <li class="mb-2 text-nowrap">
         <FontAwesomeIcon icon={faLocationDot} class="w-3 mr-1" />
         <a
           href={resume.basics.location.url}
@@ -57,25 +61,29 @@
         >
           {resume.basics.location.address}
         </a>
+        ({resume.basics.location.timezone})
+        <!-- <FontAwesomeIcon icon={faLocationDot} class="w-3 ml-1" /> -->
       </li>
 
-      <li>
+      <li class="mb-2">
         <FontAwesomeIcon icon={faGlobe} class="w-3 mr-1" />
         <a
           href={resume.basics.url}
           target="_blank"
           class="underline"
         >{resume.basics.url_label}</a>
+        <!-- <FontAwesomeIcon icon={faGlobe} class="w-3 ml-1" /> -->
       </li>
 
       {#each resume.basics.profiles as profile (profile)}
-        <li class="flex items-center">
+        <li class="mb-2">
           <FontAwesomeIcon icon={profile.icon} class="w-3 mr-1" />
           <a
             href={profile.url}
             target="_blank"
             class="underline"
           >{profile.label}</a>
+          <!-- <FontAwesomeIcon icon={profile.icon} class="w-3 ml-1" /> -->
         </li>
       {/each}
     </ul>
@@ -115,9 +123,9 @@
         {/if}
 
         {#if job.highlights && job.highlights.length > 0}
-          <ul class="list-disc ml-4">
+          <ul class="list-disc ml-3 print:ml-4">
             {#each job.highlights as highlight, index (index)}
-              <li>
+              <li class="print:indent-[-6px]">
                 {highlight.description}
               </li>
             {/each}
@@ -133,11 +141,11 @@
       TECHNICAL SKILLS
     </h2>
 
-    <ul class="list-disc ml-4">
+    <ul class="list-disc ml-3 print:ml-4">
       {#each resume.skills as skillGroup, index (index)}
-        <li>
-          <div class="flex mb-0 gap-1 items-center">
-            <h3 class="font-bold">{skillGroup.name}:</h3>
+        <li class="print:indent-[-6px]">
+          <div class="flex items-center">
+            <h3 class="font-bold mr-1 print:mr-[10px]">{skillGroup.name}:</h3>
             <p class="text-xs">{skillGroup.keywords.join(", ")}</p>
           </div>
         </li>
