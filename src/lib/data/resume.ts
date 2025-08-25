@@ -575,7 +575,7 @@ export const resume = {
       startDate: "2020-11",
       endDate: "2023-01",
       description:
-        "Lightweight State Management library for Lit, succesfully employed in for Chipta projects",
+        "Lightweight State Management library for Lit (Web Components library). Succesfully employed in for Chipta projects.",
       highlights: [
         "Conceived Open-Source NPM package providing reactive state management for Lit Web Components library",
         "Received appreciation in community with 143 GitHub stars during time of Lit & Web Components popularity",
@@ -590,7 +590,7 @@ export const resume = {
       startDate: "2017-03",
       endDate: "2020-12",
       description:
-        "Django Admin Navigation Enhancement, effectively used in Chipta & Tender-it projects",
+        "Django Admin Navigation Enhancements. Effectively used in Chipta & Tender-it projects.",
       highlights: [
         "Conceived Open-Source Python package providing navigation enhancements in Django Admin",
         "Received appreciation in community with 108 GitHub stars",

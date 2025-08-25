@@ -32,27 +32,24 @@
       <h2 class="text-xs mt-1">{resume.basics.subLabel}</h2>
     </div>
 
-    <!-- <ul class="text-xs mt-2 grid grid-cols-2 gap-x-4 w-125"> -->
-    <ul class="text-xs mt-1" style="column-count: 2">
-      <li class="mb-2">
+    <ul class="text-xs mt-2 grid grid-cols-2 grid-cols-[170px_110px] gap-x-8">
+      <li>
         <FontAwesomeIcon icon={faEnvelope} class="w-3 mr-1" />
         <a
           href="mailto:{resume.basics.email}"
           class="underline"
         >{resume.basics.email}</a>
-        <!-- <FontAwesomeIcon icon={faEnvelope} class="w-3 ml-1" /> -->
       </li>
 
-      <li class="mb-2">
+      <li>
         <FontAwesomeIcon icon={faPhone} class="w-3 mr-1" />
         <a
           href="tel:{resume.basics.phone}"
           class="underline"
         >{resume.basics.phone}</a>
-        <!-- <FontAwesomeIcon icon={faPhone} class="w-3 ml-1" /> -->
       </li>
 
-      <li class="mb-2 text-nowrap">
+      <li>
         <FontAwesomeIcon icon={faLocationDot} class="w-3 mr-1" />
         <a
           href={resume.basics.location.url}
@@ -62,28 +59,25 @@
           {resume.basics.location.address}
         </a>
         ({resume.basics.location.timezone})
-        <!-- <FontAwesomeIcon icon={faLocationDot} class="w-3 ml-1" /> -->
       </li>
 
-      <li class="mb-2">
+      <li>
         <FontAwesomeIcon icon={faGlobe} class="w-3 mr-1" />
         <a
           href={resume.basics.url}
           target="_blank"
           class="underline"
         >{resume.basics.url_label}</a>
-        <!-- <FontAwesomeIcon icon={faGlobe} class="w-3 ml-1" /> -->
       </li>
 
       {#each resume.basics.profiles as profile (profile)}
-        <li class="mb-2">
+        <li>
           <FontAwesomeIcon icon={profile.icon} class="w-3 mr-1" />
           <a
             href={profile.url}
             target="_blank"
             class="underline"
           >{profile.label}</a>
-          <!-- <FontAwesomeIcon icon={profile.icon} class="w-3 ml-1" /> -->
         </li>
       {/each}
     </ul>
