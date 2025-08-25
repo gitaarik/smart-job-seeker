@@ -530,8 +530,8 @@ export const resume = {
       keywords: [
         "Shell / Bash",
         "Lua",
-        "C",
         "PHP",
+        "C",
         "Objective-C",
       ],
     },
@@ -577,7 +577,7 @@ export const resume = {
       startDate: "2017-03",
       endDate: "2020-12",
       description:
-        "Django Admin Navigation Enhancement, succesfully employed in Chipta & Tender-it projects",
+        "Django Admin Navigation Enhancement, effectively used in Chipta & Tender-it projects",
       highlights: [
         "Conceived Open-Source Python package providing navigation enhancements in Django Admin",
         "Received appreciation in community with 108 GitHub stars",
@@ -588,11 +588,23 @@ export const resume = {
       stars: 108,
     },
     {
+      name: "Jazzchords",
+      startDate: "2013-06",
+      endDate: "2017-12",
+      description:
+        "Easy Chord Chart Creation Tool, satisfactorily used for personal music projects",
+      highlights: [
+        "Succesfully employed self-created tool to create chord charts and print them for musical projects",
+      ],
+      url: "https://github.com/gitaarik/jazzchords",
+      stars: 12,
+    },
+    {
       name: "Adyengo",
       startDate: "2013-08",
       endDate: "2020-05",
       description:
-        "Django Adyen Payment Integration, succesfully employed in Tender-it project",
+        "Adyen Payment Integration for Django, succesfully utilized in Tender-it project",
       highlights: [
         "Conceived Open-Source Python package providing Adyen payment integrations for Django",
         "Received appreciation in community with 10 GitHub stars",
@@ -601,18 +613,6 @@ export const resume = {
       ],
       url: "https://github.com/gitaarik/adyengo",
       stars: 10,
-    },
-    {
-      name: "Jazzchords",
-      startDate: "2013-06",
-      endDate: "2017-12",
-      description:
-        "Easy Chord Chart Creation Tool, succesfully used for personal music projects",
-      highlights: [
-        "Succesfully employed self-created tool to create chord charts and print them for musical projects",
-      ],
-      url: "https://github.com/gitaarik/jazzchords",
-      stars: 12,
     },
   ],
   languages: [
