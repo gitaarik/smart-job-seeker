@@ -441,9 +441,9 @@ export const resume = {
         "Flask",
         "FastAPI",
         "RESTful API & LLM integrations",
-        "Celery",
-        "Silk",
-        "Beautifulsoup",
+        // "Celery",
+        // "Silk",
+        // "Beautifulsoup",
         "pytest",
       ],
     },
@@ -459,10 +459,10 @@ export const resume = {
         "React",
         "React Native",
         "Svelte",
-        "Jest",
-        "Web Components",
         "Tailwind CSS",
-        "Sass",
+        "Jest",
+        // "Web Components",
+        // "Sass",
         // "Lit",
         // "Drizzle",
         // "MobX",
@@ -495,7 +495,7 @@ export const resume = {
         "Claude Code",
         "Cursor",
         "VSCode",
-        "Neovim",
+        // "Neovim",
       ],
     },
 
@@ -522,32 +522,31 @@ export const resume = {
         "Amazon Web Services (AWS)",
       ],
     },
-
-    {
-      name: "Serving, Caching & Load Balancing",
-      level: "Proficient",
-      icon: faNetworkWired,
-      keywords: [
-        "Nginx",
-        "Varnish",
-        "Redis",
-        "Memcached",
-        "HAProxy",
-      ],
-    },
-
-    {
-      name: "Additional Languages",
-      level: "Proficient",
-      icon: faCode,
-      keywords: [
-        "Shell / Bash",
-        "Lua",
-        "PHP",
-        "C",
-        "Objective-C",
-      ],
-    },
+    // {
+    //   name: "Serving, Caching & Load Balancing",
+    //   level: "Proficient",
+    //   icon: faNetworkWired,
+    //   keywords: [
+    //     "Nginx",
+    //     "Varnish",
+    //     "Redis",
+    //     "Memcached",
+    //     "HAProxy",
+    //   ],
+    // },
+    //
+    // {
+    //   name: "Additional Languages",
+    //   level: "Proficient",
+    //   icon: faCode,
+    //   keywords: [
+    //     "Shell / Bash",
+    //     "Lua",
+    //     "PHP",
+    //     "C",
+    //     "Objective-C",
+    //   ],
+    // },
   ],
   education: [
     {
