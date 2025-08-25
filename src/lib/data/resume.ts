@@ -552,18 +552,21 @@ export const resume = {
   education: [
     {
       institution: "Nova College",
+      location: "Hoofddorp, NL",
       url: "https://www.novacollege.nl/",
       area: "Network Management",
       studyType: "Dutch secondary vocational education",
       startDate: "2004-08",
       endDate: "2007-06",
+      graduationYear: "2007",
       score: 4,
     },
     {
       institution: "Festivalinfo.nl",
+      location: "Amsterdam, NL",
       url: "https://www.festivalinfo.nl/",
       area: "Internship Web Developer",
-      studyType: "Festival info website",
+      studyType: "Festival Info Platform",
       startDate: "2006-03",
       endDate: "2006-08",
       score: 4,

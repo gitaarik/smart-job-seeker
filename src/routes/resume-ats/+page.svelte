@@ -155,7 +155,7 @@
         <li class="print:indent-[-6px]">
           <div class="flex items-center">
             <h3 class="font-bold mr-1 print:mr-[10px]">{skillGroup.name}:</h3>
-            <p class="text-xs">{skillGroup.keywords.join(", ")}</p>
+            <p class="text-xs">{skillGroup.keywords.join(" | ")}</p>
           </div>
         </li>
       {/each}
@@ -176,18 +176,38 @@
     <!-- </p> -->
 
     {#each resume.education as education (education.area)}
-      <div class="flex justify-between mb-3">
-        <div>
-          <h3 class="font-bold text-sm">{education.area}</h3>
-          <p>
-            <strong>{education.institution}</strong> ({education.studyType})
-          </p>
+      <div class="mb-2">
+        <div class="font-bold">
+          {education.area}, {education.studyType},
+          {#if education.graduationYear}
+            Graduation Year {education.graduationYear}
+          {:else}
+            {
+              formatDateRangeCompact(
+                education.startDate,
+                education.endDate,
+              )
+            }
+          {/if}
         </div>
 
         <div>
-          {formatDateRangeCompact(education.startDate, education.endDate)}
+          {education.institution}, {education.location}
         </div>
       </div>
+
+      <!-- <div class="flex justify-between mb-3"> -->
+      <!--   <div> -->
+      <!--     <h3 class="font-bold text-sm">{education.area}</h3> -->
+      <!--     <p> -->
+      <!--       <strong>{education.institution}</strong> ({education.studyType}) -->
+      <!--     </p> -->
+      <!--   </div> -->
+      <!---->
+      <!--   <div> -->
+      <!--     {formatDateRangeCompact(education.startDate, education.endDate)} -->
+      <!--   </div> -->
+      <!-- </div> -->
     {/each}
   </div>
 
