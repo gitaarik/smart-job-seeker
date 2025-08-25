@@ -13,7 +13,7 @@ import {
   faLaptopCode,
   faMicrochip,
   faMobile,
-  faNetworkWired,
+  // faNetworkWired,
   faRobot,
   faRocket,
   faSearch,
@@ -133,8 +133,6 @@ export const resume = {
           icon: faGlobe,
           description:
             "Led ticket scan app creation using React Native & WebSockets, supercharging scalability and increasing revenue by +40%",
-          // "Led ticket scan app creation using React Native, reducing hardware costs while improving business scalability",
-          // "Led mobile app creation, deciding on React Native architecture, guiding developer in process",
         },
         {
           icon: faGlobe,
@@ -263,17 +261,6 @@ export const resume = {
           description:
             "Enhanced frontend in coordination with frontend developer using Vue.js, providing professional platform aesthetics",
         },
-        // {
-        //   title: "User Experience",
-        //   icon: faCrown,
-        //   description:
-        //     'Delivered intuitive "saved searches" and email notifications for user service & retention',
-        // },
-        // {
-        //   title: "Frontend Optimization",
-        //   icon: faPaintBrush,
-        //   description: "Collaborated on frontend optimization using Vue.js",
-        // },
       ],
       technologies: [
         "Python",
@@ -323,7 +310,6 @@ export const resume = {
           icon: faEnvelope,
           description:
             "Built email marketing system using Python & SendGrid, sending thousands of emails, supporting acquisition",
-          // "Worked on email marketing system using Python & SendGrid, supporting customer acquisition and retention campaigns",
         },
       ],
       technologies: [
