@@ -18,18 +18,20 @@ async function exportResumeToPDF() {
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
 
-  // Define the two versions to create
+  // Define the versions to create
+  const resumeTypes = ["fullstack-python", "fullstack-react", "fullstack-svelte", "datascience"];
+  
   const versions = [
     {
       route: "resume",
       dirName: "resume",
       description: "Visual Resume",
     },
-    {
-      route: "resume-ats",
-      dirName: "resume-ats",
-      description: "ATS Resume",
-    },
+    ...resumeTypes.map(type => ({
+      route: `resume-ats?type=${type}`,
+      dirName: `resume-ats/${type}`,
+      description: `ATS Resume (${type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())})`,
+    })),
   ];
 
   try {
