@@ -1,7 +1,7 @@
 <script lang="ts">
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { resume } from "$lib/data/resume";
-  import { formatDateRangeVerbose } from "$lib/tools/date-utils";
+  import { formatDateRangeCompact } from "$lib/tools/date-utils";
   import {
     faEnvelope,
     faGlobe,
@@ -111,7 +111,7 @@
           {job.name} |
           {job.location} |
           {job.position} |
-          {formatDateRangeVerbose(job.startDate, job.endDate)}
+          {formatDateRangeCompact(job.startDate, job.endDate)}
         </div>
 
         <!-- <div class="flex justify-between mb-1"> -->
@@ -185,7 +185,7 @@
         </div>
 
         <div>
-          {formatDateRangeVerbose(education.startDate, education.endDate)}
+          {formatDateRangeCompact(education.startDate, education.endDate)}
         </div>
       </div>
     {/each}
