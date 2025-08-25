@@ -92,7 +92,7 @@
   </header>
 
   <!-- Summary -->
-  <div class="my-3">
+  <div class="my-4">
     <!-- <h2 class="text-sm font-bold mb-2 border-b-2 border-black"> -->
     <!--   SUMMARY -->
     <!-- </h2> -->
@@ -100,7 +100,7 @@
   </div>
 
   <!-- Professional Experience -->
-  <div class="my-3">
+  <div class="my-4">
     <h2 class="text-sm font-bold mb-2 border-b-2 border-black">
       WORK EXPERIENCE
     </h2>
@@ -145,7 +145,7 @@
   </div>
 
   <!-- Skills -->
-  <div class="my-3 page-break-before">
+  <div class="my-4 page-break-before">
     <h2 class="text-sm font-bold mb-2 border-b-2 border-black">
       SKILLS
     </h2>
@@ -163,93 +163,93 @@
   </div>
 
   <!-- Education -->
-  <div class="my-3 page-break-before">
-    <h2 class="text-sm font-bold mb-2 border-b-2 border-black">
-      EDUCATION
-    </h2>
+  <!-- <div class="my-3 page-break-before"> -->
+  <!--   <h2 class="text-sm font-bold mb-2 border-b-2 border-black"> -->
+  <!--     EDUCATION -->
+  <!--   </h2> -->
 
-    <!-- <p> -->
-    <!--   Mainly self-thaught because of interests, with a relevant background in -->
-    <!--   Network Engineering (Dutch secondary vocational education @ Nova College -->
-    <!--   in Hoofddorp) and a half year internship as a PHP & MySQL developer at -->
-    <!--   Festivalinfo.nl -->
-    <!-- </p> -->
+  <!-- <p> -->
+  <!--   Mainly self-thaught because of interests, with a relevant background in -->
+  <!--   Network Engineering (Dutch secondary vocational education @ Nova College -->
+  <!--   in Hoofddorp) and a half year internship as a PHP & MySQL developer at -->
+  <!--   Festivalinfo.nl -->
+  <!-- </p> -->
 
-    {#each resume.education as education (education.area)}
-      <div class="mb-2">
-        <div class="font-bold">
-          {education.area}, {education.studyType},
-          {#if education.graduationYear}
-            Graduation Year {education.graduationYear}
-          {:else}
-            {
-              formatDateRangeCompact(
-                education.startDate,
-                education.endDate,
-              )
-            }
-          {/if}
-        </div>
+  <!-- {#each resume.education as education (education.area)} -->
+  <!--   <div class="mb-2"> -->
+  <!--     <div class="font-bold"> -->
+  <!--       {education.area}, {education.studyType}, -->
+  <!--       {#if education.graduationYear} -->
+  <!--         Graduation Year {education.graduationYear} -->
+  <!--       {:else} -->
+  <!--         { -->
+  <!--           formatDateRangeCompact( -->
+  <!--             education.startDate, -->
+  <!--             education.endDate, -->
+  <!--           ) -->
+  <!--         } -->
+  <!--       {/if} -->
+  <!--     </div> -->
+  <!---->
+  <!--     <div> -->
+  <!--       {education.institution}, {education.location} -->
+  <!--     </div> -->
+  <!--   </div> -->
 
-        <div>
-          {education.institution}, {education.location}
-        </div>
-      </div>
-
-      <!-- <div class="flex justify-between mb-3"> -->
-      <!--   <div> -->
-      <!--     <h3 class="font-bold text-sm">{education.area}</h3> -->
-      <!--     <p> -->
-      <!--       <strong>{education.institution}</strong> ({education.studyType}) -->
-      <!--     </p> -->
-      <!--   </div> -->
-      <!---->
-      <!--   <div> -->
-      <!--     {formatDateRangeCompact(education.startDate, education.endDate)} -->
-      <!--   </div> -->
-      <!-- </div> -->
-    {/each}
-  </div>
+  <!-- <div class="flex justify-between mb-3"> -->
+  <!--   <div> -->
+  <!--     <h3 class="font-bold text-sm">{education.area}</h3> -->
+  <!--     <p> -->
+  <!--       <strong>{education.institution}</strong> ({education.studyType}) -->
+  <!--     </p> -->
+  <!--   </div> -->
+  <!---->
+  <!--   <div> -->
+  <!--     {formatDateRangeCompact(education.startDate, education.endDate)} -->
+  <!--   </div> -->
+  <!-- </div> -->
+  <!--   {/each} -->
+  <!-- </div> -->
 
   <!-- Projects -->
-  <div class="my-3 page-break-before">
-    <h2 class="text-sm font-bold mb-2 border-b-2 border-black">
-      PROJECTS
-    </h2>
+  <!-- <div class="my-3 page-break-before"> -->
+  <!--   <h2 class="text-sm font-bold mb-2 border-b-2 border-black"> -->
+  <!--     PROJECTS -->
+  <!--   </h2> -->
+  <!---->
+  <!--   {#each resume.projects as project (project.name)} -->
+  <!--     <div class="mb-3"> -->
+  <!--       <div class="flex items-center gap-2"> -->
+  <!--         <h3 class="font-bold text-sm">{project.name}</h3> -->
+  <!--         <a -->
+  <!--           href={project.url} -->
+  <!--           target="_blank" -->
+  <!--           class="flex items-center" -->
+  <!--         > -->
+  <!--           <FontAwesomeIcon icon={faGithub} class="w-3 mr-1" /> -->
+  <!--           <FontAwesomeIcon icon={faStar} class="w-3 mr-1" /> -->
+  <!--           <span class="underline"> -->
+  <!--             {project.stars} -->
+  <!--           </span> -->
+  <!--         </a> -->
+  <!--       </div> -->
+  <!---->
+  <!--       <div> -->
+  <!--         {project.description} -->
+  <!--       </div> -->
 
-    {#each resume.projects as project (project.name)}
-      <div class="mb-3">
-        <div class="flex items-center gap-2">
-          <h3 class="font-bold text-sm">{project.name}</h3>
-          <a
-            href={project.url}
-            target="_blank"
-            class="flex items-center"
-          >
-            <FontAwesomeIcon icon={faGithub} class="w-3 mr-1" />
-            <FontAwesomeIcon icon={faStar} class="w-3 mr-1" />
-            <span class="underline">
-              {project.stars}
-            </span>
-          </a>
-        </div>
-
-        <div>
-          {project.description}
-        </div>
-
-        <!-- {#if project.highlights && project.highlights.length > 0} -->
-        <!--   <ul class="list-disc ml-4"> -->
-        <!--     {#each project.highlights as highlight, index (index)} -->
-        <!--       <li> -->
-        <!--         {highlight} -->
-        <!--       </li> -->
-        <!--     {/each} -->
-        <!--   </ul> -->
-        <!-- {/if} -->
-      </div>
-    {/each}
-  </div>
+  <!-- {#if project.highlights && project.highlights.length > 0} -->
+  <!--   <ul class="list-disc ml-4"> -->
+  <!--     {#each project.highlights as highlight, index (index)} -->
+  <!--       <li> -->
+  <!--         {highlight} -->
+  <!--       </li> -->
+  <!--     {/each} -->
+  <!--   </ul> -->
+  <!-- {/if} -->
+  <!--     </div> -->
+  <!--   {/each} -->
+  <!-- </div> -->
 
   <!-- <div class="mb-6"> -->
   <!--   <h2 class="text-sm font-bold mb-2 border-b-2 border-black"> -->

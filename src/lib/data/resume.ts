@@ -41,7 +41,7 @@ export const resume = {
     url: "https://www.rikwanders.tech",
     url_label: "rikwanders.tech",
     summary:
-      "Dutch Senior Full Stack Developer residing in Spain, with 18+ years experience specializing in Python & Node.js ecosystems. Experienced in scaling complex, high-traffic & data heavy applications and leading agile development teams. Passionate about UX design and a love for engineering DevOps & CI/CD systems. Always interested in the latest AI, tech & security industry updates. Thrives in agile teams and/or startup environments. 5+ years remote work experience.",
+      "Dutch Senior Full Stack Developer residing in Spain, with 18+ years experience specializing in Python & Node.js ecosystems. Experienced in scaling complex, high-traffic & data heavy applications and leading agile development teams. Deeply engaged in UX design and skilled at engineering DevOps & CI/CD systems. Always interested in the latest AI, tech & security industry updates. Thrives in agile teams and/or startup environments. 5+ years remote work experience.",
     highlights: [
       {
         description:
@@ -151,7 +151,7 @@ export const resume = {
           title: "System Reliability",
           icon: faShieldAlt,
           description:
-            "Ochestrated CI/CD systems on Linode, using Ansible & Python, enabling reliable regular deployment and releases",
+            "Orchestrated CI/CD systems on Linode using Ansible & Python, reducing deploy time by 60%, enabling regular releases",
         },
         {
           title: "System Reliability",
