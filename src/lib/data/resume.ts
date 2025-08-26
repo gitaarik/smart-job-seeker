@@ -121,81 +121,93 @@ export const resume = {
           title: "Team Leadership",
           icon: faUsers,
           description:
-            "Managed development teams of 3-5 developers using agile methodologies and strict code review processes",
+            "Optimized development team (3-5 devs) output with 25%, by leading agile methods and strict code review processes",
+            // "Managed development teams of 3-5 developers using agile methodologies and strict code review processes",
         },
         {
           title: "Platform Scalability",
           icon: faChartLine,
           description:
-            "Optimized SQL queries & Python processes with 30-60%, enabling platform to process thousands of orders per minute",
+            "Enabled platform to process thousands of orders per minute, by optimizing SQL queries & Python processes with 30-60%",
+            // "Optimized SQL queries & Python processes with 30-60%, enabling platform to process thousands of orders per minute",
           tags: ["fullstack-python", "fullstack-react", "fullstack-svelte"],
         },
         {
           icon: faGlobe,
           description:
-            "Modernized frontend using React, responsive design & web components, increasing user engagement by +30%",
+            "Increased user engagement by +30%, by modernizing frontend using React, responsive design & web components",
+            // "Modernized frontend using React, responsive design & web components, increasing user engagement by +30%",
           tags: ["fullstack-react", "fullstack-svelte"],
         },
         {
           icon: faGlobe,
           description:
-            "Led ticket scan app creation using React Native & WebSockets, supercharging scalability and increasing revenue by +40%",
+            "Supercharged scalability & boosted revenue +40%, by leading ticket scan app creation using React Native & WebSockets",
+            // "Led ticket scan app creation using React Native & WebSockets, supercharging scalability and increasing revenue by +40%",
           tags: ["fullstack-react", "fullstack-svelte"],
         },
         {
           title: "System Reliability",
           icon: faShieldAlt,
           description:
-            "Established quality testing suite using Django and Selenium (+80% coverage) decreasing regression bugs by about 90%",
+            "Decreased regression bugs by about 90%, by establishing quality testing suite using Django & Selenium (+80% coverage)",
+            // "Established quality testing suite using Django and Selenium (+80% coverage) decreasing regression bugs by about 90%",
           tags: ["fullstack-python", "fullstack-react", "fullstack-svelte"],
         },
         {
           title: "System Reliability",
           icon: faShieldAlt,
           description:
-            "Orchestrated CI/CD systems on Linode using Ansible & Python, reducing deploy time by +60%, enabling regular releases",
+            "Reduced deploy time -80% & enabled regular releases, by orchestrating CI/CD systems on Linode using Ansible & Python",
+            // "Orchestrated CI/CD systems on Linode using Ansible & Python, reducing deploy time by -80%, enabling regular releases",
           tags: ["fullstack-python", "fullstack-react", "fullstack-svelte"],
         },
         {
           title: "System Reliability",
           icon: faShieldAlt,
           description:
-            "Coordinated development environment setup of 4 Docker microservices in Docker Compose, streamlining onboarding",
+            "Streamlined onboarding, by coordinating development environment setup of 4 Docker microservices in Docker Compose",
+            // "Coordinated development environment setup of 4 Docker microservices in Docker Compose, streamlining onboarding",
           tags: ["fullstack-python", "fullstack-react", "fullstack-svelte"],
         },
         {
           title: "Technical Innovation",
           icon: faMicrochip,
           description:
-            "Customized Django codebase for maintaining backward compatibility with old PHP system & database",
+            "Maintained backward compatibility with legacy PHP system & database, by customizing Django codebase",
+            // "Customized Django codebase for maintaining backward compatibility with old PHP system & database",
           tags: ["fullstack-python"],
         },
         {
           title: "Market Expansion",
           icon: faGlobe,
           description:
-            "Integrated Zoom with OAuth, enabling clients to organize automatically managed online events with Zoom",
+            "Enabled clients to organize automatically managed online events with Zoom, by integrating Zoom with OAuth",
+            // "Integrated Zoom with OAuth, enabling clients to organize automatically managed online events with Zoom",
           tags: ["fullstack-python"],
         },
         {
           title: "Market Expansion",
           icon: faGlobe,
           description:
-            "Implemented TicketSwap REST APIs using DRF, allowing users to validate authenticity of 2nd hand tickets",
+            "Enabled users to validate authenticity of 2nd hand tickets, by implementing TicketSwap REST APIs using DRF",
+            // "Implemented TicketSwap REST APIs using DRF, allowing users to validate authenticity of 2nd hand tickets",
           tags: [],
         },
         {
           title: "Payment Integration",
           icon: faDollarSign,
           description:
-            "Guided payment service integrations (Mollie, Pay.nl, Paypal), processing tens of millions in payment transactions",
+            "Processed tens of millions in payment transactions, by building payment service integrations (Mollie, Pay.nl, Paypal)",
+            // "Guided payment service integrations (Mollie, Pay.nl, Paypal), processing tens of millions in payment transactions",
           tags: [],
         },
         {
           title: "Market Expansion",
           icon: faGlobe,
           description:
-            "Improved internationalization features (language, country & timezone) enabling market expansion to Eurozone countries",
+            "Enabled market expansion to Eurozone countries, by extending i18n features (language, country & timezone)",
+            // "Improved internationalization features (language, country & timezone) enabling market expansion to Eurozone countries",
           tags: [],
         },
       ],
