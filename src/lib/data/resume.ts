@@ -960,4 +960,22 @@ export const resume = {
       }
     ]
   },
+
+  selfReflection: {
+    biggestPositive: {
+      title: "Relentless Problem-Solving Drive",
+      description: "My biggest strength has been an almost obsessive curiosity and determination to understand how things work and how to make them better. When I encounter a problem, I can't let it go until I've found an elegant solution. This drive has led me to dive deep into technologies, anticipate edge cases others miss, and consistently deliver robust solutions that stand the test of time.",
+      impact: "This trait has been fundamental to my success in scaling complex systems, building reliable software, and earning trust from teams and clients. It's why I've been able to optimize platforms by 30-60%, reduce deployment times by 80%, and create solutions that handle thousands of concurrent users. My reputation for thorough, thoughtful engineering stems directly from this characteristic."
+    },
+    
+    biggestHindrance: {
+      title: "Perfectionist Tendencies & Impatience with Inefficiency",
+      description: "My perfectionism and low tolerance for inefficient processes have been my biggest career hindrance. I sometimes spend too much time perfecting solutions beyond business requirements, and I can become visibly frustrated with bureaucratic processes or team members who don't share my sense of urgency for technical excellence.",
+      impact: "This has occasionally strained relationships with stakeholders who prioritize speed over quality, and has sometimes made me seem impatient or difficult to work with when processes move slower than I think they should. It's also led me to take on too much work myself rather than delegating, creating bottlenecks and potentially limiting team growth."
+    },
+    
+    growth: {
+      description: "Recognizing these patterns has been crucial for my development. I'm actively working on balancing my drive for excellence with business pragmatism, and I'm learning to channel my impatience into constructive process improvements rather than frustration. The key insight has been understanding that my greatest strength and biggest weakness are two sides of the same coin - my passion for doing things right."
+    }
+  },
 };

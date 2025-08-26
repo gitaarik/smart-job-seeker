@@ -5,6 +5,7 @@
     faBuilding,
     faCode,
     faExclamationTriangle,
+    faEye,
     faFire,
     faGraduationCap,
     faHandshake,
@@ -90,6 +91,12 @@
       id: "currentChallenges",
       label: "Current Challenges",
       icon: faRoad,
+    },
+
+    {
+      id: "selfReflection",
+      label: "Candid Self-Reflection",
+      icon: faEye,
     },
 
     {
