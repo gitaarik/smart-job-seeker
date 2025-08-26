@@ -1,5 +1,7 @@
 import {
+  faCalendarAlt,
   faChartLine,
+  faClock,
   faCloud,
   faCode,
   faDatabase,
@@ -759,22 +761,32 @@ export const resume = {
       description: "Technically innovative, uses modern technologies",
       icon: faRocket,
     },
+
     {
       description: "A place where I can grow and develop",
       icon: faChartLine,
     },
+
     {
       description: "Open & personal atmosphere in the workplace",
       icon: faUsers,
     },
+
     {
-      description: "Flexible working hours; freely scheduled",
-      icon: faHome,
+      description: "Flexible hours",
+      icon: faClock,
     },
+
+    {
+      description: "Short-term engagement (6-12 months) or part-time",
+      icon: faCalendarAlt,
+    },
+
     {
       description: "Remote work mindset",
       icon: faGlobe,
     },
+
     {
       description: "Flat organizational structure, no micromanagement",
       icon: faHandshake,
