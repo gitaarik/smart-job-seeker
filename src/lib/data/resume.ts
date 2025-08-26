@@ -687,7 +687,7 @@ export const resume = {
       startDate: "2014-01",
       endDate: "2014-01",
       summary:
-        "Popular GitHub Gist explaining Git submodules fundamentals, that many developers understand submodules effectively.",
+        "Popular GitHub Gist explaining Git submodules fundamentals. Helped many developers understand submodules effectively.",
       description:
         "Popular GitHub Gist explaining Git submodules fundamentals with over 1,000 stars. Covers practical usage, team workflows, and common scenarios for managing Git submodules. This beginner-friendly guide has helped many developers understand submodules effectively.",
       url: "https://gist.github.com/gitaarik/8735255",
