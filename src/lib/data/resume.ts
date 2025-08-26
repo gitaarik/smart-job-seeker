@@ -879,4 +879,27 @@ export const resume = {
       mitigation: "I'm actively working on mentoring team members and breaking down complex tasks into smaller, delegatable pieces with clear guidance."
     }
   ],
+
+  currentChallenges: [
+    {
+      title: "Remote Work Market Competition",
+      description: "Finding fully remote positions is increasingly competitive, with many companies preferring hybrid or on-site arrangements, especially for senior roles.",
+      approach: "I'm expanding my search globally, leveraging my multilingual skills and time zone flexibility, while actively building my online presence and network within remote-first communities."
+    },
+    {
+      title: "Short-term & Part-time Opportunities",
+      description: "Most companies seek full-time, long-term commitments, making it challenging to find quality short-term (6-12 months) or part-time positions that match my experience level.",
+      approach: "I'm exploring consulting opportunities, contract work, and startups that need flexible senior talent. I'm also positioning myself for project-based work where my experience can deliver quick wins."
+    },
+    {
+      title: "Emerging Technology Adoption",
+      description: "Many opportunities require deep expertise in cutting-edge technologies (advanced AI/ML frameworks, cloud-native architectures, modern DevOps tools) that I'm still learning.",
+      approach: "I'm dedicating time to hands-on learning through personal projects, online courses, and contributing to open-source projects. I'm also transparent about my learning journey and eager to grow in these areas on the job."
+    },
+    {
+      title: "Market Positioning for Career Transition",
+      description: "Transitioning from traditional full-stack development to more specialized roles (AI/ML, data science) while maintaining leadership aspirations creates positioning challenges.",
+      approach: "I'm building a portfolio that bridges my extensive development background with emerging technologies, highlighting transferable skills and demonstrating practical applications through projects and contributions."
+    }
+  ],
 };

@@ -8,6 +8,7 @@
     faGraduationCap,
     faHandshake,
     faHeart,
+    faRoad,
     faRobot,
     faRocket,
     faUser,
@@ -76,6 +77,12 @@
       id: "weaknesses",
       label: "Areas for Growth",
       icon: faExclamationTriangle,
+    },
+
+    {
+      id: "currentChallenges",
+      label: "Current Challenges",
+      icon: faRoad,
     },
 
     {
