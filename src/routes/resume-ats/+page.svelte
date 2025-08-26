@@ -7,9 +7,9 @@
     faGlobe,
     faLocationDot,
     faPhone,
-    // faStar,
+    faStar,
   } from "@fortawesome/free-solid-svg-icons";
-  // import { faGithub } from "@fortawesome/free-brands-svg-icons";
+  import { faGithub } from "@fortawesome/free-brands-svg-icons";
   import { page } from "$app/state";
 
   const type = page.url.searchParams.get("type");
@@ -238,7 +238,7 @@
     {#each resume.projects.slice(0, 3) as project (project.name)}
       <div class="mb-2">
         <div class="text-xs font-bold mb-1">
-          {project.name} (<a href={project.url} class="underline" target="_blank">{project.stars} stars</a>) | {formatDateRangeYear(project.startDate, project.endDate)}
+          {project.name} | <a href={project.url} target="_blank"><FontAwesomeIcon icon={faGithub} class="w-3" title="GitHub" /> <FontAwesomeIcon icon={faStar} title="Stars" class="w-3" /> <span class="underline">{project.stars}</span></a> | {formatDateRangeYear(project.startDate, project.endDate)}
         </div>
 
         <div class="text-xs">
