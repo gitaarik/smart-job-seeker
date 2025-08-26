@@ -4,6 +4,7 @@
     faBriefcase,
     faBuilding,
     faCode,
+    faExclamationTriangle,
     faGraduationCap,
     faHandshake,
     faHeart,
@@ -69,6 +70,12 @@
       id: "fiveYearVision",
       label: "Me in 5 Years",
       icon: faRocket,
+    },
+
+    {
+      id: "weaknesses",
+      label: "Areas for Growth",
+      icon: faExclamationTriangle,
     },
 
     {

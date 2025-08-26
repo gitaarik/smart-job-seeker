@@ -856,4 +856,27 @@ export const resume = {
       },
     },
   },
+
+  weaknesses: [
+    {
+      title: "Perfectionism",
+      description: "I sometimes spend too much time refining code or features beyond what's necessary for the current requirements, which can impact delivery timelines.",
+      mitigation: "I'm learning to better balance quality with pragmatic delivery by setting clear 'good enough' thresholds and time-boxing optimization work."
+    },
+    {
+      title: "Over-engineering",
+      description: "I tend to anticipate future requirements and build more flexible solutions than immediately needed, sometimes adding unnecessary complexity.",
+      mitigation: "I'm practicing YAGNI (You Aren't Gonna Need It) principles and focusing on solving current problems first, then iterating based on actual needs."
+    },
+    {
+      title: "Impatience with inefficient processes",
+      description: "I can become frustrated with slow or bureaucratic processes that seem to hinder productivity and technical progress.",
+      mitigation: "I'm working on better understanding the business reasons behind processes and proposing constructive improvements rather than just expressing frustration."
+    },
+    {
+      title: "Difficulty delegating technical tasks",
+      description: "I sometimes prefer to handle complex technical problems myself rather than delegating them, which can create bottlenecks.",
+      mitigation: "I'm actively working on mentoring team members and breaking down complex tasks into smaller, delegatable pieces with clear guidance."
+    }
+  ],
 };
