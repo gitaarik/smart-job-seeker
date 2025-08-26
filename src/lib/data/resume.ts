@@ -866,7 +866,7 @@ export const resume = {
     {
       title: "Over-engineering",
       description: "I tend to anticipate future requirements and build more flexible solutions than immediately needed, sometimes adding unnecessary complexity.",
-      mitigation: "I'm practicing YAGNI (You Aren't Gonna Need It) principles and focusing on solving current problems first, then iterating based on actual needs."
+      mitigation: "I'm practicing YAGNI (You Aren't Gonna Need It) principles and focusing on solving current problems first, then iterating based on actual needs. I actively use agile/scrum methodologies and TDD to ensure I only create the features that are actually required."
     },
     {
       title: "Impatience with inefficient processes",
