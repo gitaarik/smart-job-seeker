@@ -1,3 +1,4 @@
+- Add "Projects" section
 - Change slogan
   - Instead of "Python • Django • React • Node.js"
   - Something like:

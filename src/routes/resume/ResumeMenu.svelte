@@ -7,6 +7,7 @@
     faHandshake,
     faHeart,
     faRobot,
+    faRocket,
     faUser,
     faUsers,
     faWrench,
@@ -55,6 +56,12 @@
       id: "idealCompany",
       label: "Ideal Company",
       icon: faBuilding,
+    },
+
+    {
+      id: "fiveYearVision",
+      label: "Me in 5 Years",
+      icon: faRocket,
     },
 
     {
