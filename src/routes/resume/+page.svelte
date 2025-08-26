@@ -1,15 +1,30 @@
 <script lang="ts">
   import HeaderSection from "./HeaderSection.svelte";
-  import ProfileSection from "./ProfileSection.svelte";
-  import SummarySection from "./SummarySection.svelte";
-  import KeyQualificationsSection from "./KeyQualificationsSection.svelte";
+  import ResumeMenu from "./ResumeMenu.svelte";
+  import OverviewSection from "./OverviewSection.svelte";
   import TechnicalExpertiseSection from "./TechnicalExpertiseSection.svelte";
   import ProfessionalExperience from "./ProfessionalExperience.svelte";
   import ReferencesSection from "./ReferencesSection.svelte";
   import EducationSection from "./EducationSection.svelte";
   import HobbiesInterestsSection from "./HobbiesInterestsSection.svelte";
-  import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
   import PersonalityAndMethodologies from "./PersonalityAndMethodologies.svelte";
+  import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
+
+  let activeSection = "overview";
+
+  function handleSectionChange(event: CustomEvent) {
+    activeSection = event.detail.section;
+  }
+
+  // Listen for section change events
+  import { onMount } from 'svelte';
+  
+  onMount(() => {
+    document.addEventListener('sectionChange', handleSectionChange);
+    return () => {
+      document.removeEventListener('sectionChange', handleSectionChange);
+    };
+  });
 </script>
 
 <svelte:head>
@@ -33,32 +48,27 @@
     class="flex flex-col gap-10 print:gap-7 py-6 px-4 print:p-0 max-w-[800px] mx-auto"
   >
     <HeaderSection />
-    <ProfileSection />
-    <SummarySection />
-    <KeyQualificationsSection />
-
-    <div class="print:my-15 print:break-inside-avoid">
-      <PersonalityAndMethodologies />
+    
+    <div class="print:hidden">
+      <ResumeMenu {activeSection} />
     </div>
 
-    <div class="print:py-10 print:break-inside-avoid">
-      <TechnicalExpertiseSection />
-    </div>
-
-    <div class="print:py-10 print:break-inside-avoid">
-      <ProfessionalExperience />
-    </div>
-
-    <div class="print:py-10 print:break-inside-avoid">
-      <EducationSection />
-    </div>
-
-    <div class="print:py-10 print:break-inside-avoid">
-      <HobbiesInterestsSection />
-    </div>
-
-    <div class="print:py-10 print:break-inside-avoid">
-      <ReferencesSection />
+    <div class="print:break-inside-avoid">
+      {#if activeSection === "overview"}
+        <OverviewSection />
+      {:else if activeSection === "personality"}
+        <PersonalityAndMethodologies />
+      {:else if activeSection === "technical"}
+        <TechnicalExpertiseSection />
+      {:else if activeSection === "experience"}
+        <ProfessionalExperience />
+      {:else if activeSection === "education"}
+        <EducationSection />
+      {:else if activeSection === "interests"}
+        <HobbiesInterestsSection />
+      {:else if activeSection === "references"}
+        <ReferencesSection />
+      {/if}
     </div>
   </div>
 </div>
