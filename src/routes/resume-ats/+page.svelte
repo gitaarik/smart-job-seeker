@@ -230,44 +230,23 @@
   <!-- </div> -->
 
   <!-- Projects -->
-  <!-- <div class="my-3 page-break-before"> -->
-  <!--   <h2 class="text-sm font-bold mb-2 border-b-2 border-black"> -->
-  <!--     PROJECTS -->
-  <!--   </h2> -->
-  <!---->
-  <!--   {#each resume.projects as project (project.name)} -->
-  <!--     <div class="mb-3"> -->
-  <!--       <div class="flex items-center gap-2"> -->
-  <!--         <h3 class="font-bold text-sm">{project.name}</h3> -->
-  <!--         <a -->
-  <!--           href={project.url} -->
-  <!--           target="_blank" -->
-  <!--           class="flex items-center" -->
-  <!--         > -->
-  <!--           <FontAwesomeIcon icon={faGithub} class="w-3 mr-1" /> -->
-  <!--           <FontAwesomeIcon icon={faStar} class="w-3 mr-1" /> -->
-  <!--           <span class="underline"> -->
-  <!--             {project.stars} -->
-  <!--           </span> -->
-  <!--         </a> -->
-  <!--       </div> -->
-  <!---->
-  <!--       <div> -->
-  <!--         {project.description} -->
-  <!--       </div> -->
+  <div class="my-4">
+    <h2 class="text-sm font-bold mb-2 border-b-2 border-black">
+      NOTABLE PROJECTS
+    </h2>
 
-  <!-- {#if project.highlights && project.highlights.length > 0} -->
-  <!--   <ul class="list-disc ml-4"> -->
-  <!--     {#each project.highlights as highlight, index (index)} -->
-  <!--       <li> -->
-  <!--         {highlight} -->
-  <!--       </li> -->
-  <!--     {/each} -->
-  <!--   </ul> -->
-  <!-- {/if} -->
-  <!--     </div> -->
-  <!--   {/each} -->
-  <!-- </div> -->
+    {#each resume.projects.slice(0, 3) as project (project.name)}
+      <div class="mb-2">
+        <div class="text-xs font-bold mb-1">
+          {project.name} ({project.stars} stars) | {formatDateRangeCompact(project.startDate, project.endDate)}
+        </div>
+
+        <div class="text-xs">
+          {project.summary}
+        </div>
+      </div>
+    {/each}
+  </div>
 
   <!-- <div class="mb-6"> -->
   <!--   <h2 class="text-sm font-bold mb-2 border-b-2 border-black"> -->

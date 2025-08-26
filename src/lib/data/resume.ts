@@ -649,6 +649,8 @@ export const resume = {
       name: "LitState",
       startDate: "2020-11",
       endDate: "2023-01",
+      summary:
+        "Reactive state management library for Lit Web Components, Open-sourced on GitHub & NPM. Used in production at Chipta.",
       description:
         "Simplified state management in Lit Web Components library, by releasing an open source Node.js package on NPM, gaining 143 stars on GitHub during time of Lit & Web Components popularity. Successfully implemented library for projects at Chipta. Engaged with developers in GitHub Issues & Pull Requests.",
       // "Open-source Node.js package providing reactive state management for Lit web components. With comprehensive documentation and extension support. A minimal yet powerful solution for efficient state synchronization across components.",
@@ -666,6 +668,8 @@ export const resume = {
       name: "Django Admin Relation Links",
       startDate: "2017-03",
       endDate: "2020-12",
+      summary:
+        "Django Admin navigation enhancement, open-sourced on GitHub and PyPi. Successfully used at Chipta & Tender-it.",
       description:
         "Enhanced Django Admin Navigation with an open source Python package released on PyPi, gaining 108 stars on GitHub. Succesfully employed at projects at Chipta & Tender-it. Engaged with developers in GitHub Issues & Pull Requests.",
       highlights: [
@@ -682,6 +686,8 @@ export const resume = {
       name: "Git Submodules Guide",
       startDate: "2014-01",
       endDate: "2014-01",
+      summary:
+        "Popular GitHub Gist explaining Git submodules fundamentals with comprehensive examples and workflows.",
       description:
         " Popular GitHub Gist explaining Git submodules fundamentals with over 1,000 stars. Covers practical usage, team workflows, and common scenarios for managing Git submodules. This beginner-friendly guide has helped many developers understand submodules effectively. ",
       url: "https://gist.github.com/gitaarik/8735255",
@@ -693,6 +699,8 @@ export const resume = {
       name: "Jazzchords",
       startDate: "2013-06",
       endDate: "2017-12",
+      summary:
+        "Web application for creating and printing professional chord charts using Python/Django and modern frontend technologies.",
       description:
         "Tool for creating, sharing & printing professional-looking chord charts. Built with Python/Django backend and modern frontend technologies. Designed for musicians who need clean, readable chord progressions for performance and collaboration.",
       highlights: [
@@ -706,6 +714,8 @@ export const resume = {
       name: "Adyengo",
       startDate: "2013-08",
       endDate: "2020-05",
+      summary:
+        "Open-source Django package for Adyen payment integration with recurring payment support. Used in production at Tender-it.",
       description:
         "Streamlined Adyen Payment integration in Django by releasing open source Python package on PyPi. Including recurring payment support & helpfull logging. Succesfully used in Tender-it project.",
       // "Open-source Django app that simplifies Adyen payment system integration. Supports regular, one-click, and recurring payments with comprehensive logging and error handling. Provides Django models and managers that mirror Adyen's API structure for seamless e-commerce development.",
@@ -860,219 +870,280 @@ export const resume = {
   weaknesses: [
     {
       title: "Perfectionism",
-      description: "I sometimes spend too much time refining code or features beyond what's necessary for the current requirements, which can impact delivery timelines.",
-      mitigation: "I'm learning to better balance quality with pragmatic delivery by setting clear 'good enough' thresholds and time-boxing optimization work."
+      description:
+        "I sometimes spend too much time refining code or features beyond what's necessary for the current requirements, which can impact delivery timelines.",
+      mitigation:
+        "I'm learning to better balance quality with pragmatic delivery by setting clear 'good enough' thresholds and time-boxing optimization work.",
     },
     {
       title: "Over-engineering",
-      description: "I tend to anticipate future requirements and build more flexible solutions than immediately needed, sometimes adding unnecessary complexity.",
-      mitigation: "I'm practicing YAGNI (You Aren't Gonna Need It) principles and focusing on solving current problems first, then iterating based on actual needs. I actively use agile/scrum methodologies and TDD to ensure I only create the features that are actually required."
+      description:
+        "I tend to anticipate future requirements and build more flexible solutions than immediately needed, sometimes adding unnecessary complexity.",
+      mitigation:
+        "I'm practicing YAGNI (You Aren't Gonna Need It) principles and focusing on solving current problems first, then iterating based on actual needs. I actively use agile/scrum methodologies and TDD to ensure I only create the features that are actually required.",
     },
     {
       title: "Impatience with inefficient processes",
-      description: "I can become frustrated with slow or bureaucratic processes that seem to hinder productivity and technical progress.",
-      mitigation: "I'm working on better understanding the business reasons behind processes and proposing constructive improvements rather than just expressing frustration."
+      description:
+        "I can become frustrated with slow or bureaucratic processes that seem to hinder productivity and technical progress.",
+      mitigation:
+        "I'm working on better understanding the business reasons behind processes and proposing constructive improvements rather than just expressing frustration.",
     },
     {
       title: "Difficulty delegating technical tasks",
-      description: "I sometimes prefer to handle complex technical problems myself rather than delegating them, which can create bottlenecks.",
-      mitigation: "I'm actively working on mentoring team members and breaking down complex tasks into smaller, delegatable pieces with clear guidance."
-    }
+      description:
+        "I sometimes prefer to handle complex technical problems myself rather than delegating them, which can create bottlenecks.",
+      mitigation:
+        "I'm actively working on mentoring team members and breaking down complex tasks into smaller, delegatable pieces with clear guidance.",
+    },
   ],
 
   currentChallenges: [
     {
       title: "Remote Work Market Competition",
-      description: "Finding fully remote positions is increasingly competitive, with many companies preferring hybrid or on-site arrangements, especially for senior roles.",
-      approach: "I'm expanding my search globally, leveraging my multilingual skills and time zone flexibility, while actively building my online presence and network within remote-first communities."
+      description:
+        "Finding fully remote positions is increasingly competitive, with many companies preferring hybrid or on-site arrangements, especially for senior roles.",
+      approach:
+        "I'm expanding my search globally, leveraging my multilingual skills and time zone flexibility, while actively building my online presence and network within remote-first communities.",
     },
     {
       title: "Short-term & Part-time Opportunities",
-      description: "Most companies seek full-time, long-term commitments, making it challenging to find quality short-term (6-12 months) or part-time positions that match my experience level.",
-      approach: "I'm exploring consulting opportunities, contract work, and startups that need flexible senior talent. I'm also positioning myself for project-based work where my experience can deliver quick wins."
+      description:
+        "Most companies seek full-time, long-term commitments, making it challenging to find quality short-term (6-12 months) or part-time positions that match my experience level.",
+      approach:
+        "I'm exploring consulting opportunities, contract work, and startups that need flexible senior talent. I'm also positioning myself for project-based work where my experience can deliver quick wins.",
     },
     {
       title: "Emerging Technology Adoption",
-      description: "Many opportunities require deep expertise in cutting-edge technologies (advanced AI/ML frameworks, cloud-native architectures, modern DevOps tools) that I'm still learning.",
-      approach: "I'm dedicating time to hands-on learning through personal projects, online courses, and contributing to open-source projects. I'm also transparent about my learning journey and eager to grow in these areas on the job."
+      description:
+        "Many opportunities require deep expertise in cutting-edge technologies (advanced AI/ML frameworks, cloud-native architectures, modern DevOps tools) that I'm still learning.",
+      approach:
+        "I'm dedicating time to hands-on learning through personal projects, online courses, and contributing to open-source projects. I'm also transparent about my learning journey and eager to grow in these areas on the job.",
     },
     {
       title: "Market Positioning for Career Transition",
-      description: "Transitioning from traditional full-stack development to more specialized roles (AI/ML, data science) while maintaining leadership aspirations creates positioning challenges.",
-      approach: "I'm building a portfolio that bridges my extensive development background with emerging technologies, highlighting transferable skills and demonstrating practical applications through projects and contributions."
-    }
+      description:
+        "Transitioning from traditional full-stack development to more specialized roles (AI/ML, data science) while maintaining leadership aspirations creates positioning challenges.",
+      approach:
+        "I'm building a portfolio that bridges my extensive development background with emerging technologies, highlighting transferable skills and demonstrating practical applications through projects and contributions.",
+    },
   ],
 
   whatExcitesMe: {
     excites: [
       {
         title: "Complex Engineering Problems",
-        description: "I thrive on tackling intricate technical challenges that require deep thinking, creative problem-solving, and innovative approaches to find elegant solutions.",
+        description:
+          "I thrive on tackling intricate technical challenges that require deep thinking, creative problem-solving, and innovative approaches to find elegant solutions.",
         icon: faWrench,
       },
       {
         title: "Creating Innovative Products & Services",
-        description: "Building something new from the ground up, especially products that solve real-world problems or create new possibilities for users, energizes me tremendously.",
+        description:
+          "Building something new from the ground up, especially products that solve real-world problems or create new possibilities for users, energizes me tremendously.",
         icon: faRocket,
       },
       {
         title: "Beautiful UI with Great UX",
-        description: "Crafting user interfaces that are not only visually appealing but also intuitive and delightful to use. The intersection of design and functionality fascinates me.",
+        description:
+          "Crafting user interfaces that are not only visually appealing but also intuitive and delightful to use. The intersection of design and functionality fascinates me.",
         icon: faGem,
       },
       {
         title: "Guiding & Teaching Developers",
-        description: "Mentoring junior developers, sharing knowledge, and helping others grow in their careers. Seeing someone succeed because of guidance I provided is incredibly rewarding.",
+        description:
+          "Mentoring junior developers, sharing knowledge, and helping others grow in their careers. Seeing someone succeed because of guidance I provided is incredibly rewarding.",
         icon: faUsers,
       },
       {
         title: "Cutting-edge Technologies",
-        description: "Exploring and mastering new technologies, especially in AI/ML, cloud computing, and modern development frameworks. The rapid pace of innovation keeps me motivated.",
+        description:
+          "Exploring and mastering new technologies, especially in AI/ML, cloud computing, and modern development frameworks. The rapid pace of innovation keeps me motivated.",
         icon: faRobot,
       },
       {
         title: "Cross-functional Collaboration",
-        description: "Working closely with designers, product managers, and stakeholders to bring ideas to life. The collaborative aspect of building great products excites me.",
+        description:
+          "Working closely with designers, product managers, and stakeholders to bring ideas to life. The collaborative aspect of building great products excites me.",
         icon: faHandshake,
-      }
+      },
     ],
-    
+
     doesntExcite: [
       {
         title: "Repetitive Maintenance Work",
-        description: "While I understand its importance, spending extended periods on routine bug fixes or maintaining legacy systems without improvement opportunities doesn't energize me.",
+        description:
+          "While I understand its importance, spending extended periods on routine bug fixes or maintaining legacy systems without improvement opportunities doesn't energize me.",
       },
       {
         title: "Purely Administrative Tasks",
-        description: "Tasks that are mainly bureaucratic or administrative in nature, with little technical or creative problem-solving involved, tend to drain my enthusiasm.",
+        description:
+          "Tasks that are mainly bureaucratic or administrative in nature, with little technical or creative problem-solving involved, tend to drain my enthusiasm.",
       },
       {
         title: "Working in Isolation",
-        description: "Long periods of solo work without team interaction or collaboration opportunities. I thrive on bouncing ideas off others and collective problem-solving.",
+        description:
+          "Long periods of solo work without team interaction or collaboration opportunities. I thrive on bouncing ideas off others and collective problem-solving.",
       },
       {
         title: "Micromanagement Environments",
-        description: "Overly rigid processes or micromanagement that stifles creativity and autonomous decision-making. I prefer environments that trust and empower developers.",
+        description:
+          "Overly rigid processes or micromanagement that stifles creativity and autonomous decision-making. I prefer environments that trust and empower developers.",
       },
       {
         title: "Technology for Technology's Sake",
-        description: "Implementing new technologies without clear business value or user benefit. I prefer purposeful innovation that solves real problems.",
-      }
-    ]
+        description:
+          "Implementing new technologies without clear business value or user benefit. I prefer purposeful innovation that solves real problems.",
+      },
+    ],
   },
 
   selfReflection: {
     biggestPositive: {
       title: "Relentless Problem-Solving Drive",
-      description: "My biggest strength has been an almost obsessive curiosity and determination to understand how things work and how to make them better. When I encounter a problem, I can't let it go until I've found an elegant solution. This drive has led me to dive deep into technologies, anticipate edge cases others miss, and consistently deliver robust solutions that stand the test of time.",
-      impact: "This trait has been fundamental to my success in scaling complex systems, building reliable software, and earning trust from teams and clients. It's why I've been able to optimize platforms by 30-60%, reduce deployment times by 80%, and create solutions that handle thousands of concurrent users. My reputation for thorough, thoughtful engineering stems directly from this characteristic."
+      description:
+        "My biggest strength has been an almost obsessive curiosity and determination to understand how things work and how to make them better. When I encounter a problem, I can't let it go until I've found an elegant solution. This drive has led me to dive deep into technologies, anticipate edge cases others miss, and consistently deliver robust solutions that stand the test of time.",
+      impact:
+        "This trait has been fundamental to my success in scaling complex systems, building reliable software, and earning trust from teams and clients. It's why I've been able to optimize platforms by 30-60%, reduce deployment times by 80%, and create solutions that handle thousands of concurrent users. My reputation for thorough, thoughtful engineering stems directly from this characteristic.",
     },
-    
+
     biggestHindrance: {
       title: "Perfectionist Tendencies & Impatience with Inefficiency",
-      description: "My perfectionism and low tolerance for inefficient processes have been my biggest career hindrance. I sometimes spend too much time perfecting solutions beyond business requirements, and I can become visibly frustrated with bureaucratic processes or team members who don't share my sense of urgency for technical excellence.",
-      impact: "This has occasionally strained relationships with stakeholders who prioritize speed over quality, and has sometimes made me seem impatient or difficult to work with when processes move slower than I think they should. It's also led me to take on too much work myself rather than delegating, creating bottlenecks and potentially limiting team growth."
+      description:
+        "My perfectionism and low tolerance for inefficient processes have been my biggest career hindrance. I sometimes spend too much time perfecting solutions beyond business requirements, and I can become visibly frustrated with bureaucratic processes or team members who don't share my sense of urgency for technical excellence.",
+      impact:
+        "This has occasionally strained relationships with stakeholders who prioritize speed over quality, and has sometimes made me seem impatient or difficult to work with when processes move slower than I think they should. It's also led me to take on too much work myself rather than delegating, creating bottlenecks and potentially limiting team growth.",
     },
-    
+
     growth: {
-      description: "Recognizing these patterns has been crucial for my development. I'm actively working on balancing my drive for excellence with business pragmatism, and I'm learning to channel my impatience into constructive process improvements rather than frustration. The key insight has been understanding that my greatest strength and biggest weakness are two sides of the same coin - my passion for doing things right."
-    }
+      description:
+        "Recognizing these patterns has been crucial for my development. I'm actively working on balancing my drive for excellence with business pragmatism, and I'm learning to channel my impatience into constructive process improvements rather than frustration. The key insight has been understanding that my greatest strength and biggest weakness are two sides of the same coin - my passion for doing things right.",
+    },
   },
 
   careerPriorities: [
     {
       priority: 1,
       title: "Transition into AI/ML Leadership Role",
-      description: "My top priority is securing a senior position that combines my extensive full-stack development experience with emerging AI/ML technologies. I want to lead teams building production-ready AI systems that solve real-world problems.",
-      actions: "Actively learning advanced ML frameworks, contributing to AI open-source projects, and seeking opportunities to demonstrate AI/ML capabilities in practical applications.",
+      description:
+        "My top priority is securing a senior position that combines my extensive full-stack development experience with emerging AI/ML technologies. I want to lead teams building production-ready AI systems that solve real-world problems.",
+      actions:
+        "Actively learning advanced ML frameworks, contributing to AI open-source projects, and seeking opportunities to demonstrate AI/ML capabilities in practical applications.",
       icon: faRobot,
     },
     {
       priority: 2,
       title: "Maintain Work-Life Balance & Location Freedom",
-      description: "Preserving my ability to work remotely from Spain while maintaining flexible hours is crucial for my personal well-being and long-term career sustainability.",
-      actions: "Focusing exclusively on remote-first companies and roles that offer genuine flexibility, rather than compromising on location or work arrangements.",
+      description:
+        "Preserving my ability to work remotely from Spain while maintaining flexible hours is crucial for my personal well-being and long-term career sustainability.",
+      actions:
+        "Focusing exclusively on remote-first companies and roles that offer genuine flexibility, rather than compromising on location or work arrangements.",
       icon: faHome,
     },
     {
       priority: 3,
       title: "Build Portfolio of Meaningful Projects",
-      description: "Creating a collection of projects that demonstrate both technical excellence and positive societal impact, showing my ability to bridge traditional development with emerging technologies.",
-      actions: "Developing AI-powered applications, contributing to open-source ML tools, and documenting my learning journey to establish thought leadership in the space.",
+      description:
+        "Creating a collection of projects that demonstrate both technical excellence and positive societal impact, showing my ability to bridge traditional development with emerging technologies.",
+      actions:
+        "Developing AI-powered applications, contributing to open-source ML tools, and documenting my learning journey to establish thought leadership in the space.",
       icon: faRocket,
     },
     {
       priority: 4,
       title: "Expand Professional Network in AI/Data Science",
-      description: "Building relationships within the AI/ML community to learn from experts, find mentorship opportunities, and discover collaborative projects or career opportunities.",
-      actions: "Engaging with AI communities online, attending virtual conferences, and connecting with professionals who are successfully bridging development and data science.",
+      description:
+        "Building relationships within the AI/ML community to learn from experts, find mentorship opportunities, and discover collaborative projects or career opportunities.",
+      actions:
+        "Engaging with AI communities online, attending virtual conferences, and connecting with professionals who are successfully bridging development and data science.",
       icon: faUsers,
     },
     {
       priority: 5,
       title: "Achieve Financial Stability Through Contract Work",
-      description: "Securing consistent income through high-value consulting or contract positions while pursuing longer-term career transition goals.",
-      actions: "Leveraging my senior development skills for well-paying short-term projects that provide financial security during my career pivot period.",
+      description:
+        "Securing consistent income through high-value consulting or contract positions while pursuing longer-term career transition goals.",
+      actions:
+        "Leveraging my senior development skills for well-paying short-term projects that provide financial security during my career pivot period.",
       icon: faDollarSign,
-    }
+    },
   ],
 
   flowState: {
-    question: "When you get lost in your work in a good way, what are you working on? What are the activities you would like to do more of in your career?",
-    
+    question:
+      "When you get lost in your work in a good way, what are you working on? What are the activities you would like to do more of in your career?",
+
     lostInWork: [
       {
         title: "Architecting Complex System Solutions",
-        description: "I completely lose track of time when designing how different components of a complex system will interact. Mapping out data flows, anticipating edge cases, and finding elegant ways to handle scalability challenges feels like solving a beautiful puzzle.",
-        example: "Like when I was designing the ticket processing system at Chipta - hours would fly by as I optimized the queue management and payment flow integration.",
+        description:
+          "I completely lose track of time when designing how different components of a complex system will interact. Mapping out data flows, anticipating edge cases, and finding elegant ways to handle scalability challenges feels like solving a beautiful puzzle.",
+        example:
+          "Like when I was designing the ticket processing system at Chipta - hours would fly by as I optimized the queue management and payment flow integration.",
         icon: faWrench,
       },
       {
         title: "Debugging Intricate Technical Problems",
-        description: "There's something deeply satisfying about tracing through complex codebases to find the root cause of mysterious bugs. The detective work, the hypothesis testing, the 'aha!' moment when everything clicks - it's pure flow state.",
-        example: "Spending entire afternoons tracking down performance bottlenecks that turned into 60% optimization gains - completely absorbed in the process.",
+        description:
+          "There's something deeply satisfying about tracing through complex codebases to find the root cause of mysterious bugs. The detective work, the hypothesis testing, the 'aha!' moment when everything clicks - it's pure flow state.",
+        example:
+          "Spending entire afternoons tracking down performance bottlenecks that turned into 60% optimization gains - completely absorbed in the process.",
         icon: faSearch,
       },
       {
         title: "Building Beautiful, Functional UI Components",
-        description: "When I'm crafting user interfaces that are both visually appealing and technically sound, I enter a zone where design thinking and technical implementation merge seamlessly.",
-        example: "Creating the responsive design system components that increased user engagement by 30% - lost in the details of animations, responsiveness, and user experience flow.",
+        description:
+          "When I'm crafting user interfaces that are both visually appealing and technically sound, I enter a zone where design thinking and technical implementation merge seamlessly.",
+        example:
+          "Creating the responsive design system components that increased user engagement by 30% - lost in the details of animations, responsiveness, and user experience flow.",
         icon: faGem,
       },
       {
         title: "Learning & Implementing New Technologies",
-        description: "Diving deep into documentation, experimenting with new frameworks, and building proof-of-concepts with emerging technologies. The learning curve and creative exploration are incredibly engaging.",
-        example: "When I first explored React Native and WebSockets for the mobile ticket scanning app - completely absorbed in understanding the paradigms and possibilities.",
+        description:
+          "Diving deep into documentation, experimenting with new frameworks, and building proof-of-concepts with emerging technologies. The learning curve and creative exploration are incredibly engaging.",
+        example:
+          "When I first explored React Native and WebSockets for the mobile ticket scanning app - completely absorbed in understanding the paradigms and possibilities.",
         icon: faRocket,
-      }
+      },
     ],
 
     wantMoreOf: [
       {
         title: "AI/ML Model Development & Integration",
-        description: "Building intelligent systems that learn and adapt. I want to spend more time developing machine learning models, implementing AI-powered features, and creating systems that get smarter over time.",
-        why: "This represents the future of software development and aligns with my desire to work on cutting-edge, impactful technology.",
+        description:
+          "Building intelligent systems that learn and adapt. I want to spend more time developing machine learning models, implementing AI-powered features, and creating systems that get smarter over time.",
+        why:
+          "This represents the future of software development and aligns with my desire to work on cutting-edge, impactful technology.",
       },
       {
         title: "Technical Mentoring & Knowledge Transfer",
-        description: "One-on-one mentoring sessions, conducting technical workshops, and helping junior developers level up their skills. The collaborative aspect of teaching while learning energizes me.",
-        why: "It combines my technical expertise with my passion for helping others grow, and it keeps me sharp by forcing me to articulate complex concepts clearly.",
+        description:
+          "One-on-one mentoring sessions, conducting technical workshops, and helping junior developers level up their skills. The collaborative aspect of teaching while learning energizes me.",
+        why:
+          "It combines my technical expertise with my passion for helping others grow, and it keeps me sharp by forcing me to articulate complex concepts clearly.",
       },
       {
         title: "Cross-functional Product Strategy",
-        description: "Working closely with product managers, designers, and stakeholders to shape product direction from a technical perspective. Being involved in 'what should we build' conversations, not just 'how should we build it'.",
-        why: "I want to have more strategic impact and help ensure technical feasibility aligns with business goals and user needs.",
+        description:
+          "Working closely with product managers, designers, and stakeholders to shape product direction from a technical perspective. Being involved in 'what should we build' conversations, not just 'how should we build it'.",
+        why:
+          "I want to have more strategic impact and help ensure technical feasibility aligns with business goals and user needs.",
       },
       {
         title: "Open Source Contribution & Community Building",
-        description: "Contributing to meaningful open-source projects, building developer tools that others can benefit from, and engaging with the broader tech community through writing and speaking.",
-        why: "It allows me to give back to the community that has given me so much, while building my reputation and network in emerging technology areas.",
+        description:
+          "Contributing to meaningful open-source projects, building developer tools that others can benefit from, and engaging with the broader tech community through writing and speaking.",
+        why:
+          "It allows me to give back to the community that has given me so much, while building my reputation and network in emerging technology areas.",
       },
       {
         title: "Experimental & Research-Oriented Projects",
-        description: "Working on projects where the outcome isn't predetermined - exploring new possibilities, testing hypotheses, and pushing the boundaries of what's currently possible.",
-        why: "This type of work feeds my curiosity and allows me to be at the forefront of technological innovation rather than just implementing established solutions.",
-      }
-    ]
+        description:
+          "Working on projects where the outcome isn't predetermined - exploring new possibilities, testing hypotheses, and pushing the boundaries of what's currently possible.",
+        why:
+          "This type of work feeds my curiosity and allows me to be at the forefront of technological innovation rather than just implementing established solutions.",
+      },
+    ],
   },
 };
