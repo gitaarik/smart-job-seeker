@@ -33,3 +33,14 @@ export function formatDateRangeCompact(startDate: string, endDate?: string): str
   const end = endDate ? formatDate(endDate) : "Present";
   return `${start} - ${end}`;
 }
+
+export function formatDateRangeYear(startDate: string, endDate?: string): string {
+  const startYear = startDate.split("-")[0];
+  const endYear = endDate ? endDate.split("-")[0] : "Present";
+  
+  if (endYear === "Present" || startYear === endYear) {
+    return endYear === "Present" ? startYear : startYear;
+  }
+  
+  return `${startYear} - ${endYear}`;
+}

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { resume } from "$lib/data/resume";
-  import { formatDateRangeCompact } from "$lib/tools/date-utils";
+  import { formatDateRangeCompact, formatDateRangeYear } from "$lib/tools/date-utils";
   import {
     faEnvelope,
     faGlobe,
@@ -238,7 +238,7 @@
     {#each resume.projects.slice(0, 3) as project (project.name)}
       <div class="mb-2">
         <div class="text-xs font-bold mb-1">
-          {project.name} (<a href={project.url} class="underline" target="_blank">{project.stars} stars</a>) | {formatDateRangeCompact(project.startDate, project.endDate)}
+          {project.name} (<a href={project.url} class="underline" target="_blank">{project.stars} stars</a>) | {formatDateRangeYear(project.startDate, project.endDate)}
         </div>
 
         <div class="text-xs">
