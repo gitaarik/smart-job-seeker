@@ -778,11 +778,6 @@ export const resume = {
     },
 
     {
-      description: "Short-term engagement (6-12 months) or part-time",
-      icon: faCalendarAlt,
-    },
-
-    {
       description: "Remote work mindset",
       icon: faGlobe,
     },
@@ -790,6 +785,16 @@ export const resume = {
     {
       description: "Flat organizational structure, no micromanagement",
       icon: faHandshake,
+    },
+
+    {
+      description: "Contributing to society or positive world impact",
+      icon: faHeart,
+    },
+
+    {
+      description: "Short-term engagement (6-12 months) or part-time",
+      icon: faCalendarAlt,
     },
   ],
 };
