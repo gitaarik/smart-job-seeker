@@ -768,12 +768,12 @@ export const resume = {
     },
 
     {
-      description: "Open & personal atmosphere in the workplace",
+      description: "Open & personal atmosphere",
       icon: faUsers,
     },
 
     {
-      description: "Flexible hours",
+      description: "Flexible working hours",
       icon: faClock,
     },
 
