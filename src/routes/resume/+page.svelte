@@ -7,6 +7,7 @@
   import ReferencesSection from "./ReferencesSection.svelte";
   import EducationSection from "./EducationSection.svelte";
   import HobbiesInterestsSection from "./HobbiesInterestsSection.svelte";
+  import IdealCompanySection from "./IdealCompanySection.svelte";
   import PersonalityAndMethodologies from "./PersonalityAndMethodologies.svelte";
   import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
 
@@ -66,6 +67,8 @@
         <EducationSection />
       {:else if activeSection === "interests"}
         <HobbiesInterestsSection />
+      {:else if activeSection === "idealCompany"}
+        <IdealCompanySection />
       {:else if activeSection === "references"}
         <ReferencesSection />
       {/if}

@@ -2,6 +2,7 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faBriefcase,
+    faBuilding,
     faGraduationCap,
     faHandshake,
     faHeart,
@@ -48,6 +49,12 @@
       id: "interests",
       label: "Hobbies / Interests",
       icon: faHeart,
+    },
+
+    {
+      id: "idealCompany",
+      label: "Ideal Company",
+      icon: faBuilding,
     },
 
     {

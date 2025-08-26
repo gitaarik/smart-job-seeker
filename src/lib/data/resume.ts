@@ -753,4 +753,31 @@ export const resume = {
       icon: faMountain,
     },
   ],
+
+  idealCompany: [
+    {
+      description: "Technically innovative, uses modern technologies",
+      icon: faRocket,
+    },
+    {
+      description: "A place where I can grow and develop",
+      icon: faChartLine,
+    },
+    {
+      description: "Open & personal atmosphere in the workplace",
+      icon: faUsers,
+    },
+    {
+      description: "Flexible working hours; freely scheduled",
+      icon: faHome,
+    },
+    {
+      description: "Remote work mindset",
+      icon: faGlobe,
+    },
+    {
+      description: "Flat organizational structure, no micromanagement",
+      icon: faHandshake,
+    },
+  ],
 };
