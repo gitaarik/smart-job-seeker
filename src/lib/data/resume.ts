@@ -271,21 +271,24 @@ export const resume = {
           title: "Revenue Model",
           icon: faDollarSign,
           description:
-            "Built subscription-based authentication system with monthly & yearly recurring payments supporting business model",
+            "Realized business model by building subscription system with monthly & yearly recurring payments, with Django & Celery",
+            // "Built subscription-based authentication system with monthly & yearly recurring payments supporting business model",
           tags: ["fullstack-python"],
         },
         {
           title: "Revenue Model",
           icon: faDollarSign,
           description:
-            "Created automatic notification mailing system for user configured tender preferences and saved searches",
+            "Supported user retention by developing automatic notification mailing system for user preferences & saved searches",
+            // "Created automatic notification mailing system for user configured tender preferences and saved searches",
           tags: [],
         },
         {
           title: "Revenue Model",
           icon: faDollarSign,
           description:
-            "Enhanced frontend in coordination with frontend developer using Vue.js, providing professional platform aesthetics",
+            "Provided professional platform aesthetics by enhancing frontend in coordination with frontend developer using Vue.js",
+            // "Enhanced frontend in coordination with frontend developer using Vue.js, providing professional platform aesthetics",
           tags: ["fullstack-react", "fullstack-svelte"],
         },
       ],
