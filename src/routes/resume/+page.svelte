@@ -7,6 +7,7 @@
   import ProfessionalExperience from "./ProfessionalExperience.svelte";
   import ReferencesSection from "./ReferencesSection.svelte";
   import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
+	import PersonalityAndMethodologies from "./PersonalityAndMethodologies.svelte";
 </script>
 
 <svelte:head>
@@ -34,9 +35,9 @@
     <SummarySection />
     <KeyQualificationsSection />
 
-    <!-- <div class="print:my-15 print:break-inside-avoid"> -->
-    <!--   <PersonalityAndMethodologies /> -->
-    <!-- </div> -->
+    <div class="print:my-15 print:break-inside-avoid">
+      <PersonalityAndMethodologies />
+    </div>
 
     <div class="print:py-10 print:break-inside-avoid">
       <TechnicalExpertiseSection />

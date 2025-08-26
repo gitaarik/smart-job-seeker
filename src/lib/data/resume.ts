@@ -31,7 +31,9 @@ import {
 import { faLinkedin } from "@fortawesome/free-brands-svg-icons";
 
 export const resume = {
+
   basics: {
+
     name: "Rik Wanders",
     label: "Senior Full Stack Developer",
     subLabel: "Available for international remote collaboration",
@@ -42,43 +44,53 @@ export const resume = {
     url_label: "rikwanders.tech",
     summary:
       "Dutch Senior Full Stack Developer residing in Spain, with 18+ years experience specializing in Python & Node.js ecosystems. Experienced in scaling complex, high-traffic & data heavy applications and leading agile development teams. Deeply engaged in UX design and skilled at engineering DevOps & CI/CD systems. Always interested in the latest AI, tech & security industry updates. Thrives in agile teams and/or startup environments. 5+ years remote work experience.",
+
     highlights: [
+
       {
         description:
           "<strong>18+ years</strong> of full stack development experience.",
         icon: faGem,
       },
+
       {
         description:
           "Expertise in modern <strong>Python, JavaScript & Node.js</strong> ecosystems.",
         icon: faCode,
       },
+
       {
         description:
           "<strong>Team leadership</strong> and <strong>project management</strong> experience.",
         icon: faUsers,
       },
+
       {
         description:
           "Additional experience in <strong>DevOps & CI/CD.</strong>",
         icon: faServer,
       },
+
       {
         description:
           "Skilled in developing scalable solutions for <strong>high-traffic applications</strong>.",
         icon: faRocket,
       },
+
       {
         description:
           "<strong>5+ years remote work</strong> and distributed team collaboration experience.",
         icon: faHome,
       },
+
       {
         description:
           "<strong>AI-accelerated development</strong> skills with security best practices.",
         icon: faRobot,
       },
+
     ],
+
     location: {
       city: "Ronda",
       region: "Andalusia",
@@ -87,7 +99,9 @@ export const resume = {
       timezone: "CET/GMT+1",
       url: "https://maps.app.goo.gl/WefqeUxUYBD6Q1qF8",
     },
+
     profiles: [
+
       {
         network: "LinkedIn",
         username: "rik-wanders-software",
@@ -95,6 +109,7 @@ export const resume = {
         label: "rik-wanders-software",
         icon: faLinkedin,
       },
+
       {
         network: "GitHub",
         username: "gitaarik",
@@ -102,9 +117,13 @@ export const resume = {
         label: "gitaarik",
         icon: faGithub,
       },
+
     ],
+
   },
+
   work: [
+
     {
       name: "Chipta",
       location: "Amsterdam, NL",
@@ -116,6 +135,7 @@ export const resume = {
       summary:
         "Led teams of 3-5 developers at innovative ticketing platform for over 10 years, scaling the platform from concept to processing thousands of orders per minute. Optimed platform performance by 30-60%, implemented comprehensive testing suites, and orchestrated CI/CD systems. Built React Native mobile apps that increased revenue by 40%, modernized frontend interfaces with React, increasing user engagement by 30%. And integrated critical payment systems processing tens of millions in transactions.",
       logo: "/src/lib/images/company-logos/chipta-logo.png",
+
       highlights: [
         {
           title: "Team Leadership",
@@ -221,7 +241,9 @@ export const resume = {
             // "Improved internationalization features (language, country & timezone) enabling market expansion to Eurozone countries",
           tags: [],
         },
+
       ],
+
       technologies: [
         "Python",
         "Django",
@@ -247,8 +269,11 @@ export const resume = {
         "Web Sockets",
         "React Native",
       ],
+
     },
+
     {
+
       name: "Tender-it",
       location: "Amsterdam, NL",
       description: "Tender/Procurement Discovery Platform",
@@ -258,7 +283,9 @@ export const resume = {
       summary:
         "Built comprehensive tender discovery platform from scratch as part time lead developer, designing complete platform using agile methodology in consultation with non-technical founders. Developed industry-first Elasticsearch-powered search engine filtering hundreds of thousands of tenders, engineered automated web crawling systems importing thousands of tenders daily, and implemented subscription-based revenue model with recurring payments and automated notification systems.",
       logo: "/src/lib/images/company-logos/tender-it-logo.png",
+
       highlights: [
+
         {
           title: "Product Development",
           icon: faWrench,
@@ -308,7 +335,9 @@ export const resume = {
             // "Enhanced frontend in coordination with frontend developer using Vue.js, providing professional platform aesthetics",
           tags: ["fullstack-react", "fullstack-svelte"],
         },
+
       ],
+
       technologies: [
         "Python",
         "Django",
@@ -326,7 +355,9 @@ export const resume = {
         "Webpack",
       ],
     },
+
     {
+
       name: "TravelBird",
       location: "Amsterdam, NL",
       description: "Online Travel Agent",
@@ -337,7 +368,9 @@ export const resume = {
       summary:
         "Contributed to mobile app development during time of travel industry mobile adoption, shipping native iOS booking app in scrum team that handled 15%+ of bookings within first 3 months. Designed REST API using Django REST Framework deployed on AWS to accommodate new iOS & Android apps and mobile website.",
       logo: "/src/lib/images/company-logos/travelbird-logo.png",
+
       highlights: [
+
         {
           title: "Mobile App Development",
           icon: faMobile,
@@ -358,7 +391,9 @@ export const resume = {
           description:
             "Built email marketing system using Python & SendGrid, sending thousands of emails, supporting acquisition",
         },
+
       ],
+
       technologies: [
         "Objective-C",
         "Xcode",
@@ -379,8 +414,11 @@ export const resume = {
         "gulp.js",
         "Sass",
       ],
+
     },
+
     {
+
       name: "SWIS",
       location: "Leiden, NL",
       description: "Web Development Agency",
@@ -391,20 +429,25 @@ export const resume = {
       summary:
         "Delivered web projects for major clients including Bol.com and Gemeente Amsterdam as part of company's best performing Scrum team out of 5 teams. Cultivated advanced frontend & UX skills with jQuery & CSS3, significantly increasing user product engagement and client satisfaction while maintaining agency's reputation for quality delivery.",
       logo: "/src/lib/images/company-logos/swis-logo.png",
+
       highlights: [
+
         {
           title: "Client Delivery",
           icon: faHandshake,
           description:
             "Delivered web projects for major clients (Bol.com, Gemeente Amsterdam) as part of company's best of 5 Scrum teams",
         },
+
         {
           title: "Frontend & CMS Development",
           icon: faFileCode,
           description:
             "Cultivated advanced frontend & UX skills with jQuery & CSS3, increasing user product engagement & client satisfaction",
         },
+
       ],
+
       technologies: [
         "PHP",
         "MySQL",
@@ -422,8 +465,11 @@ export const resume = {
         "Responsive design",
         "Firebug",
       ],
+
     },
+
     {
+
       name: "Gamepoint",
       location: "The Hague, NL",
       description: "Casual Gaming Community",
@@ -434,20 +480,25 @@ export const resume = {
       summary:
         "Progressed from junior to mid-level developer within a 10+ developer team at established gaming community platform serving hundreds of thousands of users. Implemented payment integrations and internationalization features, optimized MySQL database structures & queries, and maintained large-scale PHP codebase & Linux server setup while contributing to platform stability and feature development.",
       logo: "/src/lib/images/company-logos/gamepoint-logo.png",
+
       highlights: [
+
         {
           title: "Platform Development",
           icon: faDatabase,
           description:
             "Implemented payment integrations, internationalization, and optimized MySQL database structures & queries",
         },
+
         {
           title: "Team Collaboration & Growth",
           icon: faUsers,
           description:
             "Promoted to mid-level developer in 10+ developer team, maintaining large-scale PHP codebase & Linux servers setup",
         },
+
       ],
+
       technologies: [
         "PHP",
         "MySQL",
@@ -461,9 +512,13 @@ export const resume = {
         "AJAX",
         "YUI Library",
       ],
+
     },
+
   ],
+
   skills: [
+
     {
       name: "Backend",
       level: "Expert",
@@ -580,8 +635,11 @@ export const resume = {
     //     "Objective-C",
     //   ],
     // },
+
   ],
+
   education: [
+
     {
       institution: "Nova College",
       location: "Hoofddorp, NL",
@@ -593,6 +651,7 @@ export const resume = {
       graduationYear: "2007",
       score: 4,
     },
+
     {
       institution: "Festivalinfo.nl",
       location: "Amsterdam, NL",
@@ -603,8 +662,11 @@ export const resume = {
       endDate: "2006-08",
       score: 4,
     },
+
   ],
+
   projects: [
+
     {
       name: "LitState",
       startDate: "2020-11",
@@ -620,6 +682,7 @@ export const resume = {
       url: "https://github.com/gitaarik/lit-state",
       stars: 143,
     },
+
     {
       name: "Django Admin Relation Links",
       startDate: "2017-03",
@@ -635,6 +698,7 @@ export const resume = {
       url: "https://github.com/gitaarik/django-admin-relation-links",
       stars: 108,
     },
+
     {
       name: "Jazzchords",
       startDate: "2013-06",
@@ -647,6 +711,7 @@ export const resume = {
       url: "https://github.com/gitaarik/jazzchords",
       stars: 12,
     },
+
     {
       name: "Adyengo",
       startDate: "2013-08",
@@ -662,30 +727,41 @@ export const resume = {
       url: "https://github.com/gitaarik/adyengo",
       stars: 10,
     },
+
   ],
+
   languages: [
+
     {
       language: "English",
       fluency: "Fluent",
     },
+
     {
       language: "Dutch",
       fluency: "Native",
     },
+
   ],
+
   references: [
+
     {
       name: "Michaël de Groot - Founder of Chipta",
       reference:
         "Rik modernized our client-facing interfaces and implemented optimizations that delivered substantial performance improvements. His work enabled us to process thousands of tickets rapidly during our busiest periods.",
       logo: "/src/lib/images/company-logos/chipta-logo.png",
     },
+
     {
       name: "Elmar Krack - Co-founder of Tender-it",
       reference:
         "Rik demonstrated exceptional technical leadership by designing and developing our entire platform from the ground up, handling both backend and frontend development with impressive skill.",
       logo: "/src/lib/images/company-logos/tender-it-logo.png",
     },
+
   ],
+
   referencesDescription: "Contact details available upon request.",
+
 };
