@@ -9,10 +9,13 @@ import {
   faGem,
   faGlobe,
   faHandshake,
+  faHeart,
   faHome,
   faLaptopCode,
   faMicrochip,
   faMobile,
+  faMusic,
+  faMountain,
   // faNetworkWired,
   faRobot,
   faRocket,
@@ -729,4 +732,23 @@ export const resume = {
   ],
 
   referencesDescription: "Contact details available upon request.",
+
+  interests: [
+    {
+      name: "Music",
+      icon: faMusic,
+    },
+    {
+      name: "Traveling",
+      icon: faGlobe,
+    },
+    {
+      name: "Nature",
+      icon: faHeart,
+    },
+    {
+      name: "Hiking",
+      icon: faMountain,
+    },
+  ],
 };
