@@ -6,6 +6,7 @@
   import ProfessionalExperience from "./ProfessionalExperience.svelte";
   import ReferencesSection from "./ReferencesSection.svelte";
   import EducationSection from "./EducationSection.svelte";
+  import ProjectsSection from "./ProjectsSection.svelte";
   import HobbiesInterestsSection from "./HobbiesInterestsSection.svelte";
   import IdealCompanySection from "./IdealCompanySection.svelte";
   import FiveYearVisionSection from "./FiveYearVisionSection.svelte";
@@ -66,6 +67,8 @@
         <ProfessionalExperience />
       {:else if activeSection === "education"}
         <EducationSection />
+      {:else if activeSection === "projects"}
+        <ProjectsSection />
       {:else if activeSection === "interests"}
         <HobbiesInterestsSection />
       {:else if activeSection === "idealCompany"}

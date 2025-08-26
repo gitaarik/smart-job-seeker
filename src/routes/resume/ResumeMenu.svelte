@@ -3,6 +3,7 @@
   import {
     faBriefcase,
     faBuilding,
+    faCode,
     faGraduationCap,
     faHandshake,
     faHeart,
@@ -38,6 +39,12 @@
       id: "education",
       label: "Education",
       icon: faGraduationCap,
+    },
+
+    {
+      id: "projects",
+      label: "Projects",
+      icon: faCode,
     },
 
     {
