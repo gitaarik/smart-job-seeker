@@ -756,45 +756,49 @@ export const resume = {
     },
   ],
 
-  idealCompany: [
-    {
-      description: "Technically innovative, uses modern technologies",
-      icon: faRocket,
-    },
+  idealCompany: {
+    required: [
+      {
+        description: "Technically innovative, uses modern technologies",
+        icon: faRocket,
+      },
 
-    {
-      description: "A place where I can grow and develop",
-      icon: faChartLine,
-    },
+      {
+        description: "A place where I can grow and develop",
+        icon: faChartLine,
+      },
 
-    {
-      description: "Open & personal atmosphere",
-      icon: faUsers,
-    },
+      {
+        description: "Remote work mindset",
+        icon: faGlobe,
+      },
 
-    {
-      description: "Flexible working hours",
-      icon: faClock,
-    },
+      {
+        description: "Flexible working hours",
+        icon: faClock,
+      },
+    ],
 
-    {
-      description: "Remote work mindset",
-      icon: faGlobe,
-    },
+    niceToHave: [
+      {
+        description: "Short-term engagement (6-12 months) or part-time",
+        icon: faCalendarAlt,
+      },
 
-    {
-      description: "Flat organizational structure, no micromanagement",
-      icon: faHandshake,
-    },
+      {
+        description: "Open & personal atmosphere",
+        icon: faUsers,
+      },
 
-    {
-      description: "Contributing to society or positive world impact",
-      icon: faHeart,
-    },
+      {
+        description: "Flat organizational structure, no micromanagement",
+        icon: faHandshake,
+      },
 
-    {
-      description: "Short-term engagement (6-12 months) or part-time",
-      icon: faCalendarAlt,
-    },
-  ],
+      {
+        description: "Contributing to society or positive world impact",
+        icon: faHeart,
+      },
+    ],
+  },
 };
