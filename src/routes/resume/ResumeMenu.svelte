@@ -16,6 +16,7 @@
     faRocket,
     faUser,
     faUsers,
+    faWater,
     faWrench,
   } from "@fortawesome/free-solid-svg-icons";
 
@@ -104,6 +105,12 @@
       id: "careerPriorities",
       label: "Career Priorities",
       icon: faListOl,
+    },
+
+    {
+      id: "flowState",
+      label: "Flow State & Ideals",
+      icon: faWater,
     },
 
     {

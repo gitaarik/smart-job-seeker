@@ -1016,4 +1016,63 @@ export const resume = {
       icon: faDollarSign,
     }
   ],
+
+  flowState: {
+    question: "When you get lost in your work in a good way, what are you working on? What are the activities you would like to do more of in your career?",
+    
+    lostInWork: [
+      {
+        title: "Architecting Complex System Solutions",
+        description: "I completely lose track of time when designing how different components of a complex system will interact. Mapping out data flows, anticipating edge cases, and finding elegant ways to handle scalability challenges feels like solving a beautiful puzzle.",
+        example: "Like when I was designing the ticket processing system at Chipta - hours would fly by as I optimized the queue management and payment flow integration.",
+        icon: faWrench,
+      },
+      {
+        title: "Debugging Intricate Technical Problems",
+        description: "There's something deeply satisfying about tracing through complex codebases to find the root cause of mysterious bugs. The detective work, the hypothesis testing, the 'aha!' moment when everything clicks - it's pure flow state.",
+        example: "Spending entire afternoons tracking down performance bottlenecks that turned into 60% optimization gains - completely absorbed in the process.",
+        icon: faSearch,
+      },
+      {
+        title: "Building Beautiful, Functional UI Components",
+        description: "When I'm crafting user interfaces that are both visually appealing and technically sound, I enter a zone where design thinking and technical implementation merge seamlessly.",
+        example: "Creating the responsive design system components that increased user engagement by 30% - lost in the details of animations, responsiveness, and user experience flow.",
+        icon: faGem,
+      },
+      {
+        title: "Learning & Implementing New Technologies",
+        description: "Diving deep into documentation, experimenting with new frameworks, and building proof-of-concepts with emerging technologies. The learning curve and creative exploration are incredibly engaging.",
+        example: "When I first explored React Native and WebSockets for the mobile ticket scanning app - completely absorbed in understanding the paradigms and possibilities.",
+        icon: faRocket,
+      }
+    ],
+
+    wantMoreOf: [
+      {
+        title: "AI/ML Model Development & Integration",
+        description: "Building intelligent systems that learn and adapt. I want to spend more time developing machine learning models, implementing AI-powered features, and creating systems that get smarter over time.",
+        why: "This represents the future of software development and aligns with my desire to work on cutting-edge, impactful technology.",
+      },
+      {
+        title: "Technical Mentoring & Knowledge Transfer",
+        description: "One-on-one mentoring sessions, conducting technical workshops, and helping junior developers level up their skills. The collaborative aspect of teaching while learning energizes me.",
+        why: "It combines my technical expertise with my passion for helping others grow, and it keeps me sharp by forcing me to articulate complex concepts clearly.",
+      },
+      {
+        title: "Cross-functional Product Strategy",
+        description: "Working closely with product managers, designers, and stakeholders to shape product direction from a technical perspective. Being involved in 'what should we build' conversations, not just 'how should we build it'.",
+        why: "I want to have more strategic impact and help ensure technical feasibility aligns with business goals and user needs.",
+      },
+      {
+        title: "Open Source Contribution & Community Building",
+        description: "Contributing to meaningful open-source projects, building developer tools that others can benefit from, and engaging with the broader tech community through writing and speaking.",
+        why: "It allows me to give back to the community that has given me so much, while building my reputation and network in emerging technology areas.",
+      },
+      {
+        title: "Experimental & Research-Oriented Projects",
+        description: "Working on projects where the outcome isn't predetermined - exploring new possibilities, testing hypotheses, and pushing the boundaries of what's currently possible.",
+        why: "This type of work feeds my curiosity and allows me to be at the forefront of technological innovation rather than just implementing established solutions.",
+      }
+    ]
+  },
 };
