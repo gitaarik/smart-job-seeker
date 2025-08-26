@@ -245,14 +245,14 @@ export const resume = {
       startDate: "2015-03",
       endDate: "2022-06",
       summary:
-        "Built comprehensive tender discovery platform from scratch as part-time lead developer, designing complete platform using agile methodology in consultation with non-technical founders. Developed industry-first Elasticsearch-powered search engine filtering hundreds of thousands of tenders, engineered automated web crawling systems importing thousands of tenders daily, and implemented subscription-based revenue model with recurring payments and automated notification systems.",
+        "Built comprehensive tender discovery platform from scratch as part time lead developer, designing complete platform using agile methodology in consultation with non-technical founders. Developed industry-first Elasticsearch-powered search engine filtering hundreds of thousands of tenders, engineered automated web crawling systems importing thousands of tenders daily, and implemented subscription-based revenue model with recurring payments and automated notification systems.",
       logo: "/src/lib/images/company-logos/tender-it-logo.png",
       highlights: [
         {
           title: "Product Development",
           icon: faWrench,
           description:
-            "Delivered complete platform in part-time setup by directing agile methods in consultation with non-technical founders",
+            "Delivered complete platform in part time setup by directing agile methods in consultation with non-technical founders",
             // "Directed agile/scrum methodology while designing complete platform in consultation with non-technical founders",
         },
         {
