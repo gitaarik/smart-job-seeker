@@ -252,7 +252,8 @@ export const resume = {
           title: "Product Development",
           icon: faWrench,
           description:
-            "Directed agile/scrum methodology while designing complete platform in consultation with non-technical founders",
+            "Delivered complete platform in part-time setup by directing agile methods in consultation with non-technical founders",
+            // "Directed agile/scrum methodology while designing complete platform in consultation with non-technical founders",
         },
         {
           title: "Search Innovation",
