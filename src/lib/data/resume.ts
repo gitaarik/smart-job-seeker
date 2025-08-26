@@ -707,7 +707,9 @@ export const resume = {
       startDate: "2013-08",
       endDate: "2020-05",
       description:
-        "Adyen Payment Integration for Django, succesfully utilized in Tender-it project",
+        "Streamlined Adyen Payment integration in Django by releasing open source Python package on PyPi. Including recurring payment support & helpfull logging. Succesfully used in Tender-it project.",
+      // "Open-source Django app that simplifies Adyen payment system integration. Supports regular, one-click, and recurring payments with comprehensive logging and error handling. Provides Django models and managers that mirror Adyen's API structure for seamless e-commerce development.",
+      // "Adyen Payment Integration for Django, succesfully utilized in Tender-it project",
       highlights: [
         "Conceived Open-Source Python package providing Adyen payment integrations for Django",
         "Received appreciation in community with 10 GitHub stars",
