@@ -621,6 +621,7 @@ export const resume = {
       endDate: "2007-06",
       graduationYear: "2007",
       score: 4,
+      description: "Comprehensive technical education focusing on network infrastructure, server administration, and system management. Gained foundational knowledge in Linux systems, network protocols, and database management that formed the basis for my software development career.",
     },
 
     {
@@ -632,6 +633,7 @@ export const resume = {
       startDate: "2006-03",
       endDate: "2006-08",
       score: 4,
+      description: "Practical internship experience developing web features for a festival information platform. Worked with PHP, MySQL, and frontend technologies while learning industry best practices for web development in a real-world environment.",
     },
   ],
 

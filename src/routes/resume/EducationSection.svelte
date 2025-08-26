@@ -45,6 +45,9 @@
         <div class="mb-1">
           <p class="text-slate font-medium">{edu.area}</p>
           <p class="text-sm text-slate/80">{edu.studyType}</p>
+          {#if edu.description}
+            <p class="text-sm text-slate/70 mt-2 leading-relaxed">{edu.description}</p>
+          {/if}
         </div>
       </div>
     {/each}
