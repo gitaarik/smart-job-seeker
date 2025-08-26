@@ -16,7 +16,7 @@
 <div
   class="grid grid-cols-1 md:grid-cols-2 print:grid-cols-2 gap-3 print:gap-2 {classNames}"
 >
-  {#each items as item (item.title)}
+  {#each items as item, index (index)}
     <div
       class="bg-frost border border-aqua rounded-md hover:bg-cloud/30 transition-colors duration-200"
     >

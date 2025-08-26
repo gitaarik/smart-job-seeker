@@ -7,7 +7,7 @@
   import ProfessionalExperience from "./ProfessionalExperience.svelte";
   import ReferencesSection from "./ReferencesSection.svelte";
   import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
-	import PersonalityAndMethodologies from "./PersonalityAndMethodologies.svelte";
+  import PersonalityAndMethodologies from "./PersonalityAndMethodologies.svelte";
 </script>
 
 <svelte:head>

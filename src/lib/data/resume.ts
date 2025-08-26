@@ -31,9 +31,7 @@ import {
 import { faLinkedin } from "@fortawesome/free-brands-svg-icons";
 
 export const resume = {
-
   basics: {
-
     name: "Rik Wanders",
     label: "Senior Full Stack Developer",
     subLabel: "Available for international remote collaboration",
@@ -46,7 +44,6 @@ export const resume = {
       "Dutch Senior Full Stack Developer residing in Spain, with 18+ years experience specializing in Python & Node.js ecosystems. Experienced in scaling complex, high-traffic & data heavy applications and leading agile development teams. Deeply engaged in UX design and skilled at engineering DevOps & CI/CD systems. Always interested in the latest AI, tech & security industry updates. Thrives in agile teams and/or startup environments. 5+ years remote work experience.",
 
     highlights: [
-
       {
         description:
           "<strong>18+ years</strong> of full stack development experience.",
@@ -88,7 +85,6 @@ export const resume = {
           "<strong>AI-accelerated development</strong> skills with security best practices.",
         icon: faRobot,
       },
-
     ],
 
     location: {
@@ -101,7 +97,6 @@ export const resume = {
     },
 
     profiles: [
-
       {
         network: "LinkedIn",
         username: "rik-wanders-software",
@@ -117,13 +112,10 @@ export const resume = {
         label: "gitaarik",
         icon: faGithub,
       },
-
     ],
-
   },
 
   work: [
-
     {
       name: "Chipta",
       location: "Amsterdam, NL",
@@ -142,7 +134,7 @@ export const resume = {
           icon: faUsers,
           description:
             "Optimized development team (3-5 devs) output with 25%, by leading agile methods and strict code review processes",
-            // "Managed development teams of 3-5 developers using agile methodologies and strict code review processes",
+          // "Managed development teams of 3-5 developers using agile methodologies and strict code review processes",
         },
 
         {
@@ -150,7 +142,7 @@ export const resume = {
           icon: faChartLine,
           description:
             "Enabled platform to process thousands of orders per minute, by optimizing SQL queries & Python processes with 30-60%",
-            // "Optimized SQL queries & Python processes with 30-60%, enabling platform to process thousands of orders per minute",
+          // "Optimized SQL queries & Python processes with 30-60%, enabling platform to process thousands of orders per minute",
           tags: ["fullstack-python", "fullstack-react", "fullstack-svelte"],
         },
 
@@ -158,7 +150,7 @@ export const resume = {
           icon: faGlobe,
           description:
             "Increased user engagement by +30%, by modernizing frontend using React, responsive design & web components",
-            // "Modernized frontend using React, responsive design & web components, increasing user engagement by +30%",
+          // "Modernized frontend using React, responsive design & web components, increasing user engagement by +30%",
           tags: ["fullstack-react", "fullstack-svelte"],
         },
 
@@ -166,7 +158,7 @@ export const resume = {
           icon: faGlobe,
           description:
             "Supercharged scalability & boosted revenue +40%, by leading ticket scan app creation using React Native & WebSockets",
-            // "Led ticket scan app creation using React Native & WebSockets, supercharging scalability and increasing revenue by +40%",
+          // "Led ticket scan app creation using React Native & WebSockets, supercharging scalability and increasing revenue by +40%",
           tags: ["fullstack-react", "fullstack-svelte"],
         },
 
@@ -175,7 +167,7 @@ export const resume = {
           icon: faShieldAlt,
           description:
             "Decreased regression bugs by about 90%, by establishing quality testing suite using Django & Selenium (+80% coverage)",
-            // "Established quality testing suite using Django and Selenium (+80% coverage) decreasing regression bugs by about 90%",
+          // "Established quality testing suite using Django and Selenium (+80% coverage) decreasing regression bugs by about 90%",
           tags: ["fullstack-python", "fullstack-react", "fullstack-svelte"],
         },
 
@@ -184,7 +176,7 @@ export const resume = {
           icon: faShieldAlt,
           description:
             "Reduced deploy time -80% & enabled regular releases, by orchestrating CI/CD systems on Linode using Ansible & Python",
-            // "Orchestrated CI/CD systems on Linode using Ansible & Python, reducing deploy time by -80%, enabling regular releases",
+          // "Orchestrated CI/CD systems on Linode using Ansible & Python, reducing deploy time by -80%, enabling regular releases",
           tags: ["fullstack-python", "fullstack-react", "fullstack-svelte"],
         },
 
@@ -193,7 +185,7 @@ export const resume = {
           icon: faShieldAlt,
           description:
             "Streamlined onboarding, by coordinating development environment setup of 4 Docker microservices in Docker Compose",
-            // "Coordinated development environment setup of 4 Docker microservices in Docker Compose, streamlining onboarding",
+          // "Coordinated development environment setup of 4 Docker microservices in Docker Compose, streamlining onboarding",
           tags: ["fullstack-python", "fullstack-react", "fullstack-svelte"],
         },
 
@@ -202,7 +194,7 @@ export const resume = {
           icon: faMicrochip,
           description:
             "Maintained backward compatibility with legacy PHP system & database, by customizing Django codebase",
-            // "Customized Django codebase for maintaining backward compatibility with old PHP system & database",
+          // "Customized Django codebase for maintaining backward compatibility with old PHP system & database",
           tags: ["fullstack-python"],
         },
 
@@ -211,7 +203,7 @@ export const resume = {
           icon: faGlobe,
           description:
             "Enabled clients to organize automatically managed online events with Zoom, by integrating Zoom with OAuth",
-            // "Integrated Zoom with OAuth, enabling clients to organize automatically managed online events with Zoom",
+          // "Integrated Zoom with OAuth, enabling clients to organize automatically managed online events with Zoom",
           tags: ["fullstack-python"],
         },
 
@@ -220,7 +212,7 @@ export const resume = {
           icon: faGlobe,
           description:
             "Enabled users to validate authenticity of 2nd hand tickets, by implementing TicketSwap REST APIs using DRF",
-            // "Implemented TicketSwap REST APIs using DRF, allowing users to validate authenticity of 2nd hand tickets",
+          // "Implemented TicketSwap REST APIs using DRF, allowing users to validate authenticity of 2nd hand tickets",
           tags: [],
         },
 
@@ -229,7 +221,7 @@ export const resume = {
           icon: faDollarSign,
           description:
             "Processed tens of millions in payment transactions, by building payment service integrations (Mollie, Pay.nl, Paypal)",
-            // "Guided payment service integrations (Mollie, Pay.nl, Paypal), processing tens of millions in payment transactions",
+          // "Guided payment service integrations (Mollie, Pay.nl, Paypal), processing tens of millions in payment transactions",
           tags: [],
         },
 
@@ -238,10 +230,9 @@ export const resume = {
           icon: faGlobe,
           description:
             "Enabled market expansion to Eurozone countries, by extending i18n features (language, country & timezone)",
-            // "Improved internationalization features (language, country & timezone) enabling market expansion to Eurozone countries",
+          // "Improved internationalization features (language, country & timezone) enabling market expansion to Eurozone countries",
           tags: [],
         },
-
       ],
 
       technologies: [
@@ -269,11 +260,9 @@ export const resume = {
         "Web Sockets",
         "React Native",
       ],
-
     },
 
     {
-
       name: "Tender-it",
       location: "Amsterdam, NL",
       description: "Tender/Procurement Discovery Platform",
@@ -285,13 +274,12 @@ export const resume = {
       logo: "/src/lib/images/company-logos/tender-it-logo.png",
 
       highlights: [
-
         {
           title: "Product Development",
           icon: faWrench,
           description:
             "Delivered complete platform in part time setup by directing agile methods in consultation with non-technical founders",
-            // "Directed agile/scrum methodology while designing complete platform in consultation with non-technical founders",
+          // "Directed agile/scrum methodology while designing complete platform in consultation with non-technical founders",
         },
 
         {
@@ -306,7 +294,7 @@ export const resume = {
           icon: faLaptopCode,
           description:
             "Transformed thousands of tenders daily into structured data, by engineering automated web crawler & importer",
-            // "Engineered automated web crawling system importing & transforming thousands of tenders daily into structured data",
+          // "Engineered automated web crawling system importing & transforming thousands of tenders daily into structured data",
         },
 
         {
@@ -314,7 +302,7 @@ export const resume = {
           icon: faDollarSign,
           description:
             "Realized business model by building subscription system with monthly & yearly recurring payments, with Django & Celery",
-            // "Built subscription-based authentication system with monthly & yearly recurring payments supporting business model",
+          // "Built subscription-based authentication system with monthly & yearly recurring payments supporting business model",
           tags: ["fullstack-python"],
         },
 
@@ -323,7 +311,7 @@ export const resume = {
           icon: faDollarSign,
           description:
             "Supported user retention by developing automatic notification mailing system for user preferences & saved searches",
-            // "Created automatic notification mailing system for user configured tender preferences and saved searches",
+          // "Created automatic notification mailing system for user configured tender preferences and saved searches",
           tags: [],
         },
 
@@ -332,10 +320,9 @@ export const resume = {
           icon: faDollarSign,
           description:
             "Provided professional platform aesthetics by enhancing frontend in coordination with frontend developer using Vue.js",
-            // "Enhanced frontend in coordination with frontend developer using Vue.js, providing professional platform aesthetics",
+          // "Enhanced frontend in coordination with frontend developer using Vue.js, providing professional platform aesthetics",
           tags: ["fullstack-react", "fullstack-svelte"],
         },
-
       ],
 
       technologies: [
@@ -357,7 +344,6 @@ export const resume = {
     },
 
     {
-
       name: "TravelBird",
       location: "Amsterdam, NL",
       description: "Online Travel Agent",
@@ -370,7 +356,6 @@ export const resume = {
       logo: "/src/lib/images/company-logos/travelbird-logo.png",
 
       highlights: [
-
         {
           title: "Mobile App Development",
           icon: faMobile,
@@ -391,7 +376,6 @@ export const resume = {
           description:
             "Built email marketing system using Python & SendGrid, sending thousands of emails, supporting acquisition",
         },
-
       ],
 
       technologies: [
@@ -414,11 +398,9 @@ export const resume = {
         "gulp.js",
         "Sass",
       ],
-
     },
 
     {
-
       name: "SWIS",
       location: "Leiden, NL",
       description: "Web Development Agency",
@@ -431,7 +413,6 @@ export const resume = {
       logo: "/src/lib/images/company-logos/swis-logo.png",
 
       highlights: [
-
         {
           title: "Client Delivery",
           icon: faHandshake,
@@ -445,7 +426,6 @@ export const resume = {
           description:
             "Cultivated advanced frontend & UX skills with jQuery & CSS3, increasing user product engagement & client satisfaction",
         },
-
       ],
 
       technologies: [
@@ -465,11 +445,9 @@ export const resume = {
         "Responsive design",
         "Firebug",
       ],
-
     },
 
     {
-
       name: "Gamepoint",
       location: "The Hague, NL",
       description: "Casual Gaming Community",
@@ -482,7 +460,6 @@ export const resume = {
       logo: "/src/lib/images/company-logos/gamepoint-logo.png",
 
       highlights: [
-
         {
           title: "Platform Development",
           icon: faDatabase,
@@ -496,7 +473,6 @@ export const resume = {
           description:
             "Promoted to mid-level developer in 10+ developer team, maintaining large-scale PHP codebase & Linux servers setup",
         },
-
       ],
 
       technologies: [
@@ -512,13 +488,10 @@ export const resume = {
         "AJAX",
         "YUI Library",
       ],
-
     },
-
   ],
 
   skills: [
-
     {
       name: "Backend",
       level: "Expert",
@@ -635,11 +608,9 @@ export const resume = {
     //     "Objective-C",
     //   ],
     // },
-
   ],
 
   education: [
-
     {
       institution: "Nova College",
       location: "Hoofddorp, NL",
@@ -662,11 +633,9 @@ export const resume = {
       endDate: "2006-08",
       score: 4,
     },
-
   ],
 
   projects: [
-
     {
       name: "LitState",
       startDate: "2020-11",
@@ -727,11 +696,9 @@ export const resume = {
       url: "https://github.com/gitaarik/adyengo",
       stars: 10,
     },
-
   ],
 
   languages: [
-
     {
       language: "English",
       fluency: "Fluent",
@@ -741,11 +708,9 @@ export const resume = {
       language: "Dutch",
       fluency: "Native",
     },
-
   ],
 
   references: [
-
     {
       name: "Michaël de Groot - Founder of Chipta",
       reference:
@@ -759,9 +724,7 @@ export const resume = {
         "Rik demonstrated exceptional technical leadership by designing and developing our entire platform from the ground up, handling both backend and frontend development with impressive skill.",
       logo: "/src/lib/images/company-logos/tender-it-logo.png",
     },
-
   ],
 
   referencesDescription: "Contact details available upon request.",
-
 };

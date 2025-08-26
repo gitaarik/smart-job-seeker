@@ -5,7 +5,7 @@
 	font-style: normal;
 	font-weight: 300;
 	font-display: swap;
-	src: url('/fonts/NotoSans-Light.woff2') format('woff2');
+	src: url('/fonts/NotoSans/NotoSans-Light.ttf');
 }
 
 @font-face {
@@ -13,7 +13,7 @@
 	font-style: normal;
 	font-weight: 400;
 	font-display: swap;
-	src: url('/fonts/NotoSans-Regular.woff2') format('woff2');
+	src: url('/fonts/NotoSans/NotoSans-Regular.ttf');
 }
 
 @font-face {
@@ -21,7 +21,7 @@
 	font-style: normal;
 	font-weight: 500;
 	font-display: swap;
-	src: url('/fonts/NotoSans-Medium.woff2') format('woff2');
+	src: url('/fonts/NotoSans/NotoSans-Medium.ttf');
 }
 
 @font-face {
@@ -29,7 +29,7 @@
 	font-style: normal;
 	font-weight: 600;
 	font-display: swap;
-	src: url('/fonts/NotoSans-SemiBold.woff2') format('woff2');
+	src: url('/fonts/NotoSans/NotoSans-SemiBold.ttf');
 }
 
 @font-face {
@@ -37,52 +37,12 @@
 	font-style: normal;
 	font-weight: 700;
 	font-display: swap;
-	src: url('/fonts/NotoSans-Bold.woff2') format('woff2');
-}
-
-@font-face {
-	font-family: 'Noto Sans Mono';
-	font-style: normal;
-	font-weight: 300;
-	font-display: swap;
-	src: url('/fonts/NotoSansMono-Light.woff2') format('woff2');
-}
-
-@font-face {
-	font-family: 'Noto Sans Mono';
-	font-style: normal;
-	font-weight: 400;
-	font-display: swap;
-	src: url('/fonts/NotoSansMono-Regular.woff2') format('woff2');
-}
-
-@font-face {
-	font-family: 'Noto Sans Mono';
-	font-style: normal;
-	font-weight: 500;
-	font-display: swap;
-	src: url('/fonts/NotoSansMono-Medium.woff2') format('woff2');
-}
-
-@font-face {
-	font-family: 'Noto Sans Mono';
-	font-style: normal;
-	font-weight: 600;
-	font-display: swap;
-	src: url('/fonts/NotoSansMono-SemiBold.woff2') format('woff2');
-}
-
-@font-face {
-	font-family: 'Noto Sans Mono';
-	font-style: normal;
-	font-weight: 700;
-	font-display: swap;
-	src: url('/fonts/NotoSansMono-Bold.woff2') format('woff2');
+	src: url('/fonts/NotoSans/NotoSans-Bold.ttf');
 }
 
 .hoverStyles {
 	display: none;
-  @apply scale-105 -translate-15 brightness-125;
+	@apply scale-105 -translate-15 brightness-125;
 }
 
 @theme {
@@ -110,8 +70,6 @@
 	--color-midnight: var(--footer-bg-color);
 	--color-glass-light: var(--white-transparent-1);
 	--color-glass: var(--white-transparent-2);
-	
-	--font-mono: 'Noto Sans Mono', monospace;
 }
 
 * {
