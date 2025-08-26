@@ -238,7 +238,7 @@
     {#each resume.projects.slice(0, 3) as project (project.name)}
       <div class="mb-2">
         <div class="text-xs font-bold mb-1">
-          {project.name} ({project.stars} stars) | {formatDateRangeCompact(project.startDate, project.endDate)}
+          {project.name} (<a href={project.url} class="underline" target="_blank">{project.stars} stars</a>) | {formatDateRangeCompact(project.startDate, project.endDate)}
         </div>
 
         <div class="text-xs">
