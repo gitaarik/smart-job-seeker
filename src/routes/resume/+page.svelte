@@ -13,6 +13,7 @@
   import WeaknessesSection from "./WeaknessesSection.svelte";
   import CurrentChallengesSection from "./CurrentChallengesSection.svelte";
   import SelfReflectionSection from "./SelfReflectionSection.svelte";
+  import CareerPrioritiesSection from "./CareerPrioritiesSection.svelte";
   import WhatExcitesMeSection from "./WhatExcitesMeSection.svelte";
   import PersonalityAndMethodologies from "./PersonalityAndMethodologies.svelte";
   import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
@@ -87,6 +88,8 @@
         <CurrentChallengesSection />
       {:else if activeSection === "selfReflection"}
         <SelfReflectionSection />
+      {:else if activeSection === "careerPriorities"}
+        <CareerPrioritiesSection />
       {:else if activeSection === "references"}
         <ReferencesSection />
       {/if}

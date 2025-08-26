@@ -978,4 +978,42 @@ export const resume = {
       description: "Recognizing these patterns has been crucial for my development. I'm actively working on balancing my drive for excellence with business pragmatism, and I'm learning to channel my impatience into constructive process improvements rather than frustration. The key insight has been understanding that my greatest strength and biggest weakness are two sides of the same coin - my passion for doing things right."
     }
   },
+
+  careerPriorities: [
+    {
+      priority: 1,
+      title: "Transition into AI/ML Leadership Role",
+      description: "My top priority is securing a senior position that combines my extensive full-stack development experience with emerging AI/ML technologies. I want to lead teams building production-ready AI systems that solve real-world problems.",
+      actions: "Actively learning advanced ML frameworks, contributing to AI open-source projects, and seeking opportunities to demonstrate AI/ML capabilities in practical applications.",
+      icon: faRobot,
+    },
+    {
+      priority: 2,
+      title: "Maintain Work-Life Balance & Location Freedom",
+      description: "Preserving my ability to work remotely from Spain while maintaining flexible hours is crucial for my personal well-being and long-term career sustainability.",
+      actions: "Focusing exclusively on remote-first companies and roles that offer genuine flexibility, rather than compromising on location or work arrangements.",
+      icon: faHome,
+    },
+    {
+      priority: 3,
+      title: "Build Portfolio of Meaningful Projects",
+      description: "Creating a collection of projects that demonstrate both technical excellence and positive societal impact, showing my ability to bridge traditional development with emerging technologies.",
+      actions: "Developing AI-powered applications, contributing to open-source ML tools, and documenting my learning journey to establish thought leadership in the space.",
+      icon: faRocket,
+    },
+    {
+      priority: 4,
+      title: "Expand Professional Network in AI/Data Science",
+      description: "Building relationships within the AI/ML community to learn from experts, find mentorship opportunities, and discover collaborative projects or career opportunities.",
+      actions: "Engaging with AI communities online, attending virtual conferences, and connecting with professionals who are successfully bridging development and data science.",
+      icon: faUsers,
+    },
+    {
+      priority: 5,
+      title: "Achieve Financial Stability Through Contract Work",
+      description: "Securing consistent income through high-value consulting or contract positions while pursuing longer-term career transition goals.",
+      actions: "Leveraging my senior development skills for well-paying short-term projects that provide financial security during my career pivot period.",
+      icon: faDollarSign,
+    }
+  ],
 };

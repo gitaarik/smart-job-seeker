@@ -10,6 +10,7 @@
     faGraduationCap,
     faHandshake,
     faHeart,
+    faListOl,
     faRoad,
     faRobot,
     faRocket,
@@ -97,6 +98,12 @@
       id: "selfReflection",
       label: "Candid Self-Reflection",
       icon: faEye,
+    },
+
+    {
+      id: "careerPriorities",
+      label: "Career Priorities",
+      icon: faListOl,
     },
 
     {
