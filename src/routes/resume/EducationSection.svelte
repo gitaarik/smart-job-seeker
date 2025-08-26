@@ -38,7 +38,7 @@
             </p>
           </div>
           <div class="text-right text-sm text-slate/70">
-            {edu.startDate.substring(0, 4)} - {edu.endDate.substring(0, 4)}
+            {edu.startDate.substring(5, 7)}/{edu.startDate.substring(0, 4)} - {edu.endDate.substring(5, 7)}/{edu.endDate.substring(0, 4)}
           </div>
         </div>
 
