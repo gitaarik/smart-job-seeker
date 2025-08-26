@@ -650,7 +650,7 @@ export const resume = {
       startDate: "2020-11",
       endDate: "2023-01",
       summary:
-        "Reactive state management library for Lit Web Components, Open-sourced on GitHub & NPM. Used in production at Chipta.",
+        "Reactive state management library for Lit Web Components, Open-sourced on GitHub & NPM. Used in production at Chipta (ticket shop). I used Lit + LitState as a simpler, lightweight and browser-native alternative to React + Redux.",
       description:
         "Simplified state management in Lit Web Components library, by releasing an open source Node.js package on NPM, gaining 143 stars on GitHub during time of Lit & Web Components popularity. Successfully implemented library for projects at Chipta. Engaged with developers in GitHub Issues & Pull Requests.",
       // "Open-source Node.js package providing reactive state management for Lit web components. With comprehensive documentation and extension support. A minimal yet powerful solution for efficient state synchronization across components.",
@@ -669,7 +669,7 @@ export const resume = {
       startDate: "2017-03",
       endDate: "2020-12",
       summary:
-        "Django Admin navigation enhancement, open-sourced on GitHub and PyPi. Successfully used at Chipta & Tender-it.",
+        "Django Admin navigation enhancement, simplifying navigation between related database objects. Open-sourced on GitHub and PyPi. Effectively used at Chipta & Tender-it.",
       description:
         "Enhanced Django Admin Navigation with an open source Python package released on PyPi, gaining 108 stars on GitHub. Succesfully employed at projects at Chipta & Tender-it. Engaged with developers in GitHub Issues & Pull Requests.",
       highlights: [
@@ -687,9 +687,9 @@ export const resume = {
       startDate: "2014-01",
       endDate: "2014-01",
       summary:
-        "Popular GitHub Gist explaining Git submodules fundamentals with comprehensive examples and workflows.",
+        "Popular GitHub Gist explaining Git submodules fundamentals, that many developers understand submodules effectively.",
       description:
-        " Popular GitHub Gist explaining Git submodules fundamentals with over 1,000 stars. Covers practical usage, team workflows, and common scenarios for managing Git submodules. This beginner-friendly guide has helped many developers understand submodules effectively. ",
+        "Popular GitHub Gist explaining Git submodules fundamentals with over 1,000 stars. Covers practical usage, team workflows, and common scenarios for managing Git submodules. This beginner-friendly guide has helped many developers understand submodules effectively.",
       url: "https://gist.github.com/gitaarik/8735255",
       highlights: [],
       stars: 1022,
