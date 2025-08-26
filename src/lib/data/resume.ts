@@ -124,6 +124,7 @@ export const resume = {
             "Optimized development team (3-5 devs) output with 25%, by leading agile methods and strict code review processes",
             // "Managed development teams of 3-5 developers using agile methodologies and strict code review processes",
         },
+
         {
           title: "Platform Scalability",
           icon: faChartLine,
@@ -132,6 +133,7 @@ export const resume = {
             // "Optimized SQL queries & Python processes with 30-60%, enabling platform to process thousands of orders per minute",
           tags: ["fullstack-python", "fullstack-react", "fullstack-svelte"],
         },
+
         {
           icon: faGlobe,
           description:
@@ -139,6 +141,7 @@ export const resume = {
             // "Modernized frontend using React, responsive design & web components, increasing user engagement by +30%",
           tags: ["fullstack-react", "fullstack-svelte"],
         },
+
         {
           icon: faGlobe,
           description:
@@ -146,6 +149,7 @@ export const resume = {
             // "Led ticket scan app creation using React Native & WebSockets, supercharging scalability and increasing revenue by +40%",
           tags: ["fullstack-react", "fullstack-svelte"],
         },
+
         {
           title: "System Reliability",
           icon: faShieldAlt,
@@ -154,6 +158,7 @@ export const resume = {
             // "Established quality testing suite using Django and Selenium (+80% coverage) decreasing regression bugs by about 90%",
           tags: ["fullstack-python", "fullstack-react", "fullstack-svelte"],
         },
+
         {
           title: "System Reliability",
           icon: faShieldAlt,
@@ -162,6 +167,7 @@ export const resume = {
             // "Orchestrated CI/CD systems on Linode using Ansible & Python, reducing deploy time by -80%, enabling regular releases",
           tags: ["fullstack-python", "fullstack-react", "fullstack-svelte"],
         },
+
         {
           title: "System Reliability",
           icon: faShieldAlt,
@@ -170,6 +176,7 @@ export const resume = {
             // "Coordinated development environment setup of 4 Docker microservices in Docker Compose, streamlining onboarding",
           tags: ["fullstack-python", "fullstack-react", "fullstack-svelte"],
         },
+
         {
           title: "Technical Innovation",
           icon: faMicrochip,
@@ -178,6 +185,7 @@ export const resume = {
             // "Customized Django codebase for maintaining backward compatibility with old PHP system & database",
           tags: ["fullstack-python"],
         },
+
         {
           title: "Market Expansion",
           icon: faGlobe,
@@ -186,6 +194,7 @@ export const resume = {
             // "Integrated Zoom with OAuth, enabling clients to organize automatically managed online events with Zoom",
           tags: ["fullstack-python"],
         },
+
         {
           title: "Market Expansion",
           icon: faGlobe,
@@ -194,6 +203,7 @@ export const resume = {
             // "Implemented TicketSwap REST APIs using DRF, allowing users to validate authenticity of 2nd hand tickets",
           tags: [],
         },
+
         {
           title: "Payment Integration",
           icon: faDollarSign,
@@ -202,6 +212,7 @@ export const resume = {
             // "Guided payment service integrations (Mollie, Pay.nl, Paypal), processing tens of millions in payment transactions",
           tags: [],
         },
+
         {
           title: "Market Expansion",
           icon: faGlobe,
@@ -255,12 +266,14 @@ export const resume = {
             "Delivered complete platform in part time setup by directing agile methods in consultation with non-technical founders",
             // "Directed agile/scrum methodology while designing complete platform in consultation with non-technical founders",
         },
+
         {
           title: "Search Innovation",
           icon: faSearch,
           description:
             "Developed industry-first Elasticsearch-powered search engine for filtering & scoring hundreds of thousands of tenders",
         },
+
         {
           title: "Data Automation",
           icon: faLaptopCode,
@@ -268,6 +281,7 @@ export const resume = {
             "Transformed thousands of tenders daily into structured data, by engineering automated web crawler & importer",
             // "Engineered automated web crawling system importing & transforming thousands of tenders daily into structured data",
         },
+
         {
           title: "Revenue Model",
           icon: faDollarSign,
@@ -276,6 +290,7 @@ export const resume = {
             // "Built subscription-based authentication system with monthly & yearly recurring payments supporting business model",
           tags: ["fullstack-python"],
         },
+
         {
           title: "Revenue Model",
           icon: faDollarSign,
@@ -284,6 +299,7 @@ export const resume = {
             // "Created automatic notification mailing system for user configured tender preferences and saved searches",
           tags: [],
         },
+
         {
           title: "Revenue Model",
           icon: faDollarSign,
