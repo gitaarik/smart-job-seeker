@@ -6,6 +6,7 @@
   import TechnicalExpertiseSection from "./TechnicalExpertiseSection.svelte";
   import ProfessionalExperience from "./ProfessionalExperience.svelte";
   import ReferencesSection from "./ReferencesSection.svelte";
+  import EducationSection from "./EducationSection.svelte";
   import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
   import PersonalityAndMethodologies from "./PersonalityAndMethodologies.svelte";
 </script>
@@ -45,6 +46,10 @@
 
     <div class="print:py-10 print:break-inside-avoid">
       <ProfessionalExperience />
+    </div>
+
+    <div class="print:py-10 print:break-inside-avoid">
+      <EducationSection />
     </div>
 
     <div class="print:py-10 print:break-inside-avoid">
