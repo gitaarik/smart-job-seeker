@@ -5,6 +5,7 @@
     faBuilding,
     faCode,
     faExclamationTriangle,
+    faFire,
     faGraduationCap,
     faHandshake,
     faHeart,
@@ -53,6 +54,12 @@
       id: "personality",
       label: "Personality & Methods",
       icon: faRobot,
+    },
+
+    {
+      id: "whatExcitesMe",
+      label: "What Excites Me",
+      icon: faFire,
     },
 
     {

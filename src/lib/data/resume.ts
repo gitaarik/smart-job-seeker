@@ -902,4 +902,62 @@ export const resume = {
       approach: "I'm building a portfolio that bridges my extensive development background with emerging technologies, highlighting transferable skills and demonstrating practical applications through projects and contributions."
     }
   ],
+
+  whatExcitesMe: {
+    excites: [
+      {
+        title: "Complex Engineering Problems",
+        description: "I thrive on tackling intricate technical challenges that require deep thinking, creative problem-solving, and innovative approaches to find elegant solutions.",
+        icon: faWrench,
+      },
+      {
+        title: "Creating Innovative Products & Services",
+        description: "Building something new from the ground up, especially products that solve real-world problems or create new possibilities for users, energizes me tremendously.",
+        icon: faRocket,
+      },
+      {
+        title: "Beautiful UI with Great UX",
+        description: "Crafting user interfaces that are not only visually appealing but also intuitive and delightful to use. The intersection of design and functionality fascinates me.",
+        icon: faGem,
+      },
+      {
+        title: "Guiding & Teaching Developers",
+        description: "Mentoring junior developers, sharing knowledge, and helping others grow in their careers. Seeing someone succeed because of guidance I provided is incredibly rewarding.",
+        icon: faUsers,
+      },
+      {
+        title: "Cutting-edge Technologies",
+        description: "Exploring and mastering new technologies, especially in AI/ML, cloud computing, and modern development frameworks. The rapid pace of innovation keeps me motivated.",
+        icon: faRobot,
+      },
+      {
+        title: "Cross-functional Collaboration",
+        description: "Working closely with designers, product managers, and stakeholders to bring ideas to life. The collaborative aspect of building great products excites me.",
+        icon: faHandshake,
+      }
+    ],
+    
+    doesntExcite: [
+      {
+        title: "Repetitive Maintenance Work",
+        description: "While I understand its importance, spending extended periods on routine bug fixes or maintaining legacy systems without improvement opportunities doesn't energize me.",
+      },
+      {
+        title: "Purely Administrative Tasks",
+        description: "Tasks that are mainly bureaucratic or administrative in nature, with little technical or creative problem-solving involved, tend to drain my enthusiasm.",
+      },
+      {
+        title: "Working in Isolation",
+        description: "Long periods of solo work without team interaction or collaboration opportunities. I thrive on bouncing ideas off others and collective problem-solving.",
+      },
+      {
+        title: "Micromanagement Environments",
+        description: "Overly rigid processes or micromanagement that stifles creativity and autonomous decision-making. I prefer environments that trust and empower developers.",
+      },
+      {
+        title: "Technology for Technology's Sake",
+        description: "Implementing new technologies without clear business value or user benefit. I prefer purposeful innovation that solves real problems.",
+      }
+    ]
+  },
 };

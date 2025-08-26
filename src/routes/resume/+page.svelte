@@ -12,6 +12,7 @@
   import FiveYearVisionSection from "./FiveYearVisionSection.svelte";
   import WeaknessesSection from "./WeaknessesSection.svelte";
   import CurrentChallengesSection from "./CurrentChallengesSection.svelte";
+  import WhatExcitesMeSection from "./WhatExcitesMeSection.svelte";
   import PersonalityAndMethodologies from "./PersonalityAndMethodologies.svelte";
   import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
 
@@ -63,6 +64,8 @@
         <OverviewSection />
       {:else if activeSection === "personality"}
         <PersonalityAndMethodologies />
+      {:else if activeSection === "whatExcitesMe"}
+        <WhatExcitesMeSection />
       {:else if activeSection === "technical"}
         <TechnicalExpertiseSection />
       {:else if activeSection === "experience"}
