@@ -264,7 +264,8 @@ export const resume = {
           title: "Data Automation",
           icon: faLaptopCode,
           description:
-            "Engineered automated web crawling system importing & transforming thousands of tenders daily into structured data",
+            "Transformed thousands of tenders daily into structured data, by engineering automated web crawler & importer",
+            // "Engineered automated web crawling system importing & transforming thousands of tenders daily into structured data",
         },
         {
           title: "Revenue Model",
