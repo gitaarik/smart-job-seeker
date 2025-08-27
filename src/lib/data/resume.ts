@@ -146,9 +146,9 @@ export const resume = {
           title: "Platform Scalability",
           icon: faChartLine,
           description:
-            "Enabled platform to process thousands of orders per minute, by optimizing SQL queries & Python processes with 30-60%",
+            "Enabled processing thousands of orders per minute, by optimizing SQL queries & Python/Django processes with 30-60%",
           // "Optimized SQL queries & Python processes with 30-60%, enabling platform to process thousands of orders per minute",
-          tags: ["fullstack-python", "fullstack-react", "fullstack-svelte"],
+          tags: ["fullstack-python", "fullstack-django", "fullstack-react", "fullstack-svelte"],
         },
 
         {
@@ -171,9 +171,9 @@ export const resume = {
           title: "System Reliability",
           icon: faShieldAlt,
           description:
-            "Decreased regression bugs by about 90%, by establishing quality testing suite using Django & Selenium (+80% coverage)",
+            "Decreased regression with 90%, by establishing TDD with quality testing suite using Django & Selenium (+80% coverage)",
           // "Established quality testing suite using Django and Selenium (+80% coverage) decreasing regression bugs by about 90%",
-          tags: ["fullstack-python", "fullstack-react", "fullstack-svelte"],
+          tags: ["fullstack-python", "fullstack-django", "fullstack-react", "fullstack-svelte"],
         },
 
         {
@@ -200,7 +200,7 @@ export const resume = {
           description:
             "Maintained backward compatibility with legacy PHP system & database, by customizing Django codebase",
           // "Customized Django codebase for maintaining backward compatibility with old PHP system & database",
-          tags: ["fullstack-python"],
+          tags: ["fullstack-python", "fullstack-django"],
         },
 
         {
@@ -209,16 +209,16 @@ export const resume = {
           description:
             "Enabled clients to organize automatically managed online events with Zoom, by integrating Zoom with OAuth in Django",
           // "Integrated Zoom with OAuth, enabling clients to organize automatically managed online events with Zoom",
-          tags: ["fullstack-python"],
+          tags: ["fullstack-python", "fullstack-django"],
         },
 
         {
           title: "Market Expansion",
           icon: faGlobe,
           description:
-            "Enabled users to validate authenticity of 2nd hand tickets, by implementing TicketSwap REST APIs using DRF",
+            "Allowed users to validate authenticity of 2nd hand tickets, by implementing TicketSwap REST APIs using DRF",
           // "Implemented TicketSwap REST APIs using DRF, allowing users to validate authenticity of 2nd hand tickets",
-          tags: [],
+          tags: ["fullstack-django"],
         },
 
         {
@@ -234,9 +234,9 @@ export const resume = {
           title: "Market Expansion",
           icon: faGlobe,
           description:
-            "Enabled market expansion to Eurozone countries, by extending i18n features (language, country & timezone)",
+            "Facilitated market expansion to eurozone, by implementing Django i18n features (language, country & timezone)",
           // "Improved internationalization features (language, country & timezone) enabling market expansion to Eurozone countries",
-          tags: [],
+          tags: ["fullstack-django"],
         },
       ],
 
@@ -283,7 +283,7 @@ export const resume = {
           title: "Product Development",
           icon: faWrench,
           description:
-            "Delivered complete platform with Django & React in part time setup in consultation with non-technical founders",
+            "Delivered complete platform with Python, Django & React in part time setup in consultation with non-technical founders",
             // "Delivered complete platform in part time setup by directing agile methods in consultation with non-technical founders",
           // "Directed agile/scrum methodology while designing complete platform in consultation with non-technical founders",
         },
@@ -299,7 +299,7 @@ export const resume = {
           title: "Data Automation",
           icon: faLaptopCode,
           description:
-            "Transformed thousands of tenders daily into structured data, by making web crawlers & importers with Python & Celery",
+            "Transformed thousands of tenders daily into structured data, by making web crawlers & importers with Django & Celery",
           // "Engineered automated web crawling system importing & transforming thousands of tenders daily into structured data",
         },
 
@@ -309,7 +309,6 @@ export const resume = {
           description:
             "Enabled market entry via subscription system with monthly/yearly recurring payments, using React, Django & Celery",
           // "Built subscription-based authentication system with monthly & yearly recurring payments supporting business model",
-          tags: ["fullstack-python"],
         },
 
         {
@@ -327,7 +326,7 @@ export const resume = {
           description:
             "Provided professional platform aesthetics by enhancing frontend in coordination with frontend developer using Vue.js",
           // "Enhanced frontend in coordination with frontend developer using Vue.js, providing professional platform aesthetics",
-          tags: ["fullstack-react", "fullstack-svelte"],
+          tags: [],
         },
       ],
 
@@ -366,21 +365,22 @@ export const resume = {
           title: "Mobile App Development",
           icon: faMobile,
           description:
-            "Shipped native iOS booking app in scrum team (4) within 5 months, handling 15%+ of bookings within first 3 months",
+            "Shipped native iOS booking app in Objective-C scrum team (4) within 5 months, handling 15%+ of bookings in 3 months",
         },
 
         {
           title: "Mobile App Development",
           icon: faMobile,
           description:
-            "Designed REST API using DRF, deployed on AWS, accommodating new iOS & Android apps and mobile website",
+            "Designed REST API using DRF, deployed on AWS, accommodating iOS & Android apps and mobile website",
         },
 
         {
           title: "Email Marketing Platform",
           icon: faEnvelope,
           description:
-            "Built email marketing system using Python & SendGrid, sending thousands of emails, supporting acquisition",
+            "Supported acquisition by sending thousands of emails with marketing system using Python, Django, Celery & SendGrid",
+            // "Built email marketing system using Python, Django & SendGrid, sending thousands of emails, supporting acquisition",
         },
       ],
 
@@ -423,7 +423,8 @@ export const resume = {
           title: "Client Delivery",
           icon: faHandshake,
           description:
-            "Delivered web projects for major clients (Bol.com, Gemeente Amsterdam) as part of company's best of 5 Scrum teams",
+            "Delivered web projects for major clients (Bol.com) as part of company's best of 5 Scrum teams using custom PHP CMS",
+            // "Delivered web projects for major clients (Bol.com, Gemeente Amsterdam) as part of company's best of 5 Scrum teams",
         },
 
         {
@@ -505,7 +506,7 @@ export const resume = {
       keywords: [
         "Python",
         "Django",
-        "Django REST Framework",
+        "Django REST Framework (DRF)",
         // "FastAPI",
         "Flask",
         "RESTful API & LLM integrations",
@@ -648,6 +649,24 @@ export const resume = {
 
   projects: [
     {
+      name: "Django Admin Relation Links",
+      startDate: "2017-03",
+      endDate: "2020-12",
+      summary:
+        "Django Admin navigation enhancement, simplifying navigation between related database objects. Open-sourced on GitHub and PyPi. Effectively used at Chipta & Tender-it.",
+      description:
+        "Enhanced Django Admin Navigation with an open source Python package released on PyPi, gaining 108 stars on GitHub. Succesfully employed at projects at Chipta & Tender-it. Engaged with developers in GitHub Issues & Pull Requests.",
+      highlights: [
+        "Conceived Open-Source Python package providing navigation enhancements in Django Admin",
+        "Received appreciation in community with 108 GitHub stars",
+        "Engaged with users handling GitHub Issues and Pull Requests",
+        "Employed library succesfully in projects at Chipta",
+      ],
+      url: "https://github.com/gitaarik/django-admin-relation-links",
+      stars: 108,
+    },
+
+    {
       name: "LitState",
       startDate: "2020-11",
       endDate: "2023-01",
@@ -664,24 +683,6 @@ export const resume = {
       ],
       url: "https://github.com/gitaarik/lit-state",
       stars: 143,
-    },
-
-    {
-      name: "Django Admin Relation Links",
-      startDate: "2017-03",
-      endDate: "2020-12",
-      summary:
-        "Django Admin navigation enhancement, simplifying navigation between related database objects. Open-sourced on GitHub and PyPi. Effectively used at Chipta & Tender-it.",
-      description:
-        "Enhanced Django Admin Navigation with an open source Python package released on PyPi, gaining 108 stars on GitHub. Succesfully employed at projects at Chipta & Tender-it. Engaged with developers in GitHub Issues & Pull Requests.",
-      highlights: [
-        "Conceived Open-Source Python package providing navigation enhancements in Django Admin",
-        "Received appreciation in community with 108 GitHub stars",
-        "Engaged with users handling GitHub Issues and Pull Requests",
-        "Employed library succesfully in projects at Chipta",
-      ],
-      url: "https://github.com/gitaarik/django-admin-relation-links",
-      stars: 108,
     },
 
     {

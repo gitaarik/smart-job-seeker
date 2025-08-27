@@ -22,6 +22,7 @@ async function exportResumeToPDF() {
   const resumeTypes = [
     "",
     "fullstack-python",
+    "fullstack-django",
     "fullstack-react",
     "fullstack-svelte",
     "datascience",
