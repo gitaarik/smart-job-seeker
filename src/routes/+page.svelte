@@ -165,9 +165,9 @@
               <p>
                 With over {devYearsExperience} years of full-stack development
                 experience, I specialize in building and scaling complex,
-                high-traffic web applications with perfect user experience. My
-                skills cover the entire development process, from initial
-                architecture decisions to production deployment and
+                high-traffic and data-heavy web applications with perfect user
+                experience. My skills cover the entire development process, from
+                initial architecture decisions to production deployment and
                 optimization.
               </p>
 
