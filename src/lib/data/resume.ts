@@ -207,7 +207,7 @@ export const resume = {
           title: "Market Expansion",
           icon: faGlobe,
           description:
-            "Enabled clients to organize automatically managed online events with Zoom, by integrating Zoom with OAuth",
+            "Enabled clients to organize automatically managed online events with Zoom, by integrating Zoom with OAuth in Django",
           // "Integrated Zoom with OAuth, enabling clients to organize automatically managed online events with Zoom",
           tags: ["fullstack-python"],
         },
@@ -283,7 +283,8 @@ export const resume = {
           title: "Product Development",
           icon: faWrench,
           description:
-            "Delivered complete platform in part time setup by directing agile methods in consultation with non-technical founders",
+            "Delivered complete platform with Django & React in part time setup in consultation with non-technical founders",
+            // "Delivered complete platform in part time setup by directing agile methods in consultation with non-technical founders",
           // "Directed agile/scrum methodology while designing complete platform in consultation with non-technical founders",
         },
 
@@ -298,7 +299,7 @@ export const resume = {
           title: "Data Automation",
           icon: faLaptopCode,
           description:
-            "Transformed thousands of tenders daily into structured data, by engineering automated web crawler & importer",
+            "Transformed thousands of tenders daily into structured data, by engineering automated web crawlers & importers",
           // "Engineered automated web crawling system importing & transforming thousands of tenders daily into structured data",
         },
 
