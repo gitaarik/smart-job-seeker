@@ -299,7 +299,7 @@ export const resume = {
           title: "Data Automation",
           icon: faLaptopCode,
           description:
-            "Transformed thousands of tenders daily into structured data, by engineering automated web crawlers & importers",
+            "Transformed thousands of tenders daily into structured data, by making web crawlers & importers with Python & Celery",
           // "Engineered automated web crawling system importing & transforming thousands of tenders daily into structured data",
         },
 
@@ -307,7 +307,7 @@ export const resume = {
           title: "Revenue Model",
           icon: faDollarSign,
           description:
-            "Enabled market entry by building subscription system with monthly & yearly recurring payments, with Django & Celery",
+            "Enabled market entry via subscription system with monthly/yearly recurring payments, using React, Django & Celery",
           // "Built subscription-based authentication system with monthly & yearly recurring payments supporting business model",
           tags: ["fullstack-python"],
         },
@@ -505,8 +505,9 @@ export const resume = {
       keywords: [
         "Python",
         "Django",
+        "Django REST Framework",
+        // "FastAPI",
         "Flask",
-        "FastAPI",
         "RESTful API & LLM integrations",
         // "Celery",
         // "Silk",
@@ -546,8 +547,8 @@ export const resume = {
         "MariaDB",
         "SQLite",
         "SQL optimization",
-        "MongoDB",
         "Elasticsearch",
+        "MongoDB",
       ],
     },
 
