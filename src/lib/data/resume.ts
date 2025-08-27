@@ -306,7 +306,7 @@ export const resume = {
           title: "Revenue Model",
           icon: faDollarSign,
           description:
-            "Realized business model by building subscription system with monthly & yearly recurring payments, with Django & Celery",
+            "Enabled market entry by building subscription system with monthly & yearly recurring payments, with Django & Celery",
           // "Built subscription-based authentication system with monthly & yearly recurring payments supporting business model",
           tags: ["fullstack-python"],
         },
