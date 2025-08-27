@@ -46,7 +46,7 @@ export const resume = {
     url: "https://www.rikwanders.tech",
     url_label: "rikwanders.tech",
     summary:
-      "Dutch Senior Full Stack Developer residing in Spain, with 18+ years experience specializing in Python & Node.js ecosystems. Experienced in scaling complex, high-traffic & data heavy applications and leading agile development teams. Deeply engaged in UX design and skilled at engineering DevOps & CI/CD systems. Always interested in the latest AI, tech & security industry updates. Thrives in agile teams and/or startup environments. 5+ years remote work experience.",
+      "Dutch Senior Full Stack Developer residing in Spain, with 18+ years experience specializing in Python & Node.js ecosystems. Experienced in scaling complex, high-traffic & data heavy applications with Django and React, and leading agile development teams. Additional skills in DevOps, CI/CD & UX design. Always current with industry trends, AI, and security practices. Thrives in agile teams and/or startup environments. 5+ years remote work experience.",
 
     highlights: [
       {
