@@ -29,13 +29,11 @@ export const load: PageServerLoad = async ({ locals }) => {
     tokens,
     currentUser: locals.user,
     resumeTypes: [
-      { value: 'resume', label: 'Visual Resume' },
-      { value: 'resume-ats/', label: 'ATS Resume (General)' },
-      { value: 'resume-ats/fullstack-python', label: 'ATS Resume (Fullstack Python)' },
-      { value: 'resume-ats/fullstack-django', label: 'ATS Resume (Fullstack Django)' },
-      { value: 'resume-ats/fullstack-react', label: 'ATS Resume (Fullstack React)' },
-      { value: 'resume-ats/fullstack-svelte', label: 'ATS Resume (Fullstack Svelte)' },
-      { value: 'resume-ats/datascience', label: 'ATS Resume (Data Science)' }
+      { value: 'fullstack-python', label: 'ATS Resume (Fullstack Python)' },
+      { value: 'fullstack-django', label: 'ATS Resume (Fullstack Django)' },
+      { value: 'fullstack-react', label: 'ATS Resume (Fullstack React)' },
+      { value: 'fullstack-svelte', label: 'ATS Resume (Fullstack Svelte)' },
+      { value: 'datascience', label: 'ATS Resume (Data Science)' }
     ]
   }
 }
