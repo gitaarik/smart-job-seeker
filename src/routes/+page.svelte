@@ -396,9 +396,14 @@
       </div>
     </section>
 
-    <section class="w-full" aria-label="References">
-      <div bind:this={elReferences} class="fade-element">
-        <References />
+    <section class="w-full bg-navy text-pearl transition-colors" aria-label="References">
+      <div class="pt-20 pb-10 px-5 sm:px-10 flex justify-center">
+        <div bind:this={elReferences} class="max-w-[600px] fade-element">
+          <h3 class="text-3xl font-semibold mb-8 md:mb-10 capitalize text-center">
+            What Clients Say
+          </h3>
+          <References />
+        </div>
       </div>
     </section>
 
