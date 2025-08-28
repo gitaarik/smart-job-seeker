@@ -165,6 +165,7 @@
     if (elReferences && !elReferences.classList.contains('fade-in')) {
       const referencesTop = elReferences.getBoundingClientRect().top;
       if (referencesTop < windowHeight * 0.8) {
+        console.log('References content animation');
         elReferences.classList.add('fade-in');
         elReferences.classList.add('animate-fade-in');
       }
@@ -173,6 +174,7 @@
     if (elFooter && !elFooter.classList.contains('fade-in')) {
       const footerTop = elFooter.getBoundingClientRect().top;
       if (footerTop < windowHeight * 0.8) {
+        console.log('Footer content animation');
         elFooter.classList.add('fade-in');
         elFooter.classList.add('animate-fade-in');
       }
@@ -394,16 +396,17 @@
       </div>
     </section>
 
-    <section bind:this={elReferences} class="w-full fade-element" aria-label="References">
-      <References />
+    <section class="w-full" aria-label="References">
+      <div bind:this={elReferences} class="fade-element">
+        <References />
+      </div>
     </section>
 
     <footer
-      bind:this={elFooter}
-      class="pt-15 px-5 sm:px-10 flex flex-col w-full items-center gap-2 bg-midnight text-pearl transition-colors fade-element"
+      class="pt-15 px-5 sm:px-10 flex flex-col w-full items-center gap-2 bg-midnight text-pearl transition-colors"
       aria-labelledby="footer-heading"
     >
-      <div class="flex flex-col w-full max-w-[var(--max-content-width)]">
+      <div bind:this={elFooter} class="flex flex-col w-full max-w-[var(--max-content-width)] fade-element">
         <h4 class="font-semibold text-lg mb-2" id="footer-heading">
           Rik Wanders Software
         </h4>
