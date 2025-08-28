@@ -1,6 +1,8 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+  import AOS from 'aos';
+  import 'aos/dist/aos.css';
 
   import {
     faGithub,
@@ -33,70 +35,7 @@
   const devYearsExperience: number = currentYear - 2007;
   const remoteWorkYearsExperience: number = currentYear - 2020;
 
-  // Animation sequences - just add keys and delays!
-  const animations = {
-    header: {
-      'logo': 100,
-      'name': 300,
-      'title': 500,
-      'skills': 700,
-      'subtitle': 1200,
-      'get-in-touch': 1600,
-      'more-info': 1800,
-    },
-    about: {
-      'about-heading': 200,
-      'about-text': 400,
-      'info-boxes': 800,
-      'about-button': 1000,
-    }
-  };
-
-  // Auto-generate animation state from animations object
-  const animationState = Object.keys(animations).reduce((state, key) => {
-    state[`${key}Triggered`] = false;
-    return state;
-  }, {} as Record<string, boolean>);
-
-  // Unified animation function - automatically finds and animates elements
-  function animateElements(animationGroup: Record<string, number>) {
-    Object.entries(animationGroup).forEach(([key, delay]) => {
-      setTimeout(() => {
-        const element = document.querySelector(`[data-animate="${key}"]`);
-        if (element) {
-          element.classList.add('fade-in', 'animate-fade-in');
-        }
-      }, delay);
-    });
-  }
-
-  function animateScrollElements(selector: string) {
-    const element = document.querySelector(selector);
-    if (element && !element.classList.contains('fade-in') && isElementInViewport(selector)) {
-      element.classList.add('fade-in', 'animate-fade-in-simple');
-    }
-  }
-
-  // Auto-generate trigger functions for each animation group
-  const triggers = Object.keys(animations).reduce((triggerFns, groupName) => {
-    const stateKey = `${groupName}Triggered`;
-    triggerFns[`trigger${groupName.charAt(0).toUpperCase() + groupName.slice(1)}Animations`] = () => {
-      if (animationState[stateKey]) return;
-      animationState[stateKey] = true;
-      animateElements(animations[groupName]);
-    };
-    return triggerFns;
-  }, {} as Record<string, () => void>);
-
-  // Extract individual trigger functions for easier access
-  const triggerHeaderAnimations = triggers.triggerHeaderAnimations;
-  const triggerAboutAnimations = triggers.triggerAboutAnimations;
-
   function handleMoreInfo() {
-    if (!animationState.aboutTriggered) {
-      triggerAboutAnimations();
-    }
-    
     elAboutSection.scrollIntoView({
       behavior: "smooth",
       block: "start",
@@ -105,61 +44,28 @@
     elMoreInfo.blur();
   }
 
-  function checkScrollAnimations() {
-    const windowHeight = window.innerHeight;
-    
-    // Auto-check all animation groups for scroll triggers
-    Object.keys(animations).forEach(groupName => {
-      const stateKey = `${groupName}Triggered`;
-      if (!animationState[stateKey]) {
-        // Check if we have a section element for this group
-        if (groupName === 'about' && elAboutSection) {
-          const rect = elAboutSection.getBoundingClientRect();
-          if (rect.top < windowHeight * 0.8) {
-            triggers[`trigger${groupName.charAt(0).toUpperCase() + groupName.slice(1)}Animations`]();
-          }
-        }
-      }
-    });
-
-    // Check scroll-triggered elements
-    const scrollElements = [
-      '[data-animate-scroll="references"]',
-      '[data-animate-scroll="footer"]'
-    ];
-
-    scrollElements.forEach(selector => {
-      animateScrollElements(selector);
-    });
-  }
-
-  function isElementInViewport(selector: string): boolean {
-    const element = document.querySelector(selector);
-    if (!element) return false;
-    const rect = element.getBoundingClientRect();
-    return rect.top < window.innerHeight * 0.8;
-  }
-
   function updateMoreInfoOpacity() {
-    if (!elMoreInfo || !elMoreInfo.classList.contains('fade-in')) return;
-    
+    if (!elMoreInfo) return;
+
     const moreInfoScrollTop = elMoreInfo.getBoundingClientRect().top;
     const viewportHalf = window.innerHeight / 2;
     let opacity = 0.7 - (viewportHalf - moreInfoScrollTop) / viewportHalf;
-    
+
     opacity = Math.max(0, Math.min(1, opacity));
     elMoreInfo.style.opacity = `${opacity}`;
   }
 
   onMount(() => {
-    triggerHeaderAnimations();
+    // Initialize AOS
+    AOS.init({
+      duration: 800,
+      easing: 'ease-out',
+      once: true,
+      offset: 120,
+    });
 
-    // Check initial viewport state after DOM is ready
-    setTimeout(checkScrollAnimations, 100);
-
-    // Set up scroll listener
+    // Set up scroll listener for more info button opacity
     addEventListener("scroll", () => {
-      checkScrollAnimations();
       updateMoreInfoOpacity();
     });
   });
@@ -201,21 +107,36 @@
       class="pt-10 md:pt-25 w-full flex flex-col items-center bg-ice min-h-screen transition-colors"
       aria-labelledby="header-heading"
     >
-      <div data-animate="logo" class="px-5 sm:px-10">
+      <div data-aos="fade-up" data-aos-delay="100" class="px-5 sm:px-10">
         <Logo class="h-45 w-45" />
       </div>
 
       <div class="px-5 sm:px-10 mt-5 text-center">
-        <h1 data-animate="name" id="header-heading" class="text-3xl font-medium">Rik Wanders</h1>
-        <h2 data-animate="title" class="mt-4 text-xl">Freelance Full Stack Developer</h2>
-        <h3 data-animate="skills" class="mt-4">Python • Django • React • Node.js</h3>
+        <h1
+          data-aos="fade-up"
+          data-aos-delay="300"
+          id="header-heading"
+          class="text-3xl font-medium"
+        >
+          Rik Wanders
+        </h1>
+        <h2 data-aos="fade-up" data-aos-delay="500" class="mt-4 text-xl">
+          Freelance Full Stack Developer
+        </h2>
+        <h3 data-aos="fade-up" data-aos-delay="700" class="mt-4">
+          Python • Django • React • Node.js
+        </h3>
 
-        <h4 data-animate="subtitle" class="mt-10 italic">
+        <h4 data-aos="fade-up" data-aos-delay="1200" class="mt-10 italic">
           Building scalable web applications for remote teams
         </h4>
       </div>
 
-      <div data-animate="get-in-touch" class="mt-15 md:mt-20 px-4 flex justify-center w-full">
+      <div
+        data-aos="fade-up"
+        data-aos-delay="1600"
+        class="mt-15 md:mt-20 px-4 flex justify-center w-full"
+      >
         <GetInTouchButton contentClass="bg-snow" />
       </div>
 
@@ -223,7 +144,8 @@
 
       <button
         bind:this={elMoreInfo}
-        data-animate="more-info"
+        data-aos="fade-up"
+        data-aos-delay="1800"
         class="flex-end mt-14 mb-15 flex items-center gap-2 cursor-pointer p-2 scale-100 hover:scale-110 focus:scale-110 hover:text-teal focus:text-teal transition"
         on:click={handleMoreInfo}
       >
@@ -248,7 +170,7 @@
           class="overflow-hidden max-w-[var(--max-content-width)] pt-10 md:pt-15"
         >
           <h3
-            data-animate="about-heading"
+            data-aos="fade-up"
             id="about-me-heading"
             class="text-3xl text-center font-semibold mb-8 md:mb-10 capitalize"
           >
@@ -256,7 +178,8 @@
           </h3>
 
           <div
-            data-animate="about-text"
+            data-aos="fade-up"
+            data-aos-delay="200"
             class="mb-15 flex gap-10 justify-center max-md:flex-col max-md:items-center"
           >
             <div class="text-base/7 tracking-[0.1px]">
@@ -324,8 +247,15 @@
             </div>
           </div>
 
+        </div>
+      </div>
+    </section>
+
+    <section class="w-full bg-mist transition-colors">
+      <div class="flex flex-col items-center px-5 sm:px-10">
+        <div class="max-w-[var(--max-content-width)] pb-15">
           <div
-            data-animate="info-boxes"
+            data-aos="fade-up"
             class="flex flex-col items-center md:flex-row gap-6 w-full justify-evenly mb-15"
           >
             <InfoBox headerText="Key skills:" class="w-full 2xs:max-w-[320px]">
@@ -350,17 +280,22 @@
             </InfoBox>
           </div>
 
-          <div data-animate="about-button" class="flex justify-center mb-15">
+          <div data-aos="fade-up" data-aos-delay="200" class="flex justify-center">
             <GetInTouchButton contentClass="bg-ice" />
           </div>
         </div>
       </div>
     </section>
 
-    <section class="w-full bg-navy text-pearl transition-colors" aria-label="References">
+    <section
+      class="w-full bg-navy text-pearl transition-colors"
+      aria-label="References"
+    >
       <div class="pt-20 pb-10 px-5 sm:px-10 flex justify-center">
-        <div data-animate-scroll="references" class="max-w-[600px]">
-          <h3 class="text-3xl font-semibold mb-8 md:mb-10 capitalize text-center">
+        <div data-aos="fade" class="max-w-[600px]">
+          <h3
+            class="text-3xl font-semibold mb-8 md:mb-10 capitalize text-center"
+          >
             What Clients Say
           </h3>
           <References />
@@ -372,7 +307,10 @@
       class="pt-15 px-5 sm:px-10 flex flex-col w-full items-center gap-2 bg-midnight text-pearl transition-colors"
       aria-labelledby="footer-heading"
     >
-      <div data-animate-scroll="footer" class="flex flex-col w-full max-w-[var(--max-content-width)]">
+      <div
+        data-aos="fade"
+        class="flex flex-col w-full max-w-[var(--max-content-width)]"
+      >
         <h4 class="font-semibold text-lg mb-2" id="footer-heading">
           Rik Wanders Software
         </h4>
@@ -455,50 +393,3 @@
   </article>
 </main>
 
-<style>
-  /* Base animation styles */
-  :global([data-animate], [data-animate-scroll]) {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
-  }
-
-  :global([data-animate-scroll]) {
-    transform: none; /* No movement for scroll elements */
-    transition: opacity 0.8s ease-out;
-  }
-
-  :global([data-animate].fade-in, [data-animate-scroll].fade-in) {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  :global([data-animate-scroll].fade-in) {
-    transform: none;
-  }
-
-  /* Animation keyframes */
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-
-  :global(.animate-fade-in) {
-    animation: fadeInUp 0.8s ease-out forwards;
-  }
-
-  :global(.animate-fade-in-simple) {
-    animation: fadeIn 0.8s ease-out forwards;
-  }
-</style>
