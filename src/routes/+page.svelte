@@ -28,28 +28,69 @@
 
   let elAboutSection: HTMLElement;
   let elMoreInfo: HTMLElement;
-  let elLogo: HTMLElement;
-  let elName: HTMLElement;
-  let elTitle: HTMLElement;
-  let elSkills: HTMLElement;
-  let elSubtitle: HTMLElement;
-  let elGetInTouchButton: HTMLElement;
-  let elAboutHeading: HTMLElement;
-  let elAboutText: HTMLElement;
-  let elInfoBoxes: HTMLElement;
-  let elAboutGetInTouch: HTMLElement;
-  let elReferences: HTMLElement;
-  let elFooter: HTMLElement;
 
   const currentYear: number = (new Date()).getFullYear();
   const devYearsExperience: number = currentYear - 2007;
   const remoteWorkYearsExperience: number = currentYear - 2020;
 
-  let headerAnimationsTriggered = false;
-  let aboutSectionAnimationsTriggered = false;
+  // Animation state
+  const animationState = {
+    headerTriggered: false,
+    aboutTriggered: false,
+  };
+
+  // Animation sequences
+  const animations = {
+    header: [
+      { selector: '[data-animate="logo"]', delay: 100 },
+      { selector: '[data-animate="name"]', delay: 300 },
+      { selector: '[data-animate="title"]', delay: 500 },
+      { selector: '[data-animate="skills"]', delay: 700 },
+      { selector: '[data-animate="subtitle"]', delay: 1200 },
+      { selector: '[data-animate="get-in-touch"]', delay: 1600 },
+      { selector: '[data-animate="more-info"]', delay: 1800 },
+    ],
+    about: [
+      { selector: '[data-animate="about-heading"]', delay: 200 },
+      { selector: '[data-animate="about-text"]', delay: 400 },
+      { selector: '[data-animate="info-boxes"]', delay: 800 },
+      { selector: '[data-animate="about-button"]', delay: 1000 },
+    ]
+  };
+
+  // Unified animation functions
+  function animateElements(sequence: typeof animations.header) {
+    sequence.forEach(({ selector, delay }) => {
+      setTimeout(() => {
+        const element = document.querySelector(selector);
+        if (element) {
+          element.classList.add('fade-in', 'animate-fade-in');
+        }
+      }, delay);
+    });
+  }
+
+  function animateScrollElements(selector: string) {
+    const element = document.querySelector(selector);
+    if (element && !element.classList.contains('fade-in') && isElementInViewport(selector)) {
+      element.classList.add('fade-in', 'animate-fade-in-simple');
+    }
+  }
+
+  function triggerHeaderAnimations() {
+    if (animationState.headerTriggered) return;
+    animationState.headerTriggered = true;
+    animateElements(animations.header);
+  }
+
+  function triggerAboutSectionAnimations() {
+    if (animationState.aboutTriggered) return;
+    animationState.aboutTriggered = true;
+    animateElements(animations.about);
+  }
 
   function handleMoreInfo() {
-    if (!aboutSectionAnimationsTriggered) {
+    if (!animationState.aboutTriggered) {
       triggerAboutSectionAnimations();
     }
     
@@ -61,158 +102,56 @@
     elMoreInfo.blur();
   }
 
-  function triggerHeaderAnimations() {
-    if (headerAnimationsTriggered) return;
-    headerAnimationsTriggered = true;
-
-    console.log('Triggering header animations');
-    setTimeout(() => {
-      console.log('Logo animation', elLogo);
-      if (elLogo) {
-        elLogo.classList.add('fade-in');
-        elLogo.classList.add('animate-fade-in');
-      }
-    }, 100);
-    setTimeout(() => {
-      console.log('Name animation', elName);
-      if (elName) {
-        elName.classList.add('fade-in');
-        elName.classList.add('animate-fade-in');
-      }
-    }, 300);
-    setTimeout(() => {
-      console.log('Title animation', elTitle);
-      if (elTitle) {
-        elTitle.classList.add('fade-in');
-        elTitle.classList.add('animate-fade-in');
-      }
-    }, 500);
-    setTimeout(() => {
-      console.log('Skills animation', elSkills);
-      if (elSkills) {
-        elSkills.classList.add('fade-in');
-        elSkills.classList.add('animate-fade-in');
-      }
-    }, 700);
-    setTimeout(() => {
-      console.log('Subtitle animation', elSubtitle);
-      if (elSubtitle) {
-        elSubtitle.classList.add('fade-in');
-        elSubtitle.classList.add('animate-fade-in');
-      }
-    }, 1200);
-    setTimeout(() => {
-      console.log('Get in touch button animation', elGetInTouchButton);
-      if (elGetInTouchButton) {
-        elGetInTouchButton.classList.add('fade-in');
-        elGetInTouchButton.classList.add('animate-fade-in');
-      }
-    }, 1600);
-    setTimeout(() => {
-      console.log('More info button animation', elMoreInfo);
-      if (elMoreInfo) {
-        elMoreInfo.classList.add('fade-in');
-        elMoreInfo.classList.add('animate-fade-in');
-      }
-    }, 1800);
-  }
-
-  function triggerAboutSectionAnimations() {
-    if (aboutSectionAnimationsTriggered) return;
-    aboutSectionAnimationsTriggered = true;
-
-    console.log('Triggering about section animations');
-    setTimeout(() => {
-      console.log('About heading animation');
-      if (elAboutHeading) {
-        elAboutHeading.classList.add('fade-in');
-        elAboutHeading.classList.add('animate-fade-in');
-      }
-    }, 200);
-    setTimeout(() => {
-      console.log('About text animation');
-      if (elAboutText) {
-        elAboutText.classList.add('fade-in');
-        elAboutText.classList.add('animate-fade-in');
-      }
-    }, 400);
-    setTimeout(() => {
-      console.log('Info boxes animation');
-      if (elInfoBoxes) {
-        elInfoBoxes.classList.add('fade-in');
-        elInfoBoxes.classList.add('animate-fade-in');
-      }
-    }, 800);
-    setTimeout(() => {
-      console.log('About get in touch animation');
-      if (elAboutGetInTouch) {
-        elAboutGetInTouch.classList.add('fade-in');
-        elAboutGetInTouch.classList.add('animate-fade-in');
-      }
-    }, 1000);
-  }
-
   function checkScrollAnimations() {
     const windowHeight = window.innerHeight;
     
-    if (elAboutSection && !aboutSectionAnimationsTriggered) {
+    // Check about section
+    if (elAboutSection && !animationState.aboutTriggered) {
       const aboutTop = elAboutSection.getBoundingClientRect().top;
       if (aboutTop < windowHeight * 0.8) {
         triggerAboutSectionAnimations();
       }
     }
 
-    if (elReferences && !elReferences.classList.contains('fade-in')) {
-      const referencesTop = elReferences.getBoundingClientRect().top;
-      if (referencesTop < windowHeight * 0.8) {
-        console.log('References content animation');
-        elReferences.classList.add('fade-in');
-        elReferences.classList.add('animate-fade-in-footer');
-      }
-    }
+    // Check scroll-triggered elements
+    const scrollElements = [
+      '[data-animate-scroll="references"]',
+      '[data-animate-scroll="footer"]'
+    ];
 
-    if (elFooter && !elFooter.classList.contains('fade-in')) {
-      const footerTop = elFooter.getBoundingClientRect().top;
-      if (footerTop < windowHeight * 0.8) {
-        console.log('Footer content animation');
-        elFooter.classList.add('fade-in');
-        elFooter.classList.add('animate-fade-in-footer');
-      }
-    }
+    scrollElements.forEach(selector => {
+      animateScrollElements(selector);
+    });
+  }
+
+  function isElementInViewport(selector: string): boolean {
+    const element = document.querySelector(selector);
+    if (!element) return false;
+    const rect = element.getBoundingClientRect();
+    return rect.top < window.innerHeight * 0.8;
+  }
+
+  function updateMoreInfoOpacity() {
+    if (!elMoreInfo || !elMoreInfo.classList.contains('fade-in')) return;
+    
+    const moreInfoScrollTop = elMoreInfo.getBoundingClientRect().top;
+    const viewportHalf = window.innerHeight / 2;
+    let opacity = 0.7 - (viewportHalf - moreInfoScrollTop) / viewportHalf;
+    
+    opacity = Math.max(0, Math.min(1, opacity));
+    elMoreInfo.style.opacity = `${opacity}`;
   }
 
   onMount(() => {
     triggerHeaderAnimations();
 
-    // Check initial scroll position and show content that's already in view
-    setTimeout(() => {
-      checkScrollAnimations();
-      // Also check if we need to trigger about section animations based on scroll position
-      if (elAboutSection && !aboutSectionAnimationsTriggered) {
-        const aboutTop = elAboutSection.getBoundingClientRect().top;
-        if (aboutTop < window.innerHeight * 0.8) {
-          triggerAboutSectionAnimations();
-        }
-      }
-    }, 100);
+    // Check initial viewport state after DOM is ready
+    setTimeout(checkScrollAnimations, 100);
 
+    // Set up scroll listener
     addEventListener("scroll", () => {
       checkScrollAnimations();
-
-      const moreInfoScrollTop = elMoreInfo.getBoundingClientRect().top;
-      const viewportHalf = window.innerHeight / 2;
-
-      let opacity = 0.7 - (viewportHalf - moreInfoScrollTop) / viewportHalf;
-
-      if (opacity > 1) {
-        opacity = 1;
-      } else if (opacity < 0) {
-        opacity = 0;
-      }
-
-      if (elMoreInfo.classList.contains('fade-in')) {
-        elMoreInfo.style.opacity = `${opacity}`;
-      }
+      updateMoreInfoOpacity();
     });
   });
 </script>
@@ -253,21 +192,21 @@
       class="pt-10 md:pt-25 w-full flex flex-col items-center bg-ice min-h-screen transition-colors"
       aria-labelledby="header-heading"
     >
-      <div bind:this={elLogo} class="px-5 sm:px-10 fade-element">
+      <div data-animate="logo" class="px-5 sm:px-10">
         <Logo class="h-45 w-45" />
       </div>
 
       <div class="px-5 sm:px-10 mt-5 text-center">
-        <h1 bind:this={elName} id="header-heading" class="text-3xl font-medium fade-element">Rik Wanders</h1>
-        <h2 bind:this={elTitle} class="mt-4 text-xl fade-element">Freelance Full Stack Developer</h2>
-        <h3 bind:this={elSkills} class="mt-4 fade-element">Python • Django • React • Node.js</h3>
+        <h1 data-animate="name" id="header-heading" class="text-3xl font-medium">Rik Wanders</h1>
+        <h2 data-animate="title" class="mt-4 text-xl">Freelance Full Stack Developer</h2>
+        <h3 data-animate="skills" class="mt-4">Python • Django • React • Node.js</h3>
 
-        <h4 bind:this={elSubtitle} class="mt-10 italic fade-element">
+        <h4 data-animate="subtitle" class="mt-10 italic">
           Building scalable web applications for remote teams
         </h4>
       </div>
 
-      <div bind:this={elGetInTouchButton} class="mt-15 md:mt-20 px-4 flex justify-center w-full fade-element">
+      <div data-animate="get-in-touch" class="mt-15 md:mt-20 px-4 flex justify-center w-full">
         <GetInTouchButton contentClass="bg-snow" />
       </div>
 
@@ -275,7 +214,8 @@
 
       <button
         bind:this={elMoreInfo}
-        class="flex-end mt-14 mb-15 flex items-center gap-2 cursor-pointer p-2 scale-100 hover:scale-110 focus:scale-110 hover:text-teal focus:text-teal transition fade-element"
+        data-animate="more-info"
+        class="flex-end mt-14 mb-15 flex items-center gap-2 cursor-pointer p-2 scale-100 hover:scale-110 focus:scale-110 hover:text-teal focus:text-teal transition"
         on:click={handleMoreInfo}
       >
         <span>
@@ -299,16 +239,16 @@
           class="overflow-hidden max-w-[var(--max-content-width)] pt-10 md:pt-15"
         >
           <h3
-            bind:this={elAboutHeading}
+            data-animate="about-heading"
             id="about-me-heading"
-            class="text-3xl text-center font-semibold mb-8 md:mb-10 capitalize fade-element"
+            class="text-3xl text-center font-semibold mb-8 md:mb-10 capitalize"
           >
             About me
           </h3>
 
           <div
-            bind:this={elAboutText}
-            class="mb-15 flex gap-10 justify-center max-md:flex-col max-md:items-center fade-element"
+            data-animate="about-text"
+            class="mb-15 flex gap-10 justify-center max-md:flex-col max-md:items-center"
           >
             <div class="text-base/7 tracking-[0.1px]">
               <div
@@ -376,8 +316,8 @@
           </div>
 
           <div
-            bind:this={elInfoBoxes}
-            class="flex flex-col items-center md:flex-row gap-6 w-full justify-evenly mb-15 fade-element"
+            data-animate="info-boxes"
+            class="flex flex-col items-center md:flex-row gap-6 w-full justify-evenly mb-15"
           >
             <InfoBox headerText="Key skills:" class="w-full 2xs:max-w-[320px]">
               <ul class="mt-4 list-disc ml-4 px-4 pb-4 font-bold">
@@ -401,7 +341,7 @@
             </InfoBox>
           </div>
 
-          <div bind:this={elAboutGetInTouch} class="flex justify-center mb-15 fade-element">
+          <div data-animate="about-button" class="flex justify-center mb-15">
             <GetInTouchButton contentClass="bg-ice" />
           </div>
         </div>
@@ -410,7 +350,7 @@
 
     <section class="w-full bg-navy text-pearl transition-colors" aria-label="References">
       <div class="pt-20 pb-10 px-5 sm:px-10 flex justify-center">
-        <div bind:this={elReferences} class="max-w-[600px] fade-element-footer">
+        <div data-animate-scroll="references" class="max-w-[600px]">
           <h3 class="text-3xl font-semibold mb-8 md:mb-10 capitalize text-center">
             What Clients Say
           </h3>
@@ -423,7 +363,7 @@
       class="pt-15 px-5 sm:px-10 flex flex-col w-full items-center gap-2 bg-midnight text-pearl transition-colors"
       aria-labelledby="footer-heading"
     >
-      <div bind:this={elFooter} class="flex flex-col w-full max-w-[var(--max-content-width)] fade-element-footer">
+      <div data-animate-scroll="footer" class="flex flex-col w-full max-w-[var(--max-content-width)]">
         <h4 class="font-semibold text-lg mb-2" id="footer-heading">
           Rik Wanders Software
         </h4>
@@ -507,28 +447,28 @@
 </main>
 
 <style>
-  :global(.fade-element) {
+  /* Base animation styles */
+  :global([data-animate], [data-animate-scroll]) {
     opacity: 0;
     transform: translateY(20px);
     transition: opacity 0.8s ease-out, transform 0.8s ease-out;
   }
 
-  :global(.fade-element.fade-in) {
+  :global([data-animate-scroll]) {
+    transform: none; /* No movement for scroll elements */
+    transition: opacity 0.8s ease-out;
+  }
+
+  :global([data-animate].fade-in, [data-animate-scroll].fade-in) {
     opacity: 1;
     transform: translateY(0);
   }
 
-  /* Simple fade for footer content - no height changes */
-  :global(.fade-element-footer) {
-    opacity: 0;
-    transition: opacity 0.8s ease-out;
+  :global([data-animate-scroll].fade-in) {
+    transform: none;
   }
 
-  :global(.fade-element-footer.fade-in) {
-    opacity: 1;
-  }
-
-  /* Alternative keyframe approach */
+  /* Animation keyframes */
   @keyframes fadeInUp {
     from {
       opacity: 0;
@@ -540,20 +480,16 @@
     }
   }
 
-  @keyframes fadeInSimple {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 
   :global(.animate-fade-in) {
     animation: fadeInUp 0.8s ease-out forwards;
   }
 
-  :global(.animate-fade-in-footer) {
-    animation: fadeInSimple 0.8s ease-out forwards;
+  :global(.animate-fade-in-simple) {
+    animation: fadeIn 0.8s ease-out forwards;
   }
 </style>
