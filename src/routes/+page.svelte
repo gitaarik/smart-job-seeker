@@ -167,7 +167,7 @@
       if (referencesTop < windowHeight * 0.8) {
         console.log('References content animation');
         elReferences.classList.add('fade-in');
-        elReferences.classList.add('animate-fade-in');
+        elReferences.classList.add('animate-fade-in-footer');
       }
     }
 
@@ -176,7 +176,7 @@
       if (footerTop < windowHeight * 0.8) {
         console.log('Footer content animation');
         elFooter.classList.add('fade-in');
-        elFooter.classList.add('animate-fade-in');
+        elFooter.classList.add('animate-fade-in-footer');
       }
     }
   }
@@ -398,7 +398,7 @@
 
     <section class="w-full bg-navy text-pearl transition-colors" aria-label="References">
       <div class="pt-20 pb-10 px-5 sm:px-10 flex justify-center">
-        <div bind:this={elReferences} class="max-w-[600px] fade-element">
+        <div bind:this={elReferences} class="max-w-[600px] fade-element-footer">
           <h3 class="text-3xl font-semibold mb-8 md:mb-10 capitalize text-center">
             What Clients Say
           </h3>
@@ -411,7 +411,7 @@
       class="pt-15 px-5 sm:px-10 flex flex-col w-full items-center gap-2 bg-midnight text-pearl transition-colors"
       aria-labelledby="footer-heading"
     >
-      <div bind:this={elFooter} class="flex flex-col w-full max-w-[var(--max-content-width)] fade-element">
+      <div bind:this={elFooter} class="flex flex-col w-full max-w-[var(--max-content-width)] fade-element-footer">
         <h4 class="font-semibold text-lg mb-2" id="footer-heading">
           Rik Wanders Software
         </h4>
@@ -497,8 +497,8 @@
 <style>
   :global(.fade-element) {
     opacity: 0;
-    transform: translateY(30px);
-    transition: all 0.8s ease-out;
+    transform: translateY(20px);
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
   }
 
   :global(.fade-element.fade-in) {
@@ -506,11 +506,21 @@
     transform: translateY(0);
   }
 
+  /* Simple fade for footer content - no height changes */
+  :global(.fade-element-footer) {
+    opacity: 0;
+    transition: opacity 0.8s ease-out;
+  }
+
+  :global(.fade-element-footer.fade-in) {
+    opacity: 1;
+  }
+
   /* Alternative keyframe approach */
   @keyframes fadeInUp {
     from {
       opacity: 0;
-      transform: translateY(30px);
+      transform: translateY(20px);
     }
     to {
       opacity: 1;
@@ -518,7 +528,20 @@
     }
   }
 
+  @keyframes fadeInSimple {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
   :global(.animate-fade-in) {
     animation: fadeInUp 0.8s ease-out forwards;
+  }
+
+  :global(.animate-fade-in-footer) {
+    animation: fadeInSimple 0.8s ease-out forwards;
   }
 </style>
