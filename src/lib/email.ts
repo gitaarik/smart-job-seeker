@@ -1,3 +1,8 @@
+import { config } from 'dotenv'
+
+// Load environment variables
+config()
+
 const SMTP2GO_API_KEY = process.env.SMTP2GO_API_KEY
 const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@localhost'
 const FROM_NAME = process.env.FROM_NAME || 'Portfolio App'
