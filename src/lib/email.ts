@@ -1,14 +1,10 @@
-import nodemailer from 'nodemailer'
+const SMTP2GO_API_KEY = process.env.SMTP2GO_API_KEY
+const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@localhost'
+const FROM_NAME = process.env.FROM_NAME || 'Portfolio App'
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP2GO_HOST,
-  port: parseInt(process.env.SMTP2GO_PORT || '587'),
-  secure: false,
-  auth: {
-    user: process.env.SMTP2GO_USERNAME,
-    pass: process.env.SMTP2GO_PASSWORD,
-  },
-})
+if (!SMTP2GO_API_KEY) {
+  console.warn('SMTP2GO_API_KEY is not set. Email functionality will be disabled.')
+}
 
 export interface EmailOptions {
   to: string
@@ -17,16 +13,37 @@ export interface EmailOptions {
 }
 
 export async function sendEmail({ to, subject, html }: EmailOptions): Promise<boolean> {
+  if (!SMTP2GO_API_KEY) {
+    console.error('SMTP2GO API key is not configured')
+    return false
+  }
+
   try {
-    await transporter.sendMail({
-      from: `"Portfolio App" <${process.env.SMTP2GO_USERNAME}>`,
-      to,
-      subject,
-      html,
+    const response = await fetch('https://api.smtp2go.com/v3/email/send', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Smtp2go-Api-Key': SMTP2GO_API_KEY,
+      },
+      body: JSON.stringify({
+        api_key: SMTP2GO_API_KEY,
+        to: [to],
+        sender: `${FROM_NAME} <${FROM_EMAIL}>`,
+        subject: subject,
+        html_body: html,
+      }),
     })
-    return true
+
+    const data = await response.json()
+
+    if (data.data?.succeeded && data.data.succeeded > 0) {
+      return true
+    } else {
+      console.error('SMTP2GO API error:', data)
+      return false
+    }
   } catch (error) {
-    console.error('Failed to send email:', error)
+    console.error('Failed to send email via SMTP2GO API:', error)
     return false
   }
 }
