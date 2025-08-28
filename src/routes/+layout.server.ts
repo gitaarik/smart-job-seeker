@@ -53,13 +53,14 @@ function getThemeData(request: Request) {
   };
 }
 
-export const load: LayoutServerLoad = async ({ request }) => {
+export const load: LayoutServerLoad = async ({ request, locals }) => {
   const themeData = getThemeData(request);
 
   return {
     themePreference: themeData.themePreference,
     actualTheme: themeData.actualTheme,
     systemTheme: themeData.systemTheme,
+    user: locals.user || null,
   };
 };
 

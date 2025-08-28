@@ -1,4 +1,6 @@
 import type { Handle } from '@sveltejs/kit';
+import { verifyJWT } from '$lib/auth';
+import { prisma } from '$lib/db';
 
 function getSystemTheme(request: Request): 'light' | 'dark' {
   // Try to detect system preference from headers
@@ -57,6 +59,32 @@ function getThemeFromRequest(request: Request): string {
 
 export const handle: Handle = async ({ event, resolve }) => {
   const theme = getThemeFromRequest(event.request);
+  
+  // Handle authentication
+  const token = event.cookies.get('token');
+  
+  if (token) {
+    const decoded = verifyJWT(token);
+    if (decoded) {
+      try {
+        const user = await prisma.user.findUnique({
+          where: { id: decoded.userId },
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true
+          }
+        });
+        
+        if (user) {
+          event.locals.user = user;
+        }
+      } catch (error) {
+        console.error('Authentication error:', error);
+      }
+    }
+  }
   
   return await resolve(event, {
     transformPageChunk: ({ html }) => {

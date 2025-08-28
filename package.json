@@ -24,6 +24,10 @@
     "@sveltejs/kit": "^2.16.0",
     "@sveltejs/vite-plugin-svelte": "^6.1.0",
     "@tailwindcss/vite": "^4.0.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/nodemailer": "^7.0.1",
+    "@types/uuid": "^10.0.0",
     "concurrently": "^9.2.0",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
@@ -50,8 +54,14 @@
     "@fortawesome/free-regular-svg-icons": "^6.7.2",
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "@fortawesome/svelte-fontawesome": "^0.2.3",
+    "@prisma/client": "^6.15.0",
     "@vercel/analytics": "^1.5.0",
     "aos": "^2.3.4",
-    "deno": "^2.4.0"
+    "bcryptjs": "^3.0.2",
+    "deno": "^2.4.0",
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^7.0.5",
+    "prisma": "^6.15.0",
+    "uuid": "^11.1.0"
   }
 }
