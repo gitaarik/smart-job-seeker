@@ -56,7 +56,7 @@ async function exportResumeToPDF() {
     });
 
     // Create base output directory if it doesn't exist
-    const baseOutputDir = path.join(process.cwd(), "dist");
+    const baseOutputDir = path.join(process.cwd(), "lib", "resumes");
     if (!fs.existsSync(baseOutputDir)) {
       fs.mkdirSync(baseOutputDir, { recursive: true });
     }

@@ -32,6 +32,27 @@ model User {
   passwordResetExpiry DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
+  
+  resumeTokens      ResumeToken[]
 
   @@map("users")
+}
+
+model ResumeToken {
+  id          String    @id @default(cuid())
+  token       String    @unique
+  name        String
+  description String?
+  resumeType  String    // e.g., "resume", "resume-ats/fullstack-python", etc.
+  expiresAt   DateTime?
+  viewCount   Int       @default(0)
+  maxViews    Int?      // optional view limit
+  isActive    Boolean   @default(true)
+  createdBy   String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  creator     User      @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+
+  @@map("resume_tokens")
 }
