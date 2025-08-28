@@ -20,7 +20,6 @@ async function exportResumeToPDF() {
 
   // Define the versions to create
   const resumeTypes = [
-    "",
     "fullstack-python",
     "fullstack-django",
     "fullstack-react",
@@ -28,22 +27,14 @@ async function exportResumeToPDF() {
     "datascience",
   ];
 
-  const versions = [
-    {
-      route: "resume",
-      dirName: "resume",
-      description: "Visual Resume",
-      isATS: false,
-    },
-    ...resumeTypes.map((type) => ({
-      route: `resume-ats?type=${type}`,
-      dirName: `resume-ats/${type}`,
-      description: `ATS Resume (${
-        type.replace("-", " ").replace(/\b\w/g, (l) => l.toUpperCase())
-      })`,
-      isATS: true,
-    })),
-  ];
+  const versions = resumeTypes.map((type) => ({
+    route: `resume?type=${type}`,
+    dirName: `${type}`,
+    description: `ATS Resume (${
+      type.replace("-", " ").replace(/\b\w/g, (l) => l.toUpperCase())
+    })`,
+    isATS: true,
+  }));
 
   try {
     const page = await browser.newPage();
@@ -56,7 +47,7 @@ async function exportResumeToPDF() {
     });
 
     // Create base output directory if it doesn't exist
-    const baseOutputDir = path.join(process.cwd(), "lib", "resumes");
+    const baseOutputDir = path.join(process.cwd(), "src", "lib", "resumes");
     if (!fs.existsSync(baseOutputDir)) {
       fs.mkdirSync(baseOutputDir, { recursive: true });
     }

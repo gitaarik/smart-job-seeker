@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,27 +7,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  USER
-  ADMIN
-  SUPER_ADMIN
-}
-
 model User {
-  id                String    @id @default(cuid())
-  email             String    @unique
-  password          String
-  firstName         String?
-  lastName          String?
-  role              Role      @default(USER)
-  isEmailVerified   Boolean   @default(false)
-  emailVerifyToken  String?
-  passwordResetToken String?
+  id                  String        @id @default(cuid())
+  email               String        @unique
+  password            String
+  firstName           String?
+  lastName            String?
+  isEmailVerified     Boolean       @default(false)
+  emailVerifyToken    String?
+  passwordResetToken  String?
   passwordResetExpiry DateTime?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  
-  resumeTokens      ResumeToken[]
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  role                Role          @default(USER)
+  resumeTokens        ResumeToken[]
 
   @@map("users")
 }
@@ -43,16 +30,21 @@ model ResumeToken {
   token       String    @unique
   name        String
   description String?
-  resumeType  String    // e.g., "resume", "resume-ats/fullstack-python", etc.
+  resumeType  String
   expiresAt   DateTime?
   viewCount   Int       @default(0)
-  maxViews    Int?      // optional view limit
+  maxViews    Int?
   isActive    Boolean   @default(true)
   createdBy   String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-  
   creator     User      @relation(fields: [createdBy], references: [id], onDelete: Cascade)
 
   @@map("resume_tokens")
+}
+
+enum Role {
+  USER
+  ADMIN
+  SUPER_ADMIN
 }
