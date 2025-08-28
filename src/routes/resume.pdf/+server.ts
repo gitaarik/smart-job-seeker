@@ -4,8 +4,6 @@ import { prisma } from '$lib/db'
 import fs from 'fs'
 import path from 'path'
 
-const db = prisma
-
 export const GET: RequestHandler = async ({ url, setHeaders }) => {
   const token = url.searchParams.get('token')
   
@@ -15,7 +13,7 @@ export const GET: RequestHandler = async ({ url, setHeaders }) => {
 
   try {
     // Find and validate the token
-    const resumeToken = await db.resumeToken.findUnique({
+    const resumeToken = await prisma.resumeToken.findUnique({
       where: { token },
       include: { creator: true }
     })
@@ -39,7 +37,7 @@ export const GET: RequestHandler = async ({ url, setHeaders }) => {
     }
 
     // Increment view count
-    await db.resumeToken.update({
+    await prisma.resumeToken.update({
       where: { id: resumeToken.id },
       data: { viewCount: { increment: 1 } }
     })

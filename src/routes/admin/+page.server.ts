@@ -1,5 +1,5 @@
 import { redirect } from '@sveltejs/kit'
-import { db } from '$lib/db'
+import { prisma } from '$lib/db'
 import type { PageServerLoad, Actions } from './$types'
 import { hashPassword } from '$lib/auth'
 
@@ -12,7 +12,7 @@ export const load: PageServerLoad = async ({ locals }) => {
     throw redirect(302, '/dashboard')
   }
 
-  const users = await db.user.findMany({
+  const users = await prisma.user.findMany({
     orderBy: { createdAt: 'desc' },
     select: {
       id: true,
@@ -50,7 +50,7 @@ export const actions: Actions = {
     }
 
     try {
-      const existingUser = await db.user.findUnique({
+      const existingUser = await prisma.user.findUnique({
         where: { email }
       })
 
@@ -60,7 +60,7 @@ export const actions: Actions = {
 
       const hashedPassword = await hashPassword(password)
 
-      await db.user.create({
+      await prisma.user.create({
         data: {
           email,
           password: hashedPassword,
@@ -107,7 +107,7 @@ export const actions: Actions = {
         updateData.password = await hashPassword(password)
       }
 
-      await db.user.update({
+      await prisma.user.update({
         where: { id: userId },
         data: updateData
       })
@@ -136,7 +136,7 @@ export const actions: Actions = {
     }
 
     try {
-      await db.user.delete({
+      await prisma.user.delete({
         where: { id: userId }
       })
 

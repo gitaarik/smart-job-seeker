@@ -3,8 +3,6 @@ import { prisma } from '$lib/db'
 import type { PageServerLoad, Actions } from './$types'
 import { v4 as uuidv4 } from 'uuid'
 
-const db = prisma
-
 export const load: PageServerLoad = async ({ locals }) => {
   if (!locals.user) {
     throw redirect(302, '/auth')
@@ -14,7 +12,7 @@ export const load: PageServerLoad = async ({ locals }) => {
     throw redirect(302, '/dashboard')
   }
 
-  const tokens = await db.resumeToken.findMany({
+  const tokens = await prisma.resumeToken.findMany({
     include: {
       creator: {
         select: {
@@ -64,7 +62,7 @@ export const actions: Actions = {
       const expiresAt = expiresAtStr ? new Date(expiresAtStr) : null
       const maxViews = maxViewsStr ? parseInt(maxViewsStr) : null
 
-      await db.resumeToken.create({
+      await prisma.resumeToken.create({
         data: {
           token,
           name,
@@ -105,7 +103,7 @@ export const actions: Actions = {
       const expiresAt = expiresAtStr ? new Date(expiresAtStr) : null
       const maxViews = maxViewsStr ? parseInt(maxViewsStr) : null
 
-      await db.resumeToken.update({
+      await prisma.resumeToken.update({
         where: { id: tokenId },
         data: {
           name,
@@ -137,7 +135,7 @@ export const actions: Actions = {
     }
 
     try {
-      await db.resumeToken.delete({
+      await prisma.resumeToken.delete({
         where: { id: tokenId }
       })
 
@@ -161,7 +159,7 @@ export const actions: Actions = {
     }
 
     try {
-      await db.resumeToken.update({
+      await prisma.resumeToken.update({
         where: { id: tokenId },
         data: { viewCount: 0 }
       })
