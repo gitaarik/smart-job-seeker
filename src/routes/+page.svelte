@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import AOS from 'aos';
-  import 'aos/dist/aos.css';
+  import AOS from "aos";
+  import "aos/dist/aos.css";
 
   import {
     faGithub,
@@ -59,7 +59,7 @@
     // Initialize AOS
     AOS.init({
       duration: 800,
-      easing: 'ease-out',
+      easing: "ease-out",
       once: true,
       offset: 120,
     });
@@ -246,12 +246,9 @@
               />
             </div>
           </div>
-
         </div>
       </div>
-    </section>
 
-    <section class="w-full bg-mist transition-colors">
       <div class="flex flex-col items-center px-5 sm:px-10">
         <div class="max-w-[var(--max-content-width)] pb-15">
           <div
@@ -280,7 +277,11 @@
             </InfoBox>
           </div>
 
-          <div data-aos="fade-up" data-aos-delay="200" class="flex justify-center">
+          <div
+            data-aos="fade-up"
+            data-aos-delay="200"
+            class="flex justify-center"
+          >
             <GetInTouchButton contentClass="bg-ice" />
           </div>
         </div>
@@ -392,4 +393,3 @@
     </footer>
   </article>
 </main>
-
