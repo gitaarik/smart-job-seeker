@@ -142,23 +142,27 @@
 
       <div class="flex-grow"></div>
 
-      <button
+      <div
         bind:this={elMoreInfo}
-        data-aos="fade-up"
-        data-aos-delay="1800"
-        data-aos-anchor-placement="top-bottom"
-        class="flex-end mt-14 mb-15 flex items-center gap-2 cursor-pointer p-2 scale-100 hover:scale-110 focus:scale-110 hover:text-teal focus:text-teal transition"
-        on:click={handleMoreInfo}
+        class="flex-end mt-14 mb-15"
       >
-        <span>
-          <FontAwesomeIcon icon={faCircleChevronDown} class="w-4" />
-        </span>
-        <span
-          class="text-md font-semibold"
+        <button
+          class="flex items-center gap-2 cursor-pointer p-2 scale-100 hover:scale-110 focus:scale-110 hover:text-teal focus:text-teal transition"
+          data-aos="fade-up"
+          data-aos-delay="1800"
+          data-aos-anchor-placement="top-bottom"
+          on:click={handleMoreInfo}
         >
-          More Info
-        </span>
-      </button>
+          <span>
+            <FontAwesomeIcon icon={faCircleChevronDown} class="w-4" />
+          </span>
+          <span
+            class="text-md font-semibold"
+          >
+            More Info
+          </span>
+        </button>
+      </div>
     </header>
 
     <section
