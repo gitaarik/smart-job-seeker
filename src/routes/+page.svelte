@@ -175,7 +175,7 @@
           class="overflow-hidden max-w-[var(--max-content-width)] pt-10 md:pt-15"
         >
           <h3
-            data-aos="fade-up"
+            data-aos="fade"
             id="about-me-heading"
             class="text-3xl text-center font-semibold mb-8 md:mb-10 capitalize"
           >
@@ -183,7 +183,7 @@
           </h3>
 
           <div
-            data-aos="fade-up"
+            data-aos="fade"
             data-aos-delay="200"
             class="mb-15 flex gap-10 justify-center max-md:flex-col max-md:items-center"
           >
@@ -257,7 +257,7 @@
       <div class="flex flex-col items-center px-5 sm:px-10">
         <div class="max-w-[var(--max-content-width)] pb-15">
           <div
-            data-aos="fade-up"
+            data-aos="fade"
             class="flex flex-col items-center md:flex-row gap-6 w-full justify-evenly mb-15"
           >
             <InfoBox headerText="Key skills:" class="w-full 2xs:max-w-[320px]">
@@ -283,7 +283,7 @@
           </div>
 
           <div
-            data-aos="fade-up"
+            data-aos="fade"
             data-aos-delay="200"
             class="flex justify-center"
           >
