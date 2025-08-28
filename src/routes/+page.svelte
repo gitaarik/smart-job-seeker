@@ -33,34 +33,34 @@
   const devYearsExperience: number = currentYear - 2007;
   const remoteWorkYearsExperience: number = currentYear - 2020;
 
-  // Animation state
-  const animationState = {
-    headerTriggered: false,
-    aboutTriggered: false,
-  };
-
-  // Animation sequences
+  // Animation sequences - just add keys and delays!
   const animations = {
-    header: [
-      { key: 'logo', delay: 100 },
-      { key: 'name', delay: 300 },
-      { key: 'title', delay: 500 },
-      { key: 'skills', delay: 700 },
-      { key: 'subtitle', delay: 1200 },
-      { key: 'get-in-touch', delay: 1600 },
-      { key: 'more-info', delay: 1800 },
-    ],
-    about: [
-      { key: 'about-heading', delay: 200 },
-      { key: 'about-text', delay: 400 },
-      { key: 'info-boxes', delay: 800 },
-      { key: 'about-button', delay: 1000 },
-    ]
+    header: {
+      'logo': 100,
+      'name': 300,
+      'title': 500,
+      'skills': 700,
+      'subtitle': 1200,
+      'get-in-touch': 1600,
+      'more-info': 1800,
+    },
+    about: {
+      'about-heading': 200,
+      'about-text': 400,
+      'info-boxes': 800,
+      'about-button': 1000,
+    }
   };
 
-  // Unified animation functions
-  function animateElements(sequence: typeof animations.header) {
-    sequence.forEach(({ key, delay }) => {
+  // Auto-generate animation state from animations object
+  const animationState = Object.keys(animations).reduce((state, key) => {
+    state[`${key}Triggered`] = false;
+    return state;
+  }, {} as Record<string, boolean>);
+
+  // Unified animation function - automatically finds and animates elements
+  function animateElements(animationGroup: Record<string, number>) {
+    Object.entries(animationGroup).forEach(([key, delay]) => {
       setTimeout(() => {
         const element = document.querySelector(`[data-animate="${key}"]`);
         if (element) {
@@ -77,21 +77,24 @@
     }
   }
 
-  function triggerHeaderAnimations() {
-    if (animationState.headerTriggered) return;
-    animationState.headerTriggered = true;
-    animateElements(animations.header);
-  }
+  // Auto-generate trigger functions for each animation group
+  const triggers = Object.keys(animations).reduce((triggerFns, groupName) => {
+    const stateKey = `${groupName}Triggered`;
+    triggerFns[`trigger${groupName.charAt(0).toUpperCase() + groupName.slice(1)}Animations`] = () => {
+      if (animationState[stateKey]) return;
+      animationState[stateKey] = true;
+      animateElements(animations[groupName]);
+    };
+    return triggerFns;
+  }, {} as Record<string, () => void>);
 
-  function triggerAboutSectionAnimations() {
-    if (animationState.aboutTriggered) return;
-    animationState.aboutTriggered = true;
-    animateElements(animations.about);
-  }
+  // Extract individual trigger functions for easier access
+  const triggerHeaderAnimations = triggers.triggerHeaderAnimations;
+  const triggerAboutAnimations = triggers.triggerAboutAnimations;
 
   function handleMoreInfo() {
     if (!animationState.aboutTriggered) {
-      triggerAboutSectionAnimations();
+      triggerAboutAnimations();
     }
     
     elAboutSection.scrollIntoView({
@@ -105,13 +108,19 @@
   function checkScrollAnimations() {
     const windowHeight = window.innerHeight;
     
-    // Check about section
-    if (elAboutSection && !animationState.aboutTriggered) {
-      const aboutTop = elAboutSection.getBoundingClientRect().top;
-      if (aboutTop < windowHeight * 0.8) {
-        triggerAboutSectionAnimations();
+    // Auto-check all animation groups for scroll triggers
+    Object.keys(animations).forEach(groupName => {
+      const stateKey = `${groupName}Triggered`;
+      if (!animationState[stateKey]) {
+        // Check if we have a section element for this group
+        if (groupName === 'about' && elAboutSection) {
+          const rect = elAboutSection.getBoundingClientRect();
+          if (rect.top < windowHeight * 0.8) {
+            triggers[`trigger${groupName.charAt(0).toUpperCase() + groupName.slice(1)}Animations`]();
+          }
+        }
       }
-    }
+    });
 
     // Check scroll-triggered elements
     const scrollElements = [
