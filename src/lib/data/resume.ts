@@ -265,6 +265,153 @@ export const resume = {
         "Web Sockets",
         "React Native",
       ],
+
+      projects: [
+        {
+          name: "Migration to Django",
+          startDate: "2014-09",
+          endDate: "2015-03",
+          summary: "Led migration from PHP to Django while maintaining backward compatibility and zero downtime.",
+          description: "Migrated entire application from PHP codebase to Django while keeping existing database intact and ensuring backwards compatibility. Moved all core business logic to take advantage of Django's framework features.",
+          outcome: "Complete platform migration with no downtime or data loss. Significantly improved development velocity and maintainability."
+        },
+        {
+          name: "Dashboard Modernization", 
+          startDate: "2015-04",
+          endDate: "2015-09",
+          summary: "Built modern dashboard with Django backend and React frontend, improving user experience and performance.",
+          description: "Created modern dashboard combining Django backend with React frontend and REST API using Django REST Framework. Implemented Webpack bundling system and integrated legacy PHP components.",
+          outcome: "40% faster page load times, improved user satisfaction, and foundation for mobile apps and partner integrations."
+        },
+        {
+          name: "Ticket Shop Modernization",
+          startDate: "2015-02", 
+          endDate: "2016-12",
+          summary: "Rebuilt ticket purchasing system as single-page app, reducing cart abandonment by 35%.",
+          description: "Rebuilt entire ticket shop as single-page application using Lit and Web Components. Built REST API with Django REST Framework, enabled guest checkout, integrated multiple payment options, and created theming system.",
+          outcome: "35% reduction in cart abandonment, 50% increase in mobile sales, improved customer satisfaction, and new revenue from theming features."
+        },
+        {
+          name: "Developer Documentation",
+          startDate: "2015-10",
+          endDate: "2016-02", 
+          summary: "Created comprehensive developer documentation reducing onboarding time from 3-4 weeks to 5-7 days.",
+          description: "Built complete documentation system including onboarding guides, technical references, Docker setup instructions, and testing framework documentation with examples.",
+          outcome: "Reduced new developer onboarding from 3-4 weeks to 5-7 days, improved code consistency, and better bug reporting."
+        },
+        {
+          name: "Internationalization & Localization",
+          startDate: "2016-03",
+          endDate: "2016-07",
+          summary: "Built flexible translation system enabling expansion to 8 international markets.",
+          description: "Customized Django's translation system to store translations in database using ORM models. Created admin interface for easy translation editing and developer tools for environment syncing.",
+          outcome: "Launched in 8 international markets within 6 months, 40% increase in international customers."
+        },
+        {
+          name: "Deployment System",
+          startDate: "2016-08",
+          endDate: "2017-02",
+          summary: "Built complete CI/CD pipeline reducing deployment time from 2+ hours to 15 minutes.",
+          description: "Created automated CI/CD pipeline handling deployments to multiple environments, multi-server deployment, rollbacks, and monitoring with chat notifications. Included smart caching and complex scenario handling.",
+          outcome: "Deployment time reduced from 2+ hours to 15 minutes, 90% reduction in deployment problems, enabled multiple daily deployments."
+        },
+        {
+          name: "Test Suite Implementation",
+          startDate: "2017-03", 
+          endDate: "2017-06",
+          summary: "Established comprehensive testing system increasing code coverage from 15% to 85%.",
+          description: "Built complete testing system with unit test helpers, Selenium integration for critical workflows, and team training on testing best practices.",
+          outcome: "Increased code coverage from 15% to 85%, 60% reduction in production bugs, improved development confidence and velocity."
+        },
+        {
+          name: "Visitor Management Tool",
+          startDate: "2017-07",
+          endDate: "2017-11", 
+          summary: "Built comprehensive attendee management interface saving organizers 5-8 hours per event.",
+          description: "Created visitor management system with advanced search/filtering, detailed profiles, manual visitor addition, integrated ticket/payment management, automated emails, and flexible exports.",
+          outcome: "Saved organizers 5-8 hours per event, 90% adoption rate, 25% increase in customer satisfaction, 70% reduction in support tickets."
+        },
+        {
+          name: "Mailing System Modernization",
+          startDate: "2017-12",
+          endDate: "2018-04",
+          summary: "Modernized email system with HTML templates and personalization, increasing open rates by 45%.",
+          description: "Built modern HTML email system with responsive templates, dynamic content insertion, inline images/attachments support, and efficient mass mailing with personalization.",
+          outcome: "45% increase in email open rates, improved attendee engagement, better event attendance, reduced manual work for organizers."
+        },
+        {
+          name: "Website Integration Tool",
+          startDate: "2018-05",
+          endDate: "2018-08",
+          summary: "Created embeddable ticket shop integration improving website conversion rates by 30%.",
+          description: "Built configurable integration tool generating embed code with customization options, automatic resizing using postMessage API, and transparent background for seamless visual integration.",
+          outcome: "30% improvement in website conversion rates, became key sales feature for 60% of enterprise customers, simplified setup from developer-required to 5-minute process."
+        },
+        {
+          name: "Ticket PDF Modernization",
+          startDate: "2018-09",
+          endDate: "2018-12",
+          summary: "Modernized PDF generation with HTML templates and QR security, eliminating ticket fraud.",
+          description: "Switched to HTML-to-PDF generation using WeasyPrint, added secure QR code generation with validation keys, and built multi-page PDF support for multiple ticket purchases.",
+          outcome: "Design updates reduced from days to minutes, eliminated ticket fraud, faster event check-ins, improved customer satisfaction with professional tickets."
+        },
+        {
+          name: "Performance Optimization",
+          startDate: "2019-01",
+          endDate: "2019-05", 
+          summary: "Optimized ticket shop performance by up to 60%, reducing load times from 8 to 3 seconds.",
+          description: "Used Django Silk profiling to identify bottlenecks, optimized database queries with select_related/prefetch_related, implemented strategic caching, and optimized Python code.",
+          outcome: "Up to 60% performance improvement, load times reduced from 8 to 3 seconds, 25% reduction in cart abandonment, system handled 3x more concurrent users."
+        },
+        {
+          name: "Mobile Scan App",
+          startDate: "2019-06",
+          endDate: "2020-02",
+          summary: "Built React Native scanning app reducing check-in times by 70% and saving organizers $50-200 per event.",
+          description: "Developed cross-platform React Native app for ticket scanning and validation with barcode scanning, offline capability, REST API integration, and App Store/Google Play deployment.",
+          outcome: "Eliminated expensive third-party solutions saving $50-200 per event, 70% reduction in check-in times, offline capability for poor venue connectivity, became key selling point for 40% of new customers."
+        },
+        {
+          name: "TicketSwap Integration", 
+          startDate: "2020-03",
+          endDate: "2020-06",
+          summary: "Integrated with TicketSwap to eliminate secondary market fraud and increase sales by 15%.",
+          description: "Worked with TicketSwap's technical team to implement secure integration validating second-hand tickets sold through their platform, ensuring only legitimate tickets could be resold.",
+          outcome: "Ticket fraud rates dropped to near zero, increased customer confidence, became competitive advantage, led to 15% increase in overall ticket sales."
+        },
+        {
+          name: "Zoom Integration",
+          startDate: "2020-07", 
+          endDate: "2020-12",
+          summary: "Built comprehensive Zoom integration enabling virtual events during COVID-19 pandemic.",
+          description: "Implemented Zoom integration using OAuth for secure account connection, built meeting creation/participant management functionality, and created interface for multi-ticket assignments with separate access.",
+          outcome: "Successfully pivoted platform for virtual events during pandemic, 80% of organizers adopted virtual events, prevented major revenue loss, reduced support tickets by 50%."
+        },
+        {
+          name: "Shared Frontend Library",
+          startDate: "2021-01",
+          endDate: "2021-05",
+          summary: "Created shared JavaScript library reducing code duplication by 40% across all projects.",
+          description: "Built shared JavaScript library containing common utilities, UI components, and business logic. Systematically refactored existing projects to use shared library instead of custom implementations.",
+          outcome: "40% reduction in code duplication, 25% decrease in development time for new features, improved UI consistency and user experience scores."
+        },
+        {
+          name: "Feature Expansion",
+          startDate: "2021-06", 
+          endDate: "2021-12",
+          summary: "Enhanced multi-language support and custom attendee data collection, increasing international penetration by 60%.",
+          description: "Built dashboard widget system for multi-language event management, implemented configurable custom questions, added age verification controls, and redesigned organizer signup process.",
+          outcome: "60% increase in international market penetration, 75% adoption rate for custom questions feature, opened new market segments, 35% increase in organizer conversion rates."
+        },
+        {
+          name: "Public Events API",
+          startDate: "2022-01",
+          endDate: "2024-06",
+          summary: "Built comprehensive REST API enabling partnerships and driving 30% increase in ticket sales.",
+          description: "Designed REST API endpoints for structured event data access with privacy controls, implemented dashboard settings for public visibility control, and added categorization features for improved discovery.",
+          outcome: "Enabled partnerships with 12+ event listing platforms, 30% increase in ticket sales through partner channels, improved event discoverability and audience matching."
+        }
+      ],
     },
 
     {
