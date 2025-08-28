@@ -42,27 +42,27 @@
   // Animation sequences
   const animations = {
     header: [
-      { selector: '[data-animate="logo"]', delay: 100 },
-      { selector: '[data-animate="name"]', delay: 300 },
-      { selector: '[data-animate="title"]', delay: 500 },
-      { selector: '[data-animate="skills"]', delay: 700 },
-      { selector: '[data-animate="subtitle"]', delay: 1200 },
-      { selector: '[data-animate="get-in-touch"]', delay: 1600 },
-      { selector: '[data-animate="more-info"]', delay: 1800 },
+      { key: 'logo', delay: 100 },
+      { key: 'name', delay: 300 },
+      { key: 'title', delay: 500 },
+      { key: 'skills', delay: 700 },
+      { key: 'subtitle', delay: 1200 },
+      { key: 'get-in-touch', delay: 1600 },
+      { key: 'more-info', delay: 1800 },
     ],
     about: [
-      { selector: '[data-animate="about-heading"]', delay: 200 },
-      { selector: '[data-animate="about-text"]', delay: 400 },
-      { selector: '[data-animate="info-boxes"]', delay: 800 },
-      { selector: '[data-animate="about-button"]', delay: 1000 },
+      { key: 'about-heading', delay: 200 },
+      { key: 'about-text', delay: 400 },
+      { key: 'info-boxes', delay: 800 },
+      { key: 'about-button', delay: 1000 },
     ]
   };
 
   // Unified animation functions
   function animateElements(sequence: typeof animations.header) {
-    sequence.forEach(({ selector, delay }) => {
+    sequence.forEach(({ key, delay }) => {
       setTimeout(() => {
-        const element = document.querySelector(selector);
+        const element = document.querySelector(`[data-animate="${key}"]`);
         if (element) {
           element.classList.add('fade-in', 'animate-fade-in');
         }
