@@ -5,6 +5,9 @@ import { browser } from '$app/environment';
 type ThemePreference = 'light' | 'dark' | 'auto';
 type ActualTheme = 'light' | 'dark';
 
+// Track the auto-cycle state
+let autoCycleState: 'first' | 'second' | null = null;
+
 // Store for the user's preference (light/dark/auto)
 export const themePreference = writable<ThemePreference>('auto');
 
@@ -118,15 +121,35 @@ themePreference.subscribe((value) => {
 
 export function switchTheme() {
   themePreference.update((current) => {
-    // Cycle through: light -> dark -> auto -> light
+    // Handle auto-cycle continuation
+    if (autoCycleState === 'first') {
+      // Second step: go to the other theme
+      autoCycleState = 'second';
+      return current === 'light' ? 'dark' : 'light';
+    } else if (autoCycleState === 'second') {
+      // Third step: go back to auto
+      autoCycleState = null;
+      return 'auto';
+    }
+    
+    // Standard cycle: light -> dark -> auto -> light
     switch (current) {
       case 'light':
+        autoCycleState = null;
         return 'dark';
       case 'dark':
+        autoCycleState = null;
         return 'auto';
       case 'auto':
-        return 'light';
+        // When on auto, switch to opposite of current actual theme first
+        let currentSystemTheme: ActualTheme = 'light';
+        systemTheme.subscribe(value => currentSystemTheme = value)();
+        
+        // Start the auto-cycle: switch to opposite of current actual theme
+        autoCycleState = 'first';
+        return currentSystemTheme === 'light' ? 'dark' : 'light';
       default:
+        autoCycleState = null;
         return 'light';
     }
   });
