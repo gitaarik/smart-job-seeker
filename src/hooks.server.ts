@@ -73,7 +73,8 @@ export const handle: Handle = async ({ event, resolve }) => {
             id: true,
             email: true,
             firstName: true,
-            lastName: true
+            lastName: true,
+            role: true
           }
         });
         

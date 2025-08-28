@@ -17,6 +17,7 @@ declare global {
         email: string
         firstName: string | null
         lastName: string | null
+        role: 'USER' | 'ADMIN' | 'SUPER_ADMIN'
       }
     }
     // interface PageData {}

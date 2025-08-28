@@ -277,7 +277,7 @@
 
                 <li class="my-4">Technical strategy consulting</li>
 
-                <li>Short-term remote jobs</li>
+                <li>Lead developer roles</li>
               </ul>
             </InfoBox>
           </div>
