@@ -1,5 +1,5 @@
 <script lang="ts">
-  import ResumeSection from "./ResumeSection.svelte";
+  import InfoSection from "./InfoSection.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { 
     faRocket,
@@ -56,7 +56,7 @@
   }
 </script>
 
-<ResumeSection title="Me in 5 Years" icon={faRocket}>
+<InfoSection title="Me in 5 Years" icon={faRocket}>
   <!-- Career Path Navigation Menu -->
   <div class="print:hidden mb-6">
     <nav class="bg-frost/50 border border-ocean/30 rounded-lg p-2">
@@ -89,4 +89,4 @@
       {/each}
     </div>
   </div>
-</ResumeSection>
+</InfoSection>

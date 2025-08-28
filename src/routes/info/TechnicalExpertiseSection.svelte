@@ -1,5 +1,5 @@
 <script lang="ts">
-  import ResumeSection from "./ResumeSection.svelte";
+  import InfoSection from "./InfoSection.svelte";
   import InfoBoxes from "./InfoBoxes.svelte";
   import { faCode } from "@fortawesome/free-solid-svg-icons";
   import { resume } from "$lib/data/resume";
@@ -13,6 +13,6 @@
   }
 </script>
 
-<ResumeSection title="Technical Expertise" icon={faCode}>
+<InfoSection title="Technical Expertise" icon={faCode}>
   <InfoBoxes items={getSkills()} />
-</ResumeSection>
+</InfoSection>

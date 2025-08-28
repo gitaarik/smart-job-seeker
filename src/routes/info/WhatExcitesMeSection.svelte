@@ -1,11 +1,11 @@
 <script lang="ts">
-  import ResumeSection from "./ResumeSection.svelte";
+  import InfoSection from "./InfoSection.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { faFire, faThumbsUp, faThumbsDown } from "@fortawesome/free-solid-svg-icons";
   import { resume } from "$lib/data/resume";
 </script>
 
-<ResumeSection title="What Excites Me" icon={faFire}>
+<InfoSection title="What Excites Me" icon={faFire}>
   <div class="space-y-8">
     <!-- What Excites Me -->
     <div>
@@ -53,4 +53,4 @@
       I'm committed to delivering quality work across all areas, even those that may not be my primary sources of excitement.
     </p>
   </div>
-</ResumeSection>
+</InfoSection>

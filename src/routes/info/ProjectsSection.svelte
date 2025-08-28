@@ -1,12 +1,12 @@
 <script lang="ts">
-  import ResumeSection from "./ResumeSection.svelte";
+  import InfoSection from "./InfoSection.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { faGithub } from "@fortawesome/free-brands-svg-icons";
   import { faCode, faExternalLinkAlt, faStar } from "@fortawesome/free-solid-svg-icons";
   import { resume } from "$lib/data/resume";
 </script>
 
-<ResumeSection title="Projects" icon={faCode}>
+<InfoSection title="Projects" icon={faCode}>
   <div class="space-y-8">
     {#each resume.projects as project, index (project.name)}
       <div class="border-l-2 border-ocean pl-4 pb-6">
@@ -58,4 +58,4 @@
       </div>
     {/each}
   </div>
-</ResumeSection>
+</InfoSection>

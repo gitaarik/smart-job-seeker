@@ -1,5 +1,5 @@
 <script lang="ts">
-  import ResumeSection from "./ResumeSection.svelte";
+  import InfoSection from "./InfoSection.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faExternalLinkAlt,
@@ -9,7 +9,7 @@
   import { resume } from "$lib/data/resume";
 </script>
 
-<ResumeSection title="Education" icon={faGraduationCap}>
+<InfoSection title="Education" icon={faGraduationCap}>
   <div class="space-y-6">
     {#each resume.education as edu, index (index)}
       <div class="border-l-2 border-ocean pl-4 pb-4">
@@ -52,5 +52,5 @@
       </div>
     {/each}
   </div>
-</ResumeSection>
+</InfoSection>
 

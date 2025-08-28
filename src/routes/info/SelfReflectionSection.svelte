@@ -1,11 +1,11 @@
 <script lang="ts">
-  import ResumeSection from "./ResumeSection.svelte";
+  import InfoSection from "./InfoSection.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { faEye, faArrowUp, faArrowDown, faLightbulb } from "@fortawesome/free-solid-svg-icons";
   import { resume } from "$lib/data/resume";
 </script>
 
-<ResumeSection title="Candid Self-Reflection" icon={faEye}>
+<InfoSection title="Candid Self-Reflection" icon={faEye}>
   <div class="space-y-8">
     <!-- Biggest Positive -->
     <div class="border-l-4 border-green-500 pl-6 bg-green-50/40 rounded-r-lg p-6">
@@ -65,4 +65,4 @@
       who value authentic, reflective leadership."
     </p>
   </div>
-</ResumeSection>
+</InfoSection>

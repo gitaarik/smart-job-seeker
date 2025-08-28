@@ -1,10 +1,10 @@
 <script lang="ts">
-  import ResumeSection from "./ResumeSection.svelte";
+  import InfoSection from "./InfoSection.svelte";
   import { faComments } from "@fortawesome/free-solid-svg-icons";
   import { resume } from "$lib/data/resume";
 </script>
 
-<ResumeSection title="References" icon={faComments}>
+<InfoSection title="References" icon={faComments}>
   <div class="space-y-4">
     {#each resume.references as reference (reference.name)}
       <div class="border-l-4 border-ocean pl-4 py-2">
@@ -34,4 +34,4 @@
   <p class="mt-4">
     {resume.referencesDescription}
   </p>
-</ResumeSection>
+</InfoSection>

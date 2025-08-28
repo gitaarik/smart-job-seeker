@@ -1,11 +1,11 @@
 <script lang="ts">
-  import ResumeSection from "./ResumeSection.svelte";
+  import InfoSection from "./InfoSection.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { faHeart } from "@fortawesome/free-solid-svg-icons";
   import { resume } from "$lib/data/resume";
 </script>
 
-<ResumeSection title="Hobbies / Interests" icon={faHeart}>
+<InfoSection title="Hobbies / Interests" icon={faHeart}>
   <ul class="grid grid-cols-2 gap-4">
     {#each resume.interests as interest, index (index)}
       <li class="flex items-center">
@@ -16,4 +16,4 @@
       </li>
     {/each}
   </ul>
-</ResumeSection>
+</InfoSection>

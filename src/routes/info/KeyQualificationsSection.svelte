@@ -1,11 +1,11 @@
 <script lang="ts">
-  import ResumeSection from "./ResumeSection.svelte";
+  import InfoSection from "./InfoSection.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { faStar } from "@fortawesome/free-solid-svg-icons";
   import { resume } from "$lib/data/resume";
 </script>
 
-<ResumeSection title="Technical Highlights" icon={faStar}>
+<InfoSection title="Technical Highlights" icon={faStar}>
   <ul class="space-y-4 print:space-y-2 ml-1">
     {#each resume.basics.highlights as
       qualification
@@ -20,4 +20,4 @@
       </li>
     {/each}
   </ul>
-</ResumeSection>
+</InfoSection>

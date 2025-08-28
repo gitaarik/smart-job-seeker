@@ -1,6 +1,6 @@
 <script lang="ts">
   import HeaderSection from "./HeaderSection.svelte";
-  import ResumeMenu from "./ResumeMenu.svelte";
+  import InfoMenu from "./InfoMenu.svelte";
   import OverviewSection from "./OverviewSection.svelte";
   import TechnicalExpertiseSection from "./TechnicalExpertiseSection.svelte";
   import ProfessionalExperience from "./ProfessionalExperience.svelte";
@@ -26,12 +26,12 @@
   }
 
   // Listen for section change events
-  import { onMount } from 'svelte';
-  
+  import { onMount } from "svelte";
+
   onMount(() => {
-    document.addEventListener('sectionChange', handleSectionChange);
+    document.addEventListener("sectionChange", handleSectionChange);
     return () => {
-      document.removeEventListener('sectionChange', handleSectionChange);
+      document.removeEventListener("sectionChange", handleSectionChange);
     };
   });
 </script>
@@ -57,9 +57,9 @@
     class="flex flex-col gap-10 print:gap-7 py-6 px-4 print:p-0 max-w-[800px] mx-auto"
   >
     <HeaderSection />
-    
+
     <div class="print:hidden">
-      <ResumeMenu {activeSection} />
+      <InfoMenu {activeSection} />
     </div>
 
     <div class="print:break-inside-avoid">

@@ -1,11 +1,11 @@
 <script lang="ts">
-  import ResumeSection from "./ResumeSection.svelte";
+  import InfoSection from "./InfoSection.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { faRoad, faBullseye } from "@fortawesome/free-solid-svg-icons";
   import { resume } from "$lib/data/resume";
 </script>
 
-<ResumeSection title="Current Challenges" icon={faRoad}>
+<InfoSection title="Current Challenges" icon={faRoad}>
   <div class="space-y-6">
     {#each resume.currentChallenges as challenge, index (index)}
       <div class="border-l-2 border-blue-400 pl-4 pb-4 bg-blue-50/30 rounded-r-lg p-4">
@@ -35,4 +35,4 @@
       I'm actively working on these areas and welcome discussions about how we can address them together.
     </p>
   </div>
-</ResumeSection>
+</InfoSection>

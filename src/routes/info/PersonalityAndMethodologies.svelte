@@ -1,5 +1,5 @@
 <script lang="ts">
-  import ResumeSection from "./ResumeSection.svelte";
+  import InfoSection from "./InfoSection.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faCogs,
@@ -36,7 +36,7 @@
   ];
 </script>
 
-<ResumeSection title="Personality & Methodologies " icon={faUserCog}>
+<InfoSection title="Personality & Methodologies " icon={faUserCog}>
   <div class="space-y-8">
     <div>
       <h3
@@ -74,4 +74,4 @@
       </ul>
     </div>
   </div>
-</ResumeSection>
+</InfoSection>

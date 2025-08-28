@@ -1,11 +1,11 @@
 <script lang="ts">
-  import ResumeSection from "./ResumeSection.svelte";
+  import InfoSection from "./InfoSection.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { faListOl, faArrowRight } from "@fortawesome/free-solid-svg-icons";
   import { resume } from "$lib/data/resume";
 </script>
 
-<ResumeSection title="Career Priorities" icon={faListOl}>
+<InfoSection title="Career Priorities" icon={faListOl}>
   <div class="space-y-6">
     <p class="text-slate/80 italic mb-6">
       "What are your top priorities in your career at this time?"
@@ -46,4 +46,4 @@
       I regularly reassess and adjust based on market opportunities, personal growth, and changing life circumstances.
     </p>
   </div>
-</ResumeSection>
+</InfoSection>

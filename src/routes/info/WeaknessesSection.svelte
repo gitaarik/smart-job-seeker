@@ -1,11 +1,11 @@
 <script lang="ts">
-  import ResumeSection from "./ResumeSection.svelte";
+  import InfoSection from "./InfoSection.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { faExclamationTriangle, faLightbulb } from "@fortawesome/free-solid-svg-icons";
   import { resume } from "$lib/data/resume";
 </script>
 
-<ResumeSection title="Areas for Growth" icon={faExclamationTriangle}>
+<InfoSection title="Areas for Growth" icon={faExclamationTriangle}>
   <div class="space-y-6">
     {#each resume.weaknesses as weakness, index (index)}
       <div class="border-l-2 border-orange-400 pl-4 pb-4 bg-orange-50/30 rounded-r-lg p-4">
@@ -35,4 +35,4 @@
       These weaknesses are areas I actively work on, and I welcome feedback and mentorship to continue developing in these areas.
     </p>
   </div>
-</ResumeSection>
+</InfoSection>

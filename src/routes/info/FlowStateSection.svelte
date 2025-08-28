@@ -1,11 +1,11 @@
 <script lang="ts">
-  import ResumeSection from "./ResumeSection.svelte";
+  import InfoSection from "./InfoSection.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { faWater, faClock, faPlus } from "@fortawesome/free-solid-svg-icons";
   import { resume } from "$lib/data/resume";
 </script>
 
-<ResumeSection title="Flow State & Ideal Activities" icon={faWater}>
+<InfoSection title="Flow State & Ideal Activities" icon={faWater}>
   <div class="space-y-8">
     <p class="text-slate/80 italic text-center mb-8 text-lg">
       "{resume.flowState.question}"
@@ -71,4 +71,4 @@
       evolution of these interests toward leadership, innovation, and community contribution.
     </p>
   </div>
-</ResumeSection>
+</InfoSection>

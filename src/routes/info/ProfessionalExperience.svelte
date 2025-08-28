@@ -1,5 +1,5 @@
 <script lang="ts">
-  import ResumeSection from "./ResumeSection.svelte";
+  import InfoSection from "./InfoSection.svelte";
   import EmploymentSection from "./EmploymentSection.svelte";
   import { resume } from "$lib/data/resume";
   import { faGlobe } from "@fortawesome/free-solid-svg-icons";
@@ -11,7 +11,7 @@
   }
 </script>
 
-<ResumeSection title="Professional Experience" icon={faGlobe}>
+<InfoSection title="Professional Experience" icon={faGlobe}>
   <!-- Work Experience Navigation Menu -->
   <div class="print:hidden mb-6">
     <nav class="bg-frost/50 border border-ocean/30 rounded-lg p-2">
@@ -54,4 +54,4 @@
       {/if}
     {/each}
   </div>
-</ResumeSection>
+</InfoSection>

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import ResumeSection from "./ResumeSection.svelte";
+  import InfoSection from "./InfoSection.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faBuilding,
@@ -9,7 +9,7 @@
   import { resume } from "$lib/data/resume";
 </script>
 
-<ResumeSection title="Ideal Company" icon={faBuilding}>
+<InfoSection title="Ideal Company" icon={faBuilding}>
   <div class="space-y-8">
     <!-- Required Section -->
     <div>
@@ -56,5 +56,5 @@
       </div>
     </div>
   </div>
-</ResumeSection>
+</InfoSection>
 
