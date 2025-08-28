@@ -184,6 +184,18 @@
   onMount(() => {
     triggerHeaderAnimations();
 
+    // Check initial scroll position and show content that's already in view
+    setTimeout(() => {
+      checkScrollAnimations();
+      // Also check if we need to trigger about section animations based on scroll position
+      if (elAboutSection && !aboutSectionAnimationsTriggered) {
+        const aboutTop = elAboutSection.getBoundingClientRect().top;
+        if (aboutTop < window.innerHeight * 0.8) {
+          triggerAboutSectionAnimations();
+        }
+      }
+    }, 100);
+
     addEventListener("scroll", () => {
       checkScrollAnimations();
 
