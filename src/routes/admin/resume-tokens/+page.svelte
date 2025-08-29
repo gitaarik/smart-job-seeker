@@ -10,6 +10,7 @@
   let editingToken: any = null
   let showDeleteConfirm = false
   let tokenToDelete: any = null
+  let createTokenExpiresAt = ''
 
   async function logout() {
     try {
@@ -28,6 +29,7 @@
 
   function closeCreateModal() {
     showCreateModal = false
+    createTokenExpiresAt = ''
   }
 
   function openEditModal(token: any) {
@@ -84,6 +86,29 @@
     if (token.expiresAt && new Date() > new Date(token.expiresAt)) return 'Expired'
     if (token.maxViews && token.viewCount >= token.maxViews) return 'Limit Reached'
     return 'Active'
+  }
+
+  function setCurrentDate() {
+    const today = new Date()
+    createTokenExpiresAt = today.toISOString().split('T')[0]
+  }
+
+  function adjustDate(amount: number, unit: 'day' | 'week' | 'month') {
+    let date = createTokenExpiresAt ? new Date(createTokenExpiresAt) : new Date()
+    
+    switch (unit) {
+      case 'day':
+        date.setDate(date.getDate() + amount)
+        break
+      case 'week':
+        date.setDate(date.getDate() + (amount * 7))
+        break
+      case 'month':
+        date.setMonth(date.getMonth() + amount)
+        break
+    }
+    
+    createTokenExpiresAt = date.toISOString().split('T')[0]
   }
 </script>
 
@@ -289,11 +314,71 @@
             </div>
             <div>
               <label for="expiresAt" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Expires At (Optional)</label>
-              <input
-                type="date"
-                name="expiresAt"
-                class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-              />
+              <div class="mt-1 space-y-2">
+                <input
+                  type="date"
+                  name="expiresAt"
+                  bind:value={createTokenExpiresAt}
+                  class="block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                />
+                <div class="flex flex-wrap gap-1">
+                  <button
+                    type="button"
+                    on:click={() => adjustDate(-1, 'month')}
+                    class="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors"
+                  >
+                    - month
+                  </button>
+
+                  <button
+                    type="button"
+                    on:click={() => adjustDate(-1, 'week')}
+                    class="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors"
+                  >
+                    - week
+                  </button>
+
+                  <button
+                    type="button"
+                    on:click={() => adjustDate(-1, 'day')}
+                    class="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors"
+                  >
+                    - day
+                  </button>
+
+                  <button
+                    type="button"
+                    on:click={setCurrentDate}
+                    class="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors"
+                  >
+                    now
+                  </button>
+
+                  <button
+                    type="button"
+                    on:click={() => adjustDate(1, 'day')}
+                    class="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors"
+                  >
+                    + day
+                  </button>
+
+                  <button
+                    type="button"
+                    on:click={() => adjustDate(1, 'week')}
+                    class="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors"
+                  >
+                    + week
+                  </button>
+
+                  <button
+                    type="button"
+                    on:click={() => adjustDate(1, 'month')}
+                    class="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors"
+                  >
+                    + month
+                  </button>
+                </div>
+              </div>
             </div>
             <div>
               <label for="maxViews" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Max Views (Optional)</label>
