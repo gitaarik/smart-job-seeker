@@ -88,13 +88,26 @@
     return 'Active'
   }
 
-  function setCurrentDate() {
+  function setCurrentDate(target: 'create' | 'edit') {
     const today = new Date()
-    createTokenExpiresAt = today.toISOString().split('T')[0]
+    const dateString = today.toISOString().split('T')[0]
+    
+    if (target === 'create') {
+      createTokenExpiresAt = dateString
+    } else {
+      editingToken.expiresAt = dateString
+    }
   }
 
-  function adjustDate(amount: number, unit: 'day' | 'week' | 'month') {
-    let date = createTokenExpiresAt ? new Date(createTokenExpiresAt) : new Date()
+  function adjustDate(amount: number, unit: 'day' | 'week' | 'month', target: 'create' | 'edit') {
+    let currentDate: string
+    if (target === 'create') {
+      currentDate = createTokenExpiresAt || new Date().toISOString().split('T')[0]
+    } else {
+      currentDate = editingToken.expiresAt || new Date().toISOString().split('T')[0]
+    }
+    
+    let date = new Date(currentDate)
     
     switch (unit) {
       case 'day':
@@ -108,8 +121,24 @@
         break
     }
     
-    createTokenExpiresAt = date.toISOString().split('T')[0]
+    const newDateString = date.toISOString().split('T')[0]
+    if (target === 'create') {
+      createTokenExpiresAt = newDateString
+    } else {
+      editingToken.expiresAt = newDateString
+    }
   }
+
+  // Reusable date button component data
+  const dateButtons = [
+    { label: '- month', action: () => adjustDate(-1, 'month', 'create'), editAction: () => adjustDate(-1, 'month', 'edit') },
+    { label: '- week', action: () => adjustDate(-1, 'week', 'create'), editAction: () => adjustDate(-1, 'week', 'edit') },
+    { label: '- day', action: () => adjustDate(-1, 'day', 'create'), editAction: () => adjustDate(-1, 'day', 'edit') },
+    { label: 'now', action: () => setCurrentDate('create'), editAction: () => setCurrentDate('edit') },
+    { label: '+ day', action: () => adjustDate(1, 'day', 'create'), editAction: () => adjustDate(1, 'day', 'edit') },
+    { label: '+ week', action: () => adjustDate(1, 'week', 'create'), editAction: () => adjustDate(1, 'week', 'edit') },
+    { label: '+ month', action: () => adjustDate(1, 'month', 'create'), editAction: () => adjustDate(1, 'month', 'edit') }
+  ]
 </script>
 
 <svelte:head>
@@ -322,61 +351,15 @@
                   class="block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                 />
                 <div class="flex flex-wrap gap-1">
-                  <button
-                    type="button"
-                    on:click={() => adjustDate(-1, 'month')}
-                    class="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors"
-                  >
-                    - month
-                  </button>
-
-                  <button
-                    type="button"
-                    on:click={() => adjustDate(-1, 'week')}
-                    class="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors"
-                  >
-                    - week
-                  </button>
-
-                  <button
-                    type="button"
-                    on:click={() => adjustDate(-1, 'day')}
-                    class="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors"
-                  >
-                    - day
-                  </button>
-
-                  <button
-                    type="button"
-                    on:click={setCurrentDate}
-                    class="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors"
-                  >
-                    now
-                  </button>
-
-                  <button
-                    type="button"
-                    on:click={() => adjustDate(1, 'day')}
-                    class="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors"
-                  >
-                    + day
-                  </button>
-
-                  <button
-                    type="button"
-                    on:click={() => adjustDate(1, 'week')}
-                    class="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors"
-                  >
-                    + week
-                  </button>
-
-                  <button
-                    type="button"
-                    on:click={() => adjustDate(1, 'month')}
-                    class="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors"
-                  >
-                    + month
-                  </button>
+                  {#each dateButtons as button}
+                    <button
+                      type="button"
+                      on:click={button.action}
+                      class="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors"
+                    >
+                      {button.label}
+                    </button>
+                  {/each}
                 </div>
               </div>
             </div>
@@ -455,12 +438,25 @@
             </div>
             <div>
               <label for="expiresAt" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Expires At</label>
-              <input
-                type="date"
-                name="expiresAt"
-                bind:value={editingToken.expiresAt}
-                class="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-              />
+              <div class="mt-1 space-y-2">
+                <input
+                  type="date"
+                  name="expiresAt"
+                  bind:value={editingToken.expiresAt}
+                  class="block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                />
+                <div class="flex flex-wrap gap-1">
+                  {#each dateButtons as button}
+                    <button
+                      type="button"
+                      on:click={button.editAction}
+                      class="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors"
+                    >
+                      {button.label}
+                    </button>
+                  {/each}
+                </div>
+              </div>
             </div>
             <div>
               <label for="maxViews" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Max Views</label>
