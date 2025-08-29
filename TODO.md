@@ -1,3 +1,5 @@
+- Add common questions to info:
+  - https://www.youtube.com/watch?v=7OU6cEll_ls
 - Add "Projects" section
 - Change slogan
   - Instead of "Python • Django • React • Node.js"
