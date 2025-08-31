@@ -12,7 +12,17 @@
     faStackOverflow,
   } from "@fortawesome/free-brands-svg-icons";
 
-  import { faCircleChevronDown } from "@fortawesome/free-solid-svg-icons";
+  import {
+    faChartLine,
+    faCircleChevronDown,
+    faCode,
+    faDatabase,
+    faGears,
+    faLaptopCode,
+    faServer,
+    faUsers,
+    faUserTie,
+  } from "@fortawesome/free-solid-svg-icons";
 
   import profilePhoto from "$lib/images/profile-photo.jpeg?enhanced";
   import Logo from "$lib/components/Logo.svelte";
@@ -260,24 +270,54 @@
             data-aos="fade"
             class="flex flex-col items-center md:flex-row gap-6 w-full justify-evenly mb-15"
           >
-            <InfoBox headerText="Key skills:" class="w-full 2xs:max-w-[320px]">
-              <ul class="mt-4 list-disc ml-4 px-4 pb-4 font-bold">
-                <li>Python, Django, DRF, FastAPI</li>
-                <li class="my-4">Javascript, Node.js, React, Svelte</li>
-                <li class="my-4">SQL & NoSQL Databases</li>
-                <li>Linux, DevOps, CI/CD, Docker</li>
+            <InfoBox
+              headerText="Key skills:"
+              class="w-full 2xs:max-w-[340px] sm:min-w-[340px]"
+            >
+              <ul class="p-5 font-bold">
+                <li class="flex items-center gap-3">
+                  <FontAwesomeIcon icon={faCode} class="w-4 text-teal" />
+                  Python, Django, DRF, FastAPI
+                </li>
+                <li class="my-5 flex items-center gap-3">
+                  <FontAwesomeIcon icon={faServer} class="w-4 text-teal" />
+                  Javascript, Node.js, React, Svelte
+                </li>
+                <li class="my-5 flex items-center gap-3">
+                  <FontAwesomeIcon icon={faDatabase} class="w-4 text-teal" />
+                  SQL & NoSQL Databases
+                </li>
+                <li class="flex items-center gap-3">
+                  <FontAwesomeIcon icon={faGears} class="w-4 text-teal" />
+                  Linux, DevOps, CI/CD, Docker
+                </li>
               </ul>
             </InfoBox>
 
-            <InfoBox headerText="Contact for:" class="w-full 2xs:max-w-[320px]">
-              <ul class="mt-4 list-disc ml-4 px-4 pb-4 font-bold">
-                <li>Application development</li>
+            <InfoBox
+              headerText="Contact for:"
+              class="w-full 2xs:max-w-[340px] sm:min-w-[340px]"
+            >
+              <ul class="p-5 font-bold">
+                <li class="flex items-center gap-3">
+                  <FontAwesomeIcon icon={faLaptopCode} class="w-4 text-teal" />
+                  Application development
+                </li>
 
-                <li class="my-4">System optimization</li>
+                <li class="my-5 flex items-center gap-3">
+                  <FontAwesomeIcon icon={faChartLine} class="w-4 text-teal" />
+                  System optimization
+                </li>
 
-                <li class="my-4">Technical strategy consulting</li>
+                <li class="my-5 flex items-center gap-3">
+                  <FontAwesomeIcon icon={faUsers} class="w-4 text-teal" />
+                  Technical strategy consulting
+                </li>
 
-                <li>Project &amp; team leadership</li>
+                <li class="flex items-center gap-3">
+                  <FontAwesomeIcon icon={faUserTie} class="w-4 text-teal" />
+                  Project &amp; team leadership
+                </li>
               </ul>
             </InfoBox>
           </div>
