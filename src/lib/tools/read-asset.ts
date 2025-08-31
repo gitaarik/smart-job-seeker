@@ -27,12 +27,7 @@ export function readAsset(asset: string): AssetData {
 
   const file = dev && asset.startsWith("/@fs")
     ? asset
-    : asset.slice(base.length + 1);
-
-  // `read_implementation()` is also used by `read()` from `$app/server`
-  // https://kit.svelte.dev/docs/modules#$app-server-read
-  // https://www.youtube.com/watch?v=m4G-6dyF1MU
-  // return read_implementation(file);
+    : decodeURIComponent(asset.slice(base.length + 1));
 
   if (file in manifest._.server_assets) {
     const length = manifest._.server_assets[file];

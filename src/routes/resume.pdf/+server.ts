@@ -53,8 +53,7 @@ export const GET: RequestHandler = async ({ url, setHeaders }) => {
   const resumeFilename = "Resume Rik Wanders.pdf";
 
   // Construct file path based on resume type
-  const filePath: string = path.join(
-    process.cwd(),
+  const filePath: string = "/" + path.join(
     "src",
     "lib",
     "resumes",
@@ -63,8 +62,10 @@ export const GET: RequestHandler = async ({ url, setHeaders }) => {
   );
 
   console.log("filePath", filePath);
+  console.log("fileImports", fileImports);
 
   if (!(filePath in fileImports)) {
+    console.log(fileImports);
     throw error(
       404,
       "Resume file not found. Please contact the administrator.",
