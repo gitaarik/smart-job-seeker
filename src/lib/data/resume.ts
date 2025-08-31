@@ -122,7 +122,7 @@ export const resume = {
 
   workAccomplishment: {
     title: "Scaling Chipta: From Startup to High-Traffic Platform",
-    description: "My most impressive accomplishment was transforming Chipta from an early-stage proof of concept to a platform handling millions in transactions. I led the complete migration to Django + React and modern web technologies, guided the creation of the React Native mobile app, and established a quality testing suite. Over 10 years, I built this into a robust system processing thousands of orders per minute during peak events while growing and leading the development team.",
+    description: "My most impressive accomplishment was transforming Chipta from an early-stage proof of concept to a platform handling tens of millions in transactions. I led the complete migration to Django + React and modern web technologies, guided the creation of the React Native mobile app, and established a quality testing suite. Over 10 years, I built this into a robust system processing thousands of orders per minute during peak events while growing and leading the development team.",
     impact: "This decade-long technical leadership journey demonstrates my ability to scale both technology and teams while maintaining code quality and system reliability. The platform I built became the backbone for processing tens of millions in payment transactions and enabled the company to expand internationally. Most importantly, I established sustainable development practices that allowed the team to continue innovating long after each individual project was completed.",
     accomplishments: [
       {
