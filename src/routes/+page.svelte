@@ -289,7 +289,7 @@
                 </li>
                 <li class="flex items-center gap-3">
                   <FontAwesomeIcon icon={faGears} class="w-4 text-teal" />
-                  Linux, DevOps, CI/CD, Docker
+                  Git, CI/CD, DevOps, Docker
                 </li>
               </ul>
             </InfoBox>
