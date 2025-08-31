@@ -46,10 +46,11 @@
             Scaling Chipta: From Startup to High-Traffic Platform
           </h3>
           <p class="text-slate/80 text-base leading-relaxed">
-            My most impressive accomplishment was <strong>leading the complete transformation of Chipta</strong> 
-            from a small ticketing concept to a robust, high-traffic platform processing thousands of orders per minute. 
-            Over 10 years as Lead Developer, I orchestrated every aspect of the technical evolution while building 
-            and managing development teams.
+            My most impressive accomplishment was <strong>transforming Chipta from an early-stage proof of concept to a platform handling millions in transactions</strong>. 
+            When I joined as Lead Developer, they had a basic PHP system with 1-2 clients. I led the complete migration to 
+            Django + React and modern technologies, guided the creation of our React Native mobile app, and established 
+            comprehensive testing with +80% coverage. Over 10 years, I built this into a robust system processing thousands 
+            of orders per minute during peak events while growing and leading the development team.
           </p>
         </div>
       </div>
