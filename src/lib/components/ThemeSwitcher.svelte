@@ -1,7 +1,11 @@
 <script lang="ts">
   import { switchTheme, theme, themePreference } from "$lib/stores/theme";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { faMoon, faSun, faCircleHalfStroke } from "@fortawesome/free-solid-svg-icons";
+  import {
+    faCircleHalfStroke,
+    faMoon,
+    faSun,
+  } from "@fortawesome/free-solid-svg-icons";
   import { track } from "$lib/tools/analytics";
 
   let showThemeIndicator = false;
@@ -72,8 +76,6 @@
         return "Unknown";
     }
   }
-
-
 </script>
 
 <div class="fixed top-4 right-4 z-50">
@@ -81,33 +83,37 @@
   {#if showThemeIndicator}
     <div
       class="absolute right-14 top-1/2 -translate-y-1/2 flex items-center gap-2 px-3 py-2 bg-glass-light border border-glass rounded-lg shadow-lg backdrop-blur-md transition-all duration-300 ease-out animate-pulse overflow-hidden"
-      style="animation: slideInFromRight 0.3s ease-out forwards, fadeOut 0.5s ease-in 1.5s forwards;"
+      style="animation: slideInFromRight 0.3s ease-out forwards, fadeOut 0.5s ease-in 1.5s forwards"
     >
       <div class="relative w-4 h-4 overflow-hidden">
-        <span class="block absolute {getIndicatorTopOffset()} transition-[top] duration-250">
+        <span
+          class="block absolute {getIndicatorTopOffset()} transition-[top] duration-250"
+        >
           <!-- Light theme icon -->
           <span class="flex w-4 h-4 items-center justify-center">
             <FontAwesomeIcon icon={faSun} class="w-3 h-3" />
           </span>
-          
+
           <!-- Dark theme icon -->
           <span class="flex w-4 h-4 items-center justify-center">
             <FontAwesomeIcon icon={faMoon} class="w-3 h-3" />
           </span>
-          
+
           <!-- Auto theme icon -->
           <span class="flex w-4 h-4 items-center justify-center">
             <FontAwesomeIcon icon={faCircleHalfStroke} class="w-3 h-3" />
           </span>
         </span>
       </div>
-      <span class="text-sm font-medium whitespace-nowrap">{getThemeDisplayName()}</span>
+      <span class="text-sm font-medium whitespace-nowrap">{
+        getThemeDisplayName()
+      }</span>
     </div>
   {/if}
 
   <!-- Theme switcher button -->
   <button
-    class="relative block w-10 h-10 rounded border bg-glass-light border-glass cursor-pointer shadow transition-all duration-200 focus:outline-none overflow-hidden hover:scale-105 active:scale-95"
+    class="relative block w-[42px] h-[42px] rounded-3xl border bg-glass-light border-glass cursor-pointer shadow transition-all duration-200 focus:outline-none overflow-hidden hover:scale-105 active:scale-95"
     aria-label={getAriaLabel()}
     title={getAriaLabel()}
     on:click={handleToggleTheme}
