@@ -2,8 +2,8 @@
   export let author: string;
 </script>
 
-<blockquote class="py-15 text-lg">
-  <p class="italic tracking-[0.5px] leading-8">
+<blockquote class="py-15 sm:text-lg">
+  <p class="italic tracking-[0.5px] leading-6 sm:leading-8">
     “<slot />”
   </p>
 

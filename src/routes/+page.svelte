@@ -306,7 +306,7 @@
             What Clients Say
           </h3>
 
-          <div data-aos="fade" data-aos-delay="200">
+          <div data-aos="fade">
             <Quote author="Michaël de Groot - Founder of Chipta">
               Rik modernized our client-facing interfaces and implemented
               optimizations that delivered substantial performance improvements.
@@ -315,12 +315,8 @@
             </Quote>
           </div>
 
-          <div data-aos="fade" data-aos-delay="200">
-            <Quote
-              author="Elmar Krack - Co-founder of Tender-it"
-              data-aos="fade"
-              data-aos-delay="400"
-            >
+          <div data-aos="fade">
+            <Quote author="Elmar Krack - Co-founder of Tender-it">
               Rik demonstrated exceptional technical leadership by designing and
               developing our entire platform from the ground up, handling both
               backend and frontend development with impressive skill.
