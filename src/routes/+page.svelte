@@ -277,7 +277,7 @@
 
                 <li class="my-4">Technical strategy consulting</li>
 
-                <li>Lead developer roles</li>
+                <li>Development team leadership</li>
               </ul>
             </InfoBox>
           </div>
