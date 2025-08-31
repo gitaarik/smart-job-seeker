@@ -119,34 +119,36 @@
       class="pt-10 md:pt-25 w-full flex flex-col items-center bg-ice min-h-screen transition-colors"
       aria-labelledby="header-heading"
     >
-      <div data-aos="fade-up" data-aos-delay="100" class="px-5 sm:px-10">
+      <div data-aos="fade" class="px-5 sm:px-10">
         <Logo class="h-45 w-45" />
       </div>
 
-      <div class="px-5 sm:px-10 mt-5 text-center">
+      <div
+        class="px-5 sm:px-10 mt-5 text-center"
+        data-aos="fade"
+        data-aos-delay="500"
+      >
         <h1
-          data-aos="fade-up"
-          data-aos-delay="500"
           id="header-heading"
           class="text-3xl font-medium"
         >
           Rik Wanders
         </h1>
-        <h2 data-aos="fade-up" data-aos-delay="500" class="mt-4 text-xl">
+        <h2 data-aos="fade" class="mt-4 text-xl">
           Freelance Full Stack Developer
         </h2>
-        <h3 data-aos="fade-up" data-aos-delay="500" class="mt-4">
+        <h3 data-aos="fade" class="mt-4">
           Python • Node.js • CI/CD • DevOps
         </h3>
 
-        <h4 data-aos="fade-up" data-aos-delay="500" class="mt-10 italic">
+        <h4 data-aos="fade" class="mt-10 italic">
           Building scalable web applications for remote teams
         </h4>
       </div>
 
       <div
         data-aos="fade"
-        data-aos-delay="1500"
+        data-aos-delay="1000"
         class="mt-15 md:mt-20 px-4 flex justify-center w-full"
       >
         <GetInTouchButton contentClass="bg-snow" />
@@ -161,7 +163,7 @@
         <button
           class="flex items-center gap-2 cursor-pointer p-2 scale-100 hover:scale-110 focus:scale-110 hover:text-teal focus:text-teal transition"
           data-aos="fade"
-          data-aos-delay="1500"
+          data-aos-delay="1000"
           data-aos-anchor-placement="top-bottom"
           on:click={handleMoreInfo}
         >
