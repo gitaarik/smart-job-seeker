@@ -14,6 +14,7 @@
     faRoad,
     faRobot,
     faRocket,
+    faTrophy,
     faUser,
     faUsers,
     faWater,
@@ -33,6 +34,12 @@
       id: "experience",
       label: "Professional Experience",
       icon: faBriefcase,
+    },
+
+    {
+      id: "workAccomplishment",
+      label: "Most Impressive Work",
+      icon: faTrophy,
     },
 
     {

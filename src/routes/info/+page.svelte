@@ -17,6 +17,7 @@
   import FlowStateSection from "./FlowStateSection.svelte";
   import WhatExcitesMeSection from "./WhatExcitesMeSection.svelte";
   import PersonalityAndMethodologies from "./PersonalityAndMethodologies.svelte";
+  import WorkAccomplishmentSection from "./WorkAccomplishmentSection.svelte";
   import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
 
   let activeSection = "overview";
@@ -73,6 +74,8 @@
         <TechnicalExpertiseSection />
       {:else if activeSection === "experience"}
         <ProfessionalExperience />
+      {:else if activeSection === "workAccomplishment"}
+        <WorkAccomplishmentSection />
       {:else if activeSection === "education"}
         <EducationSection />
       {:else if activeSection === "projects"}
