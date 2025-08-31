@@ -133,8 +133,8 @@
       </div>
 
       <div
-        data-aos="fade-up"
-        data-aos-delay="1000"
+        data-aos="fade"
+        data-aos-delay="1500"
         class="mt-15 md:mt-20 px-4 flex justify-center w-full"
       >
         <GetInTouchButton contentClass="bg-snow" />
@@ -148,8 +148,8 @@
       >
         <button
           class="flex items-center gap-2 cursor-pointer p-2 scale-100 hover:scale-110 focus:scale-110 hover:text-teal focus:text-teal transition"
-          data-aos="fade-up"
-          data-aos-delay="1000"
+          data-aos="fade"
+          data-aos-delay="1500"
           data-aos-anchor-placement="top-bottom"
           on:click={handleMoreInfo}
         >
@@ -298,25 +298,34 @@
       aria-label="References"
     >
       <div class="pt-20 pb-10 px-5 sm:px-10 flex justify-center">
-        <div data-aos="fade" class="max-w-[600px]">
+        <div class="max-w-[600px]">
           <h3
+            data-aos="fade"
             class="text-3xl font-semibold mb-8 md:mb-10 capitalize text-center"
           >
             What Clients Say
           </h3>
 
-          <Quote author="Michaël de Groot - Founder of Chipta">
-            Rik modernized our client-facing interfaces and implemented
-            optimizations that delivered substantial performance improvements.
-            His work enabled us to process thousands of tickets rapidly during
-            our busiest periods.
-          </Quote>
+          <div data-aos="fade" data-aos-delay="200">
+            <Quote author="Michaël de Groot - Founder of Chipta">
+              Rik modernized our client-facing interfaces and implemented
+              optimizations that delivered substantial performance improvements.
+              His work enabled us to process thousands of tickets rapidly during
+              our busiest periods.
+            </Quote>
+          </div>
 
-          <Quote author="Elmar Krack - Co-founder of Tender-it">
-            Rik demonstrated exceptional technical leadership by designing and
-            developing our entire platform from the ground up, handling both
-            backend and frontend development with impressive skill.
-          </Quote>
+          <div data-aos="fade" data-aos-delay="200">
+            <Quote
+              author="Elmar Krack - Co-founder of Tender-it"
+              data-aos="fade"
+              data-aos-delay="400"
+            >
+              Rik demonstrated exceptional technical leadership by designing and
+              developing our entire platform from the ground up, handling both
+              backend and frontend development with impressive skill.
+            </Quote>
+          </div>
         </div>
       </div>
     </section>
