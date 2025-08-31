@@ -124,7 +124,7 @@
           Freelance Full Stack Developer
         </h2>
         <h3 data-aos="fade-up" data-aos-delay="500" class="mt-4">
-          Python • Django • React • Node.js
+          Python • Node.js • CI/CD • DevOps
         </h3>
 
         <h4 data-aos="fade-up" data-aos-delay="500" class="mt-10 italic">
