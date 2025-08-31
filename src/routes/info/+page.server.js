@@ -1,8 +1,12 @@
-import { dev } from '$app/environment';
 import { redirect } from '@sveltejs/kit';
+import { isAdmin } from '$lib/auth';
 
-export async function load() {
-	if (!dev) {
-		throw redirect(302, '/');
+export async function load({ locals }) {
+	if (!locals.user) {
+		throw redirect(302, '/auth');
+	}
+
+	if (!isAdmin(locals.user)) {
+		throw redirect(302, '/dashboard');
 	}
 }

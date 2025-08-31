@@ -48,3 +48,11 @@ export function isValidEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   return emailRegex.test(email)
 }
+
+export function isAdmin(user: { role: string }): boolean {
+  return user.role === 'ADMIN' || user.role === 'SUPER_ADMIN'
+}
+
+export function isSuperAdmin(user: { role: string }): boolean {
+  return user.role === 'SUPER_ADMIN'
+}
