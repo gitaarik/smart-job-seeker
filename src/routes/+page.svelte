@@ -6,7 +6,9 @@
 
   import {
     faGithub,
+    faJs,
     faLinkedin,
+    faNodeJs,
     faNpm,
     faPython,
     faStackOverflow,
@@ -276,11 +278,11 @@
             >
               <ul class="p-4 sm:p-5 font-bold">
                 <li class="flex items-center gap-3">
-                  <FontAwesomeIcon icon={faCode} class="w-4 text-teal" />
+                  <FontAwesomeIcon icon={faPython} class="w-4 text-teal" />
                   Python, Django, DRF, FastAPI
                 </li>
                 <li class="my-4 sm:my-5 flex items-center gap-3">
-                  <FontAwesomeIcon icon={faServer} class="w-4 text-teal" />
+                  <FontAwesomeIcon icon={faNodeJs} class="w-4 text-teal" />
                   Javascript, Node.js, React, Svelte
                 </li>
                 <li class="my-4 sm:my-5 flex items-center gap-3">
