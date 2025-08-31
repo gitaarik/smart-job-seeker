@@ -19,7 +19,7 @@
   import ProfileLink from "$lib/components/ProfileLink.svelte";
   import InfoBox from "$lib/components/InfoBox.svelte";
   import GetInTouchButton from "$lib/components/contact-info/GetInTouchButton.svelte";
-  import References from "$lib/components/references/References.svelte";
+  import Quote from "$lib/components/Quote.svelte";
   import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
 
   const metaTitle = "Rik Wanders - Freelance Full Stack Developer";
@@ -304,7 +304,19 @@
           >
             What Clients Say
           </h3>
-          <References />
+
+          <Quote author="Michaël de Groot - Founder of Chipta">
+            Rik modernized our client-facing interfaces and implemented
+            optimizations that delivered substantial performance improvements.
+            His work enabled us to process thousands of tickets rapidly during
+            our busiest periods.
+          </Quote>
+
+          <Quote author="Elmar Krack - Co-founder of Tender-it">
+            Rik demonstrated exceptional technical leadership by designing and
+            developing our entire platform from the ground up, handling both
+            backend and frontend development with impressive skill.
+          </Quote>
         </div>
       </div>
     </section>
