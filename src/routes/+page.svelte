@@ -302,7 +302,7 @@
             >
               <ul class="p-4 sm:p-5 font-bold">
                 <li class="flex items-center gap-3">
-                  <FontAwesomeIcon icon={faLaptopCode} class="w-4 text-teal" />
+                  <FontAwesomeIcon icon={faCode} class="w-4 text-teal" />
                   Application development
                 </li>
 
