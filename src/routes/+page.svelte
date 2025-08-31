@@ -274,16 +274,16 @@
               headerText="Key skills:"
               class="w-full 2xs:max-w-[340px] sm:min-w-[340px]"
             >
-              <ul class="p-5 font-bold">
+              <ul class="p-4 sm:p-5 font-bold">
                 <li class="flex items-center gap-3">
                   <FontAwesomeIcon icon={faCode} class="w-4 text-teal" />
                   Python, Django, DRF, FastAPI
                 </li>
-                <li class="my-5 flex items-center gap-3">
+                <li class="my-4 sm:my-5 flex items-center gap-3">
                   <FontAwesomeIcon icon={faServer} class="w-4 text-teal" />
                   Javascript, Node.js, React, Svelte
                 </li>
-                <li class="my-5 flex items-center gap-3">
+                <li class="my-4 sm:my-5 flex items-center gap-3">
                   <FontAwesomeIcon icon={faDatabase} class="w-4 text-teal" />
                   SQL & NoSQL Databases
                 </li>
@@ -298,18 +298,18 @@
               headerText="Contact for:"
               class="w-full 2xs:max-w-[340px] sm:min-w-[340px]"
             >
-              <ul class="p-5 font-bold">
+              <ul class="p-4 sm:p-5 font-bold">
                 <li class="flex items-center gap-3">
                   <FontAwesomeIcon icon={faLaptopCode} class="w-4 text-teal" />
                   Application development
                 </li>
 
-                <li class="my-5 flex items-center gap-3">
+                <li class="my-4 sm:my-5 flex items-center gap-3">
                   <FontAwesomeIcon icon={faChartLine} class="w-4 text-teal" />
                   System optimization
                 </li>
 
-                <li class="my-5 flex items-center gap-3">
+                <li class="my-4 sm:my-5-5 flex items-center gap-3">
                   <FontAwesomeIcon icon={faUsers} class="w-4 text-teal" />
                   Technical strategy consulting
                 </li>
