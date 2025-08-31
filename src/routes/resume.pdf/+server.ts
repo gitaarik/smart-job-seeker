@@ -1,8 +1,17 @@
 import { error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { prisma } from "$lib/db";
-import fs from "fs";
 import path from "path";
+import { readAsset } from "$lib/tools/read-asset";
+
+const fileImports: Record<string, string> = import.meta.glob(
+  "$lib/resumes/**/**.{pdf,docx}",
+  {
+    eager: true,
+    import: "default",
+    query: "?url",
+  },
+);
 
 export const GET: RequestHandler = async ({ url, setHeaders }) => {
   const token = url.searchParams.get("token");
@@ -41,6 +50,8 @@ export const GET: RequestHandler = async ({ url, setHeaders }) => {
     data: { viewCount: { increment: 1 } },
   });
 
+  const resumeFilename = "Resume Rik Wanders.pdf";
+
   // Construct file path based on resume type
   const filePath: string = path.join(
     process.cwd(),
@@ -48,30 +59,30 @@ export const GET: RequestHandler = async ({ url, setHeaders }) => {
     "lib",
     "resumes",
     resumeToken.resumeType,
-    "Resume Rik Wanders.pdf",
+    resumeFilename,
   );
 
   console.log("filePath", filePath);
 
-  // Check if file exists
-  if (!fs.existsSync(filePath)) {
+  if (!(filePath in fileImports)) {
     throw error(
       404,
       "Resume file not found. Please contact the administrator.",
     );
   }
 
-  // Read the PDF file
-  const pdfBuffer = fs.readFileSync(filePath);
+  const file = fileImports[filePath];
+  const assetData = readAsset(file);
 
   // Set appropriate headers for PDF
   setHeaders({
-    "Content-Type": "application/pdf",
-    "Content-Disposition": `inline; filename="Resume Rik Wanders.pdf"`,
+    "Content-Type": String(assetData.mimeType),
+    "Content-Length": String(assetData.length),
+    "Content-Disposition": `inline; filename="${resumeFilename}"`,
     "Cache-Control": "no-cache, no-store, must-revalidate",
     "Pragma": "no-cache",
     "Expires": "0",
   });
 
-  return new Response(pdfBuffer);
+  return new Response(assetData.contents);
 };
