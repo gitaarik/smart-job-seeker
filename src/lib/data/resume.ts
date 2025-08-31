@@ -120,6 +120,32 @@ export const resume = {
     ],
   },
 
+  workAccomplishment: {
+    title: "Scaling Chipta: From Startup to High-Traffic Platform",
+    description: "My most impressive accomplishment was transforming Chipta from an early-stage proof of concept to a platform handling millions in transactions. I led the complete migration to Django + React and modern web technologies, guided the creation of the React Native mobile app, and established a quality testing suite. Over 10 years, I built this into a robust system processing thousands of orders per minute during peak events while growing and leading the development team.",
+    impact: "This decade-long technical leadership journey demonstrates my ability to scale both technology and teams while maintaining code quality and system reliability. The platform I built became the backbone for processing tens of millions in payment transactions and enabled the company to expand internationally. Most importantly, I established sustainable development practices that allowed the team to continue innovating long after each individual project was completed.",
+    accomplishments: [
+      {
+        title: "Leading Platform Scaling Revolution",
+        description: "Led teams of 3-5 developers at innovative ticketing platform for over 10 years, scaling the platform from concept to processing thousands of orders per minute. Optimized platform performance by 30-60%, enabling the company to handle massive traffic spikes during high-demand events.",
+        impact: "Thousands of orders per minute processing capability",
+        metrics: "30-60% performance optimization"
+      },
+      {
+        title: "Mobile Revenue Transformation", 
+        description: "Built React Native mobile apps that increased revenue by 40% and modernized frontend interfaces with React, increasing user engagement by 30%. This mobile-first approach opened entirely new revenue streams and customer segments.",
+        impact: "40% revenue increase from mobile apps",
+        metrics: "30% increase in user engagement"
+      },
+      {
+        title: "System Reliability & Quality Revolution",
+        description: "Established comprehensive testing suites with +80% coverage and orchestrated CI/CD systems that reduced deploy time by 80%. This transformed the development process from risky manual deployments to confident, frequent releases.",
+        impact: "90% reduction in regression bugs", 
+        metrics: "80% reduction in deployment time"
+      }
+    ]
+  },
+
   work: [
     {
       name: "Chipta",
