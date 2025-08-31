@@ -51,6 +51,8 @@ export const GET: RequestHandler = async ({ url, setHeaders }) => {
     "Resume Rik Wanders.pdf",
   );
 
+  console.log("filePath", filePath);
+
   // Check if file exists
   if (!fs.existsSync(filePath)) {
     throw error(
