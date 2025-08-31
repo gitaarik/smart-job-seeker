@@ -6,6 +6,15 @@
 - Fix references quotes layout on mobile site view
 - Add common questions to info:
   - https://www.youtube.com/watch?v=7OU6cEll_ls
+
+- Make variations of tech stack for various purposes:
+  Shorter version:
+    - Python | Django | Django REST Framework | REST APIs
+    - JavaScript | Node.js | React
+    - SQL & NoSQL
+    - Git | Docker (Compose) | CI/CD | Ansible | GitHub Actions
+    - Vercel | Linode | AWS
+
 - Add "Projects" section
 - Enhance portfolio, inspiration: https://youtu.be/Y2kGqbzvAn4
 - Generate static version of site so maybe reader view in firefox works
