@@ -1341,26 +1341,26 @@ export const resume = {
           answer: {
             title: "React Native App with Struggling Developer",
             situation: [
-              "React Native mobile app at Chipta",
-              "Developer struggling with new/buggy technology", 
-              "Limited resources/documentation available"
+              "Leading React Native app at Chipta",
+              "Developer struggling with new/buggy technology",
+              "Limited documentation available",
             ],
             task: [
+              "Keep developer motivated",
               "Guide developer through challenges",
-              "Deliver functional app",
-              "Keep project on track"
+              "Deliver app and keep project on track",
             ],
             action: [
-              "Mentored and problem-solved technical issues",
+              "Mentored developer on technical issues",
+              "Helped in debugging process",
               "Researched source code and created patches",
-              "Made key architecture decisions",
-              "Established systematic debugging process"
+              "Made architecture decisions",
             ],
             result: [
-              "Delivered on schedule",
-              "Saved $50-200 per event, 70% faster check-ins",
-              "Developer became mobile expert",
-              "Created process for adopting new tech"
+              "Delivered on time",
+              "Boosted the revenue by +40%",
+              "Developer became our React Native expert",
+              "Created adoption process for new tech",
             ],
           },
         },

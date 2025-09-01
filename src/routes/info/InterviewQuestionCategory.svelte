@@ -70,7 +70,7 @@
                       {/each}
                     </ul>
                   {:else}
-                    <p class="text-blue-700 text-sm leading-relaxed">
+                    <p class="text-blue-700 text-base leading-relaxed">
                       {questionItem.answer.situation}
                     </p>
                   {/if}
@@ -100,7 +100,7 @@
                       {/each}
                     </ul>
                   {:else}
-                    <p class="text-yellow-700 text-sm leading-relaxed">
+                    <p class="text-yellow-700 text-base leading-relaxed">
                       {questionItem.answer.task}
                     </p>
                   {/if}
@@ -130,7 +130,7 @@
                       {/each}
                     </ul>
                   {:else}
-                    <p class="text-purple-700 text-sm leading-relaxed">
+                    <p class="text-purple-700 text-base leading-relaxed">
                       {questionItem.answer.action}
                     </p>
                   {/if}
@@ -160,7 +160,7 @@
                       {/each}
                     </ul>
                   {:else}
-                    <p class="text-green-700 text-sm leading-relaxed">
+                    <p class="text-green-700 text-base leading-relaxed">
                       {questionItem.answer.result}
                     </p>
                   {/if}
