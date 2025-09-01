@@ -1,8 +1,27 @@
 <script lang="ts">
   import InfoSection from "./InfoSection.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { faQuestionCircle, faLightbulb, faTasks, faRocket, faCheckCircle } from "@fortawesome/free-solid-svg-icons";
+  import { faQuestionCircle, faLightbulb, faTasks, faRocket, faCheckCircle, faChevronDown, faChevronRight } from "@fortawesome/free-solid-svg-icons";
   import { resume } from "$lib/data/resume";
+
+  // Track expanded state for each question - using array for reactivity
+  let expandedQuestions: string[] = [];
+
+  function toggleQuestion(categoryIndex: number, questionIndex: number) {
+    const key = `${categoryIndex}-${questionIndex}`;
+    
+    const index = expandedQuestions.indexOf(key);
+    if (index > -1) {
+      expandedQuestions = expandedQuestions.filter(q => q !== key);
+    } else {
+      expandedQuestions = [...expandedQuestions, key];
+    }
+  }
+
+  function isExpanded(categoryIndex: number, questionIndex: number): boolean {
+    const key = `${categoryIndex}-${questionIndex}`;
+    return expandedQuestions.includes(key);
+  }
 </script>
 
 <InfoSection title="Common Interview Questions" icon={faQuestionCircle}>
@@ -27,12 +46,25 @@
           {#each category.questions as questionItem, questionIndex (questionIndex)}
             <div class="border-l-4 border-ocean pl-6">
               <div class="mb-4">
-                <h4 class="font-semibold text-slate text-lg mb-3">
-                  {questionItem.question}
-                </h4>
+                <button 
+                  class="w-full text-left flex items-start justify-between group hover:bg-slate-50/50 p-3 -ml-3 rounded-lg transition-colors duration-200"
+                  on:click={() => toggleQuestion(categoryIndex, questionIndex)}
+                >
+                  <h4 class="font-semibold text-slate text-lg pr-4 group-hover:text-ocean transition-colors duration-200">
+                    {questionItem.question}
+                  </h4>
+                  <div class="flex-shrink-0 mt-1 text-slate/60 group-hover:text-ocean transition-colors duration-200">
+                    <FontAwesomeIcon 
+                      icon={isExpanded(categoryIndex, questionIndex) ? faChevronDown : faChevronRight} 
+                      class="w-4 h-4" 
+                    />
+                  </div>
+                </button>
               </div>
 
-              <div class="space-y-4">
+              <!-- Force reactivity by referencing expandedQuestions -->
+              {#if expandedQuestions && isExpanded(categoryIndex, questionIndex)}
+                <div class="space-y-4">
                 <!-- Situation -->
                 <div class="bg-blue-50/30 border border-blue-200/50 rounded-lg p-4">
                   <div class="flex items-start mb-2">
@@ -84,7 +116,8 @@
                     </div>
                   </div>
                 </div>
-              </div>
+                </div>
+              {/if}
             </div>
           {/each}
         </div>
