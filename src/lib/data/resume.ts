@@ -1340,35 +1340,35 @@ export const resume = {
             "Tell me about a time when you had to lead a difficult project or manage a challenging team situation.",
           answer: {
             situation: [
-              "Leading React Native mobile app development at Chipta",
-              "Developer struggling with new technology challenges", 
-              "Limited documentation and online resources available",
-              "Frequent bugs in React Native libraries",
-              "No clear solutions for encountered issues"
+              "Leading React Native mobile app at Chipta",
+              "Developer struggling with new technology", 
+              "Limited documentation/resources",
+              "Frequent React Native library bugs",
+              "No clear solutions available"
             ],
             task: [
-              "Guide developer through technical challenges",
+              "Guide developer through challenges",
               "Deliver functional mobile app",
-              "Reduce event check-in times", 
-              "Manage developer's frustration and motivation",
-              "Keep project on track despite roadblocks"
+              "Reduce check-in times", 
+              "Manage developer frustration",
+              "Keep project on track"
             ],
             action: [
-              "Became technical problem-solver and mentor",
-              "Researched solutions in React Native source code",
-              "Explored GitHub issues and tested workarounds",
-              "Created patches for library bugs",
-              "Made key technical and architecture decisions",
-              "Established systematic debugging approach",
-              "Taught effective problem-solving techniques"
+              "Became problem-solver and mentor",
+              "Researched React Native source code",
+              "Tested GitHub workarounds",
+              "Created library bug patches",
+              "Made key architecture decisions",
+              "Established debugging approach",
+              "Taught problem-solving techniques"
             ],
             result: [
-              "Delivered React Native app on schedule",
-              "Saved $50-200 per event (eliminated third-party solutions)",
-              "70% reduction in check-in times",
-              "Developer became our mobile expert",
-              "Created standard process for new technologies",
-              "App became key selling point (40% of new customers)"
+              "Delivered app on schedule",
+              "Saved $50-200 per event",
+              "70% faster check-ins",
+              "Developer became mobile expert",
+              "Created new tech adoption process",
+              "App = key selling point (40% customers)"
             ],
           },
         },
