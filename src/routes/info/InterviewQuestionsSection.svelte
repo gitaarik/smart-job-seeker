@@ -3,6 +3,21 @@
   import InterviewQuestionCategory from "./InterviewQuestionCategory.svelte";
   import { faQuestionCircle } from "@fortawesome/free-solid-svg-icons";
   import { resume } from "$lib/data/resume";
+
+  // Track expanded state across all categories (only one question can be expanded at a time globally)
+  let expandedQuestion: { categoryIndex: number; questionIndex: number } | null = $state(null);
+
+  function toggleQuestion(categoryIndex: number, questionIndex: number) {
+    if (expandedQuestion?.categoryIndex === categoryIndex && expandedQuestion?.questionIndex === questionIndex) {
+      expandedQuestion = null; // Collapse if already expanded
+    } else {
+      expandedQuestion = { categoryIndex, questionIndex }; // Expand this one, collapse others
+    }
+  }
+
+  function isExpanded(categoryIndex: number, questionIndex: number): boolean {
+    return expandedQuestion?.categoryIndex === categoryIndex && expandedQuestion?.questionIndex === questionIndex;
+  }
 </script>
 
 <InfoSection title="Common Interview Questions" icon={faQuestionCircle}>
@@ -16,8 +31,13 @@
   </div>
 
   <div class="space-y-8">
-    {#each resume.interviewQuestions as category, index (index)}
-      <InterviewQuestionCategory {category} />
+    {#each resume.interviewQuestions as category, categoryIndex (categoryIndex)}
+      <InterviewQuestionCategory 
+        {category} 
+        {categoryIndex}
+        {toggleQuestion}
+        {isExpanded}
+      />
     {/each}
   </div>
 

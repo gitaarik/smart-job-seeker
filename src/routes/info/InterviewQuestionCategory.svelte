@@ -9,37 +9,22 @@
     faTasks,
   } from "@fortawesome/free-solid-svg-icons";
 
-  const props = $props();
-
-  // Track which question is currently expanded (only one at a time)
-  let expandedQuestion: number | null = $state(null);
-
-  function toggleQuestion(questionIndex: number) {
-    if (expandedQuestion === questionIndex) {
-      expandedQuestion = null; // Collapse if already expanded
-    } else {
-      expandedQuestion = questionIndex; // Expand this one, collapse others
-    }
-  }
-
-  function isExpanded(questionIndex: number): boolean {
-    return expandedQuestion === questionIndex;
-  }
+  const { category, categoryIndex, toggleQuestion, isExpanded } = $props();
 </script>
 
 <div class="border border-slate/20 rounded-xl p-6 bg-white/50">
   <h3 class="text-xl font-bold text-slate mb-6 flex items-center">
     <FontAwesomeIcon icon={faLightbulb} class="w-5 h-5 mr-3 text-ocean" />
-    {props.category.category}
+    {category.category}
   </h3>
 
   <div class="space-y-6">
-    {#each props.category.questions as questionItem, index (index)}
+    {#each category.questions as questionItem, questionIndex (questionIndex)}
       <div class="border-l-4 border-ocean pl-6">
         <div class="mb-4">
           <button
             class="w-full text-left flex items-start justify-between group hover:bg-slate-50/50 p-3 -ml-3 rounded-lg transition-colors duration-200"
-            on:click={() => toggleQuestion(index)}
+            on:click={() => toggleQuestion(categoryIndex, questionIndex)}
           >
             <h4
               class="font-semibold text-slate text-lg pr-4 group-hover:text-ocean transition-colors duration-200"
@@ -50,14 +35,14 @@
               class="flex-shrink-0 mt-1 text-slate/60 group-hover:text-ocean transition-colors duration-200"
             >
               <FontAwesomeIcon
-                icon={isExpanded(index) ? faChevronDown : faChevronRight}
+                icon={isExpanded(categoryIndex, questionIndex) ? faChevronDown : faChevronRight}
                 class="w-4 h-4"
               />
             </div>
           </button>
         </div>
 
-        {#if isExpanded(index)}
+        {#if isExpanded(categoryIndex, questionIndex)}
           <div class="space-y-4">
             <!-- Situation -->
             <div class="bg-blue-50/30 border border-blue-200/50 rounded-lg p-4">
