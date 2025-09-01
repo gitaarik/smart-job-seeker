@@ -122,28 +122,33 @@ export const resume = {
 
   workAccomplishment: {
     title: "Scaling Chipta: From Startup to High-Traffic Platform",
-    description: "My most impressive accomplishment was transforming Chipta from an early-stage proof of concept to a platform handling tens of millions in transactions. I led the complete migration to Django + React and modern web technologies, guided the creation of the React Native mobile app, and established a quality testing suite. Over 10 years, I built this into a robust system processing thousands of orders per minute during peak events while growing and leading the development team.",
-    impact: "This decade-long technical leadership journey demonstrates my ability to scale both technology and teams while maintaining code quality and system reliability. The platform I built became the backbone for processing tens of millions in payment transactions and enabled the company to expand internationally. Most importantly, I established sustainable development practices that allowed the team to continue innovating long after each individual project was completed.",
+    description:
+      "My most impressive accomplishment was transforming Chipta from an early-stage proof of concept to a platform handling tens of millions in transactions. I led the complete migration to Django + React and modern web technologies, guided the creation of the React Native mobile app, and established a quality testing suite. Over 10 years, I built this into a robust system processing thousands of orders per minute during peak events while growing and leading the development team.",
+    impact:
+      "This decade-long technical leadership journey demonstrates my ability to scale both technology and teams while maintaining code quality and system reliability. The platform I built became the backbone for processing tens of millions in payment transactions and enabled the company to expand internationally. Most importantly, I established sustainable development practices that allowed the team to continue innovating long after each individual project was completed.",
     accomplishments: [
       {
         title: "Leading Platform Scaling Revolution",
-        description: "Led teams of 3-5 developers at innovative ticketing platform for over 10 years, scaling the platform from concept to processing thousands of orders per minute. Optimized platform performance by 30-60%, enabling the company to handle massive traffic spikes during high-demand events.",
+        description:
+          "Led teams of 3-5 developers at innovative ticketing platform for over 10 years, scaling the platform from concept to processing thousands of orders per minute. Optimized platform performance by 30-60%, enabling the company to handle massive traffic spikes during high-demand events.",
         impact: "Thousands of orders per minute processing capability",
-        metrics: "30-60% performance optimization"
+        metrics: "30-60% performance optimization",
       },
       {
-        title: "Mobile Revenue Transformation", 
-        description: "Built React Native mobile apps that increased revenue by 40% and modernized frontend interfaces with React, increasing user engagement by 30%. This mobile-first approach opened entirely new revenue streams and customer segments.",
+        title: "Mobile Revenue Transformation",
+        description:
+          "Built React Native mobile apps that increased revenue by 40% and modernized frontend interfaces with React, increasing user engagement by 30%. This mobile-first approach opened entirely new revenue streams and customer segments.",
         impact: "40% revenue increase from mobile apps",
-        metrics: "30% increase in user engagement"
+        metrics: "30% increase in user engagement",
       },
       {
         title: "System Reliability & Quality Revolution",
-        description: "Established comprehensive testing suites with +80% coverage and orchestrated CI/CD systems that reduced deploy time by 80%. This transformed the development process from risky manual deployments to confident, frequent releases.",
-        impact: "90% reduction in regression bugs", 
-        metrics: "80% reduction in deployment time"
-      }
-    ]
+        description:
+          "Established comprehensive testing suites with +80% coverage and orchestrated CI/CD systems that reduced deploy time by 80%. This transformed the development process from risky manual deployments to confident, frequent releases.",
+        impact: "90% reduction in regression bugs",
+        metrics: "80% reduction in deployment time",
+      },
+    ],
   },
 
   work: [
@@ -174,7 +179,12 @@ export const resume = {
           description:
             "Enabled processing thousands of orders per minute, by optimizing SQL queries & Python/Django processes with 30-60%",
           // "Optimized SQL queries & Python processes with 30-60%, enabling platform to process thousands of orders per minute",
-          tags: ["fullstack-python", "fullstack-django", "fullstack-react", "fullstack-svelte"],
+          tags: [
+            "fullstack-python",
+            "fullstack-django",
+            "fullstack-react",
+            "fullstack-svelte",
+          ],
         },
 
         {
@@ -199,7 +209,12 @@ export const resume = {
           description:
             "Decreased regression with 90%, by establishing TDD with quality testing suite using Django & Selenium (+80% coverage)",
           // "Established quality testing suite using Django and Selenium (+80% coverage) decreasing regression bugs by about 90%",
-          tags: ["fullstack-python", "fullstack-django", "fullstack-react", "fullstack-svelte"],
+          tags: [
+            "fullstack-python",
+            "fullstack-django",
+            "fullstack-react",
+            "fullstack-svelte",
+          ],
         },
 
         {
@@ -297,146 +312,217 @@ export const resume = {
           name: "Migration to Django",
           startDate: "2014-09",
           endDate: "2015-03",
-          summary: "Led migration from PHP to Django while maintaining backward compatibility and zero downtime.",
-          description: "Migrated entire application from PHP codebase to Django while keeping existing database intact and ensuring backwards compatibility. Moved all core business logic to take advantage of Django's framework features.",
-          outcome: "Complete platform migration with no downtime or data loss. Significantly improved development velocity and maintainability."
+          summary:
+            "Led migration from PHP to Django while maintaining backward compatibility and zero downtime.",
+          description:
+            "Migrated entire application from PHP codebase to Django while keeping existing database intact and ensuring backwards compatibility. Moved all core business logic to take advantage of Django's framework features.",
+          outcome:
+            "Complete platform migration with no downtime or data loss. Significantly improved development velocity and maintainability.",
         },
+
         {
-          name: "Dashboard Modernization", 
+          name: "Dashboard Modernization",
           startDate: "2015-04",
           endDate: "2015-09",
-          summary: "Built modern dashboard with Django backend and React frontend, improving user experience and performance.",
-          description: "Created modern dashboard combining Django backend with React frontend and REST API using Django REST Framework. Implemented Webpack bundling system and integrated legacy PHP components.",
-          outcome: "40% faster page load times, improved user satisfaction, and foundation for mobile apps and partner integrations."
+          summary:
+            "Built modern dashboard with Django backend and React frontend, improving user experience and performance.",
+          description:
+            "Created modern dashboard combining Django backend with React frontend and REST API using Django REST Framework. Implemented Webpack bundling system and integrated legacy PHP components.",
+          outcome:
+            "40% faster page load times, improved user satisfaction, and foundation for mobile apps and partner integrations.",
         },
+
         {
           name: "Ticket Shop Modernization",
-          startDate: "2015-02", 
+          startDate: "2015-02",
           endDate: "2016-12",
-          summary: "Rebuilt ticket purchasing system as single-page app, reducing cart abandonment by 35%.",
-          description: "Rebuilt entire ticket shop as single-page application using Lit and Web Components. Built REST API with Django REST Framework, enabled guest checkout, integrated multiple payment options, and created theming system.",
-          outcome: "35% reduction in cart abandonment, 50% increase in mobile sales, improved customer satisfaction, and new revenue from theming features."
+          summary:
+            "Rebuilt ticket purchasing system as single-page app, reducing cart abandonment by 35%.",
+          description:
+            "Rebuilt entire ticket shop as single-page application using Lit and Web Components. Built REST API with Django REST Framework, enabled guest checkout, integrated multiple payment options, and created theming system.",
+          outcome:
+            "35% reduction in cart abandonment, 50% increase in mobile sales, improved customer satisfaction, and new revenue from theming features.",
         },
+
         {
           name: "Developer Documentation",
           startDate: "2015-10",
-          endDate: "2016-02", 
-          summary: "Created comprehensive developer documentation reducing onboarding time from 3-4 weeks to 5-7 days.",
-          description: "Built complete documentation system including onboarding guides, technical references, Docker setup instructions, and testing framework documentation with examples.",
-          outcome: "Reduced new developer onboarding from 3-4 weeks to 5-7 days, improved code consistency, and better bug reporting."
+          endDate: "2016-02",
+          summary:
+            "Created comprehensive developer documentation reducing onboarding time from 3-4 weeks to 5-7 days.",
+          description:
+            "Built complete documentation system including onboarding guides, technical references, Docker setup instructions, and testing framework documentation with examples.",
+          outcome:
+            "Reduced new developer onboarding from 3-4 weeks to 5-7 days, improved code consistency, and better bug reporting.",
         },
+
         {
           name: "Internationalization & Localization",
           startDate: "2016-03",
           endDate: "2016-07",
-          summary: "Built flexible translation system enabling expansion to 8 international markets.",
-          description: "Customized Django's translation system to store translations in database using ORM models. Created admin interface for easy translation editing and developer tools for environment syncing.",
-          outcome: "Launched in 8 international markets within 6 months, 40% increase in international customers."
+          summary:
+            "Built flexible translation system enabling expansion to 8 international markets.",
+          description:
+            "Customized Django's translation system to store translations in database using ORM models. Created admin interface for easy translation editing and developer tools for environment syncing.",
+          outcome:
+            "Launched in 8 international markets within 6 months, 40% increase in international customers.",
         },
+
         {
           name: "Deployment System",
           startDate: "2016-08",
           endDate: "2017-02",
-          summary: "Built complete CI/CD pipeline reducing deployment time from 2+ hours to 15 minutes.",
-          description: "Created automated CI/CD pipeline handling deployments to multiple environments, multi-server deployment, rollbacks, and monitoring with chat notifications. Included smart caching and complex scenario handling.",
-          outcome: "Deployment time reduced from 2+ hours to 15 minutes, 90% reduction in deployment problems, enabled multiple daily deployments."
+          summary:
+            "Built complete CI/CD pipeline reducing deployment time from 2+ hours to 15 minutes.",
+          description:
+            "Created automated CI/CD pipeline handling deployments to multiple environments, multi-server deployment, rollbacks, and monitoring with chat notifications. Included smart caching and complex scenario handling.",
+          outcome:
+            "Deployment time reduced from 2+ hours to 15 minutes, 90% reduction in deployment problems, enabled multiple daily deployments.",
         },
+
         {
           name: "Test Suite Implementation",
-          startDate: "2017-03", 
+          startDate: "2017-03",
           endDate: "2017-06",
-          summary: "Established comprehensive testing system increasing code coverage from 15% to 85%.",
-          description: "Built complete testing system with unit test helpers, Selenium integration for critical workflows, and team training on testing best practices.",
-          outcome: "Increased code coverage from 15% to 85%, 60% reduction in production bugs, improved development confidence and velocity."
+          summary:
+            "Established comprehensive testing system increasing code coverage from 15% to 85%.",
+          description:
+            "Built complete testing system with unit test helpers, Selenium integration for critical workflows, and team training on testing best practices.",
+          outcome:
+            "Increased code coverage from 15% to 85%, 60% reduction in production bugs, improved development confidence and velocity.",
         },
+
         {
           name: "Visitor Management Tool",
           startDate: "2017-07",
-          endDate: "2017-11", 
-          summary: "Built comprehensive attendee management interface saving organizers 5-8 hours per event.",
-          description: "Created visitor management system with advanced search/filtering, detailed profiles, manual visitor addition, integrated ticket/payment management, automated emails, and flexible exports.",
-          outcome: "Saved organizers 5-8 hours per event, 90% adoption rate, 25% increase in customer satisfaction, 70% reduction in support tickets."
+          endDate: "2017-11",
+          summary:
+            "Built comprehensive attendee management interface saving organizers 5-8 hours per event.",
+          description:
+            "Created visitor management system with advanced search/filtering, detailed profiles, manual visitor addition, integrated ticket/payment management, automated emails, and flexible exports.",
+          outcome:
+            "Saved organizers 5-8 hours per event, 90% adoption rate, 25% increase in customer satisfaction, 70% reduction in support tickets.",
         },
+
         {
           name: "Mailing System Modernization",
           startDate: "2017-12",
           endDate: "2018-04",
-          summary: "Modernized email system with HTML templates and personalization, increasing open rates by 45%.",
-          description: "Built modern HTML email system with responsive templates, dynamic content insertion, inline images/attachments support, and efficient mass mailing with personalization.",
-          outcome: "45% increase in email open rates, improved attendee engagement, better event attendance, reduced manual work for organizers."
+          summary:
+            "Modernized email system with HTML templates and personalization, increasing open rates by 45%.",
+          description:
+            "Built modern HTML email system with responsive templates, dynamic content insertion, inline images/attachments support, and efficient mass mailing with personalization.",
+          outcome:
+            "45% increase in email open rates, improved attendee engagement, better event attendance, reduced manual work for organizers.",
         },
+
         {
           name: "Website Integration Tool",
           startDate: "2018-05",
           endDate: "2018-08",
-          summary: "Created embeddable ticket shop integration improving website conversion rates by 30%.",
-          description: "Built configurable integration tool generating embed code with customization options, automatic resizing using postMessage API, and transparent background for seamless visual integration.",
-          outcome: "30% improvement in website conversion rates, became key sales feature for 60% of enterprise customers, simplified setup from developer-required to 5-minute process."
+          summary:
+            "Created embeddable ticket shop integration improving website conversion rates by 30%.",
+          description:
+            "Built configurable integration tool generating embed code with customization options, automatic resizing using postMessage API, and transparent background for seamless visual integration.",
+          outcome:
+            "30% improvement in website conversion rates, became key sales feature for 60% of enterprise customers, simplified setup from developer-required to 5-minute process.",
         },
+
         {
           name: "Ticket PDF Modernization",
           startDate: "2018-09",
           endDate: "2018-12",
-          summary: "Modernized PDF generation with HTML templates and QR security, eliminating ticket fraud.",
-          description: "Switched to HTML-to-PDF generation using WeasyPrint, added secure QR code generation with validation keys, and built multi-page PDF support for multiple ticket purchases.",
-          outcome: "Design updates reduced from days to minutes, eliminated ticket fraud, faster event check-ins, improved customer satisfaction with professional tickets."
+          summary:
+            "Modernized PDF generation with HTML templates and QR security, eliminating ticket fraud.",
+          description:
+            "Switched to HTML-to-PDF generation using WeasyPrint, added secure QR code generation with validation keys, and built multi-page PDF support for multiple ticket purchases.",
+          outcome:
+            "Design updates reduced from days to minutes, eliminated ticket fraud, faster event check-ins, improved customer satisfaction with professional tickets.",
         },
+
         {
           name: "Performance Optimization",
           startDate: "2019-01",
-          endDate: "2019-05", 
-          summary: "Optimized ticket shop performance by up to 60%, reducing load times from 8 to 3 seconds.",
-          description: "Used Django Silk profiling to identify bottlenecks, optimized database queries with select_related/prefetch_related, implemented strategic caching, and optimized Python code.",
-          outcome: "Up to 60% performance improvement, load times reduced from 8 to 3 seconds, 25% reduction in cart abandonment, system handled 3x more concurrent users."
+          endDate: "2019-05",
+          summary:
+            "Optimized ticket shop performance by up to 60%, reducing load times from 8 to 3 seconds.",
+          description:
+            "Used Django Silk profiling to identify bottlenecks, optimized database queries with select_related/prefetch_related, implemented strategic caching, and optimized Python code.",
+          outcome:
+            "Up to 60% performance improvement, load times reduced from 8 to 3 seconds, 25% reduction in cart abandonment, system handled 3x more concurrent users.",
         },
+
         {
           name: "Mobile Scan App",
           startDate: "2019-06",
           endDate: "2020-02",
-          summary: "Built React Native scanning app reducing check-in times by 70% and saving organizers $50-200 per event.",
-          description: "Developed cross-platform React Native app for ticket scanning and validation with barcode scanning, offline capability, REST API integration, and App Store/Google Play deployment.",
-          outcome: "Eliminated expensive third-party solutions saving $50-200 per event, 70% reduction in check-in times, offline capability for poor venue connectivity, became key selling point for 40% of new customers."
+          summary:
+            "Built React Native scanning app reducing check-in times by 70% and saving organizers $50-200 per event.",
+          description:
+            "Developed cross-platform React Native app for ticket scanning and validation with barcode scanning, offline capability, REST API integration, and App Store/Google Play deployment.",
+          outcome:
+            "Eliminated expensive third-party solutions saving $50-200 per event, 70% reduction in check-in times, offline capability for poor venue connectivity, became key selling point for 40% of new customers.",
         },
+
         {
-          name: "TicketSwap Integration", 
+          name: "TicketSwap Integration",
           startDate: "2020-03",
           endDate: "2020-06",
-          summary: "Integrated with TicketSwap to eliminate secondary market fraud and increase sales by 15%.",
-          description: "Worked with TicketSwap's technical team to implement secure integration validating second-hand tickets sold through their platform, ensuring only legitimate tickets could be resold.",
-          outcome: "Ticket fraud rates dropped to near zero, increased customer confidence, became competitive advantage, led to 15% increase in overall ticket sales."
+          summary:
+            "Integrated with TicketSwap to eliminate secondary market fraud and increase sales by 15%.",
+          description:
+            "Worked with TicketSwap's technical team to implement secure integration validating second-hand tickets sold through their platform, ensuring only legitimate tickets could be resold.",
+          outcome:
+            "Ticket fraud rates dropped to near zero, increased customer confidence, became competitive advantage, led to 15% increase in overall ticket sales.",
         },
+
         {
           name: "Zoom Integration",
-          startDate: "2020-07", 
+          startDate: "2020-07",
           endDate: "2020-12",
-          summary: "Built comprehensive Zoom integration enabling virtual events during COVID-19 pandemic.",
-          description: "Implemented Zoom integration using OAuth for secure account connection, built meeting creation/participant management functionality, and created interface for multi-ticket assignments with separate access.",
-          outcome: "Successfully pivoted platform for virtual events during pandemic, 80% of organizers adopted virtual events, prevented major revenue loss, reduced support tickets by 50%."
+          summary:
+            "Built comprehensive Zoom integration enabling virtual events during COVID-19 pandemic.",
+          description:
+            "Implemented Zoom integration using OAuth for secure account connection, built meeting creation/participant management functionality, and created interface for multi-ticket assignments with separate access.",
+          outcome:
+            "Successfully pivoted platform for virtual events during pandemic, 80% of organizers adopted virtual events, prevented major revenue loss, reduced support tickets by 50%.",
         },
+
         {
           name: "Shared Frontend Library",
           startDate: "2021-01",
           endDate: "2021-05",
-          summary: "Created shared JavaScript library reducing code duplication by 40% across all projects.",
-          description: "Built shared JavaScript library containing common utilities, UI components, and business logic. Systematically refactored existing projects to use shared library instead of custom implementations.",
-          outcome: "40% reduction in code duplication, 25% decrease in development time for new features, improved UI consistency and user experience scores."
+          summary:
+            "Created shared JavaScript library reducing code duplication by 40% across all projects.",
+          description:
+            "Built shared JavaScript library containing common utilities, UI components, and business logic. Systematically refactored existing projects to use shared library instead of custom implementations.",
+          outcome:
+            "40% reduction in code duplication, 25% decrease in development time for new features, improved UI consistency and user experience scores.",
         },
+
         {
           name: "Feature Expansion",
-          startDate: "2021-06", 
+          startDate: "2021-06",
           endDate: "2021-12",
-          summary: "Enhanced multi-language support and custom attendee data collection, increasing international penetration by 60%.",
-          description: "Built dashboard widget system for multi-language event management, implemented configurable custom questions, added age verification controls, and redesigned organizer signup process.",
-          outcome: "60% increase in international market penetration, 75% adoption rate for custom questions feature, opened new market segments, 35% increase in organizer conversion rates."
+          summary:
+            "Enhanced multi-language support and custom attendee data collection, increasing international penetration by 60%.",
+          description:
+            "Built dashboard widget system for multi-language event management, implemented configurable custom questions, added age verification controls, and redesigned organizer signup process.",
+          outcome:
+            "60% increase in international market penetration, 75% adoption rate for custom questions feature, opened new market segments, 35% increase in organizer conversion rates.",
         },
+
         {
           name: "Public Events API",
           startDate: "2022-01",
           endDate: "2024-06",
-          summary: "Built comprehensive REST API enabling partnerships and driving 30% increase in ticket sales.",
-          description: "Designed REST API endpoints for structured event data access with privacy controls, implemented dashboard settings for public visibility control, and added categorization features for improved discovery.",
-          outcome: "Enabled partnerships with 12+ event listing platforms, 30% increase in ticket sales through partner channels, improved event discoverability and audience matching."
-        }
+          summary:
+            "Built comprehensive REST API enabling partnerships and driving 30% increase in ticket sales.",
+          description:
+            "Designed REST API endpoints for structured event data access with privacy controls, implemented dashboard settings for public visibility control, and added categorization features for improved discovery.",
+          outcome:
+            "Enabled partnerships with 12+ event listing platforms, 30% increase in ticket sales through partner channels, improved event discoverability and audience matching.",
+        },
       ],
     },
 
@@ -457,7 +543,7 @@ export const resume = {
           icon: faWrench,
           description:
             "Delivered complete platform with Python, Django & React in part time setup in consultation with non-technical founders",
-            // "Delivered complete platform in part time setup by directing agile methods in consultation with non-technical founders",
+          // "Delivered complete platform in part time setup by directing agile methods in consultation with non-technical founders",
           // "Directed agile/scrum methodology while designing complete platform in consultation with non-technical founders",
         },
 
@@ -553,7 +639,7 @@ export const resume = {
           icon: faEnvelope,
           description:
             "Supported acquisition by sending thousands of emails with marketing system using Python, Django, Celery & SendGrid",
-            // "Built email marketing system using Python, Django & SendGrid, sending thousands of emails, supporting acquisition",
+          // "Built email marketing system using Python, Django & SendGrid, sending thousands of emails, supporting acquisition",
         },
       ],
 
@@ -597,7 +683,7 @@ export const resume = {
           icon: faHandshake,
           description:
             "Delivered web projects for major clients (Bol.com) as part of company's best of 5 Scrum teams using custom PHP CMS",
-            // "Delivered web projects for major clients (Bol.com, Gemeente Amsterdam) as part of company's best of 5 Scrum teams",
+          // "Delivered web projects for major clients (Bol.com, Gemeente Amsterdam) as part of company's best of 5 Scrum teams",
         },
 
         {
@@ -1250,117 +1336,167 @@ export const resume = {
       category: "Leadership & Team Management",
       questions: [
         {
-          question: "Tell me about a time when you had to lead a difficult project or manage a challenging team situation.",
+          question:
+            "Tell me about a time when you had to lead a difficult project or manage a challenging team situation.",
           answer: {
-            situation: "At Chipta, I was leading a team of 5 developers when we faced a critical performance crisis during our peak ticket sales season. The platform was struggling to handle thousands of concurrent users, causing frequent timeouts and failed transactions.",
-            task: "I needed to quickly identify and resolve the performance bottlenecks while keeping the team motivated and organized during this high-pressure situation. We had to maintain system availability while implementing fixes.",
-            action: "I immediately organized daily standups to track progress and assigned specific team members to focus on different areas: database optimization, caching implementation, and frontend performance. I personally dove deep into SQL query analysis using Django Silk, identified the most problematic queries, and worked closely with each developer to implement solutions. I also established a clear communication protocol with stakeholders to manage expectations.",
-            result: "We achieved 30-60% performance improvements within two weeks, enabling the platform to successfully handle thousands of orders per minute during peak events. The team became more cohesive through the challenge, and we established better monitoring and optimization practices for the future."
-          }
+            situation:
+              "At Chipta, I was leading a team of 5 developers when we faced a critical performance crisis during our peak ticket sales season. The platform was struggling to handle thousands of concurrent users, causing frequent timeouts and failed transactions.",
+            task:
+              "I needed to quickly identify and resolve the performance bottlenecks while keeping the team motivated and organized during this high-pressure situation. We had to maintain system availability while implementing fixes.",
+            action:
+              "I immediately organized daily standups to track progress and assigned specific team members to focus on different areas: database optimization, caching implementation, and frontend performance. I personally dove deep into SQL query analysis using Django Silk, identified the most problematic queries, and worked closely with each developer to implement solutions. I also established a clear communication protocol with stakeholders to manage expectations.",
+            result:
+              "We achieved 30-60% performance improvements within two weeks, enabling the platform to successfully handle thousands of orders per minute during peak events. The team became more cohesive through the challenge, and we established better monitoring and optimization practices for the future.",
+          },
         },
         {
-          question: "Describe a situation where you had to mentor or develop a junior team member.",
+          question:
+            "Describe a situation where you had to mentor or develop a junior team member.",
           answer: {
-            situation: "A junior developer joined our team at Chipta who was struggling with Django best practices and was spending too much time on tasks that should have been straightforward.",
-            task: "I needed to help them become productive quickly while building their confidence and ensuring code quality remained high.",
-            action: "I established regular one-on-one mentoring sessions, created comprehensive onboarding documentation, and implemented a buddy system where they could work alongside me on complex features. I also introduced code review sessions where we'd walk through their code together, explaining not just what needed to change, but why certain approaches were better.",
-            result: "Within 3 months, they became one of our most reliable developers and eventually took ownership of major features independently. The onboarding documentation I created reduced new developer onboarding time from 3-4 weeks to 5-7 days for future hires."
-          }
-        }
-      ]
+            situation:
+              "A junior developer joined our team at Chipta who was struggling with Django best practices and was spending too much time on tasks that should have been straightforward.",
+            task:
+              "I needed to help them become productive quickly while building their confidence and ensuring code quality remained high.",
+            action:
+              "I established regular one-on-one mentoring sessions, created comprehensive onboarding documentation, and implemented a buddy system where they could work alongside me on complex features. I also introduced code review sessions where we'd walk through their code together, explaining not just what needed to change, but why certain approaches were better.",
+            result:
+              "Within 3 months, they became one of our most reliable developers and eventually took ownership of major features independently. The onboarding documentation I created reduced new developer onboarding time from 3-4 weeks to 5-7 days for future hires.",
+          },
+        },
+      ],
     },
     {
       category: "Technical Problem Solving",
       questions: [
         {
-          question: "Walk me through your approach to solving a complex technical problem.",
+          question:
+            "Walk me through your approach to solving a complex technical problem.",
           answer: {
-            situation: "At Chipta, we were experiencing mysterious intermittent payment failures that were affecting customer trust and revenue, but the failures seemed random and were difficult to reproduce.",
-            task: "I needed to identify the root cause of these payment failures and implement a reliable solution without disrupting the live payment processing system.",
-            action: "I started by implementing comprehensive logging around the entire payment flow, including integration points with external payment providers like Mollie and PayPal. I analyzed weeks of payment data to identify patterns, set up monitoring dashboards, and created a testing environment that could simulate the production payment flow. Through careful analysis, I discovered the issue was related to race conditions in our payment status updates during high-traffic periods.",
-            result: "I implemented a queue-based payment processing system using Django Channels and Redis that eliminated the race conditions. Payment failures dropped by 95%, and we processed tens of millions in transactions reliably. The monitoring system I built also helped prevent future payment issues."
-          }
+            situation:
+              "At Chipta, we were experiencing mysterious intermittent payment failures that were affecting customer trust and revenue, but the failures seemed random and were difficult to reproduce.",
+            task:
+              "I needed to identify the root cause of these payment failures and implement a reliable solution without disrupting the live payment processing system.",
+            action:
+              "I started by implementing comprehensive logging around the entire payment flow, including integration points with external payment providers like Mollie and PayPal. I analyzed weeks of payment data to identify patterns, set up monitoring dashboards, and created a testing environment that could simulate the production payment flow. Through careful analysis, I discovered the issue was related to race conditions in our payment status updates during high-traffic periods.",
+            result:
+              "I implemented a queue-based payment processing system using Django Channels and Redis that eliminated the race conditions. Payment failures dropped by 95%, and we processed tens of millions in transactions reliably. The monitoring system I built also helped prevent future payment issues.",
+          },
         },
         {
-          question: "Tell me about a time you had to learn a new technology quickly to solve a problem.",
+          question:
+            "Tell me about a time you had to learn a new technology quickly to solve a problem.",
           answer: {
-            situation: "During the COVID-19 pandemic, our clients at Chipta suddenly needed to pivot from physical events to virtual events, but we had no video conferencing integration in our platform.",
-            task: "I needed to quickly learn Zoom's API and OAuth integration to build a comprehensive virtual event management system within a tight 6-month deadline.",
-            action: "I dove deep into Zoom's API documentation, built several proof-of-concept integrations, and experimented with different OAuth flows. I created a testing environment with multiple Zoom accounts to understand the full user experience. I also researched similar integrations in other platforms to understand best practices and potential pitfalls.",
-            result: "I successfully built a complete Zoom integration that allowed automatic meeting creation, participant management, and separate access controls for different ticket types. 80% of our organizers adopted virtual events during the pandemic, which prevented major revenue loss for the company and our clients."
-          }
-        }
-      ]
+            situation:
+              "During the COVID-19 pandemic, our clients at Chipta suddenly needed to pivot from physical events to virtual events, but we had no video conferencing integration in our platform.",
+            task:
+              "I needed to quickly learn Zoom's API and OAuth integration to build a comprehensive virtual event management system within a tight 6-month deadline.",
+            action:
+              "I dove deep into Zoom's API documentation, built several proof-of-concept integrations, and experimented with different OAuth flows. I created a testing environment with multiple Zoom accounts to understand the full user experience. I also researched similar integrations in other platforms to understand best practices and potential pitfalls.",
+            result:
+              "I successfully built a complete Zoom integration that allowed automatic meeting creation, participant management, and separate access controls for different ticket types. 80% of our organizers adopted virtual events during the pandemic, which prevented major revenue loss for the company and our clients.",
+          },
+        },
+      ],
     },
     {
       category: "Project Management & Delivery",
       questions: [
         {
-          question: "Describe a time when you had to deliver a project under tight deadlines.",
+          question:
+            "Describe a time when you had to deliver a project under tight deadlines.",
           answer: {
-            situation: "At Chipta, we needed to migrate our entire ticketing platform from PHP to Django while maintaining 100% uptime during our busy event season, with a hard deadline of 6 months due to legacy system maintenance costs.",
-            task: "I needed to plan and execute a complete platform migration without any service interruption, data loss, or functionality regression.",
-            action: "I broke the migration into phases, starting with the most critical backend systems while maintaining API compatibility. I implemented a comprehensive testing strategy using Django and Selenium, created detailed migration scripts, and established a rollback plan for each phase. I coordinated closely with the team to ensure parallel development of new features while migration was ongoing.",
-            result: "We completed the migration 2 weeks ahead of schedule with zero downtime and no data loss. The new Django platform was immediately more maintainable and performant, setting the foundation for all future development. Development velocity increased significantly after the migration."
-          }
+            situation:
+              "At Chipta, we needed to migrate our entire ticketing platform from PHP to Django while maintaining 100% uptime during our busy event season, with a hard deadline of 6 months due to legacy system maintenance costs.",
+            task:
+              "I needed to plan and execute a complete platform migration without any service interruption, data loss, or functionality regression.",
+            action:
+              "I broke the migration into phases, starting with the most critical backend systems while maintaining API compatibility. I implemented a comprehensive testing strategy using Django and Selenium, created detailed migration scripts, and established a rollback plan for each phase. I coordinated closely with the team to ensure parallel development of new features while migration was ongoing.",
+            result:
+              "We completed the migration 2 weeks ahead of schedule with zero downtime and no data loss. The new Django platform was immediately more maintainable and performant, setting the foundation for all future development. Development velocity increased significantly after the migration.",
+          },
         },
         {
-          question: "Tell me about a project that didn't go as planned and how you handled it.",
+          question:
+            "Tell me about a project that didn't go as planned and how you handled it.",
           answer: {
-            situation: "At Tender-it, I was building a comprehensive tender discovery platform as the sole technical lead, but midway through development, the requirements changed significantly when we discovered our initial search approach wasn't meeting user needs.",
-            task: "I needed to rebuild the core search functionality using Elasticsearch while keeping the project on track and maintaining stakeholder confidence.",
-            action: "I immediately scheduled a meeting with the founders to discuss the technical challenges and proposed solutions. I created a detailed plan for implementing Elasticsearch, including migration strategies for existing data and a timeline for the new features. I also implemented the new search system incrementally, allowing users to test and provide feedback throughout the development process.",
-            result: "The Elasticsearch-powered search engine became our key differentiator, allowing users to filter and score hundreds of thousands of tenders effectively. This pivot actually improved our market position and became a major selling point that helped secure our subscription-based business model."
-          }
-        }
-      ]
+            situation:
+              "At Tender-it, I was building a comprehensive tender discovery platform as the sole technical lead, but midway through development, the requirements changed significantly when we discovered our initial search approach wasn't meeting user needs.",
+            task:
+              "I needed to rebuild the core search functionality using Elasticsearch while keeping the project on track and maintaining stakeholder confidence.",
+            action:
+              "I immediately scheduled a meeting with the founders to discuss the technical challenges and proposed solutions. I created a detailed plan for implementing Elasticsearch, including migration strategies for existing data and a timeline for the new features. I also implemented the new search system incrementally, allowing users to test and provide feedback throughout the development process.",
+            result:
+              "The Elasticsearch-powered search engine became our key differentiator, allowing users to filter and score hundreds of thousands of tenders effectively. This pivot actually improved our market position and became a major selling point that helped secure our subscription-based business model.",
+          },
+        },
+      ],
     },
     {
       category: "Collaboration & Communication",
       questions: [
         {
-          question: "Describe a time when you had to work with a difficult stakeholder or team member.",
+          question:
+            "Describe a time when you had to work with a difficult stakeholder or team member.",
           answer: {
-            situation: "At SWIS, I was working with a client who had very specific design requirements that were technically challenging and kept changing their mind about key functionality, causing frustration within our development team.",
-            task: "I needed to maintain a positive client relationship while protecting my team from scope creep and ensuring we could deliver quality work on schedule.",
-            action: "I scheduled regular check-ins with the client to better understand their underlying business needs rather than just their stated requirements. I created visual mockups and prototypes to help them visualize the impact of their requests. I also established a clear change request process that included timeline and cost implications for any modifications.",
-            result: "The project was completed successfully and on time, with the client very satisfied with both the final product and the process. They became a repeat client, and the structured approach I developed became standard practice for our agency, reducing similar issues on future projects."
-          }
+            situation:
+              "At SWIS, I was working with a client who had very specific design requirements that were technically challenging and kept changing their mind about key functionality, causing frustration within our development team.",
+            task:
+              "I needed to maintain a positive client relationship while protecting my team from scope creep and ensuring we could deliver quality work on schedule.",
+            action:
+              "I scheduled regular check-ins with the client to better understand their underlying business needs rather than just their stated requirements. I created visual mockups and prototypes to help them visualize the impact of their requests. I also established a clear change request process that included timeline and cost implications for any modifications.",
+            result:
+              "The project was completed successfully and on time, with the client very satisfied with both the final product and the process. They became a repeat client, and the structured approach I developed became standard practice for our agency, reducing similar issues on future projects.",
+          },
         },
         {
-          question: "Tell me about a time you had to explain complex technical concepts to non-technical stakeholders.",
+          question:
+            "Tell me about a time you had to explain complex technical concepts to non-technical stakeholders.",
           answer: {
-            situation: "At Chipta, I needed to explain to the business owners why implementing a comprehensive testing suite was crucial for our platform's reliability, but they were concerned about the time investment and didn't understand the technical benefits.",
-            task: "I needed to communicate the business value of technical testing practices in terms that resonated with their priorities and concerns.",
-            action: "I prepared a presentation that focused on business impact rather than technical details. I showed them data about production bugs, the cost of downtime during peak events, and customer support tickets related to system issues. I also created simple analogies, comparing our testing suite to quality control in manufacturing, and demonstrated how testing would prevent the expensive emergency fixes we'd been doing.",
-            result: "They approved the testing initiative, which increased our code coverage from 15% to 85% and reduced production bugs by 60%. This also led to better communication patterns where I regularly translated technical decisions into business terms, improving overall project planning and prioritization."
-          }
-        }
-      ]
+            situation:
+              "At Chipta, I needed to explain to the business owners why implementing a comprehensive testing suite was crucial for our platform's reliability, but they were concerned about the time investment and didn't understand the technical benefits.",
+            task:
+              "I needed to communicate the business value of technical testing practices in terms that resonated with their priorities and concerns.",
+            action:
+              "I prepared a presentation that focused on business impact rather than technical details. I showed them data about production bugs, the cost of downtime during peak events, and customer support tickets related to system issues. I also created simple analogies, comparing our testing suite to quality control in manufacturing, and demonstrated how testing would prevent the expensive emergency fixes we'd been doing.",
+            result:
+              "They approved the testing initiative, which increased our code coverage from 15% to 85% and reduced production bugs by 60%. This also led to better communication patterns where I regularly translated technical decisions into business terms, improving overall project planning and prioritization.",
+          },
+        },
+      ],
     },
     {
       category: "Innovation & Improvement",
       questions: [
         {
-          question: "Tell me about a time when you identified an opportunity for improvement and took initiative to implement it.",
+          question:
+            "Tell me about a time when you identified an opportunity for improvement and took initiative to implement it.",
           answer: {
-            situation: "At Chipta, I noticed that our deployment process was taking 2+ hours and causing significant stress for the team, with frequent deployment failures that required manual rollbacks.",
-            task: "I wanted to streamline our deployment process to enable more frequent, reliable releases without requiring explicit approval from management.",
-            action: "I researched CI/CD best practices and built a complete automated deployment pipeline using Ansible and Python. I implemented automated testing, deployment to multiple environments, rollback capabilities, and Slack notifications. I also created detailed documentation and trained the team on the new process.",
-            result: "Deployment time reduced from 2+ hours to 15 minutes, with a 90% reduction in deployment problems. This enabled multiple daily deployments and significantly improved our development velocity and team confidence. The system became a model for other projects in the company."
-          }
+            situation:
+              "At Chipta, I noticed that our deployment process was taking 2+ hours and causing significant stress for the team, with frequent deployment failures that required manual rollbacks.",
+            task:
+              "I wanted to streamline our deployment process to enable more frequent, reliable releases without requiring explicit approval from management.",
+            action:
+              "I researched CI/CD best practices and built a complete automated deployment pipeline using Ansible and Python. I implemented automated testing, deployment to multiple environments, rollback capabilities, and Slack notifications. I also created detailed documentation and trained the team on the new process.",
+            result:
+              "Deployment time reduced from 2+ hours to 15 minutes, with a 90% reduction in deployment problems. This enabled multiple daily deployments and significantly improved our development velocity and team confidence. The system became a model for other projects in the company.",
+          },
         },
         {
-          question: "Describe a time when you had to challenge the status quo or propose a better way of doing something.",
+          question:
+            "Describe a time when you had to challenge the status quo or propose a better way of doing something.",
           answer: {
-            situation: "At Chipta, the team was manually managing customer email communications, which was time-intensive and inconsistent, leading to poor customer experience and high support ticket volume.",
-            task: "I believed we could significantly improve customer engagement and reduce manual work by modernizing our email system, but needed to convince the team it was worth the development investment.",
-            action: "I analyzed our current email metrics and support tickets to build a business case. I then built a prototype HTML email system with responsive templates, dynamic content insertion, and automated personalization. I demonstrated the prototype to stakeholders and showed how it could improve both customer experience and operational efficiency.",
-            result: "The new email system increased email open rates by 45% and improved attendee engagement significantly. It also saved organizers considerable time and reduced support tickets, becoming one of our most valued features. The success of this initiative led to more trust in my technical recommendations."
-          }
-        }
-      ]
-    }
+            situation:
+              "At Chipta, the team was manually managing customer email communications, which was time-intensive and inconsistent, leading to poor customer experience and high support ticket volume.",
+            task:
+              "I believed we could significantly improve customer engagement and reduce manual work by modernizing our email system, but needed to convince the team it was worth the development investment.",
+            action:
+              "I analyzed our current email metrics and support tickets to build a business case. I then built a prototype HTML email system with responsive templates, dynamic content insertion, and automated personalization. I demonstrated the prototype to stakeholders and showed how it could improve both customer experience and operational efficiency.",
+            result:
+              "The new email system increased email open rates by 45% and improved attendee engagement significantly. It also saved organizers considerable time and reduced support tickets, becoming one of our most valued features. The success of this initiative led to more trust in my technical recommendations.",
+          },
+        },
+      ],
+    },
   ],
 
   flowState: {
