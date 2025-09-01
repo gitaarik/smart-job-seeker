@@ -11,6 +11,7 @@
     faHandshake,
     faHeart,
     faListOl,
+    faQuestionCircle,
     faRoad,
     faRobot,
     faRocket,
@@ -118,6 +119,12 @@
       id: "flowState",
       label: "Flow State & Ideals",
       icon: faWater,
+    },
+
+    {
+      id: "interviewQuestions",
+      label: "Interview Questions",
+      icon: faQuestionCircle,
     },
 
     {

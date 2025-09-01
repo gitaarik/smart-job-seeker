@@ -18,6 +18,7 @@
   import WhatExcitesMeSection from "./WhatExcitesMeSection.svelte";
   import PersonalityAndMethodologies from "./PersonalityAndMethodologies.svelte";
   import WorkAccomplishmentSection from "./WorkAccomplishmentSection.svelte";
+  import InterviewQuestionsSection from "./InterviewQuestionsSection.svelte";
   import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
 
   let activeSection = "overview";
@@ -96,6 +97,8 @@
         <CareerPrioritiesSection />
       {:else if activeSection === "flowState"}
         <FlowStateSection />
+      {:else if activeSection === "interviewQuestions"}
+        <InterviewQuestionsSection />
       {:else if activeSection === "references"}
         <ReferencesSection />
       {/if}

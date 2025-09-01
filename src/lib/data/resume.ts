@@ -1245,6 +1245,124 @@ export const resume = {
     },
   ],
 
+  interviewQuestions: [
+    {
+      category: "Leadership & Team Management",
+      questions: [
+        {
+          question: "Tell me about a time when you had to lead a difficult project or manage a challenging team situation.",
+          answer: {
+            situation: "At Chipta, I was leading a team of 5 developers when we faced a critical performance crisis during our peak ticket sales season. The platform was struggling to handle thousands of concurrent users, causing frequent timeouts and failed transactions.",
+            task: "I needed to quickly identify and resolve the performance bottlenecks while keeping the team motivated and organized during this high-pressure situation. We had to maintain system availability while implementing fixes.",
+            action: "I immediately organized daily standups to track progress and assigned specific team members to focus on different areas: database optimization, caching implementation, and frontend performance. I personally dove deep into SQL query analysis using Django Silk, identified the most problematic queries, and worked closely with each developer to implement solutions. I also established a clear communication protocol with stakeholders to manage expectations.",
+            result: "We achieved 30-60% performance improvements within two weeks, enabling the platform to successfully handle thousands of orders per minute during peak events. The team became more cohesive through the challenge, and we established better monitoring and optimization practices for the future."
+          }
+        },
+        {
+          question: "Describe a situation where you had to mentor or develop a junior team member.",
+          answer: {
+            situation: "A junior developer joined our team at Chipta who was struggling with Django best practices and was spending too much time on tasks that should have been straightforward.",
+            task: "I needed to help them become productive quickly while building their confidence and ensuring code quality remained high.",
+            action: "I established regular one-on-one mentoring sessions, created comprehensive onboarding documentation, and implemented a buddy system where they could work alongside me on complex features. I also introduced code review sessions where we'd walk through their code together, explaining not just what needed to change, but why certain approaches were better.",
+            result: "Within 3 months, they became one of our most reliable developers and eventually took ownership of major features independently. The onboarding documentation I created reduced new developer onboarding time from 3-4 weeks to 5-7 days for future hires."
+          }
+        }
+      ]
+    },
+    {
+      category: "Technical Problem Solving",
+      questions: [
+        {
+          question: "Walk me through your approach to solving a complex technical problem.",
+          answer: {
+            situation: "At Chipta, we were experiencing mysterious intermittent payment failures that were affecting customer trust and revenue, but the failures seemed random and were difficult to reproduce.",
+            task: "I needed to identify the root cause of these payment failures and implement a reliable solution without disrupting the live payment processing system.",
+            action: "I started by implementing comprehensive logging around the entire payment flow, including integration points with external payment providers like Mollie and PayPal. I analyzed weeks of payment data to identify patterns, set up monitoring dashboards, and created a testing environment that could simulate the production payment flow. Through careful analysis, I discovered the issue was related to race conditions in our payment status updates during high-traffic periods.",
+            result: "I implemented a queue-based payment processing system using Django Channels and Redis that eliminated the race conditions. Payment failures dropped by 95%, and we processed tens of millions in transactions reliably. The monitoring system I built also helped prevent future payment issues."
+          }
+        },
+        {
+          question: "Tell me about a time you had to learn a new technology quickly to solve a problem.",
+          answer: {
+            situation: "During the COVID-19 pandemic, our clients at Chipta suddenly needed to pivot from physical events to virtual events, but we had no video conferencing integration in our platform.",
+            task: "I needed to quickly learn Zoom's API and OAuth integration to build a comprehensive virtual event management system within a tight 6-month deadline.",
+            action: "I dove deep into Zoom's API documentation, built several proof-of-concept integrations, and experimented with different OAuth flows. I created a testing environment with multiple Zoom accounts to understand the full user experience. I also researched similar integrations in other platforms to understand best practices and potential pitfalls.",
+            result: "I successfully built a complete Zoom integration that allowed automatic meeting creation, participant management, and separate access controls for different ticket types. 80% of our organizers adopted virtual events during the pandemic, which prevented major revenue loss for the company and our clients."
+          }
+        }
+      ]
+    },
+    {
+      category: "Project Management & Delivery",
+      questions: [
+        {
+          question: "Describe a time when you had to deliver a project under tight deadlines.",
+          answer: {
+            situation: "At Chipta, we needed to migrate our entire ticketing platform from PHP to Django while maintaining 100% uptime during our busy event season, with a hard deadline of 6 months due to legacy system maintenance costs.",
+            task: "I needed to plan and execute a complete platform migration without any service interruption, data loss, or functionality regression.",
+            action: "I broke the migration into phases, starting with the most critical backend systems while maintaining API compatibility. I implemented a comprehensive testing strategy using Django and Selenium, created detailed migration scripts, and established a rollback plan for each phase. I coordinated closely with the team to ensure parallel development of new features while migration was ongoing.",
+            result: "We completed the migration 2 weeks ahead of schedule with zero downtime and no data loss. The new Django platform was immediately more maintainable and performant, setting the foundation for all future development. Development velocity increased significantly after the migration."
+          }
+        },
+        {
+          question: "Tell me about a project that didn't go as planned and how you handled it.",
+          answer: {
+            situation: "At Tender-it, I was building a comprehensive tender discovery platform as the sole technical lead, but midway through development, the requirements changed significantly when we discovered our initial search approach wasn't meeting user needs.",
+            task: "I needed to rebuild the core search functionality using Elasticsearch while keeping the project on track and maintaining stakeholder confidence.",
+            action: "I immediately scheduled a meeting with the founders to discuss the technical challenges and proposed solutions. I created a detailed plan for implementing Elasticsearch, including migration strategies for existing data and a timeline for the new features. I also implemented the new search system incrementally, allowing users to test and provide feedback throughout the development process.",
+            result: "The Elasticsearch-powered search engine became our key differentiator, allowing users to filter and score hundreds of thousands of tenders effectively. This pivot actually improved our market position and became a major selling point that helped secure our subscription-based business model."
+          }
+        }
+      ]
+    },
+    {
+      category: "Collaboration & Communication",
+      questions: [
+        {
+          question: "Describe a time when you had to work with a difficult stakeholder or team member.",
+          answer: {
+            situation: "At SWIS, I was working with a client who had very specific design requirements that were technically challenging and kept changing their mind about key functionality, causing frustration within our development team.",
+            task: "I needed to maintain a positive client relationship while protecting my team from scope creep and ensuring we could deliver quality work on schedule.",
+            action: "I scheduled regular check-ins with the client to better understand their underlying business needs rather than just their stated requirements. I created visual mockups and prototypes to help them visualize the impact of their requests. I also established a clear change request process that included timeline and cost implications for any modifications.",
+            result: "The project was completed successfully and on time, with the client very satisfied with both the final product and the process. They became a repeat client, and the structured approach I developed became standard practice for our agency, reducing similar issues on future projects."
+          }
+        },
+        {
+          question: "Tell me about a time you had to explain complex technical concepts to non-technical stakeholders.",
+          answer: {
+            situation: "At Chipta, I needed to explain to the business owners why implementing a comprehensive testing suite was crucial for our platform's reliability, but they were concerned about the time investment and didn't understand the technical benefits.",
+            task: "I needed to communicate the business value of technical testing practices in terms that resonated with their priorities and concerns.",
+            action: "I prepared a presentation that focused on business impact rather than technical details. I showed them data about production bugs, the cost of downtime during peak events, and customer support tickets related to system issues. I also created simple analogies, comparing our testing suite to quality control in manufacturing, and demonstrated how testing would prevent the expensive emergency fixes we'd been doing.",
+            result: "They approved the testing initiative, which increased our code coverage from 15% to 85% and reduced production bugs by 60%. This also led to better communication patterns where I regularly translated technical decisions into business terms, improving overall project planning and prioritization."
+          }
+        }
+      ]
+    },
+    {
+      category: "Innovation & Improvement",
+      questions: [
+        {
+          question: "Tell me about a time when you identified an opportunity for improvement and took initiative to implement it.",
+          answer: {
+            situation: "At Chipta, I noticed that our deployment process was taking 2+ hours and causing significant stress for the team, with frequent deployment failures that required manual rollbacks.",
+            task: "I wanted to streamline our deployment process to enable more frequent, reliable releases without requiring explicit approval from management.",
+            action: "I researched CI/CD best practices and built a complete automated deployment pipeline using Ansible and Python. I implemented automated testing, deployment to multiple environments, rollback capabilities, and Slack notifications. I also created detailed documentation and trained the team on the new process.",
+            result: "Deployment time reduced from 2+ hours to 15 minutes, with a 90% reduction in deployment problems. This enabled multiple daily deployments and significantly improved our development velocity and team confidence. The system became a model for other projects in the company."
+          }
+        },
+        {
+          question: "Describe a time when you had to challenge the status quo or propose a better way of doing something.",
+          answer: {
+            situation: "At Chipta, the team was manually managing customer email communications, which was time-intensive and inconsistent, leading to poor customer experience and high support ticket volume.",
+            task: "I believed we could significantly improve customer engagement and reduce manual work by modernizing our email system, but needed to convince the team it was worth the development investment.",
+            action: "I analyzed our current email metrics and support tickets to build a business case. I then built a prototype HTML email system with responsive templates, dynamic content insertion, and automated personalization. I demonstrated the prototype to stakeholders and showed how it could improve both customer experience and operational efficiency.",
+            result: "The new email system increased email open rates by 45% and improved attendee engagement significantly. It also saved organizers considerable time and reduced support tickets, becoming one of our most valued features. The success of this initiative led to more trust in my technical recommendations."
+          }
+        }
+      ]
+    }
+  ],
+
   flowState: {
     question:
       "When you get lost in your work in a good way, what are you working on? What are the activities you would like to do more of in your career?",
