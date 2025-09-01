@@ -1430,14 +1430,28 @@ export const resume = {
           question:
             "Tell me about a time you had to learn a new technology quickly to solve a problem.",
           answer: {
-            situation:
-              "During the COVID-19 pandemic, our clients at Chipta suddenly needed to pivot from physical events to virtual events, but we had no video conferencing integration in our platform.",
-            task:
-              "I needed to quickly learn Zoom's API and OAuth integration to build a comprehensive virtual event management system within a tight 6-month deadline.",
-            action:
-              "I dove deep into Zoom's API documentation, built several proof-of-concept integrations, and experimented with different OAuth flows. I created a testing environment with multiple Zoom accounts to understand the full user experience. I also researched similar integrations in other platforms to understand best practices and potential pitfalls.",
-            result:
-              "I successfully built a complete Zoom integration that allowed automatic meeting creation, participant management, and separate access controls for different ticket types. 80% of our organizers adopted virtual events during the pandemic, which prevented major revenue loss for the company and our clients.",
+            title: "Zoom OAuth Integration During COVID",
+            situation: [
+              "COVID hit and clients needed virtual events",
+              "No Zoom integration in our platform",
+              "Event organizers needed seamless online solution"
+            ],
+            task: [
+              "Learn Zoom API and OAuth quickly",
+              "Integrate client accounts with dashboard",
+              "Enable automatic Zoom management for Chipta events"
+            ],
+            action: [
+              "Mastered Zoom OAuth and API documentation",
+              "Navigated strict app admittance process",
+              "Built dashboard integration for client accounts",
+              "Created automatic Zoom event management system"
+            ],
+            result: [
+              "Many clients successfully organized online events",
+              "Helped company survive COVID with less than 20% profit loss",
+              "Seamless Chipta-Zoom integration in production"
+            ],
           },
         },
       ],
