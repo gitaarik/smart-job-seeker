@@ -1339,36 +1339,28 @@ export const resume = {
           question:
             "Tell me about a time when you had to lead a difficult project or manage a challenging team situation.",
           answer: {
+            title: "React Native App with Struggling Developer",
             situation: [
-              "Leading React Native mobile app at Chipta",
-              "Developer struggling with new technology", 
-              "Limited documentation/resources",
-              "Frequent React Native library bugs",
-              "No clear solutions available"
+              "React Native mobile app at Chipta",
+              "Developer struggling with new/buggy technology", 
+              "Limited resources/documentation available"
             ],
             task: [
               "Guide developer through challenges",
-              "Deliver functional mobile app",
-              "Reduce check-in times", 
-              "Manage developer frustration",
+              "Deliver functional app",
               "Keep project on track"
             ],
             action: [
-              "Became problem-solver and mentor",
-              "Researched React Native source code",
-              "Tested GitHub workarounds",
-              "Created library bug patches",
+              "Mentored and problem-solved technical issues",
+              "Researched source code and created patches",
               "Made key architecture decisions",
-              "Established debugging approach",
-              "Taught problem-solving techniques"
+              "Established systematic debugging process"
             ],
             result: [
-              "Delivered app on schedule",
-              "Saved $50-200 per event",
-              "70% faster check-ins",
+              "Delivered on schedule",
+              "Saved $50-200 per event, 70% faster check-ins",
               "Developer became mobile expert",
-              "Created new tech adoption process",
-              "App = key selling point (40% customers)"
+              "Created process for adopting new tech"
             ],
           },
         },

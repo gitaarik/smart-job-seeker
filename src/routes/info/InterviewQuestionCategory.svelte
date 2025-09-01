@@ -44,6 +44,12 @@
 
         {#if isExpanded(categoryIndex, questionIndex)}
           <div class="space-y-4">
+            <!-- Summary Title -->
+            {#if questionItem.answer.title}
+              <div class="bg-slate-100 border border-slate-200 rounded-lg p-3 mb-4">
+                <h6 class="font-bold text-slate-800 text-base">{questionItem.answer.title}</h6>
+              </div>
+            {/if}
             <!-- Situation -->
             <div class="bg-blue-50/30 border border-blue-200/50 rounded-lg p-4">
               <div class="flex items-start mb-2">
