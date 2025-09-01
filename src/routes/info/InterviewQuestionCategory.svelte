@@ -57,9 +57,17 @@
                   <h5 class="font-semibold text-blue-800 text-sm mb-2">
                     SITUATION
                   </h5>
-                  <p class="text-blue-700 text-sm leading-relaxed">
-                    {questionItem.answer.situation}
-                  </p>
+                  {#if Array.isArray(questionItem.answer.situation)}
+                    <ul class="text-blue-700 text-sm leading-relaxed list-disc list-inside space-y-1">
+                      {#each questionItem.answer.situation as item}
+                        <li>{item}</li>
+                      {/each}
+                    </ul>
+                  {:else}
+                    <p class="text-blue-700 text-sm leading-relaxed">
+                      {questionItem.answer.situation}
+                    </p>
+                  {/if}
                 </div>
               </div>
             </div>
@@ -79,9 +87,17 @@
                   <h5 class="font-semibold text-yellow-800 text-sm mb-2">
                     TASK
                   </h5>
-                  <p class="text-yellow-700 text-sm leading-relaxed">
-                    {questionItem.answer.task}
-                  </p>
+                  {#if Array.isArray(questionItem.answer.task)}
+                    <ul class="text-yellow-700 text-sm leading-relaxed list-disc list-inside space-y-1">
+                      {#each questionItem.answer.task as item}
+                        <li>{item}</li>
+                      {/each}
+                    </ul>
+                  {:else}
+                    <p class="text-yellow-700 text-sm leading-relaxed">
+                      {questionItem.answer.task}
+                    </p>
+                  {/if}
                 </div>
               </div>
             </div>
@@ -101,9 +117,17 @@
                   <h5 class="font-semibold text-purple-800 text-sm mb-2">
                     ACTION
                   </h5>
-                  <p class="text-purple-700 text-sm leading-relaxed">
-                    {questionItem.answer.action}
-                  </p>
+                  {#if Array.isArray(questionItem.answer.action)}
+                    <ul class="text-purple-700 text-sm leading-relaxed list-disc list-inside space-y-1">
+                      {#each questionItem.answer.action as item}
+                        <li>{item}</li>
+                      {/each}
+                    </ul>
+                  {:else}
+                    <p class="text-purple-700 text-sm leading-relaxed">
+                      {questionItem.answer.action}
+                    </p>
+                  {/if}
                 </div>
               </div>
             </div>
@@ -123,9 +147,17 @@
                   <h5 class="font-semibold text-green-800 text-sm mb-2">
                     RESULT
                   </h5>
-                  <p class="text-green-700 text-sm leading-relaxed">
-                    {questionItem.answer.result}
-                  </p>
+                  {#if Array.isArray(questionItem.answer.result)}
+                    <ul class="text-green-700 text-sm leading-relaxed list-disc list-inside space-y-1">
+                      {#each questionItem.answer.result as item}
+                        <li>{item}</li>
+                      {/each}
+                    </ul>
+                  {:else}
+                    <p class="text-green-700 text-sm leading-relaxed">
+                      {questionItem.answer.result}
+                    </p>
+                  {/if}
                 </div>
               </div>
             </div>

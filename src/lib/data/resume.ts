@@ -1339,14 +1339,37 @@ export const resume = {
           question:
             "Tell me about a time when you had to lead a difficult project or manage a challenging team situation.",
           answer: {
-            situation:
-              "At Chipta, I was leading the development of our React Native mobile ticket scanning app with a developer who was struggling with the project. Since React Native was relatively new technology at the time, documentation was limited, online resources were scarce, and we frequently encountered bugs in React Native itself and its libraries that had no clear solutions.",
-            task:
-              "I needed to guide the developer through these technical challenges while ensuring we delivered a functional mobile app that would save organizers money and reduce check-in times. The developer was becoming increasingly frustrated with the constant roadblocks and lack of reliable resources to solve his problems, which was affecting his motivation and threatening project progress.",
-            action:
-              "I took on the role of technical problem-solver and mentor. When the developer encountered complex issues, I would research solutions by diving deep into React Native's source code, exploring GitHub issues, testing workarounds, and sometimes creating patches for library bugs. I made key technical decisions about which libraries to use, when to implement custom solutions, and how to architect around React Native's limitations. I also established a systematic debugging approach and taught the developer how to effectively search for solutions to emerging technology problems.",
-            result:
-              "We successfully delivered the React Native app that eliminated expensive third-party solutions, saving organizers $50-200 per event and reducing check-in times by 70%. The developer gained confidence with React Native and became our go-to mobile expert. The systematic problem-solving approach I developed became our standard process for adopting new technologies, and the app became a key selling point for 40% of our new customers.",
+            situation: [
+              "Leading React Native mobile app development at Chipta",
+              "Developer struggling with new technology challenges", 
+              "Limited documentation and online resources available",
+              "Frequent bugs in React Native libraries",
+              "No clear solutions for encountered issues"
+            ],
+            task: [
+              "Guide developer through technical challenges",
+              "Deliver functional mobile app",
+              "Reduce event check-in times", 
+              "Manage developer's frustration and motivation",
+              "Keep project on track despite roadblocks"
+            ],
+            action: [
+              "Became technical problem-solver and mentor",
+              "Researched solutions in React Native source code",
+              "Explored GitHub issues and tested workarounds",
+              "Created patches for library bugs",
+              "Made key technical and architecture decisions",
+              "Established systematic debugging approach",
+              "Taught effective problem-solving techniques"
+            ],
+            result: [
+              "Delivered React Native app on schedule",
+              "Saved $50-200 per event (eliminated third-party solutions)",
+              "70% reduction in check-in times",
+              "Developer became our mobile expert",
+              "Created standard process for new technologies",
+              "App became key selling point (40% of new customers)"
+            ],
           },
         },
         {
