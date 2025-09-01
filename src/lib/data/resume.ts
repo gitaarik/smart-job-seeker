@@ -1360,7 +1360,6 @@ export const resume = {
               "Delivered on time",
               "Boosted the revenue by +40%",
               "Developer became our React Native expert",
-              "Created adoption process for new tech",
             ],
           },
         },
