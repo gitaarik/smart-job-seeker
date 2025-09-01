@@ -1367,14 +1367,31 @@ export const resume = {
           question:
             "Describe a situation where you had to mentor or develop a junior team member.",
           answer: {
-            situation:
-              "A junior developer joined our team at Chipta who was struggling with Django best practices and was spending too much time on tasks that should have been straightforward.",
-            task:
-              "I needed to help them become productive quickly while building their confidence and ensuring code quality remained high.",
-            action:
-              "I established regular one-on-one mentoring sessions, created comprehensive onboarding documentation, and implemented a buddy system where they could work alongside me on complex features. I also introduced code review sessions where we'd walk through their code together, explaining not just what needed to change, but why certain approaches were better.",
-            result:
-              "Within 3 months, they became one of our most reliable developers and eventually took ownership of major features independently. The onboarding documentation I created reduced new developer onboarding time from 3-4 weeks to 5-7 days for future hires.",
+            title: "Onboarding Junior Developer to Django System",
+            situation: [
+              "New junior developer joined comprehensive Django project",
+              "Developer needed to learn Django framework",
+              "Complex system with frontend integration required",
+              "Multiple new skills needed simultaneously"
+            ],
+            task: [
+              "Guide developer through system architecture",
+              "Teach Django best practices",
+              "Train on frontend technologies",
+              "Make developer productive on assigned projects"
+            ],
+            action: [
+              "Created structured learning plan covering Django and frontend",
+              "Paired programming sessions to demonstrate system",
+              "Regular code reviews with detailed explanations",
+              "Gradually increased project complexity and responsibility"
+            ],
+            result: [
+              "Developer became productive within first month",
+              "Successfully delivered assigned project features",
+              "Developer gained confidence in both Django and frontend",
+              "Created reusable onboarding process for future hires"
+            ],
           },
         },
       ],
