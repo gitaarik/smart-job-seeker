@@ -1403,14 +1403,27 @@ export const resume = {
           question:
             "Walk me through your approach to solving a complex technical problem.",
           answer: {
-            situation:
-              "At Chipta, we were experiencing mysterious intermittent payment failures that were affecting customer trust and revenue, but the failures seemed random and were difficult to reproduce.",
-            task:
-              "I needed to identify the root cause of these payment failures and implement a reliable solution without disrupting the live payment processing system.",
-            action:
-              "I started by implementing comprehensive logging around the entire payment flow, including integration points with external payment providers like Mollie and PayPal. I analyzed weeks of payment data to identify patterns, set up monitoring dashboards, and created a testing environment that could simulate the production payment flow. Through careful analysis, I discovered the issue was related to race conditions in our payment status updates during high-traffic periods.",
-            result:
-              "I implemented a queue-based payment processing system using Django Channels and Redis that eliminated the race conditions. Payment failures dropped by 95%, and we processed tens of millions in transactions reliably. The monitoring system I built also helped prevent future payment issues.",
+            title: "Ticketshop Performance for Big Events",
+            situation: [
+              "Big event clients selling thousands of tickets",
+              "Ticketshop couldn't handle large order volumes",
+              "Performance bottlenecks in order processing"
+            ],
+            task: [
+              "Speed up ticketshop order processing",
+              "Handle high-volume ticket sales",
+              "Work with DevOps on scaling"
+            ],
+            action: [
+              "Optimized SQL queries - got 30-60% speed boost",
+              "Refactored Python/Django order processing code",
+              "Worked with DevOps on flexible scaling setup"
+            ],
+            result: [
+              "Big event clients successfully onboarded",
+              "30-60% faster ticket order processing",
+              "Scalable ticketshop ready for large events"
+            ],
           },
         },
         {
