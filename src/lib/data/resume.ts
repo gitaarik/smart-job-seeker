@@ -1340,13 +1340,13 @@ export const resume = {
             "Tell me about a time when you had to lead a difficult project or manage a challenging team situation.",
           answer: {
             situation:
-              "At Chipta, I was leading a team of 5 developers when we faced a critical performance crisis during our peak ticket sales season. The platform was struggling to handle thousands of concurrent users, causing frequent timeouts and failed transactions.",
+              "At Chipta, I was leading the development of our React Native mobile ticket scanning app with a developer who was struggling with the project. Since React Native was relatively new technology at the time, documentation was limited, online resources were scarce, and we frequently encountered bugs in React Native itself and its libraries that had no clear solutions.",
             task:
-              "I needed to quickly identify and resolve the performance bottlenecks while keeping the team motivated and organized during this high-pressure situation. We had to maintain system availability while implementing fixes.",
+              "I needed to guide the developer through these technical challenges while ensuring we delivered a functional mobile app that would save organizers money and reduce check-in times. The developer was becoming increasingly frustrated with the constant roadblocks and lack of reliable resources to solve his problems, which was affecting his motivation and threatening project progress.",
             action:
-              "I immediately organized daily standups to track progress and assigned specific team members to focus on different areas: database optimization, caching implementation, and frontend performance. I personally dove deep into SQL query analysis using Django Silk, identified the most problematic queries, and worked closely with each developer to implement solutions. I also established a clear communication protocol with stakeholders to manage expectations.",
+              "I took on the role of technical problem-solver and mentor. When the developer encountered complex issues, I would research solutions by diving deep into React Native's source code, exploring GitHub issues, testing workarounds, and sometimes creating patches for library bugs. I made key technical decisions about which libraries to use, when to implement custom solutions, and how to architect around React Native's limitations. I also established a systematic debugging approach and taught the developer how to effectively search for solutions to emerging technology problems.",
             result:
-              "We achieved 30-60% performance improvements within two weeks, enabling the platform to successfully handle thousands of orders per minute during peak events. The team became more cohesive through the challenge, and we established better monitoring and optimization practices for the future.",
+              "We successfully delivered the React Native app that eliminated expensive third-party solutions, saving organizers $50-200 per event and reducing check-in times by 70%. The developer gained confidence with React Native and became our go-to mobile expert. The systematic problem-solving approach I developed became our standard process for adopting new technologies, and the app became a key selling point for 40% of our new customers.",
           },
         },
         {
