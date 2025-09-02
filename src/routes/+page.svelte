@@ -34,10 +34,10 @@
   import Quote from "$lib/components/Quote.svelte";
   import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
 
-  const metaTitle = "Rik Wanders - Freelance Full Stack Developer";
+  const metaTitle = "Rik Wanders - Senior Full Stack Developer";
   const metaUrl = "https://www.rikwanders.tech/";
   const metaDescription =
-    "Freelance Full Stack Developer available for remote projects. Specialized in application development, system optimization, and technical strategy consulting. Focused on short-term engagements (2-6 months).";
+    "Senior Full Stack Developer available for remote projects. Specialized in application development, system optimization, and technical strategy consulting. Focused on short-term engagements (2-6 months).";
   const metaImg = "https://www.rikwanders.tech/images/logo.png";
 
   let elAboutSection: HTMLElement;
@@ -85,7 +85,7 @@
 </script>
 
 <svelte:head>
-  <title>Rik Wanders - Freelance Full Stack Developer</title>
+  <title>Rik Wanders - Senior Full Stack Developer</title>
 
   <!-- Umami Analytics -->
   <script
@@ -135,9 +135,11 @@
         >
           Rik Wanders
         </h1>
+
         <h2 data-aos="fade" class="mt-4 text-xl">
-          Freelance Full Stack Developer
+          Senior Full Stack Developer
         </h2>
+
         <h3 data-aos="fade" class="mt-4">
           Python • Node.js • CI/CD • DevOps
         </h3>
