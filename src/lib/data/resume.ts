@@ -1463,14 +1463,33 @@ export const resume = {
           question:
             "Describe a time when you had to deliver a project under tight deadlines.",
           answer: {
-            situation:
-              "At Chipta, we needed to migrate our entire ticketing platform from PHP to Django while maintaining 100% uptime during our busy event season, with a hard deadline of 6 months due to legacy system maintenance costs.",
-            task:
-              "I needed to plan and execute a complete platform migration without any service interruption, data loss, or functionality regression.",
-            action:
-              "I broke the migration into phases, starting with the most critical backend systems while maintaining API compatibility. I implemented a comprehensive testing strategy using Django and Selenium, created detailed migration scripts, and established a rollback plan for each phase. I coordinated closely with the team to ensure parallel development of new features while migration was ongoing.",
-            result:
-              "We completed the migration 2 weeks ahead of schedule with zero downtime and no data loss. The new Django platform was immediately more maintainable and performant, setting the foundation for all future development. Development velocity increased significantly after the migration.",
+            title: "TicketSwap Integration for Major Event Organizer",
+            situation: [
+              "Major event organizer prospect wanted TicketSwap integration for their events",
+              "Client needed secure second-hand ticket validation through TicketSwap platform",
+              "Hard deadline of 2 weeks to deliver integration or lose the prospect",
+            ],
+            task: [
+              "Build integration with TicketSwap's REST API system",
+              "Implement secure ticket validation for second-hand sales",
+              "Ensure only legitimate tickets could be resold through TicketSwap",
+              "Deliver working integration within 2-week deadline to close the deal",
+            ],
+            action: [
+              "Immediately contacted TicketSwap's technical team for API access",
+              "Worked extended hours to understand their API specifications",
+              "Implemented secure integration validating second-hand tickets",
+              "Built dashboard controls for organizers to enable/disable resale",
+              "Created comprehensive testing suite for ticket validation",
+              "Coordinated with both TicketSwap and the prospect throughout development",
+            ],
+            result: [
+              "Delivered TicketSwap integration within 2-week deadline",
+              "Secured the major event organizer as a client",
+              "Ticket fraud rates dropped to near zero for integrated events",
+              "Integration became competitive advantage for future sales",
+              "Led to 15% increase in overall ticket sales through reduced fraud",
+            ],
           },
         },
         {
