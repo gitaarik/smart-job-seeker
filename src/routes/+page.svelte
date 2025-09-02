@@ -45,6 +45,7 @@
 
   const currentYear: number = (new Date()).getFullYear();
   const devYearsExperience: number = currentYear - 2007;
+  const pyJsYearsExperience: number = currentYear - 2013;
   const remoteWorkYearsExperience: number = currentYear - 2020;
 
   function handleMoreInfo() {
@@ -213,7 +214,7 @@
               </div>
 
               <p>
-                With over {devYearsExperience} years of Full Stack Python &amp;
+                With over {pyJsYearsExperience} years of Full Stack Python &amp;
                 Node.js development experience, I specialize in building and
                 scaling complex, high-traffic and data-heavy web applications
                 with perfect user experience. My skills cover the entire
@@ -257,7 +258,7 @@
               </p>
             </div>
 
-            <div class="max-lg:hidden">
+            <div class="max-lg:hidden w-290">
               <enhanced:img
                 src={profilePhoto}
                 alt=""
