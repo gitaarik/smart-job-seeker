@@ -1491,14 +1491,28 @@ export const resume = {
           question:
             "Tell me about a project that didn't go as planned and how you handled it.",
           answer: {
-            situation:
-              "At Tender-it, I was building a comprehensive tender discovery platform as the sole technical lead, but midway through development, the requirements changed significantly when we discovered our initial search approach wasn't meeting user needs.",
-            task:
-              "I needed to rebuild the core search functionality using Elasticsearch while keeping the project on track and maintaining stakeholder confidence.",
-            action:
-              "I immediately scheduled a meeting with the founders to discuss the technical challenges and proposed solutions. I created a detailed plan for implementing Elasticsearch, including migration strategies for existing data and a timeline for the new features. I also implemented the new search system incrementally, allowing users to test and provide feedback throughout the development process.",
-            result:
-              "The Elasticsearch-powered search engine became our key differentiator, allowing users to filter and score hundreds of thousands of tenders effectively. This pivot actually improved our market position and became a major selling point that helped secure our subscription-based business model.",
+            title: "Visitor Management Tool Search Engine Complexity",
+            situation: [
+              "Building visitor management system for event organizers at Chipta",
+              "Initial requirements seemed straightforward: search and filter attendees",
+              "Underestimated complexity of search engine with ranking and filtering",
+            ],
+            task: [
+              "Create advanced search system with filtering and ranking capabilities",
+              "Handle complex attendee data with multiple search criteria",
+              "Deliver intuitive interface that saves organizers time",
+            ],
+            action: [
+              "Discovered numerous edge cases during development (partial names, special characters, etc.)",
+              "Had to redesign search algorithm to handle complex filtering combinations", 
+              "Implemented incremental search improvements based on real organizer feedback",
+              "Added comprehensive testing for various search scenarios and edge cases",
+            ],
+            result: [
+              "Successfully delivered comprehensive attendee management system",
+              "Saved organizers 5-8 hours per event with 90% adoption rate",
+              "Learned valuable lesson about complexity hiding in seemingly simple requirements",
+            ],
           },
         },
       ],
