@@ -1,7 +1,10 @@
 <script lang="ts">
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { resume } from "$lib/data/resume";
-  import { formatDateRangeCompact, formatDateRangeYear } from "$lib/tools/date-utils";
+  import {
+    formatDateRangeCompact,
+    formatDateRangeYear,
+  } from "$lib/tools/date-utils";
   import {
     faEnvelope,
     faGlobe,
@@ -163,7 +166,7 @@
   </div>
 
   <!-- Skills -->
-  <div class="my-4 page-break-before">
+  <div class="my-4 break-inside-avoid">
     <h2 class="text-sm font-bold mb-2 border-b-2 border-black">
       SKILLS
     </h2>
@@ -181,7 +184,7 @@
   </div>
 
   <!-- Education -->
-  <!-- <div class="my-3 page-break-before"> -->
+  <!-- <div class="my-3 break-inside-avoid"> -->
   <!--   <h2 class="text-sm font-bold mb-2 border-b-2 border-black"> -->
   <!--     EDUCATION -->
   <!--   </h2> -->
@@ -230,7 +233,7 @@
   <!-- </div> -->
 
   <!-- Projects -->
-  <div class="my-4">
+  <div class="my-4 break-inside-avoid">
     <h2 class="text-sm font-bold mb-2 border-b-2 border-black">
       NOTABLE PROJECTS
     </h2>
@@ -238,7 +241,15 @@
     {#each resume.projects.slice(0, 3) as project (project.name)}
       <div class="mb-2">
         <div class="text-xs font-bold mb-1">
-          {project.name} | <a href={project.url} target="_blank"><FontAwesomeIcon icon={faGithub} class="w-3" title="GitHub" /> <FontAwesomeIcon icon={faStar} title="Stars" class="w-3" /> <span class="underline">{project.stars}</span></a> | {formatDateRangeYear(project.startDate, project.endDate)}
+          {project.name} | <a
+            href={project.url}
+            target="_blank"
+          ><FontAwesomeIcon icon={faGithub} class="w-3" title="GitHub" />
+            <FontAwesomeIcon icon={faStar} title="Stars" class="w-3" /> <span
+              class="underline"
+            >{project.stars}</span></a> | {
+            formatDateRangeYear(project.startDate, project.endDate)
+          }
         </div>
 
         <div class="text-xs">

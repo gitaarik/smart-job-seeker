@@ -32,7 +32,9 @@ async function exportResumeToPDF() {
     route: `resume?type=${type}`,
     dirName: `${type || "full"}`,
     description: `ATS Resume (${
-      type.replace("-", " ").replace(/\b\w/g, (l) => l.toUpperCase())
+      type
+        ? type.replace("-", " ").replace(/\b\w/g, (l) => l.toUpperCase())
+        : "Full"
     })`,
     isATS: true,
   }));

@@ -819,7 +819,7 @@ export const resume = {
       keywords: [
         "Git",
         "GitHub",
-        "GitHub Flow",
+        "Git Flow",
         "Claude Code",
         "Cursor",
         "VSCode",
@@ -1372,25 +1372,25 @@ export const resume = {
               "New junior developer joined comprehensive Django project",
               "Developer needed to learn Django framework",
               "Complex system with frontend integration required",
-              "Multiple new skills needed simultaneously"
+              "Multiple new skills needed simultaneously",
             ],
             task: [
               "Guide developer through system architecture",
               "Teach Django best practices",
               "Train on frontend technologies",
-              "Make developer productive on assigned projects"
+              "Make developer productive on assigned projects",
             ],
             action: [
               "Created structured learning plan covering Django and frontend",
               "Paired programming sessions to demonstrate system",
               "Regular code reviews with detailed explanations",
-              "Gradually increased project complexity and responsibility"
+              "Gradually increased project complexity and responsibility",
             ],
             result: [
               "Developer became productive within first month",
               "Successfully delivered assigned project features",
               "Developer gained confidence in both Django and frontend",
-              "Created reusable onboarding process for future hires"
+              "Created reusable onboarding process for future hires",
             ],
           },
         },
@@ -1407,22 +1407,22 @@ export const resume = {
             situation: [
               "Big event clients selling thousands of tickets",
               "Ticketshop couldn't handle large order volumes",
-              "Performance bottlenecks in order processing"
+              "Performance bottlenecks in order processing",
             ],
             task: [
               "Speed up ticketshop order processing",
               "Handle high-volume ticket sales",
-              "Work with DevOps on scaling"
+              "Work with DevOps on scaling",
             ],
             action: [
               "Optimized SQL queries - got 30-60% speed boost",
               "Refactored Python/Django order processing code",
-              "Worked with DevOps on flexible scaling setup"
+              "Worked with DevOps on flexible scaling setup",
             ],
             result: [
               "Big event clients successfully onboarded",
               "30-60% faster ticket order processing",
-              "Scalable ticketshop ready for large events"
+              "Scalable ticketshop ready for large events",
             ],
           },
         },
@@ -1434,23 +1434,23 @@ export const resume = {
             situation: [
               "COVID hit and clients needed virtual events",
               "No Zoom integration in our platform",
-              "Event organizers needed seamless online solution"
+              "Event organizers needed seamless online solution",
             ],
             task: [
               "Learn Zoom API and OAuth quickly",
               "Integrate client accounts with dashboard",
-              "Enable automatic Zoom management for Chipta events"
+              "Enable automatic Zoom management for Chipta events",
             ],
             action: [
               "Mastered Zoom OAuth and API documentation",
               "Navigated strict app admittance process",
               "Built dashboard integration for client accounts",
-              "Created automatic Zoom event management system"
+              "Created automatic Zoom event management system",
             ],
             result: [
               "Many clients successfully organized online events",
               "Helped company survive COVID with less than 20% profit loss",
-              "Seamless Chipta-Zoom integration in production"
+              "Seamless Chipta-Zoom integration in production",
             ],
           },
         },
