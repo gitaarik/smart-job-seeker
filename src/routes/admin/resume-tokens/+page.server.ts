@@ -1,7 +1,6 @@
 import { redirect } from '@sveltejs/kit'
 import { prisma } from '$lib/db'
 import type { PageServerLoad, Actions } from './$types'
-import { v4 as uuidv4 } from 'uuid'
 
 export const load: PageServerLoad = async ({ locals }) => {
   if (!locals.user) {
@@ -56,7 +55,7 @@ export const actions: Actions = {
     }
 
     try {
-      const token = uuidv4()
+      const token = Math.random().toString(36).substring(2, 12)
       const expiresAt = expiresAtStr ? new Date(expiresAtStr) : null
       const maxViews = maxViewsStr ? parseInt(maxViewsStr) : null
 

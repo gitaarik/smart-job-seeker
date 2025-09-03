@@ -66,7 +66,7 @@
   }
 
   function copyToClipboard(token: string) {
-    const url = `${window.location.origin}/resume.pdf?token=${token}`
+    const url = `${window.location.origin}/resume.pdf?t=${token}`
     navigator.clipboard.writeText(url).then(() => {
       alert('Resume URL copied to clipboard!')
     }).catch(() => {
