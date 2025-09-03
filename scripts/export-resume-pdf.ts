@@ -20,6 +20,7 @@ async function exportResumeToPDF() {
 
   // Define the versions to create
   const resumeTypes = [
+    "", // Full resume
     "fullstack-python",
     "fullstack-django",
     "fullstack-react",
@@ -29,7 +30,7 @@ async function exportResumeToPDF() {
 
   const versions = resumeTypes.map((type) => ({
     route: `resume?type=${type}`,
-    dirName: `${type}`,
+    dirName: `${type || "full"}`,
     description: `ATS Resume (${
       type.replace("-", " ").replace(/\b\w/g, (l) => l.toUpperCase())
     })`,

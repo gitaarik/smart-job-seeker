@@ -908,24 +908,6 @@ export const resume = {
 
   projects: [
     {
-      name: "Django Admin Relation Links",
-      startDate: "2017-03",
-      endDate: "2020-12",
-      summary:
-        "Django Admin navigation enhancement, simplifying navigation between related database objects. Open-sourced on GitHub and PyPi. Effectively used at Chipta & Tender-it.",
-      description:
-        "Enhanced Django Admin Navigation with an open source Python package released on PyPi, gaining 108 stars on GitHub. Succesfully employed at projects at Chipta & Tender-it. Engaged with developers in GitHub Issues & Pull Requests.",
-      highlights: [
-        "Conceived Open-Source Python package providing navigation enhancements in Django Admin",
-        "Received appreciation in community with 108 GitHub stars",
-        "Engaged with users handling GitHub Issues and Pull Requests",
-        "Employed library succesfully in projects at Chipta",
-      ],
-      url: "https://github.com/gitaarik/django-admin-relation-links",
-      stars: 108,
-    },
-
-    {
       name: "LitState",
       startDate: "2020-11",
       endDate: "2023-01",
@@ -942,6 +924,24 @@ export const resume = {
       ],
       url: "https://github.com/gitaarik/lit-state",
       stars: 143,
+    },
+
+    {
+      name: "Django Admin Relation Links",
+      startDate: "2017-03",
+      endDate: "2020-12",
+      summary:
+        "Django Admin navigation enhancement, simplifying navigation between related database objects. Open-sourced on GitHub and PyPi. Effectively used at Chipta & Tender-it.",
+      description:
+        "Enhanced Django Admin Navigation with an open source Python package released on PyPi, gaining 108 stars on GitHub. Succesfully employed at projects at Chipta & Tender-it. Engaged with developers in GitHub Issues & Pull Requests.",
+      highlights: [
+        "Conceived Open-Source Python package providing navigation enhancements in Django Admin",
+        "Received appreciation in community with 108 GitHub stars",
+        "Engaged with users handling GitHub Issues and Pull Requests",
+        "Employed library succesfully in projects at Chipta",
+      ],
+      url: "https://github.com/gitaarik/django-admin-relation-links",
+      stars: 108,
     },
 
     {
