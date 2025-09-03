@@ -1466,17 +1466,19 @@ export const resume = {
             title: "TicketSwap Integration for Major Event Organizer",
             situation: [
               "Major event organizer prospect required TicketSwap integration",
-              "Hard deadline of 2 weeks to deliver or lose the prospect",
+              "Hard deadline of 3 weeks to deliver or lose the prospect",
+              "Complex coordination needed with external development team",
             ],
             task: [
               "Build secure TicketSwap API integration for second-hand ticket validation",
-              "Deliver working solution within 2-week deadline to close the deal",
+              "Coordinate with TicketSwap developers on protocols and implementation steps",
+              "Deliver working solution within 3-week deadline to close the deal",
             ],
             action: [
-              "Contacted TicketSwap's technical team and worked extended hours",
-              "Implemented secure integration with comprehensive testing suite",
-              "Built dashboard controls for organizers to manage resale settings",
-              "Coordinated with both TicketSwap and prospect throughout development",
+              "Contacted TicketSwap's technical team to establish communication protocols",
+              "Coordinated step-by-step implementation process with their developers",
+              "Built secure integration with comprehensive testing suite",
+              "Managed coordination between TicketSwap team, prospect, and internal stakeholders",
             ],
             result: [
               "Delivered integration on time and secured the client",
