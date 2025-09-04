@@ -262,7 +262,7 @@
                 My experience includes designing RESTful APIs, implementing
                 OAuth services, and building comprehensive CI/CD systems. I've
                 optimized SQL queries and Python processes, implemented caching
-                strategies, and bring solid DevOps experience alongside strong
+                strategies, and have solid DevOps experience alongside strong
                 frontend development skills. I have deep experience with Django
                 and React while being comfortable working across the full stack
                 with different technologies.

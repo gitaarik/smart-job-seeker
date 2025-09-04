@@ -137,7 +137,7 @@ export const resume = {
       {
         title: "Mobile Revenue Transformation",
         description:
-          "Built React Native mobile apps that increased revenue by 40% and modernized frontend interfaces with React, increasing user engagement by 30%. This mobile-first approach opened entirely new revenue streams and customer segments.",
+          "Built React Native mobile apps that contributed to a 40% revenue increase and modernized frontend interfaces with React, increasing user engagement by 30%. This mobile-first approach opened entirely new revenue streams and customer segments.",
         impact: "40% revenue increase from mobile apps",
         metrics: "30% increase in user engagement",
       },
@@ -161,7 +161,7 @@ export const resume = {
       startDate: "2014-09",
       endDate: "2024-06",
       summary:
-        "Led teams of 3-5 developers at innovative ticketing platform for over 10 years, scaling the platform from concept to processing thousands of orders per minute. Optimed platform performance by 30-60%, implemented comprehensive testing suites, and orchestrated CI/CD systems. Built React Native mobile apps that increased revenue by 40%, modernized frontend interfaces with React, increasing user engagement by 30%. And integrated critical payment systems processing tens of millions in transactions.",
+        "Led teams of 3-5 developers at innovative ticketing platform for over 10 years, scaling the platform from concept to processing thousands of orders per minute. Optimed platform performance by 30-60%, implemented comprehensive testing suites, and orchestrated CI/CD systems. Built React Native mobile apps that contributed to a 40% revenue increase, modernized frontend interfaces with React, increasing user engagement by 30%. And integrated critical payment systems processing tens of millions in transactions.",
       logo: "/src/lib/images/company-logos/chipta-logo.png",
 
       highlights: [
@@ -198,7 +198,8 @@ export const resume = {
         {
           icon: faGlobe,
           description:
-            "Supercharged scalability & boosted revenue +40%, by leading ticket scan app creation using React Native & WebSockets",
+            "Contributed to scalability & 40% revenue growth by leading ticket scan app development with React Native & WebSockets",
+          // "Supercharged scalability & boosted revenue +40%, by leading ticket scan app creation using React Native & WebSockets",
           // "Led ticket scan app creation using React Native & WebSockets, supercharging scalability and increasing revenue by +40%",
           tags: ["fullstack-react", "fullstack-svelte"],
         },
@@ -1357,8 +1358,9 @@ export const resume = {
               "Made architecture decisions",
             ],
             result: [
-              "Delivered on time",
-              "Boosted the revenue by +40%",
+              "Delivered on time before festival season start",
+              "Supercharged scalability with infinite reach",
+              "Contributed to +40% revenue increase",
               "Developer became our React Native expert",
             ],
           },
@@ -1504,7 +1506,7 @@ export const resume = {
             ],
             action: [
               "Discovered numerous edge cases during development (partial names, special characters, etc.)",
-              "Had to redesign search algorithm to handle complex filtering combinations", 
+              "Had to redesign search algorithm to handle complex filtering combinations",
               "Implemented incremental search improvements based on real organizer feedback",
               "Added comprehensive testing for various search scenarios and edge cases",
             ],
