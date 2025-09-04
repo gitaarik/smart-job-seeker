@@ -210,6 +210,16 @@
           >
             <div class="text-base/7 tracking-[0.1px]">
               <div
+                class="max-lg:hidden float-right w-full max-w-[265px] pl-4 pb-4"
+              >
+                <enhanced:img
+                  src={profilePhoto}
+                  alt="Rik Wanders"
+                  width="265"
+                />
+              </div>
+
+              <div
                 class="max-xs:hidden lg:hidden float-right w-full max-w-[200px] pl-3 pb-3"
               >
                 <enhanced:img
@@ -240,36 +250,41 @@
               </div>
 
               <p class="my-4">
-                I particularly enjoy projects where I can take a complex
-                business requirement and break it down into elegant technical
-                solutions. I deliver complete technical solutions on time that
-                produce real results.
+                I've worked with systems processing tens of millions in payment
+                transactions, handling traffic peaks of thousands of orders per
+                minute, and managed databases with millions of records. I've led
+                an agile development team of 3-5 people in a startup
+                environment, implemented strict code review policies,
+                established TDD methodologies and architected test suites.
               </p>
 
               <p class="my-4">
-                I've worked fully remote for the last 5 years, collaborating
-                with, and leading distributed agile teams across different time
-                zones and cultures. This experience has refined my communication
-                skills and ability to work independently while maintaining
-                strong team alignment.
+                My experience includes designing RESTful APIs, implementing
+                OAuth services, and building comprehensive CI/CD systems. I've
+                optimized SQL queries and Python processes, implemented caching
+                strategies, and bring solid DevOps experience alongside strong
+                frontend development skills. I have deep experience with Django
+                and React while being comfortable working across the full stack
+                with different technologies.
               </p>
 
               <p>
-                I'm always interested in the latest developments in the software
-                industry. By integrating AI into my development workflow, I'm
-                able to speed up repetitive development tasks and focus on
-                quality and architecture. All this while maintaining current
+                I've worked fully remote for the last 5 years, leading and
+                collaborating with distributed agile teams across different time
+                zones. I stay current with industry developments and integrate
+                AI into my development workflow to speed up repetitive tasks and
+                focus on quality and architecture while maintaining current
                 security best practices.
               </p>
             </div>
 
-            <div class="max-lg:hidden w-290">
-              <enhanced:img
-                src={profilePhoto}
-                alt=""
-                aria-hidden="true"
-              />
-            </div>
+            <!-- <div class="max-lg:hidden w-290"> -->
+            <!--   <enhanced:img -->
+            <!--     src={profilePhoto} -->
+            <!--     alt="" -->
+            <!--     aria-hidden="true" -->
+            <!--   /> -->
+            <!-- </div> -->
           </div>
         </div>
       </div>
