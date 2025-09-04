@@ -915,16 +915,16 @@ export const resume = {
       summary:
         "Reactive state management library for Lit Web Components, Open-sourced on GitHub & NPM. Used in production at Chipta (ticket shop). I used Lit + LitState as a simpler, lightweight and browser-native alternative to React + Redux.",
       description:
-        "Simplified state management in Lit Web Components library, by releasing an open source Node.js package on NPM, gaining 143 stars on GitHub during time of Lit & Web Components popularity. Successfully implemented library for projects at Chipta. Engaged with developers in GitHub Issues & Pull Requests.",
+        "Simplified state management in Lit Web Components library, by releasing an open source Node.js package on NPM, gaining 152 stars on GitHub during time of Lit & Web Components popularity. Successfully implemented library for projects at Chipta. Engaged with developers in GitHub Issues & Pull Requests.",
       // "Open-source Node.js package providing reactive state management for Lit web components. With comprehensive documentation and extension support. A minimal yet powerful solution for efficient state synchronization across components.",
       highlights: [
         "Created Open-Source NPM package providing reactive state management for Lit Web Components library",
-        "Received appreciation in community with 143 GitHub stars during time of Lit & Web Components popularity",
+        "Received appreciation in community with 152 GitHub stars during time of Lit & Web Components popularity",
         "Engaged with users handling GitHub Issues and Pull Requests",
         "Employed library succesfully in projects at Chipta",
       ],
       url: "https://github.com/gitaarik/lit-state",
-      stars: 143,
+      stars: 152,
     },
 
     {
