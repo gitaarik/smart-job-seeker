@@ -460,7 +460,7 @@ export const resume = {
           summary:
             "Built React Native scanning app reducing check-in times by 70% and saving organizers $50-200 per event.",
           description:
-            "Developed cross-platform React Native app for ticket scanning and validation with barcode scanning, offline capability, REST API integration, and App Store/Google Play deployment.",
+            "Developed cross-platform React Native app for ticket scanning and validating tickets with QR codes, offline capability, synchronization through WebSockets, and App Store/Google Play deployment.",
           outcome:
             "Eliminated expensive third-party solutions saving $50-200 per event, 70% reduction in check-in times, offline capability for poor venue connectivity, became key selling point for 40% of new customers.",
         },
