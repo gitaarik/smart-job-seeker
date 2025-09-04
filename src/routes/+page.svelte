@@ -253,7 +253,7 @@
                 I've worked with systems processing tens of millions in payment
                 transactions, handling traffic peaks of thousands of orders per
                 minute, and managed databases with millions of records. I've led
-                an agile development team of 3-5 people in a startup
+                an agile development team of 3-5 developers in a startup
                 environment, implemented strict code review policies,
                 established TDD methodologies and architected test suites.
               </p>
