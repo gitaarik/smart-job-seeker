@@ -112,7 +112,9 @@
   <meta property="twitter:image" content={metaImg}>
 </svelte:head>
 
-<ThemeSwitcher />
+<div data-aos="fade">
+  <ThemeSwitcher />
+</div>
 
 <main class="flex h-full min-h-screen flex-col justify-between">
   <article class="flex flex-col items-center">
@@ -126,32 +128,36 @@
 
       <div
         class="px-5 sm:px-10 mt-5 text-center"
-        data-aos="fade"
-        data-aos-delay="500"
       >
-        <h1
-          id="header-heading"
-          class="text-3xl font-medium"
+        <div
+          data-aos="fade"
         >
-          Rik Wanders
-        </h1>
+          <h1
+            id="header-heading"
+            class="text-3xl font-medium"
+          >
+            Rik Wanders
+          </h1>
 
-        <h2 data-aos="fade" class="mt-4 text-xl">
-          Senior Full Stack Developer
-        </h2>
+          <h2 class="mt-4 text-xl">
+            Senior Full Stack Developer
+          </h2>
 
-        <h3 data-aos="fade" class="mt-4">
-          Python • Node.js • CI/CD • DevOps
-        </h3>
+          <h3 class="mt-4">
+            Python • Node.js • CI/CD • DevOps
+          </h3>
+        </div>
 
-        <h4 data-aos="fade" class="mt-10 italic">
+        <h4
+          data-aos="fade"
+          class="mt-10 italic"
+        >
           Building scalable web applications for remote teams
         </h4>
       </div>
 
       <div
         data-aos="fade"
-        data-aos-delay="1000"
         class="mt-15 md:mt-20 px-4 flex justify-center w-full"
       >
         <GetInTouchButton contentClass="bg-snow" />
@@ -166,7 +172,6 @@
         <button
           class="flex items-center gap-2 cursor-pointer p-2 scale-100 hover:scale-110 focus:scale-110 hover:text-teal focus:text-teal transition"
           data-aos="fade"
-          data-aos-delay="1000"
           data-aos-anchor-placement="top-bottom"
           on:click={handleMoreInfo}
         >
@@ -201,7 +206,6 @@
 
           <div
             data-aos="fade"
-            data-aos-delay="200"
             class="mb-15 flex gap-10 justify-center max-md:flex-col max-md:items-center"
           >
             <div class="text-base/7 tracking-[0.1px]">
@@ -216,12 +220,12 @@
               </div>
 
               <p>
-                With over {pyJsYearsExperience} years of Full Stack Python &amp;
-                Node.js development experience, I specialize in building and
-                scaling complex, high-traffic and data-heavy web applications
-                with perfect user experience. My skills cover the entire
-                development process, from initial architecture decisions to
-                production deployment and optimization.
+                With over 12 years of Full Stack Python & Node.js development
+                experience, I specialize in building and scaling complex,
+                high-traffic and data-heavy web applications that ship together
+                with beautiful UIs. My skills cover the entire development
+                process, from initial architecture decisions to production
+                deployment and optimization.
               </p>
 
               <div
@@ -236,27 +240,26 @@
               </div>
 
               <p class="my-4">
-                I have been working fully remote for the last
-                {remoteWorkYearsExperience} years, collaborating with, and
-                leading distributed agile teams across different time zones and
-                cultures. This experience has refined my communication skills
-                and ability to work independently while maintaining strong team
-                alignment.
+                I particularly enjoy projects where I can take a complex
+                business requirement and break it down into elegant technical
+                solutions. I deliver complete technical solutions on time that
+                produce real results.
               </p>
 
               <p class="my-4">
+                I've worked fully remote for the last 5 years, collaborating
+                with, and leading distributed agile teams across different time
+                zones and cultures. This experience has refined my communication
+                skills and ability to work independently while maintaining
+                strong team alignment.
+              </p>
+
+              <p>
                 I'm always interested in the latest developments in the software
                 industry. By integrating AI into my development workflow, I'm
                 able to speed up repetitive development tasks and focus on
                 quality and architecture. All this while maintaining current
                 security best practices.
-              </p>
-
-              <p>
-                I like to be challenged with unique technical problems, where I
-                can use my creativity and analytical reasoning to develop custom
-                made solutions. Together with my business insights I can timely
-                deliver complete technical solutions that produce real results.
               </p>
             </div>
 
@@ -331,7 +334,6 @@
 
           <div
             data-aos="fade"
-            data-aos-delay="200"
             class="flex justify-center"
           >
             <GetInTouchButton contentClass="bg-ice" />
