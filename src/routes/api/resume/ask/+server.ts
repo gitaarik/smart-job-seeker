@@ -4,6 +4,7 @@ import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { resume } from "$lib/data/resume.js";
 import { isAdmin } from "$lib/auth.js";
+import { prisma } from "$lib/db.js";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -28,7 +29,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     }
 
     const requestData = await request.json();
-    const { question, context, originalContent, isRefinement } = requestData;
+    const { question, context, originalContent, isRefinement, responseId, sessionId } = requestData;
     llm = requestData.llm || "openai"; // Set llm with fallback
 
     if (!question) {
@@ -137,10 +138,56 @@ When generating content:
       }
     }
 
-    return json({
-      question,
-      answer,
-    });
+    // Determine the LLM model based on provider
+    const llmModel = llm === "gemini" ? "gemini-1.5-flash" : "gpt-4o-mini";
+
+    // Save to database
+    if (isRefinement && responseId) {
+      // Save refinement
+      const refinement = await prisma.aiRefinement.create({
+        data: {
+          responseId,
+          request: question,
+          refinedContent: answer,
+        },
+      });
+
+      // Update the current content of the response
+      await prisma.aiResponse.update({
+        where: { id: responseId },
+        data: { 
+          currentContent: answer,
+          updatedAt: new Date()
+        },
+      });
+
+      return json({
+        question,
+        answer,
+        refinementId: refinement.id,
+        responseId,
+      });
+    } else {
+      // Save new response
+      const aiResponse = await prisma.aiResponse.create({
+        data: {
+          userId: locals.user.id,
+          prompt: question,
+          context: context || null,
+          originalContent: answer,
+          currentContent: answer,
+          llmProvider: llm,
+          llmModel,
+          sessionId: sessionId || null,
+        },
+      });
+
+      return json({
+        question,
+        answer,
+        responseId: aiResponse.id,
+      });
+    }
   } catch (error: any) {
     console.error(`${llm.toUpperCase()} API error:`, error);
 

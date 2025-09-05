@@ -16,12 +16,18 @@
     llm?: string,
     id?: string,
     parentId?: string,
+    dbId?: string, // Database ID for responses
     refinements?: Array<{ content: string, request: string, timestamp: Date }>
   }> = []
   let isLoading = false
   let error = ''
   let refinementInputs: Record<string, string> = {} // Track refinement inputs for each response
   let refiningMessageId: string | null = null // Track which message is being refined
+  let sessionId = generateId() // Generate session ID for this chat session
+  let historyResponses: any[] = []
+  let showHistory = false
+  let loadingHistory = false
+  let selectedVersions: Record<string, 'original' | number> = {} // Track which version is selected for each response
 
   async function logout() {
     try {
@@ -70,7 +76,8 @@
         body: JSON.stringify({
           question: currentPrompt,
           context: currentContext,
-          llm: selectedLLM
+          llm: selectedLLM,
+          sessionId: sessionId
         })
       })
 
@@ -89,6 +96,7 @@
         llm: selectedLLM,
         id: responseId,
         parentId: requestId,
+        dbId: data.responseId, // Store database ID
         refinements: []
       }]
 
@@ -149,6 +157,7 @@
           context: originalRequest?.context || '',
           originalContent: originalMessage.content,
           isRefinement: true,
+          responseId: originalMessage.dbId, // Use database ID
           llm: originalMessage.llm || selectedLLM
         })
       })
@@ -217,6 +226,85 @@
     prompt = template.prompt
     context = template.contextPlaceholder
   }
+
+  async function loadHistory() {
+    if (loadingHistory) return
+    
+    loadingHistory = true
+    error = ''
+
+    try {
+      const response = await fetch('/api/resume/history')
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to load history')
+      }
+
+      historyResponses = data.responses
+      showHistory = true
+    } catch (err: any) {
+      error = err.message || 'Failed to load history'
+    } finally {
+      loadingHistory = false
+    }
+  }
+
+  function loadResponseFromHistory(historyResponse: any) {
+    // Clear current messages and load the selected response
+    messages = []
+    
+    // Add the original request
+    const requestId = generateId()
+    messages = [...messages, {
+      type: 'request',
+      content: historyResponse.prompt,
+      timestamp: new Date(historyResponse.createdAt),
+      prompt: historyResponse.prompt,
+      context: historyResponse.context,
+      llm: historyResponse.llmProvider,
+      id: requestId
+    }]
+
+    // Add the response with refinement history
+    const responseId = generateId()
+    const refinements = historyResponse.refinements?.map((r: any) => ({
+      content: r.refinedContent,
+      request: r.request,
+      timestamp: new Date(r.createdAt)
+    })) || []
+
+    messages = [...messages, {
+      type: 'response',
+      content: historyResponse.currentContent,
+      timestamp: new Date(historyResponse.createdAt),
+      llm: historyResponse.llmProvider,
+      id: responseId,
+      parentId: requestId,
+      dbId: historyResponse.id,
+      refinements
+    }]
+
+    showHistory = false
+  }
+
+  function getDisplayedContent(message: any): string {
+    if (!message.refinements || message.refinements.length === 0) {
+      return message.content
+    }
+
+    const selectedVersion = selectedVersions[message.id] || 'original'
+    if (selectedVersion === 'original') {
+      return message.content
+    } else {
+      return message.refinements[selectedVersion]?.content || message.content
+    }
+  }
+
+  function switchVersion(messageId: string, version: 'original' | number) {
+    selectedVersions[messageId] = version
+    selectedVersions = { ...selectedVersions } // Trigger reactivity
+  }
 </script>
 
 <svelte:head>
@@ -252,7 +340,8 @@
   <main class="max-w-6xl mx-auto py-6 sm:px-6 lg:px-8">
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Templates Sidebar -->
-      <div class="lg:col-span-1">
+      <div class="lg:col-span-1 space-y-4">
+        <!-- Templates -->
         <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
           <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Quick Templates</h3>
           <div class="space-y-2">
@@ -266,6 +355,54 @@
               </button>
             {/each}
           </div>
+        </div>
+
+        <!-- History -->
+        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white">History</h3>
+            <button
+              on:click={loadHistory}
+              disabled={loadingHistory}
+              class="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 disabled:opacity-50"
+            >
+              {loadingHistory ? 'Loading...' : showHistory ? 'Hide' : 'Load'}
+            </button>
+          </div>
+          
+          {#if showHistory}
+            <div class="space-y-2 max-h-96 overflow-y-auto">
+              {#each historyResponses as historyResponse}
+                <button
+                  on:click={() => loadResponseFromHistory(historyResponse)}
+                  class="w-full text-left p-3 text-sm rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <div class="flex justify-between items-start mb-1">
+                    <div class="font-medium text-gray-900 dark:text-white text-xs">
+                      {new Date(historyResponse.createdAt).toLocaleDateString()}
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                      {historyResponse.llmProvider === 'openai' ? '🤖' : '✨'}
+                    </div>
+                  </div>
+                  <div class="text-gray-600 dark:text-gray-300 text-xs line-clamp-2 mb-1">
+                    {historyResponse.prompt}
+                  </div>
+                  {#if historyResponse.refinements?.length > 0}
+                    <div class="text-xs text-blue-600 dark:text-blue-400">
+                      {historyResponse.refinements.length} refinement{historyResponse.refinements.length !== 1 ? 's' : ''}
+                    </div>
+                  {/if}
+                </button>
+              {/each}
+              
+              {#if historyResponses.length === 0}
+                <div class="text-center text-gray-500 dark:text-gray-400 text-sm py-4">
+                  No history yet
+                </div>
+              {/if}
+            </div>
+          {/if}
         </div>
       </div>
 
@@ -410,7 +547,7 @@
                       </div>
                       <div class="flex items-center space-x-2 ml-4">
                         <button
-                          on:click={() => copyToClipboard(message.content)}
+                          on:click={() => copyToClipboard(getDisplayedContent(message))}
                           class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                           title="Copy to clipboard"
                         >
@@ -424,7 +561,7 @@
                       </div>
                     </div>
                     <div class="prose dark:prose-invert max-w-none">
-                      <pre class="whitespace-pre-wrap text-sm text-gray-900 dark:text-white font-sans">{message.content}</pre>
+                      <pre class="whitespace-pre-wrap text-sm text-gray-900 dark:text-white font-sans">{getDisplayedContent(message)}</pre>
                     </div>
 
                     <!-- Refinement Input -->
@@ -455,19 +592,43 @@
                         </button>
                       </div>
                       
-                      <!-- Show refinement history if any -->
+                      <!-- Version Switching -->
                       {#if message.refinements && message.refinements.length > 0}
                         <div class="mt-3 text-xs text-gray-500 dark:text-gray-400">
+                          <div class="mb-2">
+                            <span class="font-medium">Versions:</span>
+                            <div class="flex flex-wrap gap-1 mt-1">
+                              <button
+                                on:click={() => switchVersion(message.id, 'original')}
+                                class="px-2 py-1 rounded text-xs transition-colors {selectedVersions[message.id] === 'original' || !selectedVersions[message.id] ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500'}"
+                              >
+                                Original
+                              </button>
+                              {#each message.refinements as refinement, index}
+                                <button
+                                  on:click={() => switchVersion(message.id, index)}
+                                  class="px-2 py-1 rounded text-xs transition-colors {selectedVersions[message.id] === index ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500'}"
+                                  title="Refinement: {refinement.request}"
+                                >
+                                  v{index + 1}
+                                </button>
+                              {/each}
+                            </div>
+                          </div>
+                          
                           <details>
                             <summary class="cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">
                               {message.refinements.length} refinement{message.refinements.length !== 1 ? 's' : ''} made
                             </summary>
                             <div class="mt-2 space-y-2 pl-3 border-l-2 border-gray-200 dark:border-gray-600">
-                              {#each message.refinements as refinement}
-                                <div class="text-xs">
+                              {#each message.refinements as refinement, index}
+                                <div class="text-xs {selectedVersions[message.id] === index ? 'bg-blue-50 dark:bg-blue-900 p-2 rounded' : ''}">
                                   <div class="font-medium">"{refinement.request}"</div>
                                   <div class="text-gray-400 dark:text-gray-500">
                                     {formatTime(refinement.timestamp)}
+                                    {#if selectedVersions[message.id] === index}
+                                      <span class="ml-2 text-blue-600 dark:text-blue-400">← Currently showing</span>
+                                    {/if}
                                   </div>
                                 </div>
                               {/each}
