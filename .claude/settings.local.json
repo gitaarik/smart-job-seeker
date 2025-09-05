@@ -14,7 +14,8 @@
       "Bash(npm uninstall:*)",
       "Bash(node:*)",
       "Bash(y)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(npx tsx:*)"
     ],
     "deny": [],
     "ask": []

@@ -73,6 +73,83 @@ model AiRefinement {
   @@map("ai_refinements")
 }
 
+model WorkExperience {
+  id          String   @id @default(cuid())
+  name        String   // Company name
+  location    String
+  description String
+  position    String
+  url         String?
+  startDate   String
+  endDate     String?
+  summary     String   @db.Text
+  logo        String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  highlights   WorkHighlight[]
+  technologies WorkTechnology[]
+  projects     WorkProject[]
+
+  @@map("work_experiences")
+}
+
+model WorkHighlight {
+  id               String          @id @default(cuid())
+  workExperienceId String
+  title            String?
+  description      String          @db.Text
+  iconName         String?         // Store FontAwesome icon name
+  sortOrder        Int             @default(0)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  workExperience   WorkExperience  @relation(fields: [workExperienceId], references: [id], onDelete: Cascade)
+
+  tags WorkHighlightTag[]
+
+  @@map("work_highlights")
+}
+
+model WorkHighlightTag {
+  id            String        @id @default(cuid())
+  highlightId   String
+  tagName       String
+  createdAt     DateTime      @default(now())
+  highlight     WorkHighlight @relation(fields: [highlightId], references: [id], onDelete: Cascade)
+
+  @@map("work_highlight_tags")
+}
+
+model WorkTechnology {
+  id               String         @id @default(cuid())
+  workExperienceId String
+  technologyName   String
+  sortOrder        Int            @default(0)
+  createdAt        DateTime       @default(now())
+  workExperience   WorkExperience @relation(fields: [workExperienceId], references: [id], onDelete: Cascade)
+
+  @@map("work_technologies")
+}
+
+model WorkProject {
+  id               String         @id @default(cuid())
+  workExperienceId String
+  name             String
+  startDate        String
+  endDate          String
+  summary          String         @db.Text
+  description      String         @db.Text
+  outcome          String         @db.Text
+  sortOrder        Int            @default(0)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  workExperience   WorkExperience @relation(fields: [workExperienceId], references: [id], onDelete: Cascade)
+
+  @@map("work_projects")
+}
+
 enum Role {
   USER
   ADMIN
