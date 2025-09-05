@@ -6,7 +6,8 @@
 
   let prompt = ''
   let context = ''
-  let messages: Array<{ type: 'request' | 'response', content: string, timestamp: Date, prompt?: string, context?: string }> = []
+  let selectedLLM = 'openai'
+  let messages: Array<{ type: 'request' | 'response', content: string, timestamp: Date, prompt?: string, context?: string, llm?: string }> = []
   let isLoading = false
   let error = ''
 
@@ -37,7 +38,8 @@
       content: currentPrompt,
       timestamp: new Date(),
       prompt: currentPrompt,
-      context: currentContext
+      context: currentContext,
+      llm: selectedLLM
     }]
 
     try {
@@ -48,7 +50,8 @@
         },
         body: JSON.stringify({
           question: currentPrompt,
-          context: currentContext
+          context: currentContext,
+          llm: selectedLLM
         })
       })
 
@@ -62,7 +65,8 @@
       messages = [...messages, {
         type: 'response',
         content: data.answer,
-        timestamp: new Date()
+        timestamp: new Date(),
+        llm: selectedLLM
       }]
 
     } catch (err: any) {
@@ -211,6 +215,21 @@
           <!-- Input Area -->
           <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
             <div class="space-y-4">
+              <!-- LLM Selector -->
+              <div>
+                <label for="llm-selector" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  AI Model
+                </label>
+                <select
+                  bind:value={selectedLLM}
+                  disabled={isLoading}
+                  class="w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white disabled:opacity-50"
+                >
+                  <option value="openai">OpenAI GPT-4o Mini</option>
+                  <option value="gemini">Google Gemini 1.5 Flash</option>
+                </select>
+              </div>
+
               <!-- Prompt Input -->
               <div>
                 <label for="prompt" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -299,6 +318,11 @@
                         {#if messages[index - 1]?.context}
                           <div class="text-xs text-gray-500 dark:text-gray-500 mb-3 p-2 bg-gray-100 dark:bg-gray-600 rounded">
                             <strong>Context:</strong> {messages[index - 1].context.slice(0, 100)}...
+                          </div>
+                        {/if}
+                        {#if message.llm}
+                          <div class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 mb-3">
+                            {message.llm === 'openai' ? '🤖 OpenAI' : '✨ Gemini'}
                           </div>
                         {/if}
                       </div>

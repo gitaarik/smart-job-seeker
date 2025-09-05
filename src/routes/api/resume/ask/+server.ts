@@ -1,6 +1,7 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { resume } from "$lib/data/resume.js";
 import { isAdmin } from "$lib/auth.js";
 import dotenv from "dotenv";
@@ -11,7 +12,11 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+
 export const POST: RequestHandler = async ({ request, locals }) => {
+  let llm = "openai"; // Default value
+  
   try {
     // Check if user is authenticated and has admin permissions
     if (!locals.user) {
@@ -22,14 +27,21 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       return json({ error: "Admin access required" }, { status: 403 });
     }
 
-    const { question, context } = await request.json();
+    const requestData = await request.json();
+    const { question, context } = requestData;
+    llm = requestData.llm || "openai"; // Set llm with fallback
 
     if (!question) {
       return json({ error: "Question is required" }, { status: 400 });
     }
 
-    if (!process.env.OPENAI_API_KEY) {
+    // Check API keys based on selected LLM
+    if (llm === "openai" && !process.env.OPENAI_API_KEY) {
       return json({ error: "OpenAI API key not configured" }, { status: 500 });
+    }
+
+    if (llm === "gemini" && !process.env.GEMINI_API_KEY) {
+      return json({ error: "Gemini API key not configured" }, { status: 500 });
     }
 
     // Convert resume data to a readable format for the AI
@@ -56,28 +68,46 @@ When generating content:
 11. Keep the content short and concise, except when explicitly asked for a longer / more detailed message
 12. Write the content from the perspective of Rik Wanders, as if you are him`;
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: systemPrompt,
-        },
-        {
-          role: "user",
-          content: context
-            ? `Request: ${question}\n\nAdditional Context: ${context}`
-            : question,
-        },
-      ],
-      max_tokens: 1000,
-      temperature: 0.7,
-    });
+    const userPrompt = context
+      ? `Request: ${question}\n\nAdditional Context: ${context}`
+      : question;
 
-    const answer = completion.choices[0]?.message?.content;
+    let answer: string;
 
-    if (!answer) {
-      return json({ error: "No response generated" }, { status: 500 });
+    if (llm === "gemini") {
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const fullPrompt = `${systemPrompt}\n\nUser Request: ${userPrompt}`;
+      
+      const result = await model.generateContent(fullPrompt);
+      const response = await result.response;
+      answer = response.text();
+      
+      if (!answer) {
+        return json({ error: "No response generated from Gemini" }, { status: 500 });
+      }
+    } else {
+      // OpenAI
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: systemPrompt,
+          },
+          {
+            role: "user",
+            content: userPrompt,
+          },
+        ],
+        max_tokens: 1000,
+        temperature: 0.7,
+      });
+
+      answer = completion.choices[0]?.message?.content;
+
+      if (!answer) {
+        return json({ error: "No response generated from OpenAI" }, { status: 500 });
+      }
     }
 
     return json({
@@ -85,19 +115,31 @@ When generating content:
       answer,
     });
   } catch (error: any) {
-    console.error("OpenAI API error:", error);
+    console.error(`${llm.toUpperCase()} API error:`, error);
 
-    if (error.code === "invalid_api_key") {
-      return json({ error: "Invalid OpenAI API key" }, { status: 401 });
+    if (llm === "openai") {
+      if (error.code === "invalid_api_key") {
+        return json({ error: "Invalid OpenAI API key" }, { status: 401 });
+      }
+      
+      if (error.code === "rate_limit_exceeded") {
+        return json({ error: "OpenAI rate limit exceeded. Please try again later." }, {
+          status: 429,
+        });
+      }
+    } else if (llm === "gemini") {
+      if (error.message?.includes("API_KEY_INVALID")) {
+        return json({ error: "Invalid Gemini API key" }, { status: 401 });
+      }
+
+      if (error.message?.includes("QUOTA_EXCEEDED")) {
+        return json({ error: "Gemini quota exceeded. Please try again later." }, {
+          status: 429,
+        });
+      }
     }
 
-    if (error.code === "rate_limit_exceeded") {
-      return json({ error: "Rate limit exceeded. Please try again later." }, {
-        status: 429,
-      });
-    }
-
-    return json({ error: "Failed to generate response" }, { status: 500 });
+    return json({ error: `Failed to generate response using ${llm.toUpperCase()}` }, { status: 500 });
   }
 };
 
