@@ -295,39 +295,24 @@
   }
 
   function getDisplayedContent(message: any, versions: Record<string, 'original' | number>): string {
-    console.log('getDisplayedContent called for message:', message.id)
-    console.log('message.refinements:', message.refinements)
-    console.log('versions:', versions)
-    console.log('selectedVersion for this message:', versions[message.id])
-    
     if (!message.refinements || message.refinements.length === 0) {
-      console.log('No refinements, returning original content')
       return message.content
     }
 
     const selectedVersion = versions[message.id] !== undefined ? versions[message.id] : 'original'
-    console.log('Selected version:', selectedVersion, 'Type:', typeof selectedVersion)
     
     if (selectedVersion === 'original') {
-      console.log('Returning original content:', message.content.substring(0, 100))
       return message.content
     } else {
       // selectedVersion is the refinement index
       const refinedContent = message.refinements[selectedVersion]?.content
-      console.log('Returning refined content for index', selectedVersion, ':', refinedContent?.substring(0, 100))
-      console.log('Available refinements:', message.refinements.map(r => r.content.substring(0, 50)))
       return refinedContent || message.content
     }
   }
 
   function switchVersion(messageId: string, version: 'original' | number) {
-    console.log('switchVersion called with:', messageId, version, 'Type:', typeof version)
-    console.log('Before update, selectedVersions:', selectedVersions)
     selectedVersions[messageId] = version
-    console.log('After direct assignment:', selectedVersions[messageId])
     selectedVersions = { ...selectedVersions } // Trigger reactivity
-    console.log('After spread operator, selectedVersions:', selectedVersions)
-    console.log('Final check - selectedVersions[messageId]:', selectedVersions[messageId])
   }
 </script>
 
@@ -626,7 +611,7 @@
                             <div class="flex flex-wrap gap-1 mt-1">
                               <button
                                 on:click={() => switchVersion(message.id, 'original')}
-                                class="px-2 py-1 rounded text-xs transition-colors {selectedVersions[message.id] === 'original' || !selectedVersions[message.id] ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500'}"
+                                class="px-2 py-1 rounded text-xs transition-colors {selectedVersions[message.id] === 'original' || selectedVersions[message.id] === undefined ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500'}"
                               >
                                 Original
                               </button>
