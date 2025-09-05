@@ -28,6 +28,9 @@
   let showHistory = false
   let loadingHistory = false
   let selectedVersions: Record<string, 'original' | number> = {} // Track which version is selected for each response
+  let editingMessageId: string | null = null // Track which message is being manually edited
+  let editingContent: string = '' // Store the content being edited
+  let savingEdit: boolean = false // Track saving state
 
   // Save selected LLM to localStorage whenever it changes
   $: if (typeof localStorage !== 'undefined' && selectedLLM) {
@@ -319,6 +322,129 @@
     selectedVersions[messageId] = version
     selectedVersions = { ...selectedVersions } // Trigger reactivity
   }
+
+  function startEditing(messageId: string) {
+    const message = messages.find(m => m.id === messageId)
+    if (!message) return
+    
+    editingMessageId = messageId
+    editingContent = getDisplayedContent(message, selectedVersions)
+    
+    // Create a temporary "draft" version in the UI
+    const messageIndex = messages.findIndex(m => m.id === messageId)
+    const updatedMessages = [...messages]
+    const draftRefinement = {
+      content: editingContent,
+      request: "Manual edit (draft)",
+      timestamp: new Date(),
+      isDraft: true
+    }
+    
+    updatedMessages[messageIndex] = {
+      ...updatedMessages[messageIndex],
+      refinements: [...(updatedMessages[messageIndex].refinements || []), draftRefinement]
+    }
+    
+    messages = updatedMessages
+    
+    // Switch to the draft version
+    const draftIndex = updatedMessages[messageIndex].refinements.length - 1
+    selectedVersions[messageId] = draftIndex
+    selectedVersions = { ...selectedVersions }
+  }
+
+  function cancelEditing() {
+    if (!editingMessageId) return
+    
+    // Remove the draft refinement from UI
+    const messageIndex = messages.findIndex(m => m.id === editingMessageId)
+    const updatedMessages = [...messages]
+    
+    // Remove the last refinement if it's a draft
+    const lastRefinement = updatedMessages[messageIndex].refinements?.slice(-1)[0]
+    if (lastRefinement?.isDraft) {
+      updatedMessages[messageIndex] = {
+        ...updatedMessages[messageIndex],
+        refinements: updatedMessages[messageIndex].refinements?.slice(0, -1) || []
+      }
+      
+      // Switch back to previous version
+      const previousVersion = updatedMessages[messageIndex].refinements?.length > 0 
+        ? updatedMessages[messageIndex].refinements.length - 1 
+        : 'original'
+      selectedVersions[editingMessageId] = previousVersion
+      selectedVersions = { ...selectedVersions }
+    }
+    
+    messages = updatedMessages
+    editingMessageId = null
+    editingContent = ''
+  }
+
+  async function saveEdit() {
+    if (!editingMessageId || savingEdit) return
+    
+    savingEdit = true
+    error = ''
+    
+    try {
+      const originalMessage = messages.find(m => m.id === editingMessageId)
+      if (!originalMessage) throw new Error('Message not found')
+      
+      const response = await fetch('/api/resume/ask', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          question: "Manual edit",
+          context: '',
+          originalContent: originalMessage.content,
+          isRefinement: true,
+          isManualEdit: true,
+          manualContent: editingContent,
+          responseId: originalMessage.dbId,
+          llm: originalMessage.llm || selectedLLM
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to save manual edit')
+      }
+
+      // Update the draft refinement to be permanent
+      const messageIndex = messages.findIndex(m => m.id === editingMessageId)
+      const updatedMessages = [...messages]
+      const refinements = [...(updatedMessages[messageIndex].refinements || [])]
+      const lastRefinementIndex = refinements.length - 1
+      
+      if (refinements[lastRefinementIndex]?.isDraft) {
+        refinements[lastRefinementIndex] = {
+          content: editingContent,
+          request: "Manual edit",
+          timestamp: new Date(),
+          isDraft: false
+        }
+        
+        updatedMessages[messageIndex] = {
+          ...updatedMessages[messageIndex],
+          refinements
+        }
+        
+        messages = updatedMessages
+      }
+      
+      editingMessageId = null
+      editingContent = ''
+
+    } catch (err: any) {
+      error = err.message || 'Failed to save manual edit'
+    } finally {
+      savingEdit = false
+    }
+  }
 </script>
 
 <svelte:head>
@@ -569,16 +695,64 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                           </svg>
                         </button>
+                        <button
+                          on:click={() => startEditing(message.id)}
+                          disabled={editingMessageId !== null}
+                          class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Edit manually"
+                        >
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                          </svg>
+                        </button>
                         <span class="text-xs text-gray-500 dark:text-gray-400">
                           {formatTime(message.timestamp)}
                         </span>
                       </div>
                     </div>
-                    <div class="prose dark:prose-invert max-w-none">
-                      {#key selectedVersions[message.id]}
-                        <pre class="whitespace-pre-wrap text-sm text-gray-900 dark:text-white font-sans">{getDisplayedContent(message, selectedVersions)}</pre>
-                      {/key}
-                    </div>
+                    <!-- Content Display or Edit Mode -->
+                    {#if editingMessageId === message.id}
+                      <!-- Edit Mode -->
+                      <div class="space-y-3">
+                        <textarea
+                          bind:value={editingContent}
+                          rows="10"
+                          class="w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white placeholder-gray-400 text-sm font-mono"
+                          placeholder="Edit the content..."
+                        ></textarea>
+                        <div class="flex justify-end space-x-2">
+                          <button
+                            on:click={cancelEditing}
+                            disabled={savingEdit}
+                            class="px-3 py-1 bg-gray-500 hover:bg-gray-600 disabled:bg-gray-400 text-white text-sm rounded-md transition-colors disabled:cursor-not-allowed"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            on:click={saveEdit}
+                            disabled={savingEdit || !editingContent.trim()}
+                            class="px-3 py-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white text-sm rounded-md transition-colors disabled:cursor-not-allowed flex items-center space-x-1"
+                          >
+                            {#if savingEdit}
+                              <svg class="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              <span>Saving...</span>
+                            {:else}
+                              <span>Save</span>
+                            {/if}
+                          </button>
+                        </div>
+                      </div>
+                    {:else}
+                      <!-- Display Mode -->
+                      <div class="prose dark:prose-invert max-w-none">
+                        {#key selectedVersions[message.id]}
+                          <pre class="whitespace-pre-wrap text-sm text-gray-900 dark:text-white font-sans">{getDisplayedContent(message, selectedVersions)}</pre>
+                        {/key}
+                      </div>
+                    {/if}
 
                     <!-- Refinement Input -->
                     <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">

@@ -29,7 +29,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     }
 
     const requestData = await request.json();
-    const { question, context, originalContent, isRefinement, responseId, sessionId } = requestData;
+    const { question, context, originalContent, isRefinement, responseId, sessionId, isManualEdit, manualContent } = requestData;
     llm = requestData.llm || "openai"; // Set llm with fallback
 
     if (!question) {
@@ -102,39 +102,45 @@ When generating content:
 
     let answer: string;
 
-    if (llm === "gemini") {
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      const fullPrompt = `${systemPrompt}\n\nUser Request: ${userPrompt}`;
-      
-      const result = await model.generateContent(fullPrompt);
-      const response = await result.response;
-      answer = response.text();
-      
-      if (!answer) {
-        return json({ error: "No response generated from Gemini" }, { status: 500 });
-      }
+    // Handle manual edits - no AI call needed
+    if (isManualEdit && manualContent) {
+      answer = manualContent;
     } else {
-      // OpenAI
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "system",
-            content: systemPrompt,
-          },
-          {
-            role: "user",
-            content: userPrompt,
-          },
-        ],
-        max_tokens: 1000,
-        temperature: 0.7,
-      });
+      // Regular AI generation
+      if (llm === "gemini") {
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const fullPrompt = `${systemPrompt}\n\nUser Request: ${userPrompt}`;
+        
+        const result = await model.generateContent(fullPrompt);
+        const response = await result.response;
+        answer = response.text();
+        
+        if (!answer) {
+          return json({ error: "No response generated from Gemini" }, { status: 500 });
+        }
+      } else {
+        // OpenAI
+        const completion = await openai.chat.completions.create({
+          model: "gpt-4o-mini",
+          messages: [
+            {
+              role: "system",
+              content: systemPrompt,
+            },
+            {
+              role: "user",
+              content: userPrompt,
+            },
+          ],
+          max_tokens: 1000,
+          temperature: 0.7,
+        });
 
-      answer = completion.choices[0]?.message?.content;
+        answer = completion.choices[0]?.message?.content;
 
-      if (!answer) {
-        return json({ error: "No response generated from OpenAI" }, { status: 500 });
+        if (!answer) {
+          return json({ error: "No response generated from OpenAI" }, { status: 500 });
+        }
       }
     }
 
