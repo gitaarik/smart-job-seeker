@@ -1,18 +1,10 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
-import { isAdmin } from "$lib/auth.js";
 import { prisma } from "$lib/db.js";
 
 // GET - List all work experiences
-export const GET: RequestHandler = async ({ locals, url }) => {
+export const GET: RequestHandler = async ({ url }) => {
   try {
-    if (!locals.user) {
-      return json({ error: "Authentication required" }, { status: 401 });
-    }
-
-    if (!isAdmin(locals.user)) {
-      return json({ error: "Admin access required" }, { status: 403 });
-    }
 
     const include = url.searchParams.get('include');
     const includeRelations = include === 'all';
@@ -45,13 +37,6 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 // POST - Create new work experience
 export const POST: RequestHandler = async ({ request, locals }) => {
   try {
-    if (!locals.user) {
-      return json({ error: "Authentication required" }, { status: 401 });
-    }
-
-    if (!isAdmin(locals.user)) {
-      return json({ error: "Admin access required" }, { status: 403 });
-    }
 
     const data = await request.json();
     const {

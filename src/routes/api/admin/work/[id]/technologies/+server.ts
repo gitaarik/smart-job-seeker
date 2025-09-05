@@ -1,18 +1,10 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
-import { isAdmin } from "$lib/auth.js";
 import { prisma } from "$lib/db.js";
 
 // GET - List technologies for work experience
-export const GET: RequestHandler = async ({ locals, params }) => {
+export const GET: RequestHandler = async ({ params }) => {
   try {
-    if (!locals.user) {
-      return json({ error: "Authentication required" }, { status: 401 });
-    }
-
-    if (!isAdmin(locals.user)) {
-      return json({ error: "Admin access required" }, { status: 403 });
-    }
 
     const technologies = await prisma.workTechnology.findMany({
       where: { workExperienceId: params.id },
@@ -27,15 +19,8 @@ export const GET: RequestHandler = async ({ locals, params }) => {
 };
 
 // POST - Create new technology
-export const POST: RequestHandler = async ({ request, locals, params }) => {
+export const POST: RequestHandler = async ({ request, params }) => {
   try {
-    if (!locals.user) {
-      return json({ error: "Authentication required" }, { status: 401 });
-    }
-
-    if (!isAdmin(locals.user)) {
-      return json({ error: "Admin access required" }, { status: 403 });
-    }
 
     const data = await request.json();
     const { technologyName, sortOrder } = data;
@@ -60,15 +45,8 @@ export const POST: RequestHandler = async ({ request, locals, params }) => {
 };
 
 // PUT - Update all technologies (bulk update for reordering)
-export const PUT: RequestHandler = async ({ request, locals, params }) => {
+export const PUT: RequestHandler = async ({ request, params }) => {
   try {
-    if (!locals.user) {
-      return json({ error: "Authentication required" }, { status: 401 });
-    }
-
-    if (!isAdmin(locals.user)) {
-      return json({ error: "Admin access required" }, { status: 403 });
-    }
 
     const data = await request.json();
     const { technologies } = data;
