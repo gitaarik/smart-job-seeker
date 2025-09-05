@@ -1496,31 +1496,31 @@ export const resume = {
           question:
             "Tell me about a project that didn't go as planned and how you handled it.",
           answer: {
-            title: "React Native App with Struggling Developer",
+            title: "React Native App Technical Challenges",
             situation: [
               "Leading React Native mobile app development at Chipta",
-              "Developer struggling with new and buggy React Native technology",
+              "React Native framework had significant bugs and limitations",
               "Limited documentation and community support available",
               "Tight deadline before festival season start",
             ],
             task: [
-              "Keep developer motivated despite technical challenges",
-              "Guide developer through complex debugging process",
+              "Navigate technical challenges with immature framework",
+              "Find solutions to framework bugs and limitations",
               "Deliver functional app on schedule",
               "Ensure app met performance and reliability requirements",
             ],
             action: [
-              "Mentored developer on technical issues and debugging techniques",
+              "Collaborated with developer to tackle complex technical issues",
               "Researched React Native source code to understand underlying problems",
               "Created custom patches for framework bugs we encountered",
               "Made key architecture decisions to work around limitations",
-              "Provided hands-on support during critical development phases",
+              "Provided technical guidance during challenging development phases",
             ],
             result: [
               "Delivered app on time before festival season started",
               "App significantly improved event scalability and reach",
               "Contributed to 40% revenue increase from mobile ticket sales",
-              "Developer became our in-house React Native expert",
+              "Team gained valuable React Native expertise",
               "Established foundation for future mobile development projects",
             ],
           },

@@ -1,15 +1,7 @@
-import { redirect } from '@sveltejs/kit'
 import { prisma } from '$lib/db'
 import type { PageServerLoad, Actions } from './$types'
 
 export const load: PageServerLoad = async ({ locals }) => {
-  if (!locals.user) {
-    throw redirect(302, '/auth')
-  }
-
-  if (locals.user.role !== 'ADMIN' && locals.user.role !== 'SUPER_ADMIN') {
-    throw redirect(302, '/dashboard')
-  }
 
   const tokens = await prisma.resumeToken.findMany({
     include: {
@@ -39,9 +31,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 export const actions: Actions = {
   createToken: async ({ request, locals }) => {
-    if (!locals.user || (locals.user.role !== 'ADMIN' && locals.user.role !== 'SUPER_ADMIN')) {
-      return { error: 'Unauthorized' }
-    }
 
     const data = await request.formData()
     const name = data.get('name') as string
@@ -79,9 +68,6 @@ export const actions: Actions = {
   },
 
   updateToken: async ({ request, locals }) => {
-    if (!locals.user || (locals.user.role !== 'ADMIN' && locals.user.role !== 'SUPER_ADMIN')) {
-      return { error: 'Unauthorized' }
-    }
 
     const data = await request.formData()
     const tokenId = data.get('tokenId') as string
@@ -120,9 +106,6 @@ export const actions: Actions = {
   },
 
   deleteToken: async ({ request, locals }) => {
-    if (!locals.user || (locals.user.role !== 'ADMIN' && locals.user.role !== 'SUPER_ADMIN')) {
-      return { error: 'Unauthorized' }
-    }
 
     const data = await request.formData()
     const tokenId = data.get('tokenId') as string
@@ -144,9 +127,6 @@ export const actions: Actions = {
   },
 
   resetViews: async ({ request, locals }) => {
-    if (!locals.user || (locals.user.role !== 'ADMIN' && locals.user.role !== 'SUPER_ADMIN')) {
-      return { error: 'Unauthorized' }
-    }
 
     const data = await request.formData()
     const tokenId = data.get('tokenId') as string

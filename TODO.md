@@ -32,7 +32,9 @@
     - Managed error logging system
 - Add something highlighting that I've written extensive documentation
 
-
+- Finish interview questions with STAR method
+    - https://resources.biginterview.com/behavioral-interviews/star-interview-method/
+    - https://www.youtube.com/watch?v=7OU6cEll_ls
 - Add common questions to info:
   - https://www.youtube.com/watch?v=7OU6cEll_ls
 
