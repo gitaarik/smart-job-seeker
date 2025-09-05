@@ -6,7 +6,7 @@
 
   let prompt = ''
   let context = ''
-  let selectedLLM = 'openai'
+  let selectedLLM = typeof localStorage !== 'undefined' ? localStorage.getItem('resume-chat-llm') || 'openai' : 'openai'
   let messages: Array<{ 
     type: 'request' | 'response', 
     content: string, 
@@ -28,6 +28,11 @@
   let showHistory = false
   let loadingHistory = false
   let selectedVersions: Record<string, 'original' | number> = {} // Track which version is selected for each response
+
+  // Save selected LLM to localStorage whenever it changes
+  $: if (typeof localStorage !== 'undefined' && selectedLLM) {
+    localStorage.setItem('resume-chat-llm', selectedLLM)
+  }
 
   async function logout() {
     try {
