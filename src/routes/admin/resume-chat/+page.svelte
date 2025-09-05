@@ -7,9 +7,21 @@
   let prompt = ''
   let context = ''
   let selectedLLM = 'openai'
-  let messages: Array<{ type: 'request' | 'response', content: string, timestamp: Date, prompt?: string, context?: string, llm?: string }> = []
+  let messages: Array<{ 
+    type: 'request' | 'response', 
+    content: string, 
+    timestamp: Date, 
+    prompt?: string, 
+    context?: string, 
+    llm?: string,
+    id?: string,
+    parentId?: string,
+    refinements?: Array<{ content: string, request: string, timestamp: Date }>
+  }> = []
   let isLoading = false
   let error = ''
+  let refinementInputs: Record<string, string> = {} // Track refinement inputs for each response
+  let refiningMessageId: string | null = null // Track which message is being refined
 
   async function logout() {
     try {
@@ -22,11 +34,17 @@
     }
   }
 
+  function generateId() {
+    return Math.random().toString(36).substr(2, 9)
+  }
+
   async function generateContent() {
     if (!prompt.trim() || isLoading) return
 
     const currentPrompt = prompt.trim()
     const currentContext = context.trim()
+    const requestId = generateId()
+    
     prompt = ''
     context = ''
     error = ''
@@ -39,7 +57,8 @@
       timestamp: new Date(),
       prompt: currentPrompt,
       context: currentContext,
-      llm: selectedLLM
+      llm: selectedLLM,
+      id: requestId
     }]
 
     try {
@@ -62,11 +81,15 @@
       }
 
       // Add response to messages
+      const responseId = generateId()
       messages = [...messages, {
         type: 'response',
         content: data.answer,
         timestamp: new Date(),
-        llm: selectedLLM
+        llm: selectedLLM,
+        id: responseId,
+        parentId: requestId,
+        refinements: []
       }]
 
     } catch (err: any) {
@@ -100,6 +123,65 @@
     navigator.clipboard.writeText(text).then(() => {
       // Could add a toast notification here
     })
+  }
+
+  async function refineResponse(messageId: string) {
+    const refinementRequest = refinementInputs[messageId]?.trim()
+    if (!refinementRequest || refiningMessageId) return
+
+    const messageIndex = messages.findIndex(m => m.id === messageId)
+    if (messageIndex === -1) return
+
+    const originalMessage = messages[messageIndex]
+    const originalRequest = messages.find(m => m.id === originalMessage.parentId)
+
+    refiningMessageId = messageId
+    error = ''
+
+    try {
+      const response = await fetch('/api/resume/ask', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          question: refinementRequest,
+          context: originalRequest?.context || '',
+          originalContent: originalMessage.content,
+          isRefinement: true,
+          llm: originalMessage.llm || selectedLLM
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to refine response')
+      }
+
+      // Update the message content and add to refinement history
+      const updatedMessages = [...messages]
+      const refinement = {
+        content: data.answer,
+        request: refinementRequest,
+        timestamp: new Date()
+      }
+      
+      updatedMessages[messageIndex] = {
+        ...updatedMessages[messageIndex],
+        content: data.answer,
+        refinements: [...(updatedMessages[messageIndex].refinements || []), refinement]
+      }
+      
+      messages = updatedMessages
+      refinementInputs[messageId] = '' // Clear the input
+
+    } catch (err: any) {
+      error = err.message || 'An error occurred during refinement'
+      console.error('Error refining response:', err)
+    } finally {
+      refiningMessageId = null
+    }
   }
 
   // Predefined templates for common use cases
@@ -343,6 +425,56 @@
                     </div>
                     <div class="prose dark:prose-invert max-w-none">
                       <pre class="whitespace-pre-wrap text-sm text-gray-900 dark:text-white font-sans">{message.content}</pre>
+                    </div>
+
+                    <!-- Refinement Input -->
+                    <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                      <div class="flex space-x-2">
+                        <input
+                          type="text"
+                          bind:value={refinementInputs[message.id]}
+                          on:keydown={(e) => e.key === 'Enter' && refineResponse(message.id)}
+                          placeholder="Ask for changes (e.g., 'Make it more concise', 'Add more technical details')..."
+                          disabled={refiningMessageId === message.id}
+                          class="flex-1 text-sm border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white placeholder-gray-400 disabled:opacity-50"
+                        />
+                        <button
+                          on:click={() => refineResponse(message.id)}
+                          disabled={!refinementInputs[message.id]?.trim() || refiningMessageId === message.id}
+                          class="px-3 py-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white text-sm rounded-md transition-colors disabled:cursor-not-allowed flex items-center space-x-1"
+                        >
+                          {#if refiningMessageId === message.id}
+                            <svg class="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24">
+                              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                              <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>Refining...</span>
+                          {:else}
+                            <span>Refine</span>
+                          {/if}
+                        </button>
+                      </div>
+                      
+                      <!-- Show refinement history if any -->
+                      {#if message.refinements && message.refinements.length > 0}
+                        <div class="mt-3 text-xs text-gray-500 dark:text-gray-400">
+                          <details>
+                            <summary class="cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">
+                              {message.refinements.length} refinement{message.refinements.length !== 1 ? 's' : ''} made
+                            </summary>
+                            <div class="mt-2 space-y-2 pl-3 border-l-2 border-gray-200 dark:border-gray-600">
+                              {#each message.refinements as refinement}
+                                <div class="text-xs">
+                                  <div class="font-medium">"{refinement.request}"</div>
+                                  <div class="text-gray-400 dark:text-gray-500">
+                                    {formatTime(refinement.timestamp)}
+                                  </div>
+                                </div>
+                              {/each}
+                            </div>
+                          </details>
+                        </div>
+                      {/if}
                     </div>
                   </div>
                 {/if}

@@ -28,7 +28,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     }
 
     const requestData = await request.json();
-    const { question, context } = requestData;
+    const { question, context, originalContent, isRefinement } = requestData;
     llm = requestData.llm || "openai"; // Set llm with fallback
 
     if (!question) {
@@ -47,8 +47,34 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     // Convert resume data to a readable format for the AI
     const resumeContext = JSON.stringify(resume, null, 2);
 
-    const systemPrompt =
-      `You are an AI assistant helping Rik Wanders create professional content using his resume data. Your role is to generate cover letters, LinkedIn messages, emails, summaries, and other professional communications that showcase his experience and skills effectively.
+    let systemPrompt;
+    let userPrompt;
+
+    if (isRefinement && originalContent) {
+      // Special handling for refinement requests
+      systemPrompt = `You are an AI assistant helping Rik Wanders refine and improve professional content. Your role is to modify existing content based on specific user requests while maintaining the same professional tone and style.
+
+Here is his complete resume data for reference:
+
+${resumeContext}
+
+When refining content:
+1. Keep the same writing style and voice as demonstrated in his resume - direct, results-focused, with specific metrics and achievements
+2. Maintain the same tone and format of the original content
+3. Make only the changes requested by the user
+4. Keep the content authentic to Rik's background and experience
+5. Don't change the fundamental message unless specifically asked
+6. Keep it professional and accurate
+7. Don't use em dashes to break up sentences
+8. Write from the perspective of Rik Wanders, as if you are him`;
+
+      userPrompt = `Please modify the following content based on this request: "${question}"
+
+${context ? `Additional context: ${context}\n\n` : ''}Original content to modify:
+${originalContent}`;
+    } else {
+      // Original content generation
+      systemPrompt = `You are an AI assistant helping Rik Wanders create professional content using his resume data. Your role is to generate cover letters, LinkedIn messages, emails, summaries, and other professional communications that showcase his experience and skills effectively.
 
 Here is his complete resume data:
 
@@ -68,9 +94,10 @@ When generating content:
 11. Keep the content short and concise, except when explicitly asked for a longer / more detailed message
 12. Write the content from the perspective of Rik Wanders, as if you are him`;
 
-    const userPrompt = context
-      ? `Request: ${question}\n\nAdditional Context: ${context}`
-      : question;
+      userPrompt = context
+        ? `Request: ${question}\n\nAdditional Context: ${context}`
+        : question;
+    }
 
     let answer: string;
 
