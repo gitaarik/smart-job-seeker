@@ -168,7 +168,7 @@
         throw new Error(data.error || 'Failed to refine response')
       }
 
-      // Update the message content and add to refinement history
+      // Update the message and add to refinement history
       const updatedMessages = [...messages]
       const refinement = {
         content: data.answer,
@@ -178,11 +178,17 @@
       
       updatedMessages[messageIndex] = {
         ...updatedMessages[messageIndex],
-        content: data.answer,
+        // Don't update content - keep original in content field
         refinements: [...(updatedMessages[messageIndex].refinements || []), refinement]
       }
       
       messages = updatedMessages
+      
+      // Automatically switch to the new refinement version
+      const newRefinementIndex = updatedMessages[messageIndex].refinements.length - 1
+      selectedVersions[messageId] = newRefinementIndex
+      selectedVersions = { ...selectedVersions }
+      
       refinementInputs[messageId] = '' // Clear the input
 
     } catch (err: any) {
@@ -288,22 +294,40 @@
     showHistory = false
   }
 
-  function getDisplayedContent(message: any): string {
+  function getDisplayedContent(message: any, versions: Record<string, 'original' | number>): string {
+    console.log('getDisplayedContent called for message:', message.id)
+    console.log('message.refinements:', message.refinements)
+    console.log('versions:', versions)
+    console.log('selectedVersion for this message:', versions[message.id])
+    
     if (!message.refinements || message.refinements.length === 0) {
+      console.log('No refinements, returning original content')
       return message.content
     }
 
-    const selectedVersion = selectedVersions[message.id] || 'original'
+    const selectedVersion = versions[message.id] !== undefined ? versions[message.id] : 'original'
+    console.log('Selected version:', selectedVersion, 'Type:', typeof selectedVersion)
+    
     if (selectedVersion === 'original') {
+      console.log('Returning original content:', message.content.substring(0, 100))
       return message.content
     } else {
-      return message.refinements[selectedVersion]?.content || message.content
+      // selectedVersion is the refinement index
+      const refinedContent = message.refinements[selectedVersion]?.content
+      console.log('Returning refined content for index', selectedVersion, ':', refinedContent?.substring(0, 100))
+      console.log('Available refinements:', message.refinements.map(r => r.content.substring(0, 50)))
+      return refinedContent || message.content
     }
   }
 
   function switchVersion(messageId: string, version: 'original' | number) {
+    console.log('switchVersion called with:', messageId, version, 'Type:', typeof version)
+    console.log('Before update, selectedVersions:', selectedVersions)
     selectedVersions[messageId] = version
+    console.log('After direct assignment:', selectedVersions[messageId])
     selectedVersions = { ...selectedVersions } // Trigger reactivity
+    console.log('After spread operator, selectedVersions:', selectedVersions)
+    console.log('Final check - selectedVersions[messageId]:', selectedVersions[messageId])
   }
 </script>
 
@@ -547,7 +571,7 @@
                       </div>
                       <div class="flex items-center space-x-2 ml-4">
                         <button
-                          on:click={() => copyToClipboard(getDisplayedContent(message))}
+                          on:click={() => copyToClipboard(getDisplayedContent(message, selectedVersions))}
                           class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                           title="Copy to clipboard"
                         >
@@ -561,7 +585,9 @@
                       </div>
                     </div>
                     <div class="prose dark:prose-invert max-w-none">
-                      <pre class="whitespace-pre-wrap text-sm text-gray-900 dark:text-white font-sans">{getDisplayedContent(message)}</pre>
+                      {#key selectedVersions[message.id]}
+                        <pre class="whitespace-pre-wrap text-sm text-gray-900 dark:text-white font-sans">{getDisplayedContent(message, selectedVersions)}</pre>
+                      {/key}
                     </div>
 
                     <!-- Refinement Input -->
