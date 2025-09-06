@@ -74,7 +74,7 @@ model AiRefinement {
 }
 
 model WorkExperience {
-  id          String   @id @default(cuid())
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name        String   // Company name
   location    String
   description String
@@ -98,7 +98,7 @@ model WorkExperience {
 
 model WorkHighlight {
   id               String          @id @default(cuid())
-  workExperienceId String
+  workExperienceId String          @db.Uuid
   title            String?
   description      String          @db.Text
   iconName         String?         // Store FontAwesome icon name
@@ -124,7 +124,7 @@ model WorkHighlightTag {
 
 model WorkTechnology {
   id               String         @id @default(cuid())
-  workExperienceId String
+  workExperienceId String         @db.Uuid
   technologyName   String
   sortOrder        Int            @default(0)
   createdAt        DateTime       @default(now())
@@ -135,7 +135,7 @@ model WorkTechnology {
 
 model WorkProject {
   id               String         @id @default(cuid())
-  workExperienceId String
+  workExperienceId String         @db.Uuid
   name             String
   startDate        String
   endDate          String
