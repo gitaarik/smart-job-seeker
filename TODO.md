@@ -1,8 +1,5 @@
 # Todo
 
-- Add docs about connecting with psql CLI to Prisma dev DB:
-  `psql 'postgres://postgres:postgres@localhost:51214/template1?sslmode=disable&connect_timeout=0'`
-
 - Team management skills
   - items:
     - Implementing scrum / agile methodologoies
