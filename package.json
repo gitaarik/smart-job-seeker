@@ -4,9 +4,9 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "dev": "node -r dotenv/config ./node_modules/.bin/vite dev",
-    "build": "prisma migrate deploy && prisma generate && prisma generate && node -r dotenv/config ./node_modules/.bin/vite build",
-    "preview": "node -r dotenv/config ./node_modules/.bin/vite preview",
+    "dev": "dotenvx run -- vite dev",
+    "build": "prisma migrate deploy && prisma generate && dotenvx run -- vite build",
+    "preview": "dotenvx run -- vite preview",
     "prepare": "svelte-kit sync || echo ''",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
@@ -48,6 +48,7 @@
     "wait-on": "^8.0.4"
   },
   "dependencies": {
+    "@dotenvx/dotenvx": "^1.49.0",
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
     "@fortawesome/free-brands-svg-icons": "^6.7.2",
     "@fortawesome/free-regular-svg-icons": "^6.7.2",
