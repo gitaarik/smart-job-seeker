@@ -5,9 +5,6 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { resume } from "$lib/data/resume.js";
 import { isAdmin } from "$lib/auth.js";
 import { prisma } from "$lib/db.js";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,

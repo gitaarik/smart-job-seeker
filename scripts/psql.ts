@@ -1,9 +1,6 @@
 #!/usr/bin/env tsx
 
-import { config } from 'dotenv';
 import { spawn } from 'child_process';
-
-config();
 
 const connectionString = process.env.POSTGRES_URL;
 

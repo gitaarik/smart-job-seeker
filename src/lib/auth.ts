@@ -1,10 +1,6 @@
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { v4 as uuidv4 } from 'uuid'
-import { config } from 'dotenv'
-
-// Load environment variables
-config()
 
 function getJWTSecret(): string {
   const JWT_SECRET = process.env.JWT_SECRET
