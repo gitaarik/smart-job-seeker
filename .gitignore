@@ -14,18 +14,18 @@ Thumbs.db
 
 # Env
 .env
+.env.keys
 .env.*
 !.env.example
 !.env.test
 !.env.project
 !.env.vault
+# Using dotenvx now, and `.env.production` is encrypted,
+# and should be committed to the repo.
+!.env.production
 
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
 /../generated/prisma
-
-.env*
-
-.flaskenv*

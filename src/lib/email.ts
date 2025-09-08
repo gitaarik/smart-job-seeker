@@ -1,6 +1,8 @@
-const SMTP2GO_API_KEY = process.env.SMTP2GO_API_KEY
-const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@localhost'
-const FROM_NAME = process.env.FROM_NAME || 'Portfolio App'
+import { getEnv } from '$lib/tools/get-env'
+
+const SMTP2GO_API_KEY = getEnv('SMTP2GO_API_KEY')
+const FROM_EMAIL = getEnv('FROM_EMAIL') || 'noreply@localhost'
+const FROM_NAME = getEnv('FROM_NAME') || 'Portfolio App'
 
 if (!SMTP2GO_API_KEY) {
   console.warn('SMTP2GO_API_KEY is not set. Email functionality will be disabled.')
@@ -49,7 +51,7 @@ export async function sendEmail({ to, subject, html }: EmailOptions): Promise<bo
 }
 
 export async function sendPasswordResetEmail(email: string, resetToken: string): Promise<boolean> {
-  const resetUrl = `${process.env.APP_URL}/auth/reset-password?token=${resetToken}`
+  const resetUrl = `${getEnv('APP_URL')}/auth/reset-password?token=${resetToken}`
   
   const html = `
     <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">

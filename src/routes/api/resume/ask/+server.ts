@@ -5,12 +5,13 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { resume } from "$lib/data/resume.js";
 import { isAdmin } from "$lib/auth.js";
 import { prisma } from "$lib/db.js";
+import { getEnv } from "$lib/tools/get-env";
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: getEnv('OPENAI_API_KEY'),
 });
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+const genAI = new GoogleGenerativeAI(getEnv('GEMINI_API_KEY') || "");
 
 export const POST: RequestHandler = async ({ request, locals }) => {
   let llm = "openai"; // Default value
@@ -34,11 +35,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     }
 
     // Check API keys based on selected LLM
-    if (llm === "openai" && !process.env.OPENAI_API_KEY) {
+    if (llm === "openai" && !getEnv('OPENAI_API_KEY')) {
       return json({ error: "OpenAI API key not configured" }, { status: 500 });
     }
 
-    if (llm === "gemini" && !process.env.GEMINI_API_KEY) {
+    if (llm === "gemini" && !getEnv('GEMINI_API_KEY')) {
       return json({ error: "Gemini API key not configured" }, { status: 500 });
     }
 

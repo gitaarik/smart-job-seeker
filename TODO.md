@@ -1,6 +1,6 @@
 # Todo
 
-- Setup Dotenv Vault
+- Setup Dotenvx
 - Team management skills
   - items:
     - Implementing scrum / agile methodologoies

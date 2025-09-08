@@ -1,9 +1,10 @@
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { v4 as uuidv4 } from 'uuid'
+import { getEnv } from '$lib/tools/get-env'
 
 function getJWTSecret(): string {
-  const JWT_SECRET = process.env.JWT_SECRET
+  const JWT_SECRET = getEnv('JWT_SECRET')
   
   if (!JWT_SECRET) {
     throw new Error('JWT_SECRET environment variable is not set')

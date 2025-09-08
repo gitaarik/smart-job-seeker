@@ -4,8 +4,9 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
+    "dotenvx": "dotenvx",
     "dev": "dotenvx run -- vite dev",
-    "build": "prisma migrate deploy && prisma generate && dotenvx run -- vite build",
+    "build": "dotenvx run -- prisma migrate deploy && dotenvx run -- prisma generate && dotenvx run -- vite build",
     "preview": "dotenvx run -- vite preview",
     "prepare": "svelte-kit sync || echo ''",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
@@ -60,7 +61,6 @@
     "aos": "^2.3.4",
     "bcryptjs": "^3.0.2",
     "deno": "^2.4.0",
-    "dotenv": "^17.2.1",
     "jsonwebtoken": "^9.0.2",
     "openai": "^5.19.1",
     "prisma": "^6.15.0",
