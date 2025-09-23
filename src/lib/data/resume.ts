@@ -1561,6 +1561,42 @@ export const resume = {
       ],
     },
     {
+      category: "Challenges & Problem Resolution",
+      questions: [
+        {
+          question:
+            "Tell me about something you didn't like about a previous job and how you addressed it.",
+          answer: {
+            title: "Manual Integration Testing Bottleneck",
+            situation: [
+              "Manual integration testing required before each production deployment",
+              "Testing process took up to 1.5 hours per release",
+              "Process was error prone because of human errors",
+              "Time-consuming manual process slowed down development cycle"
+            ],
+            task: [
+              "Eliminate manual testing bottleneck",
+              "Enable faster, more reliable deployments",
+              "Reduce time investment required for each release",
+              "Improve reliability of test results"
+            ],
+            action: [
+              "Researched automated testing solutions and selected Selenium",
+              "Built comprehensive Selenium test suite covering the existing manual test procedures",
+              "Integrated automated tests into deployment pipeline",
+              "Created documentation for developers on running tests and creating new ones"
+            ],
+            result: [
+              "Reduced integration testing time from 1.5 hours to 5 minutes",
+              "Enabled any developer to run complete integration test suite",
+              "Increased deployment frequency and confidence",
+              "Eliminated testing bottleneck and improved development velocity"
+            ]
+          }
+        }
+      ]
+    },
+    {
       category: "Innovation & Improvement",
       questions: [
         {
