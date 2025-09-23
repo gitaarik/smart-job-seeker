@@ -1344,7 +1344,7 @@ export const resume = {
             situation: [
               "Early days at Chipta with minimal team structure",
               "3-5 developers working without established methodologies",
-              "Lack of coordination leading to inefficiencies",
+              "Changing requirements from management causing confusion with devs",
               "Need to scale development processes as team grew",
             ],
             task: [
