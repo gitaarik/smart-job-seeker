@@ -38,7 +38,7 @@
   const metaUrl = "https://www.rikwanders.tech/";
   const metaDescription =
     "Senior Full Stack Developer available for remote projects. Specialized in application development, system optimization, and technical strategy consulting. Focused on short-term engagements (2-6 months).";
-  const metaImg = "https://www.rikwanders.tech/images/logo.png";
+  const metaImg = "https://www.rikwanders.tech/images/profile-pic-square.png";
 
   let elAboutSection: HTMLElement;
   let elMoreInfo: HTMLElement;
