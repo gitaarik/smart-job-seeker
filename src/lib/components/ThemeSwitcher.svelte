@@ -80,36 +80,33 @@
 
 <div class="fixed top-4 right-4 z-50">
   <!-- Stylish theme indicator with slide-in animation -->
-  {#if showThemeIndicator}
-    <div
-      class="absolute right-14 top-1/2 -translate-y-1/2 flex items-center gap-2 px-3 py-2 bg-glass-light border border-glass rounded-lg shadow-lg backdrop-blur-md transition-all duration-300 ease-out animate-pulse overflow-hidden"
-      style="animation: slideInFromRight 0.3s ease-out forwards, fadeOut 0.5s ease-in 1.5s forwards"
-    >
-      <div class="relative w-4 h-4 overflow-hidden">
-        <span
-          class="block absolute {getIndicatorTopOffset()} transition-[top] duration-250"
-        >
-          <!-- Light theme icon -->
-          <span class="flex w-4 h-4 items-center justify-center">
-            <FontAwesomeIcon icon={faSun} class="w-3 h-3" />
-          </span>
-
-          <!-- Dark theme icon -->
-          <span class="flex w-4 h-4 items-center justify-center">
-            <FontAwesomeIcon icon={faMoon} class="w-3 h-3" />
-          </span>
-
-          <!-- Auto theme icon -->
-          <span class="flex w-4 h-4 items-center justify-center">
-            <FontAwesomeIcon icon={faCircleHalfStroke} class="w-3 h-3" />
-          </span>
+  <div
+    class="absolute right-14 top-1/2 -translate-y-1/2 flex items-center gap-2 px-3 py-2 bg-glass-light border border-glass rounded-lg shadow-lg backdrop-blur-md transition-all duration-300 ease-out overflow-hidden {showThemeIndicator ? 'opacity-100' : 'opacity-0'}"
+  >
+    <div class="relative w-4 h-4 overflow-hidden">
+      <span
+        class="block absolute {getIndicatorTopOffset()} transition-[top] duration-250"
+      >
+        <!-- Light theme icon -->
+        <span class="flex w-4 h-4 items-center justify-center">
+          <FontAwesomeIcon icon={faSun} class="w-3 h-3" />
         </span>
-      </div>
-      <span class="text-sm font-medium whitespace-nowrap">{
-        getThemeDisplayName()
-      }</span>
+
+        <!-- Dark theme icon -->
+        <span class="flex w-4 h-4 items-center justify-center">
+          <FontAwesomeIcon icon={faMoon} class="w-3 h-3" />
+        </span>
+
+        <!-- Auto theme icon -->
+        <span class="flex w-4 h-4 items-center justify-center">
+          <FontAwesomeIcon icon={faCircleHalfStroke} class="w-3 h-3" />
+        </span>
+      </span>
     </div>
-  {/if}
+    <span class="text-sm font-medium whitespace-nowrap">{
+      getThemeDisplayName()
+    }</span>
+  </div>
 
   <!-- Theme switcher button -->
   <button
