@@ -306,7 +306,7 @@
                 </li>
                 <li class="my-4 sm:my-5 flex items-center gap-3">
                   <FontAwesomeIcon icon={faNodeJs} class="w-4 text-teal" />
-                  JavaScript, Node.js, React
+                  JavaScript, Node.js, React, Svelte
                 </li>
                 <li class="my-4 sm:my-5 flex items-center gap-3">
                   <FontAwesomeIcon icon={faDatabase} class="w-4 text-teal" />
