@@ -26,7 +26,7 @@
     faUserTie,
   } from "@fortawesome/free-solid-svg-icons";
 
-  import profilePhoto from "$lib/images/profile-photo.jpeg?enhanced";
+  import profilePhoto from "$lib/images/profile-pic.png?enhanced";
   import Logo from "$lib/components/Logo.svelte";
   import ProfileLink from "$lib/components/ProfileLink.svelte";
   import InfoBox from "$lib/components/InfoBox.svelte";
@@ -112,7 +112,7 @@
   <meta property="twitter:image" content={metaImg}>
 </svelte:head>
 
-<div data-aos="fade">
+<div class="fixed top-0 right-0" data-aos="fade">
   <ThemeSwitcher />
 </div>
 

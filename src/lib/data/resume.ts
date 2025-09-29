@@ -40,7 +40,7 @@ export const resume = {
     name: "Rik Wanders",
     label: "Senior Full Stack Developer",
     subLabel: "Available for international remote collaboration",
-    image: "/src/lib/images/profile-photo.jpeg",
+    image: "/src/lib/images/profile-pic.png",
     email: "rik@rikwanders.tech",
     phone: "+31649118511",
     url: "https://www.rikwanders.tech",
