@@ -112,7 +112,7 @@
   <meta property="twitter:image" content={metaImg}>
 </svelte:head>
 
-<div class="fixed top-0 right-0" data-aos="fade">
+<div class="fixed top-0 right-0 z-50" data-aos="fade">
   <ThemeSwitcher />
 </div>
 
