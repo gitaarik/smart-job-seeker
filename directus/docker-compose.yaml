@@ -1,0 +1,27 @@
+services:
+  directus:
+    image: directus/directus:latest
+    ports:
+      - 8055:8055
+    volumes:
+      - ./uploads:/directus/uploads
+      - ./extensions:/directus/extensions
+    environment:
+      KEY: 'replace-with-random-value'
+      SECRET: 'replace-with-random-value'
+      
+      # Prisma connection string:
+      # postgres://ccc587e4d36f15ec4a35c0aa8bb5a8be864ae3b6c1665e2744a176f89106258a:sk_3X4C_Wi-K2LlcUsDD7oIZ@db.prisma.io:5432/postgres?sslmode=require
+
+      DB_CLIENT: 'pg'  # or mysql, sqlite3, etc.
+      DB_HOST: 'db.prisma.io'  # could be localhost, IP, or hostname
+      DB_PORT: '5432'
+      DB_DATABASE: 'postgres'
+      DB_USER: 'ccc587e4d36f15ec4a35c0aa8bb5a8be864ae3b6c1665e2744a176f89106258a'
+      DB_PASSWORD: 'sk_3X4C_Wi-K2LlcUsDD7oIZ'
+      DB_SSL: 'true'
+      # DB_CONNECTION_TIMEOUT: 60000
+      # DB_ACQUIRE_CONNECTION_TIMEOUT: 60000
+      
+      ADMIN_EMAIL: 'admin@example.com'
+      ADMIN_PASSWORD: 'your-admin-password'
