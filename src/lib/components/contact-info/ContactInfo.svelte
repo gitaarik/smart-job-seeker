@@ -207,7 +207,7 @@
           ><FontAwesomeIcon icon={faSignalMessenger} /></a>
 
           <a
-            href="https://api.whatsapp.com/send?phone=+31649118511"
+            href="https://wa.me/+31649118511"
             target="_blank"
             title="WhatsApp"
             class="hover:text-teal"
