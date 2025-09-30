@@ -5,7 +5,10 @@
   "type": "module",
   "scripts": {
     "dotenvx": "dotenvx",
-    "dev": "dotenvx run -- vite dev",
+    "dev": "concurrently --names dev-web,dev-db,dev-directus --prefix-colors red,blue,cyan npm:dev-web npm:dev-db npm:dev-directus",
+    "dev-web": "dotenvx run -- vite dev",
+    "dev-db": "npm exec prisma dev",
+    "dev-directus": "cd directus/ && docker compose up",
     "build": "dotenvx run -- prisma migrate deploy && dotenvx run -- prisma generate && dotenvx run -- vite build",
     "preview": "dotenvx run -- vite preview",
     "prepare": "svelte-kit sync || echo ''",
