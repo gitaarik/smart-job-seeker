@@ -18,12 +18,12 @@ services:
       # Prisma Dev DB connection string:
 
       DB_CLIENT: 'pg'  # or mysql, sqlite3, etc.
-      DB_HOST: 'host.docker.internal'  # could be localhost, IP, or hostname
-      DB_PORT: '51214'
-      DB_DATABASE: 'template1'
-      DB_USER: 'postgres'
-      DB_PASSWORD: 'postgres'
-      DB_SSL: 'false'
+      DB_HOST: ''  # could be localhost, IP, or hostname
+      DB_PORT: ''
+      DB_DATABASE: ''
+      DB_USER: ''
+      DB_PASSWORD: ''
+      DB_SSL: ''
 
       # DB_CONNECTION_TIMEOUT: 60000
       # DB_ACQUIRE_CONNECTION_TIMEOUT: 60000
