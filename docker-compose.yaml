@@ -1,6 +1,24 @@
 services:
+  postgres:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: smartjobseeker
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   directus:
     image: directus/directus:latest
+    restart: unless-stopped
     ports:
       - 8055:8055
     volumes:
@@ -11,20 +29,40 @@ services:
     environment:
       KEY: 'replace-with-random-value'
       SECRET: 'replace-with-random-value'
-      
 
-      # Prisma Dev DB connection string:
 
-      DB_CLIENT: 'pg'  # or mysql, sqlite3, etc.
-      DB_HOST: ''  # could be localhost, IP, or hostname
-      DB_PORT: ''
-      DB_DATABASE: ''
-      DB_USER: ''
-      DB_PASSWORD: ''
-      DB_SSL: ''
+      # Database connection:
+      DB_CLIENT: 'pg'
+      DB_HOST: 'postgres'
+      DB_PORT: '5432'
+      DB_DATABASE: 'smartjobseeker'
+      DB_USER: 'postgres'
+      DB_PASSWORD: 'postgres'
+      DB_SSL: 'false'
 
       # DB_CONNECTION_TIMEOUT: 60000
       # DB_ACQUIRE_CONNECTION_TIMEOUT: 60000
-      
+
       ADMIN_EMAIL: 'admin@example.com'
       ADMIN_PASSWORD: 'your-admin-password'
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
