@@ -8,8 +8,6 @@ services:
       - ./directus/extensions:/directus/extensions
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    env_file:
-      - ../.env  # Go up one directory to find .env
     environment:
       KEY: 'replace-with-random-value'
       SECRET: 'replace-with-random-value'
