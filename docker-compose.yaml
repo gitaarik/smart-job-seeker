@@ -63,10 +63,10 @@ services:
       CACHE_STORE: "redis"
       REDIS: "redis://cache:6379"
 
-      ADMIN_EMAIL: 'admin@example.com'
-      ADMIN_PASSWORD: 'your-admin-password'
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
 
-      PUBLIC_URL: "REPLACE_WITH_YOUR_URL"
+      PUBLIC_URL: ${PUBLIC_URL}
 
   app:
     build:
