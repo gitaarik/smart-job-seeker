@@ -68,7 +68,7 @@ services:
       PUBLIC_URL: ${ADMIN_PUBLIC_URL}
 
   app:
-    image: node:20-slim
+    image: node:20
     working_dir: /app
     restart: unless-stopped
     ports:
