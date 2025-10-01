@@ -43,7 +43,7 @@ services:
       cache:
         condition: service_healthy
     environment:
-      SECRET: 'replace-with-random-value'
+      SECRET: ${ADMIN_SECRET}
 
       # Database connection:
       DB_CLIENT: 'pg'
@@ -62,12 +62,10 @@ services:
       CACHE_STORE: "redis"
       REDIS: "redis://cache:6379"
 
-      # ADMIN_EMAIL: ${ADMIN_EMAIL}
-      # ADMIN_PASSWORD: ${ADMIN_PASSWORD}
-      ADMIN_EMAIL: 'rik@rikwanders.tech'
-      ADMIN_PASSWORD: 'waterpijp'
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
 
-      PUBLIC_URL: ${PUBLIC_URL}
+      PUBLIC_URL: ${ADMIN_PUBLIC_URL}
 
   app:
     image: node:20-slim
