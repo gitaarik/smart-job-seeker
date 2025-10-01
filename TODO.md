@@ -4,6 +4,7 @@
 
 ### Development
 
+- Add prisma studio container
 - Make directus use login details from database
 - Deploy docker setup on AWS
 - Insert data in Directus
