@@ -11,6 +11,7 @@
     "dev-db": "npm exec prisma dev",
     "dev-directus": "cd directus/ && docker compose up",
     "build": "npm i && dotenvx run -- prisma migrate deploy && dotenvx run -- prisma generate && dotenvx run -- vite build",
+    "rebuild": "npm ci && npm run build",
     "build:docker": "docker-compose exec app npm run build",
     "preview": "dotenvx run -- vite preview",
     "prepare": "svelte-kit sync || echo ''",
