@@ -1,6 +1,18 @@
 # Todo
 
-- Setup Dotenvx
+## Todo
+
+### Development
+
+- Make directus use login details from database
+- Deploy docker setup on AWS
+- Insert data in Directus
+- Add "Projects" section
+- Enhance portfolio, inspiration: https://youtu.be/Y2kGqbzvAn4
+- Generate static version of site so maybe reader view in firefox works
+
+### Content
+
 - Team management skills
   - items:
     - Implementing scrum / agile methodologoies
@@ -47,12 +59,9 @@
     - Git | Docker (Compose) | CI/CD | Ansible | GitHub Actions
     - Vercel | Linode | AWS
 
-- Add "Projects" section
-- Enhance portfolio, inspiration: https://youtu.be/Y2kGqbzvAn4
-- Generate static version of site so maybe reader view in firefox works
-
 ## Done:
 
+- Setup Dotenvx
 - Fix references quotes layout on mobile site view
 - Change slogan
   - Instead of "Python • Django • React • Node.js"
