@@ -27,6 +27,22 @@ services:
       start_interval: 5s
       start_period: 30s
 
+  app:
+    image: node:20
+    working_dir: /app
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: sh -c "npm run build && npx dotenvx run -- npx vite dev --host"
+    depends_on:
+      - database
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: 'postgres://postgres:postgres@database:5432/smartjobseeker'
+
   admin:
     # Directus Docs:
     # https://directus.io/docs/self-hosting/deploying#docker-compose-examples
@@ -38,6 +54,8 @@ services:
       - ./directus/uploads:/directus/uploads
       - ./directus/extensions:/directus/extensions
     depends_on:
+      app:
+        condition: service_healthy
       database:
         condition: service_healthy
       cache:
@@ -66,22 +84,6 @@ services:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
 
       PUBLIC_URL: ${ADMIN_PUBLIC_URL}
-
-  app:
-    image: node:20
-    working_dir: /app
-    restart: unless-stopped
-    ports:
-      - "5173:5173"
-    volumes:
-      - .:/app
-      - /app/node_modules
-    command: sh -c "npm run build && npx dotenvx run -- npx vite dev --host"
-    depends_on:
-      - database
-    environment:
-      NODE_ENV: development
-      DATABASE_URL: 'postgres://postgres:postgres@database:5432/smartjobseeker'
 
 volumes:
   postgres_data:
