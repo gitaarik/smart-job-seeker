@@ -17,7 +17,8 @@
       "Bash(npm run dev:*)",
       "Bash(npx tsx:*)",
       "Bash(chmod:*)",
-      "WebFetch(domain:dotenvx.com)"
+      "WebFetch(domain:dotenvx.com)",
+      "Bash(docker volume:*)"
     ],
     "deny": [],
     "ask": []
