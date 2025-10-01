@@ -3,26 +3,34 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
+
   "scripts": {
     "dotenvx": "dotenvx",
-    "dev": "dotenvx run -- vite dev",
-    "dev-all": "concurrently --names dev-web,dev-db,dev-directus --prefix-colors red,blue,cyan npm:dev-web npm:dev-db npm:dev-directus",
-    "dev-web": "dotenvx run -- vite dev",
-    "dev-db": "npm exec prisma dev",
-    "dev-directus": "cd directus/ && docker compose up",
+
+    "docker:dev": "dotenvx run -- vite dev --host",
+    "docker:build": "docker-compose exec app npm run build",
+
     "build": "npm i && dotenvx run -- prisma migrate deploy && dotenvx run -- prisma generate && dotenvx run -- vite build",
     "rebuild": "npm ci && npm run build",
-    "build:docker": "docker-compose exec app npm run build",
+
+    "dev-concur": "concurrently --names dev-web,dev-db,dev-directus --prefix-colors red,blue,cyan npm:dev-web npm:dev-db npm:dev-directus",
+    "dev-web": "dotenvx run -- vite dev",
+    "dev-db": "npm exec prisma dev",
+
     "preview": "dotenvx run -- vite preview",
     "prepare": "svelte-kit sync || echo ''",
+
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+
     "format": "prettier --write .",
     "lint": "prettier --check . && eslint .",
+
     "export-resume-pdf": "tsx scripts/export-resume-pdf.ts",
     "build-json-resume": "tsx scripts/build-json-resume.ts",
     "render-resume": "resumed render dist/resume.json --output dist/resume.html --theme jsonresume-theme-even"
   },
+
   "devDependencies": {
     "@eslint/compat": "^1.2.5",
     "@eslint/js": "^9.18.0",
