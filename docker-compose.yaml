@@ -76,11 +76,12 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
-    environment:
-      - NODE_ENV=development
     command: sh -c "npm install && npx prisma generate && npx dotenvx run -- npx vite dev --host"
     depends_on:
       - database
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: 'postgres://postgres:postgres@database:5432/smartjobseeker'
 
 volumes:
   postgres_data:
