@@ -1,8 +1,8 @@
 import { error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { prisma } from "$lib/db";
+import { read } from '$app/server';
 import path from "path";
-import { readAsset } from "$lib/tools/read-asset";
 
 const fileImports: Record<string, string> = import.meta.glob(
   "$lib/resumes/**/**.{pdf,docx}",
@@ -73,17 +73,6 @@ export const GET: RequestHandler = async ({ url, setHeaders }) => {
   }
 
   const file = fileImports[filePath];
-  const assetData = readAsset(file);
+  return read(file);
 
-  // Set appropriate headers for PDF
-  setHeaders({
-    "Content-Type": String(assetData.mimeType),
-    "Content-Length": String(assetData.length),
-    "Content-Disposition": `inline; filename="${resumeFilename}"`,
-    "Cache-Control": "no-cache, no-store, must-revalidate",
-    "Pragma": "no-cache",
-    "Expires": "0",
-  });
-
-  return new Response(assetData.contents);
 };
