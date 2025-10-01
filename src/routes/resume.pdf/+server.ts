@@ -13,7 +13,7 @@ const fileImports: Record<string, string> = import.meta.glob(
   },
 );
 
-export const GET: RequestHandler = async ({ url, setHeaders }) => {
+export const GET: RequestHandler = async ({ url }) => {
   const token = url.searchParams.get("t") || url.searchParams.get("token");
 
   if (!token) {
