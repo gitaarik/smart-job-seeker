@@ -39,6 +39,11 @@ services:
     command: sh -c "npm run build && npx dotenvx run -- npx vite dev --host"
     depends_on:
       - database
+    healthcheck:
+      test: ["CMD-SHELL", "curl -o /dev/null -s http://localhost:5174/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     environment:
       NODE_ENV: development
       DATABASE_URL: 'postgres://postgres:postgres@database:5432/smartjobseeker'
