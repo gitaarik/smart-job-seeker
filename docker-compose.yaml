@@ -40,7 +40,7 @@ services:
     depends_on:
       - database
     healthcheck:
-      test: ["CMD-SHELL", "curl -o /dev/null -s http://localhost:5174/"]
+      test: ["CMD-SHELL", "curl -o /dev/null -s http://localhost:5173/"]
       interval: 10s
       timeout: 5s
       retries: 5
