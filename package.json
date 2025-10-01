@@ -9,6 +9,7 @@
 
     "docker:dev": "dotenvx run -- vite dev --host",
     "docker:build": "docker-compose exec app npm run build",
+    "docker:psql": "docker-compose exec database psql -U postgres -d smartjobseeker",
 
     "build": "npm i && dotenvx run -- prisma migrate deploy && dotenvx run -- prisma generate && dotenvx run -- vite build",
     "rebuild": "npm ci && npm run build",
