@@ -2,6 +2,7 @@ import crypto from "crypto";
 import { dev } from "$app/environment";
 import { base } from "__sveltekit/paths";
 import { manifest, read_implementation } from "__sveltekit/server";
+import { read } from '$app/server';
 
 const fileEtags: Record<string, string> = {};
 
