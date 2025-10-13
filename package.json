@@ -10,14 +10,14 @@
     "docker:dev": "dotenvx run -- vite dev --host",
     "docker:build-app": "docker-compose exec app npm run build",
     "docker:psql": "docker-compose exec database psql -U postgres -d smartjobseeker",
-    "docker:export-resume-pdf": "docker-compose exec app npm exec tsx scripts/export-resume-pdf.ts",
+    "docker:export-resume-pdf": "docker-compose exec app npx tsx scripts/export-resume-pdf.ts",
 
     "build": "npm i && dotenvx run -- prisma migrate deploy && dotenvx run -- prisma generate && dotenvx run -- vite build",
     "rebuild": "npm ci && npm run build",
 
     "dev-concur": "concurrently --names dev-web,dev-db,dev-directus --prefix-colors red,blue,cyan npm:dev-web npm:dev-db npm:dev-directus",
     "dev-web": "dotenvx run -- vite dev",
-    "dev-db": "npm exec prisma dev",
+    "dev-db": "npx prisma dev",
 
     "preview": "dotenvx run -- vite preview",
     "prepare": "svelte-kit sync || echo ''",
@@ -28,8 +28,8 @@
     "format": "prettier --write .",
     "lint": "prettier --check . && eslint .",
 
-    "export-resume-pdf": "tsx scripts/export-resume-pdf.ts",
-    "build-json-resume": "tsx scripts/build-json-resume.ts",
+    "export-resume-pdf": "npx tsx scripts/export-resume-pdf.ts",
+    "build-json-resume": "npx tsx scripts/build-json-resume.ts",
     "render-resume": "resumed render dist/resume.json --output dist/resume.html --theme jsonresume-theme-even"
   },
 
