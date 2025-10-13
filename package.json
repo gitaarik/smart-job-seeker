@@ -29,6 +29,7 @@
     "lint": "prettier --check . && eslint .",
 
     "export-resume-pdf": "npx tsx scripts/export-resume-pdf.ts",
+    "sync-resumes-admin": "cp -r /home/rik/dev/smart-job-seeker/src/lib/resumes/* ~/data/Administratie/Freelancing/Resumes",
     "build-json-resume": "npx tsx scripts/build-json-resume.ts",
     "render-resume": "resumed render dist/resume.json --output dist/resume.html --theme jsonresume-theme-even"
   },

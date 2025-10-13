@@ -164,7 +164,7 @@ export const resume = {
       description: "Ticketing Service",
       position: "Lead Developer",
       url: "https://www.chipta.com/",
-      startDate: "2018-09",
+      startDate: "2017-09",
       endDate: "2024-06",
       summary:
         `Led teams of 3-5 developers at innovative ticketing platform for over ${yearsAtChipta} years, scaling the platform from concept to processing thousands of orders per minute. Optimized platform performance by 30-60%, implemented comprehensive testing suites, and orchestrated CI/CD systems. Built React Native mobile apps that contributed to a 40% revenue increase, modernized frontend interfaces with React, increasing user engagement by 30%. And integrated critical payment systems processing tens of millions in transactions.`,
@@ -539,7 +539,7 @@ export const resume = {
       description: "Tender/Procurement Discovery Platform",
       position: "Lead Developer",
       startDate: "2014-03",
-      endDate: "2018-06",
+      endDate: "2017-06",
       summary:
         "Built comprehensive tender discovery platform from scratch as Lead Developer, designing complete platform using agile methodology in consultation with non-technical founders. Developed industry-first Elasticsearch-powered search engine filtering hundreds of thousands of tenders, engineered automated web crawling systems importing thousands of tenders daily, and implemented subscription-based revenue model with recurring payments and automated notification systems.",
       logo: "/src/lib/images/company-logos/tender-it-logo.png",
