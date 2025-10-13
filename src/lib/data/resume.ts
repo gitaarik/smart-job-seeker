@@ -35,6 +35,8 @@ import {
 } from "@fortawesome/free-brands-svg-icons";
 import { faLinkedin } from "@fortawesome/free-brands-svg-icons";
 
+const yearsAtChipta = 6;
+
 export const resume = {
   basics: {
     name: "Rik Wanders",
@@ -125,14 +127,14 @@ export const resume = {
   workAccomplishment: {
     title: "Scaling Chipta: From Startup to High-Traffic Platform",
     description:
-      "My most impressive accomplishment was transforming Chipta from an early-stage proof of concept to a platform handling tens of millions in transactions. I led the complete migration to Django + React and modern web technologies, guided the creation of the React Native mobile app, and established a quality testing suite. Over 10 years, I built this into a robust system processing thousands of orders per minute during peak events while growing and leading the development team.",
+      `My most impressive accomplishment was transforming Chipta from an early-stage proof of concept to a platform handling tens of millions in transactions. I led the complete migration to Django + React and modern web technologies, guided the creation of the React Native mobile app, and established a quality testing suite. Over ${yearsAtChipta} years, I built this into a robust system processing thousands of orders per minute during peak events while growing and leading the development team.`,
     impact:
       "This decade-long technical leadership journey demonstrates my ability to scale both technology and teams while maintaining code quality and system reliability. The platform I built became the backbone for processing tens of millions in payment transactions and enabled the company to expand internationally. Most importantly, I established sustainable development practices that allowed the team to continue innovating long after each individual project was completed.",
     accomplishments: [
       {
         title: "Leading Platform Scaling Revolution",
         description:
-          "Led teams of 3-5 developers at innovative ticketing platform for over 10 years, scaling the platform from concept to processing thousands of orders per minute. Optimized platform performance by 30-60%, enabling the company to handle massive traffic spikes during high-demand events.",
+          `Led teams of 3-5 developers at innovative ticketing platform for over ${yearsAtChipta} years, scaling the platform from concept to processing thousands of orders per minute. Optimized platform performance by 30-60%, enabling the company to handle massive traffic spikes during high-demand events.`,
         impact: "Thousands of orders per minute processing capability",
         metrics: "30-60% performance optimization",
       },
@@ -160,10 +162,10 @@ export const resume = {
       description: "Ticketing Service",
       position: "Lead Developer",
       url: "https://www.chipta.com/",
-      startDate: "2014-09",
+      startDate: "2018-09",
       endDate: "2024-06",
       summary:
-        "Led teams of 3-5 developers at innovative ticketing platform for over 10 years, scaling the platform from concept to processing thousands of orders per minute. Optimed platform performance by 30-60%, implemented comprehensive testing suites, and orchestrated CI/CD systems. Built React Native mobile apps that contributed to a 40% revenue increase, modernized frontend interfaces with React, increasing user engagement by 30%. And integrated critical payment systems processing tens of millions in transactions.",
+        "Led teams of 3-5 developers at innovative ticketing platform for over 6 years, scaling the platform from concept to processing thousands of orders per minute. Optimized platform performance by 30-60%, implemented comprehensive testing suites, and orchestrated CI/CD systems. Built React Native mobile apps that contributed to a 40% revenue increase, modernized frontend interfaces with React, increasing user engagement by 30%. And integrated critical payment systems processing tens of millions in transactions.",
       logo: "/src/lib/images/company-logos/chipta-logo.png",
 
       highlights: [
@@ -533,11 +535,11 @@ export const resume = {
       name: "Tender-it",
       location: "Amsterdam, NL",
       description: "Tender/Procurement Discovery Platform",
-      position: "Lead Developer (part time)",
-      startDate: "2015-03",
-      endDate: "2022-06",
+      position: "Lead Developer",
+      startDate: "2014-03",
+      endDate: "2018-06",
       summary:
-        "Built comprehensive tender discovery platform from scratch as part time lead developer, designing complete platform using agile methodology in consultation with non-technical founders. Developed industry-first Elasticsearch-powered search engine filtering hundreds of thousands of tenders, engineered automated web crawling systems importing thousands of tenders daily, and implemented subscription-based revenue model with recurring payments and automated notification systems.",
+        "Built comprehensive tender discovery platform from scratch as Lead Developer, designing complete platform using agile methodology in consultation with non-technical founders. Developed industry-first Elasticsearch-powered search engine filtering hundreds of thousands of tenders, engineered automated web crawling systems importing thousands of tenders daily, and implemented subscription-based revenue model with recurring payments and automated notification systems.",
       logo: "/src/lib/images/company-logos/tender-it-logo.png",
 
       highlights: [
@@ -545,8 +547,8 @@ export const resume = {
           title: "Product Development",
           icon: faWrench,
           description:
-            "Delivered complete platform with Python, Django & React in part time setup in consultation with non-technical founders",
-          // "Delivered complete platform in part time setup by directing agile methods in consultation with non-technical founders",
+            "Delivered complete platform with Python, Django & React in consultation with non-technical founders",
+          // "Delivered complete platform by directing agile methods in consultation with non-technical founders",
           // "Directed agile/scrum methodology while designing complete platform in consultation with non-technical founders",
         },
 
@@ -1380,7 +1382,7 @@ export const resume = {
               "Successfully transitioned team to structured development process",
               "Improved team coordination and reduced miscommunication",
               "Increased development efficiency and code quality",
-              "Created scalable processes that supported team growth over 10 years",
+              `Created scalable processes that supported team growth over ${yearsAtChipta} years`,
             ],
           },
         },
