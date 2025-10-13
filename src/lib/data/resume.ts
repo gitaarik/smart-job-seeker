@@ -35,13 +35,15 @@ import {
 } from "@fortawesome/free-brands-svg-icons";
 import { faLinkedin } from "@fortawesome/free-brands-svg-icons";
 
-const yearsAtChipta = 6;
+const yearsAtChipta = 7;
 
 export const resume = {
   basics: {
     name: "Rik Wanders",
     label: "Senior Full Stack Developer",
-    subLabel: "Available for international remote collaboration",
+    subLabel1: "Python • Node.js • CI/CD • DevOps",
+    subLabel2: "Building scalable web applications for remote teams",
+
     image: "/src/lib/images/profile-pic.png",
     email: "rik@rikwanders.tech",
     phone: "+31649118511",
@@ -165,7 +167,7 @@ export const resume = {
       startDate: "2018-09",
       endDate: "2024-06",
       summary:
-        "Led teams of 3-5 developers at innovative ticketing platform for over 6 years, scaling the platform from concept to processing thousands of orders per minute. Optimized platform performance by 30-60%, implemented comprehensive testing suites, and orchestrated CI/CD systems. Built React Native mobile apps that contributed to a 40% revenue increase, modernized frontend interfaces with React, increasing user engagement by 30%. And integrated critical payment systems processing tens of millions in transactions.",
+        `Led teams of 3-5 developers at innovative ticketing platform for over ${yearsAtChipta} years, scaling the platform from concept to processing thousands of orders per minute. Optimized platform performance by 30-60%, implemented comprehensive testing suites, and orchestrated CI/CD systems. Built React Native mobile apps that contributed to a 40% revenue increase, modernized frontend interfaces with React, increasing user engagement by 30%. And integrated critical payment systems processing tens of millions in transactions.`,
       logo: "/src/lib/images/company-logos/chipta-logo.png",
 
       highlights: [

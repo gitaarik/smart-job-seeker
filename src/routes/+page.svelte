@@ -26,6 +26,7 @@
     faUserTie,
   } from "@fortawesome/free-solid-svg-icons";
 
+  import { resume } from "$lib/data/resume";
   import profilePhoto from "$lib/images/profile-pic.png?enhanced";
   import Logo from "$lib/components/Logo.svelte";
   import ProfileLink from "$lib/components/ProfileLink.svelte";
@@ -136,15 +137,15 @@
             id="header-heading"
             class="text-3xl font-medium"
           >
-            Rik Wanders
+            {resume.basics.name}
           </h1>
 
           <h2 class="mt-4 text-xl">
-            Senior Full Stack Developer
+            {resume.basics.label}
           </h2>
 
           <h3 class="mt-4">
-            Python • Node.js • CI/CD • DevOps
+            {resume.basics.subLabel1}
           </h3>
         </div>
 
@@ -152,7 +153,7 @@
           data-aos="fade"
           class="mt-10 italic"
         >
-          Building scalable web applications for remote teams
+          {resume.basics.subLabel2}
         </h4>
       </div>
 
