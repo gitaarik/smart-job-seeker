@@ -317,8 +317,8 @@ export const resume = {
       projects: [
         {
           name: "Migration to Django",
-          startDate: "2014-09",
-          endDate: "2015-03",
+          startDate: "2017-09",
+          endDate: "2018-03",
           summary:
             "Led migration from PHP to Django while maintaining backward compatibility and zero downtime.",
           description:
@@ -329,8 +329,8 @@ export const resume = {
 
         {
           name: "Dashboard Modernization",
-          startDate: "2015-04",
-          endDate: "2015-09",
+          startDate: "2018-04",
+          endDate: "2018-09",
           summary:
             "Built modern dashboard with Django backend and React frontend, improving user experience and performance.",
           description:
@@ -341,8 +341,8 @@ export const resume = {
 
         {
           name: "Ticket Shop Modernization",
-          startDate: "2015-02",
-          endDate: "2016-12",
+          startDate: "2018-02",
+          endDate: "2019-12",
           summary:
             "Rebuilt ticket purchasing system as single-page app, reducing cart abandonment by 35%.",
           description:
@@ -353,8 +353,8 @@ export const resume = {
 
         {
           name: "Developer Documentation",
-          startDate: "2015-10",
-          endDate: "2016-02",
+          startDate: "2018-10",
+          endDate: "2019-02",
           summary:
             "Created comprehensive developer documentation reducing onboarding time from 3-4 weeks to 5-7 days.",
           description:
@@ -365,8 +365,8 @@ export const resume = {
 
         {
           name: "Internationalization & Localization",
-          startDate: "2016-03",
-          endDate: "2016-07",
+          startDate: "2019-03",
+          endDate: "2019-07",
           summary:
             "Built flexible translation system enabling expansion to 8 international markets.",
           description:
@@ -377,8 +377,8 @@ export const resume = {
 
         {
           name: "Deployment System",
-          startDate: "2016-08",
-          endDate: "2017-02",
+          startDate: "2019-08",
+          endDate: "2020-02",
           summary:
             "Built complete CI/CD pipeline reducing deployment time from 2+ hours to 15 minutes.",
           description:
@@ -389,8 +389,8 @@ export const resume = {
 
         {
           name: "Test Suite Implementation",
-          startDate: "2017-03",
-          endDate: "2017-06",
+          startDate: "2020-03",
+          endDate: "2020-06",
           summary:
             "Established comprehensive testing system increasing code coverage from 15% to 85%.",
           description:
@@ -401,8 +401,8 @@ export const resume = {
 
         {
           name: "Visitor Management Tool",
-          startDate: "2017-07",
-          endDate: "2017-11",
+          startDate: "2020-07",
+          endDate: "2020-11",
           summary:
             "Built comprehensive attendee management interface saving organizers 5-8 hours per event.",
           description:
@@ -413,8 +413,8 @@ export const resume = {
 
         {
           name: "Mailing System Modernization",
-          startDate: "2017-12",
-          endDate: "2018-04",
+          startDate: "2020-12",
+          endDate: "2021-04",
           summary:
             "Modernized email system with HTML templates and personalization, increasing open rates by 45%.",
           description:
@@ -425,8 +425,8 @@ export const resume = {
 
         {
           name: "Website Integration Tool",
-          startDate: "2018-05",
-          endDate: "2018-08",
+          startDate: "2021-05",
+          endDate: "2021-08",
           summary:
             "Created embeddable ticket shop integration improving website conversion rates by 30%.",
           description:
@@ -437,8 +437,8 @@ export const resume = {
 
         {
           name: "Ticket PDF Modernization",
-          startDate: "2018-09",
-          endDate: "2018-12",
+          startDate: "2021-09",
+          endDate: "2021-12",
           summary:
             "Modernized PDF generation with HTML templates and QR security, eliminating ticket fraud.",
           description:
@@ -449,8 +449,8 @@ export const resume = {
 
         {
           name: "Performance Optimization",
-          startDate: "2019-01",
-          endDate: "2019-05",
+          startDate: "2022-01",
+          endDate: "2022-05",
           summary:
             "Optimized ticket shop performance by up to 60%, reducing load times from 8 to 3 seconds.",
           description:
@@ -461,8 +461,8 @@ export const resume = {
 
         {
           name: "Mobile Scan App",
-          startDate: "2019-06",
-          endDate: "2020-02",
+          startDate: "2022-06",
+          endDate: "2023-02",
           summary:
             "Built React Native scanning app reducing check-in times by 70% and saving organizers $50-200 per event.",
           description:
@@ -497,8 +497,8 @@ export const resume = {
 
         {
           name: "Shared Frontend Library",
-          startDate: "2021-01",
-          endDate: "2021-05",
+          startDate: "2023-01",
+          endDate: "2023-05",
           summary:
             "Created shared JavaScript library reducing code duplication by 40% across all projects.",
           description:
@@ -508,27 +508,27 @@ export const resume = {
         },
 
         {
-          name: "Feature Expansion",
-          startDate: "2021-06",
-          endDate: "2021-12",
-          summary:
-            "Enhanced multi-language support and custom attendee data collection, increasing international penetration by 60%.",
-          description:
-            "Built dashboard widget system for multi-language event management, implemented configurable custom questions, added age verification controls, and redesigned organizer signup process.",
-          outcome:
-            "60% increase in international market penetration, 75% adoption rate for custom questions feature, opened new market segments, 35% increase in organizer conversion rates.",
-        },
-
-        {
           name: "Public Events API",
-          startDate: "2022-01",
-          endDate: "2024-06",
+          startDate: "2023-06",
+          endDate: "2023-08",
           summary:
             "Built comprehensive REST API enabling partnerships and driving 30% increase in ticket sales.",
           description:
             "Designed REST API endpoints for structured event data access with privacy controls, implemented dashboard settings for public visibility control, and added categorization features for improved discovery.",
           outcome:
             "Enabled partnerships with 12+ event listing platforms, 30% increase in ticket sales through partner channels, improved event discoverability and audience matching.",
+        },
+
+        {
+          name: "Feature Expansion",
+          startDate: "2023-08",
+          endDate: "2024-08",
+          summary:
+            "Enhanced multi-language support and custom attendee data collection, increasing international penetration by 60%.",
+          description:
+            "Built dashboard widget system for multi-language event management, implemented configurable custom questions, added age verification controls, and redesigned organizer signup process.",
+          outcome:
+            "60% increase in international market penetration, 75% adoption rate for custom questions feature, opened new market segments, 35% increase in organizer conversion rates.",
         },
       ],
     },
