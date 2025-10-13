@@ -48,6 +48,8 @@ export const resume = {
     summary:
       "Dutch Senior Full Stack Developer residing in Spain, 12+ years Full Stack Python & Node.js experience, scaling complex, high-traffic & data heavy applications with Django & React, and leading agile development teams. Additional skills in DevOps, CI/CD & UX design. Always current with industry trends, AI, and security practices. Thrives in agile teams and/or startup environments. 5+ years remote work experience.",
 
+    headline: "Full Stack Developer 12+ years expertise in Python, Django, Node.js, React, CI/CD, DevOps, UX, AI",
+
     highlights: [
       {
         description:
@@ -606,6 +608,20 @@ export const resume = {
         "Vue.js",
         "Webpack",
       ],
+
+      projects: [
+        {
+          name: "Tender search engine powered by Elasticsearch",
+          // startDate: "2014-09",
+          // endDate: "2015-03",
+          // summary:
+          //   "Led migration from PHP to Django while maintaining backward compatibility and zero downtime.",
+          // description:
+          //   "Migrated entire application from PHP codebase to Django while keeping existing database intact and ensuring backwards compatibility. Moved all core business logic to take advantage of Django's framework features.",
+          // outcome:
+          //   "Complete platform migration with no downtime or data loss. Significantly improved development velocity and maintainability.",
+        },
+      ]
     },
 
     {
