@@ -10,6 +10,7 @@
     "docker:dev": "dotenvx run -- vite dev --host",
     "docker:build-app": "docker-compose exec app npm run build",
     "docker:psql": "docker-compose exec database psql -U postgres -d smartjobseeker",
+    "docker:export-resume-pdf": "docker-compose exec app npm exec tsx scripts/export-resume-pdf.ts",
 
     "build": "npm i && dotenvx run -- prisma migrate deploy && dotenvx run -- prisma generate && dotenvx run -- vite build",
     "rebuild": "npm ci && npm run build",
@@ -57,12 +58,12 @@
     "svelte": "^5.0.0",
     "svelte-check": "^4.0.0",
     "tailwindcss": "^4.0.0",
-    "tsx": "^4.20.4",
     "typescript": "^5.0.0",
     "typescript-eslint": "^8.20.0",
     "vite": "^6.2.6",
     "wait-on": "^8.0.4"
   },
+
   "dependencies": {
     "@dotenvx/dotenvx": "^1.49.0",
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
@@ -79,6 +80,7 @@
     "jsonwebtoken": "^9.0.2",
     "openai": "^5.19.1",
     "prisma": "^6.15.0",
+    "tsx": "^4.20.4",
     "uuid": "^11.1.0"
   }
 }
