@@ -165,7 +165,7 @@ export const resume = {
       position: "Lead Developer",
       url: "https://www.chipta.com/",
       startDate: "2017-09",
-      endDate: "2024-06",
+      endDate: "2024-09",
       summary:
         `Led teams of 3-5 developers at innovative ticketing platform for over ${yearsAtChipta} years, scaling the platform from concept to processing thousands of orders per minute. Optimized platform performance by 30-60%, implemented comprehensive testing suites, and orchestrated CI/CD systems. Built React Native mobile apps that contributed to a 40% revenue increase, modernized frontend interfaces with React, increasing user engagement by 30%. And integrated critical payment systems processing tens of millions in transactions.`,
       logo: "/src/lib/images/company-logos/chipta-logo.png",
