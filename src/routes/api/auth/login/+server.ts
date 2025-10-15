@@ -14,7 +14,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
     const client = createDirectusClient();
 
     // Login with Directus
-    const authResult = await client.login(email, password);
+    const authResult = await client.login({ email, password });
 
     if (!authResult.access_token || !authResult.refresh_token) {
       return json({ error: 'Invalid email or password' }, { status: 401 });
