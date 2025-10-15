@@ -11,6 +11,7 @@
     "docker:build-app": "docker-compose exec app npm run build",
     "docker:psql": "docker-compose exec database psql -U postgres -d smartjobseeker",
     "docker:export-resume-pdf": "docker-compose exec app npx tsx scripts/export-resume-pdf.ts",
+    "docker:db:migrate": "docker-compose exec app npx prisma migrate deploy",
 
     "build": "npm i && dotenvx run -- prisma migrate deploy && dotenvx run -- prisma generate && dotenvx run -- vite build",
     "rebuild": "npm ci && npm run build",

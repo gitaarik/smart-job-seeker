@@ -12,7 +12,7 @@ services:
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD", "pg_isready", "-U", "postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -36,7 +36,7 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
-    command: sh -c "npm ci && npm run docker:dev"
+    command: sh -c "npm ci && npx prisma migrate deploy && npm run docker:dev"
     depends_on:
       - database
     healthcheck:
@@ -90,19 +90,19 @@ services:
 
       PUBLIC_URL: ${ADMIN_PUBLIC_URL}
 
-  prisma-studio:
-    image: node:20
-    working_dir: /app
-    ports:
-      - "5555:5555"
-    volumes:
-      - .:/app
-      - /app/node_modules
-    command: sh -c "npx prisma studio --port 5555 --browser none"
-    depends_on:
-      - database
-    environment:
-      DATABASE_URL: 'postgres://postgres:postgres@database:5432/smartjobseeker'
+  # prisma-studio:
+  #   image: node:20
+  #   working_dir: /app
+  #   ports:
+  #     - "5555:5555"
+  #   volumes:
+  #     - .:/app
+  #     - /app/node_modules
+  #   command: sh -c "npx prisma studio --port 5555 --browser none"
+  #   depends_on:
+  #     - database
+  #   environment:
+  #     DATABASE_URL: 'postgres://postgres:postgres@database:5432/smartjobseeker'
 
 volumes:
   postgres_data:
