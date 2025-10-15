@@ -81,10 +81,10 @@ export const handle: Handle = async ({ event, resolve }) => {
       if (user) {
         event.locals.user = {
           id: user.id,
-          email: user.email,
+          email: user.email || '',
           firstName: user.first_name || null,
           lastName: user.last_name || null,
-          role: user.role || 'USER'
+          role: typeof user.role === 'string' ? (user.role as 'USER' | 'ADMIN' | 'SUPER_ADMIN') : 'USER'
         };
       }
     } catch (error: any) {
@@ -94,7 +94,7 @@ export const handle: Handle = async ({ event, resolve }) => {
       if (refreshToken && error?.errors?.[0]?.extensions?.code === 'TOKEN_EXPIRED') {
         try {
           const client = createDirectusClient();
-          const authResult = await client.request(refresh('json', refreshToken));
+          const authResult = await client.request(refresh());
 
           if (authResult.access_token && authResult.refresh_token) {
             // Update cookies with new tokens
@@ -125,10 +125,10 @@ export const handle: Handle = async ({ event, resolve }) => {
             if (user) {
               event.locals.user = {
                 id: user.id,
-                email: user.email,
+                email: user.email || '',
                 firstName: user.first_name || null,
                 lastName: user.last_name || null,
-                role: user.role || 'USER'
+                role: typeof user.role === 'string' ? (user.role as 'USER' | 'ADMIN' | 'SUPER_ADMIN') : 'USER'
               };
             }
           }

@@ -12,7 +12,7 @@ export const POST: RequestHandler = async ({ cookies }) => {
 
       // Logout from Directus (invalidates the refresh token)
       try {
-        await client.request(logout(refreshToken, 'json'));
+        await client.request(logout());
       } catch (error) {
         console.error('Directus logout error:', error);
         // Continue anyway to clear cookies

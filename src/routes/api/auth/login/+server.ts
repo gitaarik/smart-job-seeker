@@ -16,9 +16,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 
     // Login with Directus
     const authResult = await client.request(
-      login(email, password, {
-        mode: 'json'
-      })
+      login(email, password)
     );
 
     if (!authResult.access_token || !authResult.refresh_token) {

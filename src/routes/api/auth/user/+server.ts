@@ -16,7 +16,7 @@ export const GET: RequestHandler = async ({ cookies }) => {
 
     const user = await client.request(
       readMe({
-        fields: ['id', 'email', 'first_name', 'last_name', 'date_created']
+        fields: ['id', 'email', 'first_name', 'last_name']
       })
     );
 
@@ -27,10 +27,9 @@ export const GET: RequestHandler = async ({ cookies }) => {
     return json({
       user: {
         id: user.id,
-        email: user.email,
+        email: user.email || '',
         firstName: user.first_name,
-        lastName: user.last_name,
-        createdAt: user.date_created
+        lastName: user.last_name
       }
     });
   } catch (error) {

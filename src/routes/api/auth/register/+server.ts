@@ -37,9 +37,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 
       // Login the newly created user
       const authResult = await client.request(
-        login(email, password, {
-          mode: 'json'
-        })
+        login(email, password)
       );
 
       if (!authResult.access_token || !authResult.refresh_token) {

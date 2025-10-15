@@ -15,7 +15,7 @@ export const POST: RequestHandler = async ({ cookies }) => {
     const client = createDirectusClient();
 
     // Refresh the access token
-    const authResult = await client.request(refresh('json', refreshToken));
+    const authResult = await client.request(refresh());
 
     if (!authResult.access_token || !authResult.refresh_token) {
       return json({ error: 'Token refresh failed' }, { status: 401 });
