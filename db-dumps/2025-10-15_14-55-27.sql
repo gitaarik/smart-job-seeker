@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict C5fiSVkg69VfhxEpp90LVuvUmNjgdrI9PEVn5zvwFFinQRuV9T4kOGrIaPCdfwr
+\restrict reouC4FQCWWPrMgibhOjbWtb4KJekOyGr8q4wYfokM4usbKkWoTmZ6qHVnbm4j4
 
 -- Dumped from database version 15.14 (Debian 15.14-1.pgdg13+1)
 -- Dumped by pg_dump version 15.14 (Debian 15.14-1.pgdg13+1)
@@ -1131,6 +1131,8 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 7	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-15 14:46:38.366+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	2	http://localhost:8055
 8	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-15 14:46:45.625+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	2	http://localhost:8055
 9	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-15 14:47:13.748+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	work_experiences	f044625e-b180-4603-b03a-42a5a397403a	http://localhost:8055
+10	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-15 14:55:14.381+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	work_experiences	f044625e-b180-4603-b03a-42a5a397403a	http://localhost:8055
+11	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-15 14:55:21.485+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	work_experiences	f044625e-b180-4603-b03a-42a5a397403a	http://localhost:8055
 \.
 
 
@@ -1371,6 +1373,8 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 5	7	directus_fields	2	{"special":["uuid"],"collection":"work_experiences","field":"id"}	{"special":["uuid"],"collection":"work_experiences","field":"id"}	\N	\N
 6	8	directus_fields	2	{"id":2,"collection":"work_experiences","field":"id","special":["uuid"],"interface":null,"options":null,"display":null,"display_options":null,"readonly":true,"hidden":false,"sort":null,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"id","readonly":true}	\N	\N
 7	9	work_experiences	f044625e-b180-4603-b03a-42a5a397403a	{"name":"wajo dannn","location":"wajo","description":"wajo","position":"wajo","url":"wajo","startDate":"wajowajo","endDate":"wajo","summary":"wajo","createdAt":"2025-10-22T12:00:00","updatedAt":"2025-10-15T12:00:00"}	{"name":"wajo dannn","location":"wajo","description":"wajo","position":"wajo","url":"wajo","startDate":"wajowajo","endDate":"wajo","summary":"wajo","createdAt":"2025-10-22T12:00:00","updatedAt":"2025-10-15T12:00:00"}	\N	\N
+8	10	work_experiences	f044625e-b180-4603-b03a-42a5a397403a	{"name":"wajo22 dannn222","location":"wajo hola jatzer","description":"wajo","position":"wajo","url":"wajo","startDate":"wajowajo","endDate":"wajo","summary":"wajo","sortOrder":0,"isActive":true,"createdAt":"2025-10-22T12:00:00","updatedAt":"2025-10-15T12:00:00","id":"f044625e-b180-4603-b03a-42a5a397403a","logo":null}	{"name":"wajo22 dannn222","location":"wajo hola jatzer"}	\N	\N
+9	11	work_experiences	f044625e-b180-4603-b03a-42a5a397403a	{"name":"wajo22 dannn222","location":"wajo hola jatzer","description":"wajozzz","position":"wajo","url":"wajo","startDate":"wajowajo","endDate":"wajo","summary":"wajo","sortOrder":0,"isActive":true,"createdAt":"2025-10-22T12:00:00","updatedAt":"2025-10-15T12:00:00","id":"f044625e-b180-4603-b03a-42a5a397403a","logo":null}	{"description":"wajozzz"}	\N	\N
 \.
 
 
@@ -1389,8 +1393,8 @@ COPY public.directus_roles (id, name, icon, description, parent) FROM stdin;
 
 COPY public.directus_sessions (token, "user", expires, ip, user_agent, share, origin, next_token) FROM stdin;
 jyEi42Iib3ayUhuKtRg8crSw0qNgHJgwHBGyXgh2IXu6VhJFRchsBiOMADOe89TD	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-22 11:36:02.247+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	\N	http://localhost:8055	\N
-_FUnynwziAQbrlBlkzSynVTG9nHGDN2zEjKF5Sp5WrofuaonmLVVbvNUnfkj1w4j	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-15 14:46:02.219+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	\N	http://localhost:8055	x0xzQT45FIGQSU7f6eYqVZhqWfiHUtabxpCGbeCZPGSFC_yRJ8ztDMRJyMJw1ALr
-x0xzQT45FIGQSU7f6eYqVZhqWfiHUtabxpCGbeCZPGSFC_yRJ8ztDMRJyMJw1ALr	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-16 14:45:52.219+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	\N	http://localhost:8055	\N
+x0xzQT45FIGQSU7f6eYqVZhqWfiHUtabxpCGbeCZPGSFC_yRJ8ztDMRJyMJw1ALr	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-15 14:55:03.615+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	\N	http://localhost:8055	TEDQJcv3B_VRgKFQfTvRuv3zZtepEFme2-MaZjPf-mRgC-l8p68ZHCyktVAknRHL
+TEDQJcv3B_VRgKFQfTvRuv3zZtepEFme2-MaZjPf-mRgC-l8p68ZHCyktVAknRHL	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-16 14:54:53.614+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	\N	http://localhost:8055	\N
 \.
 
 
@@ -1424,7 +1428,7 @@ COPY public.directus_translations (id, language, key, value) FROM stdin;
 --
 
 COPY public.directus_users (id, first_name, last_name, email, password, location, title, description, tags, avatar, language, tfa_secret, status, role, token, last_access, last_page, provider, external_identifier, auth_data, email_notifications, appearance, theme_dark, theme_light, theme_light_overrides, theme_dark_overrides, text_direction) FROM stdin;
-157238bb-6930-4f26-be9c-8b31a9e11ab8	Admin	User	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-10-15 14:45:52.222+00	/content/work_experiences	default	\N	\N	t	\N	\N	\N	\N	\N	auto
+157238bb-6930-4f26-be9c-8b31a9e11ab8	Admin	User	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-10-15 14:54:53.621+00	/content/work_experiences	default	\N	\N	t	\N	\N	\N	\N	\N	auto
 \.
 
 
@@ -1465,7 +1469,7 @@ COPY public.users (email, password, "firstName", "lastName", "isEmailVerified", 
 --
 
 COPY public.work_experiences (name, location, description, "position", url, "startDate", "endDate", summary, "sortOrder", "isActive", "createdAt", "updatedAt", id, logo) FROM stdin;
-wajo dannn	wajo	wajo	wajo	wajo	wajowajo	wajo	wajo	0	t	2025-10-22 12:00:00	2025-10-15 12:00:00	f044625e-b180-4603-b03a-42a5a397403a	\N
+wajo22 dannn222	wajo hola jatzer	wajozzz	wajo	wajo	wajowajo	wajo	wajo	0	t	2025-10-22 12:00:00	2025-10-15 12:00:00	f044625e-b180-4603-b03a-42a5a397403a	\N
 \.
 
 
@@ -1505,7 +1509,7 @@ COPY public.work_technologies ("workExperienceId", "technologyName", "sortOrder"
 -- Name: directus_activity_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_activity_id_seq', 9, true);
+SELECT pg_catalog.setval('public.directus_activity_id_seq', 11, true);
 
 
 --
@@ -1547,7 +1551,7 @@ SELECT pg_catalog.setval('public.directus_relations_id_seq', 1, false);
 -- Name: directus_revisions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_revisions_id_seq', 7, true);
+SELECT pg_catalog.setval('public.directus_revisions_id_seq', 9, true);
 
 
 --
@@ -2326,5 +2330,5 @@ ALTER TABLE ONLY public.work_technologies
 -- PostgreSQL database dump complete
 --
 
-\unrestrict C5fiSVkg69VfhxEpp90LVuvUmNjgdrI9PEVn5zvwFFinQRuV9T4kOGrIaPCdfwr
+\unrestrict reouC4FQCWWPrMgibhOjbWtb4KJekOyGr8q4wYfokM4usbKkWoTmZ6qHVnbm4j4
 
