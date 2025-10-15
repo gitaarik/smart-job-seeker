@@ -9,8 +9,10 @@
 
     "docker:dev": "dotenvx run -- vite dev --host",
     "docker:build-app": "docker-compose exec app npm run build",
-    "docker:psql": "docker-compose exec database psql -U postgres -d smartjobseeker",
     "docker:export-resume-pdf": "docker-compose exec app npx tsx scripts/export-resume-pdf.ts",
+
+    "docker:db:cli": "docker-compose exec database psql -U postgres -d smartjobseeker",
+    "docker:db:backup": "docker-compose exec database pg_dump -U postgres -d smartjobseeker > db-dumps/$(date +'%Y-%m-%d_%H-%M-%S').sql",
     "docker:db:migrate": "docker-compose exec app npx prisma migrate deploy",
 
     "build": "npm i && dotenvx run -- prisma migrate deploy && dotenvx run -- prisma generate && dotenvx run -- vite build",
