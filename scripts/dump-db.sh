@@ -1,6 +1,5 @@
 #!/bin/bash
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 cd "$DIR/../db-dumps/" || exit
 
 filename=$(date +'%Y-%m-%d_%H-%M-%S').sql
