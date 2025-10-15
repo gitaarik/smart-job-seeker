@@ -90,19 +90,19 @@ services:
 
       PUBLIC_URL: ${ADMIN_PUBLIC_URL}
 
-  # prisma-studio:
-  #   image: node:20
-  #   working_dir: /app
-  #   ports:
-  #     - "5555:5555"
-  #   volumes:
-  #     - .:/app
-  #     - /app/node_modules
-  #   command: sh -c "npx prisma studio --port 5555 --browser none"
-  #   depends_on:
-  #     - database
-  #   environment:
-  #     DATABASE_URL: 'postgres://postgres:postgres@database:5432/smartjobseeker'
+  prisma-studio:
+    image: node:20
+    working_dir: /app
+    ports:
+      - "5555:5555"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: sh -c "npx prisma studio --port 5555 --browser none"
+    depends_on:
+      - database
+    environment:
+      DATABASE_URL: 'postgres://postgres:postgres@database:5432/smartjobseeker'
 
 volumes:
   postgres_data:
