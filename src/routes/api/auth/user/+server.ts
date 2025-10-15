@@ -1,40 +1,40 @@
-import { json } from '@sveltejs/kit'
-import { prisma } from '$lib/db'
-import { verifyJWT } from '$lib/auth'
-import type { RequestHandler } from './$types'
+import { json } from '@sveltejs/kit';
+import { createDirectusClient } from '$lib/directus';
+import { readMe } from '@directus/sdk';
+import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ cookies }) => {
   try {
-    const token = cookies.get('token')
+    const accessToken = cookies.get('directus_access_token');
 
-    if (!token) {
-      return json({ error: 'Not authenticated' }, { status: 401 })
+    if (!accessToken) {
+      return json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    const decoded = verifyJWT(token)
+    const client = createDirectusClient();
+    client.setToken(accessToken);
 
-    if (!decoded) {
-      return json({ error: 'Invalid token' }, { status: 401 })
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        createdAt: true
-      }
-    })
+    const user = await client.request(
+      readMe({
+        fields: ['id', 'email', 'first_name', 'last_name', 'date_created']
+      })
+    );
 
     if (!user) {
-      return json({ error: 'User not found' }, { status: 404 })
+      return json({ error: 'User not found' }, { status: 404 });
     }
 
-    return json({ user })
+    return json({
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        createdAt: user.date_created
+      }
+    });
   } catch (error) {
-    console.error('User profile error:', error)
-    return json({ error: 'Internal server error' }, { status: 500 })
+    console.error('User profile error:', error);
+    return json({ error: 'Invalid or expired token' }, { status: 401 });
   }
-}
+};

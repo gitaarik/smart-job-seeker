@@ -3,41 +3,31 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
-
   "scripts": {
     "dotenvx": "dotenvx",
-
     "docker:dev": "dotenvx run -- vite dev --host",
     "docker:build-app": "docker-compose exec app npm run build",
     "docker:export-resume-pdf": "docker-compose exec app npx tsx scripts/export-resume-pdf.ts",
-
     "docker:db:cli": "docker-compose exec database psql -U postgres -d smartjobseeker",
     "docker:db:backup": "docker-compose exec database ./scripts/dump-db.sh",
     "docker:db:restore": "docker-compose exec database ./scripts/restore-last-db-dump.sh",
     "docker:db:migrate": "docker-compose exec app npx prisma migrate deploy",
-
     "build": "npm i && dotenvx run -- prisma migrate deploy && dotenvx run -- prisma generate && dotenvx run -- vite build",
     "rebuild": "npm ci && npm run build",
-
     "dev-concur": "concurrently --names dev-web,dev-db,dev-directus --prefix-colors red,blue,cyan npm:dev-web npm:dev-db npm:dev-directus",
     "dev-web": "dotenvx run -- vite dev",
     "dev-db": "npx prisma dev",
-
     "preview": "dotenvx run -- vite preview",
     "prepare": "svelte-kit sync || echo ''",
-
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-
     "format": "prettier --write .",
     "lint": "prettier --check . && eslint .",
-
     "export-resume-pdf": "npx tsx scripts/export-resume-pdf.ts",
     "sync-resumes-admin": "cp -r /home/rik/dev/smart-job-seeker/src/lib/resumes/* ~/data/Administratie/Freelancing/Resumes",
     "build-json-resume": "npx tsx scripts/build-json-resume.ts",
     "render-resume": "resumed render dist/resume.json --output dist/resume.html --theme jsonresume-theme-even"
   },
-
   "devDependencies": {
     "@eslint/compat": "^1.2.5",
     "@eslint/js": "^9.18.0",
@@ -68,8 +58,8 @@
     "vite": "^6.2.6",
     "wait-on": "^8.0.4"
   },
-
   "dependencies": {
+    "@directus/sdk": "^20.1.0",
     "@dotenvx/dotenvx": "^1.49.0",
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
     "@fortawesome/free-brands-svg-icons": "^6.7.2",

@@ -1,31 +1,27 @@
 import { json } from '@sveltejs/kit';
 import { createDirectusClient } from '$lib/directus';
 import { getEnv } from '$lib/tools/get-env';
-import { login, refresh } from '@directus/sdk';
+import { refresh } from '@directus/sdk';
 import type { RequestHandler } from './$types';
 
-export const POST: RequestHandler = async ({ request, cookies }) => {
+export const POST: RequestHandler = async ({ cookies }) => {
   try {
-    const { email, password } = await request.json();
+    const refreshToken = cookies.get('directus_refresh_token');
 
-    if (!email || !password) {
-      return json({ error: 'Email and password are required' }, { status: 400 });
+    if (!refreshToken) {
+      return json({ error: 'No refresh token found' }, { status: 401 });
     }
 
     const client = createDirectusClient();
 
-    // Login with Directus
-    const authResult = await client.request(
-      login(email, password, {
-        mode: 'json'
-      })
-    );
+    // Refresh the access token
+    const authResult = await client.request(refresh('json', refreshToken));
 
     if (!authResult.access_token || !authResult.refresh_token) {
-      return json({ error: 'Invalid email or password' }, { status: 401 });
+      return json({ error: 'Token refresh failed' }, { status: 401 });
     }
 
-    // Set access token cookie
+    // Set new access token cookie
     cookies.set('directus_access_token', authResult.access_token, {
       httpOnly: true,
       secure: getEnv('NODE_ENV') === 'production',
@@ -34,7 +30,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
       path: '/'
     });
 
-    // Set refresh token cookie
+    // Set new refresh token cookie
     cookies.set('directus_refresh_token', authResult.refresh_token, {
       httpOnly: true,
       secure: getEnv('NODE_ENV') === 'production',
@@ -50,7 +46,10 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
       expires: authResult.expires
     });
   } catch (error) {
-    console.error('Login error:', error);
-    return json({ error: 'Invalid email or password' }, { status: 401 });
+    console.error('Token refresh error:', error);
+    // Clear invalid tokens
+    cookies.delete('directus_access_token', { path: '/' });
+    cookies.delete('directus_refresh_token', { path: '/' });
+    return json({ error: 'Token refresh failed' }, { status: 401 });
   }
 };

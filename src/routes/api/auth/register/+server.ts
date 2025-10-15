@@ -1,65 +1,84 @@
-import { json } from '@sveltejs/kit'
-import { prisma } from '$lib/db'
-import { hashPassword, isValidEmail, generateJWT } from '$lib/auth'
-import { getEnv } from '$lib/tools/get-env'
-import type { RequestHandler } from './$types'
+import { json } from '@sveltejs/kit';
+import { createDirectusClient } from '$lib/directus';
+import { isValidEmail } from '$lib/auth';
+import { getEnv } from '$lib/tools/get-env';
+import { createUser, login } from '@directus/sdk';
+import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request, cookies }) => {
   try {
-    const { email, password, firstName, lastName } = await request.json()
+    const { email, password, firstName, lastName } = await request.json();
 
     if (!email || !password) {
-      return json({ error: 'Email and password are required' }, { status: 400 })
+      return json({ error: 'Email and password are required' }, { status: 400 });
     }
 
     if (!isValidEmail(email)) {
-      return json({ error: 'Invalid email format' }, { status: 400 })
+      return json({ error: 'Invalid email format' }, { status: 400 });
     }
 
     if (password.length < 6) {
-      return json({ error: 'Password must be at least 6 characters' }, { status: 400 })
+      return json({ error: 'Password must be at least 6 characters' }, { status: 400 });
     }
 
-    const existingUser = await prisma.user.findUnique({
-      where: { email }
-    })
+    const client = createDirectusClient();
 
-    if (existingUser) {
-      return json({ error: 'User already exists with this email' }, { status: 409 })
+    try {
+      // Create user in Directus
+      await client.request(
+        createUser({
+          email,
+          password,
+          first_name: firstName || undefined,
+          last_name: lastName || undefined,
+          role: null // Set to default role, or specify your default role ID
+        })
+      );
+
+      // Login the newly created user
+      const authResult = await client.request(
+        login(email, password, {
+          mode: 'json'
+        })
+      );
+
+      if (!authResult.access_token || !authResult.refresh_token) {
+        return json({ error: 'Registration successful but login failed' }, { status: 500 });
+      }
+
+      // Set access token cookie
+      cookies.set('directus_access_token', authResult.access_token, {
+        httpOnly: true,
+        secure: getEnv('NODE_ENV') === 'production',
+        sameSite: 'strict',
+        maxAge: authResult.expires || 60 * 15, // 15 minutes default
+        path: '/'
+      });
+
+      // Set refresh token cookie
+      cookies.set('directus_refresh_token', authResult.refresh_token, {
+        httpOnly: true,
+        secure: getEnv('NODE_ENV') === 'production',
+        sameSite: 'strict',
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+        path: '/'
+      });
+
+      return json({
+        success: true,
+        access_token: authResult.access_token,
+        refresh_token: authResult.refresh_token,
+        expires: authResult.expires
+      });
+    } catch (error: any) {
+      // Handle Directus-specific errors
+      if (error?.errors?.[0]?.extensions?.code === 'RECORD_NOT_UNIQUE') {
+        return json({ error: 'User already exists with this email' }, { status: 409 });
+      }
+      throw error;
     }
-
-    const hashedPassword = await hashPassword(password)
-
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        firstName: firstName || null,
-        lastName: lastName || null
-      }
-    })
-
-    const token = generateJWT(user.id)
-
-    cookies.set('token', token, {
-      httpOnly: true,
-      secure: getEnv('NODE_ENV') === 'production',
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 24 * 7,
-      path: '/'
-    })
-
-    return json({
-      success: true,
-      user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName
-      }
-    })
   } catch (error) {
-    console.error('Registration error:', error)
-    return json({ error: 'Internal server error' }, { status: 500 })
+    console.error('Registration error:', error);
+    return json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+};
