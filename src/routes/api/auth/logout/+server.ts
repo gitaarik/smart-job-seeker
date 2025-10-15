@@ -1,6 +1,5 @@
 import { json } from '@sveltejs/kit';
 import { createDirectusClient } from '$lib/directus';
-import { logout } from '@directus/sdk';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ cookies }) => {
@@ -12,7 +11,7 @@ export const POST: RequestHandler = async ({ cookies }) => {
 
       // Logout from Directus (invalidates the refresh token)
       try {
-        await client.request(logout());
+        await client.logout();
       } catch (error) {
         console.error('Directus logout error:', error);
         // Continue anyway to clear cookies

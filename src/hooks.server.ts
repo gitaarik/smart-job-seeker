@@ -1,6 +1,6 @@
 import type { Handle } from '@sveltejs/kit';
 import { createDirectusClient } from '$lib/directus';
-import { readMe, refresh } from '@directus/sdk';
+import { readMe } from '@directus/sdk';
 
 function getSystemTheme(request: Request): 'light' | 'dark' {
   // Try to detect system preference from headers
@@ -94,7 +94,7 @@ export const handle: Handle = async ({ event, resolve }) => {
       if (refreshToken && error?.errors?.[0]?.extensions?.code === 'TOKEN_EXPIRED') {
         try {
           const client = createDirectusClient();
-          const authResult = await client.request(refresh());
+          const authResult = await client.refresh();
 
           if (authResult.access_token && authResult.refresh_token) {
             // Update cookies with new tokens

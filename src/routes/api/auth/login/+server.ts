@@ -1,7 +1,6 @@
 import { json } from '@sveltejs/kit';
 import { createDirectusClient } from '$lib/directus';
 import { getEnv } from '$lib/tools/get-env';
-import { login, refresh } from '@directus/sdk';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request, cookies }) => {
@@ -15,9 +14,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
     const client = createDirectusClient();
 
     // Login with Directus
-    const authResult = await client.request(
-      login(email, password)
-    );
+    const authResult = await client.login(email, password);
 
     if (!authResult.access_token || !authResult.refresh_token) {
       return json({ error: 'Invalid email or password' }, { status: 401 });

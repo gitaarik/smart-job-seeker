@@ -2,7 +2,7 @@ import { json } from '@sveltejs/kit';
 import { createDirectusClient } from '$lib/directus';
 import { isValidEmail } from '$lib/auth';
 import { getEnv } from '$lib/tools/get-env';
-import { createUser, login } from '@directus/sdk';
+import { createUser } from '@directus/sdk';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request, cookies }) => {
@@ -36,9 +36,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
       );
 
       // Login the newly created user
-      const authResult = await client.request(
-        login(email, password)
-      );
+      const authResult = await client.login(email, password);
 
       if (!authResult.access_token || !authResult.refresh_token) {
         return json({ error: 'Registration successful but login failed' }, { status: 500 });

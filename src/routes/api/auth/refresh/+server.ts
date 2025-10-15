@@ -1,7 +1,6 @@
 import { json } from '@sveltejs/kit';
 import { createDirectusClient } from '$lib/directus';
 import { getEnv } from '$lib/tools/get-env';
-import { refresh } from '@directus/sdk';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ cookies }) => {
@@ -15,7 +14,7 @@ export const POST: RequestHandler = async ({ cookies }) => {
     const client = createDirectusClient();
 
     // Refresh the access token
-    const authResult = await client.request(refresh());
+    const authResult = await client.refresh();
 
     if (!authResult.access_token || !authResult.refresh_token) {
       return json({ error: 'Token refresh failed' }, { status: 401 });
