@@ -60,48 +60,13 @@
   >
     <HeaderSection />
 
-    <div class="print:hidden">
-      <InfoMenu {activeSection} />
-    </div>
-
-    <div class="print:break-inside-avoid">
-      {#if activeSection === "overview"}
-        <OverviewSection />
-      {:else if activeSection === "personality"}
-        <PersonalityAndMethodologies />
-      {:else if activeSection === "whatExcitesMe"}
-        <WhatExcitesMeSection />
-      {:else if activeSection === "technical"}
-        <TechnicalExpertiseSection />
-      {:else if activeSection === "experience"}
-        <ProfessionalExperience />
-      {:else if activeSection === "workAccomplishment"}
-        <WorkAccomplishmentSection />
-      {:else if activeSection === "education"}
-        <EducationSection />
-      {:else if activeSection === "projects"}
-        <ProjectsSection />
-      {:else if activeSection === "interests"}
-        <HobbiesInterestsSection />
-      {:else if activeSection === "idealCompany"}
-        <IdealCompanySection />
-      {:else if activeSection === "fiveYearVision"}
-        <FiveYearVisionSection />
-      {:else if activeSection === "weaknesses"}
-        <WeaknessesSection />
-      {:else if activeSection === "currentChallenges"}
-        <CurrentChallengesSection />
-      {:else if activeSection === "selfReflection"}
-        <SelfReflectionSection />
-      {:else if activeSection === "careerPriorities"}
-        <CareerPrioritiesSection />
-      {:else if activeSection === "flowState"}
-        <FlowStateSection />
-      {:else if activeSection === "interviewQuestions"}
-        <InterviewQuestionsSection />
-      {:else if activeSection === "references"}
-        <ReferencesSection />
-      {/if}
-    </div>
+    <OverviewSection />
+    <TechnicalExpertiseSection />
+    <PersonalityAndMethodologies />
+    <ProfessionalExperience />
+    <EducationSection />
+    <ProjectsSection />
+    <HobbiesInterestsSection />
+    <ReferencesSection />
   </div>
 </div>
