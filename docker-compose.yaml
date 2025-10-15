@@ -47,7 +47,7 @@ services:
       timeout: 5s
       retries: 5
       start_interval: 2s
-      start_period: 30s
+      start_period: 60s
     environment:
       NODE_ENV: development
       DATABASE_URL: 'postgres://postgres:postgres@database:5432/smartjobseeker'
