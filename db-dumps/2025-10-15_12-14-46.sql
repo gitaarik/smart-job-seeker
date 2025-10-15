@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict ikwbXMqbPHi1h9jVCgRwsGMrSv7iJC5W7CJcCsaiuUQ1TfoZMIVpLJHEpMSHhQd
+\restrict nCDTUyt5f7eSfJisMcHbNtImjI8Q4WOruceJShjuviPyDHXhLOAKrvvYGD3CKlG
 
 -- Dumped from database version 15.14 (Debian 15.14-1.pgdg13+1)
 -- Dumped by pg_dump version 15.14 (Debian 15.14-1.pgdg13+1)
@@ -903,6 +903,7 @@ ALTER TABLE public.resume_tokens OWNER TO postgres;
 --
 
 CREATE TABLE public.users (
+    email text NOT NULL,
     password text NOT NULL,
     "firstName" text,
     "lastName" text,
@@ -913,8 +914,7 @@ CREATE TABLE public.users (
     "createdAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "updatedAt" timestamp(3) without time zone NOT NULL,
     role public."Role" DEFAULT 'USER'::public."Role" NOT NULL,
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    email character varying(255) DEFAULT NULL::character varying NOT NULL
+    id uuid DEFAULT gen_random_uuid() NOT NULL
 );
 
 
@@ -1080,14 +1080,14 @@ ALTER TABLE ONLY public.directus_webhooks ALTER COLUMN id SET DEFAULT nextval('p
 --
 
 COPY public._prisma_migrations (id, checksum, finished_at, migration_name, logs, rolled_back_at, started_at, applied_steps_count) FROM stdin;
-66d5000d-d06c-4bab-8a9b-f22af072c324	6f75a511317f52c801637057bfa239227482e4464687a83ac8b57547b0a590d0	2025-10-15 10:25:14.793699+00	20250828150944_init	\N	\N	2025-10-15 10:25:14.787106+00	1
-caebfac1-28d3-4e00-8425-ad18a3f8b37c	11afbeb0fcae4e489583fd55cc25e9835f016e65f8d27e3535d41c1a3ba5741d	2025-10-15 10:25:14.797615+00	20250828155716_add_user_roles	\N	\N	2025-10-15 10:25:14.79445+00	1
-77f5ef6a-0579-445e-b683-fe7a66431742	18a8cbd87255f697493dfee84f0bf9ce0a2b4730dc4d31267559ba2250bd70f9	2025-10-15 10:25:14.803589+00	20250828161348_add_resume_tokens	\N	\N	2025-10-15 10:25:14.798129+00	1
-e84d9aed-da51-4b73-adbd-21cbed2dca68	111d08880ff5af0f9654acdf1b66cc585a113a91f225e4ee91184dc346fdb429	2025-10-15 10:25:14.811422+00	20250905110242_add_ai_responses_refinements	\N	\N	2025-10-15 10:25:14.804102+00	1
-f934e957-2e5e-449a-8c39-bbb484d356eb	24131d2168f288587e37859652816d9663f6570e8a5fde2089ee99d84bb20f01	2025-10-15 10:25:14.82625+00	20250905131408_add_work_experience_tables	\N	\N	2025-10-15 10:25:14.812264+00	1
-5f5f1ca3-5dc2-45c9-b5af-b2d5086c0a86	c11450bef14cbe1f01da89aa768f8d99d5fdb91579873e74b0fed6df6931acc7	2025-10-15 10:25:14.841037+00	20250906141612_use_postgres_gen_random_uuid_for_work_experience	\N	\N	2025-10-15 10:25:14.827097+00	1
-be60f389-8e45-49ca-8ac9-0f12ba61096c	6351ecc3d0577a365d0382c0d87bb5db1cfa062fb75c8c1140de071c96b5772b	2025-10-15 10:25:14.871308+00	20250906150352_convert_all_cuid_to_uuid	\N	\N	2025-10-15 10:25:14.841682+00	1
-a389aae8-97bf-4606-9643-3a5709d3b21a	e007dd1db84eebfec72b2d729b52b3522237775a0923922f57316de012c236fc	2025-10-15 10:25:14.87361+00	20251001145143_logo_to_uuid_for_directus_upload	\N	\N	2025-10-15 10:25:14.87187+00	1
+01b0c92e-5b32-441d-ac4c-36b0c61a6209	6f75a511317f52c801637057bfa239227482e4464687a83ac8b57547b0a590d0	2025-10-15 11:34:25.859255+00	20250828150944_init	\N	\N	2025-10-15 11:34:25.853886+00	1
+2750efec-a5ed-45f8-9579-e91a6836e630	11afbeb0fcae4e489583fd55cc25e9835f016e65f8d27e3535d41c1a3ba5741d	2025-10-15 11:34:25.861738+00	20250828155716_add_user_roles	\N	\N	2025-10-15 11:34:25.859797+00	1
+bbb5000a-c54f-4ab0-83f7-578cd23c26ad	18a8cbd87255f697493dfee84f0bf9ce0a2b4730dc4d31267559ba2250bd70f9	2025-10-15 11:34:25.868483+00	20250828161348_add_resume_tokens	\N	\N	2025-10-15 11:34:25.86224+00	1
+ec688bd1-81b0-4521-ad28-34e67afb1e0d	111d08880ff5af0f9654acdf1b66cc585a113a91f225e4ee91184dc346fdb429	2025-10-15 11:34:25.877879+00	20250905110242_add_ai_responses_refinements	\N	\N	2025-10-15 11:34:25.869137+00	1
+651f0cf5-8a11-4777-8a7a-8a1f2643ed40	24131d2168f288587e37859652816d9663f6570e8a5fde2089ee99d84bb20f01	2025-10-15 11:34:25.892008+00	20250905131408_add_work_experience_tables	\N	\N	2025-10-15 11:34:25.87871+00	1
+340222fa-aa90-469a-9def-108f5a2e117b	c11450bef14cbe1f01da89aa768f8d99d5fdb91579873e74b0fed6df6931acc7	2025-10-15 11:34:25.9055+00	20250906141612_use_postgres_gen_random_uuid_for_work_experience	\N	\N	2025-10-15 11:34:25.892536+00	1
+29ef25f4-1daf-4781-9edb-64238b7a1d58	6351ecc3d0577a365d0382c0d87bb5db1cfa062fb75c8c1140de071c96b5772b	2025-10-15 11:34:25.933525+00	20250906150352_convert_all_cuid_to_uuid	\N	\N	2025-10-15 11:34:25.906277+00	1
+db7d5ea4-2423-40a1-9c8e-4dfd491bcf8c	e007dd1db84eebfec72b2d729b52b3522237775a0923922f57316de012c236fc	2025-10-15 11:34:25.935911+00	20251001145143_logo_to_uuid_for_directus_upload	\N	\N	2025-10-15 11:34:25.934076+00	1
 \.
 
 
@@ -1112,8 +1112,8 @@ COPY public.ai_responses ("userId", prompt, context, "originalContent", "current
 --
 
 COPY public.directus_access (id, role, "user", policy, sort) FROM stdin;
-e2eacab9-d54e-46b8-a573-f62f1d147663	\N	\N	abf8a154-5b1c-4a46-ac9c-7300570f4f17	1
-400a5d0b-8778-4b37-9d2a-5d9678a00eb9	d915485e-3847-450f-a2af-0fadf00bcdd5	\N	36e4edb3-8e33-4bf1-a15c-3bc0b72cabcc	\N
+0e236704-23fc-4110-9406-ba58510239e4	\N	\N	abf8a154-5b1c-4a46-ac9c-7300570f4f17	1
+66e8420c-0a37-41e6-92e6-3492ad5b740c	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	0a0d53b2-3692-4892-bacc-3be26b02c0e3	\N
 \.
 
 
@@ -1122,31 +1122,8 @@ e2eacab9-d54e-46b8-a573-f62f1d147663	\N	\N	abf8a154-5b1c-4a46-ac9c-7300570f4f17	
 --
 
 COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, collection, item, origin) FROM stdin;
-1	login	4415db81-4fd6-499d-aa63-d8505c712eb5	2025-10-15 10:51:38.367+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_users	4415db81-4fd6-499d-aa63-d8505c712eb5	http://localhost:8055
-2	update	4415db81-4fd6-499d-aa63-d8505c712eb5	2025-10-15 10:51:42.643+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_settings	1	http://localhost:8055
-3	create	4415db81-4fd6-499d-aa63-d8505c712eb5	2025-10-15 10:55:40.78+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_collections	users	http://localhost:8055
-4	create	4415db81-4fd6-499d-aa63-d8505c712eb5	2025-10-15 11:13:52.621+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	1	http://localhost:8055
-5	update	4415db81-4fd6-499d-aa63-d8505c712eb5	2025-10-15 11:18:15.809+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	1	http://localhost:8055
-6	create	4415db81-4fd6-499d-aa63-d8505c712eb5	2025-10-15 11:18:25.159+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	2	http://localhost:8055
-7	update	4415db81-4fd6-499d-aa63-d8505c712eb5	2025-10-15 11:18:43.876+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	2	http://localhost:8055
-8	delete	4415db81-4fd6-499d-aa63-d8505c712eb5	2025-10-15 11:18:50.364+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	2	http://localhost:8055
-9	create	4415db81-4fd6-499d-aa63-d8505c712eb5	2025-10-15 11:19:33.199+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	3	http://localhost:8055
-10	update	4415db81-4fd6-499d-aa63-d8505c712eb5	2025-10-15 11:19:40.726+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	1	http://localhost:8055
-11	update	4415db81-4fd6-499d-aa63-d8505c712eb5	2025-10-15 11:19:40.735+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	3	http://localhost:8055
-12	create	4415db81-4fd6-499d-aa63-d8505c712eb5	2025-10-15 11:19:40.741+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	4	http://localhost:8055
-13	create	4415db81-4fd6-499d-aa63-d8505c712eb5	2025-10-15 11:19:40.744+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	5	http://localhost:8055
-14	create	4415db81-4fd6-499d-aa63-d8505c712eb5	2025-10-15 11:19:40.749+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	6	http://localhost:8055
-15	create	4415db81-4fd6-499d-aa63-d8505c712eb5	2025-10-15 11:19:40.753+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	7	http://localhost:8055
-16	create	4415db81-4fd6-499d-aa63-d8505c712eb5	2025-10-15 11:19:40.757+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	8	http://localhost:8055
-17	create	4415db81-4fd6-499d-aa63-d8505c712eb5	2025-10-15 11:19:40.76+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	9	http://localhost:8055
-18	create	4415db81-4fd6-499d-aa63-d8505c712eb5	2025-10-15 11:19:40.765+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	10	http://localhost:8055
-19	create	4415db81-4fd6-499d-aa63-d8505c712eb5	2025-10-15 11:19:40.771+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	11	http://localhost:8055
-20	create	4415db81-4fd6-499d-aa63-d8505c712eb5	2025-10-15 11:19:40.774+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	12	http://localhost:8055
-21	create	4415db81-4fd6-499d-aa63-d8505c712eb5	2025-10-15 11:19:40.777+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	13	http://localhost:8055
-22	update	4415db81-4fd6-499d-aa63-d8505c712eb5	2025-10-15 11:20:11.04+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	3	http://localhost:8055
-23	create	4415db81-4fd6-499d-aa63-d8505c712eb5	2025-10-15 11:23:14.717+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_collections	work_experiences	http://localhost:8055
-24	create	4415db81-4fd6-499d-aa63-d8505c712eb5	2025-10-15 11:23:18.689+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	14	http://localhost:8055
-25	create	4415db81-4fd6-499d-aa63-d8505c712eb5	2025-10-15 11:23:22.09+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	15	http://localhost:8055
+1	login	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-15 11:36:02.256+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_users	157238bb-6930-4f26-be9c-8b31a9e11ab8	http://localhost:8055
+2	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-15 11:37:08.622+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_settings	1	http://localhost:8055
 \.
 
 
@@ -1155,8 +1132,6 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 --
 
 COPY public.directus_collections (collection, icon, note, display_template, hidden, singleton, translations, archive_field, archive_app_filter, archive_value, unarchive_value, sort_field, accountability, color, item_duplication_fields, sort, "group", collapse, preview_url, versioning) FROM stdin;
-users	\N	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	\N	\N	\N	\N	open	\N	f
-work_experiences	\N	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	\N	\N	\N	\N	open	\N	f
 \.
 
 
@@ -1189,20 +1164,6 @@ COPY public.directus_extensions (enabled, id, folder, source, bundle) FROM stdin
 --
 
 COPY public.directus_fields (id, collection, field, special, interface, options, display, display_options, readonly, hidden, sort, width, translations, note, conditions, required, "group", validation, validation_message) FROM stdin;
-1	users	id	uuid	\N	\N	\N	\N	t	f	1	full	\N	\N	\N	f	\N	\N	\N
-4	users	password	\N	\N	\N	\N	\N	f	f	3	full	\N	\N	\N	f	\N	\N	\N
-5	users	firstName	\N	\N	\N	\N	\N	f	f	4	full	\N	\N	\N	f	\N	\N	\N
-6	users	lastName	\N	\N	\N	\N	\N	f	f	5	full	\N	\N	\N	f	\N	\N	\N
-7	users	isEmailVerified	\N	\N	\N	\N	\N	f	f	6	full	\N	\N	\N	f	\N	\N	\N
-8	users	emailVerifyToken	\N	\N	\N	\N	\N	f	f	7	full	\N	\N	\N	f	\N	\N	\N
-9	users	passwordResetToken	\N	\N	\N	\N	\N	f	f	8	full	\N	\N	\N	f	\N	\N	\N
-10	users	passwordResetExpiry	\N	\N	\N	\N	\N	f	f	9	full	\N	\N	\N	f	\N	\N	\N
-11	users	createdAt	\N	\N	\N	\N	\N	f	f	10	full	\N	\N	\N	f	\N	\N	\N
-12	users	updatedAt	\N	\N	\N	\N	\N	f	f	11	full	\N	\N	\N	f	\N	\N	\N
-13	users	role	\N	\N	\N	\N	\N	f	f	12	full	\N	\N	\N	f	\N	\N	\N
-3	users	email	\N	input	\N	\N	\N	f	f	2	full	\N	\N	\N	f	\N	\N	\N
-14	work_experiences	name	\N	\N	\N	\N	\N	f	f	\N	full	\N	\N	\N	f	\N	\N	\N
-15	work_experiences	location	\N	\N	\N	\N	\N	f	f	\N	full	\N	\N	\N	f	\N	\N	\N
 \.
 
 
@@ -1235,97 +1196,97 @@ COPY public.directus_folders (id, name, parent) FROM stdin;
 --
 
 COPY public.directus_migrations (version, name, "timestamp") FROM stdin;
-20201028A	Remove Collection Foreign Keys	2025-10-15 10:31:59.022184+00
-20201029A	Remove System Relations	2025-10-15 10:31:59.026421+00
-20201029B	Remove System Collections	2025-10-15 10:31:59.03359+00
-20201029C	Remove System Fields	2025-10-15 10:31:59.041458+00
-20201105A	Add Cascade System Relations	2025-10-15 10:31:59.075203+00
-20201105B	Change Webhook URL Type	2025-10-15 10:31:59.084004+00
-20210225A	Add Relations Sort Field	2025-10-15 10:31:59.089798+00
-20210304A	Remove Locked Fields	2025-10-15 10:31:59.092202+00
-20210312A	Webhooks Collections Text	2025-10-15 10:31:59.098459+00
-20210331A	Add Refresh Interval	2025-10-15 10:31:59.102525+00
-20210415A	Make Filesize Nullable	2025-10-15 10:31:59.108954+00
-20210416A	Add Collections Accountability	2025-10-15 10:31:59.11319+00
-20210422A	Remove Files Interface	2025-10-15 10:31:59.117519+00
-20210506A	Rename Interfaces	2025-10-15 10:31:59.135473+00
-20210510A	Restructure Relations	2025-10-15 10:31:59.146249+00
-20210518A	Add Foreign Key Constraints	2025-10-15 10:31:59.154874+00
-20210519A	Add System Fk Triggers	2025-10-15 10:31:59.175554+00
-20210521A	Add Collections Icon Color	2025-10-15 10:31:59.177557+00
-20210525A	Add Insights	2025-10-15 10:31:59.190997+00
-20210608A	Add Deep Clone Config	2025-10-15 10:31:59.193209+00
-20210626A	Change Filesize Bigint	2025-10-15 10:31:59.204451+00
-20210716A	Add Conditions to Fields	2025-10-15 10:31:59.206967+00
-20210721A	Add Default Folder	2025-10-15 10:31:59.211055+00
-20210802A	Replace Groups	2025-10-15 10:31:59.217001+00
-20210803A	Add Required to Fields	2025-10-15 10:31:59.219866+00
-20210805A	Update Groups	2025-10-15 10:31:59.223951+00
-20210805B	Change Image Metadata Structure	2025-10-15 10:31:59.227172+00
-20210811A	Add Geometry Config	2025-10-15 10:31:59.230248+00
-20210831A	Remove Limit Column	2025-10-15 10:31:59.233988+00
-20210903A	Add Auth Provider	2025-10-15 10:31:59.245915+00
-20210907A	Webhooks Collections Not Null	2025-10-15 10:31:59.253401+00
-20210910A	Move Module Setup	2025-10-15 10:31:59.257026+00
-20210920A	Webhooks URL Not Null	2025-10-15 10:31:59.262384+00
-20210924A	Add Collection Organization	2025-10-15 10:31:59.27012+00
-20210927A	Replace Fields Group	2025-10-15 10:31:59.276977+00
-20210927B	Replace M2M Interface	2025-10-15 10:31:59.279933+00
-20210929A	Rename Login Action	2025-10-15 10:31:59.283801+00
-20211007A	Update Presets	2025-10-15 10:31:59.289789+00
-20211009A	Add Auth Data	2025-10-15 10:31:59.291834+00
-20211016A	Add Webhook Headers	2025-10-15 10:31:59.293745+00
-20211103A	Set Unique to User Token	2025-10-15 10:31:59.298423+00
-20211103B	Update Special Geometry	2025-10-15 10:31:59.301602+00
-20211104A	Remove Collections Listing	2025-10-15 10:31:59.30476+00
-20211118A	Add Notifications	2025-10-15 10:31:59.315121+00
-20211211A	Add Shares	2025-10-15 10:31:59.328353+00
-20211230A	Add Project Descriptor	2025-10-15 10:31:59.331876+00
-20220303A	Remove Default Project Color	2025-10-15 10:31:59.339003+00
-20220308A	Add Bookmark Icon and Color	2025-10-15 10:31:59.341304+00
-20220314A	Add Translation Strings	2025-10-15 10:31:59.343309+00
-20220322A	Rename Field Typecast Flags	2025-10-15 10:31:59.349142+00
-20220323A	Add Field Validation	2025-10-15 10:31:59.352195+00
-20220325A	Fix Typecast Flags	2025-10-15 10:31:59.356514+00
-20220325B	Add Default Language	2025-10-15 10:31:59.362945+00
-20220402A	Remove Default Value Panel Icon	2025-10-15 10:31:59.369909+00
-20220429A	Add Flows	2025-10-15 10:31:59.392213+00
-20220429B	Add Color to Insights Icon	2025-10-15 10:31:59.394302+00
-20220429C	Drop Non Null From IP of Activity	2025-10-15 10:31:59.397406+00
-20220429D	Drop Non Null From Sender of Notifications	2025-10-15 10:31:59.400801+00
-20220614A	Rename Hook Trigger to Event	2025-10-15 10:31:59.403217+00
-20220801A	Update Notifications Timestamp Column	2025-10-15 10:31:59.408627+00
-20220802A	Add Custom Aspect Ratios	2025-10-15 10:31:59.410542+00
-20220826A	Add Origin to Accountability	2025-10-15 10:31:59.414628+00
-20230401A	Update Material Icons	2025-10-15 10:31:59.422125+00
-20230525A	Add Preview Settings	2025-10-15 10:31:59.424268+00
-20230526A	Migrate Translation Strings	2025-10-15 10:31:59.432012+00
-20230721A	Require Shares Fields	2025-10-15 10:31:59.438112+00
-20230823A	Add Content Versioning	2025-10-15 10:31:59.452666+00
-20230927A	Themes	2025-10-15 10:31:59.462697+00
-20231009A	Update CSV Fields to Text	2025-10-15 10:31:59.467739+00
-20231009B	Update Panel Options	2025-10-15 10:31:59.47044+00
-20231010A	Add Extensions	2025-10-15 10:31:59.473933+00
-20231215A	Add Focalpoints	2025-10-15 10:31:59.476179+00
-20240122A	Add Report URL Fields	2025-10-15 10:31:59.478542+00
-20240204A	Marketplace	2025-10-15 10:31:59.498135+00
-20240305A	Change Useragent Type	2025-10-15 10:31:59.507147+00
-20240311A	Deprecate Webhooks	2025-10-15 10:31:59.514792+00
-20240422A	Public Registration	2025-10-15 10:31:59.520974+00
-20240515A	Add Session Window	2025-10-15 10:31:59.52345+00
-20240701A	Add Tus Data	2025-10-15 10:31:59.526057+00
-20240716A	Update Files Date Fields	2025-10-15 10:31:59.533415+00
-20240806A	Permissions Policies	2025-10-15 10:31:59.562654+00
-20240817A	Update Icon Fields Length	2025-10-15 10:31:59.584355+00
-20240909A	Separate Comments	2025-10-15 10:31:59.593462+00
-20240909B	Consolidate Content Versioning	2025-10-15 10:31:59.595936+00
-20240924A	Migrate Legacy Comments	2025-10-15 10:31:59.602649+00
-20240924B	Populate Versioning Deltas	2025-10-15 10:31:59.606748+00
-20250224A	Visual Editor	2025-10-15 10:31:59.609463+00
-20250609A	License Banner	2025-10-15 10:31:59.613582+00
-20250613A	Add Project ID	2025-10-15 10:31:59.624173+00
-20250718A	Add Direction	2025-10-15 10:31:59.62633+00
-20250813A	Add MCP	2025-10-15 10:31:59.629615+00
+20201028A	Remove Collection Foreign Keys	2025-10-15 11:34:39.592076+00
+20201029A	Remove System Relations	2025-10-15 11:34:39.59634+00
+20201029B	Remove System Collections	2025-10-15 11:34:39.601006+00
+20201029C	Remove System Fields	2025-10-15 11:34:39.60932+00
+20201105A	Add Cascade System Relations	2025-10-15 11:34:39.634062+00
+20201105B	Change Webhook URL Type	2025-10-15 11:34:39.642474+00
+20210225A	Add Relations Sort Field	2025-10-15 11:34:39.646632+00
+20210304A	Remove Locked Fields	2025-10-15 11:34:39.64877+00
+20210312A	Webhooks Collections Text	2025-10-15 11:34:39.653542+00
+20210331A	Add Refresh Interval	2025-10-15 11:34:39.657357+00
+20210415A	Make Filesize Nullable	2025-10-15 11:34:39.661967+00
+20210416A	Add Collections Accountability	2025-10-15 11:34:39.664807+00
+20210422A	Remove Files Interface	2025-10-15 11:34:39.666472+00
+20210506A	Rename Interfaces	2025-10-15 11:34:39.681806+00
+20210510A	Restructure Relations	2025-10-15 11:34:39.785936+00
+20210518A	Add Foreign Key Constraints	2025-10-15 11:34:39.791101+00
+20210519A	Add System Fk Triggers	2025-10-15 11:34:39.811102+00
+20210521A	Add Collections Icon Color	2025-10-15 11:34:39.813231+00
+20210525A	Add Insights	2025-10-15 11:34:39.82634+00
+20210608A	Add Deep Clone Config	2025-10-15 11:34:39.828547+00
+20210626A	Change Filesize Bigint	2025-10-15 11:34:39.83615+00
+20210716A	Add Conditions to Fields	2025-10-15 11:34:39.838242+00
+20210721A	Add Default Folder	2025-10-15 11:34:39.842129+00
+20210802A	Replace Groups	2025-10-15 11:34:39.845392+00
+20210803A	Add Required to Fields	2025-10-15 11:34:39.847357+00
+20210805A	Update Groups	2025-10-15 11:34:39.850366+00
+20210805B	Change Image Metadata Structure	2025-10-15 11:34:39.853252+00
+20210811A	Add Geometry Config	2025-10-15 11:34:39.855265+00
+20210831A	Remove Limit Column	2025-10-15 11:34:39.857037+00
+20210903A	Add Auth Provider	2025-10-15 11:34:39.866518+00
+20210907A	Webhooks Collections Not Null	2025-10-15 11:34:39.870999+00
+20210910A	Move Module Setup	2025-10-15 11:34:39.873482+00
+20210920A	Webhooks URL Not Null	2025-10-15 11:34:39.877929+00
+20210924A	Add Collection Organization	2025-10-15 11:34:39.881908+00
+20210927A	Replace Fields Group	2025-10-15 11:34:39.887654+00
+20210927B	Replace M2M Interface	2025-10-15 11:34:39.889174+00
+20210929A	Rename Login Action	2025-10-15 11:34:39.890612+00
+20211007A	Update Presets	2025-10-15 11:34:39.894492+00
+20211009A	Add Auth Data	2025-10-15 11:34:39.896289+00
+20211016A	Add Webhook Headers	2025-10-15 11:34:39.897901+00
+20211103A	Set Unique to User Token	2025-10-15 11:34:39.90049+00
+20211103B	Update Special Geometry	2025-10-15 11:34:39.902044+00
+20211104A	Remove Collections Listing	2025-10-15 11:34:39.903734+00
+20211118A	Add Notifications	2025-10-15 11:34:39.912262+00
+20211211A	Add Shares	2025-10-15 11:34:39.923124+00
+20211230A	Add Project Descriptor	2025-10-15 11:34:39.924999+00
+20220303A	Remove Default Project Color	2025-10-15 11:34:39.929454+00
+20220308A	Add Bookmark Icon and Color	2025-10-15 11:34:39.931341+00
+20220314A	Add Translation Strings	2025-10-15 11:34:39.933073+00
+20220322A	Rename Field Typecast Flags	2025-10-15 11:34:39.93579+00
+20220323A	Add Field Validation	2025-10-15 11:34:39.937661+00
+20220325A	Fix Typecast Flags	2025-10-15 11:34:39.940841+00
+20220325B	Add Default Language	2025-10-15 11:34:39.946497+00
+20220402A	Remove Default Value Panel Icon	2025-10-15 11:34:39.951203+00
+20220429A	Add Flows	2025-10-15 11:34:39.969306+00
+20220429B	Add Color to Insights Icon	2025-10-15 11:34:39.971227+00
+20220429C	Drop Non Null From IP of Activity	2025-10-15 11:34:39.972995+00
+20220429D	Drop Non Null From Sender of Notifications	2025-10-15 11:34:39.974679+00
+20220614A	Rename Hook Trigger to Event	2025-10-15 11:34:39.976103+00
+20220801A	Update Notifications Timestamp Column	2025-10-15 11:34:39.980768+00
+20220802A	Add Custom Aspect Ratios	2025-10-15 11:34:39.982847+00
+20220826A	Add Origin to Accountability	2025-10-15 11:34:39.985517+00
+20230401A	Update Material Icons	2025-10-15 11:34:39.991392+00
+20230525A	Add Preview Settings	2025-10-15 11:34:39.994531+00
+20230526A	Migrate Translation Strings	2025-10-15 11:34:40.000929+00
+20230721A	Require Shares Fields	2025-10-15 11:34:40.004623+00
+20230823A	Add Content Versioning	2025-10-15 11:34:40.015282+00
+20230927A	Themes	2025-10-15 11:34:40.023811+00
+20231009A	Update CSV Fields to Text	2025-10-15 11:34:40.026901+00
+20231009B	Update Panel Options	2025-10-15 11:34:40.028558+00
+20231010A	Add Extensions	2025-10-15 11:34:40.031596+00
+20231215A	Add Focalpoints	2025-10-15 11:34:40.033525+00
+20240122A	Add Report URL Fields	2025-10-15 11:34:40.035412+00
+20240204A	Marketplace	2025-10-15 11:34:40.048741+00
+20240305A	Change Useragent Type	2025-10-15 11:34:40.054691+00
+20240311A	Deprecate Webhooks	2025-10-15 11:34:40.060103+00
+20240422A	Public Registration	2025-10-15 11:34:40.063639+00
+20240515A	Add Session Window	2025-10-15 11:34:40.065543+00
+20240701A	Add Tus Data	2025-10-15 11:34:40.067398+00
+20240716A	Update Files Date Fields	2025-10-15 11:34:40.071444+00
+20240806A	Permissions Policies	2025-10-15 11:34:40.097988+00
+20240817A	Update Icon Fields Length	2025-10-15 11:34:40.112319+00
+20240909A	Separate Comments	2025-10-15 11:34:40.119581+00
+20240909B	Consolidate Content Versioning	2025-10-15 11:34:40.127238+00
+20240924A	Migrate Legacy Comments	2025-10-15 11:34:40.131822+00
+20240924B	Populate Versioning Deltas	2025-10-15 11:34:40.135374+00
+20250224A	Visual Editor	2025-10-15 11:34:40.138099+00
+20250609A	License Banner	2025-10-15 11:34:40.141294+00
+20250613A	Add Project ID	2025-10-15 11:34:40.148277+00
+20250718A	Add Direction	2025-10-15 11:34:40.150205+00
+20250813A	Add MCP	2025-10-15 11:34:40.152756+00
 \.
 
 
@@ -1367,7 +1328,7 @@ COPY public.directus_permissions (id, collection, action, permissions, validatio
 
 COPY public.directus_policies (id, name, icon, description, ip_access, enforce_tfa, admin_access, app_access) FROM stdin;
 abf8a154-5b1c-4a46-ac9c-7300570f4f17	$t:public_label	public	$t:public_description	\N	f	f	f
-36e4edb3-8e33-4bf1-a15c-3bc0b72cabcc	Administrator	verified	$t:admin_description	\N	f	t	t
+0a0d53b2-3692-4892-bacc-3be26b02c0e3	Administrator	verified	$t:admin_description	\N	f	t	t
 \.
 
 
@@ -1392,29 +1353,7 @@ COPY public.directus_relations (id, many_collection, many_field, one_collection,
 --
 
 COPY public.directus_revisions (id, activity, collection, item, data, delta, parent, version) FROM stdin;
-1	2	directus_settings	1	{"id":1,"project_name":"Directus","project_url":null,"project_color":"#6644FF","project_logo":null,"public_foreground":null,"public_background":null,"public_note":null,"auth_login_attempts":25,"auth_password_policy":null,"storage_asset_transform":"all","storage_asset_presets":null,"custom_css":null,"storage_default_folder":null,"basemaps":null,"mapbox_key":null,"module_bar":null,"project_descriptor":null,"default_language":"en-US","custom_aspect_ratios":null,"public_favicon":null,"default_appearance":"auto","default_theme_light":null,"theme_light_overrides":null,"default_theme_dark":null,"theme_dark_overrides":null,"report_error_url":null,"report_bug_url":null,"report_feature_url":null,"public_registration":false,"public_registration_verify_email":true,"public_registration_role":null,"public_registration_email_filter":null,"visual_editor_urls":null,"accepted_terms":true,"project_id":"0199e76d-3b87-7241-a1aa-5cca896b57dd","mcp_enabled":false,"mcp_allow_deletes":false,"mcp_prompts_collection":null,"mcp_system_prompt_enabled":true,"mcp_system_prompt":null}	{"accepted_terms":true}	\N	\N
-2	3	directus_collections	users	{"collection":"users"}	{"collection":"users"}	\N	\N
-3	4	directus_fields	1	{"special":["uuid"],"collection":"users","field":"id"}	{"special":["uuid"],"collection":"users","field":"id"}	\N	\N
-4	5	directus_fields	1	{"id":1,"collection":"users","field":"id","special":["uuid"],"interface":null,"options":null,"display":null,"display_options":null,"readonly":true,"hidden":false,"sort":null,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"users","field":"id","readonly":true,"hidden":false}	\N	\N
-5	6	directus_fields	2	{"special":null,"collection":"users","field":"email"}	{"special":null,"collection":"users","field":"email"}	\N	\N
-6	7	directus_fields	2	{"id":2,"collection":"users","field":"email","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":null,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"users","field":"email","interface":"input"}	\N	\N
-7	9	directus_fields	3	{"sort":1,"interface":"input","special":null,"required":true,"collection":"users","field":"email"}	{"sort":1,"interface":"input","special":null,"required":true,"collection":"users","field":"email"}	\N	\N
-8	10	directus_fields	1	{"id":1,"collection":"users","field":"id","special":["uuid"],"interface":null,"options":null,"display":null,"display_options":null,"readonly":true,"hidden":false,"sort":1,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"users","field":"id","sort":1,"group":null}	\N	\N
-9	11	directus_fields	3	{"id":3,"collection":"users","field":"email","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":2,"width":"full","translations":null,"note":null,"conditions":null,"required":true,"group":null,"validation":null,"validation_message":null}	{"collection":"users","field":"email","sort":2,"group":null}	\N	\N
-10	12	directus_fields	4	{"sort":3,"group":null,"collection":"users","field":"password"}	{"sort":3,"group":null,"collection":"users","field":"password"}	\N	\N
-11	13	directus_fields	5	{"sort":4,"group":null,"collection":"users","field":"firstName"}	{"sort":4,"group":null,"collection":"users","field":"firstName"}	\N	\N
-12	14	directus_fields	6	{"sort":5,"group":null,"collection":"users","field":"lastName"}	{"sort":5,"group":null,"collection":"users","field":"lastName"}	\N	\N
-13	15	directus_fields	7	{"sort":6,"group":null,"collection":"users","field":"isEmailVerified"}	{"sort":6,"group":null,"collection":"users","field":"isEmailVerified"}	\N	\N
-14	16	directus_fields	8	{"sort":7,"group":null,"collection":"users","field":"emailVerifyToken"}	{"sort":7,"group":null,"collection":"users","field":"emailVerifyToken"}	\N	\N
-15	17	directus_fields	9	{"sort":8,"group":null,"collection":"users","field":"passwordResetToken"}	{"sort":8,"group":null,"collection":"users","field":"passwordResetToken"}	\N	\N
-16	18	directus_fields	10	{"sort":9,"group":null,"collection":"users","field":"passwordResetExpiry"}	{"sort":9,"group":null,"collection":"users","field":"passwordResetExpiry"}	\N	\N
-17	19	directus_fields	11	{"sort":10,"group":null,"collection":"users","field":"createdAt"}	{"sort":10,"group":null,"collection":"users","field":"createdAt"}	\N	\N
-18	20	directus_fields	12	{"sort":11,"group":null,"collection":"users","field":"updatedAt"}	{"sort":11,"group":null,"collection":"users","field":"updatedAt"}	\N	\N
-19	21	directus_fields	13	{"sort":12,"group":null,"collection":"users","field":"role"}	{"sort":12,"group":null,"collection":"users","field":"role"}	\N	\N
-20	22	directus_fields	3	{"id":3,"collection":"users","field":"email","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":2,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"users","field":"email","required":false}	\N	\N
-21	23	directus_collections	work_experiences	{"collection":"work_experiences"}	{"collection":"work_experiences"}	\N	\N
-22	24	directus_fields	14	{"special":null,"collection":"work_experiences","field":"name"}	{"special":null,"collection":"work_experiences","field":"name"}	\N	\N
-23	25	directus_fields	15	{"special":null,"collection":"work_experiences","field":"location"}	{"special":null,"collection":"work_experiences","field":"location"}	\N	\N
+1	2	directus_settings	1	{"id":1,"project_name":"Directus","project_url":null,"project_color":"#6644FF","project_logo":null,"public_foreground":null,"public_background":null,"public_note":null,"auth_login_attempts":25,"auth_password_policy":null,"storage_asset_transform":"all","storage_asset_presets":null,"custom_css":null,"storage_default_folder":null,"basemaps":null,"mapbox_key":null,"module_bar":null,"project_descriptor":null,"default_language":"en-US","custom_aspect_ratios":null,"public_favicon":null,"default_appearance":"auto","default_theme_light":null,"theme_light_overrides":null,"default_theme_dark":null,"theme_dark_overrides":null,"report_error_url":null,"report_bug_url":null,"report_feature_url":null,"public_registration":false,"public_registration_verify_email":true,"public_registration_role":null,"public_registration_email_filter":null,"visual_editor_urls":null,"accepted_terms":true,"project_id":"0199e7a6-9d13-72dc-af68-381958575f19","mcp_enabled":false,"mcp_allow_deletes":false,"mcp_prompts_collection":null,"mcp_system_prompt_enabled":true,"mcp_system_prompt":null}	{"accepted_terms":true}	\N	\N
 \.
 
 
@@ -1423,7 +1362,7 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 --
 
 COPY public.directus_roles (id, name, icon, description, parent) FROM stdin;
-d915485e-3847-450f-a2af-0fadf00bcdd5	Administrator	verified	$t:admin_description	\N
+17756a67-2cbc-42b5-bb7c-906f79444fb3	Administrator	verified	$t:admin_description	\N
 \.
 
 
@@ -1432,7 +1371,7 @@ d915485e-3847-450f-a2af-0fadf00bcdd5	Administrator	verified	$t:admin_description
 --
 
 COPY public.directus_sessions (token, "user", expires, ip, user_agent, share, origin, next_token) FROM stdin;
-XEuDhpMTwLG10QaiXIL7PdynTtEQZ18T2s8Ixs6keg1c_-UH2BbX6fWiRa9u4Ltf	4415db81-4fd6-499d-aa63-d8505c712eb5	2025-10-22 10:51:38.36+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	\N	http://localhost:8055	\N
+jyEi42Iib3ayUhuKtRg8crSw0qNgHJgwHBGyXgh2IXu6VhJFRchsBiOMADOe89TD	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-22 11:36:02.247+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	\N	http://localhost:8055	\N
 \.
 
 
@@ -1441,7 +1380,7 @@ XEuDhpMTwLG10QaiXIL7PdynTtEQZ18T2s8Ixs6keg1c_-UH2BbX6fWiRa9u4Ltf	4415db81-4fd6-4
 --
 
 COPY public.directus_settings (id, project_name, project_url, project_color, project_logo, public_foreground, public_background, public_note, auth_login_attempts, auth_password_policy, storage_asset_transform, storage_asset_presets, custom_css, storage_default_folder, basemaps, mapbox_key, module_bar, project_descriptor, default_language, custom_aspect_ratios, public_favicon, default_appearance, default_theme_light, theme_light_overrides, default_theme_dark, theme_dark_overrides, report_error_url, report_bug_url, report_feature_url, public_registration, public_registration_verify_email, public_registration_role, public_registration_email_filter, visual_editor_urls, accepted_terms, project_id, mcp_enabled, mcp_allow_deletes, mcp_prompts_collection, mcp_system_prompt_enabled, mcp_system_prompt) FROM stdin;
-1	Directus	\N	#6644FF	\N	\N	\N	\N	25	\N	all	\N	\N	\N	\N	\N	\N	\N	en-US	\N	\N	auto	\N	\N	\N	\N	\N	\N	\N	f	t	\N	\N	\N	t	0199e76d-3b87-7241-a1aa-5cca896b57dd	f	f	\N	t	\N
+1	Directus	\N	#6644FF	\N	\N	\N	\N	25	\N	all	\N	\N	\N	\N	\N	\N	\N	en-US	\N	\N	auto	\N	\N	\N	\N	\N	\N	\N	f	t	\N	\N	\N	t	0199e7a6-9d13-72dc-af68-381958575f19	f	f	\N	t	\N
 \.
 
 
@@ -1466,7 +1405,7 @@ COPY public.directus_translations (id, language, key, value) FROM stdin;
 --
 
 COPY public.directus_users (id, first_name, last_name, email, password, location, title, description, tags, avatar, language, tfa_secret, status, role, token, last_access, last_page, provider, external_identifier, auth_data, email_notifications, appearance, theme_dark, theme_light, theme_light_overrides, theme_dark_overrides, text_direction) FROM stdin;
-4415db81-4fd6-499d-aa63-d8505c712eb5	Admin	User	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$rEy3JqXJ0gO+4TKaZDgc7g$Orkchp+YjPdv3u+GohGYDfghCvZNUdVypEM3PBJmk7w	\N	\N	\N	\N	\N	\N	\N	active	d915485e-3847-450f-a2af-0fadf00bcdd5	\N	2025-10-15 10:51:38.371+00	/settings/project	default	\N	\N	t	\N	\N	\N	\N	\N	auto
+157238bb-6930-4f26-be9c-8b31a9e11ab8	Admin	User	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-10-15 11:36:02.259+00	/content	default	\N	\N	t	\N	\N	\N	\N	\N	auto
 \.
 
 
@@ -1498,7 +1437,7 @@ COPY public.resume_tokens (token, name, description, "resumeType", "expiresAt", 
 -- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.users (password, "firstName", "lastName", "isEmailVerified", "emailVerifyToken", "passwordResetToken", "passwordResetExpiry", "createdAt", "updatedAt", role, id, email) FROM stdin;
+COPY public.users (email, password, "firstName", "lastName", "isEmailVerified", "emailVerifyToken", "passwordResetToken", "passwordResetExpiry", "createdAt", "updatedAt", role, id) FROM stdin;
 \.
 
 
@@ -1546,14 +1485,14 @@ COPY public.work_technologies ("workExperienceId", "technologyName", "sortOrder"
 -- Name: directus_activity_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_activity_id_seq', 25, true);
+SELECT pg_catalog.setval('public.directus_activity_id_seq', 2, true);
 
 
 --
 -- Name: directus_fields_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_fields_id_seq', 15, true);
+SELECT pg_catalog.setval('public.directus_fields_id_seq', 1, false);
 
 
 --
@@ -1588,7 +1527,7 @@ SELECT pg_catalog.setval('public.directus_relations_id_seq', 1, false);
 -- Name: directus_revisions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_revisions_id_seq', 23, true);
+SELECT pg_catalog.setval('public.directus_revisions_id_seq', 1, true);
 
 
 --
@@ -1954,6 +1893,13 @@ ALTER TABLE ONLY public.work_technologies
 --
 
 CREATE UNIQUE INDEX resume_tokens_token_key ON public.resume_tokens USING btree (token);
+
+
+--
+-- Name: users_email_key; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX users_email_key ON public.users USING btree (email);
 
 
 --
@@ -2360,5 +2306,5 @@ ALTER TABLE ONLY public.work_technologies
 -- PostgreSQL database dump complete
 --
 
-\unrestrict ikwbXMqbPHi1h9jVCgRwsGMrSv7iJC5W7CJcCsaiuUQ1TfoZMIVpLJHEpMSHhQd
+\unrestrict nCDTUyt5f7eSfJisMcHbNtImjI8Q4WOruceJShjuviPyDHXhLOAKrvvYGD3CKlG
 
