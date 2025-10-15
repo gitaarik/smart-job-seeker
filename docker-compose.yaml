@@ -11,9 +11,11 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/:/scripts
       - ./db-dumps/:/db-dumps
-      - ./db-dumps/latest.sql:/docker-entrypoint-initdb.d/latest.sql
     ports:
       - "5432:5432"
+    command: >
+      bash -c "cp /db-dumps/latest.sql /docker-entrypoint-initdb.d/latest.sql 2>/dev/null || true &&
+      docker-entrypoint.sh postgres"
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres"]
       interval: 10s
