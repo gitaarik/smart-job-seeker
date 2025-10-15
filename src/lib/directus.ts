@@ -18,9 +18,21 @@ export function getDirectusUrl(): string {
   return url;
 }
 
+// Get the internal Directus URL (for server-side connections within Docker)
+export function getDirectusInternalUrl(): string {
+  // Use internal URL if available (for Docker), otherwise fall back to public URL
+  const url = getEnv('ADMIN_INTERNAL_URL') || getEnv('ADMIN_PUBLIC_URL');
+
+  if (!url) {
+    throw new Error('ADMIN_INTERNAL_URL or ADMIN_PUBLIC_URL environment variable is not set');
+  }
+
+  return url;
+}
+
 // Create a server-side Directus client
 export function createDirectusClient() {
-  const directusUrl = getDirectusUrl();
+  const directusUrl = getDirectusInternalUrl();
 
   return createDirectus<DirectusSchema>(directusUrl)
     .with(rest())
