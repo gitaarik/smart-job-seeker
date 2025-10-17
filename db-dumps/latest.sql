@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict fZWwsYcf5kkOruznlF13VghShcRWD4uS8ISyaYtlcgE8DNmz17WagSlG7bMxxoR
+\restrict o6SQ91NnE5kzVrJnJeg4xq0bYlxdZ5XBLjkVJaHsBLcpQXNSE9LTYH7HPSlDTpn
 
 -- Dumped from database version 15.14 (Debian 15.14-1.pgdg13+1)
 -- Dumped by pg_dump version 15.14 (Debian 15.14-1.pgdg13+1)
@@ -1895,6 +1895,8 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 966	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 17:08:46.46+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	tech_skills	21	http://localhost:8055
 967	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 17:09:24.63+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	tech_skills	22	http://localhost:8055
 968	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 17:09:52.918+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	tech_skills	23	http://localhost:8055
+969	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 17:12:02.59+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	tech_skill_categories	6d549daa-2775-4af9-85c9-c3a50ef155c0	http://localhost:8055
+970	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 17:12:49.095+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	tech_skills	24	http://localhost:8055
 \.
 
 
@@ -2809,6 +2811,8 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 936	966	tech_skills	21	{"status":"published","name":"SQL optimization","category":"0bcc8c53-eb96-4d3b-8bd5-81faf33000a5","years_experience":"12","level":"proficient","tech_type":3}	{"status":"published","name":"SQL optimization","category":"0bcc8c53-eb96-4d3b-8bd5-81faf33000a5","years_experience":"12","level":"proficient","tech_type":3}	\N	\N
 937	967	tech_skills	22	{"status":"published","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","name":"Elasticsearch","category":"0bcc8c53-eb96-4d3b-8bd5-81faf33000a5","years_experience":"3","level":"proficient","tech_type":5}	{"status":"published","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","name":"Elasticsearch","category":"0bcc8c53-eb96-4d3b-8bd5-81faf33000a5","years_experience":"3","level":"proficient","tech_type":5}	\N	\N
 938	968	tech_skills	23	{"status":"published","name":"MongoDB","category":"0bcc8c53-eb96-4d3b-8bd5-81faf33000a5","years_experience":"2","level":"proficient","tech_type":5}	{"status":"published","name":"MongoDB","category":"0bcc8c53-eb96-4d3b-8bd5-81faf33000a5","years_experience":"2","level":"proficient","tech_type":5}	\N	\N
+939	969	tech_skill_categories	6d549daa-2775-4af9-85c9-c3a50ef155c0	{"status":"published","name":"Development Tools"}	{"status":"published","name":"Development Tools"}	\N	\N
+940	970	tech_skills	24	{"profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","status":"published","name":"Git","category":"6d549daa-2775-4af9-85c9-c3a50ef155c0","years_experience":"12","level":"expert","tech_type":6}	{"profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","status":"published","name":"Git","category":"6d549daa-2775-4af9-85c9-c3a50ef155c0","years_experience":"12","level":"expert","tech_type":6}	\N	\N
 \.
 
 
@@ -2868,7 +2872,7 @@ COPY public.directus_translations (id, language, key, value) FROM stdin;
 --
 
 COPY public.directus_users (id, first_name, last_name, email, password, location, title, description, tags, avatar, language, tfa_secret, status, role, token, last_access, last_page, provider, external_identifier, auth_data, email_notifications, appearance, theme_dark, theme_light, theme_light_overrides, theme_dark_overrides, text_direction) FROM stdin;
-157238bb-6930-4f26-be9c-8b31a9e11ab8	Admin	User	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-10-17 17:05:29.079+00	/content/tech_skill_categories	default	\N	\N	t	\N	\N	\N	\N	\N	auto
+157238bb-6930-4f26-be9c-8b31a9e11ab8	Admin	User	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-10-17 17:05:29.079+00	/content/tech_skills	default	\N	\N	t	\N	\N	\N	\N	\N	auto
 \.
 
 
@@ -2939,6 +2943,7 @@ COPY public.tech_skill_categories (id, status, sort, date_created, date_updated,
 0bcc8c53-eb96-4d3b-8bd5-81faf33000a5	published	4	2025-10-17 15:12:51.928+00	2025-10-17 15:29:24.926+00	Databases
 e6875da0-e556-45f0-be1e-e469fdaed3a7	published	2	2025-10-17 15:11:13.878+00	2025-10-17 15:29:31.195+00	Backend
 a2c07ea5-050e-4ad0-adad-7bfd7908e4ad	published	3	2025-10-17 17:00:54.583+00	\N	Mobile
+6d549daa-2775-4af9-85c9-c3a50ef155c0	published	\N	2025-10-17 17:12:02.589+00	\N	Development Tools
 \.
 
 
@@ -2988,6 +2993,7 @@ COPY public.tech_skills (id, status, sort, date_created, date_updated, profile, 
 19	published	11	2025-10-17 17:07:14.543+00	\N	\N	MariaDB	0bcc8c53-eb96-4d3b-8bd5-81faf33000a5	12	expert	3
 16	published	22	2025-10-17 17:04:43.06+00	\N	\N	Tailwind CSS	78c235f4-2456-40e6-939d-19c855a30aa1	2	proficient	2
 17	published	23	2025-10-17 17:04:59.917+00	\N	\N	Jest	78c235f4-2456-40e6-939d-19c855a30aa1	2	proficient	2
+24	published	\N	2025-10-17 17:12:49.093+00	\N	0eeb942b-e35a-44e8-a37d-52b9cdb24309	Git	6d549daa-2775-4af9-85c9-c3a50ef155c0	12	expert	6
 20	draft	12	2025-10-17 17:07:50.873+00	\N	0eeb942b-e35a-44e8-a37d-52b9cdb24309	SQLite	0bcc8c53-eb96-4d3b-8bd5-81faf33000a5	5	proficient	3
 21	published	13	2025-10-17 17:08:46.459+00	\N	\N	SQL optimization	0bcc8c53-eb96-4d3b-8bd5-81faf33000a5	12	proficient	3
 22	published	14	2025-10-17 17:09:24.629+00	\N	0eeb942b-e35a-44e8-a37d-52b9cdb24309	Elasticsearch	0bcc8c53-eb96-4d3b-8bd5-81faf33000a5	3	proficient	5
@@ -3048,7 +3054,7 @@ COPY public.work_technologies ("workExperienceId", "technologyName", "sortOrder"
 -- Name: directus_activity_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_activity_id_seq', 968, true);
+SELECT pg_catalog.setval('public.directus_activity_id_seq', 970, true);
 
 
 --
@@ -3090,7 +3096,7 @@ SELECT pg_catalog.setval('public.directus_relations_id_seq', 11, true);
 -- Name: directus_revisions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_revisions_id_seq', 938, true);
+SELECT pg_catalog.setval('public.directus_revisions_id_seq', 940, true);
 
 
 --
@@ -3118,7 +3124,7 @@ SELECT pg_catalog.setval('public.tech_skill_types_id_seq', 13, true);
 -- Name: tech_skills_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.tech_skills_id_seq', 23, true);
+SELECT pg_catalog.setval('public.tech_skills_id_seq', 24, true);
 
 
 --
@@ -3995,5 +4001,5 @@ ALTER TABLE ONLY public.work_technologies
 -- PostgreSQL database dump complete
 --
 
-\unrestrict fZWwsYcf5kkOruznlF13VghShcRWD4uS8ISyaYtlcgE8DNmz17WagSlG7bMxxoR
+\unrestrict o6SQ91NnE5kzVrJnJeg4xq0bYlxdZ5XBLjkVJaHsBLcpQXNSE9LTYH7HPSlDTpn
 
