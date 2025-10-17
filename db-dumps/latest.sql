@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict t21xBle2srOq5odBWLS4RIsVaycTSvaC8OXBaPs3wO1yjELegwNolASXuGEE88Y
+\restrict fZWwsYcf5kkOruznlF13VghShcRWD4uS8ISyaYtlcgE8DNmz17WagSlG7bMxxoR
 
 -- Dumped from database version 15.14 (Debian 15.14-1.pgdg13+1)
 -- Dumped by pg_dump version 15.14 (Debian 15.14-1.pgdg13+1)
@@ -1877,6 +1877,24 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 948	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 16:49:46.514+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	69	http://localhost:8055
 949	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 16:50:23.214+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	69	http://localhost:8055
 950	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 16:53:10.395+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	tech_skills	10	http://localhost:8055
+951	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 16:55:49.757+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	tech_skills	11	http://localhost:8055
+952	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 16:55:49.762+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	profiles	0eeb942b-e35a-44e8-a37d-52b9cdb24309	http://localhost:8055
+953	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 16:56:44.834+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	tech_skills	12	http://localhost:8055
+954	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 16:56:44.836+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	profiles	0eeb942b-e35a-44e8-a37d-52b9cdb24309	http://localhost:8055
+955	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 16:57:04.64+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	tech_skills	13	http://localhost:8055
+956	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 16:57:04.642+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	profiles	0eeb942b-e35a-44e8-a37d-52b9cdb24309	http://localhost:8055
+957	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 17:00:54.584+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	tech_skill_categories	a2c07ea5-050e-4ad0-adad-7bfd7908e4ad	http://localhost:8055
+958	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 17:01:46.444+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	tech_skills	14	http://localhost:8055
+959	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 17:01:46.446+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	profiles	0eeb942b-e35a-44e8-a37d-52b9cdb24309	http://localhost:8055
+960	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 17:04:22.336+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	tech_skills	15	http://localhost:8055
+961	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 17:04:43.061+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	tech_skills	16	http://localhost:8055
+962	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 17:04:59.918+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	tech_skills	17	http://localhost:8055
+963	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 17:06:28.289+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	tech_skills	18	http://localhost:8055
+964	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 17:07:14.547+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	tech_skills	19	http://localhost:8055
+965	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 17:07:50.875+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	tech_skills	20	http://localhost:8055
+966	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 17:08:46.46+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	tech_skills	21	http://localhost:8055
+967	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 17:09:24.63+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	tech_skills	22	http://localhost:8055
+968	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 17:09:52.918+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	tech_skills	23	http://localhost:8055
 \.
 
 
@@ -2178,12 +2196,12 @@ abf8a154-5b1c-4a46-ac9c-7300570f4f17	$t:public_label	public	$t:public_descriptio
 
 COPY public.directus_presets (id, bookmark, "user", role, collection, search, layout, layout_query, layout_options, refresh_interval, filter, icon, color) FROM stdin;
 2	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	users	\N	\N	{"tabular":{"page":1}}	\N	\N	\N	bookmark	\N
+3	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	profiles	\N	\N	{"tabular":{"page":1,"fields":["name","title","core_stack","subtitle"]}}	{"tabular":{"widths":{"name":126.66665649414062,"title":231.66668701171875,"core_stack":278.3333740234375,"subtitle":343.3333740234375}}}	\N	\N	bookmark	\N
+6	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	tech_skills	\N	tabular	{"tabular":{"fields":["name","category","years_experience","level","status"],"page":1}}	{"tabular":{"widths":{"name":303.33331298828125,"category":150,"years_experience":176,"level":133.3333740234375,"status":120},"align":{"status":"left"}}}	\N	\N	bookmark	\N
 8	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	highlights	\N	\N	{"tabular":{"fields":["text","status"],"page":1}}	{"tabular":{"widths":{"text":852.6666259765625,"status":97.99993896484375}}}	\N	\N	bookmark	\N
 7	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	tech_skill_categories	\N	\N	{"tabular":{"fields":["name","status"]}}	{"tabular":{"widths":{"name":163.00006103515625,"status":98.6666259765625}}}	\N	\N	bookmark	\N
 9	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	tech_skill_types	\N	\N	{"tabular":{"fields":["name","status"]}}	{"tabular":{"widths":{"name":370,"status":118}}}	\N	\N	bookmark	\N
 1	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	work_experiences	\N	\N	{"tabular":{"fields":["id","isActive","name","location","description","startDate"],"page":1}}	{"tabular":{"widths":{"id":117.60000610351562,"isActive":105.4000244140625,"name":149.79998779296875,"location":152.79998779296875,"description":191.39990234375,"startDate":124.5999755859375}}}	\N	\N	bookmark	\N
-6	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	tech_skills	\N	tabular	{"tabular":{"fields":["name","category","years_experience","level","status"]}}	{"tabular":{"widths":{"name":303.33331298828125,"category":150,"years_experience":176,"level":133.3333740234375,"status":120},"align":{"status":"left"}}}	\N	\N	bookmark	\N
-3	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	profiles	\N	\N	{"tabular":{"page":1,"fields":["name","title","core_stack","subtitle"]}}	{"tabular":{"widths":{"name":126.66665649414062,"title":231.66668701171875,"core_stack":278.3333740234375,"subtitle":343.3333740234375}}}	\N	\N	bookmark	\N
 4	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	languages	\N	\N	{"tabular":{"page":1,"fields":["name","language_code","proficiency","status"]}}	{"tabular":{"widths":{"name":160,"language_code":160,"proficiency":160,"status":160}}}	\N	\N	bookmark	\N
 \.
 
@@ -2773,6 +2791,24 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 918	948	directus_fields	69	{"id":69,"collection":"profiles","field":"tech_skills","special":["o2m"],"interface":"list-o2m-tree-view","options":{"enableSelect":false},"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":19,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"tech_skills","interface":"list-o2m-tree-view"}	\N	\N
 919	949	directus_fields	69	{"id":69,"collection":"profiles","field":"tech_skills","special":["o2m"],"interface":"list-o2m","options":{"enableSelect":false},"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":19,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"tech_skills","interface":"list-o2m","options":{"enableSelect":false}}	\N	\N
 920	950	tech_skills	10	{"profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","status":"published","name":"pytest","category":"e6875da0-e556-45f0-be1e-e469fdaed3a7","years_experience":"12","level":"proficient","tech_type":2}	{"profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","status":"published","name":"pytest","category":"e6875da0-e556-45f0-be1e-e469fdaed3a7","years_experience":"12","level":"proficient","tech_type":2}	\N	\N
+922	952	profiles	0eeb942b-e35a-44e8-a37d-52b9cdb24309	{"id":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","date_created":"2025-10-15T16:51:41.394Z","date_updated":"2025-10-17T16:55:49.754Z","name":"Rik Wanders","title":"Senior Full Stack Developer","location":"Ronda, Spain","phone_number":"+31649118511","email_address":"rik@rikwanders.tech","personal_website":"https://www.rikwanders.tech/","subtitle":"Building scalable web applications for remote teams","core_stack":"Python • Node.js • CI/CD • DevOps","linkedin_profile":"https://www.linkedin.com/in/rik-wanders-software","github_profile":"https://github.com/gitaarik","stackoverflow_profile":"https://stackoverflow.com/users/1248175/gitaarik","headline":"Full Stack Developer 12+ years expertise in Python, Django, Node.js, React, CI/CD, DevOps, UX, AI","profile_picture":"e12c8ec6-2cbe-4672-98e9-a33d6ed5869a","languages":["7024cec2-289e-44e5-a4e8-721805a151a0","b636a780-6a9f-4342-adfa-eed183447a17"],"highlights":["00483bae-b8ef-46bb-8230-0f84c989f971","85956023-2be3-4fa9-9643-fc677ffd97cb","bf60fa32-c241-4a49-9edf-d0a21c3a4b3d","82700d7e-0a60-43af-82a7-1ca8a4fcb43f","912a4cfd-44d1-4b88-bd32-0a67ce05e1bc","311f493d-c89f-4a35-86fc-9605e93f639d","e30e3468-9f74-4bdb-9f33-abcef8eb6f7b"],"work_experiences":["a37c89e0-2b6d-44e1-911a-c1399611562a","f044625e-b180-4603-b03a-42a5a397403a"],"tech_skills":[1,3,4,5,6,7,8,9,10,2,11]}	{"date_updated":"2025-10-17T16:55:49.754Z"}	\N	\N
+921	951	tech_skills	11	{"status":"published","name":"Node.js","category":"78c235f4-2456-40e6-939d-19c855a30aa1","years_experience":"12","level":"expert","tech_type":1,"profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309"}	{"status":"published","name":"Node.js","category":"78c235f4-2456-40e6-939d-19c855a30aa1","years_experience":"12","level":"expert","tech_type":1,"profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309"}	922	\N
+924	954	profiles	0eeb942b-e35a-44e8-a37d-52b9cdb24309	{"id":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","date_created":"2025-10-15T16:51:41.394Z","date_updated":"2025-10-17T16:56:44.832Z","name":"Rik Wanders","title":"Senior Full Stack Developer","location":"Ronda, Spain","phone_number":"+31649118511","email_address":"rik@rikwanders.tech","personal_website":"https://www.rikwanders.tech/","subtitle":"Building scalable web applications for remote teams","core_stack":"Python • Node.js • CI/CD • DevOps","linkedin_profile":"https://www.linkedin.com/in/rik-wanders-software","github_profile":"https://github.com/gitaarik","stackoverflow_profile":"https://stackoverflow.com/users/1248175/gitaarik","headline":"Full Stack Developer 12+ years expertise in Python, Django, Node.js, React, CI/CD, DevOps, UX, AI","profile_picture":"e12c8ec6-2cbe-4672-98e9-a33d6ed5869a","languages":["7024cec2-289e-44e5-a4e8-721805a151a0","b636a780-6a9f-4342-adfa-eed183447a17"],"highlights":["00483bae-b8ef-46bb-8230-0f84c989f971","85956023-2be3-4fa9-9643-fc677ffd97cb","bf60fa32-c241-4a49-9edf-d0a21c3a4b3d","82700d7e-0a60-43af-82a7-1ca8a4fcb43f","912a4cfd-44d1-4b88-bd32-0a67ce05e1bc","311f493d-c89f-4a35-86fc-9605e93f639d","e30e3468-9f74-4bdb-9f33-abcef8eb6f7b"],"work_experiences":["a37c89e0-2b6d-44e1-911a-c1399611562a","f044625e-b180-4603-b03a-42a5a397403a"],"tech_skills":[1,3,4,5,6,7,8,9,10,2,11,12]}	{"date_updated":"2025-10-17T16:56:44.832Z"}	\N	\N
+923	953	tech_skills	12	{"status":"published","name":"TypeScript","category":"78c235f4-2456-40e6-939d-19c855a30aa1","years_experience":"2","level":"proficient","tech_type":1,"profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309"}	{"status":"published","name":"TypeScript","category":"78c235f4-2456-40e6-939d-19c855a30aa1","years_experience":"2","level":"proficient","tech_type":1,"profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309"}	924	\N
+925	955	tech_skills	13	{"status":"published","name":"React","category":"78c235f4-2456-40e6-939d-19c855a30aa1","years_experience":"12","level":"expert","tech_type":2,"profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309"}	{"status":"published","name":"React","category":"78c235f4-2456-40e6-939d-19c855a30aa1","years_experience":"12","level":"expert","tech_type":2,"profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309"}	926	\N
+926	956	profiles	0eeb942b-e35a-44e8-a37d-52b9cdb24309	{"id":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","date_created":"2025-10-15T16:51:41.394Z","date_updated":"2025-10-17T16:57:04.637Z","name":"Rik Wanders","title":"Senior Full Stack Developer","location":"Ronda, Spain","phone_number":"+31649118511","email_address":"rik@rikwanders.tech","personal_website":"https://www.rikwanders.tech/","subtitle":"Building scalable web applications for remote teams","core_stack":"Python • Node.js • CI/CD • DevOps","linkedin_profile":"https://www.linkedin.com/in/rik-wanders-software","github_profile":"https://github.com/gitaarik","stackoverflow_profile":"https://stackoverflow.com/users/1248175/gitaarik","headline":"Full Stack Developer 12+ years expertise in Python, Django, Node.js, React, CI/CD, DevOps, UX, AI","profile_picture":"e12c8ec6-2cbe-4672-98e9-a33d6ed5869a","languages":["7024cec2-289e-44e5-a4e8-721805a151a0","b636a780-6a9f-4342-adfa-eed183447a17"],"highlights":["00483bae-b8ef-46bb-8230-0f84c989f971","85956023-2be3-4fa9-9643-fc677ffd97cb","bf60fa32-c241-4a49-9edf-d0a21c3a4b3d","82700d7e-0a60-43af-82a7-1ca8a4fcb43f","912a4cfd-44d1-4b88-bd32-0a67ce05e1bc","311f493d-c89f-4a35-86fc-9605e93f639d","e30e3468-9f74-4bdb-9f33-abcef8eb6f7b"],"work_experiences":["a37c89e0-2b6d-44e1-911a-c1399611562a","f044625e-b180-4603-b03a-42a5a397403a"],"tech_skills":[1,3,4,5,6,7,8,9,10,2,11,12,13]}	{"date_updated":"2025-10-17T16:57:04.637Z"}	\N	\N
+927	957	tech_skill_categories	a2c07ea5-050e-4ad0-adad-7bfd7908e4ad	{"name":"Mobile","status":"published"}	{"name":"Mobile","status":"published"}	\N	\N
+929	959	profiles	0eeb942b-e35a-44e8-a37d-52b9cdb24309	{"id":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","date_created":"2025-10-15T16:51:41.394Z","date_updated":"2025-10-17T17:01:46.441Z","name":"Rik Wanders","title":"Senior Full Stack Developer","location":"Ronda, Spain","phone_number":"+31649118511","email_address":"rik@rikwanders.tech","personal_website":"https://www.rikwanders.tech/","subtitle":"Building scalable web applications for remote teams","core_stack":"Python • Node.js • CI/CD • DevOps","linkedin_profile":"https://www.linkedin.com/in/rik-wanders-software","github_profile":"https://github.com/gitaarik","stackoverflow_profile":"https://stackoverflow.com/users/1248175/gitaarik","headline":"Full Stack Developer 12+ years expertise in Python, Django, Node.js, React, CI/CD, DevOps, UX, AI","profile_picture":"e12c8ec6-2cbe-4672-98e9-a33d6ed5869a","languages":["7024cec2-289e-44e5-a4e8-721805a151a0","b636a780-6a9f-4342-adfa-eed183447a17"],"highlights":["00483bae-b8ef-46bb-8230-0f84c989f971","85956023-2be3-4fa9-9643-fc677ffd97cb","bf60fa32-c241-4a49-9edf-d0a21c3a4b3d","82700d7e-0a60-43af-82a7-1ca8a4fcb43f","912a4cfd-44d1-4b88-bd32-0a67ce05e1bc","311f493d-c89f-4a35-86fc-9605e93f639d","e30e3468-9f74-4bdb-9f33-abcef8eb6f7b"],"work_experiences":["a37c89e0-2b6d-44e1-911a-c1399611562a","f044625e-b180-4603-b03a-42a5a397403a"],"tech_skills":[1,3,4,5,6,7,8,9,10,2,14,11,12,13]}	{"date_updated":"2025-10-17T17:01:46.441Z"}	\N	\N
+928	958	tech_skills	14	{"status":"published","name":"React Native","category":"a2c07ea5-050e-4ad0-adad-7bfd7908e4ad","years_experience":"3","level":"proficient","tech_type":2,"profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309"}	{"status":"published","name":"React Native","category":"a2c07ea5-050e-4ad0-adad-7bfd7908e4ad","years_experience":"3","level":"proficient","tech_type":2,"profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309"}	929	\N
+930	960	tech_skills	15	{"status":"published","name":"Svelte","category":"78c235f4-2456-40e6-939d-19c855a30aa1","years_experience":"2","level":"proficient","tech_type":2}	{"status":"published","name":"Svelte","category":"78c235f4-2456-40e6-939d-19c855a30aa1","years_experience":"2","level":"proficient","tech_type":2}	\N	\N
+931	961	tech_skills	16	{"status":"published","name":"Tailwind CSS","category":"78c235f4-2456-40e6-939d-19c855a30aa1","years_experience":"2","level":"proficient","tech_type":2}	{"status":"published","name":"Tailwind CSS","category":"78c235f4-2456-40e6-939d-19c855a30aa1","years_experience":"2","level":"proficient","tech_type":2}	\N	\N
+932	962	tech_skills	17	{"status":"published","name":"Jest","category":"78c235f4-2456-40e6-939d-19c855a30aa1","years_experience":"2","level":"proficient","tech_type":2}	{"status":"published","name":"Jest","category":"78c235f4-2456-40e6-939d-19c855a30aa1","years_experience":"2","level":"proficient","tech_type":2}	\N	\N
+933	963	tech_skills	18	{"profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","status":"published","name":"MySQL","category":"0bcc8c53-eb96-4d3b-8bd5-81faf33000a5","years_experience":"10","level":"expert","tech_type":3}	{"profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","status":"published","name":"MySQL","category":"0bcc8c53-eb96-4d3b-8bd5-81faf33000a5","years_experience":"10","level":"expert","tech_type":3}	\N	\N
+934	964	tech_skills	19	{"status":"published","name":"MariaDB","category":"0bcc8c53-eb96-4d3b-8bd5-81faf33000a5","years_experience":"12","level":"expert","tech_type":3}	{"status":"published","name":"MariaDB","category":"0bcc8c53-eb96-4d3b-8bd5-81faf33000a5","years_experience":"12","level":"expert","tech_type":3}	\N	\N
+935	965	tech_skills	20	{"profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","name":"SQLite","category":"0bcc8c53-eb96-4d3b-8bd5-81faf33000a5","years_experience":"5","level":"proficient","tech_type":3}	{"profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","name":"SQLite","category":"0bcc8c53-eb96-4d3b-8bd5-81faf33000a5","years_experience":"5","level":"proficient","tech_type":3}	\N	\N
+936	966	tech_skills	21	{"status":"published","name":"SQL optimization","category":"0bcc8c53-eb96-4d3b-8bd5-81faf33000a5","years_experience":"12","level":"proficient","tech_type":3}	{"status":"published","name":"SQL optimization","category":"0bcc8c53-eb96-4d3b-8bd5-81faf33000a5","years_experience":"12","level":"proficient","tech_type":3}	\N	\N
+937	967	tech_skills	22	{"status":"published","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","name":"Elasticsearch","category":"0bcc8c53-eb96-4d3b-8bd5-81faf33000a5","years_experience":"3","level":"proficient","tech_type":5}	{"status":"published","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","name":"Elasticsearch","category":"0bcc8c53-eb96-4d3b-8bd5-81faf33000a5","years_experience":"3","level":"proficient","tech_type":5}	\N	\N
+938	968	tech_skills	23	{"status":"published","name":"MongoDB","category":"0bcc8c53-eb96-4d3b-8bd5-81faf33000a5","years_experience":"2","level":"proficient","tech_type":5}	{"status":"published","name":"MongoDB","category":"0bcc8c53-eb96-4d3b-8bd5-81faf33000a5","years_experience":"2","level":"proficient","tech_type":5}	\N	\N
 \.
 
 
@@ -2791,14 +2827,14 @@ COPY public.directus_roles (id, name, icon, description, parent) FROM stdin;
 
 COPY public.directus_sessions (token, "user", expires, ip, user_agent, share, origin, next_token) FROM stdin;
 jyEi42Iib3ayUhuKtRg8crSw0qNgHJgwHBGyXgh2IXu6VhJFRchsBiOMADOe89TD	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-22 11:36:02.247+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	\N	http://localhost:8055	\N
+zibs3K1vFgC3-7YJ6KcHD88VVdNfgVMRJtD_6frjs1VLLfjo6nd7Sp-AaOLeEtVd	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 17:05:39.076+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	\N	http://localhost:8055	Ft40rdkfCvkcjU2t7a1nKFWaeQ8PlQxHrgMSkf1KwNpJEPDQ2UlghD5VquW_Kq0B
 y-WO4WkHlhiznOiATKO-RjKK9Z3HEIlKHRYr0_u4sFB0eeLv84Ny2T4aqWxQ3eCM	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-22 16:20:39.984+00	172.18.0.5	node	\N	\N	\N
 pVX2TAe16YVkkcVw9TWxFZh-iyhGwVjppd9O13Ta1Qa1TKHbszuDvPeMz6S5szXg	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-22 16:20:44.345+00	172.18.0.5	node	\N	\N	\N
 jpJiV5kskoW5LlYVhxbzagfug_ZbrJ8irKY3a3RneaGmmQoHb9R-91GCFCG35EeL	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-22 16:20:49.72+00	172.18.0.5	node	\N	\N	\N
 kA-S7XRDdk9qfWnTlPvsSX9dImd6TfBgEH0sve42Wkv76kWjg7QSDcBlLtdEzCW4	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-22 16:20:54.471+00	172.18.0.5	node	\N	\N	\N
 kh42EQlknOAg1mgK2LdARxcW3pzcBUD-VB7HqL8iJawgHPuyyxOTALOU9snCsUra	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-22 16:21:15.524+00	172.18.0.5	node	\N	\N	\N
 NYWuxTb_-k1RbMjrV7UHdCDRg82yDOpx1-IQ5gZP-vt7zmyc526B58aFbj2HDdnq	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-22 16:29:05.39+00	172.18.0.5	node	\N	\N	\N
-zG2PY9G4UjaHdkONkIKtI3w1ofbRQZjrizxzMcFLYbAsfqx3jrB3gETP9Wi7O0qn	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 16:50:37.315+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	\N	http://localhost:8055	paZBy1QNv2rMzgwNt3zzHPCZ4zxH5vKsCk3pjp64G6KKWLi2-fJP_ysJbd_RkoIx
-paZBy1QNv2rMzgwNt3zzHPCZ4zxH5vKsCk3pjp64G6KKWLi2-fJP_ysJbd_RkoIx	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-18 16:50:27.315+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	\N	http://localhost:8055	\N
+Ft40rdkfCvkcjU2t7a1nKFWaeQ8PlQxHrgMSkf1KwNpJEPDQ2UlghD5VquW_Kq0B	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-18 17:05:29.076+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	\N	http://localhost:8055	\N
 \.
 
 
@@ -2832,7 +2868,7 @@ COPY public.directus_translations (id, language, key, value) FROM stdin;
 --
 
 COPY public.directus_users (id, first_name, last_name, email, password, location, title, description, tags, avatar, language, tfa_secret, status, role, token, last_access, last_page, provider, external_identifier, auth_data, email_notifications, appearance, theme_dark, theme_light, theme_light_overrides, theme_dark_overrides, text_direction) FROM stdin;
-157238bb-6930-4f26-be9c-8b31a9e11ab8	Admin	User	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-10-17 16:50:27.317+00	/settings/data-model/tech_skills	default	\N	\N	t	\N	\N	\N	\N	\N	auto
+157238bb-6930-4f26-be9c-8b31a9e11ab8	Admin	User	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-10-17 17:05:29.079+00	/content/tech_skill_categories	default	\N	\N	t	\N	\N	\N	\N	\N	auto
 \.
 
 
@@ -2882,7 +2918,7 @@ b636a780-6a9f-4342-adfa-eed183447a17	published	2025-10-17 12:03:30.884+00	\N	Dut
 --
 
 COPY public.profiles (id, date_created, date_updated, name, title, location, phone_number, email_address, personal_website, subtitle, core_stack, linkedin_profile, github_profile, stackoverflow_profile, headline, profile_picture) FROM stdin;
-0eeb942b-e35a-44e8-a37d-52b9cdb24309	2025-10-15 16:51:41.394+00	2025-10-17 16:49:12.446+00	Rik Wanders	Senior Full Stack Developer	Ronda, Spain	+31649118511	rik@rikwanders.tech	https://www.rikwanders.tech/	Building scalable web applications for remote teams	Python • Node.js • CI/CD • DevOps	https://www.linkedin.com/in/rik-wanders-software	https://github.com/gitaarik	https://stackoverflow.com/users/1248175/gitaarik	Full Stack Developer 12+ years expertise in Python, Django, Node.js, React, CI/CD, DevOps, UX, AI	e12c8ec6-2cbe-4672-98e9-a33d6ed5869a
+0eeb942b-e35a-44e8-a37d-52b9cdb24309	2025-10-15 16:51:41.394+00	2025-10-17 17:01:46.441+00	Rik Wanders	Senior Full Stack Developer	Ronda, Spain	+31649118511	rik@rikwanders.tech	https://www.rikwanders.tech/	Building scalable web applications for remote teams	Python • Node.js • CI/CD • DevOps	https://www.linkedin.com/in/rik-wanders-software	https://github.com/gitaarik	https://stackoverflow.com/users/1248175/gitaarik	Full Stack Developer 12+ years expertise in Python, Django, Node.js, React, CI/CD, DevOps, UX, AI	e12c8ec6-2cbe-4672-98e9-a33d6ed5869a
 \.
 
 
@@ -2899,9 +2935,10 @@ COPY public.resume_tokens (token, name, description, "resumeType", "expiresAt", 
 --
 
 COPY public.tech_skill_categories (id, status, sort, date_created, date_updated, name) FROM stdin;
-78c235f4-2456-40e6-939d-19c855a30aa1	published	\N	2025-10-17 15:11:24.359+00	2025-10-17 15:29:21.475+00	Frontend
-0bcc8c53-eb96-4d3b-8bd5-81faf33000a5	published	\N	2025-10-17 15:12:51.928+00	2025-10-17 15:29:24.926+00	Databases
-e6875da0-e556-45f0-be1e-e469fdaed3a7	published	\N	2025-10-17 15:11:13.878+00	2025-10-17 15:29:31.195+00	Backend
+78c235f4-2456-40e6-939d-19c855a30aa1	published	1	2025-10-17 15:11:24.359+00	2025-10-17 15:29:21.475+00	Frontend
+0bcc8c53-eb96-4d3b-8bd5-81faf33000a5	published	4	2025-10-17 15:12:51.928+00	2025-10-17 15:29:24.926+00	Databases
+e6875da0-e556-45f0-be1e-e469fdaed3a7	published	2	2025-10-17 15:11:13.878+00	2025-10-17 15:29:31.195+00	Backend
+a2c07ea5-050e-4ad0-adad-7bfd7908e4ad	published	3	2025-10-17 17:00:54.583+00	\N	Mobile
 \.
 
 
@@ -2931,16 +2968,29 @@ COPY public.tech_skill_types (id, status, sort, date_created, date_updated, name
 --
 
 COPY public.tech_skills (id, status, sort, date_created, date_updated, profile, name, category, years_experience, level, tech_type) FROM stdin;
+23	published	15	2025-10-17 17:09:52.916+00	\N	\N	MongoDB	0bcc8c53-eb96-4d3b-8bd5-81faf33000a5	2	proficient	5
+2	published	16	2025-10-17 16:02:34.588+00	\N	0eeb942b-e35a-44e8-a37d-52b9cdb24309	JavaScript	78c235f4-2456-40e6-939d-19c855a30aa1	18	expert	1
+11	published	17	2025-10-17 16:55:49.756+00	\N	0eeb942b-e35a-44e8-a37d-52b9cdb24309	Node.js	78c235f4-2456-40e6-939d-19c855a30aa1	12	expert	1
+12	published	18	2025-10-17 16:56:44.833+00	\N	0eeb942b-e35a-44e8-a37d-52b9cdb24309	TypeScript	78c235f4-2456-40e6-939d-19c855a30aa1	2	proficient	1
+14	published	19	2025-10-17 17:01:46.443+00	\N	0eeb942b-e35a-44e8-a37d-52b9cdb24309	React Native	a2c07ea5-050e-4ad0-adad-7bfd7908e4ad	3	proficient	2
 1	published	1	2025-10-17 15:11:59.895+00	2025-10-17 16:00:38.293+00	0eeb942b-e35a-44e8-a37d-52b9cdb24309	Python	e6875da0-e556-45f0-be1e-e469fdaed3a7	12	expert	1
-2	published	7	2025-10-17 16:02:34.588+00	\N	0eeb942b-e35a-44e8-a37d-52b9cdb24309	JavaScript	78c235f4-2456-40e6-939d-19c855a30aa1	18	expert	1
-3	published	2	2025-10-17 16:03:18.66+00	2025-10-17 16:37:50.808+00	0eeb942b-e35a-44e8-a37d-52b9cdb24309	PostgreSQL	0bcc8c53-eb96-4d3b-8bd5-81faf33000a5	4	expert	3
-4	published	3	2025-10-17 16:38:48.185+00	\N	0eeb942b-e35a-44e8-a37d-52b9cdb24309	Django	e6875da0-e556-45f0-be1e-e469fdaed3a7	12	expert	2
-5	published	4	2025-10-17 16:42:03.762+00	\N	0eeb942b-e35a-44e8-a37d-52b9cdb24309	Django REST Framework (DRF)	e6875da0-e556-45f0-be1e-e469fdaed3a7	12	expert	2
-6	published	5	2025-10-17 16:42:47.554+00	\N	0eeb942b-e35a-44e8-a37d-52b9cdb24309	Flask	e6875da0-e556-45f0-be1e-e469fdaed3a7	4	proficient	2
-7	published	6	2025-10-17 16:43:46.247+00	\N	0eeb942b-e35a-44e8-a37d-52b9cdb24309	FastAPI	e6875da0-e556-45f0-be1e-e469fdaed3a7	1	proficient	2
-8	published	\N	2025-10-17 16:45:28.783+00	\N	0eeb942b-e35a-44e8-a37d-52b9cdb24309	RESTful APIs	e6875da0-e556-45f0-be1e-e469fdaed3a7	12	expert	\N
-9	published	\N	2025-10-17 16:49:12.448+00	\N	0eeb942b-e35a-44e8-a37d-52b9cdb24309	LLM integrations	e6875da0-e556-45f0-be1e-e469fdaed3a7	1	proficient	13
-10	published	\N	2025-10-17 16:53:10.394+00	\N	0eeb942b-e35a-44e8-a37d-52b9cdb24309	pytest	e6875da0-e556-45f0-be1e-e469fdaed3a7	12	proficient	2
+6	published	4	2025-10-17 16:42:47.554+00	\N	0eeb942b-e35a-44e8-a37d-52b9cdb24309	Flask	e6875da0-e556-45f0-be1e-e469fdaed3a7	4	proficient	2
+7	published	5	2025-10-17 16:43:46.247+00	\N	0eeb942b-e35a-44e8-a37d-52b9cdb24309	FastAPI	e6875da0-e556-45f0-be1e-e469fdaed3a7	1	proficient	2
+8	published	6	2025-10-17 16:45:28.783+00	\N	0eeb942b-e35a-44e8-a37d-52b9cdb24309	RESTful APIs	e6875da0-e556-45f0-be1e-e469fdaed3a7	12	expert	\N
+9	published	7	2025-10-17 16:49:12.448+00	\N	0eeb942b-e35a-44e8-a37d-52b9cdb24309	LLM integrations	e6875da0-e556-45f0-be1e-e469fdaed3a7	1	proficient	13
+4	published	2	2025-10-17 16:38:48.185+00	\N	0eeb942b-e35a-44e8-a37d-52b9cdb24309	Django	e6875da0-e556-45f0-be1e-e469fdaed3a7	12	expert	2
+5	published	3	2025-10-17 16:42:03.762+00	\N	0eeb942b-e35a-44e8-a37d-52b9cdb24309	Django REST Framework (DRF)	e6875da0-e556-45f0-be1e-e469fdaed3a7	12	expert	2
+15	published	21	2025-10-17 17:04:22.335+00	\N	\N	Svelte	78c235f4-2456-40e6-939d-19c855a30aa1	2	proficient	2
+18	published	10	2025-10-17 17:06:28.288+00	\N	0eeb942b-e35a-44e8-a37d-52b9cdb24309	MySQL	0bcc8c53-eb96-4d3b-8bd5-81faf33000a5	10	expert	3
+3	published	9	2025-10-17 16:03:18.66+00	2025-10-17 16:37:50.808+00	0eeb942b-e35a-44e8-a37d-52b9cdb24309	PostgreSQL	0bcc8c53-eb96-4d3b-8bd5-81faf33000a5	4	expert	3
+10	published	8	2025-10-17 16:53:10.394+00	\N	0eeb942b-e35a-44e8-a37d-52b9cdb24309	pytest	e6875da0-e556-45f0-be1e-e469fdaed3a7	12	proficient	2
+13	published	20	2025-10-17 16:57:04.639+00	\N	0eeb942b-e35a-44e8-a37d-52b9cdb24309	React	78c235f4-2456-40e6-939d-19c855a30aa1	12	expert	2
+19	published	11	2025-10-17 17:07:14.543+00	\N	\N	MariaDB	0bcc8c53-eb96-4d3b-8bd5-81faf33000a5	12	expert	3
+16	published	22	2025-10-17 17:04:43.06+00	\N	\N	Tailwind CSS	78c235f4-2456-40e6-939d-19c855a30aa1	2	proficient	2
+17	published	23	2025-10-17 17:04:59.917+00	\N	\N	Jest	78c235f4-2456-40e6-939d-19c855a30aa1	2	proficient	2
+20	draft	12	2025-10-17 17:07:50.873+00	\N	0eeb942b-e35a-44e8-a37d-52b9cdb24309	SQLite	0bcc8c53-eb96-4d3b-8bd5-81faf33000a5	5	proficient	3
+21	published	13	2025-10-17 17:08:46.459+00	\N	\N	SQL optimization	0bcc8c53-eb96-4d3b-8bd5-81faf33000a5	12	proficient	3
+22	published	14	2025-10-17 17:09:24.629+00	\N	0eeb942b-e35a-44e8-a37d-52b9cdb24309	Elasticsearch	0bcc8c53-eb96-4d3b-8bd5-81faf33000a5	3	proficient	5
 \.
 
 
@@ -2998,7 +3048,7 @@ COPY public.work_technologies ("workExperienceId", "technologyName", "sortOrder"
 -- Name: directus_activity_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_activity_id_seq', 950, true);
+SELECT pg_catalog.setval('public.directus_activity_id_seq', 968, true);
 
 
 --
@@ -3040,7 +3090,7 @@ SELECT pg_catalog.setval('public.directus_relations_id_seq', 11, true);
 -- Name: directus_revisions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_revisions_id_seq', 920, true);
+SELECT pg_catalog.setval('public.directus_revisions_id_seq', 938, true);
 
 
 --
@@ -3068,7 +3118,7 @@ SELECT pg_catalog.setval('public.tech_skill_types_id_seq', 13, true);
 -- Name: tech_skills_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.tech_skills_id_seq', 10, true);
+SELECT pg_catalog.setval('public.tech_skills_id_seq', 23, true);
 
 
 --
@@ -3945,5 +3995,5 @@ ALTER TABLE ONLY public.work_technologies
 -- PostgreSQL database dump complete
 --
 
-\unrestrict t21xBle2srOq5odBWLS4RIsVaycTSvaC8OXBaPs3wO1yjELegwNolASXuGEE88Y
+\unrestrict fZWwsYcf5kkOruznlF13VghShcRWD4uS8ISyaYtlcgE8DNmz17WagSlG7bMxxoR
 
