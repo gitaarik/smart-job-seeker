@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict bNyHQhChh3frqcJayRpGIRL0gwFnIKQ2sPk6btO1jGTzoCDZIPt4CufG0PxKikJ
+\restrict If1WH95DcOskGqF8xPndfJHFJi9dVjSv47l22YsaTrhMPWKC5urvZQckTo34sBf
 
 -- Dumped from database version 15.14 (Debian 15.14-1.pgdg13+1)
 -- Dumped by pg_dump version 15.14 (Debian 15.14-1.pgdg13+1)
@@ -877,42 +877,21 @@ ALTER SEQUENCE public.directus_webhooks_id_seq OWNED BY public.directus_webhooks
 
 
 --
--- Name: headlines; Type: TABLE; Schema: public; Owner: postgres
+-- Name: highlights; Type: TABLE; Schema: public; Owner: postgres
 --
 
-CREATE TABLE public.headlines (
-    id integer NOT NULL,
+CREATE TABLE public.highlights (
+    id uuid NOT NULL,
+    status character varying(255) DEFAULT 'draft'::character varying NOT NULL,
     sort integer,
     date_created timestamp with time zone,
     date_updated timestamp with time zone,
-    text character varying(255) DEFAULT NULL::character varying NOT NULL,
-    profile uuid
+    profile uuid,
+    text character varying(255)
 );
 
 
-ALTER TABLE public.headlines OWNER TO postgres;
-
---
--- Name: headlines_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.headlines_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.headlines_id_seq OWNER TO postgres;
-
---
--- Name: headlines_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.headlines_id_seq OWNED BY public.headlines.id;
-
+ALTER TABLE public.highlights OWNER TO postgres;
 
 --
 -- Name: languages; Type: TABLE; Schema: public; Owner: postgres
@@ -950,7 +929,9 @@ CREATE TABLE public.profiles (
     core_stack character varying(255),
     linkedin_profile character varying(255),
     github_profile character varying(255),
-    stackoverflow_profile character varying(255)
+    stackoverflow_profile character varying(255),
+    headline character varying(255),
+    profile_picture uuid
 );
 
 
@@ -1157,13 +1138,6 @@ ALTER TABLE ONLY public.directus_webhooks ALTER COLUMN id SET DEFAULT nextval('p
 
 
 --
--- Name: headlines id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.headlines ALTER COLUMN id SET DEFAULT nextval('public.headlines_id_seq'::regclass);
-
-
---
 -- Data for Name: _prisma_migrations; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -1302,7 +1276,6 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 454	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 12:45:37.202+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_collections	languages	http://localhost:8055
 456	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 12:45:37.206+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_collections	headlines	http://localhost:8055
 458	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 12:45:37.212+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_collections	work_experiences	http://localhost:8055
-460	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 12:47:02.105+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	headlines	1	http://localhost:8055
 461	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 12:47:02.108+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	profiles	0eeb942b-e35a-44e8-a37d-52b9cdb24309	http://localhost:8055
 462	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 12:48:00.671+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	47	http://localhost:8055
 463	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 12:48:36.929+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	44	http://localhost:8055
@@ -1410,6 +1383,152 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 565	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 13:44:56.021+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	50	http://localhost:8055
 566	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 13:44:58.308+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	51	http://localhost:8055
 567	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 13:45:02.448+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	28	http://localhost:8055
+568	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:26:43.848+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	47	http://localhost:8055
+569	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:26:49.939+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_collections	headlines	http://localhost:8055
+570	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:26:49.941+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	40	http://localhost:8055
+571	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:26:49.942+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	41	http://localhost:8055
+572	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:26:49.942+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	42	http://localhost:8055
+573	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:26:49.942+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	43	http://localhost:8055
+574	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:26:49.943+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	45	http://localhost:8055
+575	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:26:49.943+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	46	http://localhost:8055
+576	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:23.986+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	53	http://localhost:8055
+577	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:27.881+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	17	http://localhost:8055
+578	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:27.885+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	18	http://localhost:8055
+579	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:27.888+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	19	http://localhost:8055
+580	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:27.895+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	20	http://localhost:8055
+581	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:27.899+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	21	http://localhost:8055
+582	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:27.902+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	49	http://localhost:8055
+583	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:27.905+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	48	http://localhost:8055
+584	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:27.91+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	27	http://localhost:8055
+585	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:27.913+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	26	http://localhost:8055
+586	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:27.916+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	53	http://localhost:8055
+587	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:27.921+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	24	http://localhost:8055
+588	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:27.925+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	28	http://localhost:8055
+589	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:27.928+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	50	http://localhost:8055
+590	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:27.931+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	51	http://localhost:8055
+591	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:27.934+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	52	http://localhost:8055
+592	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:27.937+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	39	http://localhost:8055
+593	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:27.941+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	23	http://localhost:8055
+594	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:33.322+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	17	http://localhost:8055
+595	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:33.33+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	18	http://localhost:8055
+596	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:33.334+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	19	http://localhost:8055
+597	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:33.337+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	20	http://localhost:8055
+598	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:33.341+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	21	http://localhost:8055
+599	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:33.347+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	49	http://localhost:8055
+600	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:33.351+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	48	http://localhost:8055
+601	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:33.354+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	53	http://localhost:8055
+602	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:33.358+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	27	http://localhost:8055
+603	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:33.363+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	26	http://localhost:8055
+604	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:33.366+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	24	http://localhost:8055
+605	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:33.369+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	28	http://localhost:8055
+606	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:33.372+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	50	http://localhost:8055
+607	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:33.377+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	51	http://localhost:8055
+608	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:33.381+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	52	http://localhost:8055
+609	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:33.384+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	39	http://localhost:8055
+610	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:33.387+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	23	http://localhost:8055
+611	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:28:43.419+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	profiles	0eeb942b-e35a-44e8-a37d-52b9cdb24309	http://localhost:8055
+612	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:31:08.443+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	54	http://localhost:8055
+613	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:31:11.88+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	17	http://localhost:8055
+614	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:31:11.885+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	18	http://localhost:8055
+615	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:31:11.889+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	19	http://localhost:8055
+616	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:31:11.892+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	20	http://localhost:8055
+617	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:31:11.898+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	21	http://localhost:8055
+618	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:31:11.901+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	49	http://localhost:8055
+619	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:31:11.904+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	48	http://localhost:8055
+620	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:31:11.907+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	53	http://localhost:8055
+621	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:31:11.91+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	27	http://localhost:8055
+622	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:31:11.914+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	26	http://localhost:8055
+623	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:31:11.918+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	24	http://localhost:8055
+624	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:31:11.922+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	54	http://localhost:8055
+625	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:31:11.925+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	28	http://localhost:8055
+626	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:31:11.93+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	50	http://localhost:8055
+627	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:31:11.933+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	51	http://localhost:8055
+628	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:31:11.936+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	52	http://localhost:8055
+629	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:31:11.939+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	39	http://localhost:8055
+630	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:31:11.942+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	23	http://localhost:8055
+631	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:31:44.846+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_files	e12c8ec6-2cbe-4672-98e9-a33d6ed5869a	http://localhost:8055
+632	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:31:47.39+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	profiles	0eeb942b-e35a-44e8-a37d-52b9cdb24309	http://localhost:8055
+633	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:32:06.617+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	54	http://localhost:8055
+634	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:32:21.478+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	54	http://localhost:8055
+635	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:32:59.019+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	17	http://localhost:8055
+636	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:32:59.024+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	18	http://localhost:8055
+637	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:32:59.028+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	19	http://localhost:8055
+638	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:32:59.033+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	20	http://localhost:8055
+639	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:32:59.038+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	21	http://localhost:8055
+640	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:32:59.041+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	49	http://localhost:8055
+641	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:32:59.045+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	48	http://localhost:8055
+642	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:32:59.05+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	53	http://localhost:8055
+643	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:32:59.054+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	54	http://localhost:8055
+644	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:32:59.056+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	27	http://localhost:8055
+645	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:32:59.06+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	26	http://localhost:8055
+646	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:32:59.063+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	24	http://localhost:8055
+647	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:32:59.069+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	28	http://localhost:8055
+648	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:32:59.073+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	50	http://localhost:8055
+649	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:32:59.076+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	51	http://localhost:8055
+650	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:32:59.079+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	52	http://localhost:8055
+651	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:32:59.084+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	39	http://localhost:8055
+652	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:32:59.088+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	23	http://localhost:8055
+653	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:33:09.274+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	17	http://localhost:8055
+654	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:33:09.278+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	18	http://localhost:8055
+655	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:33:09.285+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	19	http://localhost:8055
+656	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:33:09.29+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	20	http://localhost:8055
+657	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:33:09.294+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	21	http://localhost:8055
+658	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:33:09.3+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	49	http://localhost:8055
+659	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:33:09.304+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	48	http://localhost:8055
+660	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:33:09.309+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	53	http://localhost:8055
+661	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:33:09.312+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	54	http://localhost:8055
+662	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:33:09.316+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	27	http://localhost:8055
+663	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:33:09.32+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	24	http://localhost:8055
+664	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:33:09.323+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	26	http://localhost:8055
+665	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:33:09.326+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	28	http://localhost:8055
+666	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:33:09.331+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	50	http://localhost:8055
+667	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:33:09.335+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	51	http://localhost:8055
+668	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:33:09.339+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	52	http://localhost:8055
+669	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:33:09.342+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	39	http://localhost:8055
+670	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:33:09.346+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	23	http://localhost:8055
+671	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:34:49.044+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	55	http://localhost:8055
+672	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:34:49.047+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	56	http://localhost:8055
+673	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:34:49.049+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	57	http://localhost:8055
+674	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:34:49.051+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	58	http://localhost:8055
+675	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:34:49.053+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	59	http://localhost:8055
+676	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:34:49.056+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_collections	highlights	http://localhost:8055
+677	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:35:23.494+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	60	http://localhost:8055
+678	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:35:23.6+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	61	http://localhost:8055
+679	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:35:50.353+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	62	http://localhost:8055
+680	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:35:57.908+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_collections	highlights	http://localhost:8055
+681	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:36:05.031+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_collections	profiles	http://localhost:8055
+682	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:36:05.032+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_collections	languages	http://localhost:8055
+683	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:36:05.036+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_collections	users	http://localhost:8055
+684	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:36:05.038+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_collections	highlights	http://localhost:8055
+685	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:36:05.042+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_collections	work_experiences	http://localhost:8055
+686	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:36:29.277+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	17	http://localhost:8055
+687	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:36:29.281+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	18	http://localhost:8055
+688	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:36:29.285+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	19	http://localhost:8055
+689	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:36:29.289+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	20	http://localhost:8055
+690	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:36:29.294+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	21	http://localhost:8055
+691	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:36:29.297+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	49	http://localhost:8055
+692	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:36:29.3+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	48	http://localhost:8055
+693	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:36:29.303+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	53	http://localhost:8055
+694	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:36:29.307+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	54	http://localhost:8055
+695	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:36:29.31+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	27	http://localhost:8055
+696	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:36:29.313+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	24	http://localhost:8055
+697	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:36:29.317+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	26	http://localhost:8055
+698	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:36:29.32+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	28	http://localhost:8055
+699	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:36:29.324+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	50	http://localhost:8055
+700	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:36:29.327+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	51	http://localhost:8055
+701	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:36:29.33+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	52	http://localhost:8055
+702	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:36:29.333+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	39	http://localhost:8055
+703	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:36:29.335+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	61	http://localhost:8055
+704	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:36:29.339+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	23	http://localhost:8055
+705	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:36:45.198+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	61	http://localhost:8055
+706	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:38:05.592+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	highlights	00483bae-b8ef-46bb-8230-0f84c989f971	http://localhost:8055
+707	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:38:05.595+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	highlights	85956023-2be3-4fa9-9643-fc677ffd97cb	http://localhost:8055
+708	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:38:05.596+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	highlights	bf60fa32-c241-4a49-9edf-d0a21c3a4b3d	http://localhost:8055
+709	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:38:05.598+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	highlights	82700d7e-0a60-43af-82a7-1ca8a4fcb43f	http://localhost:8055
+710	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:38:05.601+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	highlights	912a4cfd-44d1-4b88-bd32-0a67ce05e1bc	http://localhost:8055
+711	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:38:05.602+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	highlights	311f493d-c89f-4a35-86fc-9605e93f639d	http://localhost:8055
+712	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:38:05.604+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	highlights	e30e3468-9f74-4bdb-9f33-abcef8eb6f7b	http://localhost:8055
+713	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:38:05.607+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	profiles	0eeb942b-e35a-44e8-a37d-52b9cdb24309	http://localhost:8055
 \.
 
 
@@ -1418,11 +1537,11 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 --
 
 COPY public.directus_collections (collection, icon, note, display_template, hidden, singleton, translations, archive_field, archive_app_filter, archive_value, unarchive_value, sort_field, accountability, color, item_duplication_fields, sort, "group", collapse, preview_url, versioning) FROM stdin;
-languages	\N	\N	{{name}}	f	f	\N	status	t	archived	draft	\N	all	\N	\N	1	profiles	open	\N	f
 profiles	\N	\N	{{name}}	f	f	\N	\N	t	\N	\N	\N	all	\N	\N	1	\N	open	\N	f
+languages	\N	\N	{{name}}	f	f	\N	status	t	archived	draft	\N	all	\N	\N	1	profiles	open	\N	f
 users	\N	\N	\N	t	f	\N	\N	t	\N	\N	\N	all	\N	\N	2	\N	open	\N	f
+highlights	\N	\N	{{text}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	2	profiles	open	\N	f
 work_experiences	\N	\N	{{name}} ({{startDate}}-{{endDate}})	f	f	\N	\N	t	\N	\N	sortOrder	all	\N	\N	3	profiles	open	\N	f
-headlines	\N	\N	{{text}}	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	2	profiles	open	\N	f
 \.
 
 
@@ -1476,32 +1595,35 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 32	languages	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	3	half	\N	\N	\N	f	\N	\N	\N
 33	languages	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	4	half	\N	\N	\N	f	\N	\N	\N
 34	languages	name	\N	input	\N	\N	\N	f	f	5	half	\N	\N	\N	f	\N	\N	\N
+17	profiles	id	uuid	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N
 35	languages	language_code	\N	input	\N	\N	\N	f	f	6	half	\N	2-letter ISO 639 language code	\N	f	\N	\N	\N
 36	languages	proficiency	\N	select-radio	{"choices":[{"text":"Native","value":"native"},{"text":"Fluent","value":"fluent"},{"text":"Proficient","value":"proficient"},{"text":"Conversational","value":"conversational"},{"text":"Basic","value":"basic"}]}	\N	\N	f	f	7	full	\N	\N	\N	f	\N	\N	\N
 38	languages	profile	m2o	\N	\N	\N	\N	f	f	8	full	\N	\N	\N	f	\N	\N	\N
-26	profiles	phone_number	\N	input	\N	\N	\N	f	f	9	half	\N	\N	\N	f	\N	\N	\N
-24	profiles	location	\N	input	\N	\N	\N	f	f	10	half	\N	Where you are currently based.	\N	f	\N	\N	\N
-17	profiles	id	uuid	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N
 18	profiles	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	2	half	\N	\N	\N	f	\N	\N	\N
-19	profiles	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	3	half	\N	\N	\N	f	\N	\N	\N
-20	profiles	name	\N	input	\N	\N	\N	f	f	4	full	\N	\N	\N	t	\N	\N	\N
 21	profiles	title	\N	input	\N	\N	\N	f	f	5	full	\N	Your job title, a phrase describing your profession.	\N	t	\N	\N	\N
-40	headlines	id	\N	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N
-41	headlines	sort	\N	input	\N	\N	\N	f	t	2	full	\N	\N	\N	f	\N	\N	\N
-42	headlines	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	3	half	\N	\N	\N	f	\N	\N	\N
-43	headlines	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	4	half	\N	\N	\N	f	\N	\N	\N
-45	headlines	text	\N	input	\N	\N	\N	f	f	6	full	\N	\N	\N	f	\N	\N	\N
-46	headlines	profile	m2o	\N	\N	\N	\N	f	f	7	full	\N	\N	\N	f	\N	\N	\N
-39	profiles	languages	o2m	list-o2m	{"enableSelect":false}	\N	\N	f	f	15	full	\N	\N	\N	f	\N	\N	\N
-47	profiles	headlines	o2m	list-o2m	{"enableSelect":false,"template":null}	\N	\N	f	f	16	full	\N	\N	\N	f	\N	\N	\N
-23	profiles	work_experiences	o2m	list-o2m	{"enableSelect":false}	\N	\N	f	f	17	full	\N	\N	\N	f	\N	\N	\N
-52	profiles	stackoverflow_profile	\N	input	\N	\N	\N	f	f	14	full	\N	\N	\N	f	\N	\N	\N
 49	profiles	core_stack	\N	input	\N	\N	\N	f	f	6	full	\N	Short list of your core technology stack that you are most familiar with.	\N	f	\N	\N	\N
 48	profiles	subtitle	\N	input	\N	\N	\N	f	f	7	full	\N	A short sentence complementing your work title, giving more insight to your expertise.	\N	f	\N	\N	\N
-50	profiles	linkedin_profile	\N	input	\N	\N	\N	f	f	12	full	\N	\N	\N	f	\N	\N	\N
-51	profiles	github_profile	\N	input	\N	\N	\N	f	f	13	full	\N	\N	\N	f	\N	\N	\N
-27	profiles	email_address	\N	input	\N	\N	\N	f	f	8	half	\N	\N	\N	f	\N	\N	\N
-28	profiles	personal_website	\N	input	\N	\N	\N	f	f	11	full	\N	\N	\N	f	\N	\N	\N
+53	profiles	headline	\N	input	\N	\N	\N	f	f	8	full	\N	Brief professional tagline that summarizes your key qualifications.	\N	f	\N	\N	\N
+55	highlights	id	uuid	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N
+54	profiles	profile_picture	file	file-image	{"crop":false}	\N	\N	f	f	9	half	\N	\N	\N	f	\N	\N	\N
+56	highlights	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	2	full	\N	\N	\N	f	\N	\N	\N
+57	highlights	sort	\N	input	\N	\N	\N	f	t	3	full	\N	\N	\N	f	\N	\N	\N
+27	profiles	email_address	\N	input	\N	\N	\N	f	f	10	half	\N	\N	\N	f	\N	\N	\N
+24	profiles	location	\N	input	\N	\N	\N	f	f	11	half	\N	Where you are currently based.	\N	f	\N	\N	\N
+26	profiles	phone_number	\N	input	\N	\N	\N	f	f	12	half	\N	\N	\N	f	\N	\N	\N
+58	highlights	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	4	half	\N	\N	\N	f	\N	\N	\N
+50	profiles	linkedin_profile	\N	input	\N	\N	\N	f	f	14	full	\N	\N	\N	f	\N	\N	\N
+59	highlights	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	5	half	\N	\N	\N	f	\N	\N	\N
+60	highlights	profile	m2o	\N	\N	\N	\N	f	f	6	full	\N	\N	\N	f	\N	\N	\N
+62	highlights	text	\N	input	\N	\N	\N	f	f	7	full	\N	\N	\N	t	\N	\N	\N
+19	profiles	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	3	half	\N	\N	\N	f	\N	\N	\N
+20	profiles	name	\N	input	\N	\N	\N	f	f	4	full	\N	\N	\N	t	\N	\N	\N
+51	profiles	github_profile	\N	input	\N	\N	\N	f	f	15	full	\N	\N	\N	f	\N	\N	\N
+52	profiles	stackoverflow_profile	\N	input	\N	\N	\N	f	f	16	full	\N	\N	\N	f	\N	\N	\N
+39	profiles	languages	o2m	list-o2m	{"enableSelect":false}	\N	\N	f	f	17	full	\N	\N	\N	f	\N	\N	\N
+28	profiles	personal_website	\N	input	\N	\N	\N	f	f	13	full	\N	\N	\N	f	\N	\N	\N
+23	profiles	work_experiences	o2m	list-o2m	{"enableSelect":false}	\N	\N	f	f	19	full	\N	\N	\N	f	\N	\N	\N
+61	profiles	highlights	o2m	list-o2m	{"enableSelect":false}	\N	\N	f	f	18	full	\N	\N	\N	f	\N	\N	\N
 \.
 
 
@@ -1512,6 +1634,7 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 COPY public.directus_files (id, storage, filename_disk, filename_download, title, type, folder, uploaded_by, created_on, modified_by, modified_on, charset, filesize, width, height, duration, embed, description, location, tags, metadata, focal_point_x, focal_point_y, tus_id, tus_data, uploaded_on) FROM stdin;
 8127127c-d1cf-480e-87ea-5cbfbfc12e36	local	8127127c-d1cf-480e-87ea-5cbfbfc12e36.png	chipta-logo.png	Chipta Logo	image/png	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-15 15:31:28.781+00	\N	2025-10-15 15:31:28.796+00	\N	18182	558	270	\N	\N	\N	\N	\N	{}	\N	\N	\N	\N	2025-10-15 15:31:28.795+00
 d6beca5c-5fc3-4f31-aa57-fc1a8209a97c	local	d6beca5c-5fc3-4f31-aa57-fc1a8209a97c.png	tender-it-logo.png	Tender It Logo	image/png	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-15 15:31:52.439+00	\N	2025-10-15 15:31:52.448+00	\N	24609	558	270	\N	\N	\N	\N	\N	{}	\N	\N	\N	\N	2025-10-15 15:31:52.448+00
+e12c8ec6-2cbe-4672-98e9-a33d6ed5869a	local	e12c8ec6-2cbe-4672-98e9-a33d6ed5869a.png	profile-pic.png	Profile Pic	image/png	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:31:44.844+00	\N	2025-10-17 14:31:44.87+00	\N	1146192	750	1024	\N	\N	\N	\N	\N	{}	\N	\N	\N	\N	2025-10-17 14:31:44.869+00
 \.
 
 
@@ -1680,7 +1803,6 @@ COPY public.directus_presets (id, bookmark, "user", role, collection, search, la
 2	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	users	\N	\N	{"tabular":{"page":1}}	\N	\N	\N	bookmark	\N
 4	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	languages	\N	\N	{"tabular":{"page":1}}	\N	\N	\N	bookmark	\N
 1	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	work_experiences	\N	\N	{"tabular":{"fields":["id","isActive","name","location","description","startDate"],"page":1}}	{"tabular":{"widths":{"id":117.60000610351562,"isActive":105.4000244140625,"name":149.79998779296875,"location":152.79998779296875,"description":191.39990234375,"startDate":124.5999755859375}}}	\N	\N	bookmark	\N
-5	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	headlines	\N	\N	{"tabular":{"page":1}}	\N	\N	\N	bookmark	\N
 3	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	profiles	\N	\N	{"tabular":{"page":1,"fields":["name","title"]}}	{"tabular":{"widths":{"name":160,"title":242.79998779296875}}}	\N	\N	bookmark	\N
 \.
 
@@ -1693,7 +1815,8 @@ COPY public.directus_relations (id, many_collection, many_field, one_collection,
 1	work_experiences	logo	directus_files	\N	\N	\N	\N	\N	nullify
 2	work_experiences	profiles	profiles	work_experiences	\N	\N	\N	\N	nullify
 3	languages	profile	profiles	languages	\N	\N	\N	\N	nullify
-4	headlines	profile	profiles	headlines	\N	\N	\N	\N	nullify
+5	profiles	profile_picture	directus_files	\N	\N	\N	\N	\N	nullify
+6	highlights	profile	profiles	highlights	\N	\N	\N	\N	nullify
 \.
 
 
@@ -1793,7 +1916,6 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 443	458	directus_collections	work_experiences	{"collection":"work_experiences","icon":null,"note":null,"display_template":"{{name}} ({{startDate}}-{{endDate}})","hidden":false,"singleton":false,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":"sortOrder","accountability":"all","color":null,"item_duplication_fields":null,"sort":3,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"sort":3,"group":"profiles"}	\N	\N
 444	459	directus_collections	headlines	{"collection":"headlines","icon":null,"note":null,"display_template":"{{name}}","hidden":false,"singleton":false,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":2,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"display_template":"{{name}}"}	\N	\N
 446	461	profiles	0eeb942b-e35a-44e8-a37d-52b9cdb24309	{"id":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","date_created":"2025-10-15T16:51:41.394Z","date_updated":"2025-10-17T12:47:02.102Z","name":"Rik Wanders","title":"Senior Full Stack Developer","location":"Ronda, Spain","phone_number":"+31649118511","email_address":"rik@rikwanders.tech","personal_website":"https://www.rikwanders.tech/","linkedin_url":"https://www.linkedin.com/in/rik-wanders-software/","work_experiences":["a37c89e0-2b6d-44e1-911a-c1399611562a","f044625e-b180-4603-b03a-42a5a397403a"],"languages":["7024cec2-289e-44e5-a4e8-721805a151a0","b636a780-6a9f-4342-adfa-eed183447a17"],"headlines":[1]}	{"date_updated":"2025-10-17T12:47:02.102Z"}	\N	\N
-445	460	headlines	1	{"name":"Full Stack Developer","text":"Full Stack Developer 12+ years expertise in Python, Django, Node.js, React, CI/CD, DevOps, UX, AI","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309"}	{"name":"Full Stack Developer","text":"Full Stack Developer 12+ years expertise in Python, Django, Node.js, React, CI/CD, DevOps, UX, AI","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309"}	446	\N
 447	462	directus_fields	47	{"id":47,"collection":"profiles","field":"headlines","special":["o2m"],"interface":"list-o2m","options":{"enableSelect":false,"template":"{{text}}"},"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":12,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"headlines","options":{"enableSelect":false,"template":"{{text}}"}}	\N	\N
 448	464	directus_collections	headlines	{"collection":"headlines","icon":null,"note":null,"display_template":"{{text}}","hidden":false,"singleton":false,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":2,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"display_template":"{{text}}"}	\N	\N
 449	465	directus_fields	47	{"id":47,"collection":"profiles","field":"headlines","special":["o2m"],"interface":"list-o2m","options":{"enableSelect":false,"template":null},"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":12,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"headlines","options":{"enableSelect":false,"template":null}}	\N	\N
@@ -1897,6 +2019,144 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 548	565	directus_fields	50	{"id":50,"collection":"profiles","field":"linkedin_profile","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":12,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"linkedin_profile","width":"full"}	\N	\N
 549	566	directus_fields	51	{"id":51,"collection":"profiles","field":"github_profile","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":13,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"github_profile","width":"full"}	\N	\N
 550	567	directus_fields	28	{"id":28,"collection":"profiles","field":"personal_website","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":11,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"personal_website","width":"full"}	\N	\N
+551	576	directus_fields	53	{"sort":18,"interface":"input","special":null,"note":"Brief professional tagline that summarizes your key qualifications.","collection":"profiles","field":"headline"}	{"sort":18,"interface":"input","special":null,"note":"Brief professional tagline that summarizes your key qualifications.","collection":"profiles","field":"headline"}	\N	\N
+552	577	directus_fields	17	{"id":17,"collection":"profiles","field":"id","special":["uuid"],"interface":"input","options":null,"display":null,"display_options":null,"readonly":true,"hidden":true,"sort":1,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"id","sort":1,"group":null}	\N	\N
+553	578	directus_fields	18	{"id":18,"collection":"profiles","field":"date_created","special":["date-created"],"interface":"datetime","options":null,"display":"datetime","display_options":{"relative":true},"readonly":true,"hidden":true,"sort":2,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"date_created","sort":2,"group":null}	\N	\N
+554	579	directus_fields	19	{"id":19,"collection":"profiles","field":"date_updated","special":["date-updated"],"interface":"datetime","options":null,"display":"datetime","display_options":{"relative":true},"readonly":true,"hidden":true,"sort":3,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"date_updated","sort":3,"group":null}	\N	\N
+555	580	directus_fields	20	{"id":20,"collection":"profiles","field":"name","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":4,"width":"full","translations":null,"note":null,"conditions":null,"required":true,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"name","sort":4,"group":null}	\N	\N
+556	581	directus_fields	21	{"id":21,"collection":"profiles","field":"title","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":5,"width":"full","translations":null,"note":"Your job title, a phrase describing your profession.","conditions":null,"required":true,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"title","sort":5,"group":null}	\N	\N
+557	582	directus_fields	49	{"id":49,"collection":"profiles","field":"core_stack","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":6,"width":"full","translations":null,"note":"Short list of your core technology stack that you are most familiar with.","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"core_stack","sort":6,"group":null}	\N	\N
+558	583	directus_fields	48	{"id":48,"collection":"profiles","field":"subtitle","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":7,"width":"full","translations":null,"note":"A short sentence complementing your work title, giving more insight to your expertise.","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"subtitle","sort":7,"group":null}	\N	\N
+559	584	directus_fields	27	{"id":27,"collection":"profiles","field":"email_address","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":8,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"email_address","sort":8,"group":null}	\N	\N
+560	585	directus_fields	26	{"id":26,"collection":"profiles","field":"phone_number","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":9,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"phone_number","sort":9,"group":null}	\N	\N
+561	586	directus_fields	53	{"id":53,"collection":"profiles","field":"headline","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":10,"width":"full","translations":null,"note":"Brief professional tagline that summarizes your key qualifications.","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"headline","sort":10,"group":null}	\N	\N
+562	587	directus_fields	24	{"id":24,"collection":"profiles","field":"location","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":11,"width":"half","translations":null,"note":"Where you are currently based.","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"location","sort":11,"group":null}	\N	\N
+563	588	directus_fields	28	{"id":28,"collection":"profiles","field":"personal_website","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":12,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"personal_website","sort":12,"group":null}	\N	\N
+564	589	directus_fields	50	{"id":50,"collection":"profiles","field":"linkedin_profile","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":13,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"linkedin_profile","sort":13,"group":null}	\N	\N
+565	590	directus_fields	51	{"id":51,"collection":"profiles","field":"github_profile","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":14,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"github_profile","sort":14,"group":null}	\N	\N
+566	591	directus_fields	52	{"id":52,"collection":"profiles","field":"stackoverflow_profile","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":15,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"stackoverflow_profile","sort":15,"group":null}	\N	\N
+567	592	directus_fields	39	{"id":39,"collection":"profiles","field":"languages","special":["o2m"],"interface":"list-o2m","options":{"enableSelect":false},"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":16,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"languages","sort":16,"group":null}	\N	\N
+568	593	directus_fields	23	{"id":23,"collection":"profiles","field":"work_experiences","special":["o2m"],"interface":"list-o2m","options":{"enableSelect":false},"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":17,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"work_experiences","sort":17,"group":null}	\N	\N
+569	594	directus_fields	17	{"id":17,"collection":"profiles","field":"id","special":["uuid"],"interface":"input","options":null,"display":null,"display_options":null,"readonly":true,"hidden":true,"sort":1,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"id","sort":1,"group":null}	\N	\N
+570	595	directus_fields	18	{"id":18,"collection":"profiles","field":"date_created","special":["date-created"],"interface":"datetime","options":null,"display":"datetime","display_options":{"relative":true},"readonly":true,"hidden":true,"sort":2,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"date_created","sort":2,"group":null}	\N	\N
+571	596	directus_fields	19	{"id":19,"collection":"profiles","field":"date_updated","special":["date-updated"],"interface":"datetime","options":null,"display":"datetime","display_options":{"relative":true},"readonly":true,"hidden":true,"sort":3,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"date_updated","sort":3,"group":null}	\N	\N
+572	597	directus_fields	20	{"id":20,"collection":"profiles","field":"name","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":4,"width":"full","translations":null,"note":null,"conditions":null,"required":true,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"name","sort":4,"group":null}	\N	\N
+573	598	directus_fields	21	{"id":21,"collection":"profiles","field":"title","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":5,"width":"full","translations":null,"note":"Your job title, a phrase describing your profession.","conditions":null,"required":true,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"title","sort":5,"group":null}	\N	\N
+574	599	directus_fields	49	{"id":49,"collection":"profiles","field":"core_stack","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":6,"width":"full","translations":null,"note":"Short list of your core technology stack that you are most familiar with.","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"core_stack","sort":6,"group":null}	\N	\N
+575	600	directus_fields	48	{"id":48,"collection":"profiles","field":"subtitle","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":7,"width":"full","translations":null,"note":"A short sentence complementing your work title, giving more insight to your expertise.","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"subtitle","sort":7,"group":null}	\N	\N
+576	601	directus_fields	53	{"id":53,"collection":"profiles","field":"headline","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":8,"width":"full","translations":null,"note":"Brief professional tagline that summarizes your key qualifications.","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"headline","sort":8,"group":null}	\N	\N
+577	602	directus_fields	27	{"id":27,"collection":"profiles","field":"email_address","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":9,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"email_address","sort":9,"group":null}	\N	\N
+578	603	directus_fields	26	{"id":26,"collection":"profiles","field":"phone_number","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":10,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"phone_number","sort":10,"group":null}	\N	\N
+579	604	directus_fields	24	{"id":24,"collection":"profiles","field":"location","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":11,"width":"half","translations":null,"note":"Where you are currently based.","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"location","sort":11,"group":null}	\N	\N
+580	605	directus_fields	28	{"id":28,"collection":"profiles","field":"personal_website","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":12,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"personal_website","sort":12,"group":null}	\N	\N
+581	606	directus_fields	50	{"id":50,"collection":"profiles","field":"linkedin_profile","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":13,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"linkedin_profile","sort":13,"group":null}	\N	\N
+582	607	directus_fields	51	{"id":51,"collection":"profiles","field":"github_profile","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":14,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"github_profile","sort":14,"group":null}	\N	\N
+583	608	directus_fields	52	{"id":52,"collection":"profiles","field":"stackoverflow_profile","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":15,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"stackoverflow_profile","sort":15,"group":null}	\N	\N
+584	609	directus_fields	39	{"id":39,"collection":"profiles","field":"languages","special":["o2m"],"interface":"list-o2m","options":{"enableSelect":false},"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":16,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"languages","sort":16,"group":null}	\N	\N
+585	610	directus_fields	23	{"id":23,"collection":"profiles","field":"work_experiences","special":["o2m"],"interface":"list-o2m","options":{"enableSelect":false},"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":17,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"work_experiences","sort":17,"group":null}	\N	\N
+586	611	profiles	0eeb942b-e35a-44e8-a37d-52b9cdb24309	{"id":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","date_created":"2025-10-15T16:51:41.394Z","date_updated":"2025-10-17T14:28:43.418Z","name":"Rik Wanders","title":"Senior Full Stack Developer","location":"Ronda, Spain","phone_number":"+31649118511","email_address":"rik@rikwanders.tech","personal_website":"https://www.rikwanders.tech/","subtitle":"Building scalable web applications for remote teams","core_stack":"Python • Node.js • CI/CD • DevOps","linkedin_profile":"https://www.linkedin.com/in/rik-wanders-software","github_profile":"https://github.com/gitaarik","stackoverflow_profile":"https://stackoverflow.com/users/1248175/gitaarik","headline":"Full Stack Developer 12+ years expertise in Python, Django, Node.js, React, CI/CD, DevOps, UX, AI","languages":["7024cec2-289e-44e5-a4e8-721805a151a0","b636a780-6a9f-4342-adfa-eed183447a17"],"work_experiences":["a37c89e0-2b6d-44e1-911a-c1399611562a","f044625e-b180-4603-b03a-42a5a397403a"]}	{"headline":"Full Stack Developer 12+ years expertise in Python, Django, Node.js, React, CI/CD, DevOps, UX, AI","date_updated":"2025-10-17T14:28:43.418Z"}	\N	\N
+587	612	directus_fields	54	{"sort":18,"interface":"file-image","special":["file"],"collection":"profiles","field":"profile_picture"}	{"sort":18,"interface":"file-image","special":["file"],"collection":"profiles","field":"profile_picture"}	\N	\N
+588	613	directus_fields	17	{"id":17,"collection":"profiles","field":"id","special":["uuid"],"interface":"input","options":null,"display":null,"display_options":null,"readonly":true,"hidden":true,"sort":1,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"id","sort":1,"group":null}	\N	\N
+589	614	directus_fields	18	{"id":18,"collection":"profiles","field":"date_created","special":["date-created"],"interface":"datetime","options":null,"display":"datetime","display_options":{"relative":true},"readonly":true,"hidden":true,"sort":2,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"date_created","sort":2,"group":null}	\N	\N
+590	615	directus_fields	19	{"id":19,"collection":"profiles","field":"date_updated","special":["date-updated"],"interface":"datetime","options":null,"display":"datetime","display_options":{"relative":true},"readonly":true,"hidden":true,"sort":3,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"date_updated","sort":3,"group":null}	\N	\N
+591	616	directus_fields	20	{"id":20,"collection":"profiles","field":"name","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":4,"width":"full","translations":null,"note":null,"conditions":null,"required":true,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"name","sort":4,"group":null}	\N	\N
+592	617	directus_fields	21	{"id":21,"collection":"profiles","field":"title","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":5,"width":"full","translations":null,"note":"Your job title, a phrase describing your profession.","conditions":null,"required":true,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"title","sort":5,"group":null}	\N	\N
+593	618	directus_fields	49	{"id":49,"collection":"profiles","field":"core_stack","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":6,"width":"full","translations":null,"note":"Short list of your core technology stack that you are most familiar with.","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"core_stack","sort":6,"group":null}	\N	\N
+594	619	directus_fields	48	{"id":48,"collection":"profiles","field":"subtitle","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":7,"width":"full","translations":null,"note":"A short sentence complementing your work title, giving more insight to your expertise.","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"subtitle","sort":7,"group":null}	\N	\N
+595	620	directus_fields	53	{"id":53,"collection":"profiles","field":"headline","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":8,"width":"full","translations":null,"note":"Brief professional tagline that summarizes your key qualifications.","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"headline","sort":8,"group":null}	\N	\N
+596	621	directus_fields	27	{"id":27,"collection":"profiles","field":"email_address","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":9,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"email_address","sort":9,"group":null}	\N	\N
+597	622	directus_fields	26	{"id":26,"collection":"profiles","field":"phone_number","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":10,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"phone_number","sort":10,"group":null}	\N	\N
+598	623	directus_fields	24	{"id":24,"collection":"profiles","field":"location","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":11,"width":"half","translations":null,"note":"Where you are currently based.","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"location","sort":11,"group":null}	\N	\N
+599	624	directus_fields	54	{"id":54,"collection":"profiles","field":"profile_picture","special":["file"],"interface":"file-image","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":12,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"profile_picture","sort":12,"group":null}	\N	\N
+600	625	directus_fields	28	{"id":28,"collection":"profiles","field":"personal_website","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":13,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"personal_website","sort":13,"group":null}	\N	\N
+601	626	directus_fields	50	{"id":50,"collection":"profiles","field":"linkedin_profile","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":14,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"linkedin_profile","sort":14,"group":null}	\N	\N
+602	627	directus_fields	51	{"id":51,"collection":"profiles","field":"github_profile","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":15,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"github_profile","sort":15,"group":null}	\N	\N
+603	628	directus_fields	52	{"id":52,"collection":"profiles","field":"stackoverflow_profile","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":16,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"stackoverflow_profile","sort":16,"group":null}	\N	\N
+604	629	directus_fields	39	{"id":39,"collection":"profiles","field":"languages","special":["o2m"],"interface":"list-o2m","options":{"enableSelect":false},"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":17,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"languages","sort":17,"group":null}	\N	\N
+605	630	directus_fields	23	{"id":23,"collection":"profiles","field":"work_experiences","special":["o2m"],"interface":"list-o2m","options":{"enableSelect":false},"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":18,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"work_experiences","sort":18,"group":null}	\N	\N
+606	631	directus_files	e12c8ec6-2cbe-4672-98e9-a33d6ed5869a	{"title":"Profile Pic","filename_download":"profile-pic.png","type":"image/png","storage":"local"}	{"title":"Profile Pic","filename_download":"profile-pic.png","type":"image/png","storage":"local"}	\N	\N
+607	632	profiles	0eeb942b-e35a-44e8-a37d-52b9cdb24309	{"id":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","date_created":"2025-10-15T16:51:41.394Z","date_updated":"2025-10-17T14:31:47.389Z","name":"Rik Wanders","title":"Senior Full Stack Developer","location":"Ronda, Spain","phone_number":"+31649118511","email_address":"rik@rikwanders.tech","personal_website":"https://www.rikwanders.tech/","subtitle":"Building scalable web applications for remote teams","core_stack":"Python • Node.js • CI/CD • DevOps","linkedin_profile":"https://www.linkedin.com/in/rik-wanders-software","github_profile":"https://github.com/gitaarik","stackoverflow_profile":"https://stackoverflow.com/users/1248175/gitaarik","headline":"Full Stack Developer 12+ years expertise in Python, Django, Node.js, React, CI/CD, DevOps, UX, AI","profile_picture":"e12c8ec6-2cbe-4672-98e9-a33d6ed5869a","languages":["7024cec2-289e-44e5-a4e8-721805a151a0","b636a780-6a9f-4342-adfa-eed183447a17"],"work_experiences":["a37c89e0-2b6d-44e1-911a-c1399611562a","f044625e-b180-4603-b03a-42a5a397403a"]}	{"profile_picture":"e12c8ec6-2cbe-4672-98e9-a33d6ed5869a","date_updated":"2025-10-17T14:31:47.389Z"}	\N	\N
+608	633	directus_fields	54	{"id":54,"collection":"profiles","field":"profile_picture","special":["file"],"interface":"file-image","options":{"crop":false},"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":12,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"profile_picture","options":{"crop":false}}	\N	\N
+609	634	directus_fields	54	{"id":54,"collection":"profiles","field":"profile_picture","special":["file"],"interface":"file-image","options":{"crop":false},"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":12,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"profile_picture","width":"half"}	\N	\N
+610	635	directus_fields	17	{"id":17,"collection":"profiles","field":"id","special":["uuid"],"interface":"input","options":null,"display":null,"display_options":null,"readonly":true,"hidden":true,"sort":1,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"id","sort":1,"group":null}	\N	\N
+611	636	directus_fields	18	{"id":18,"collection":"profiles","field":"date_created","special":["date-created"],"interface":"datetime","options":null,"display":"datetime","display_options":{"relative":true},"readonly":true,"hidden":true,"sort":2,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"date_created","sort":2,"group":null}	\N	\N
+612	637	directus_fields	19	{"id":19,"collection":"profiles","field":"date_updated","special":["date-updated"],"interface":"datetime","options":null,"display":"datetime","display_options":{"relative":true},"readonly":true,"hidden":true,"sort":3,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"date_updated","sort":3,"group":null}	\N	\N
+613	638	directus_fields	20	{"id":20,"collection":"profiles","field":"name","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":4,"width":"full","translations":null,"note":null,"conditions":null,"required":true,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"name","sort":4,"group":null}	\N	\N
+614	639	directus_fields	21	{"id":21,"collection":"profiles","field":"title","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":5,"width":"full","translations":null,"note":"Your job title, a phrase describing your profession.","conditions":null,"required":true,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"title","sort":5,"group":null}	\N	\N
+615	640	directus_fields	49	{"id":49,"collection":"profiles","field":"core_stack","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":6,"width":"full","translations":null,"note":"Short list of your core technology stack that you are most familiar with.","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"core_stack","sort":6,"group":null}	\N	\N
+616	641	directus_fields	48	{"id":48,"collection":"profiles","field":"subtitle","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":7,"width":"full","translations":null,"note":"A short sentence complementing your work title, giving more insight to your expertise.","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"subtitle","sort":7,"group":null}	\N	\N
+617	642	directus_fields	53	{"id":53,"collection":"profiles","field":"headline","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":8,"width":"full","translations":null,"note":"Brief professional tagline that summarizes your key qualifications.","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"headline","sort":8,"group":null}	\N	\N
+618	643	directus_fields	54	{"id":54,"collection":"profiles","field":"profile_picture","special":["file"],"interface":"file-image","options":{"crop":false},"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":9,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"profile_picture","sort":9,"group":null}	\N	\N
+619	644	directus_fields	27	{"id":27,"collection":"profiles","field":"email_address","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":10,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"email_address","sort":10,"group":null}	\N	\N
+620	645	directus_fields	26	{"id":26,"collection":"profiles","field":"phone_number","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":11,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"phone_number","sort":11,"group":null}	\N	\N
+621	646	directus_fields	24	{"id":24,"collection":"profiles","field":"location","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":12,"width":"half","translations":null,"note":"Where you are currently based.","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"location","sort":12,"group":null}	\N	\N
+622	647	directus_fields	28	{"id":28,"collection":"profiles","field":"personal_website","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":13,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"personal_website","sort":13,"group":null}	\N	\N
+623	648	directus_fields	50	{"id":50,"collection":"profiles","field":"linkedin_profile","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":14,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"linkedin_profile","sort":14,"group":null}	\N	\N
+624	649	directus_fields	51	{"id":51,"collection":"profiles","field":"github_profile","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":15,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"github_profile","sort":15,"group":null}	\N	\N
+625	650	directus_fields	52	{"id":52,"collection":"profiles","field":"stackoverflow_profile","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":16,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"stackoverflow_profile","sort":16,"group":null}	\N	\N
+661	686	directus_fields	17	{"id":17,"collection":"profiles","field":"id","special":["uuid"],"interface":"input","options":null,"display":null,"display_options":null,"readonly":true,"hidden":true,"sort":1,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"id","sort":1,"group":null}	\N	\N
+626	651	directus_fields	39	{"id":39,"collection":"profiles","field":"languages","special":["o2m"],"interface":"list-o2m","options":{"enableSelect":false},"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":17,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"languages","sort":17,"group":null}	\N	\N
+627	652	directus_fields	23	{"id":23,"collection":"profiles","field":"work_experiences","special":["o2m"],"interface":"list-o2m","options":{"enableSelect":false},"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":18,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"work_experiences","sort":18,"group":null}	\N	\N
+628	653	directus_fields	17	{"id":17,"collection":"profiles","field":"id","special":["uuid"],"interface":"input","options":null,"display":null,"display_options":null,"readonly":true,"hidden":true,"sort":1,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"id","sort":1,"group":null}	\N	\N
+629	654	directus_fields	18	{"id":18,"collection":"profiles","field":"date_created","special":["date-created"],"interface":"datetime","options":null,"display":"datetime","display_options":{"relative":true},"readonly":true,"hidden":true,"sort":2,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"date_created","sort":2,"group":null}	\N	\N
+630	655	directus_fields	19	{"id":19,"collection":"profiles","field":"date_updated","special":["date-updated"],"interface":"datetime","options":null,"display":"datetime","display_options":{"relative":true},"readonly":true,"hidden":true,"sort":3,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"date_updated","sort":3,"group":null}	\N	\N
+631	656	directus_fields	20	{"id":20,"collection":"profiles","field":"name","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":4,"width":"full","translations":null,"note":null,"conditions":null,"required":true,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"name","sort":4,"group":null}	\N	\N
+632	657	directus_fields	21	{"id":21,"collection":"profiles","field":"title","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":5,"width":"full","translations":null,"note":"Your job title, a phrase describing your profession.","conditions":null,"required":true,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"title","sort":5,"group":null}	\N	\N
+633	658	directus_fields	49	{"id":49,"collection":"profiles","field":"core_stack","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":6,"width":"full","translations":null,"note":"Short list of your core technology stack that you are most familiar with.","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"core_stack","sort":6,"group":null}	\N	\N
+634	659	directus_fields	48	{"id":48,"collection":"profiles","field":"subtitle","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":7,"width":"full","translations":null,"note":"A short sentence complementing your work title, giving more insight to your expertise.","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"subtitle","sort":7,"group":null}	\N	\N
+635	660	directus_fields	53	{"id":53,"collection":"profiles","field":"headline","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":8,"width":"full","translations":null,"note":"Brief professional tagline that summarizes your key qualifications.","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"headline","sort":8,"group":null}	\N	\N
+636	661	directus_fields	54	{"id":54,"collection":"profiles","field":"profile_picture","special":["file"],"interface":"file-image","options":{"crop":false},"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":9,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"profile_picture","sort":9,"group":null}	\N	\N
+637	662	directus_fields	27	{"id":27,"collection":"profiles","field":"email_address","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":10,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"email_address","sort":10,"group":null}	\N	\N
+638	663	directus_fields	24	{"id":24,"collection":"profiles","field":"location","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":11,"width":"half","translations":null,"note":"Where you are currently based.","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"location","sort":11,"group":null}	\N	\N
+639	664	directus_fields	26	{"id":26,"collection":"profiles","field":"phone_number","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":12,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"phone_number","sort":12,"group":null}	\N	\N
+640	665	directus_fields	28	{"id":28,"collection":"profiles","field":"personal_website","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":13,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"personal_website","sort":13,"group":null}	\N	\N
+641	666	directus_fields	50	{"id":50,"collection":"profiles","field":"linkedin_profile","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":14,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"linkedin_profile","sort":14,"group":null}	\N	\N
+642	667	directus_fields	51	{"id":51,"collection":"profiles","field":"github_profile","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":15,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"github_profile","sort":15,"group":null}	\N	\N
+643	668	directus_fields	52	{"id":52,"collection":"profiles","field":"stackoverflow_profile","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":16,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"stackoverflow_profile","sort":16,"group":null}	\N	\N
+644	669	directus_fields	39	{"id":39,"collection":"profiles","field":"languages","special":["o2m"],"interface":"list-o2m","options":{"enableSelect":false},"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":17,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"languages","sort":17,"group":null}	\N	\N
+645	670	directus_fields	23	{"id":23,"collection":"profiles","field":"work_experiences","special":["o2m"],"interface":"list-o2m","options":{"enableSelect":false},"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":18,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"work_experiences","sort":18,"group":null}	\N	\N
+646	671	directus_fields	55	{"sort":1,"hidden":true,"readonly":true,"interface":"input","special":["uuid"],"field":"id","collection":"highlights"}	{"sort":1,"hidden":true,"readonly":true,"interface":"input","special":["uuid"],"field":"id","collection":"highlights"}	\N	\N
+647	672	directus_fields	56	{"sort":2,"width":"full","options":{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]},"interface":"select-dropdown","display":"labels","display_options":{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]},"field":"status","collection":"highlights"}	{"sort":2,"width":"full","options":{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]},"interface":"select-dropdown","display":"labels","display_options":{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]},"field":"status","collection":"highlights"}	\N	\N
+648	673	directus_fields	57	{"sort":3,"interface":"input","hidden":true,"field":"sort","collection":"highlights"}	{"sort":3,"interface":"input","hidden":true,"field":"sort","collection":"highlights"}	\N	\N
+649	674	directus_fields	58	{"sort":4,"special":["date-created"],"interface":"datetime","readonly":true,"hidden":true,"width":"half","display":"datetime","display_options":{"relative":true},"field":"date_created","collection":"highlights"}	{"sort":4,"special":["date-created"],"interface":"datetime","readonly":true,"hidden":true,"width":"half","display":"datetime","display_options":{"relative":true},"field":"date_created","collection":"highlights"}	\N	\N
+650	675	directus_fields	59	{"sort":5,"special":["date-updated"],"interface":"datetime","readonly":true,"hidden":true,"width":"half","display":"datetime","display_options":{"relative":true},"field":"date_updated","collection":"highlights"}	{"sort":5,"special":["date-updated"],"interface":"datetime","readonly":true,"hidden":true,"width":"half","display":"datetime","display_options":{"relative":true},"field":"date_updated","collection":"highlights"}	\N	\N
+651	676	directus_collections	highlights	{"sort_field":"sort","archive_field":"status","archive_value":"archived","unarchive_value":"draft","singleton":false,"collection":"highlights"}	{"sort_field":"sort","archive_field":"status","archive_value":"archived","unarchive_value":"draft","singleton":false,"collection":"highlights"}	\N	\N
+652	677	directus_fields	60	{"sort":6,"special":["m2o"],"collection":"highlights","field":"profile"}	{"sort":6,"special":["m2o"],"collection":"highlights","field":"profile"}	\N	\N
+653	678	directus_fields	61	{"sort":19,"special":["o2m"],"interface":"list-o2m","collection":"profiles","field":"highlights"}	{"sort":19,"special":["o2m"],"interface":"list-o2m","collection":"profiles","field":"highlights"}	\N	\N
+654	679	directus_fields	62	{"sort":7,"interface":"input","special":null,"required":true,"collection":"highlights","field":"text"}	{"sort":7,"interface":"input","special":null,"required":true,"collection":"highlights","field":"text"}	\N	\N
+655	680	directus_collections	highlights	{"collection":"highlights","icon":null,"note":null,"display_template":"{{text}}","hidden":false,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":null,"group":null,"collapse":"open","preview_url":null,"versioning":false}	{"display_template":"{{text}}"}	\N	\N
+656	681	directus_collections	profiles	{"collection":"profiles","icon":null,"note":null,"display_template":"{{name}}","hidden":false,"singleton":false,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":null,"accountability":"all","color":null,"item_duplication_fields":null,"sort":1,"group":null,"collapse":"open","preview_url":null,"versioning":false}	{"sort":1,"group":null}	\N	\N
+657	682	directus_collections	languages	{"collection":"languages","icon":null,"note":null,"display_template":"{{name}}","hidden":false,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":null,"accountability":"all","color":null,"item_duplication_fields":null,"sort":1,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"sort":1,"group":"profiles"}	\N	\N
+658	683	directus_collections	users	{"collection":"users","icon":null,"note":null,"display_template":null,"hidden":true,"singleton":false,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":null,"accountability":"all","color":null,"item_duplication_fields":null,"sort":2,"group":null,"collapse":"open","preview_url":null,"versioning":false}	{"sort":2,"group":null}	\N	\N
+659	684	directus_collections	highlights	{"collection":"highlights","icon":null,"note":null,"display_template":"{{text}}","hidden":false,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":2,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"sort":2,"group":"profiles"}	\N	\N
+660	685	directus_collections	work_experiences	{"collection":"work_experiences","icon":null,"note":null,"display_template":"{{name}} ({{startDate}}-{{endDate}})","hidden":false,"singleton":false,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":"sortOrder","accountability":"all","color":null,"item_duplication_fields":null,"sort":3,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"sort":3,"group":"profiles"}	\N	\N
+662	687	directus_fields	18	{"id":18,"collection":"profiles","field":"date_created","special":["date-created"],"interface":"datetime","options":null,"display":"datetime","display_options":{"relative":true},"readonly":true,"hidden":true,"sort":2,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"date_created","sort":2,"group":null}	\N	\N
+663	688	directus_fields	19	{"id":19,"collection":"profiles","field":"date_updated","special":["date-updated"],"interface":"datetime","options":null,"display":"datetime","display_options":{"relative":true},"readonly":true,"hidden":true,"sort":3,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"date_updated","sort":3,"group":null}	\N	\N
+664	689	directus_fields	20	{"id":20,"collection":"profiles","field":"name","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":4,"width":"full","translations":null,"note":null,"conditions":null,"required":true,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"name","sort":4,"group":null}	\N	\N
+665	690	directus_fields	21	{"id":21,"collection":"profiles","field":"title","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":5,"width":"full","translations":null,"note":"Your job title, a phrase describing your profession.","conditions":null,"required":true,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"title","sort":5,"group":null}	\N	\N
+666	691	directus_fields	49	{"id":49,"collection":"profiles","field":"core_stack","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":6,"width":"full","translations":null,"note":"Short list of your core technology stack that you are most familiar with.","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"core_stack","sort":6,"group":null}	\N	\N
+667	692	directus_fields	48	{"id":48,"collection":"profiles","field":"subtitle","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":7,"width":"full","translations":null,"note":"A short sentence complementing your work title, giving more insight to your expertise.","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"subtitle","sort":7,"group":null}	\N	\N
+668	693	directus_fields	53	{"id":53,"collection":"profiles","field":"headline","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":8,"width":"full","translations":null,"note":"Brief professional tagline that summarizes your key qualifications.","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"headline","sort":8,"group":null}	\N	\N
+669	694	directus_fields	54	{"id":54,"collection":"profiles","field":"profile_picture","special":["file"],"interface":"file-image","options":{"crop":false},"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":9,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"profile_picture","sort":9,"group":null}	\N	\N
+670	695	directus_fields	27	{"id":27,"collection":"profiles","field":"email_address","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":10,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"email_address","sort":10,"group":null}	\N	\N
+671	696	directus_fields	24	{"id":24,"collection":"profiles","field":"location","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":11,"width":"half","translations":null,"note":"Where you are currently based.","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"location","sort":11,"group":null}	\N	\N
+672	697	directus_fields	26	{"id":26,"collection":"profiles","field":"phone_number","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":12,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"phone_number","sort":12,"group":null}	\N	\N
+673	698	directus_fields	28	{"id":28,"collection":"profiles","field":"personal_website","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":13,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"personal_website","sort":13,"group":null}	\N	\N
+674	699	directus_fields	50	{"id":50,"collection":"profiles","field":"linkedin_profile","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":14,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"linkedin_profile","sort":14,"group":null}	\N	\N
+675	700	directus_fields	51	{"id":51,"collection":"profiles","field":"github_profile","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":15,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"github_profile","sort":15,"group":null}	\N	\N
+676	701	directus_fields	52	{"id":52,"collection":"profiles","field":"stackoverflow_profile","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":16,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"stackoverflow_profile","sort":16,"group":null}	\N	\N
+677	702	directus_fields	39	{"id":39,"collection":"profiles","field":"languages","special":["o2m"],"interface":"list-o2m","options":{"enableSelect":false},"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":17,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"languages","sort":17,"group":null}	\N	\N
+678	703	directus_fields	61	{"id":61,"collection":"profiles","field":"highlights","special":["o2m"],"interface":"list-o2m","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":18,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"highlights","sort":18,"group":null}	\N	\N
+679	704	directus_fields	23	{"id":23,"collection":"profiles","field":"work_experiences","special":["o2m"],"interface":"list-o2m","options":{"enableSelect":false},"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":19,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"work_experiences","sort":19,"group":null}	\N	\N
+680	705	directus_fields	61	{"id":61,"collection":"profiles","field":"highlights","special":["o2m"],"interface":"list-o2m","options":{"enableSelect":false},"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":18,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"highlights","options":{"enableSelect":false}}	\N	\N
+688	713	profiles	0eeb942b-e35a-44e8-a37d-52b9cdb24309	{"id":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","date_created":"2025-10-15T16:51:41.394Z","date_updated":"2025-10-17T14:38:05.588Z","name":"Rik Wanders","title":"Senior Full Stack Developer","location":"Ronda, Spain","phone_number":"+31649118511","email_address":"rik@rikwanders.tech","personal_website":"https://www.rikwanders.tech/","subtitle":"Building scalable web applications for remote teams","core_stack":"Python • Node.js • CI/CD • DevOps","linkedin_profile":"https://www.linkedin.com/in/rik-wanders-software","github_profile":"https://github.com/gitaarik","stackoverflow_profile":"https://stackoverflow.com/users/1248175/gitaarik","headline":"Full Stack Developer 12+ years expertise in Python, Django, Node.js, React, CI/CD, DevOps, UX, AI","profile_picture":"e12c8ec6-2cbe-4672-98e9-a33d6ed5869a","languages":["7024cec2-289e-44e5-a4e8-721805a151a0","b636a780-6a9f-4342-adfa-eed183447a17"],"work_experiences":["a37c89e0-2b6d-44e1-911a-c1399611562a","f044625e-b180-4603-b03a-42a5a397403a"],"highlights":["00483bae-b8ef-46bb-8230-0f84c989f971","85956023-2be3-4fa9-9643-fc677ffd97cb","bf60fa32-c241-4a49-9edf-d0a21c3a4b3d","82700d7e-0a60-43af-82a7-1ca8a4fcb43f","912a4cfd-44d1-4b88-bd32-0a67ce05e1bc","311f493d-c89f-4a35-86fc-9605e93f639d","e30e3468-9f74-4bdb-9f33-abcef8eb6f7b"]}	{"date_updated":"2025-10-17T14:38:05.588Z"}	\N	\N
+681	706	highlights	00483bae-b8ef-46bb-8230-0f84c989f971	{"status":"published","text":"18+ years of full stack development experience","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309"}	{"status":"published","text":"18+ years of full stack development experience","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309"}	688	\N
+682	707	highlights	85956023-2be3-4fa9-9643-fc677ffd97cb	{"text":"Expertise in modern Python, JavaScript & Node.js ecosystems","status":"published","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309"}	{"text":"Expertise in modern Python, JavaScript & Node.js ecosystems","status":"published","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309"}	688	\N
+683	708	highlights	bf60fa32-c241-4a49-9edf-d0a21c3a4b3d	{"text":"Team leadership and project management experience","status":"published","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309"}	{"text":"Team leadership and project management experience","status":"published","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309"}	688	\N
+684	709	highlights	82700d7e-0a60-43af-82a7-1ca8a4fcb43f	{"text":"Additional experience in DevOps & CI/CD","status":"published","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309"}	{"text":"Additional experience in DevOps & CI/CD","status":"published","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309"}	688	\N
+685	710	highlights	912a4cfd-44d1-4b88-bd32-0a67ce05e1bc	{"text":"Skilled in developing scalable solutions for high-traffic applications","status":"published","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309"}	{"text":"Skilled in developing scalable solutions for high-traffic applications","status":"published","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309"}	688	\N
+686	711	highlights	311f493d-c89f-4a35-86fc-9605e93f639d	{"text":"5+ years remote work and distributed team collaboration experience","status":"published","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309"}	{"text":"5+ years remote work and distributed team collaboration experience","status":"published","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309"}	688	\N
+687	712	highlights	e30e3468-9f74-4bdb-9f33-abcef8eb6f7b	{"text":"AI-accelerated development skills with security best practices","status":"published","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309"}	{"text":"AI-accelerated development skills with security best practices","status":"published","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309"}	688	\N
 \.
 
 
@@ -1915,14 +2175,14 @@ COPY public.directus_roles (id, name, icon, description, parent) FROM stdin;
 
 COPY public.directus_sessions (token, "user", expires, ip, user_agent, share, origin, next_token) FROM stdin;
 jyEi42Iib3ayUhuKtRg8crSw0qNgHJgwHBGyXgh2IXu6VhJFRchsBiOMADOe89TD	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-22 11:36:02.247+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	\N	http://localhost:8055	\N
+bO2oRYEEF7ELH6gECqI5L1g_3Lg65grHvjjXHrA9eoGuBO0e2xU-dFJtem59Ya3l	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:41:02.041+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	\N	http://localhost:8055	99nlQqjSPuRJjRN4TBq4F9blkyI39dcBih3FM-sYF_fGowySv8mAEEOEGME4TKkF
 y-WO4WkHlhiznOiATKO-RjKK9Z3HEIlKHRYr0_u4sFB0eeLv84Ny2T4aqWxQ3eCM	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-22 16:20:39.984+00	172.18.0.5	node	\N	\N	\N
 pVX2TAe16YVkkcVw9TWxFZh-iyhGwVjppd9O13Ta1Qa1TKHbszuDvPeMz6S5szXg	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-22 16:20:44.345+00	172.18.0.5	node	\N	\N	\N
 jpJiV5kskoW5LlYVhxbzagfug_ZbrJ8irKY3a3RneaGmmQoHb9R-91GCFCG35EeL	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-22 16:20:49.72+00	172.18.0.5	node	\N	\N	\N
 kA-S7XRDdk9qfWnTlPvsSX9dImd6TfBgEH0sve42Wkv76kWjg7QSDcBlLtdEzCW4	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-22 16:20:54.471+00	172.18.0.5	node	\N	\N	\N
+99nlQqjSPuRJjRN4TBq4F9blkyI39dcBih3FM-sYF_fGowySv8mAEEOEGME4TKkF	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-18 14:40:52.041+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	\N	http://localhost:8055	\N
 kh42EQlknOAg1mgK2LdARxcW3pzcBUD-VB7HqL8iJawgHPuyyxOTALOU9snCsUra	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-22 16:21:15.524+00	172.18.0.5	node	\N	\N	\N
 NYWuxTb_-k1RbMjrV7UHdCDRg82yDOpx1-IQ5gZP-vt7zmyc526B58aFbj2HDdnq	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-22 16:29:05.39+00	172.18.0.5	node	\N	\N	\N
-DWozichZ_vucuhsuFqVp8FVLoZozXZZURbF6wcWk8q9bpmDM6BXhdrT3dlSdPkIO	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-17 14:05:07.802+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	\N	http://localhost:8055	Yo0FRlvwjMsTxNv_1tRAWQv6Q-oHS9K-4mGNFJvCfFra7i6qpzluNN6RxvTUgSLI
-Yo0FRlvwjMsTxNv_1tRAWQv6Q-oHS9K-4mGNFJvCfFra7i6qpzluNN6RxvTUgSLI	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-18 14:04:57.802+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	\N	http://localhost:8055	\N
 \.
 
 
@@ -1956,7 +2216,7 @@ COPY public.directus_translations (id, language, key, value) FROM stdin;
 --
 
 COPY public.directus_users (id, first_name, last_name, email, password, location, title, description, tags, avatar, language, tfa_secret, status, role, token, last_access, last_page, provider, external_identifier, auth_data, email_notifications, appearance, theme_dark, theme_light, theme_light_overrides, theme_dark_overrides, text_direction) FROM stdin;
-157238bb-6930-4f26-be9c-8b31a9e11ab8	Admin	User	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-10-17 14:04:57.805+00	/content/profiles/0eeb942b-e35a-44e8-a37d-52b9cdb24309	default	\N	\N	t	\N	\N	\N	\N	\N	auto
+157238bb-6930-4f26-be9c-8b31a9e11ab8	Admin	User	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-10-17 14:40:52.044+00	/content/profiles/0eeb942b-e35a-44e8-a37d-52b9cdb24309	default	\N	\N	t	\N	\N	\N	\N	\N	auto
 \.
 
 
@@ -1977,11 +2237,17 @@ COPY public.directus_webhooks (id, name, method, url, status, data, actions, col
 
 
 --
--- Data for Name: headlines; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: highlights; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.headlines (id, sort, date_created, date_updated, text, profile) FROM stdin;
-1	\N	2025-10-17 12:47:02.104+00	\N	Full Stack Developer 12+ years expertise in Python, Django, Node.js, React, CI/CD, DevOps, UX, AI	0eeb942b-e35a-44e8-a37d-52b9cdb24309
+COPY public.highlights (id, status, sort, date_created, date_updated, profile, text) FROM stdin;
+00483bae-b8ef-46bb-8230-0f84c989f971	published	\N	2025-10-17 14:38:05.591+00	\N	0eeb942b-e35a-44e8-a37d-52b9cdb24309	18+ years of full stack development experience
+85956023-2be3-4fa9-9643-fc677ffd97cb	published	\N	2025-10-17 14:38:05.594+00	\N	0eeb942b-e35a-44e8-a37d-52b9cdb24309	Expertise in modern Python, JavaScript & Node.js ecosystems
+bf60fa32-c241-4a49-9edf-d0a21c3a4b3d	published	\N	2025-10-17 14:38:05.596+00	\N	0eeb942b-e35a-44e8-a37d-52b9cdb24309	Team leadership and project management experience
+82700d7e-0a60-43af-82a7-1ca8a4fcb43f	published	\N	2025-10-17 14:38:05.598+00	\N	0eeb942b-e35a-44e8-a37d-52b9cdb24309	Additional experience in DevOps & CI/CD
+912a4cfd-44d1-4b88-bd32-0a67ce05e1bc	published	\N	2025-10-17 14:38:05.6+00	\N	0eeb942b-e35a-44e8-a37d-52b9cdb24309	Skilled in developing scalable solutions for high-traffic applications
+311f493d-c89f-4a35-86fc-9605e93f639d	published	\N	2025-10-17 14:38:05.602+00	\N	0eeb942b-e35a-44e8-a37d-52b9cdb24309	5+ years remote work and distributed team collaboration experience
+e30e3468-9f74-4bdb-9f33-abcef8eb6f7b	published	\N	2025-10-17 14:38:05.603+00	\N	0eeb942b-e35a-44e8-a37d-52b9cdb24309	AI-accelerated development skills with security best practices
 \.
 
 
@@ -1999,8 +2265,8 @@ b636a780-6a9f-4342-adfa-eed183447a17	published	2025-10-17 12:03:30.884+00	\N	Dut
 -- Data for Name: profiles; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.profiles (id, date_created, date_updated, name, title, location, phone_number, email_address, personal_website, subtitle, core_stack, linkedin_profile, github_profile, stackoverflow_profile) FROM stdin;
-0eeb942b-e35a-44e8-a37d-52b9cdb24309	2025-10-15 16:51:41.394+00	2025-10-17 13:44:41.829+00	Rik Wanders	Senior Full Stack Developer	Ronda, Spain	+31649118511	rik@rikwanders.tech	https://www.rikwanders.tech/	Building scalable web applications for remote teams	Python • Node.js • CI/CD • DevOps	https://www.linkedin.com/in/rik-wanders-software	https://github.com/gitaarik	https://stackoverflow.com/users/1248175/gitaarik
+COPY public.profiles (id, date_created, date_updated, name, title, location, phone_number, email_address, personal_website, subtitle, core_stack, linkedin_profile, github_profile, stackoverflow_profile, headline, profile_picture) FROM stdin;
+0eeb942b-e35a-44e8-a37d-52b9cdb24309	2025-10-15 16:51:41.394+00	2025-10-17 14:38:05.588+00	Rik Wanders	Senior Full Stack Developer	Ronda, Spain	+31649118511	rik@rikwanders.tech	https://www.rikwanders.tech/	Building scalable web applications for remote teams	Python • Node.js • CI/CD • DevOps	https://www.linkedin.com/in/rik-wanders-software	https://github.com/gitaarik	https://stackoverflow.com/users/1248175/gitaarik	Full Stack Developer 12+ years expertise in Python, Django, Node.js, React, CI/CD, DevOps, UX, AI	e12c8ec6-2cbe-4672-98e9-a33d6ed5869a
 \.
 
 
@@ -2066,14 +2332,14 @@ COPY public.work_technologies ("workExperienceId", "technologyName", "sortOrder"
 -- Name: directus_activity_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_activity_id_seq', 567, true);
+SELECT pg_catalog.setval('public.directus_activity_id_seq', 713, true);
 
 
 --
 -- Name: directus_fields_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_fields_id_seq', 52, true);
+SELECT pg_catalog.setval('public.directus_fields_id_seq', 62, true);
 
 
 --
@@ -2101,14 +2367,14 @@ SELECT pg_catalog.setval('public.directus_presets_id_seq', 5, true);
 -- Name: directus_relations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_relations_id_seq', 4, true);
+SELECT pg_catalog.setval('public.directus_relations_id_seq', 6, true);
 
 
 --
 -- Name: directus_revisions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_revisions_id_seq', 550, true);
+SELECT pg_catalog.setval('public.directus_revisions_id_seq', 688, true);
 
 
 --
@@ -2123,13 +2389,6 @@ SELECT pg_catalog.setval('public.directus_settings_id_seq', 1, true);
 --
 
 SELECT pg_catalog.setval('public.directus_webhooks_id_seq', 1, false);
-
-
---
--- Name: headlines_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.headlines_id_seq', 1, true);
 
 
 --
@@ -2421,11 +2680,11 @@ ALTER TABLE ONLY public.directus_webhooks
 
 
 --
--- Name: headlines headlines_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+-- Name: highlights highlights_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.headlines
-    ADD CONSTRAINT headlines_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.highlights
+    ADD CONSTRAINT highlights_pkey PRIMARY KEY (id);
 
 
 --
@@ -2875,11 +3134,11 @@ ALTER TABLE ONLY public.directus_webhooks
 
 
 --
--- Name: headlines headlines_profile_foreign; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+-- Name: highlights highlights_profile_foreign; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.headlines
-    ADD CONSTRAINT headlines_profile_foreign FOREIGN KEY (profile) REFERENCES public.profiles(id);
+ALTER TABLE ONLY public.highlights
+    ADD CONSTRAINT highlights_profile_foreign FOREIGN KEY (profile) REFERENCES public.profiles(id);
 
 
 --
@@ -2888,6 +3147,14 @@ ALTER TABLE ONLY public.headlines
 
 ALTER TABLE ONLY public.languages
     ADD CONSTRAINT languages_profile_foreign FOREIGN KEY (profile) REFERENCES public.profiles(id) ON DELETE SET NULL;
+
+
+--
+-- Name: profiles profiles_profile_picture_foreign; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.profiles
+    ADD CONSTRAINT profiles_profile_picture_foreign FOREIGN KEY (profile_picture) REFERENCES public.directus_files(id) ON DELETE SET NULL;
 
 
 --
@@ -2950,5 +3217,5 @@ ALTER TABLE ONLY public.work_technologies
 -- PostgreSQL database dump complete
 --
 
-\unrestrict bNyHQhChh3frqcJayRpGIRL0gwFnIKQ2sPk6btO1jGTzoCDZIPt4CufG0PxKikJ
+\unrestrict If1WH95DcOskGqF8xPndfJHFJi9dVjSv47l22YsaTrhMPWKC5urvZQckTo34sBf
 
