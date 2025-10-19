@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict kqupHv5D5ljIAfjXh9cnMOIMJLtJHt5whoMRbl1uruSGvqyRq4cUB1me9KKje3E
+\restrict eIsg3F9bPGiVp3yy00DE6IWfBUUOorFXAusEzBCqQJUQ6ud0F046vXJNUI74410
 
 -- Dumped from database version 15.14 (Debian 15.14-1.pgdg13+1)
 -- Dumped by pg_dump version 15.14 (Debian 15.14-1.pgdg13+1)
@@ -1125,12 +1125,13 @@ CREATE TABLE public.work_experiences (
     "startDate" text NOT NULL,
     "endDate" text,
     summary text NOT NULL,
-    "sortOrder" integer DEFAULT 0 NOT NULL,
     "createdAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     "updatedAt" timestamp(3) without time zone NOT NULL,
     id uuid DEFAULT gen_random_uuid() NOT NULL,
     logo uuid,
-    profiles uuid NOT NULL
+    status character varying(255) DEFAULT 'draft'::character varying NOT NULL,
+    sort integer,
+    profile uuid
 );
 
 
@@ -2090,6 +2091,87 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 1107	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 16:19:23.928+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	profiles	0eeb942b-e35a-44e8-a37d-52b9cdb24309	http://localhost:8055
 1108	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 16:20:47.757+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	22	http://localhost:8055
 1109	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 16:20:52.947+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	11	http://localhost:8055
+1110	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 16:58:08.692+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	110	http://localhost:8055
+1111	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 16:58:13.541+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	110	http://localhost:8055
+1112	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 16:58:16.678+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	2	http://localhost:8055
+1113	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 16:58:16.688+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	22	http://localhost:8055
+1114	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 16:58:16.693+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	1	http://localhost:8055
+1115	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 16:58:16.7+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	3	http://localhost:8055
+1116	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 16:58:16.707+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	4	http://localhost:8055
+1117	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 16:58:16.713+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	6	http://localhost:8055
+1118	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 16:58:16.719+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	110	http://localhost:8055
+1119	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 16:58:16.726+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	15	http://localhost:8055
+1120	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 16:58:16.733+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	7	http://localhost:8055
+1121	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 16:58:16.738+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	8	http://localhost:8055
+1122	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 16:58:16.743+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	5	http://localhost:8055
+1123	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 16:58:16.751+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	9	http://localhost:8055
+1124	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 16:58:16.756+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	12	http://localhost:8055
+1125	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 16:58:16.761+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	13	http://localhost:8055
+1126	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 16:58:16.767+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	10	http://localhost:8055
+1127	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 16:59:08.802+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_translations	477e76f0-e099-49ab-a993-d55f72cf2931	http://localhost:8055
+1128	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 16:59:15.821+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_translations	c530a32f-84cb-4ab9-8a61-7a12a5bcb7e6	http://localhost:8055
+1129	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 16:59:22.925+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_translations	39d9db6d-c7a4-4298-b997-cc4ce6d427b3	http://localhost:8055
+1130	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:00:52.551+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	110	http://localhost:8055
+1131	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:01:29.666+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	110	http://localhost:8055
+1132	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:02:39.71+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	15	http://localhost:8055
+1133	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:03:09.127+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	15	http://localhost:8055
+1134	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:03:35.059+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	15	http://localhost:8055
+1135	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:04:04.114+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	10	http://localhost:8055
+1136	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:05:22.667+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	111	http://localhost:8055
+1137	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:05:32.696+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_collections	work_experiences	http://localhost:8055
+1138	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:18:17.033+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	2	http://localhost:8055
+1139	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:18:17.038+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	22	http://localhost:8055
+1140	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:18:17.043+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	110	http://localhost:8055
+1141	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:18:17.052+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	1	http://localhost:8055
+1142	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:18:17.056+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	3	http://localhost:8055
+1143	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:18:17.062+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	4	http://localhost:8055
+1144	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:18:17.068+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	6	http://localhost:8055
+1145	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:18:17.073+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	15	http://localhost:8055
+1146	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:18:17.081+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	7	http://localhost:8055
+1147	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:18:17.085+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	8	http://localhost:8055
+1148	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:18:17.088+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	5	http://localhost:8055
+1149	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:18:17.094+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	9	http://localhost:8055
+1150	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:18:17.099+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	12	http://localhost:8055
+1151	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:18:17.103+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	13	http://localhost:8055
+1152	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:18:17.107+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	111	http://localhost:8055
+1153	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:11.288+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	23	http://localhost:8055
+1154	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:11.291+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	22	http://localhost:8055
+1155	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:30.132+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	112	http://localhost:8055
+1156	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:30.309+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	113	http://localhost:8055
+1157	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:35.074+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	112	http://localhost:8055
+1158	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:38.648+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	2	http://localhost:8055
+1159	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:38.654+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	110	http://localhost:8055
+1160	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:38.658+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	1	http://localhost:8055
+1161	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:38.663+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	3	http://localhost:8055
+1162	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:38.669+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	4	http://localhost:8055
+1163	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:38.674+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	112	http://localhost:8055
+1164	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:38.678+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	6	http://localhost:8055
+1165	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:38.683+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	15	http://localhost:8055
+1166	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:38.687+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	7	http://localhost:8055
+1167	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:38.692+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	8	http://localhost:8055
+1168	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:38.698+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	5	http://localhost:8055
+1169	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:38.703+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	9	http://localhost:8055
+1170	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:38.707+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	12	http://localhost:8055
+1171	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:38.713+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	13	http://localhost:8055
+1172	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:38.722+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	111	http://localhost:8055
+1173	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:43.92+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	2	http://localhost:8055
+1174	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:43.965+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	112	http://localhost:8055
+1175	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:43.969+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	110	http://localhost:8055
+1176	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:43.973+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	1	http://localhost:8055
+1177	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:43.978+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	3	http://localhost:8055
+1178	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:43.983+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	4	http://localhost:8055
+1179	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:43.987+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	6	http://localhost:8055
+1180	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:43.99+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	15	http://localhost:8055
+1181	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:43.993+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	7	http://localhost:8055
+1182	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:43.998+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	8	http://localhost:8055
+1183	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:44.003+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	5	http://localhost:8055
+1184	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:44.008+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	9	http://localhost:8055
+1185	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:44.013+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	12	http://localhost:8055
+1186	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:44.019+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	13	http://localhost:8055
+1187	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:44.022+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	111	http://localhost:8055
+1188	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:19:49.095+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	112	http://localhost:8055
+1189	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:20:00.715+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	work_experiences	a37c89e0-2b6d-44e1-911a-c1399611562a	http://localhost:8055
+1190	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:20:07.021+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	work_experiences	f044625e-b180-4603-b03a-42a5a397403a	http://localhost:8055
 \.
 
 
@@ -2100,7 +2182,7 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 COPY public.directus_collections (collection, icon, note, display_template, hidden, singleton, translations, archive_field, archive_app_filter, archive_value, unarchive_value, sort_field, accountability, color, item_duplication_fields, sort, "group", collapse, preview_url, versioning) FROM stdin;
 soft_skills	\N	\N	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	4	profiles	open	\N	f
 dev_methodologies	\N	\N	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	5	profiles	open	\N	f
-work_experiences	\N	\N	{{name}} ({{startDate}}-{{endDate}})	f	f	\N	\N	t	\N	\N	sortOrder	all	\N	\N	6	profiles	open	\N	f
+work_experiences	\N	\N	{{name}} ({{startDate}}-{{endDate}})	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	6	profiles	open	\N	f
 tech_skill_categories	\N	\N	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	1	tech_skills	open	\N	f
 tech_skill_types	\N	\N	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	2	tech_skills	open	\N	f
 profiles	\N	\N	{{name}}	f	f	\N	\N	t	\N	\N	\N	all	\N	\N	1	\N	open	\N	f
@@ -2142,19 +2224,6 @@ COPY public.directus_extensions (enabled, id, folder, source, bundle) FROM stdin
 
 COPY public.directus_fields (id, collection, field, special, interface, options, display, display_options, readonly, hidden, sort, width, translations, note, conditions, required, "group", validation, validation_message) FROM stdin;
 16	users	password	\N	\N	\N	\N	\N	f	t	\N	full	\N	\N	\N	f	\N	\N	\N
-2	work_experiences	id	uuid	\N	\N	\N	\N	t	f	1	full	\N	\N	\N	f	\N	\N	\N
-1	work_experiences	name	\N	input	\N	\N	\N	f	f	4	half	\N	\N	\N	f	\N	\N	\N
-3	work_experiences	location	\N	input	\N	\N	\N	f	f	5	half	\N	\N	\N	f	\N	\N	\N
-4	work_experiences	description	\N	input	\N	\N	\N	f	f	6	half	\N	\N	\N	f	\N	\N	\N
-6	work_experiences	url	\N	input	\N	\N	\N	f	f	7	half	\N	\N	\N	f	\N	\N	\N
-15	work_experiences	logo	file	file-image	{}	\N	\N	f	f	8	full	\N	\N	\N	f	\N	\N	\N
-7	work_experiences	startDate	\N	input	\N	\N	\N	f	f	9	half	\N	\N	\N	f	\N	\N	\N
-8	work_experiences	endDate	\N	input	\N	\N	\N	f	f	10	half	\N	\N	\N	f	\N	\N	\N
-5	work_experiences	position	\N	input	\N	\N	\N	f	f	11	full	\N	\N	\N	f	\N	\N	\N
-9	work_experiences	summary	\N	\N	\N	\N	\N	f	f	12	full	\N	\N	\N	f	\N	\N	\N
-12	work_experiences	createdAt	date-created	\N	\N	\N	\N	t	f	13	half	\N	\N	\N	f	\N	\N	\N
-13	work_experiences	updatedAt	date-updated,date-created	\N	\N	\N	\N	t	f	14	half	\N	\N	\N	f	\N	\N	\N
-10	work_experiences	sortOrder	\N	\N	\N	\N	\N	f	f	15	full	\N	\N	\N	f	\N	\N	\N
 36	languages	proficiency	\N	select-radio	{"choices":[{"text":"Native","value":"native"},{"text":"Fluent","value":"fluent"},{"text":"Proficient","value":"proficient"},{"text":"Conversational","value":"conversational"},{"text":"Basic","value":"basic"}]}	\N	\N	f	f	8	full	\N	\N	\N	f	\N	\N	\N
 49	profiles	core_stack	\N	input	\N	\N	\N	f	f	6	full	\N	Short list of your core technology stack that you are most familiar with.	\N	f	\N	\N	\N
 38	languages	profile	m2o	select-dropdown-m2o	\N	\N	\N	f	f	2	half	\N	\N	\N	f	\N	\N	\N
@@ -2172,12 +2241,12 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 52	profiles	stackoverflow_profile	\N	input	\N	\N	\N	f	f	16	full	\N	\N	\N	f	\N	\N	\N
 39	profiles	languages	o2m	list-o2m	{"enableSelect":false}	\N	\N	f	f	17	full	\N	\N	\N	f	\N	\N	\N
 58	highlights	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	4	half	\N	\N	\N	f	\N	\N	\N
-23	profiles	work_experiences	o2m	list-o2m	{"enableSelect":false}	\N	\N	f	f	22	full	\N	\N	\N	f	\N	\N	\N
+15	work_experiences	logo	file	file-image	{"crop":false}	image	\N	f	f	8	full	\N	\N	\N	f	\N	\N	\N
 59	highlights	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	5	half	\N	\N	\N	f	\N	\N	\N
 62	highlights	text	\N	input	\N	\N	\N	f	f	7	full	\N	\N	\N	t	\N	\N	\N
 27	profiles	email_address	\N	input	\N	\N	\N	f	f	10	half	\N	\N	\N	f	\N	\N	\N
 26	profiles	phone_number	\N	input	\N	\N	\N	f	f	12	half	\N	\N	\N	f	\N	\N	\N
-22	work_experiences	profiles	m2o	select-dropdown-m2o	\N	related-values	\N	f	f	2	half	\N	\N	\N	f	\N	\N	\N
+9	work_experiences	summary	\N	\N	\N	\N	\N	f	f	12	full	\N	\N	\N	f	\N	\N	\N
 17	profiles	id	uuid	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N
 61	profiles	highlights	o2m	list-o2m	{"enableSelect":false}	\N	\N	f	f	18	full	\N	\N	\N	f	\N	\N	\N
 65	tech_skills	sort	\N	input	\N	\N	\N	f	t	2	full	\N	\N	\N	f	\N	\N	\N
@@ -2192,6 +2261,16 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 34	languages	name	\N	input	\N	\N	\N	f	f	6	half	\N	\N	\N	f	\N	\N	\N
 35	languages	language_code	\N	input	\N	\N	\N	f	f	7	half	\N	2-letter ISO 639 language code	\N	f	\N	\N	\N
 31	languages	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	3	half	\N	\N	\N	f	\N	\N	\N
+2	work_experiences	id	uuid	\N	\N	\N	\N	t	f	1	full	\N	\N	\N	f	\N	\N	\N
+1	work_experiences	name	\N	input	\N	\N	\N	f	f	4	half	\N	\N	\N	f	\N	\N	\N
+3	work_experiences	location	\N	input	\N	\N	\N	f	f	5	half	\N	\N	\N	f	\N	\N	\N
+4	work_experiences	description	\N	input	\N	\N	\N	f	f	6	half	\N	\N	\N	f	\N	\N	\N
+6	work_experiences	url	\N	input	\N	\N	\N	f	f	7	half	\N	\N	\N	f	\N	\N	\N
+7	work_experiences	startDate	\N	input	\N	\N	\N	f	f	9	half	\N	\N	\N	f	\N	\N	\N
+8	work_experiences	endDate	\N	input	\N	\N	\N	f	f	10	half	\N	\N	\N	f	\N	\N	\N
+5	work_experiences	position	\N	input	\N	\N	\N	f	f	11	full	\N	\N	\N	f	\N	\N	\N
+12	work_experiences	createdAt	date-created	\N	\N	\N	\N	t	f	13	half	\N	\N	\N	f	\N	\N	\N
+13	work_experiences	updatedAt	date-updated,date-created	\N	\N	\N	\N	t	f	14	half	\N	\N	\N	f	\N	\N	\N
 85	tech_skills	level	\N	select-dropdown	{"choices":[{"text":"Expert","value":"expert"},{"text":"Proficient","value":"proficient"},{"text":"Intermediate","value":"intermediate"},{"text":"Beginner","value":"beginner"}],"allowNone":true}	\N	\N	f	f	10	half	\N	\N	\N	f	\N	\N	\N
 70	tech_skills	name	\N	input	\N	\N	\N	f	f	7	half	\N	\N	\N	f	\N	\N	\N
 86	tech_skill_types	id	\N	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N
@@ -2225,13 +2304,17 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 69	profiles	tech_skills	o2m	list-o2m	{"enableSelect":false}	\N	\N	f	f	19	full	\N	\N	\N	f	\N	\N	\N
 95	soft_skills	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	3	half	\N	\N	\N	f	\N	\N	\N
 102	dev_methodologies	id	uuid	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N
+111	work_experiences	sort	\N	input	\N	\N	\N	f	t	15	full	\N	\N	\N	f	\N	\N	\N
 104	dev_methodologies	sort	\N	input	\N	\N	\N	f	t	4	full	\N	\N	\N	f	\N	\N	\N
 105	dev_methodologies	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	5	half	\N	\N	\N	f	\N	\N	\N
 106	dev_methodologies	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	6	half	\N	\N	\N	f	\N	\N	\N
 107	dev_methodologies	name	\N	input	\N	\N	\N	f	f	7	full	\N	\N	\N	t	\N	\N	\N
+112	work_experiences	profile	m2o	select-dropdown-m2o	\N	\N	\N	f	f	2	half	\N	\N	\N	f	\N	\N	\N
 103	dev_methodologies	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	3	half	\N	\N	\N	f	\N	\N	\N
 108	dev_methodologies	profile	m2o	select-dropdown-m2o	\N	\N	\N	f	f	2	half	\N	\N	\N	f	\N	\N	\N
 109	profiles	dev_methodologies	o2m	list-o2m	\N	\N	\N	f	f	21	full	\N	\N	\N	f	\N	\N	\N
+113	profiles	work_experiences	o2m	list-o2m	\N	\N	\N	f	f	\N	full	\N	\N	\N	f	\N	\N	\N
+110	work_experiences	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}],"showAsDot":true}	f	f	3	half	\N	\N	\N	f	\N	\N	\N
 \.
 
 
@@ -2415,7 +2498,7 @@ COPY public.directus_presets (id, bookmark, "user", role, collection, search, la
 3	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	profiles	\N	\N	{"tabular":{"page":1,"fields":["name","title","core_stack","subtitle"]}}	{"tabular":{"widths":{"name":126.66665649414062,"title":231.66668701171875,"core_stack":278.3333740234375,"subtitle":343.3333740234375}}}	\N	\N	bookmark	\N
 7	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	tech_skill_categories	\N	\N	{"tabular":{"fields":["name","status"]}}	{"tabular":{"widths":{"name":163.00006103515625,"status":98.6666259765625}}}	\N	\N	bookmark	\N
 9	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	tech_skill_types	\N	\N	{"tabular":{"fields":["name","status"]}}	{"tabular":{"widths":{"name":370,"status":118}}}	\N	\N	bookmark	\N
-1	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	work_experiences	\N	\N	{"tabular":{"fields":["id","isActive","name","location","description","startDate"],"page":1}}	{"tabular":{"widths":{"id":117.60000610351562,"isActive":105.4000244140625,"name":149.79998779296875,"location":152.79998779296875,"description":191.39990234375,"startDate":124.5999755859375}}}	\N	\N	bookmark	\N
+1	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	work_experiences	\N	\N	{"tabular":{"fields":["name","position","location","description","startDate","endDate"],"page":1}}	{"tabular":{"widths":{"name":123.60000610351562,"position":139.60003662109375,"location":114,"description":169.4000244140625,"startDate":116.5999755859375,"endDate":108.39990234375}}}	\N	\N	bookmark	\N
 4	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	languages	\N	\N	{"tabular":{"page":1,"fields":["name","language_code","proficiency","status"]}}	{"tabular":{"widths":{"name":160,"language_code":160,"proficiency":160,"status":160}}}	\N	\N	bookmark	\N
 \.
 
@@ -2426,7 +2509,6 @@ COPY public.directus_presets (id, bookmark, "user", role, collection, search, la
 
 COPY public.directus_relations (id, many_collection, many_field, one_collection, one_field, one_collection_field, one_allowed_collections, junction_field, sort_field, one_deselect_action) FROM stdin;
 1	work_experiences	logo	directus_files	\N	\N	\N	\N	\N	nullify
-2	work_experiences	profiles	profiles	work_experiences	\N	\N	\N	\N	nullify
 3	languages	profile	profiles	languages	\N	\N	\N	\N	nullify
 5	profiles	profile_picture	directus_files	\N	\N	\N	\N	\N	nullify
 6	highlights	profile	profiles	highlights	\N	\N	\N	\N	nullify
@@ -2435,6 +2517,7 @@ COPY public.directus_relations (id, many_collection, many_field, one_collection,
 11	tech_skills	tech_type	tech_skill_types	tech_skills	\N	\N	\N	\N	nullify
 12	soft_skills	profile	profiles	soft_skills	\N	\N	\N	\N	nullify
 13	dev_methodologies	profile	profiles	dev_methodologies	\N	\N	\N	\N	nullify
+14	work_experiences	profile	profiles	work_experiences	\N	\N	\N	\N	nullify
 \.
 
 
@@ -3164,6 +3247,84 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 1071	1102	dev_methodologies	94c1e7c6-f687-4a45-b870-1c922baacd2d	{"name":"Asynchronous Workflows","status":"published","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309"}	{"name":"Asynchronous Workflows","status":"published","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309"}	1076	\N
 1072	1103	dev_methodologies	af4c406b-bf9e-4f65-b196-5ff37c57eba9	{"name":"Component-based development","status":"published","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309"}	{"name":"Component-based development","status":"published","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309"}	1076	\N
 1077	1108	directus_fields	22	{"id":22,"collection":"work_experiences","field":"profiles","special":["m2o"],"interface":"select-dropdown-m2o","options":null,"display":"related-values","display_options":null,"readonly":false,"hidden":false,"sort":2,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"profiles","width":"half"}	\N	\N
+1078	1110	directus_fields	110	{"sort":16,"interface":"select-dropdown","special":null,"options":{"choices":[{"text":"Draft","value":"draft"},{"text":"Published","value":"published"},{"text":"Archived","value":"archived"}]},"collection":"work_experiences","field":"status"}	{"sort":16,"interface":"select-dropdown","special":null,"options":{"choices":[{"text":"Draft","value":"draft"},{"text":"Published","value":"published"},{"text":"Archived","value":"archived"}]},"collection":"work_experiences","field":"status"}	\N	\N
+1079	1111	directus_fields	110	{"id":110,"collection":"work_experiences","field":"status","special":null,"interface":"select-dropdown","options":{"choices":[{"text":"Draft","value":"draft"},{"text":"Published","value":"published"},{"text":"Archived","value":"archived"}]},"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":16,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"status","width":"half"}	\N	\N
+1080	1112	directus_fields	2	{"id":2,"collection":"work_experiences","field":"id","special":["uuid"],"interface":null,"options":null,"display":null,"display_options":null,"readonly":true,"hidden":false,"sort":1,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"id","sort":1,"group":null}	\N	\N
+1081	1113	directus_fields	22	{"id":22,"collection":"work_experiences","field":"profiles","special":["m2o"],"interface":"select-dropdown-m2o","options":null,"display":"related-values","display_options":null,"readonly":false,"hidden":false,"sort":2,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"profiles","sort":2,"group":null}	\N	\N
+1082	1114	directus_fields	1	{"id":1,"collection":"work_experiences","field":"name","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":3,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"name","sort":3,"group":null}	\N	\N
+1083	1115	directus_fields	3	{"id":3,"collection":"work_experiences","field":"location","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":4,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"location","sort":4,"group":null}	\N	\N
+1084	1116	directus_fields	4	{"id":4,"collection":"work_experiences","field":"description","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":5,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"description","sort":5,"group":null}	\N	\N
+1085	1117	directus_fields	6	{"id":6,"collection":"work_experiences","field":"url","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":6,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"url","sort":6,"group":null}	\N	\N
+1086	1118	directus_fields	110	{"id":110,"collection":"work_experiences","field":"status","special":null,"interface":"select-dropdown","options":{"choices":[{"text":"Draft","value":"draft"},{"text":"Published","value":"published"},{"text":"Archived","value":"archived"}]},"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":7,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"status","sort":7,"group":null}	\N	\N
+1087	1119	directus_fields	15	{"id":15,"collection":"work_experiences","field":"logo","special":["file"],"interface":"file-image","options":{},"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":8,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"logo","sort":8,"group":null}	\N	\N
+1088	1120	directus_fields	7	{"id":7,"collection":"work_experiences","field":"startDate","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":9,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"startDate","sort":9,"group":null}	\N	\N
+1089	1121	directus_fields	8	{"id":8,"collection":"work_experiences","field":"endDate","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":10,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"endDate","sort":10,"group":null}	\N	\N
+1090	1122	directus_fields	5	{"id":5,"collection":"work_experiences","field":"position","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":11,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"position","sort":11,"group":null}	\N	\N
+1091	1123	directus_fields	9	{"id":9,"collection":"work_experiences","field":"summary","special":null,"interface":null,"options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":12,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"summary","sort":12,"group":null}	\N	\N
+1092	1124	directus_fields	12	{"id":12,"collection":"work_experiences","field":"createdAt","special":["date-created"],"interface":null,"options":null,"display":null,"display_options":null,"readonly":true,"hidden":false,"sort":13,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"createdAt","sort":13,"group":null}	\N	\N
+1093	1125	directus_fields	13	{"id":13,"collection":"work_experiences","field":"updatedAt","special":["date-updated","date-created"],"interface":null,"options":null,"display":null,"display_options":null,"readonly":true,"hidden":false,"sort":14,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"updatedAt","sort":14,"group":null}	\N	\N
+1094	1126	directus_fields	10	{"id":10,"collection":"work_experiences","field":"sortOrder","special":null,"interface":null,"options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":15,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"sortOrder","sort":15,"group":null}	\N	\N
+1095	1127	directus_translations	477e76f0-e099-49ab-a993-d55f72cf2931	{"language":"en-US","key":"published","value":"Published"}	{"language":"en-US","key":"published","value":"Published"}	\N	\N
+1096	1128	directus_translations	c530a32f-84cb-4ab9-8a61-7a12a5bcb7e6	{"language":"en-US","key":"draft","value":"Draft"}	{"language":"en-US","key":"draft","value":"Draft"}	\N	\N
+1097	1129	directus_translations	39d9db6d-c7a4-4298-b997-cc4ce6d427b3	{"language":"en-US","key":"archived","value":"Archived"}	{"language":"en-US","key":"archived","value":"Archived"}	\N	\N
+1098	1130	directus_fields	110	{"id":110,"collection":"work_experiences","field":"status","special":null,"interface":"select-dropdown","options":{"choices":[{"text":"$t:published","value":"published"},{"text":"$t:draft","value":"draft"},{"text":"$t:archived","value":"archived"}]},"display":"labels","display_options":{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}],"showAsDot":true},"readonly":false,"hidden":false,"sort":7,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"status","options":{"choices":[{"text":"$t:published","value":"published"},{"text":"$t:draft","value":"draft"},{"text":"$t:archived","value":"archived"}]},"display":"labels","display_options":{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}],"showAsDot":true}}	\N	\N
+1129	1164	directus_fields	6	{"id":6,"collection":"work_experiences","field":"url","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":7,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"url","sort":7,"group":null}	\N	\N
+1099	1131	directus_fields	110	{"id":110,"collection":"work_experiences","field":"status","special":null,"interface":"select-dropdown","options":{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]},"display":"labels","display_options":{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}],"showAsDot":true},"readonly":false,"hidden":false,"sort":7,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"status","options":{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}}	\N	\N
+1100	1132	directus_fields	15	{"id":15,"collection":"work_experiences","field":"logo","special":["file"],"interface":"file-image","options":{"crop":false},"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":8,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"logo","options":{"crop":false}}	\N	\N
+1101	1133	directus_fields	15	{"id":15,"collection":"work_experiences","field":"logo","special":["file"],"interface":"file-image","options":{"crop":false},"display":"image","display_options":null,"readonly":false,"hidden":false,"sort":8,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"logo","display":"image"}	\N	\N
+1102	1134	directus_fields	15	{"id":15,"collection":"work_experiences","field":"logo","special":["file"],"interface":"file-image","options":{"crop":false},"display":"image","display_options":null,"readonly":false,"hidden":false,"sort":8,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"logo","display":"image"}	\N	\N
+1103	1136	directus_fields	111	{"sort":15,"interface":"input","special":null,"hidden":true,"collection":"work_experiences","field":"sort"}	{"sort":15,"interface":"input","special":null,"hidden":true,"collection":"work_experiences","field":"sort"}	\N	\N
+1104	1137	directus_collections	work_experiences	{"collection":"work_experiences","icon":null,"note":null,"display_template":"{{name}} ({{startDate}}-{{endDate}})","hidden":false,"singleton":false,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":6,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"sort_field":"sort"}	\N	\N
+1105	1138	directus_fields	2	{"id":2,"collection":"work_experiences","field":"id","special":["uuid"],"interface":null,"options":null,"display":null,"display_options":null,"readonly":true,"hidden":false,"sort":1,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"id","sort":1,"group":null}	\N	\N
+1106	1139	directus_fields	22	{"id":22,"collection":"work_experiences","field":"profiles","special":["m2o"],"interface":"select-dropdown-m2o","options":null,"display":"related-values","display_options":null,"readonly":false,"hidden":false,"sort":2,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"profiles","sort":2,"group":null}	\N	\N
+1107	1140	directus_fields	110	{"id":110,"collection":"work_experiences","field":"status","special":null,"interface":"select-dropdown","options":{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]},"display":"labels","display_options":{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}],"showAsDot":true},"readonly":false,"hidden":false,"sort":3,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"status","sort":3,"group":null}	\N	\N
+1108	1141	directus_fields	1	{"id":1,"collection":"work_experiences","field":"name","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":4,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"name","sort":4,"group":null}	\N	\N
+1109	1142	directus_fields	3	{"id":3,"collection":"work_experiences","field":"location","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":5,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"location","sort":5,"group":null}	\N	\N
+1110	1143	directus_fields	4	{"id":4,"collection":"work_experiences","field":"description","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":6,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"description","sort":6,"group":null}	\N	\N
+1111	1144	directus_fields	6	{"id":6,"collection":"work_experiences","field":"url","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":7,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"url","sort":7,"group":null}	\N	\N
+1112	1145	directus_fields	15	{"id":15,"collection":"work_experiences","field":"logo","special":["file"],"interface":"file-image","options":{"crop":false},"display":"image","display_options":null,"readonly":false,"hidden":false,"sort":8,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"logo","sort":8,"group":null}	\N	\N
+1113	1146	directus_fields	7	{"id":7,"collection":"work_experiences","field":"startDate","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":9,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"startDate","sort":9,"group":null}	\N	\N
+1114	1147	directus_fields	8	{"id":8,"collection":"work_experiences","field":"endDate","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":10,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"endDate","sort":10,"group":null}	\N	\N
+1115	1148	directus_fields	5	{"id":5,"collection":"work_experiences","field":"position","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":11,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"position","sort":11,"group":null}	\N	\N
+1116	1149	directus_fields	9	{"id":9,"collection":"work_experiences","field":"summary","special":null,"interface":null,"options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":12,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"summary","sort":12,"group":null}	\N	\N
+1117	1150	directus_fields	12	{"id":12,"collection":"work_experiences","field":"createdAt","special":["date-created"],"interface":null,"options":null,"display":null,"display_options":null,"readonly":true,"hidden":false,"sort":13,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"createdAt","sort":13,"group":null}	\N	\N
+1118	1151	directus_fields	13	{"id":13,"collection":"work_experiences","field":"updatedAt","special":["date-updated","date-created"],"interface":null,"options":null,"display":null,"display_options":null,"readonly":true,"hidden":false,"sort":14,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"updatedAt","sort":14,"group":null}	\N	\N
+1119	1152	directus_fields	111	{"id":111,"collection":"work_experiences","field":"sort","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":true,"sort":15,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"sort","sort":15,"group":null}	\N	\N
+1120	1155	directus_fields	112	{"sort":16,"special":["m2o"],"collection":"work_experiences","field":"profile"}	{"sort":16,"special":["m2o"],"collection":"work_experiences","field":"profile"}	\N	\N
+1121	1156	directus_fields	113	{"special":["o2m"],"interface":"list-o2m","collection":"profiles","field":"work_experiences"}	{"special":["o2m"],"interface":"list-o2m","collection":"profiles","field":"work_experiences"}	\N	\N
+1122	1157	directus_fields	112	{"id":112,"collection":"work_experiences","field":"profile","special":["m2o"],"interface":null,"options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":16,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"profile","width":"half"}	\N	\N
+1123	1158	directus_fields	2	{"id":2,"collection":"work_experiences","field":"id","special":["uuid"],"interface":null,"options":null,"display":null,"display_options":null,"readonly":true,"hidden":false,"sort":1,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"id","sort":1,"group":null}	\N	\N
+1124	1159	directus_fields	110	{"id":110,"collection":"work_experiences","field":"status","special":null,"interface":"select-dropdown","options":{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]},"display":"labels","display_options":{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}],"showAsDot":true},"readonly":false,"hidden":false,"sort":2,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"status","sort":2,"group":null}	\N	\N
+1125	1160	directus_fields	1	{"id":1,"collection":"work_experiences","field":"name","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":3,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"name","sort":3,"group":null}	\N	\N
+1126	1161	directus_fields	3	{"id":3,"collection":"work_experiences","field":"location","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":4,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"location","sort":4,"group":null}	\N	\N
+1127	1162	directus_fields	4	{"id":4,"collection":"work_experiences","field":"description","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":5,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"description","sort":5,"group":null}	\N	\N
+1128	1163	directus_fields	112	{"id":112,"collection":"work_experiences","field":"profile","special":["m2o"],"interface":null,"options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":6,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"profile","sort":6,"group":null}	\N	\N
+1130	1165	directus_fields	15	{"id":15,"collection":"work_experiences","field":"logo","special":["file"],"interface":"file-image","options":{"crop":false},"display":"image","display_options":null,"readonly":false,"hidden":false,"sort":8,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"logo","sort":8,"group":null}	\N	\N
+1131	1166	directus_fields	7	{"id":7,"collection":"work_experiences","field":"startDate","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":9,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"startDate","sort":9,"group":null}	\N	\N
+1132	1167	directus_fields	8	{"id":8,"collection":"work_experiences","field":"endDate","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":10,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"endDate","sort":10,"group":null}	\N	\N
+1133	1168	directus_fields	5	{"id":5,"collection":"work_experiences","field":"position","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":11,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"position","sort":11,"group":null}	\N	\N
+1134	1169	directus_fields	9	{"id":9,"collection":"work_experiences","field":"summary","special":null,"interface":null,"options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":12,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"summary","sort":12,"group":null}	\N	\N
+1135	1170	directus_fields	12	{"id":12,"collection":"work_experiences","field":"createdAt","special":["date-created"],"interface":null,"options":null,"display":null,"display_options":null,"readonly":true,"hidden":false,"sort":13,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"createdAt","sort":13,"group":null}	\N	\N
+1136	1171	directus_fields	13	{"id":13,"collection":"work_experiences","field":"updatedAt","special":["date-updated","date-created"],"interface":null,"options":null,"display":null,"display_options":null,"readonly":true,"hidden":false,"sort":14,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"updatedAt","sort":14,"group":null}	\N	\N
+1137	1172	directus_fields	111	{"id":111,"collection":"work_experiences","field":"sort","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":true,"sort":15,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"sort","sort":15,"group":null}	\N	\N
+1138	1173	directus_fields	2	{"id":2,"collection":"work_experiences","field":"id","special":["uuid"],"interface":null,"options":null,"display":null,"display_options":null,"readonly":true,"hidden":false,"sort":1,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"id","sort":1,"group":null}	\N	\N
+1139	1174	directus_fields	112	{"id":112,"collection":"work_experiences","field":"profile","special":["m2o"],"interface":null,"options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":2,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"profile","sort":2,"group":null}	\N	\N
+1140	1175	directus_fields	110	{"id":110,"collection":"work_experiences","field":"status","special":null,"interface":"select-dropdown","options":{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]},"display":"labels","display_options":{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}],"showAsDot":true},"readonly":false,"hidden":false,"sort":3,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"status","sort":3,"group":null}	\N	\N
+1141	1176	directus_fields	1	{"id":1,"collection":"work_experiences","field":"name","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":4,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"name","sort":4,"group":null}	\N	\N
+1142	1177	directus_fields	3	{"id":3,"collection":"work_experiences","field":"location","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":5,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"location","sort":5,"group":null}	\N	\N
+1143	1178	directus_fields	4	{"id":4,"collection":"work_experiences","field":"description","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":6,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"description","sort":6,"group":null}	\N	\N
+1144	1179	directus_fields	6	{"id":6,"collection":"work_experiences","field":"url","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":7,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"url","sort":7,"group":null}	\N	\N
+1145	1180	directus_fields	15	{"id":15,"collection":"work_experiences","field":"logo","special":["file"],"interface":"file-image","options":{"crop":false},"display":"image","display_options":null,"readonly":false,"hidden":false,"sort":8,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"logo","sort":8,"group":null}	\N	\N
+1146	1181	directus_fields	7	{"id":7,"collection":"work_experiences","field":"startDate","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":9,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"startDate","sort":9,"group":null}	\N	\N
+1147	1182	directus_fields	8	{"id":8,"collection":"work_experiences","field":"endDate","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":10,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"endDate","sort":10,"group":null}	\N	\N
+1148	1183	directus_fields	5	{"id":5,"collection":"work_experiences","field":"position","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":11,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"position","sort":11,"group":null}	\N	\N
+1149	1184	directus_fields	9	{"id":9,"collection":"work_experiences","field":"summary","special":null,"interface":null,"options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":12,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"summary","sort":12,"group":null}	\N	\N
+1150	1185	directus_fields	12	{"id":12,"collection":"work_experiences","field":"createdAt","special":["date-created"],"interface":null,"options":null,"display":null,"display_options":null,"readonly":true,"hidden":false,"sort":13,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"createdAt","sort":13,"group":null}	\N	\N
+1151	1186	directus_fields	13	{"id":13,"collection":"work_experiences","field":"updatedAt","special":["date-updated","date-created"],"interface":null,"options":null,"display":null,"display_options":null,"readonly":true,"hidden":false,"sort":14,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"updatedAt","sort":14,"group":null}	\N	\N
+1152	1187	directus_fields	111	{"id":111,"collection":"work_experiences","field":"sort","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":true,"sort":15,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"sort","sort":15,"group":null}	\N	\N
+1153	1188	directus_fields	112	{"id":112,"collection":"work_experiences","field":"profile","special":["m2o"],"interface":"select-dropdown-m2o","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":2,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"work_experiences","field":"profile","interface":"select-dropdown-m2o"}	\N	\N
+1154	1189	work_experiences	a37c89e0-2b6d-44e1-911a-c1399611562a	{"name":"Chipta","location":"Amsterdam","description":"Ticketing company","position":"Lead Developer","url":"https://chipta.com/en/","startDate":"2017","endDate":"2024","summary":"Was fun","createdAt":"2025-10-15T15:24:10","updatedAt":"2025-10-19T17:20:00","id":"a37c89e0-2b6d-44e1-911a-c1399611562a","logo":"8127127c-d1cf-480e-87ea-5cbfbfc12e36","status":"published","sort":1,"profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309"}	{"status":"published","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","updatedAt":"2025-10-19T17:20:00"}	\N	\N
+1155	1190	work_experiences	f044625e-b180-4603-b03a-42a5a397403a	{"name":"Tender-it","location":"Amsterdam","description":"Tender platform","position":"Lead Developer","url":null,"startDate":"2014","endDate":"2017","summary":"Was cool","createdAt":"2025-10-22T12:00:00","updatedAt":"2025-10-19T17:20:07","id":"f044625e-b180-4603-b03a-42a5a397403a","logo":"d6beca5c-5fc3-4f31-aa57-fc1a8209a97c","status":"published","sort":2,"profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309"}	{"status":"published","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","updatedAt":"2025-10-19T17:20:07"}	\N	\N
 \.
 
 
@@ -3182,14 +3343,14 @@ COPY public.directus_roles (id, name, icon, description, parent) FROM stdin;
 
 COPY public.directus_sessions (token, "user", expires, ip, user_agent, share, origin, next_token) FROM stdin;
 jyEi42Iib3ayUhuKtRg8crSw0qNgHJgwHBGyXgh2IXu6VhJFRchsBiOMADOe89TD	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-22 11:36:02.247+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	\N	http://localhost:8055	\N
-ZjejCtWdY7vjhaREanjozphVBnm1vywbd4BFNZPctHaHtcP6r8m_x7WzD_K0rZb7	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 16:21:53.217+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	\N	http://localhost:8055	WGe_9nHbg29daK2hy2lkOT6wupudkcvtj90AV5mEyQUUkb6NZ-spcBciwWkeMXfb
 y-WO4WkHlhiznOiATKO-RjKK9Z3HEIlKHRYr0_u4sFB0eeLv84Ny2T4aqWxQ3eCM	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-22 16:20:39.984+00	172.18.0.5	node	\N	\N	\N
 pVX2TAe16YVkkcVw9TWxFZh-iyhGwVjppd9O13Ta1Qa1TKHbszuDvPeMz6S5szXg	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-22 16:20:44.345+00	172.18.0.5	node	\N	\N	\N
 jpJiV5kskoW5LlYVhxbzagfug_ZbrJ8irKY3a3RneaGmmQoHb9R-91GCFCG35EeL	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-22 16:20:49.72+00	172.18.0.5	node	\N	\N	\N
 kA-S7XRDdk9qfWnTlPvsSX9dImd6TfBgEH0sve42Wkv76kWjg7QSDcBlLtdEzCW4	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-22 16:20:54.471+00	172.18.0.5	node	\N	\N	\N
 kh42EQlknOAg1mgK2LdARxcW3pzcBUD-VB7HqL8iJawgHPuyyxOTALOU9snCsUra	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-22 16:21:15.524+00	172.18.0.5	node	\N	\N	\N
 NYWuxTb_-k1RbMjrV7UHdCDRg82yDOpx1-IQ5gZP-vt7zmyc526B58aFbj2HDdnq	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-22 16:29:05.39+00	172.18.0.5	node	\N	\N	\N
-WGe_9nHbg29daK2hy2lkOT6wupudkcvtj90AV5mEyQUUkb6NZ-spcBciwWkeMXfb	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-20 16:21:43.217+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	\N	http://localhost:8055	\N
+ijnCEyu1HXiwqyz5JNV3mY8mtBXeZRDj_nHARzgfi8mAcOL6UeK0yBcwEPFLvJcP	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 17:20:18.597+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	\N	http://localhost:8055	wpJdy4hUK-ZqnswZsYw0FiWQ7dzglDFFbzwENol_OmndFpUQ2rTck8eiGNGoLkm8
+wpJdy4hUK-ZqnswZsYw0FiWQ7dzglDFFbzwENol_OmndFpUQ2rTck8eiGNGoLkm8	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-20 17:20:08.597+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	\N	http://localhost:8055	\N
 \.
 
 
@@ -3215,6 +3376,9 @@ COPY public.directus_shares (id, name, collection, item, role, password, user_cr
 --
 
 COPY public.directus_translations (id, language, key, value) FROM stdin;
+477e76f0-e099-49ab-a993-d55f72cf2931	en-US	published	Published
+c530a32f-84cb-4ab9-8a61-7a12a5bcb7e6	en-US	draft	Draft
+39d9db6d-c7a4-4298-b997-cc4ce6d427b3	en-US	archived	Archived
 \.
 
 
@@ -3223,7 +3387,7 @@ COPY public.directus_translations (id, language, key, value) FROM stdin;
 --
 
 COPY public.directus_users (id, first_name, last_name, email, password, location, title, description, tags, avatar, language, tfa_secret, status, role, token, last_access, last_page, provider, external_identifier, auth_data, email_notifications, appearance, theme_dark, theme_light, theme_light_overrides, theme_dark_overrides, text_direction) FROM stdin;
-157238bb-6930-4f26-be9c-8b31a9e11ab8	Admin	User	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-10-19 16:21:43.22+00	/settings/data-model/work_experiences	default	\N	\N	t	\N	\N	\N	\N	\N	auto
+157238bb-6930-4f26-be9c-8b31a9e11ab8	Admin	User	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-10-19 17:20:08.601+00	/content/work_experiences/a37c89e0-2b6d-44e1-911a-c1399611562a	default	\N	\N	t	\N	\N	\N	\N	\N	auto
 \.
 
 
@@ -3380,9 +3544,9 @@ COPY public.users (email, password, "firstName", "lastName", "isEmailVerified", 
 -- Data for Name: work_experiences; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.work_experiences (name, location, description, "position", url, "startDate", "endDate", summary, "sortOrder", "createdAt", "updatedAt", id, logo, profiles) FROM stdin;
-Tender-it	Amsterdam	Tender platform	Lead Developer	\N	2014	2017	Was cool	2	2025-10-22 12:00:00	2025-10-15 17:00:38.437	f044625e-b180-4603-b03a-42a5a397403a	d6beca5c-5fc3-4f31-aa57-fc1a8209a97c	0eeb942b-e35a-44e8-a37d-52b9cdb24309
-Chipta	Amsterdam	Ticketing company	Lead Developer	https://chipta.com/en/	2017	2024	Was fun	1	2025-10-15 15:24:10.556	2025-10-15 17:00:44.19	a37c89e0-2b6d-44e1-911a-c1399611562a	8127127c-d1cf-480e-87ea-5cbfbfc12e36	0eeb942b-e35a-44e8-a37d-52b9cdb24309
+COPY public.work_experiences (name, location, description, "position", url, "startDate", "endDate", summary, "createdAt", "updatedAt", id, logo, status, sort, profile) FROM stdin;
+Chipta	Amsterdam	Ticketing company	Lead Developer	https://chipta.com/en/	2017	2024	Was fun	2025-10-15 15:24:10.556	2025-10-19 17:20:00.712	a37c89e0-2b6d-44e1-911a-c1399611562a	8127127c-d1cf-480e-87ea-5cbfbfc12e36	published	1	0eeb942b-e35a-44e8-a37d-52b9cdb24309
+Tender-it	Amsterdam	Tender platform	Lead Developer	\N	2014	2017	Was cool	2025-10-22 12:00:00	2025-10-19 17:20:07.02	f044625e-b180-4603-b03a-42a5a397403a	d6beca5c-5fc3-4f31-aa57-fc1a8209a97c	published	2	0eeb942b-e35a-44e8-a37d-52b9cdb24309
 \.
 
 
@@ -3422,14 +3586,14 @@ COPY public.work_technologies ("workExperienceId", "technologyName", "sortOrder"
 -- Name: directus_activity_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_activity_id_seq', 1109, true);
+SELECT pg_catalog.setval('public.directus_activity_id_seq', 1190, true);
 
 
 --
 -- Name: directus_fields_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_fields_id_seq', 109, true);
+SELECT pg_catalog.setval('public.directus_fields_id_seq', 113, true);
 
 
 --
@@ -3457,14 +3621,14 @@ SELECT pg_catalog.setval('public.directus_presets_id_seq', 10, true);
 -- Name: directus_relations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_relations_id_seq', 13, true);
+SELECT pg_catalog.setval('public.directus_relations_id_seq', 14, true);
 
 
 --
 -- Name: directus_revisions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_revisions_id_seq', 1077, true);
+SELECT pg_catalog.setval('public.directus_revisions_id_seq', 1155, true);
 
 
 --
@@ -4362,7 +4526,7 @@ ALTER TABLE ONLY public.work_experiences
 --
 
 ALTER TABLE ONLY public.work_experiences
-    ADD CONSTRAINT work_experiences_profile_foreign FOREIGN KEY (profiles) REFERENCES public.profiles(id);
+    ADD CONSTRAINT work_experiences_profile_foreign FOREIGN KEY (profile) REFERENCES public.profiles(id);
 
 
 --
@@ -4401,5 +4565,5 @@ ALTER TABLE ONLY public.work_technologies
 -- PostgreSQL database dump complete
 --
 
-\unrestrict kqupHv5D5ljIAfjXh9cnMOIMJLtJHt5whoMRbl1uruSGvqyRq4cUB1me9KKje3E
+\unrestrict eIsg3F9bPGiVp3yy00DE6IWfBUUOorFXAusEzBCqQJUQ6ud0F046vXJNUI74410
 
