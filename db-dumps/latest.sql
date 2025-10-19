@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict dx07xbLdX6sHlMPimy0JLfRxOkgiSRaJQCb0xD78g8l5IfgrNuDtvceWrM2BCiQ
+\restrict P6uF7Fc27Nz61OrNVbZKMw7x7E9DP3pV7EKNluSBwBSNyic4Qy0g3aSkTMGg5Kg
 
 -- Dumped from database version 15.14 (Debian 15.14-1.pgdg13+1)
 -- Dumped by pg_dump version 15.14 (Debian 15.14-1.pgdg13+1)
@@ -1126,7 +1126,8 @@ CREATE TABLE public.work_experience_achievements (
     title character varying(255),
     description character varying(255),
     work_experience uuid,
-    fa_icon character varying(255)
+    fa_icon character varying(255),
+    tags json
 );
 
 
@@ -2537,6 +2538,8 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 1534	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 18:21:00.714+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	highlights	311f493d-c89f-4a35-86fc-9605e93f639d	http://localhost:8055
 1532	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 18:20:40.132+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	highlights	bf60fa32-c241-4a49-9edf-d0a21c3a4b3d	http://localhost:8055
 1535	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 18:21:05.816+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	highlights	e30e3468-9f74-4bdb-9f33-abcef8eb6f7b	http://localhost:8055
+1536	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 18:27:11.387+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	133	http://localhost:8055
+1537	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 18:27:43.93+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	work_experience_achievements	1a595ecc-42aa-4d7a-a51f-084d69aa63d5	http://localhost:8055
 \.
 
 
@@ -2687,6 +2690,7 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 108	dev_methodologies	profile	m2o	select-dropdown-m2o	{"template":null}	related-values	{"template":"{{name}}"}	f	f	2	half	\N	\N	\N	f	\N	\N	\N
 127	work_experience_achievements	description	\N	input	\N	\N	\N	f	f	9	full	\N	\N	\N	f	\N	\N	\N
 132	highlights	fa_icon	\N	input	\N	\N	\N	f	f	8	full	\N	Font Awesome icon name	\N	f	\N	\N	\N
+133	work_experience_achievements	tags	cast-json	tags	{"whitespace":"-","capitalization":"lowercase","alphabetize":true}	\N	\N	f	f	10	full	\N	\N	\N	f	\N	\N	\N
 112	work_experiences	profile	m2o	select-dropdown-m2o	\N	\N	\N	f	f	2	half	\N	\N	\N	f	\N	\N	\N
 121	work_experience_achievements	id	uuid	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N
 110	work_experiences	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}],"showAsDot":true}	f	f	3	half	\N	\N	\N	f	\N	\N	\N
@@ -2871,12 +2875,12 @@ COPY public.directus_presets (id, bookmark, "user", role, collection, search, la
 2	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	users	\N	\N	{"tabular":{"page":1}}	\N	\N	\N	bookmark	\N
 1	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	work_experiences	\N	\N	{"tabular":{"fields":["name","position","location","description","start_date","end_date","status"],"page":1}}	{"tabular":{"widths":{"name":126.5999755859375,"position":140.79998779296875,"location":114.4000244140625,"description":160.79998779296875,"start_date":117,"end_date":120,"status":91}}}	\N	\N	bookmark	\N
 11	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	work_experience_achievements	\N	\N	{"tabular":{"fields":["description","work_experience","status"],"page":1}}	{"tabular":{"widths":{"description":569.5999755859375,"work_experience":159.4000244140625,"status":93}}}	\N	\N	bookmark	\N
-3	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	profiles	\N	\N	{"tabular":{"page":1,"fields":["name","title","core_stack","subtitle"]}}	{"tabular":{"widths":{"name":126.66665649414062,"title":231.66668701171875,"core_stack":278.3333740234375,"subtitle":343.3333740234375}}}	\N	\N	bookmark	\N
-8	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	highlights	\N	\N	{"tabular":{"fields":["text","status","profile"],"page":1}}	{"tabular":{"widths":{"text":625.4000244140625,"status":94.39990234375,"profile":122.7999267578125}}}	\N	\N	bookmark	\N
 6	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	tech_skills	\N	tabular	{"tabular":{"fields":["name","category","years_experience","level","status","profile"],"page":1}}	{"tabular":{"widths":{"name":273,"category":183,"years_experience":101.4000244140625,"level":119.2000732421875,"status":96,"profile":124},"align":{"status":"left"}}}	\N	\N	bookmark	\N
-4	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	languages	\N	\N	{"tabular":{"page":1,"fields":["name","language_code","proficiency","status","profile"]}}	{"tabular":{"widths":{"name":287.60003662109375,"language_code":165.20001220703125,"proficiency":176.4000244140625,"status":96.4000244140625,"profile":132.39990234375}}}	\N	\N	bookmark	\N
+8	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	highlights	\N	\N	{"tabular":{"fields":["text","fa_icon","status","profile"],"page":1}}	{"tabular":{"widths":{"text":584.800048828125,"fa_icon":99.4000244140625,"status":91,"profile":121.7999267578125}}}	\N	\N	bookmark	\N
 7	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	tech_skill_categories	\N	\N	{"tabular":{"fields":["name","status"]}}	{"tabular":{"widths":{"name":708.199951171875,"status":98.6666259765625}}}	\N	\N	bookmark	\N
+4	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	languages	\N	\N	{"tabular":{"page":1,"fields":["name","language_code","proficiency","status","profile"]}}	{"tabular":{"widths":{"name":287.60003662109375,"language_code":165.20001220703125,"proficiency":176.4000244140625,"status":96.4000244140625,"profile":132.39990234375}}}	\N	\N	bookmark	\N
 9	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	tech_skill_types	\N	\N	{"tabular":{"fields":["name","status"]}}	{"tabular":{"widths":{"name":696.3999633789062,"status":118}}}	\N	\N	bookmark	\N
+3	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	profiles	\N	\N	{"tabular":{"page":1,"fields":["name","title","core_stack","subtitle"]}}	{"tabular":{"widths":{"name":126.66665649414062,"title":231.66668701171875,"core_stack":278.3333740234375,"subtitle":343.3333740234375}}}	\N	\N	bookmark	\N
 10	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	soft_skills	\N	\N	{"tabular":{"page":1,"fields":["name","status","profile"]}}	{"tabular":{"widths":{"name":587,"status":98.5999755859375,"profile":125.199951171875}}}	\N	\N	bookmark	\N
 12	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	dev_methodologies	\N	\N	{"tabular":{"page":1,"fields":["name","status","profile"]}}	{"tabular":{"widths":{"name":591,"status":94.5999755859375,"profile":132.60003662109375}}}	\N	\N	bookmark	\N
 \.
@@ -4042,6 +4046,8 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 1490	1533	highlights	912a4cfd-44d1-4b88-bd32-0a67ce05e1bc	{"id":"912a4cfd-44d1-4b88-bd32-0a67ce05e1bc","status":"published","sort":5,"date_created":"2025-10-17T14:38:05.600Z","date_updated":"2025-10-19T18:20:53.612Z","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","text":"Skilled in developing scalable solutions for high-traffic applications","fa_icon":"rocket"}	{"fa_icon":"rocket","date_updated":"2025-10-19T18:20:53.612Z"}	\N	\N
 1491	1534	highlights	311f493d-c89f-4a35-86fc-9605e93f639d	{"id":"311f493d-c89f-4a35-86fc-9605e93f639d","status":"published","sort":6,"date_created":"2025-10-17T14:38:05.602Z","date_updated":"2025-10-19T18:21:00.713Z","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","text":"5+ years remote work and distributed team collaboration experience","fa_icon":"home"}	{"fa_icon":"home","date_updated":"2025-10-19T18:21:00.713Z"}	\N	\N
 1492	1535	highlights	e30e3468-9f74-4bdb-9f33-abcef8eb6f7b	{"id":"e30e3468-9f74-4bdb-9f33-abcef8eb6f7b","status":"published","sort":7,"date_created":"2025-10-17T14:38:05.603Z","date_updated":"2025-10-19T18:21:05.815Z","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","text":"AI-accelerated development skills with security best practices","fa_icon":"robot"}	{"fa_icon":"robot","date_updated":"2025-10-19T18:21:05.815Z"}	\N	\N
+1493	1536	directus_fields	133	{"sort":10,"interface":"tags","special":["cast-json"],"options":{"whitespace":"-","capitalization":"lowercase","alphabetize":true},"collection":"work_experience_achievements","field":"tags"}	{"sort":10,"interface":"tags","special":["cast-json"],"options":{"whitespace":"-","capitalization":"lowercase","alphabetize":true},"collection":"work_experience_achievements","field":"tags"}	\N	\N
+1494	1537	work_experience_achievements	1a595ecc-42aa-4d7a-a51f-084d69aa63d5	{"id":"1a595ecc-42aa-4d7a-a51f-084d69aa63d5","status":"published","sort":null,"date_created":"2025-10-19T18:10:23.885Z","date_updated":"2025-10-19T18:27:43.927Z","title":"Platform Scalability","description":"Enabled processing thousands of orders per minute, by optimizing SQL queries & Python/Django processes with 30-60%","work_experience":"a37c89e0-2b6d-44e1-911a-c1399611562a","fa_icon":"chart-line","tags":["fullstack-django","fullstack-python","fullstack-react","fullstack-svelte"]}	{"tags":["fullstack-django","fullstack-python","fullstack-react","fullstack-svelte"],"date_updated":"2025-10-19T18:27:43.927Z"}	\N	\N
 \.
 
 
@@ -4066,8 +4072,8 @@ jpJiV5kskoW5LlYVhxbzagfug_ZbrJ8irKY3a3RneaGmmQoHb9R-91GCFCG35EeL	157238bb-6930-4
 kA-S7XRDdk9qfWnTlPvsSX9dImd6TfBgEH0sve42Wkv76kWjg7QSDcBlLtdEzCW4	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-22 16:20:54.471+00	172.18.0.5	node	\N	\N	\N
 kh42EQlknOAg1mgK2LdARxcW3pzcBUD-VB7HqL8iJawgHPuyyxOTALOU9snCsUra	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-22 16:21:15.524+00	172.18.0.5	node	\N	\N	\N
 NYWuxTb_-k1RbMjrV7UHdCDRg82yDOpx1-IQ5gZP-vt7zmyc526B58aFbj2HDdnq	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-22 16:29:05.39+00	172.18.0.5	node	\N	\N	\N
-nky9yqOy0mJPg-VtMX10BTBOXyuzWn_0fHUOayFH1FeppE8VoBIAt40tcS0Cogdo	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 18:20:09.135+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	\N	http://localhost:8055	2exel0arWcNDIKZ_LGLYMjRRDorzS4_slT8wEAQJOIivOe9t9jfCKBCG4Ygk2Lu7
-2exel0arWcNDIKZ_LGLYMjRRDorzS4_slT8wEAQJOIivOe9t9jfCKBCG4Ygk2Lu7	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-20 18:19:59.135+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	\N	http://localhost:8055	\N
+odZBCqLatcZqJ-hv641vC94aNeEH-Wj75fNxN_ZxfZle8rprRCJV73pm_u_5Trae	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 18:28:11.729+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	\N	http://localhost:8055	Bq3FHCKdF42Abk5T3x_JF7WEjmWTAtKGaBGACRmRbtNYmK484B_9q4fwFkB-N8te
+Bq3FHCKdF42Abk5T3x_JF7WEjmWTAtKGaBGACRmRbtNYmK484B_9q4fwFkB-N8te	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-20 18:28:01.729+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	\N	http://localhost:8055	\N
 \.
 
 
@@ -4104,7 +4110,7 @@ c530a32f-84cb-4ab9-8a61-7a12a5bcb7e6	en-US	draft	Draft
 --
 
 COPY public.directus_users (id, first_name, last_name, email, password, location, title, description, tags, avatar, language, tfa_secret, status, role, token, last_access, last_page, provider, external_identifier, auth_data, email_notifications, appearance, theme_dark, theme_light, theme_light_overrides, theme_dark_overrides, text_direction) FROM stdin;
-157238bb-6930-4f26-be9c-8b31a9e11ab8	Admin	User	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-10-19 18:19:59.139+00	/content/highlights	default	\N	\N	t	\N	\N	\N	\N	\N	auto
+157238bb-6930-4f26-be9c-8b31a9e11ab8	Admin	User	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-10-19 18:28:01.734+00	/content/work_experience_achievements/1a595ecc-42aa-4d7a-a51f-084d69aa63d5	default	\N	\N	t	\N	\N	\N	\N	\N	auto
 \.
 
 
@@ -4261,9 +4267,9 @@ COPY public.users (email, password, "firstName", "lastName", "isEmailVerified", 
 -- Data for Name: work_experience_achievements; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.work_experience_achievements (id, status, sort, date_created, date_updated, title, description, work_experience, fa_icon) FROM stdin;
-8e32e85b-f8d8-4fcf-af76-cb8f18ad91d9	published	\N	2025-10-19 17:55:53.073+00	2025-10-19 18:04:44.151+00	Team Leadership	Optimized development team (3-5 devs) output with 25%, by leading agile methods and strict code review processes	a37c89e0-2b6d-44e1-911a-c1399611562a	users
-1a595ecc-42aa-4d7a-a51f-084d69aa63d5	published	\N	2025-10-19 18:10:23.885+00	2025-10-19 18:10:33.243+00	Platform Scalability	Enabled processing thousands of orders per minute, by optimizing SQL queries & Python/Django processes with 30-60%	a37c89e0-2b6d-44e1-911a-c1399611562a	chart-line
+COPY public.work_experience_achievements (id, status, sort, date_created, date_updated, title, description, work_experience, fa_icon, tags) FROM stdin;
+8e32e85b-f8d8-4fcf-af76-cb8f18ad91d9	published	\N	2025-10-19 17:55:53.073+00	2025-10-19 18:04:44.151+00	Team Leadership	Optimized development team (3-5 devs) output with 25%, by leading agile methods and strict code review processes	a37c89e0-2b6d-44e1-911a-c1399611562a	users	\N
+1a595ecc-42aa-4d7a-a51f-084d69aa63d5	published	\N	2025-10-19 18:10:23.885+00	2025-10-19 18:27:43.927+00	Platform Scalability	Enabled processing thousands of orders per minute, by optimizing SQL queries & Python/Django processes with 30-60%	a37c89e0-2b6d-44e1-911a-c1399611562a	chart-line	["fullstack-django","fullstack-python","fullstack-react","fullstack-svelte"]
 \.
 
 
@@ -4313,14 +4319,14 @@ COPY public.work_technologies ("workExperienceId", "technologyName", "sortOrder"
 -- Name: directus_activity_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_activity_id_seq', 1535, true);
+SELECT pg_catalog.setval('public.directus_activity_id_seq', 1537, true);
 
 
 --
 -- Name: directus_fields_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_fields_id_seq', 132, true);
+SELECT pg_catalog.setval('public.directus_fields_id_seq', 133, true);
 
 
 --
@@ -4355,7 +4361,7 @@ SELECT pg_catalog.setval('public.directus_relations_id_seq', 15, true);
 -- Name: directus_revisions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_revisions_id_seq', 1492, true);
+SELECT pg_catalog.setval('public.directus_revisions_id_seq', 1494, true);
 
 
 --
@@ -5308,5 +5314,5 @@ ALTER TABLE ONLY public.work_technologies
 -- PostgreSQL database dump complete
 --
 
-\unrestrict dx07xbLdX6sHlMPimy0JLfRxOkgiSRaJQCb0xD78g8l5IfgrNuDtvceWrM2BCiQ
+\unrestrict P6uF7Fc27Nz61OrNVbZKMw7x7E9DP3pV7EKNluSBwBSNyic4Qy0g3aSkTMGg5Kg
 
