@@ -8,6 +8,7 @@
     "docker:dev": "dotenvx run -- vite dev --host",
     "docker:build-app": "docker-compose exec app npm run build",
     "docker:export-resume-pdf": "docker-compose exec app npx tsx scripts/export-resume-pdf.ts",
+    "docker:pull-db-schema": "docker-compose exec app npx prisma db pull",
     "docker:db:cli": "docker-compose exec database psql -U postgres -d smartjobseeker",
     "docker:db:backup": "docker-compose exec database ./scripts/dump-db.sh",
     "docker:db:restore": "docker-compose exec database ./scripts/restore-last-db-dump.sh",

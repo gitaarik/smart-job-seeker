@@ -41,7 +41,7 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
-    command: sh -c "npx prisma migrate deploy && npm ci && npm run docker:dev"
+    command: sh -c "npm ci && npm run docker:dev"
     depends_on:
       database:
         condition: service_healthy
