@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict hcDVvM0YFNhPBL3v3jmXpTzZOHlaAnCuCnxIkZOTGRhmoBBXhdgSUdbFJk5k7Cg
+\restrict dAq70MZ7RUpl6xVa4CFeoW3frzhTpplLY36sV0S2f2ph1ExkQzncqiqPBuU2U8n
 
 -- Dumped from database version 15.14 (Debian 15.14-1.pgdg13+1)
 -- Dumped by pg_dump version 15.14 (Debian 15.14-1.pgdg13+1)
@@ -34,60 +34,6 @@ ALTER TYPE public."Role" OWNER TO postgres;
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
-
---
--- Name: _prisma_migrations; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public._prisma_migrations (
-    id character varying(36) NOT NULL,
-    checksum character varying(64) NOT NULL,
-    finished_at timestamp with time zone,
-    migration_name character varying(255) NOT NULL,
-    logs text,
-    rolled_back_at timestamp with time zone,
-    started_at timestamp with time zone DEFAULT now() NOT NULL,
-    applied_steps_count integer DEFAULT 0 NOT NULL
-);
-
-
-ALTER TABLE public._prisma_migrations OWNER TO postgres;
-
---
--- Name: ai_refinements; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.ai_refinements (
-    "responseId" uuid NOT NULL,
-    request text NOT NULL,
-    "refinedContent" text NOT NULL,
-    "createdAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    id uuid DEFAULT gen_random_uuid() NOT NULL
-);
-
-
-ALTER TABLE public.ai_refinements OWNER TO postgres;
-
---
--- Name: ai_responses; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.ai_responses (
-    "userId" uuid NOT NULL,
-    prompt text NOT NULL,
-    context text,
-    "originalContent" text NOT NULL,
-    "currentContent" text NOT NULL,
-    "llmProvider" text NOT NULL,
-    "llmModel" text NOT NULL,
-    "sessionId" text,
-    "createdAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    "updatedAt" timestamp(3) without time zone NOT NULL,
-    id uuid DEFAULT gen_random_uuid() NOT NULL
-);
-
-
-ALTER TABLE public.ai_responses OWNER TO postgres;
 
 --
 -- Name: dev_methodologies; Type: TABLE; Schema: public; Owner: postgres
@@ -956,28 +902,6 @@ CREATE TABLE public.profiles (
 ALTER TABLE public.profiles OWNER TO postgres;
 
 --
--- Name: resume_tokens; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.resume_tokens (
-    token text NOT NULL,
-    name text NOT NULL,
-    description text,
-    "resumeType" text NOT NULL,
-    "expiresAt" timestamp(3) without time zone,
-    "viewCount" integer DEFAULT 0 NOT NULL,
-    "maxViews" integer,
-    "isActive" boolean DEFAULT true NOT NULL,
-    "createdBy" uuid NOT NULL,
-    "createdAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    "updatedAt" timestamp(3) without time zone NOT NULL,
-    id uuid DEFAULT gen_random_uuid() NOT NULL
-);
-
-
-ALTER TABLE public.resume_tokens OWNER TO postgres;
-
---
 -- Name: soft_skills; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -1092,28 +1016,6 @@ ALTER SEQUENCE public.tech_skills_id_seq OWNED BY public.tech_skills.id;
 
 
 --
--- Name: users; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.users (
-    email text NOT NULL,
-    password text NOT NULL,
-    "firstName" text,
-    "lastName" text,
-    "isEmailVerified" boolean DEFAULT false NOT NULL,
-    "emailVerifyToken" text,
-    "passwordResetToken" text,
-    "passwordResetExpiry" timestamp(3) without time zone,
-    "createdAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    "updatedAt" timestamp(3) without time zone NOT NULL,
-    role public."Role" DEFAULT 'USER'::public."Role" NOT NULL,
-    id uuid DEFAULT gen_random_uuid() NOT NULL
-);
-
-
-ALTER TABLE public.users OWNER TO postgres;
-
---
 -- Name: work_experience_achievements; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -1157,74 +1059,6 @@ CREATE TABLE public.work_experiences (
 
 
 ALTER TABLE public.work_experiences OWNER TO postgres;
-
---
--- Name: work_highlight_tags; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.work_highlight_tags (
-    "highlightId" uuid NOT NULL,
-    "tagName" text NOT NULL,
-    "createdAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    id uuid DEFAULT gen_random_uuid() NOT NULL
-);
-
-
-ALTER TABLE public.work_highlight_tags OWNER TO postgres;
-
---
--- Name: work_highlights; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.work_highlights (
-    "workExperienceId" uuid NOT NULL,
-    title text,
-    description text NOT NULL,
-    "iconName" text,
-    "sortOrder" integer DEFAULT 0 NOT NULL,
-    "createdAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    "updatedAt" timestamp(3) without time zone NOT NULL,
-    id uuid DEFAULT gen_random_uuid() NOT NULL
-);
-
-
-ALTER TABLE public.work_highlights OWNER TO postgres;
-
---
--- Name: work_projects; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.work_projects (
-    "workExperienceId" uuid NOT NULL,
-    name text NOT NULL,
-    "startDate" text NOT NULL,
-    "endDate" text NOT NULL,
-    summary text NOT NULL,
-    description text NOT NULL,
-    outcome text NOT NULL,
-    "sortOrder" integer DEFAULT 0 NOT NULL,
-    "createdAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    "updatedAt" timestamp(3) without time zone NOT NULL,
-    id uuid DEFAULT gen_random_uuid() NOT NULL
-);
-
-
-ALTER TABLE public.work_projects OWNER TO postgres;
-
---
--- Name: work_technologies; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.work_technologies (
-    "workExperienceId" uuid NOT NULL,
-    "technologyName" text NOT NULL,
-    "sortOrder" integer DEFAULT 0 NOT NULL,
-    "createdAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    id uuid DEFAULT gen_random_uuid() NOT NULL
-);
-
-
-ALTER TABLE public.work_technologies OWNER TO postgres;
 
 --
 -- Name: directus_activity id; Type: DEFAULT; Schema: public; Owner: postgres
@@ -1301,38 +1135,6 @@ ALTER TABLE ONLY public.tech_skill_types ALTER COLUMN id SET DEFAULT nextval('pu
 --
 
 ALTER TABLE ONLY public.tech_skills ALTER COLUMN id SET DEFAULT nextval('public.tech_skills_id_seq'::regclass);
-
-
---
--- Data for Name: _prisma_migrations; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public._prisma_migrations (id, checksum, finished_at, migration_name, logs, rolled_back_at, started_at, applied_steps_count) FROM stdin;
-01b0c92e-5b32-441d-ac4c-36b0c61a6209	6f75a511317f52c801637057bfa239227482e4464687a83ac8b57547b0a590d0	2025-10-15 11:34:25.859255+00	20250828150944_init	\N	\N	2025-10-15 11:34:25.853886+00	1
-2750efec-a5ed-45f8-9579-e91a6836e630	11afbeb0fcae4e489583fd55cc25e9835f016e65f8d27e3535d41c1a3ba5741d	2025-10-15 11:34:25.861738+00	20250828155716_add_user_roles	\N	\N	2025-10-15 11:34:25.859797+00	1
-bbb5000a-c54f-4ab0-83f7-578cd23c26ad	18a8cbd87255f697493dfee84f0bf9ce0a2b4730dc4d31267559ba2250bd70f9	2025-10-15 11:34:25.868483+00	20250828161348_add_resume_tokens	\N	\N	2025-10-15 11:34:25.86224+00	1
-ec688bd1-81b0-4521-ad28-34e67afb1e0d	111d08880ff5af0f9654acdf1b66cc585a113a91f225e4ee91184dc346fdb429	2025-10-15 11:34:25.877879+00	20250905110242_add_ai_responses_refinements	\N	\N	2025-10-15 11:34:25.869137+00	1
-651f0cf5-8a11-4777-8a7a-8a1f2643ed40	24131d2168f288587e37859652816d9663f6570e8a5fde2089ee99d84bb20f01	2025-10-15 11:34:25.892008+00	20250905131408_add_work_experience_tables	\N	\N	2025-10-15 11:34:25.87871+00	1
-340222fa-aa90-469a-9def-108f5a2e117b	c11450bef14cbe1f01da89aa768f8d99d5fdb91579873e74b0fed6df6931acc7	2025-10-15 11:34:25.9055+00	20250906141612_use_postgres_gen_random_uuid_for_work_experience	\N	\N	2025-10-15 11:34:25.892536+00	1
-29ef25f4-1daf-4781-9edb-64238b7a1d58	6351ecc3d0577a365d0382c0d87bb5db1cfa062fb75c8c1140de071c96b5772b	2025-10-15 11:34:25.933525+00	20250906150352_convert_all_cuid_to_uuid	\N	\N	2025-10-15 11:34:25.906277+00	1
-db7d5ea4-2423-40a1-9c8e-4dfd491bcf8c	e007dd1db84eebfec72b2d729b52b3522237775a0923922f57316de012c236fc	2025-10-15 11:34:25.935911+00	20251001145143_logo_to_uuid_for_directus_upload	\N	\N	2025-10-15 11:34:25.934076+00	1
-\.
-
-
---
--- Data for Name: ai_refinements; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.ai_refinements ("responseId", request, "refinedContent", "createdAt", id) FROM stdin;
-\.
-
-
---
--- Data for Name: ai_responses; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.ai_responses ("userId", prompt, context, "originalContent", "currentContent", "llmProvider", "llmModel", "sessionId", "createdAt", "updatedAt", id) FROM stdin;
-\.
 
 
 --
@@ -2555,6 +2357,14 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 1550	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 18:50:01.073+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	work_experience_achievements	dbbfe692-24b5-42ee-be27-bf901d1bb5c9	http://localhost:8055
 1551	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 18:51:40.479+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	work_experience_achievements	b48c5e14-e385-4ee6-8965-32ce56bbfaa2	http://localhost:8055
 1552	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 18:52:26.342+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	work_experience_achievements	298270af-97ca-461f-8497-b7f24c9a56bf	http://localhost:8055
+1553	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-20 09:18:56.482+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_collections	work_technologies	http://localhost:8055
+1554	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-20 09:19:15.949+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_collections	work_technologies	http://localhost:8055
+1555	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-20 09:20:06.899+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_collections	work_highlights	http://localhost:8055
+1556	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-20 09:20:27.248+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_collections	work_highlights	http://localhost:8055
+1557	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-20 09:20:39.792+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_collections	work_highlights	http://localhost:8055
+1558	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-20 09:21:06.148+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_collections	work_projects	http://localhost:8055
+1559	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-20 09:21:12.963+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_collections	users	http://localhost:8055
+1560	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-20 09:21:12.965+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	16	http://localhost:8055
 \.
 
 
@@ -2567,8 +2377,6 @@ soft_skills	\N	\N	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	4	profi
 dev_methodologies	\N	\N	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	5	profiles	open	\N	f
 work_experiences	\N	\N	{{name}} | {{location}} | {{position}} | {{start_date}} - {{end_date}}	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	6	profiles	open	\N	f
 profiles	\N	\N	{{name}}	f	f	\N	\N	t	\N	\N	\N	all	\N	\N	1	\N	open	\N	f
-users	\N	\N	\N	t	f	\N	\N	t	\N	\N	\N	all	\N	\N	2	\N	open	\N	f
-work_projects	\N	\N	\N	t	f	\N	\N	t	\N	\N	\N	all	\N	\N	3	\N	open	\N	f
 work_experience_achievements	\N	\N	{{description}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	1	work_experiences	open	\N	f
 tech_skill_categories	\N	\N	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	1	tech_skills	open	\N	f
 tech_skill_types	\N	\N	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	2	tech_skills	open	\N	f
@@ -2607,7 +2415,6 @@ COPY public.directus_extensions (enabled, id, folder, source, bundle) FROM stdin
 --
 
 COPY public.directus_fields (id, collection, field, special, interface, options, display, display_options, readonly, hidden, sort, width, translations, note, conditions, required, "group", validation, validation_message) FROM stdin;
-16	users	password	\N	\N	\N	\N	\N	f	t	\N	full	\N	\N	\N	f	\N	\N	\N
 36	languages	proficiency	\N	select-radio	{"choices":[{"text":"Native","value":"native"},{"text":"Fluent","value":"fluent"},{"text":"Proficient","value":"proficient"},{"text":"Conversational","value":"conversational"},{"text":"Basic","value":"basic"}]}	\N	\N	f	f	8	full	\N	\N	\N	f	\N	\N	\N
 49	profiles	core_stack	\N	input	\N	\N	\N	f	f	6	full	\N	Short list of your core technology stack that you are most familiar with.	\N	f	\N	\N	\N
 60	highlights	profile	m2o	select-dropdown-m2o	\N	related-values	{"template":"{{name}}"}	f	f	3	half	\N	\N	\N	f	\N	\N	\N
@@ -2887,15 +2694,14 @@ abf8a154-5b1c-4a46-ac9c-7300570f4f17	$t:public_label	public	$t:public_descriptio
 --
 
 COPY public.directus_presets (id, bookmark, "user", role, collection, search, layout, layout_query, layout_options, refresh_interval, filter, icon, color) FROM stdin;
-2	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	users	\N	\N	{"tabular":{"page":1}}	\N	\N	\N	bookmark	\N
 1	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	work_experiences	\N	\N	{"tabular":{"fields":["name","position","location","description","start_date","end_date","status"],"page":1}}	{"tabular":{"widths":{"name":126.5999755859375,"position":140.79998779296875,"location":114.4000244140625,"description":160.79998779296875,"start_date":117,"end_date":120,"status":91}}}	\N	\N	bookmark	\N
+3	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	profiles	\N	\N	{"tabular":{"page":1,"fields":["name","title","core_stack","subtitle"]}}	{"tabular":{"widths":{"name":126.66665649414062,"title":231.66668701171875,"core_stack":278.3333740234375,"subtitle":343.3333740234375}}}	\N	\N	bookmark	\N
 6	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	tech_skills	\N	tabular	{"tabular":{"fields":["name","category","years_experience","level","status","profile"],"page":1}}	{"tabular":{"widths":{"name":273,"category":183,"years_experience":101.4000244140625,"level":119.2000732421875,"status":96,"profile":124},"align":{"status":"left"}}}	\N	\N	bookmark	\N
 8	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	highlights	\N	\N	{"tabular":{"fields":["text","fa_icon","status","profile"],"page":1}}	{"tabular":{"widths":{"text":584.800048828125,"fa_icon":99.4000244140625,"status":91,"profile":121.7999267578125}}}	\N	\N	bookmark	\N
 7	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	tech_skill_categories	\N	\N	{"tabular":{"fields":["name","status"]}}	{"tabular":{"widths":{"name":708.199951171875,"status":98.6666259765625}}}	\N	\N	bookmark	\N
 4	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	languages	\N	\N	{"tabular":{"page":1,"fields":["name","language_code","proficiency","status","profile"]}}	{"tabular":{"widths":{"name":287.60003662109375,"language_code":165.20001220703125,"proficiency":176.4000244140625,"status":96.4000244140625,"profile":132.39990234375}}}	\N	\N	bookmark	\N
 9	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	tech_skill_types	\N	\N	{"tabular":{"fields":["name","status"]}}	{"tabular":{"widths":{"name":696.3999633789062,"status":118}}}	\N	\N	bookmark	\N
 11	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	work_experience_achievements	\N	\N	{"tabular":{"fields":["title","description","work_experience","status"],"page":1}}	{"tabular":{"widths":{"title":213.5999755859375,"description":388,"work_experience":162.2000732421875,"status":90}}}	\N	\N	bookmark	\N
-3	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	profiles	\N	\N	{"tabular":{"page":1,"fields":["name","title","core_stack","subtitle"]}}	{"tabular":{"widths":{"name":126.66665649414062,"title":231.66668701171875,"core_stack":278.3333740234375,"subtitle":343.3333740234375}}}	\N	\N	bookmark	\N
 10	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	soft_skills	\N	\N	{"tabular":{"page":1,"fields":["name","status","profile"]}}	{"tabular":{"widths":{"name":587,"status":98.5999755859375,"profile":125.199951171875}}}	\N	\N	bookmark	\N
 12	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	dev_methodologies	\N	\N	{"tabular":{"page":1,"fields":["name","status","profile"]}}	{"tabular":{"widths":{"name":591,"status":94.5999755859375,"profile":132.60003662109375}}}	\N	\N	bookmark	\N
 \.
@@ -4078,6 +3884,9 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 1507	1550	work_experience_achievements	dbbfe692-24b5-42ee-be27-bf901d1bb5c9	{"id":"dbbfe692-24b5-42ee-be27-bf901d1bb5c9","status":"published","sort":null,"date_created":"2025-10-19T18:49:52.949Z","date_updated":"2025-10-19T18:50:01.072Z","title":"OAuth Zoom Integration","description":"Enabled clients to organize automatically managed online events with Zoom, by integrating Zoom with OAuth in Django","work_experience":"a37c89e0-2b6d-44e1-911a-c1399611562a","fa_icon":null,"tags":["fullstack-django","fullstack-python"]}	{"status":"published","work_experience":"a37c89e0-2b6d-44e1-911a-c1399611562a","date_updated":"2025-10-19T18:50:01.072Z"}	\N	\N
 1508	1551	work_experience_achievements	b48c5e14-e385-4ee6-8965-32ce56bbfaa2	{"work_experience":"a37c89e0-2b6d-44e1-911a-c1399611562a","status":"published","description":"Processed tens of millions in payment transactions, by building payment service integrations (Mollie, Pay.nl, Paypal)","tags":["fullstack-django"],"title":"Payment Integrations"}	{"work_experience":"a37c89e0-2b6d-44e1-911a-c1399611562a","status":"published","description":"Processed tens of millions in payment transactions, by building payment service integrations (Mollie, Pay.nl, Paypal)","tags":["fullstack-django"],"title":"Payment Integrations"}	\N	\N
 1509	1552	work_experience_achievements	298270af-97ca-461f-8497-b7f24c9a56bf	{"work_experience":"a37c89e0-2b6d-44e1-911a-c1399611562a","status":"published","description":"Facilitated market expansion to eurozone, by implementing Django i18n features (language, country & timezone)","title":"Internationalization","fa_icon":"globe","tags":["fullstack-django"]}	{"work_experience":"a37c89e0-2b6d-44e1-911a-c1399611562a","status":"published","description":"Facilitated market expansion to eurozone, by implementing Django i18n features (language, country & timezone)","title":"Internationalization","fa_icon":"globe","tags":["fullstack-django"]}	\N	\N
+1510	1553	directus_collections	work_technologies	{"collection":"work_technologies"}	{"collection":"work_technologies"}	\N	\N
+1511	1555	directus_collections	work_highlights	{"collection":"work_highlights"}	{"collection":"work_highlights"}	\N	\N
+1512	1556	directus_collections	work_highlights	{"collection":"work_highlights","icon":null,"note":null,"display_template":null,"hidden":true,"singleton":false,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":null,"accountability":"all","color":null,"item_duplication_fields":null,"sort":null,"group":null,"collapse":"open","preview_url":null,"versioning":false}	{"hidden":true}	\N	\N
 \.
 
 
@@ -4096,14 +3905,14 @@ COPY public.directus_roles (id, name, icon, description, parent) FROM stdin;
 
 COPY public.directus_sessions (token, "user", expires, ip, user_agent, share, origin, next_token) FROM stdin;
 jyEi42Iib3ayUhuKtRg8crSw0qNgHJgwHBGyXgh2IXu6VhJFRchsBiOMADOe89TD	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-22 11:36:02.247+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	\N	http://localhost:8055	\N
+ViRXFiuPoBoVRb5tYNR2Gzwjg0ZqCyLOsZsfV2RfWa7_S0plwPyczMIYzYKE-DBm	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-20 09:15:17.789+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	\N	http://localhost:8055	fyDcRvxh-SoggPHJEPTZNOV6UB_vYGLjE8e2aLWuhiGLrJILJBKGR7lWwYTApcLK
 y-WO4WkHlhiznOiATKO-RjKK9Z3HEIlKHRYr0_u4sFB0eeLv84Ny2T4aqWxQ3eCM	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-22 16:20:39.984+00	172.18.0.5	node	\N	\N	\N
 pVX2TAe16YVkkcVw9TWxFZh-iyhGwVjppd9O13Ta1Qa1TKHbszuDvPeMz6S5szXg	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-22 16:20:44.345+00	172.18.0.5	node	\N	\N	\N
 jpJiV5kskoW5LlYVhxbzagfug_ZbrJ8irKY3a3RneaGmmQoHb9R-91GCFCG35EeL	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-22 16:20:49.72+00	172.18.0.5	node	\N	\N	\N
 kA-S7XRDdk9qfWnTlPvsSX9dImd6TfBgEH0sve42Wkv76kWjg7QSDcBlLtdEzCW4	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-22 16:20:54.471+00	172.18.0.5	node	\N	\N	\N
 kh42EQlknOAg1mgK2LdARxcW3pzcBUD-VB7HqL8iJawgHPuyyxOTALOU9snCsUra	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-22 16:21:15.524+00	172.18.0.5	node	\N	\N	\N
 NYWuxTb_-k1RbMjrV7UHdCDRg82yDOpx1-IQ5gZP-vt7zmyc526B58aFbj2HDdnq	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-22 16:29:05.39+00	172.18.0.5	node	\N	\N	\N
-sD5CivuR9vaZrQ8rpTMJGh2UVCHSVpp11Gb3DaYSM8fxjj1L_7KiF7cJ3lkTjLsl	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-19 18:51:07.709+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	\N	http://localhost:8055	ViRXFiuPoBoVRb5tYNR2Gzwjg0ZqCyLOsZsfV2RfWa7_S0plwPyczMIYzYKE-DBm
-ViRXFiuPoBoVRb5tYNR2Gzwjg0ZqCyLOsZsfV2RfWa7_S0plwPyczMIYzYKE-DBm	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-20 18:50:57.709+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	\N	http://localhost:8055	\N
+fyDcRvxh-SoggPHJEPTZNOV6UB_vYGLjE8e2aLWuhiGLrJILJBKGR7lWwYTApcLK	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-21 09:15:07.789+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	\N	http://localhost:8055	\N
 \.
 
 
@@ -4140,7 +3949,7 @@ c530a32f-84cb-4ab9-8a61-7a12a5bcb7e6	en-US	draft	Draft
 --
 
 COPY public.directus_users (id, first_name, last_name, email, password, location, title, description, tags, avatar, language, tfa_secret, status, role, token, last_access, last_page, provider, external_identifier, auth_data, email_notifications, appearance, theme_dark, theme_light, theme_light_overrides, theme_dark_overrides, text_direction) FROM stdin;
-157238bb-6930-4f26-be9c-8b31a9e11ab8	Admin	User	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-10-19 18:50:57.713+00	/content/profiles/0eeb942b-e35a-44e8-a37d-52b9cdb24309	default	\N	\N	t	\N	\N	\N	\N	\N	auto
+157238bb-6930-4f26-be9c-8b31a9e11ab8	Admin	User	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-10-20 09:15:07.791+00	/settings/data-model	default	\N	\N	t	\N	\N	\N	\N	\N	auto
 \.
 
 
@@ -4191,14 +4000,6 @@ b636a780-6a9f-4342-adfa-eed183447a17	published	2025-10-17 12:03:30.884+00	\N	Dut
 
 COPY public.profiles (id, date_created, date_updated, name, title, location, phone_number, email_address, personal_website, subtitle, core_stack, linkedin_profile, github_profile, stackoverflow_profile, headline, profile_picture) FROM stdin;
 0eeb942b-e35a-44e8-a37d-52b9cdb24309	2025-10-15 16:51:41.394+00	2025-10-19 18:10:23.88+00	Rik Wanders	Senior Full Stack Developer	Ronda, Spain	+31649118511	rik@rikwanders.tech	https://www.rikwanders.tech/	Building scalable web applications for remote teams	Python • Node.js • CI/CD • DevOps	https://www.linkedin.com/in/rik-wanders-software	https://github.com/gitaarik	https://stackoverflow.com/users/1248175/gitaarik	Full Stack Developer 12+ years expertise in Python, Django, Node.js, React, CI/CD, DevOps, UX, AI	e12c8ec6-2cbe-4672-98e9-a33d6ed5869a
-\.
-
-
---
--- Data for Name: resume_tokens; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.resume_tokens (token, name, description, "resumeType", "expiresAt", "viewCount", "maxViews", "isActive", "createdBy", "createdAt", "updatedAt", id) FROM stdin;
 \.
 
 
@@ -4286,14 +4087,6 @@ COPY public.tech_skills (id, status, sort, date_created, date_updated, profile, 
 
 
 --
--- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.users (email, password, "firstName", "lastName", "isEmailVerified", "emailVerifyToken", "passwordResetToken", "passwordResetExpiry", "createdAt", "updatedAt", role, id) FROM stdin;
-\.
-
-
---
 -- Data for Name: work_experience_achievements; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -4324,42 +4117,10 @@ Chipta	Amsterdam	Ticketing company	Lead Developer	Led teams of 3-5 developers at
 
 
 --
--- Data for Name: work_highlight_tags; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.work_highlight_tags ("highlightId", "tagName", "createdAt", id) FROM stdin;
-\.
-
-
---
--- Data for Name: work_highlights; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.work_highlights ("workExperienceId", title, description, "iconName", "sortOrder", "createdAt", "updatedAt", id) FROM stdin;
-\.
-
-
---
--- Data for Name: work_projects; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.work_projects ("workExperienceId", name, "startDate", "endDate", summary, description, outcome, "sortOrder", "createdAt", "updatedAt", id) FROM stdin;
-\.
-
-
---
--- Data for Name: work_technologies; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.work_technologies ("workExperienceId", "technologyName", "sortOrder", "createdAt", id) FROM stdin;
-\.
-
-
---
 -- Name: directus_activity_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_activity_id_seq', 1552, true);
+SELECT pg_catalog.setval('public.directus_activity_id_seq', 1560, true);
 
 
 --
@@ -4401,7 +4162,7 @@ SELECT pg_catalog.setval('public.directus_relations_id_seq', 15, true);
 -- Name: directus_revisions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_revisions_id_seq', 1509, true);
+SELECT pg_catalog.setval('public.directus_revisions_id_seq', 1512, true);
 
 
 --
@@ -4430,30 +4191,6 @@ SELECT pg_catalog.setval('public.tech_skill_types_id_seq', 13, true);
 --
 
 SELECT pg_catalog.setval('public.tech_skills_id_seq', 24, true);
-
-
---
--- Name: _prisma_migrations _prisma_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public._prisma_migrations
-    ADD CONSTRAINT _prisma_migrations_pkey PRIMARY KEY (id);
-
-
---
--- Name: ai_refinements ai_refinements_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.ai_refinements
-    ADD CONSTRAINT ai_refinements_pkey PRIMARY KEY (id);
-
-
---
--- Name: ai_responses ai_responses_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.ai_responses
-    ADD CONSTRAINT ai_responses_pkey PRIMARY KEY (id);
 
 
 --
@@ -4753,14 +4490,6 @@ ALTER TABLE ONLY public.profiles
 
 
 --
--- Name: resume_tokens resume_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.resume_tokens
-    ADD CONSTRAINT resume_tokens_pkey PRIMARY KEY (id);
-
-
---
 -- Name: soft_skills soft_skills_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -4793,14 +4522,6 @@ ALTER TABLE ONLY public.tech_skills
 
 
 --
--- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.users
-    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
-
-
---
 -- Name: work_experience_achievements work_experience_achievements_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -4814,68 +4535,6 @@ ALTER TABLE ONLY public.work_experience_achievements
 
 ALTER TABLE ONLY public.work_experiences
     ADD CONSTRAINT work_experiences_pkey PRIMARY KEY (id);
-
-
---
--- Name: work_highlight_tags work_highlight_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.work_highlight_tags
-    ADD CONSTRAINT work_highlight_tags_pkey PRIMARY KEY (id);
-
-
---
--- Name: work_highlights work_highlights_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.work_highlights
-    ADD CONSTRAINT work_highlights_pkey PRIMARY KEY (id);
-
-
---
--- Name: work_projects work_projects_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.work_projects
-    ADD CONSTRAINT work_projects_pkey PRIMARY KEY (id);
-
-
---
--- Name: work_technologies work_technologies_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.work_technologies
-    ADD CONSTRAINT work_technologies_pkey PRIMARY KEY (id);
-
-
---
--- Name: resume_tokens_token_key; Type: INDEX; Schema: public; Owner: postgres
---
-
-CREATE UNIQUE INDEX resume_tokens_token_key ON public.resume_tokens USING btree (token);
-
-
---
--- Name: users_email_key; Type: INDEX; Schema: public; Owner: postgres
---
-
-CREATE UNIQUE INDEX users_email_key ON public.users USING btree (email);
-
-
---
--- Name: ai_refinements ai_refinements_responseId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.ai_refinements
-    ADD CONSTRAINT "ai_refinements_responseId_fkey" FOREIGN KEY ("responseId") REFERENCES public.ai_responses(id) ON UPDATE CASCADE ON DELETE CASCADE;
-
-
---
--- Name: ai_responses ai_responses_userId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.ai_responses
-    ADD CONSTRAINT "ai_responses_userId_fkey" FOREIGN KEY ("userId") REFERENCES public.users(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
@@ -5255,14 +4914,6 @@ ALTER TABLE ONLY public.profiles
 
 
 --
--- Name: resume_tokens resume_tokens_createdBy_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.resume_tokens
-    ADD CONSTRAINT "resume_tokens_createdBy_fkey" FOREIGN KEY ("createdBy") REFERENCES public.users(id) ON UPDATE CASCADE ON DELETE CASCADE;
-
-
---
 -- Name: soft_skills soft_skills_profile_foreign; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -5319,40 +4970,8 @@ ALTER TABLE ONLY public.work_experiences
 
 
 --
--- Name: work_highlight_tags work_highlight_tags_highlightId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.work_highlight_tags
-    ADD CONSTRAINT "work_highlight_tags_highlightId_fkey" FOREIGN KEY ("highlightId") REFERENCES public.work_highlights(id) ON UPDATE CASCADE ON DELETE CASCADE;
-
-
---
--- Name: work_highlights work_highlights_workExperienceId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.work_highlights
-    ADD CONSTRAINT "work_highlights_workExperienceId_fkey" FOREIGN KEY ("workExperienceId") REFERENCES public.work_experiences(id) ON UPDATE CASCADE ON DELETE CASCADE;
-
-
---
--- Name: work_projects work_projects_workExperienceId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.work_projects
-    ADD CONSTRAINT "work_projects_workExperienceId_fkey" FOREIGN KEY ("workExperienceId") REFERENCES public.work_experiences(id) ON UPDATE CASCADE ON DELETE CASCADE;
-
-
---
--- Name: work_technologies work_technologies_workExperienceId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.work_technologies
-    ADD CONSTRAINT "work_technologies_workExperienceId_fkey" FOREIGN KEY ("workExperienceId") REFERENCES public.work_experiences(id) ON UPDATE CASCADE ON DELETE CASCADE;
-
-
---
 -- PostgreSQL database dump complete
 --
 
-\unrestrict hcDVvM0YFNhPBL3v3jmXpTzZOHlaAnCuCnxIkZOTGRhmoBBXhdgSUdbFJk5k7Cg
+\unrestrict dAq70MZ7RUpl6xVa4CFeoW3frzhTpplLY36sV0S2f2ph1ExkQzncqiqPBuU2U8n
 
