@@ -1,5 +1,0 @@
-- Run `docker compose up`
-- Directus will start
-- Open the web address logged in the shell
-- Login details are in `docker-compose.yaml`
-- It connects to the Prisma production DB
