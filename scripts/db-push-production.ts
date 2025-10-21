@@ -1,0 +1,160 @@
+import { execSync } from "child_process";
+import * as dotenvx from "@dotenvx/dotenvx";
+import path from "path";
+
+/**
+ * Pushes specified tables from dev database to production database.
+ * Usage: npx tsx scripts/sync-db-tables.ts
+ *
+ * The script:
+ * 1. Loads env vars from .env (dev DB)
+ * 2. Loads encrypted env vars from .env.production using DOTENV_PRIVATE_KEY_PRODUCTION
+ * 3. Dumps specified tables from dev DB
+ * 4. Restores them to production DB (overwriting if they exist)
+ *
+ * Tables synced:
+ * - application_questions
+ * - dev_methodologies
+ * - highlights
+ * - languages
+ * - profiles
+ * - soft_skills
+ * - tech_skill_categories
+ * - tech_skill_types
+ * - tech_skills
+ * - work_experience_achievements
+ * - work_experience_technologies
+ * - work_experiences
+ */
+
+const TABLES_TO_SYNC = [
+  "application_questions",
+  "dev_methodologies",
+  "highlights",
+  "languages",
+  "profiles",
+  "soft_skills",
+  "tech_skill_categories",
+  "tech_skill_types",
+  "tech_skills",
+  "work_experience_achievements",
+  "work_experience_technologies",
+  "work_experiences",
+];
+
+console.log("📋 Tables to sync:", TABLES_TO_SYNC.join(", "));
+
+// Load dev database URL from .env
+const devDbUrl = dotenvx.get("DATABASE_URL");
+if (!devDbUrl) {
+  console.error("❌ Error: DATABASE_URL not found in .env (dev database)");
+  process.exit(1);
+}
+
+// Load production database URL from .env.production with decryption
+// The DOTENV_PRIVATE_KEY_PRODUCTION env var must be set for decryption
+const prodEnvFile = path.resolve(process.cwd(), ".env.production");
+const prodConfig = dotenvx.config({ path: prodEnvFile });
+
+if (prodConfig.error) {
+  console.error("❌ Error loading .env.production:", prodConfig.error);
+  process.exit(1);
+}
+
+const prodDbUrl = prodConfig.parsed?.DATABASE_URL;
+if (!prodDbUrl) {
+  console.error("❌ Error: DATABASE_URL not found in .env.production");
+  console.error(
+    "Make sure DOTENV_PRIVATE_KEY_PRODUCTION is set to decrypt the values",
+  );
+  process.exit(1);
+}
+
+console.log("✅ Dev DB loaded");
+console.log("✅ Production DB loaded and decrypted");
+
+// Create temporary dump file
+const tmpDumpFile = `/tmp/db-sync-${Date.now()}.sql`;
+
+try {
+  // Step 1: Dump tables from dev database
+  console.log("\n📤 Dumping tables from dev database...");
+
+  const dumpCmd = [
+    "pg_dump",
+    "--data-only", // Only dump data, not schema
+    "--no-privileges", // Exclude privilege commands
+    "--no-owner", // Exclude owner commands
+    ...TABLES_TO_SYNC.map((table) => `--table=${table}`), // Specify which tables to dump
+  ];
+
+  const dumpCmdLine = `${dumpCmd.join(" ")} "${devDbUrl}" > "${tmpDumpFile}"`;
+
+  console.log("executing:", dumpCmdLine);
+
+  execSync(dumpCmdLine, {
+    stdio: "inherit",
+    env: { ...process.env, PGPASSWORD: extractPassword(devDbUrl) },
+  });
+
+  console.log(`✅ Tables dumped to ${tmpDumpFile}`);
+
+  // Step 2: Restore tables to production database
+  console.log("\n📥 Restoring tables to production database...");
+  console.log("⚠️  This will override existing data in these tables!");
+
+  // Drop tables first to ensure clean restore
+  for (const table of TABLES_TO_SYNC) {
+    try {
+      console.log(`   Dropping table '${table}' in production...`);
+      execSync(
+        `psql "${prodDbUrl}" -c "DROP TABLE IF EXISTS \\"${table}\\" CASCADE;"`,
+        {
+          stdio: "pipe",
+          env: { ...process.env, PGPASSWORD: extractPassword(prodDbUrl) },
+        },
+      );
+    } catch (err) {
+      console.warn(
+        `   ⚠️  Could not drop table '${table}':`,
+        (err as Error).message,
+      );
+    }
+  }
+
+  // Restore the dump
+  execSync(`psql "${prodDbUrl}" < "${tmpDumpFile}"`, {
+    stdio: "inherit",
+    env: { ...process.env, PGPASSWORD: extractPassword(prodDbUrl) },
+  });
+
+  console.log("\n✅ Tables restored to production database");
+
+  // Cleanup
+  execSync(`rm -f "${tmpDumpFile}"`);
+  console.log("✅ Temporary files cleaned up");
+
+  console.log("\n🎉 Sync complete!");
+} catch (error) {
+  console.error(
+    "\n❌ Error during sync:",
+    error instanceof Error ? error.message : String(error),
+  );
+
+  // Cleanup on error
+  try {
+    execSync(`rm -f "${tmpDumpFile}"`);
+  } catch {
+    // Ignore cleanup errors
+  }
+
+  process.exit(1);
+}
+
+/**
+ * Extract password from a PostgreSQL connection string
+ */
+function extractPassword(connectionString: string): string {
+  const match = connectionString.match(/:([^@]+)@/);
+  return match ? match[1] : "";
+}
