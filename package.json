@@ -4,8 +4,8 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "dotenvx": "dotenvx",
-    "docker:dev": "dotenvx run -- vite dev --host",
+    "docker:dev": "docker-compose -f docker-compose.dev.yml up",
+    "docker:dev:init": "dotenvx run -- vite dev --host",
     "docker:build-app": "docker-compose exec app npm run build",
     "docker:export-resume-pdf": "docker-compose exec app npx tsx scripts/export-resume-pdf.ts",
     "docker:pull-db-schema": "docker-compose exec app npx prisma db pull",
