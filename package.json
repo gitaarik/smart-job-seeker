@@ -13,6 +13,7 @@
     "docker:db:backup": "docker-compose exec database ./scripts/dump-db.sh",
     "docker:db:restore": "docker-compose exec database ./scripts/restore-last-db-dump.sh",
     "docker:db:migrate": "docker-compose exec app npx prisma migrate deploy",
+    "docker:admin:production": "npx dotenvx run -f .env.production -- docker compose -f docker-compose.directus.yml up",
     "build": "npm i && dotenvx run -- prisma migrate deploy && dotenvx run -- prisma generate && dotenvx run -- vite build",
     "rebuild": "npm ci && npm run build",
     "dev-concur": "concurrently --names dev-web,dev-db,dev-directus --prefix-colors red,blue,cyan npm:dev-web npm:dev-db npm:dev-directus",
