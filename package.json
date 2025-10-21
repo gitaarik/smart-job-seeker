@@ -14,7 +14,6 @@
     "docker:db:backup": "docker-compose exec database ./scripts/dump-db.sh",
     "docker:db:restore": "docker-compose exec database ./scripts/restore-last-db-dump.sh",
     "docker:db:migrate": "docker-compose exec app npx prisma migrate deploy",
-    "docker:admin:cache:clear": "docker compose exec admin npx directus cache clear",
     "docker:admin:production": "npx dotenvx run -f .env.production -- docker compose -f docker-compose.directus.yml up",
     "build": "npm i && dotenvx run -- prisma migrate deploy && dotenvx run -- prisma generate && dotenvx run -- vite build",
     "rebuild": "npm ci && npm run build",
