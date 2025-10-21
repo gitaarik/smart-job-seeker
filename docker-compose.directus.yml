@@ -11,7 +11,7 @@ services:
       - ./directus/uploads:/directus/uploads
       - ./directus/extensions:/directus/extensions
     depends_on:
-      cache:
+      admin-cache:
         condition: service_healthy
     environment:
       ADMIN_EMAIL: ${ADMIN_EMAIL}
@@ -34,9 +34,9 @@ services:
       CACHE_ENABLED: "true"
       CACHE_AUTO_PURGE: "true"
       CACHE_STORE: "redis"
-      REDIS: "redis://cache:6379"
+      REDIS: "redis://admin-cache:6379"
 
-  cache:
+  admin-cache:
     image: redis:6
     healthcheck:
       test: ["CMD-SHELL", "[ $$(redis-cli ping) = 'PONG' ]"]

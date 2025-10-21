@@ -56,6 +56,11 @@ services:
       database:
         condition: service_healthy
 
+  admin-cache:
+    extends:
+      file: docker-compose.directus.yml
+      service: admin-cache
+
   prisma-studio:
     image: node:20
     working_dir: /app
