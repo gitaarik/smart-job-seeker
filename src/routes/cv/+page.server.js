@@ -1,4 +1,14 @@
-import { redirect } from '@sveltejs/kit';
+import { prisma } from "$lib/db.js";
 
 export async function load({ locals }) {
+  const profiles = await prisma.profiles.findMany({
+    include: {
+      languages: true,
+    },
+  });
+
+  if (profiles.length) {
+    const profile = profiles[0];
+    return { profile };
+  }
 }

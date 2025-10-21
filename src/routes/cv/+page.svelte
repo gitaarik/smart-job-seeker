@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { PageData } from './$types'
   import HeaderSection from "./HeaderSection.svelte";
   import InfoMenu from "./InfoMenu.svelte";
   import OverviewSection from "./OverviewSection.svelte";
@@ -27,6 +28,8 @@
     activeSection = event.detail.section;
   }
 
+  export let data: PageData;
+
   // Listen for section change events
   import { onMount } from "svelte";
 
@@ -40,7 +43,7 @@
 
 <svelte:head>
   <title>
-    Rik Wanders - Senior Full Stack Developer
+    {data.profile.name} - {data.profile.title}
   </title>
   <meta
     name="viewport"
@@ -58,9 +61,9 @@
   <div
     class="flex flex-col gap-10 print:gap-7 py-6 px-4 print:p-0 max-w-[800px] mx-auto"
   >
-    <HeaderSection />
+    <HeaderSection profile={data.profile} />
 
-    <OverviewSection />
+    <OverviewSection profile={data.profile} />
     <TechnicalExpertiseSection />
     <PersonalityAndMethodologies />
     <ProfessionalExperience />

@@ -1,6 +1,7 @@
 <script lang="ts">
   import Logo from "$lib/components/Logo.svelte";
-  import { resume } from "$lib/data/resume";
+
+  export let profile;
 </script>
 
 <header class="flex flex-col items-center">
@@ -11,10 +12,10 @@
   <h1
     class="text-3xl font-medium mt-2 mb-4"
   >
-    {resume.basics.name}
+    {profile.name}
   </h1>
 
   <h2 class="text-xl">
-    {resume.basics.label}
+    {profile.title}
   </h2>
 </header>

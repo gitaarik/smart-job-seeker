@@ -10,39 +10,42 @@
     faUser,
   } from "@fortawesome/free-solid-svg-icons";
   import { faLinkedin } from "@fortawesome/free-brands-svg-icons";
-  import { resume } from "$lib/data/resume";
 
-  const languageText = resume.languages.map((lang) =>
-    `${lang.language}: ${lang.fluency}`
+  let props = $props();
+  const profile = props.profile;
+
+  console.log("lanagues:");
+  console.log(profile.languages);
+
+  const languageText = profile.languages.map((lang) =>
+    `${lang.name}: ${lang.proficiency}`
   ).join(", ");
 
-  const linkedInProfile = resume.basics.profiles.find((p) =>
-    p.network === "LinkedIn"
-  );
+  const linkedInProfile = profile.linkedin_profile;
 
   const profileData = [
-    { icon: faMapMarkerAlt, text: resume.basics.location.address },
+    { icon: faMapMarkerAlt, text: profile.location },
     { icon: faLanguage, text: languageText },
     {
       icon: faPhone,
-      text: resume.basics.phone,
-      href: `tel:${resume.basics.phone}`,
+      text: profile.phone_number,
+      href: `tel:${profile.phone_number}`,
     },
     {
       icon: faEnvelope,
-      text: resume.basics.email,
-      href: `mailto:${resume.basics.email}`,
+      text: profile.email_address,
+      href: `mailto:${profile.email_address}`,
     },
     {
       icon: faGlobe,
-      text: resume.basics.url.replace("https://", ""),
-      href: resume.basics.url,
+      text: profile.personal_website.replace("https://", ""),
+      href: profile.personal_website,
       target: "_blank",
     },
     {
       icon: faLinkedin,
-      text: linkedInProfile?.url.replace("https://www.", "") || "",
-      href: linkedInProfile?.url || "",
+      text: linkedInProfile?.replace("https://www.", "") || "",
+      href: linkedInProfile || "",
       target: "_blank",
     },
   ];
