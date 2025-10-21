@@ -123,6 +123,7 @@ try {
     "-T", // Disable pseudo-TTY allocation
     DEV_DB_CONTAINER,
     "pg_dump",
+    "-F", "p", // Plain text format
     "--no-privileges", // Exclude privilege commands
     "--no-owner", // Exclude owner commands
     "--clean", // Include DROP statements for clean restore
