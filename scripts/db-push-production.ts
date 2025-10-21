@@ -4,12 +4,12 @@ import path from "path";
 
 /**
  * Pushes specified tables from dev database to production database.
- * Usage: npx tsx scripts/sync-db-tables.ts
+ * Usage: DOTENV_PRIVATE_KEY_PRODUCTION=<key> npx tsx scripts/db-push-production.ts
  *
  * The script:
- * 1. Loads env vars from .env (dev DB)
+ * 1. Loads dev DB credentials from .env using dotenvx
  * 2. Loads encrypted env vars from .env.production using DOTENV_PRIVATE_KEY_PRODUCTION
- * 3. Dumps specified tables from dev DB
+ * 3. Uses docker compose exec to dump tables from dev DB (running in database container)
  * 4. Restores them to production DB (overwriting if they exist)
  *
  * Tables synced:
@@ -25,6 +25,10 @@ import path from "path";
  * - work_experience_achievements
  * - work_experience_technologies
  * - work_experiences
+ *
+ * Requirements:
+ * - Docker compose services must be running
+ * - DOTENV_PRIVATE_KEY_PRODUCTION env var must be set
  */
 
 const TABLES_TO_SYNC = [
@@ -44,10 +48,15 @@ const TABLES_TO_SYNC = [
 
 console.log("📋 Tables to sync:", TABLES_TO_SYNC.join(", "));
 
-// Load dev database URL from .env
-const devDbUrl = dotenvx.get("DATABASE_URL");
-if (!devDbUrl) {
-  console.error("❌ Error: DATABASE_URL not found in .env (dev database)");
+// Load dev DB connection details from .env (using dotenvx)
+const DEV_DB_USER = dotenvx.get("DB_USER");
+const DEV_DB_PASSWORD = dotenvx.get("DB_PASSWORD");
+const DEV_DB_NAME = dotenvx.get("DB_DATABASE");
+const DEV_DB_CONTAINER = "database";
+
+if (!DEV_DB_USER || !DEV_DB_PASSWORD || !DEV_DB_NAME) {
+  console.error("❌ Error: Missing dev DB credentials in .env");
+  console.error("Required: DB_USER, DB_PASSWORD, DB_DATABASE");
   process.exit(1);
 }
 
@@ -61,40 +70,48 @@ if (prodConfig.error) {
   process.exit(1);
 }
 
-const prodDbUrl = prodConfig.parsed?.DATABASE_URL;
+const prodDbUrl = prodConfig.parsed?.POSTGRES_URL;
 if (!prodDbUrl) {
-  console.error("❌ Error: DATABASE_URL not found in .env.production");
+  console.error("❌ Error: POSTGRES_URL not found in .env.production");
   console.error(
     "Make sure DOTENV_PRIVATE_KEY_PRODUCTION is set to decrypt the values",
   );
   process.exit(1);
 }
 
-console.log("✅ Dev DB loaded");
+console.log("✅ Dev DB credentials loaded from .env");
 console.log("✅ Production DB loaded and decrypted");
 
 // Create temporary dump file
 const tmpDumpFile = `/tmp/db-sync-${Date.now()}.sql`;
 
 try {
-  // Step 1: Dump tables from dev database
-  console.log("\n📤 Dumping tables from dev database...");
+  // Step 1: Dump tables from dev database via docker compose exec
+  console.log("\n📤 Dumping tables from dev database (via docker)...");
 
   const dumpCmd = [
+    "docker",
+    "compose",
+    "exec",
+    "-T", // Disable pseudo-TTY allocation
+    DEV_DB_CONTAINER,
     "pg_dump",
     "--data-only", // Only dump data, not schema
     "--no-privileges", // Exclude privilege commands
     "--no-owner", // Exclude owner commands
+    "-U",
+    DEV_DB_USER,
     ...TABLES_TO_SYNC.map((table) => `--table=${table}`), // Specify which tables to dump
+    DEV_DB_NAME,
   ];
 
-  const dumpCmdLine = `${dumpCmd.join(" ")} "${devDbUrl}" > "${tmpDumpFile}"`;
+  const dumpCmdLine = dumpCmd.join(" ");
 
-  console.log("executing:", dumpCmdLine);
+  console.log("executing docker dump...");
 
-  execSync(dumpCmdLine, {
-    stdio: "inherit",
-    env: { ...process.env, PGPASSWORD: extractPassword(devDbUrl) },
+  execSync(`${dumpCmdLine} > "${tmpDumpFile}"`, {
+    stdio: ["pipe", "pipe", "inherit"],
+    env: { ...process.env, PGPASSWORD: DEV_DB_PASSWORD },
   });
 
   console.log(`✅ Tables dumped to ${tmpDumpFile}`);
@@ -111,7 +128,7 @@ try {
         `psql "${prodDbUrl}" -c "DROP TABLE IF EXISTS \\"${table}\\" CASCADE;"`,
         {
           stdio: "pipe",
-          env: { ...process.env, PGPASSWORD: extractPassword(prodDbUrl) },
+          env: { ...process.env },
         },
       );
     } catch (err) {
@@ -125,7 +142,7 @@ try {
   // Restore the dump
   execSync(`psql "${prodDbUrl}" < "${tmpDumpFile}"`, {
     stdio: "inherit",
-    env: { ...process.env, PGPASSWORD: extractPassword(prodDbUrl) },
+    env: { ...process.env },
   });
 
   console.log("\n✅ Tables restored to production database");
@@ -149,12 +166,4 @@ try {
   }
 
   process.exit(1);
-}
-
-/**
- * Extract password from a PostgreSQL connection string
- */
-function extractPassword(connectionString: string): string {
-  const match = connectionString.match(/:([^@]+)@/);
-  return match ? match[1] : "";
 }
