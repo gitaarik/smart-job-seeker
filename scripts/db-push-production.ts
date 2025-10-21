@@ -96,9 +96,9 @@ try {
     "-T", // Disable pseudo-TTY allocation
     DEV_DB_CONTAINER,
     "pg_dump",
-    "--data-only", // Only dump data, not schema
     "--no-privileges", // Exclude privilege commands
     "--no-owner", // Exclude owner commands
+    "--clean", // Include DROP statements for clean restore
     "-U",
     DEV_DB_USER,
     ...TABLES_TO_SYNC.map((table) => `--table=${table}`), // Specify which tables to dump
@@ -120,26 +120,7 @@ try {
   console.log("\n📥 Restoring tables to production database...");
   console.log("⚠️  This will override existing data in these tables!");
 
-  // Drop tables first to ensure clean restore
-  for (const table of TABLES_TO_SYNC) {
-    try {
-      console.log(`   Dropping table '${table}' in production...`);
-      execSync(
-        `psql "${prodDbUrl}" -c "DROP TABLE IF EXISTS \\"${table}\\" CASCADE;"`,
-        {
-          stdio: "pipe",
-          env: { ...process.env },
-        },
-      );
-    } catch (err) {
-      console.warn(
-        `   ⚠️  Could not drop table '${table}':`,
-        (err as Error).message,
-      );
-    }
-  }
-
-  // Restore the dump
+  // Restore the dump (--clean flag in dump handles dropping old tables)
   execSync(`psql "${prodDbUrl}" < "${tmpDumpFile}"`, {
     stdio: "inherit",
     env: { ...process.env },
