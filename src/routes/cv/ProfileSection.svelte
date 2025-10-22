@@ -14,11 +14,8 @@
   let props = $props();
   const profile = props.profile;
 
-  console.log("lanagues:");
-  console.log(profile.languages);
-
   const languageText = profile.languages.map((lang) =>
-    `${lang.name}: ${lang.proficiency}`
+    `${lang.name}: ${lang.proficiency[0].toUpperCase() + lang.proficiency.slice(1)}`
   ).join(", ");
 
   const linkedInProfile = profile.linkedin_profile;
