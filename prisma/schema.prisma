@@ -8,6 +8,43 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id                  String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email               String        @unique
+  password            String
+  firstName           String?
+  lastName            String?
+  isEmailVerified     Boolean       @default(false)
+  emailVerifyToken    String?
+  passwordResetToken  String?
+  passwordResetExpiry DateTime?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  role                Role          @default(USER)
+  resumeTokens        ResumeToken[]
+  aiResponses         AiResponse[]
+
+  @@map("users")
+}
+
+model ResumeToken {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  token       String    @unique
+  name        String
+  description String?
+  resumeType  String
+  expiresAt   DateTime?
+  viewCount   Int       @default(0)
+  maxViews    Int?
+  isActive    Boolean   @default(true)
+  createdBy   String          @db.Uuid
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  creator     User      @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+
+  @@map("resume_tokens")
+}
+
 model WorkExperience {
   name                         String
   location                     String
