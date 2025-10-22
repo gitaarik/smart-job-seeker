@@ -64,7 +64,7 @@
     <HeaderSection profile={data.profile} />
 
     <OverviewSection profile={data.profile} />
-    <TechnicalExpertiseSection />
+    <TechnicalExpertiseSection profile={data.profile} />
     <PersonalityAndMethodologies />
     <ProfessionalExperience />
     <EducationSection />
