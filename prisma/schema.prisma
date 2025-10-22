@@ -621,11 +621,14 @@ model profiles {
   stackoverflow_profile String?                 @db.VarChar(255)
   headline              String?                 @db.VarChar(255)
   profile_picture       String?                 @db.Uuid
+  summary               String?
   application_questions application_questions[]
+  cheat_sheets          cheat_sheets[]
   dev_methodologies     dev_methodologies[]
   highlights            highlights[]
   languages             languages[]
   directus_files        directus_files?         @relation(fields: [profile_picture], references: [id], onUpdate: NoAction, map: "profiles_profile_picture_foreign")
+  project_stories       project_stories[]
   soft_skills           soft_skills[]
   tech_skills           tech_skills[]
   work_experiences      WorkExperience[]
@@ -702,6 +705,33 @@ model work_experience_technologies {
   name             String?         @db.VarChar(255)
   work_experience  String?         @db.Uuid
   work_experiences WorkExperience? @relation(fields: [work_experience], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "work_experience_technologies_work_experience_foreign")
+}
+
+model cheat_sheets {
+  id           String    @id @db.Uuid
+  sort         Int?
+  date_created DateTime? @db.Timestamptz(6)
+  date_updated DateTime? @db.Timestamptz(6)
+  title        String?   @db.VarChar(255)
+  content      String?
+  profile      String?   @db.Uuid
+  profiles     profiles? @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "cheat_sheets_profile_foreign")
+}
+
+model project_stories {
+  id           String    @id @db.Uuid
+  sort         Int?
+  date_created DateTime? @db.Timestamptz(6)
+  date_updated DateTime? @db.Timestamptz(6)
+  title        String?   @db.VarChar(255)
+  situation    String?
+  task         String?
+  action       String?
+  result       String?
+  reflection   String?
+  category     String?   @db.VarChar(255)
+  profile      String?   @db.Uuid
+  profiles     profiles? @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "project_stories_profile_foreign")
 }
 
 enum Role {

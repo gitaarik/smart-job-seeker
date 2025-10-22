@@ -1,11 +1,13 @@
 <script lang="ts">
   import InfoSection from "./InfoSection.svelte";
   import { faCompass } from "@fortawesome/free-solid-svg-icons";
-  import { resume } from "$lib/data/resume";
+
+  let props = $props();
+  const profile = props.profile;
 </script>
 
 <InfoSection title="Summary" icon={faCompass} class="leading-relaxed">
   <p class="mb-4">
-    {resume.basics.summary}
+    {profile.summary}
   </p>
 </InfoSection>

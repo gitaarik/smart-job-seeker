@@ -4,6 +4,7 @@ export async function load({ locals }) {
   const profiles = await prisma.profiles.findMany({
     include: {
       languages: true,
+      highlights: true,
     },
   });
 
