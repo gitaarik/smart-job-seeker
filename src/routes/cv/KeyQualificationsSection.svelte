@@ -2,6 +2,7 @@
   import InfoSection from "./InfoSection.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { faStar } from "@fortawesome/free-solid-svg-icons";
+  import { getFaIcon } from "$lib/tools/fa-icons";
 
   let props = $props();
   const profile = props.profile;
@@ -15,7 +16,7 @@
     }
       <li class="flex items-start">
         <FontAwesomeIcon
-          icon={highlight.fa_icon}
+          icon={getFaIcon(highlight.fa_icon)}
           class="mr-3 mt-1 w-4 h-4"
         />
         <span>{@html highlight.text}</span>
