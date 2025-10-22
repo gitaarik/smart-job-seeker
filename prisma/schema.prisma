@@ -22,7 +22,6 @@ model User {
   updatedAt           DateTime      @updatedAt
   role                Role          @default(USER)
   resumeTokens        ResumeToken[]
-  aiResponses         AiResponse[]
 
   @@map("users")
 }
