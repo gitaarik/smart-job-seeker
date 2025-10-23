@@ -95,15 +95,15 @@
         </div>
       </div>
 
-      {#if data.logo}
-        <div class="ml-4 flex-shrink-0">
-          <img
-            src={data.logo}
-            alt="{data.name} Logo"
-            class="h-22 w-auto border border-aqua rounded"
-          />
-        </div>
-      {/if}
+      <!-- {#if data.logo} -->
+      <!--   <div class="ml-4 flex-shrink-0"> -->
+      <!--     <img -->
+      <!--       <!-- src={getImg(data.logo)} --> -->
+      <!--       alt="{data.name} Logo" -->
+      <!--       class="h-22 w-auto border border-aqua rounded" -->
+      <!--     /> -->
+      <!--   </div> -->
+      <!-- {/if} -->
     </div>
   </header>
 
