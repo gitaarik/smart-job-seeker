@@ -10,34 +10,6 @@
   let props = $props();
   const profile = props.profile;
   console.log(profile);
-
-  const methodologies = [
-    "Agile",
-    "Scrum",
-    "Kanban",
-    "Extreme Programming (XP)",
-    "AI-accelerated development",
-    "Secure by design",
-    "Test-driven development (TDD)",
-    "User experience design (UXD)",
-    "Asynchronous Workflows",
-    "Component-based development",
-    "Extensive code reviewing",
-    "Writing and maintaining documentation",
-    "Pair-programming",
-  ];
-
-  const traits = [
-    "Responsible",
-    "Independent",
-    "Disciplined",
-    "Organized",
-    "Proactive",
-    "Creative",
-    "Problem solving",
-    "Result-oriented",
-    "Determined",
-  ];
 </script>
 
 <InfoSection title="Personality & Methodologies " icon={faUserCog}>
@@ -68,11 +40,11 @@
         <FontAwesomeIcon icon={faCogs} class="w-4 h-4 ml-2" />
       </h3>
       <ul class="flex flex-wrap gap-2">
-        {#each methodologies as methodology (methodology)}
+        {#each profile.dev_methodologies as methodology (methodology)}
           <li
             class="text-sm font-semibold px-2 py-2 bg-mist hover:bg-ice rounded-md border border-aqua transition-colors duration-200 text-center"
           >
-            {methodology}
+            {methodology.name}
           </li>
         {/each}
       </ul>

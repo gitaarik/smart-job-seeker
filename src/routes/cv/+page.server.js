@@ -12,6 +12,7 @@ export async function load({ locals }) {
         orderBy: { sort: "asc" },
       },
       soft_skills: { orderBy: { sort: "asc" } },
+      dev_methodologies: { orderBy: { sort: "asc" } },
     },
   });
 
