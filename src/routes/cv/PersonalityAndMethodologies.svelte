@@ -9,7 +9,6 @@
 
   let props = $props();
   const profile = props.profile;
-  console.log(profile);
 </script>
 
 <InfoSection title="Personality & Methodologies " icon={faUserCog}>

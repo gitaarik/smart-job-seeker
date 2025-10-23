@@ -58,8 +58,8 @@ model WorkExperience {
   start_date                   DateTime?                      @db.Date
   end_date                     DateTime?                      @db.Date
   website                      String?                        @db.VarChar(255)
-  work_experience_achievements work_experience_achievements[]
-  work_experience_technologies work_experience_technologies[]
+  achievements                 work_experience_achievements[]
+  technologies                 work_experience_technologies[]
   directus_files               directus_files?                @relation(fields: [logo], references: [id], onUpdate: NoAction, map: "work_experiences_logo_foreign")
   profiles                     profiles?                      @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "work_experiences_profile_foreign")
 

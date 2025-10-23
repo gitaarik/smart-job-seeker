@@ -38,7 +38,7 @@
     <OverviewSection profile={data.profile} />
     <TechnicalExpertiseSection profile={data.profile} />
     <PersonalityAndMethodologies profile={data.profile} />
-    <ProfessionalExperience />
+    <ProfessionalExperience profile={data.profile} />
     <EducationSection />
     <ProjectsSection />
     <HobbiesInterestsSection />

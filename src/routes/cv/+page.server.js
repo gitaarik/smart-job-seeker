@@ -13,6 +13,13 @@ export async function load({ locals }) {
       },
       soft_skills: { orderBy: { sort: "asc" } },
       dev_methodologies: { orderBy: { sort: "asc" } },
+      work_experiences: {
+        include: {
+          achievements: { orderBy: { sort: "asc" } },
+          technologies: { orderBy: { sort: "asc" } },
+        },
+        orderBy: { sort: "asc" },
+      },
     },
   });
 

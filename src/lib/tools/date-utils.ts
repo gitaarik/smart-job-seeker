@@ -1,6 +1,10 @@
-export function formatDateRangeVerbose(startDate: string, endDate?: string): string {
-  const formatDate = (date: string) => {
-    const [year, month] = date.split("-");
+export function formatDateRangeVerbose(
+  startDate: Date,
+  endDate?: Date,
+): string {
+  const formatDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
     const monthNames = [
       "Jan",
       "Feb",
@@ -23,10 +27,13 @@ export function formatDateRangeVerbose(startDate: string, endDate?: string): str
   return `${start} - ${end}`;
 }
 
-export function formatDateRangeCompact(startDate: string, endDate?: string): string {
+export function formatDateRangeCompact(
+  startDate: string,
+  endDate?: string,
+): string {
   const formatDate = (date: string) => {
     const [year, month] = date.split("-");
-    return `${month.padStart(2, '0')}/${year}`;
+    return `${month.padStart(2, "0")}/${year}`;
   };
 
   const start = formatDate(startDate);
@@ -34,13 +41,16 @@ export function formatDateRangeCompact(startDate: string, endDate?: string): str
   return `${start} - ${end}`;
 }
 
-export function formatDateRangeYear(startDate: string, endDate?: string): string {
+export function formatDateRangeYear(
+  startDate: string,
+  endDate?: string,
+): string {
   const startYear = startDate.split("-")[0];
   const endYear = endDate ? endDate.split("-")[0] : "Present";
-  
+
   if (endYear === "Present" || startYear === endYear) {
     return endYear === "Present" ? startYear : startYear;
   }
-  
+
   return `${startYear} - ${endYear}`;
 }

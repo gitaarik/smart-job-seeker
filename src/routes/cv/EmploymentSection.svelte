@@ -78,8 +78,8 @@
               />
               <span>{
                 formatDateRangeVerbose(
-                  data.startDate,
-                  data.endDate,
+                  data.start_date,
+                  data.end_date,
                 )
               }</span>
             </div>
@@ -114,12 +114,12 @@
       <p class="text-sm italic"><strong>Note:</strong> {data.note}</p>
     {/if}
 
-    {#if data.highlights.length > 0}
+    {#if data.achievements.length > 0}
       <div>
         <h4 class="text-lg print:text-base font-semibold mb-3 print:mb-2">
           Key Achievements:
         </h4>
-        <InfoBoxes items={data.highlights} />
+        <InfoBoxes items={data.achievements} />
       </div>
     {/if}
 
