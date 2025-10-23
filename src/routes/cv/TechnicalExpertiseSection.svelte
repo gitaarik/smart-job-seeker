@@ -13,15 +13,21 @@
 
     for (const skill of profile.tech_skills) {
 
-      if (!(skill.category in skills)) {
-        skills[skill.category] = []
+      const category = profile.tech_skill_categories.find(
+        (c: object) => c.id === skill.category
+      )
+
+      if (!category) {
+        continue;
       }
 
-      skills[skill.category].push(skill.name)
+      if (!(category.name in skills)) {
+        skills[category.name] = []
+      }
+
+      skills[category.name].push(skill.name)
 
     }
-
-    console.log(skills)
 
     return resume.skills.map((skill) => ({
       title: skill.name,
