@@ -1,5 +1,5 @@
-import { ADMIN_PUBLIC_URL } from "$env/static/private";
+import { getEnv } from "./get-env";
 
 export function getImg(uuid) {
-  return ADMIN_PUBLIC_URL + "assets/" + uuid;
+  return getEnv("ADMIN_PUBLIC_URL") + "assets/" + uuid;
 }
