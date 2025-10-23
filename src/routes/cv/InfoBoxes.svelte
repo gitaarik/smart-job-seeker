@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { getFaIcon } from "$lib/tools/fa-icons";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
 
   type Item = {
@@ -23,9 +24,9 @@
       <h5
         class="text-sm font-semibold mb-1 px-2 py-2 bg-aqua/13 rounded-t-md border-b-1 border-aqua flex items-center"
       >
-        {#if item.icon}
+        {#if item.icon && item.icon.split}
           <FontAwesomeIcon
-            icon={item.icon}
+            icon={getFaIcon(item.icon)}
             class="w-3 h-3 mr-2 flex-shrink-0"
           />
         {/if}

@@ -4,36 +4,44 @@
   import { faCode } from "@fortawesome/free-solid-svg-icons";
   import { resume } from "$lib/data/resume";
 
+  interface TechSkillCategory {
+    id: string | number;
+    name: string;
+  }
+
   let props = $props();
   const profile = props.profile;
 
   function getSkills() {
 
-    const skills: string[object] = {};
+    const skillsByCategory: Record<string, string[]> = {};
 
     for (const skill of profile.tech_skills) {
 
-      const category = profile.tech_skill_categories.find(
-        (c: object) => c.id === skill.category
-      )
-
-      if (!category) {
-        continue;
+      if (!(skill.category in skillsByCategory)) {
+        skillsByCategory[skill.category] = []
       }
 
-      if (!(category.name in skills)) {
-        skills[category.name] = []
-      }
-
-      skills[category.name].push(skill.name)
+      skillsByCategory[skill.category].push(skill.name)
 
     }
 
-    return resume.skills.map((skill) => ({
-      title: skill.name,
-      description: skill.keywords.join(", "),
-      icon: skill.icon,
-    }));
+    const skillsList = [];
+
+    for (const category of profile.tech_skill_categories) {
+
+      const skills = skillsByCategory[category.id];
+
+      skillsList.push({
+        title: category.name,
+        description: skills.join(", "),
+        icon: category.fa_icon,
+      })
+
+    }
+
+    return skillsList;
+
   }
 </script>
 
