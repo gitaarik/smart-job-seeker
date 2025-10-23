@@ -12,6 +12,7 @@
     faUser,
   } from "@fortawesome/free-solid-svg-icons";
   import { formatDateRangeVerbose } from "$lib/tools/date-utils";
+  import { getImg } from "$lib/tools/get-img";
 
   export let data;
   export let isFirst = false;
@@ -95,15 +96,15 @@
         </div>
       </div>
 
-      <!-- {#if data.logo} -->
-      <!--   <div class="ml-4 flex-shrink-0"> -->
-      <!--     <img -->
-      <!--       <!-- src={getImg(data.logo)} --> -->
-      <!--       alt="{data.name} Logo" -->
-      <!--       class="h-22 w-auto border border-aqua rounded" -->
-      <!--     /> -->
-      <!--   </div> -->
-      <!-- {/if} -->
+      {#if data.logo}
+        <div class="ml-4 flex-shrink-0">
+          <img
+            src={getImg(data.logo)}
+            alt="{data.name} Logo"
+            class="h-22 w-auto border border-aqua rounded"
+          />
+        </div>
+      {/if}
     </div>
   </header>
 

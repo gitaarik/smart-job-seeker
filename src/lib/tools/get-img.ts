@@ -1,5 +1,5 @@
-import { getEnv } from "./get-env";
+import { page } from "$app/state";
 
-export function getImg(uuid) {
-  return getEnv("ADMIN_PUBLIC_URL") + "assets/" + uuid;
+export function getImg(uuid: string): string {
+  return page.data.adminPublicUrl + "/assets/" + uuid;
 }
