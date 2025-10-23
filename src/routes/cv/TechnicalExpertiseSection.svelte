@@ -13,41 +13,25 @@
   const profile = props.profile;
 
   function getSkills() {
-
-    const skillsByCategory: Record<string, string[]> = {};
-
-    for (const skill of profile.tech_skills) {
-
-      if (!(skill.category in skillsByCategory)) {
-        skillsByCategory[skill.category] = []
-      }
-
-      skillsByCategory[skill.category].push(skill.name)
-
-    }
-
-    const skillsList = [];
+    const skillsByCategory = [];
 
     for (const category of profile.tech_skill_categories) {
+      const skills = category.tech_skills.map((s) => s.name);
 
-      const skills = skillsByCategory[category.id];
-
-      skillsList.push({
+      skillsByCategory.push({
         title: category.name,
-        description: skills ? skills.join(", ") : '',
+        description: skills.join(", "),
         icon: category.fa_icon,
-      })
-
+      });
     }
 
-    return skillsList;
+    return skillsByCategory;
 
     // return resume.skills.map((skill) => ({
     //   title: skill.name,
     //   description: skill.keywords.join(", "),
     //   icon: skill.icon,
     // }));
-
   }
 </script>
 

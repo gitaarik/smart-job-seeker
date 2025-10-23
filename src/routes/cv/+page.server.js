@@ -5,8 +5,11 @@ export async function load({ locals }) {
     include: {
       languages: true,
       highlights: true,
-      tech_skills: true,
-      tech_skill_categories: true
+      tech_skill_categories: {
+        include: {
+          tech_skills: true
+        }
+      }
     },
   });
 

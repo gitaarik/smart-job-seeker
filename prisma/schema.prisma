@@ -629,7 +629,6 @@ model profiles {
   project_stories       project_stories[]
   soft_skills           soft_skills[]
   tech_skill_categories tech_skill_categories[]
-  tech_skills           tech_skills[]
   work_experiences      WorkExperience[]
 }
 
@@ -673,14 +672,12 @@ model tech_skills {
   sort                  Int?
   date_created          DateTime?              @db.Timestamptz(6)
   date_updated          DateTime?              @db.Timestamptz(6)
-  profile               String?                @db.Uuid
   name                  String?                @db.VarChar(255)
   category              String?                @db.Uuid
   years_experience      String?                @db.VarChar(255)
   level                 String?                @db.VarChar(255)
   tech_type             Int?
   tech_skill_categories tech_skill_categories? @relation(fields: [category], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tech_skills_category_foreign")
-  profiles              profiles?              @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tech_skills_profile_foreign")
   tech_skill_types      tech_skill_types?      @relation(fields: [tech_type], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tech_skills_tech_type_foreign")
 }
 
