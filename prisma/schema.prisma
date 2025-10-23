@@ -599,6 +599,7 @@ model languages {
   language_code String?   @db.VarChar(255)
   proficiency   String?   @db.VarChar(255)
   profile       String?   @db.Uuid
+  sort          Int?
   profiles      profiles? @relation(fields: [profile], references: [id], onUpdate: NoAction, map: "languages_profile_foreign")
 }
 
