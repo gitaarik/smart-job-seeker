@@ -19,7 +19,7 @@
       skillsByCategory.push({
         title: category.name,
         description: skills.join(", "),
-        icon: category.fa_icon,
+        fa_icon: category.fa_icon,
       });
     }
 
