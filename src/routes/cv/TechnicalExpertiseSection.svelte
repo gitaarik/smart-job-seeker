@@ -34,13 +34,19 @@
 
       skillsList.push({
         title: category.name,
-        description: skills.join(", "),
+        description: skills ? skills.join(", ") : '',
         icon: category.fa_icon,
       })
 
     }
 
     return skillsList;
+
+    // return resume.skills.map((skill) => ({
+    //   title: skill.name,
+    //   description: skill.keywords.join(", "),
+    //   icon: skill.icon,
+    // }));
 
   }
 </script>
