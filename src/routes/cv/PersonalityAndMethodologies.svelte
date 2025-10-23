@@ -7,6 +7,10 @@
     faUserCog,
   } from "@fortawesome/free-solid-svg-icons";
 
+  let props = $props();
+  const profile = props.profile;
+  console.log(profile);
+
   const methodologies = [
     "Agile",
     "Scrum",
@@ -46,11 +50,11 @@
         <FontAwesomeIcon icon={faUser} class="w-4 h-4 ml-2" />
       </h3>
       <ul class="flex flex-wrap gap-2">
-        {#each traits as trait (trait)}
+        {#each profile.soft_skills as skill (skill)}
           <li
             class="text-sm font-semibold px-2 py-2 bg-mist hover:bg-ice rounded-md border border-aqua transition-colors duration-200 text-center"
           >
-            {trait}
+            {skill.name}
           </li>
         {/each}
       </ul>
