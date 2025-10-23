@@ -9,25 +9,23 @@ datasource db {
 }
 
 model User {
-  id                  String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email               String        @unique
+  email               String    @unique
   password            String
   firstName           String?
   lastName            String?
-  isEmailVerified     Boolean       @default(false)
+  isEmailVerified     Boolean   @default(false)
   emailVerifyToken    String?
   passwordResetToken  String?
   passwordResetExpiry DateTime?
-  createdAt           DateTime      @default(now())
-  updatedAt           DateTime      @updatedAt
-  role                Role          @default(USER)
-  resumeTokens        ResumeToken[]
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  role                Role      @default(USER)
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
 
   @@map("users")
 }
 
 model ResumeToken {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   token       String    @unique
   name        String
   description String?
@@ -36,10 +34,10 @@ model ResumeToken {
   viewCount   Int       @default(0)
   maxViews    Int?
   isActive    Boolean   @default(true)
-  createdBy   String          @db.Uuid
+  createdBy   String    @db.Uuid
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-  creator     User      @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
 
   @@map("resume_tokens")
 }
@@ -630,6 +628,7 @@ model profiles {
   directus_files        directus_files?         @relation(fields: [profile_picture], references: [id], onUpdate: NoAction, map: "profiles_profile_picture_foreign")
   project_stories       project_stories[]
   soft_skills           soft_skills[]
+  tech_skill_categories tech_skill_categories[]
   tech_skills           tech_skills[]
   work_experiences      WorkExperience[]
 }
@@ -652,6 +651,9 @@ model tech_skill_categories {
   date_created DateTime?     @db.Timestamptz(6)
   date_updated DateTime?     @db.Timestamptz(6)
   name         String?       @db.VarChar(255)
+  profile      String?       @db.Uuid
+  fa_icon      String?       @db.VarChar(255)
+  profiles     profiles?     @relation(fields: [profile], references: [id], onUpdate: NoAction, map: "tech_skill_categories_profile_foreign")
   tech_skills  tech_skills[]
 }
 
