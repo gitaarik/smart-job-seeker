@@ -21,6 +21,12 @@ export async function load({ locals }) {
         orderBy: { sort: "asc" },
       },
       education: { orderBy: { sort: "asc" } },
+      side_projects: {
+        include: {
+          side_project_achievements: { orderBy: { sort: "asc" } },
+        },
+        orderBy: { sort: "asc" },
+      },
     },
   });
 

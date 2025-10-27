@@ -19,7 +19,7 @@ export function formatDateRangeVerbose(
       "Nov",
       "Dec",
     ];
-    return `${monthNames[parseInt(month) - 1]} ${year}`;
+    return `${monthNames[parseInt(month)]} ${year}`;
   };
 
   const start = formatDate(startDate);

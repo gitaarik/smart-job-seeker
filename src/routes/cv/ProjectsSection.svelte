@@ -4,6 +4,7 @@
   import { faGithub } from "@fortawesome/free-brands-svg-icons";
   import { faCode, faExternalLinkAlt, faStar } from "@fortawesome/free-solid-svg-icons";
   import { resume } from "$lib/data/resume";
+	import { formatDateRangeVerbose } from "$lib/tools/date-utils";
 
   let props = $props();
   const profile = props.profile;
@@ -11,7 +12,7 @@
 
 <InfoSection title="Side Projects" icon={faCode}>
   <div class="space-y-8">
-    {#each resume.projects as project, index (project.name)}
+    {#each profile.side_projects as project, index (project.name)}
       <div class="border-l-2 border-ocean pl-4 pb-6">
         <div class="flex items-start justify-between mb-3">
           <div>
@@ -34,7 +35,10 @@
             </h3>
             <div class="flex items-center mt-1">
               <span class="text-sm text-slate/80">
-                {project.startDate.substring(5, 7)}/{project.startDate.substring(0, 4)} - {project.endDate.substring(5, 7)}/{project.endDate.substring(0, 4)}
+                {formatDateRangeVerbose(
+                  project.start_date,
+                  project.end_date,
+                )}
               </span>
               {#if project.stars}
                 <div class="flex items-center ml-4 text-sm text-slate/70">
@@ -46,15 +50,15 @@
           </div>
         </div>
 
-        <p class="text-slate mb-4 leading-relaxed">{project.description}</p>
+        <p class="text-slate mb-4 leading-relaxed">{project.summary}</p>
 
         <div class="space-y-2">
-          {#each project.highlights as highlight}
+          {#each project.side_project_achievements as achievement (achievement.title)}
             <div class="flex items-start">
               <div class="mr-2 flex-shrink-0 mt-1">
                 <div class="w-1.5 h-1.5 bg-ocean rounded-full"></div>
               </div>
-              <p class="text-slate/80 text-sm leading-relaxed">{highlight}</p>
+              <p class="text-slate/80 text-sm leading-relaxed">{achievement.description}</p>
             </div>
           {/each}
         </div>

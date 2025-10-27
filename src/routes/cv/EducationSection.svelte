@@ -65,12 +65,12 @@
                     icon={faCalendar}
                     class="mr-1 flex-shrink-0 w-3 h-3"
                   />
-                  <span>{
-                    formatDateRangeVerbose(
+                  <span>
+                    {formatDateRangeVerbose(
                       edu.start_date,
                       edu.end_date,
-                    )
-                  }</span>
+                    )}
+                  </span>
                 </li>
 
                 <li class="flex items-center">
