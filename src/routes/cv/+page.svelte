@@ -40,7 +40,7 @@
     <PersonalityAndMethodologies profile={data.profile} />
     <ProfessionalExperience profile={data.profile} />
     <EducationSection profile={data.profile} />
-    <ProjectsSection />
+    <ProjectsSection profile={data.profile} />
     <HobbiesInterestsSection />
     <ReferencesSection />
   </div>

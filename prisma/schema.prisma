@@ -630,6 +630,7 @@ model profiles {
   languages             languages[]
   directus_files        directus_files?         @relation(fields: [profile_picture], references: [id], onUpdate: NoAction, map: "profiles_profile_picture_foreign")
   project_stories       project_stories[]
+  side_projects         side_projects[]
   soft_skills           soft_skills[]
   tech_skill_categories tech_skill_categories[]
   work_experiences      WorkExperience[]
@@ -755,6 +756,36 @@ model education {
   logo            String?         @db.Uuid
   directus_files  directus_files? @relation(fields: [logo], references: [id], onUpdate: NoAction, map: "education_logo_foreign")
   profiles        profiles?       @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "education_profile_foreign")
+}
+
+model side_project_achievements {
+  id            String         @id @db.Uuid
+  title         String?        @db.VarChar(255)
+  fa_icon       String?        @db.VarChar(255)
+  description   String?        @db.VarChar(255)
+  side_project  Int?
+  status        String         @default("draft") @db.VarChar(255)
+  date_created  DateTime?      @db.Timestamptz(6)
+  date_updated  DateTime?      @db.Timestamptz(6)
+  sort          Int?
+  side_projects side_projects? @relation(fields: [side_project], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "side_project_achievements_side_project_foreign")
+}
+
+model side_projects {
+  id                        Int                         @id @default(autoincrement())
+  status                    String                      @default("draft") @db.VarChar(255)
+  sort                      Int?
+  date_created              DateTime?                   @db.Timestamptz(6)
+  date_updated              DateTime?                   @db.Timestamptz(6)
+  name                      String?                     @db.VarChar(255)
+  start_date                DateTime?                   @db.Date
+  end_date                  DateTime?                   @db.Date
+  profile                   String?                     @db.Uuid
+  url                       String?                     @db.VarChar(255)
+  stars                     Int?
+  summary                   String?
+  side_project_achievements side_project_achievements[]
+  profiles                  profiles?                   @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "side_projects_profile_foreign")
 }
 
 enum Role {
