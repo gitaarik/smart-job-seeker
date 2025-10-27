@@ -12,6 +12,7 @@
   import { resume } from "$lib/data/resume";
 
   import { formatDateRangeVerbose } from "$lib/tools/date-utils";
+  import { getImg } from "$lib/tools/get-img";
 
   let props = $props();
   const profile = props.profile;
@@ -21,7 +22,7 @@
   <div>
     {#each profile.education as edu, index (index)}
       <div class="break-inside-avoid {index === 0 ? 'mt-12 print:mt-0' : ''}">
-        <header class="mb-4 print:mb-2">
+        <header class="mb-6 print:mb-4">
           <div class="flex items-start justify-between">
             <div class="flex-1">
               <h3 class="text-2xl font-semibold text-ocean mb-2">
@@ -92,6 +93,16 @@
                 </div>
               </div>
             </div>
+
+            {#if edu.logo}
+              <div class="ml-4 flex-shrink-0">
+                <img
+                  src={getImg(edu.logo)}
+                  alt="{edu.institution} Logo"
+                  class="h-22 w-auto border border-aqua rounded"
+                />
+              </div>
+            {/if}
           </div>
         </header>
 
