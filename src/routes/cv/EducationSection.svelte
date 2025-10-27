@@ -18,7 +18,7 @@
 </script>
 
 <InfoSection title="Education" icon={faGraduationCap}>
-  <div class="space-y-6 print:space-y-4">
+  <div>
     {#each profile.education as edu, index (index)}
       <div class="break-inside-avoid">
         <header class="mb-4 print:mb-2">
@@ -101,6 +101,9 @@
           </div>
         {/if}
       </div>
+      {#if index < profile.education.length - 1}
+        <hr class="border-cloud my-12" />
+      {/if}
     {/each}
   </div>
 </InfoSection>
