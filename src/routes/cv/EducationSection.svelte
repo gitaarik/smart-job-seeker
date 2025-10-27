@@ -5,54 +5,101 @@
     faExternalLinkAlt,
     faGraduationCap,
     faMapMarkerAlt,
+    faCalendar,
+    faBook,
+    faLink,
   } from "@fortawesome/free-solid-svg-icons";
   import { resume } from "$lib/data/resume";
-	import { formatDateRangeVerbose } from "$lib/tools/date-utils";
+
+  import { formatDateRangeVerbose } from "$lib/tools/date-utils";
 
   let props = $props();
   const profile = props.profile;
 </script>
 
 <InfoSection title="Education" icon={faGraduationCap}>
-  <div class="space-y-6">
+  <div class="space-y-6 print:space-y-4">
     {#each profile.education as edu, index (index)}
-      <div class="border-l-2 border-ocean pl-4 pb-4">
-        <div class="flex items-start justify-between mb-2">
-          <div>
-            <h3 class="font-semibold text-slate">
-              {#if edu.url}
-                <a
-                  href={edu.url}
-                  target="_blank"
-                  class="hover:text-teal underline"
-                >
-                  {edu.institution}
-                  <FontAwesomeIcon
-                    icon={faExternalLinkAlt}
-                    class="w-3 h-3 ml-1 inline"
-                  />
-                </a>
-              {:else}
+      <div class="break-inside-avoid">
+        <header class="mb-4 print:mb-2">
+          <div class="flex items-start justify-between">
+            <div class="flex-1">
+              <h3 class="text-2xl font-semibold text-ocean mb-2">
                 {edu.institution}
-              {/if}
-            </h3>
-            <p class="text-sm text-slate/80 flex items-center">
-              <FontAwesomeIcon icon={faMapMarkerAlt} class="w-3 h-3 mr-1" />
-              {edu.location}
-            </p>
-          </div>
-          <div class="text-right text-sm text-slate/70">
-            {formatDateRangeVerbose(edu.start_date, edu.end_date)}
-          </div>
-        </div>
+              </h3>
 
-        <div class="mb-1">
-          <p class="text-slate font-medium">{edu.area}</p>
-          <p class="text-sm text-slate/80">{edu.studyType}</p>
-          {#if edu.summary}
-            <p class="text-sm text-slate/70 mt-2 leading-relaxed">{edu.summary}</p>
-          {/if}
-        </div>
+              <div
+                class="grid grid-cols-1 md:grid-cols-[max-content_1fr] print:grid-cols-[max-content_1fr] gap-4 md:gap-6 print:gap-4 text-sm"
+              >
+                <div class="space-y-2">
+                  <div class="flex items-center">
+                    <FontAwesomeIcon
+                      icon={faBook}
+                      class="mr-2 flex-shrink-0 w-3 h-3"
+                    />
+                    <span>{edu.area}</span>
+                  </div>
+
+                  <div class="flex items-center">
+                    <FontAwesomeIcon
+                      icon={faGraduationCap}
+                      class="mr-2 flex-shrink-0 w-3 h-3"
+                    />
+                    <span>{edu.studyType}</span>
+                  </div>
+
+                  {#if edu.url}
+                    <div class="flex items-center">
+                      <FontAwesomeIcon
+                        icon={faLink}
+                        class="mr-2 flex-shrink-0 w-3 h-3"
+                      />
+                      <a
+                        href={edu.url}
+                        target="_blank"
+                        class="text-ocean hover:text-teal"
+                      >{
+                        edu.url.replace("https://", "").replace(
+                          "www.",
+                          "",
+                        )
+                      }</a>
+                    </div>
+                  {/if}
+                </div>
+
+                <div class="space-y-2">
+                  <div class="flex items-center">
+                    <FontAwesomeIcon
+                      icon={faCalendar}
+                      class="mr-2 flex-shrink-0 w-3 h-3"
+                    />
+                    <span>{
+                      formatDateRangeVerbose(
+                        edu.start_date,
+                        edu.end_date,
+                      )
+                    }</span>
+                  </div>
+
+                  <div class="flex items-center">
+                    <FontAwesomeIcon
+                      icon={faMapMarkerAlt}
+                      class="mr-2 flex-shrink-0 w-3 h-3"
+                    />
+                    <span>{edu.location}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {#if edu.summary}
+          <div class="space-y-3 print:space-y-2">
+            <p class="leading-relaxed print:text-sm">{edu.summary}</p>
+          </div>
+        {/if}
       </div>
     {/each}
   </div>
