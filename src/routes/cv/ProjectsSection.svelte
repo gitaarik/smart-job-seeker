@@ -5,6 +5,7 @@
   import { faCode, faExternalLinkAlt, faStar, faCalendar } from "@fortawesome/free-solid-svg-icons";
   import { resume } from "$lib/data/resume";
   import { formatDateRangeVerbose } from "$lib/tools/date-utils";
+	import InfoBoxes from "./InfoBoxes.svelte";
 
   let props = $props();
   const profile = props.profile;
@@ -22,7 +23,7 @@
               </h3>
 
               <ul
-                class="inline-grid grid-cols-2 gap-y-2 gap-x-8 text-sm list-none p-0"
+                class="flex gap-8 text-sm p-0"
               >
                 <li class="flex items-center">
                   <FontAwesomeIcon
@@ -62,7 +63,7 @@
                       icon={faStar}
                       class="mr-1 flex-shrink-0 w-3 h-3 text-yellow-500"
                     />
-                    <span>{project.stars} stars</span>
+                    <span>{project.stars}</span>
                   </li>
                 {/if}
               </ul>
@@ -74,18 +75,10 @@
           <p class="leading-relaxed print:text-sm">{project.summary}</p>
 
           {#if project.side_project_achievements.length > 0}
-            <div>
-              <ul class="space-y-2 list-none p-0">
-                {#each project.side_project_achievements as achievement (achievement.title)}
-                  <li class="flex items-start">
-                    <div class="mr-2 flex-shrink-0 mt-1">
-                      <div class="w-1.5 h-1.5 bg-ocean rounded-full"></div>
-                    </div>
-                    <p class="text-slate/80 text-sm leading-relaxed">{achievement.description}</p>
-                  </li>
-                {/each}
-              </ul>
-            </div>
+            <h4 class="text-lg print:text-base font-semibold mb-3 print:mb-2">
+              Highlights:
+            </h4>
+            <InfoBoxes items={project.side_project_achievements} />
           {/if}
         </div>
       </div>

@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 5RbHgRqZGGScYp2En0udDoY8NIem9s7Awj9RPhJCOc2xbB9PZtbEQzEhWdroE8U
+\restrict o0loaSnR92O4zruMlQHRHHLROJL0JQDtXbehrHe1Sq5G3HBUY8U6KpJnnheFclk
 
 -- Dumped from database version 15.14 (Debian 15.14-1.pgdg13+1)
 -- Dumped by pg_dump version 15.14 (Debian 15.14-1.pgdg13+1)
@@ -4187,6 +4187,16 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 3148	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-27 18:33:10.778+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_achievements	a03b8a42-ed2b-44ff-8929-7a91fe0fa71c	http://localhost:8055
 3149	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-27 18:33:10.781+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_achievements	588f6a19-29f4-4407-a8e8-167b21aad49f	http://localhost:8055
 3150	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-27 18:33:10.785+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_projects	1	http://localhost:8055
+3151	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-27 18:51:34.704+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_achievements	d76e19f7-e052-4908-9e25-11e048e9be81	http://localhost:8055
+3152	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-27 18:51:34.707+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_achievements	5f4d1cb6-b09c-4226-8e23-6aa3271cd50e	http://localhost:8055
+3153	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-27 18:51:34.711+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_achievements	3c112423-5d8c-43a1-a5f3-27ee654f963e	http://localhost:8055
+3154	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-27 18:51:34.714+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_achievements	9b496336-6477-4df7-907b-e9f966ebdad6	http://localhost:8055
+3155	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-27 18:51:34.717+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_projects	2	http://localhost:8055
+3156	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-27 18:56:41.561+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_projects	3	http://localhost:8055
+3157	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-27 18:56:52.235+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_projects	3	http://localhost:8055
+3158	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-27 18:57:47.944+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_projects	4	http://localhost:8055
+3159	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-27 18:57:53.794+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_projects	4	http://localhost:8055
+3160	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-27 18:58:56.21+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_projects	5	http://localhost:8055
 \.
 
 
@@ -7303,6 +7313,16 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 3057	3147	side_project_achievements	0f30dd84-edc1-4c72-bd51-c3a51ec5b12c	{"id":"0f30dd84-edc1-4c72-bd51-c3a51ec5b12c","title":"GitHub Issue Engagement","fa_icon":"github","description":"Engaged with users handling GitHub Issues and Pull Requests","side_project":1,"status":"published","date_created":"2025-10-27T18:31:24.496Z","date_updated":"2025-10-27T18:33:10.775Z","sort":1}	{"sort":1,"date_updated":"2025-10-27T18:33:10.775Z"}	3060	\N
 3058	3148	side_project_achievements	a03b8a42-ed2b-44ff-8929-7a91fe0fa71c	{"id":"a03b8a42-ed2b-44ff-8929-7a91fe0fa71c","title":"150+ GitHub stars","fa_icon":"star","description":"Received appreciation in community with 152 GitHub stars","side_project":1,"status":"draft","date_created":null,"date_updated":"2025-10-27T18:33:10.778Z","sort":3}	{"sort":3,"date_updated":"2025-10-27T18:33:10.778Z"}	3060	\N
 3059	3149	side_project_achievements	588f6a19-29f4-4407-a8e8-167b21aad49f	{"id":"588f6a19-29f4-4407-a8e8-167b21aad49f","title":"Open source package","fa_icon":"github","description":"Conceived Open-Source Python package providing navigation enhancements in Django Admin","side_project":1,"status":"draft","date_created":null,"date_updated":"2025-10-27T18:33:10.781Z","sort":2}	{"sort":2,"date_updated":"2025-10-27T18:33:10.781Z"}	3060	\N
+3065	3155	side_projects	2	{"id":2,"status":"published","sort":2,"date_created":"2025-10-27T17:48:27.988Z","date_updated":"2025-10-27T18:51:34.699Z","name":"Django Admin Relation Links","start_date":"2014-01-15","end_date":"2014-01-15","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","url":"https://gist.github.com/gitaarik/8735255","stars":108,"summary":"Popular GitHub Gist explaining Git submodules fundamentals. Helped many developers understand submodules effectively.","achievements":["d76e19f7-e052-4908-9e25-11e048e9be81","5f4d1cb6-b09c-4226-8e23-6aa3271cd50e","3c112423-5d8c-43a1-a5f3-27ee654f963e","9b496336-6477-4df7-907b-e9f966ebdad6"]}	{"date_updated":"2025-10-27T18:51:34.699Z"}	\N	\N
+3061	3151	side_project_achievements	d76e19f7-e052-4908-9e25-11e048e9be81	{"description":"Conceived Open-Source Python package providing navigation enhancements in Django Admin","title":"Open source package","fa_icon":"github","sort":1,"side_project":"2"}	{"description":"Conceived Open-Source Python package providing navigation enhancements in Django Admin","title":"Open source package","fa_icon":"github","sort":1,"side_project":"2"}	3065	\N
+3062	3152	side_project_achievements	5f4d1cb6-b09c-4226-8e23-6aa3271cd50e	{"description":"Received appreciation in community with 108 GitHub stars","title":"100+ GitHub stars","fa_icon":"star","sort":2,"side_project":"2"}	{"description":"Received appreciation in community with 108 GitHub stars","title":"100+ GitHub stars","fa_icon":"star","sort":2,"side_project":"2"}	3065	\N
+3063	3153	side_project_achievements	3c112423-5d8c-43a1-a5f3-27ee654f963e	{"status":"published","description":"Engaged with users handling GitHub Issues and Pull Requests","title":"GitHub Issue engagement","fa_icon":"github","sort":3,"side_project":"2"}	{"status":"published","description":"Engaged with users handling GitHub Issues and Pull Requests","title":"GitHub Issue engagement","fa_icon":"github","sort":3,"side_project":"2"}	3065	\N
+3064	3154	side_project_achievements	9b496336-6477-4df7-907b-e9f966ebdad6	{"description":"Employed library succesfully in projects at Chipta","title":"Production usage","fa_icon":"servers","sort":4,"side_project":"2"}	{"description":"Employed library succesfully in projects at Chipta","title":"Production usage","fa_icon":"servers","sort":4,"side_project":"2"}	3065	\N
+3066	3156	side_projects	3	{"status":"published","name":"Git Submodules Guide","start_date":"2014-01-15","end_date":"2014-01-15","url":"https://gist.github.com/gitaarik/8735255","stars":1022,"summary":"Popular GitHub Gist explaining Git submodules fundamentals. Helped many developers understand submodules effectively."}	{"status":"published","name":"Git Submodules Guide","start_date":"2014-01-15","end_date":"2014-01-15","url":"https://gist.github.com/gitaarik/8735255","stars":1022,"summary":"Popular GitHub Gist explaining Git submodules fundamentals. Helped many developers understand submodules effectively."}	\N	\N
+3067	3157	side_projects	3	{"id":3,"status":"published","sort":3,"date_created":"2025-10-27T18:56:41.560Z","date_updated":"2025-10-27T18:56:52.233Z","name":"Git Submodules Guide","start_date":"2014-01-15","end_date":"2014-01-15","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","url":"https://gist.github.com/gitaarik/8735255","stars":1022,"summary":"Popular GitHub Gist explaining Git submodules fundamentals. Helped many developers understand submodules effectively.","achievements":[]}	{"profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","date_updated":"2025-10-27T18:56:52.233Z"}	\N	\N
+3068	3158	side_projects	4	{"status":"published","name":"Jazzchords","start_date":"2013-06-24","end_date":"2017-12-08","url":"https://github.com/gitaarik/jazzchords","stars":12,"summary":"Web application for creating and printing professional chord charts using Python/Django and modern frontend technologies."}	{"status":"published","name":"Jazzchords","start_date":"2013-06-24","end_date":"2017-12-08","url":"https://github.com/gitaarik/jazzchords","stars":12,"summary":"Web application for creating and printing professional chord charts using Python/Django and modern frontend technologies."}	\N	\N
+3069	3159	side_projects	4	{"id":4,"status":"published","sort":null,"date_created":"2025-10-27T18:57:47.942Z","date_updated":"2025-10-27T18:57:53.793Z","name":"Jazzchords","start_date":"2013-06-24","end_date":"2017-12-08","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","url":"https://github.com/gitaarik/jazzchords","stars":12,"summary":"Web application for creating and printing professional chord charts using Python/Django and modern frontend technologies.","achievements":[]}	{"profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","date_updated":"2025-10-27T18:57:53.793Z"}	\N	\N
+3070	3160	side_projects	5	{"profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","status":"published","name":"Adyengo","start_date":"2013-08-06","end_date":"2020-05-07","url":"https://github.com/gitaarik/adyengo","stars":10,"summary":"Open-source Django package for Adyen payment integration with recurring payment support. Used in production at Tender-it."}	{"profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","status":"published","name":"Adyengo","start_date":"2013-08-06","end_date":"2020-05-07","url":"https://github.com/gitaarik/adyengo","stars":10,"summary":"Open-source Django package for Adyen payment integration with recurring payment support. Used in production at Tender-it."}	\N	\N
 \.
 
 
@@ -7358,7 +7378,7 @@ c530a32f-84cb-4ab9-8a61-7a12a5bcb7e6	en-US	draft	Draft
 --
 
 COPY public.directus_users (id, first_name, last_name, email, password, location, title, description, tags, avatar, language, tfa_secret, status, role, token, last_access, last_page, provider, external_identifier, auth_data, email_notifications, appearance, theme_dark, theme_light, theme_light_overrides, theme_dark_overrides, text_direction) FROM stdin;
-157238bb-6930-4f26-be9c-8b31a9e11ab8	Admin	User	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-10-27 18:32:25.195+00	/settings/data-model/side_projects	default	\N	\N	t	\N	\N	\N	\N	\N	auto
+157238bb-6930-4f26-be9c-8b31a9e11ab8	Admin	User	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-10-27 18:32:25.195+00	/content/side_projects	default	\N	\N	t	\N	\N	\N	\N	\N	auto
 \.
 
 
@@ -7460,6 +7480,10 @@ d9f209e9-4864-416b-a3ab-4431bdd5378e	Production usage	servers	Employed library s
 0f30dd84-edc1-4c72-bd51-c3a51ec5b12c	GitHub Issue Engagement	github	Engaged with users handling GitHub Issues and Pull Requests	1	published	2025-10-27 18:31:24.496+00	2025-10-27 18:33:10.775+00	1
 a03b8a42-ed2b-44ff-8929-7a91fe0fa71c	150+ GitHub stars	star	Received appreciation in community with 152 GitHub stars	1	draft	\N	2025-10-27 18:33:10.778+00	3
 588f6a19-29f4-4407-a8e8-167b21aad49f	Open source package	github	Conceived Open-Source Python package providing navigation enhancements in Django Admin	1	draft	\N	2025-10-27 18:33:10.781+00	2
+d76e19f7-e052-4908-9e25-11e048e9be81	Open source package	github	Conceived Open-Source Python package providing navigation enhancements in Django Admin	2	draft	2025-10-27 18:51:34.703+00	\N	1
+5f4d1cb6-b09c-4226-8e23-6aa3271cd50e	100+ GitHub stars	star	Received appreciation in community with 108 GitHub stars	2	draft	2025-10-27 18:51:34.707+00	\N	2
+3c112423-5d8c-43a1-a5f3-27ee654f963e	GitHub Issue engagement	github	Engaged with users handling GitHub Issues and Pull Requests	2	published	2025-10-27 18:51:34.709+00	\N	3
+9b496336-6477-4df7-907b-e9f966ebdad6	Production usage	servers	Employed library succesfully in projects at Chipta	2	draft	2025-10-27 18:51:34.713+00	\N	4
 \.
 
 
@@ -7468,8 +7492,11 @@ a03b8a42-ed2b-44ff-8929-7a91fe0fa71c	150+ GitHub stars	star	Received appreciatio
 --
 
 COPY public.side_projects (id, status, sort, date_created, date_updated, name, start_date, end_date, profile, url, stars, summary) FROM stdin;
-2	published	2	2025-10-27 17:48:27.988+00	2025-10-27 18:17:26.784+00	Django Admin Relation Links	2014-01-15	2014-01-15	0eeb942b-e35a-44e8-a37d-52b9cdb24309	https://gist.github.com/gitaarik/8735255	108	Popular GitHub Gist explaining Git submodules fundamentals. Helped many developers understand submodules effectively.
 1	published	1	2025-10-27 17:48:27.985+00	2025-10-27 18:33:10.77+00	LitState	2020-11-15	2023-01-18	0eeb942b-e35a-44e8-a37d-52b9cdb24309	https://github.com/gitaarik/lit-state	152	Reactive state management library for Lit Web Components, Open-sourced on GitHub & NPM. Used in production at Chipta (ticket shop). I used Lit + LitState as a simpler, lightweight and browser-native alternative to React + Redux.
+2	published	2	2025-10-27 17:48:27.988+00	2025-10-27 18:51:34.699+00	Django Admin Relation Links	2014-01-15	2014-01-15	0eeb942b-e35a-44e8-a37d-52b9cdb24309	https://gist.github.com/gitaarik/8735255	108	Popular GitHub Gist explaining Git submodules fundamentals. Helped many developers understand submodules effectively.
+3	published	3	2025-10-27 18:56:41.56+00	2025-10-27 18:56:52.233+00	Git Submodules Guide	2014-01-15	2014-01-15	0eeb942b-e35a-44e8-a37d-52b9cdb24309	https://gist.github.com/gitaarik/8735255	1022	Popular GitHub Gist explaining Git submodules fundamentals. Helped many developers understand submodules effectively.
+4	published	\N	2025-10-27 18:57:47.942+00	2025-10-27 18:57:53.793+00	Jazzchords	2013-06-24	2017-12-08	0eeb942b-e35a-44e8-a37d-52b9cdb24309	https://github.com/gitaarik/jazzchords	12	Web application for creating and printing professional chord charts using Python/Django and modern frontend technologies.
+5	published	\N	2025-10-27 18:58:56.208+00	\N	Adyengo	2013-08-06	2020-05-07	0eeb942b-e35a-44e8-a37d-52b9cdb24309	https://github.com/gitaarik/adyengo	10	Open-source Django package for Adyen payment integration with recurring payment support. Used in production at Tender-it.
 \.
 
 
@@ -7737,7 +7764,7 @@ SWIS	Leiden, NL	Web Development Agency	Mid-level Web Developer	Delivered web pro
 -- Name: directus_activity_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_activity_id_seq', 3150, true);
+SELECT pg_catalog.setval('public.directus_activity_id_seq', 3160, true);
 
 
 --
@@ -7779,7 +7806,7 @@ SELECT pg_catalog.setval('public.directus_relations_id_seq', 26, true);
 -- Name: directus_revisions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_revisions_id_seq', 3060, true);
+SELECT pg_catalog.setval('public.directus_revisions_id_seq', 3070, true);
 
 
 --
@@ -7807,7 +7834,7 @@ SELECT pg_catalog.setval('public.education_id_seq', 4, true);
 -- Name: side_projects_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.side_projects_id_seq', 2, true);
+SELECT pg_catalog.setval('public.side_projects_id_seq', 5, true);
 
 
 --
@@ -8770,5 +8797,5 @@ ALTER TABLE ONLY public.work_experiences
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 5RbHgRqZGGScYp2En0udDoY8NIem9s7Awj9RPhJCOc2xbB9PZtbEQzEhWdroE8U
+\unrestrict o0loaSnR92O4zruMlQHRHHLROJL0JQDtXbehrHe1Sq5G3HBUY8U6KpJnnheFclk
 
