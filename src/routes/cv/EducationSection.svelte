@@ -20,7 +20,7 @@
 <InfoSection title="Education" icon={faGraduationCap}>
   <div>
     {#each profile.education as edu, index (index)}
-      <div class="break-inside-avoid">
+      <div class="break-inside-avoid {index === 0 ? 'mt-12 print:mt-0' : ''}">
         <header class="mb-4 print:mb-2">
           <div class="flex items-start justify-between">
             <div class="flex-1">
