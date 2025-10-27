@@ -7,11 +7,14 @@
     faMapMarkerAlt,
   } from "@fortawesome/free-solid-svg-icons";
   import { resume } from "$lib/data/resume";
+
+  let props = $props();
+  const profile = props.profile;
 </script>
 
 <InfoSection title="Education" icon={faGraduationCap}>
   <div class="space-y-6">
-    {#each resume.education as edu, index (index)}
+    {#each profile.education as edu, index (index)}
       <div class="border-l-2 border-ocean pl-4 pb-4">
         <div class="flex items-start justify-between mb-2">
           <div>
@@ -53,4 +56,3 @@
     {/each}
   </div>
 </InfoSection>
-

@@ -1,7 +1,6 @@
 <script lang="ts">
   import InfoSection from "./InfoSection.svelte";
   import EmploymentSection from "./EmploymentSection.svelte";
-  import { resume } from "$lib/data/resume";
   import { faGlobe } from "@fortawesome/free-solid-svg-icons";
 
   let props = $props();

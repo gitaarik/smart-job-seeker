@@ -20,6 +20,7 @@ export async function load({ locals }) {
         },
         orderBy: { sort: "asc" },
       },
+      education: { orderBy: { sort: "asc" } },
     },
   });
 
