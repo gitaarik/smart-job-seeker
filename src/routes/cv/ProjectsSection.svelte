@@ -2,10 +2,15 @@
   import InfoSection from "./InfoSection.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { faGithub } from "@fortawesome/free-brands-svg-icons";
-  import { faCode, faExternalLinkAlt, faStar, faCalendar } from "@fortawesome/free-solid-svg-icons";
+  import {
+    faCalendar,
+    faCode,
+    faExternalLinkAlt,
+    faStar,
+  } from "@fortawesome/free-solid-svg-icons";
   import { resume } from "$lib/data/resume";
   import { formatDateRangeVerbose } from "$lib/tools/date-utils";
-	import InfoBoxes from "./InfoBoxes.svelte";
+  import InfoBoxes from "./InfoBoxes.svelte";
 
   let props = $props();
   const profile = props.profile;
@@ -49,10 +54,11 @@
                       target="_blank"
                       class="text-ocean hover:text-teal"
                     >{
-                      project.url.replace("https://", "").replace(
-                        "www.",
-                        "",
-                      )
+                      project.url.replace("https://", "")
+                        .replace(
+                          "www.",
+                          "",
+                        )
                     }</a>
                   </li>
                 {/if}
@@ -81,7 +87,18 @@
             <InfoBoxes items={project.side_project_achievements} />
           {/if}
         </div>
+
+        {#if project.technologies}
+          <h4
+            class="text-lg mt-6 print:text-base font-semibold mb-3 print:mb-2"
+          >
+            Technologies:
+          </h4>
+
+          {project.technologies}
+        {/if}
       </div>
+
       {#if index < profile.side_projects.length - 1}
         <hr class="border-cloud my-12" />
       {/if}

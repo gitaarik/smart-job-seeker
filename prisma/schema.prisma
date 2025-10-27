@@ -784,6 +784,7 @@ model side_projects {
   url                       String?                     @db.VarChar(255)
   stars                     Int?
   summary                   String?
+  technologies              Json?                       @db.Json
   side_project_achievements side_project_achievements[]
   profiles                  profiles?                   @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "side_projects_profile_foreign")
 }
