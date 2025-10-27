@@ -46,7 +46,7 @@
                       icon={faGraduationCap}
                       class="mr-2 flex-shrink-0 w-3 h-3"
                     />
-                    <span>{edu.studyType}</span>
+                    <span>{edu.study_type}</span>
                   </div>
 
                   {#if edu.url}
