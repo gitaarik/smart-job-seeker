@@ -25,85 +25,81 @@
       <div class="break-inside-avoid {index === 0 ? 'mt-12 print:mt-0' : ''}">
         <header class="mb-6 print:mb-4">
           <div class="flex items-start justify-between">
+
             <div class="flex-1">
-              <h3 class="text-2xl font-semibold text-ocean mb-2">
+              <h3 class="text-2xl font-semibold text-ocean mb-1">
                 {edu.institution}
               </h3>
 
-              <div
-                class="grid grid-cols-1 md:grid-cols-[max-content_1fr] print:grid-cols-[max-content_1fr] gap-4 md:gap-6 print:gap-4 text-sm"
+              <ul
+                class="inline-grid grid-cols-2 gap-y-2 gap-x-8 text-sm list-none p-0"
               >
-                <div class="space-y-2">
-                  <div class="flex items-center">
+                <li class="flex items-center">
+                  <FontAwesomeIcon
+                    icon={faBook}
+                    class="mr-1 flex-shrink-0 w-3 h-3"
+                  />
+                  <span>{edu.area}</span>
+                </li>
+
+                {#if edu.graduation_year}
+                  <li class="flex items-center">
                     <FontAwesomeIcon
-                      icon={faBook}
-                      class="mr-2 flex-shrink-0 w-3 h-3"
+                      icon={faGraduationCap}
+                      class="mr-1 flex-shrink-0 w-3 h-3"
                     />
-                    <span>{edu.area}</span>
-                  </div>
+                    <span>Graduated in {edu.graduation_year}</span>
+                  </li>
+                {/if}
 
-                  {#if edu.graduation_year}
-                    <div class="flex items-center">
-                      <FontAwesomeIcon
-                        icon={faGraduationCap}
-                        class="mr-2 flex-shrink-0 w-3 h-3"
-                      />
-                      <span>Graduated in {edu.graduation_year}</span>
-                    </div>
-                  {/if}
+                <li class="flex items-center">
+                  <FontAwesomeIcon
+                    icon={faMapMarkerAlt}
+                    class="mr-1 flex-shrink-0 w-3 h-3"
+                  />
+                  <span>{edu.location}</span>
+                </li>
 
-                  <div class="flex items-center">
+                <li class="flex items-center">
+                  <FontAwesomeIcon
+                    icon={faCalendar}
+                    class="mr-1 flex-shrink-0 w-3 h-3"
+                  />
+                  <span>{
+                    formatDateRangeVerbose(
+                      edu.start_date,
+                      edu.end_date,
+                    )
+                  }</span>
+                </li>
+
+                <li class="flex items-center">
+                  <FontAwesomeIcon
+                    icon={faBuilding}
+                    class="mr-1 flex-shrink-0 w-3 h-3"
+                  />
+                  <span>{edu.study_type}</span>
+                </li>
+
+                {#if edu.url}
+                  <li class="flex items-center">
                     <FontAwesomeIcon
-                      icon={faMapMarkerAlt}
-                      class="mr-2 flex-shrink-0 w-3 h-3"
+                      icon={faLink}
+                      class="mr-1 flex-shrink-0 w-3 h-3"
                     />
-                    <span>{edu.location}</span>
-                  </div>
-
-                </div>
-
-                <div class="space-y-2">
-                  <div class="flex items-center">
-                    <FontAwesomeIcon
-                      icon={faCalendar}
-                      class="mr-2 flex-shrink-0 w-3 h-3"
-                    />
-                    <span>{
-                      formatDateRangeVerbose(
-                        edu.start_date,
-                        edu.end_date,
+                    <a
+                      href={edu.url}
+                      target="_blank"
+                      class="text-ocean hover:text-teal"
+                    >{
+                      edu.url.replace("https://", "").replace(
+                        "www.",
+                        "",
                       )
-                    }</span>
-                  </div>
-
-                  <div class="flex items-center">
-                    <FontAwesomeIcon
-                      icon={faBuilding}
-                      class="mr-2 flex-shrink-0 w-3 h-3"
-                    />
-                    <span>{edu.study_type}</span>
-                  </div>
-
-                  {#if edu.url}
-                    <div class="flex items-center">
-                      <FontAwesomeIcon
-                        icon={faLink}
-                        class="mr-2 flex-shrink-0 w-3 h-3"
-                      />
-                      <a
-                        href={edu.url}
-                        target="_blank"
-                        class="text-ocean hover:text-teal"
-                      >{
-                        edu.url.replace("https://", "").replace(
-                          "www.",
-                          "",
-                        )
-                      }</a>
-                    </div>
-                  {/if}
-                </div>
-              </div>
+                    }</a>
+                  </li>
+                {/if}
+              </ul>
             </div>
 
             {#if edu.logo}
