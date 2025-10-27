@@ -51,18 +51,18 @@
               <span>{data.description}</span>
             </div>
 
-            {#if data.url}
+            {#if data.website}
               <div class="flex items-center">
                 <FontAwesomeIcon
                   icon={faLink}
                   class="mr-2 flex-shrink-0 w-3 h-3"
                 />
                 <a
-                  href={data.url}
+                  href={data.website}
                   target="_blank"
                   class="text-ocean hover:text-teal"
                 >{
-                  data.url.replace("https://", "").replace(
+                  data.website.replace("https://", "").replace(
                     "www.",
                     "",
                   )

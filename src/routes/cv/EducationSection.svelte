@@ -7,6 +7,7 @@
     faMapMarkerAlt,
   } from "@fortawesome/free-solid-svg-icons";
   import { resume } from "$lib/data/resume";
+	import { formatDateRangeVerbose } from "$lib/tools/date-utils";
 
   let props = $props();
   const profile = props.profile;
@@ -41,15 +42,15 @@
             </p>
           </div>
           <div class="text-right text-sm text-slate/70">
-            {edu.startDate.substring(5, 7)}/{edu.startDate.substring(0, 4)} - {edu.endDate.substring(5, 7)}/{edu.endDate.substring(0, 4)}
+            {formatDateRangeVerbose(edu.start_date, edu.end_date)}
           </div>
         </div>
 
         <div class="mb-1">
           <p class="text-slate font-medium">{edu.area}</p>
           <p class="text-sm text-slate/80">{edu.studyType}</p>
-          {#if edu.description}
-            <p class="text-sm text-slate/70 mt-2 leading-relaxed">{edu.description}</p>
+          {#if edu.summary}
+            <p class="text-sm text-slate/70 mt-2 leading-relaxed">{edu.summary}</p>
           {/if}
         </div>
       </div>

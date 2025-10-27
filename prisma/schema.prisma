@@ -43,25 +43,25 @@ model ResumeToken {
 }
 
 model WorkExperience {
-  name                         String
-  location                     String
-  description                  String
-  position                     String
-  summary                      String
-  id                           String                         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  logo                         String?                        @db.Uuid
-  status                       String                         @default("draft") @db.VarChar(255)
-  sort                         Int?
-  profile                      String?                        @db.Uuid
-  date_created                 DateTime?                      @db.Timestamptz(6)
-  date_updated                 DateTime?                      @db.Timestamptz(6)
-  start_date                   DateTime?                      @db.Date
-  end_date                     DateTime?                      @db.Date
-  website                      String?                        @db.VarChar(255)
-  achievements                 work_experience_achievements[]
-  technologies                 work_experience_technologies[]
-  directus_files               directus_files?                @relation(fields: [logo], references: [id], onUpdate: NoAction, map: "work_experiences_logo_foreign")
-  profiles                     profiles?                      @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "work_experiences_profile_foreign")
+  name           String
+  location       String
+  description    String
+  position       String
+  summary        String
+  id             String                         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  logo           String?                        @db.Uuid
+  status         String                         @default("draft") @db.VarChar(255)
+  sort           Int?
+  profile        String?                        @db.Uuid
+  date_created   DateTime?                      @db.Timestamptz(6)
+  date_updated   DateTime?                      @db.Timestamptz(6)
+  start_date     DateTime?                      @db.Date
+  end_date       DateTime?                      @db.Date
+  website        String?                        @db.VarChar(255)
+  achievements   work_experience_achievements[]
+  technologies   work_experience_technologies[]
+  directus_files directus_files?                @relation(fields: [logo], references: [id], onUpdate: NoAction, map: "work_experiences_logo_foreign")
+  profiles       profiles?                      @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "work_experiences_profile_foreign")
 
   @@map("work_experiences")
 }
@@ -624,6 +624,7 @@ model profiles {
   application_questions application_questions[]
   cheat_sheets          cheat_sheets[]
   dev_methodologies     dev_methodologies[]
+  education             education[]
   highlights            highlights[]
   languages             languages[]
   directus_files        directus_files?         @relation(fields: [profile_picture], references: [id], onUpdate: NoAction, map: "profiles_profile_picture_foreign")
@@ -732,6 +733,25 @@ model project_stories {
   category     String?   @db.VarChar(255)
   profile      String?   @db.Uuid
   profiles     profiles? @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "project_stories_profile_foreign")
+}
+
+model education {
+  id              Int       @id @default(autoincrement())
+  status          String    @default("draft") @db.VarChar(255)
+  sort            Int?
+  date_created    DateTime? @db.Timestamptz(6)
+  date_updated    DateTime? @db.Timestamptz(6)
+  institution     String?   @db.VarChar(255)
+  location        String?   @db.VarChar(255)
+  url             String?   @db.VarChar(255)
+  area            String?   @db.VarChar(255)
+  study_type      String?   @db.VarChar(255)
+  graduation_year Int?
+  start_date      DateTime? @db.Date
+  end_date        DateTime? @db.Date
+  profile         String?   @db.Uuid
+  summary         String?
+  profiles        profiles? @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "education_profile_foreign")
 }
 
 enum Role {
