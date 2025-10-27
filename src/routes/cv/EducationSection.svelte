@@ -4,6 +4,7 @@
   import {
     faExternalLinkAlt,
     faGraduationCap,
+    faBuilding,
     faMapMarkerAlt,
     faCalendar,
     faBook,
@@ -41,9 +42,43 @@
                     <span>{edu.area}</span>
                   </div>
 
+                  {#if edu.graduation_year}
+                    <div class="flex items-center">
+                      <FontAwesomeIcon
+                        icon={faGraduationCap}
+                        class="mr-2 flex-shrink-0 w-3 h-3"
+                      />
+                      <span>Graduated in {edu.graduation_year}</span>
+                    </div>
+                  {/if}
+
                   <div class="flex items-center">
                     <FontAwesomeIcon
-                      icon={faGraduationCap}
+                      icon={faMapMarkerAlt}
+                      class="mr-2 flex-shrink-0 w-3 h-3"
+                    />
+                    <span>{edu.location}</span>
+                  </div>
+
+                </div>
+
+                <div class="space-y-2">
+                  <div class="flex items-center">
+                    <FontAwesomeIcon
+                      icon={faCalendar}
+                      class="mr-2 flex-shrink-0 w-3 h-3"
+                    />
+                    <span>{
+                      formatDateRangeVerbose(
+                        edu.start_date,
+                        edu.end_date,
+                      )
+                    }</span>
+                  </div>
+
+                  <div class="flex items-center">
+                    <FontAwesomeIcon
+                      icon={faBuilding}
                       class="mr-2 flex-shrink-0 w-3 h-3"
                     />
                     <span>{edu.study_type}</span>
@@ -67,29 +102,6 @@
                       }</a>
                     </div>
                   {/if}
-                </div>
-
-                <div class="space-y-2">
-                  <div class="flex items-center">
-                    <FontAwesomeIcon
-                      icon={faCalendar}
-                      class="mr-2 flex-shrink-0 w-3 h-3"
-                    />
-                    <span>{
-                      formatDateRangeVerbose(
-                        edu.start_date,
-                        edu.end_date,
-                      )
-                    }</span>
-                  </div>
-
-                  <div class="flex items-center">
-                    <FontAwesomeIcon
-                      icon={faMapMarkerAlt}
-                      class="mr-2 flex-shrink-0 w-3 h-3"
-                    />
-                    <span>{edu.location}</span>
-                  </div>
                 </div>
               </div>
             </div>
