@@ -30,6 +30,16 @@
         <p class="leading-relaxed print:text-sm">{project.summary}</p>
 
         {#if project.url}
+          {@const isGithub = project.url.includes("github.com")}
+          {@const         displayLabel = project.url_label || (isGithub
+          ? project.url.replace("https://github.com/", "").replace(
+            "https://www.github.com/",
+            "",
+          ).replace(/\/$/, "")
+          : project.url.replace("https://www.", "").replace(
+            "https://",
+            "",
+          ).replace(/\/$/, ""))}
           <div class="flex justify-start mt-6">
             <a
               href={project.url}
@@ -37,29 +47,15 @@
               class="inline-flex items-center gap-2 px-5 py-3 bg-ocean text-white rounded-lg hover:bg-ocean/85 transition-all"
             >
               <FontAwesomeIcon
-                icon={faGithub}
+                icon={isGithub ? faGithub : faExternalLinkAlt}
                 size="lg"
               />
 
               <span class="font-medium nowrap">
-                {#if project.url_label}
-                  {project.url_label}
-                {:else}
-                  {
-                    project.url.replace(
-                      "https://github.com/",
-                      "",
-                    )
-                      .replace("https://www.github.com/", "")
-                      .replace(
-                        /\/$/,
-                        "",
-                      )
-                  }
-                {/if}
+                {displayLabel}
               </span>
 
-              {#if project.stars}
+              {#if project.stars && isGithub}
                 <span
                   class="flex items-center gap-1 ml-2 pl-2 border-l border-white/30"
                 >
