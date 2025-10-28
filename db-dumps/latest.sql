@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict QTtXzjT4nnvYPAZZS0Piq2Wk6fJR25cbgwU74ygdebPFrciHJBnMwlZ7yFni1FM
+\restrict ki6ks5yqQNmiuNE1j7AkHpHm8REo57sIghXlD3SuoWFb5gaw7rSSFy6RDBgiHR2
 
 -- Dumped from database version 15.14 (Debian 15.14-1.pgdg13+1)
 -- Dumped by pg_dump version 15.14 (Debian 15.14-1.pgdg13+1)
@@ -4926,6 +4926,19 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 3788	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-28 18:39:24.742+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	175	http://localhost:8055
 3789	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-28 18:39:24.745+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	187	http://localhost:8055
 3790	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-28 18:39:34.766+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	profiles	0eeb942b-e35a-44e8-a37d-52b9cdb24309	http://localhost:8055
+3791	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-28 18:46:44.883+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	32	http://localhost:8055
+3792	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-28 18:46:44.886+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	33	http://localhost:8055
+3793	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-28 18:46:44.888+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_projects	6	http://localhost:8055
+3794	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-28 18:47:13.255+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	19	http://localhost:8055
+3795	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-28 18:47:13.26+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	20	http://localhost:8055
+3796	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-28 18:47:13.264+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	21	http://localhost:8055
+3797	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-28 18:47:13.268+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	22	http://localhost:8055
+3798	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-28 18:47:13.272+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	23	http://localhost:8055
+3799	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-28 18:47:13.275+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	24	http://localhost:8055
+3800	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-28 18:47:13.279+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	32	http://localhost:8055
+3801	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-28 18:47:13.284+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	33	http://localhost:8055
+3802	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-28 18:47:13.288+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	25	http://localhost:8055
+3803	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-28 18:47:13.29+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_projects	6	http://localhost:8055
 \.
 
 
@@ -8706,6 +8719,19 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 3694	3787	directus_fields	147	{"id":147,"collection":"profiles","field":"application_questions","special":["o2m"],"interface":"list-o2m","options":null,"display":null,"display_options":null,"readonly":false,"hidden":true,"sort":27,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"application_questions","sort":27,"group":null}	\N	\N
 3695	3788	directus_fields	175	{"id":175,"collection":"profiles","field":"cheat_sheets","special":["o2m"],"interface":"list-o2m","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":28,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"cheat_sheets","sort":28,"group":null}	\N	\N
 3696	3789	directus_fields	187	{"id":187,"collection":"profiles","field":"project_stories","special":["o2m"],"interface":"list-o2m","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":29,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"project_stories","sort":29,"group":null}	\N	\N
+3700	3793	side_projects	6	{"id":6,"status":"published","sort":1,"date_created":"2025-10-28T16:08:58.982Z","date_updated":"2025-10-28T18:46:44.879Z","name":"Portfolio website","start_date":"2025-08-01","end_date":null,"profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","url":"https://www.rikwanders.tech/","stars":null,"summary":"Personal portfolio website showcasing my professional experience, skills, and services as a freelance/independent developer. Including personal dashboard with AI features for efficient job matching.","url_label":null,"achievements":["7c8851f2-84fd-4705-85eb-ee98edf5f0c0","353b6ae9-beac-4c4d-a8cd-e05bbdff2bd1"],"technologies":[19,20,21,22,23,24,25,32,33]}	{"date_updated":"2025-10-28T18:46:44.879Z"}	\N	\N
+3698	3791	side_project_technologies	32	{"status":"published","name":"Prisma ORM","sort":8,"side_project":"6"}	{"status":"published","name":"Prisma ORM","sort":8,"side_project":"6"}	3700	\N
+3699	3792	side_project_technologies	33	{"status":"published","name":"Directus (Headless CMS)","sort":9,"side_project":"6"}	{"status":"published","name":"Directus (Headless CMS)","sort":9,"side_project":"6"}	3700	\N
+3710	3803	side_projects	6	{"id":6,"status":"published","sort":1,"date_created":"2025-10-28T16:08:58.982Z","date_updated":"2025-10-28T18:47:13.252Z","name":"Portfolio website","start_date":"2025-08-01","end_date":null,"profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","url":"https://www.rikwanders.tech/","stars":null,"summary":"Personal portfolio website showcasing my professional experience, skills, and services as a freelance/independent developer. Including personal dashboard with AI features for efficient job matching.","url_label":null,"achievements":["7c8851f2-84fd-4705-85eb-ee98edf5f0c0","353b6ae9-beac-4c4d-a8cd-e05bbdff2bd1"],"technologies":[19,20,21,22,23,24,32,33,25]}	{"date_updated":"2025-10-28T18:47:13.252Z"}	\N	\N
+3701	3794	side_project_technologies	19	{"id":19,"status":"published","sort":1,"date_created":"2025-10-28T16:28:09.909Z","date_updated":"2025-10-28T18:47:13.254Z","name":"Sveltekit","side_project":6}	{"sort":1,"date_updated":"2025-10-28T18:47:13.254Z"}	3710	\N
+3702	3795	side_project_technologies	20	{"id":20,"status":"published","sort":2,"date_created":"2025-10-28T16:28:09.913Z","date_updated":"2025-10-28T18:47:13.259Z","name":"Tailwind CSS","side_project":6}	{"sort":2,"date_updated":"2025-10-28T18:47:13.259Z"}	3710	\N
+3703	3796	side_project_technologies	21	{"id":21,"status":"published","sort":3,"date_created":"2025-10-28T16:28:09.914Z","date_updated":"2025-10-28T18:47:13.263Z","name":"Vercel","side_project":6}	{"sort":3,"date_updated":"2025-10-28T18:47:13.263Z"}	3710	\N
+3704	3797	side_project_technologies	22	{"id":22,"status":"published","sort":4,"date_created":"2025-10-28T16:39:14.421Z","date_updated":"2025-10-28T18:47:13.267Z","name":"LLM","side_project":6}	{"sort":4,"date_updated":"2025-10-28T18:47:13.267Z"}	3710	\N
+3705	3798	side_project_technologies	23	{"id":23,"status":"published","sort":5,"date_created":"2025-10-28T16:46:26.452Z","date_updated":"2025-10-28T18:47:13.271Z","name":"OpenAI","side_project":6}	{"sort":5,"date_updated":"2025-10-28T18:47:13.271Z"}	3710	\N
+3706	3799	side_project_technologies	24	{"id":24,"status":"published","sort":6,"date_created":"2025-10-28T16:46:26.455Z","date_updated":"2025-10-28T18:47:13.274Z","name":"Google Gemini","side_project":6}	{"sort":6,"date_updated":"2025-10-28T18:47:13.274Z"}	3710	\N
+3707	3800	side_project_technologies	32	{"id":32,"status":"published","sort":7,"date_created":"2025-10-28T18:46:44.882Z","date_updated":"2025-10-28T18:47:13.278Z","name":"Prisma ORM","side_project":6}	{"sort":7,"date_updated":"2025-10-28T18:47:13.278Z"}	3710	\N
+3708	3801	side_project_technologies	33	{"id":33,"status":"published","sort":8,"date_created":"2025-10-28T18:46:44.885Z","date_updated":"2025-10-28T18:47:13.283Z","name":"Directus (Headless CMS)","side_project":6}	{"sort":8,"date_updated":"2025-10-28T18:47:13.283Z"}	3710	\N
+3709	3802	side_project_technologies	25	{"id":25,"status":"published","sort":9,"date_created":"2025-10-28T16:48:29.896Z","date_updated":"2025-10-28T18:47:13.287Z","name":"Selenium","side_project":6}	{"sort":9,"date_updated":"2025-10-28T18:47:13.287Z"}	3710	\N
 \.
 
 
@@ -8761,7 +8787,7 @@ c530a32f-84cb-4ab9-8a61-7a12a5bcb7e6	en-US	draft	Draft
 --
 
 COPY public.directus_users (id, first_name, last_name, email, password, location, title, description, tags, avatar, language, tfa_secret, status, role, token, last_access, last_page, provider, external_identifier, auth_data, email_notifications, appearance, theme_dark, theme_light, theme_light_overrides, theme_dark_overrides, text_direction) FROM stdin;
-157238bb-6930-4f26-be9c-8b31a9e11ab8	Admin	User	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-10-28 18:39:26.367+00	/content/profiles/0eeb942b-e35a-44e8-a37d-52b9cdb24309	default	\N	\N	t	\N	\N	\N	\N	\N	auto
+157238bb-6930-4f26-be9c-8b31a9e11ab8	Admin	User	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-10-28 18:39:26.367+00	/content/side_projects/6	default	\N	\N	t	\N	\N	\N	\N	\N	auto
 \.
 
 
@@ -8917,19 +8943,21 @@ COPY public.side_project_technologies (id, status, sort, date_created, date_upda
 16	published	4	2025-10-28 16:03:30.605+00	\N	Ember.js	4
 17	published	5	2025-10-28 16:04:51.741+00	\N	HTML	4
 18	published	6	2025-10-28 16:04:51.747+00	\N	CSS	4
-19	published	1	2025-10-28 16:28:09.909+00	\N	Sveltekit	6
-20	published	2	2025-10-28 16:28:09.913+00	\N	Tailwind CSS	6
-21	published	3	2025-10-28 16:28:09.914+00	\N	Vercel	6
-22	published	4	2025-10-28 16:39:14.421+00	\N	LLM	6
-23	published	5	2025-10-28 16:46:26.452+00	\N	OpenAI	6
-24	published	6	2025-10-28 16:46:26.455+00	\N	Google Gemini	6
-25	published	7	2025-10-28 16:48:29.896+00	\N	Selenium	6
 26	published	1	2025-10-28 17:37:02.198+00	\N	Python	5
 27	published	2	2025-10-28 17:37:02.203+00	\N	Django	5
 28	published	3	2025-10-28 17:38:14.715+00	\N	HTML	5
 29	published	1	2025-10-28 17:39:19.622+00	\N	Python	7
 30	published	2	2025-10-28 17:39:45.197+00	\N	Flask	7
 31	published	3	2025-10-28 17:39:45.2+00	\N	MongoEngine	7
+19	published	1	2025-10-28 16:28:09.909+00	2025-10-28 18:47:13.254+00	Sveltekit	6
+20	published	2	2025-10-28 16:28:09.913+00	2025-10-28 18:47:13.259+00	Tailwind CSS	6
+21	published	3	2025-10-28 16:28:09.914+00	2025-10-28 18:47:13.263+00	Vercel	6
+22	published	4	2025-10-28 16:39:14.421+00	2025-10-28 18:47:13.267+00	LLM	6
+23	published	5	2025-10-28 16:46:26.452+00	2025-10-28 18:47:13.271+00	OpenAI	6
+24	published	6	2025-10-28 16:46:26.455+00	2025-10-28 18:47:13.274+00	Google Gemini	6
+32	published	7	2025-10-28 18:46:44.882+00	2025-10-28 18:47:13.278+00	Prisma ORM	6
+33	published	8	2025-10-28 18:46:44.885+00	2025-10-28 18:47:13.283+00	Directus (Headless CMS)	6
+25	published	9	2025-10-28 16:48:29.896+00	2025-10-28 18:47:13.287+00	Selenium	6
 \.
 
 
@@ -8942,9 +8970,9 @@ COPY public.side_projects (id, status, sort, date_created, date_updated, name, s
 3	published	4	2025-10-27 18:56:41.56+00	2025-10-28 17:09:28.533+00	Git Submodules Guide	2014-01-15	2014-01-15	0eeb942b-e35a-44e8-a37d-52b9cdb24309	https://gist.github.com/gitaarik/8735255	1028	Popular GitHub Gist explaining Git submodules fundamentals. Helped many developers understand submodules effectively.	gist.github.com/gitaarik/8735255
 4	published	5	2025-10-27 18:57:47.942+00	2025-10-28 17:40:38.662+00	Jazzchords	2013-06-24	2017-12-08	0eeb942b-e35a-44e8-a37d-52b9cdb24309	https://github.com/gitaarik/jazzchords	12	Web application for creating and printing professional chord charts using Python/Django and modern frontend technologies.	\N
 1	published	2	2025-10-27 17:48:27.985+00	2025-10-28 15:07:27.15+00	LitState	2020-11-15	2023-01-18	0eeb942b-e35a-44e8-a37d-52b9cdb24309	https://github.com/gitaarik/lit-state	155	Reactive state management library for Lit Web Components, Open-sourced on GitHub & NPM. Used in production at Chipta (ticket shop). I used Lit + LitState as a simpler, lightweight and browser-native alternative to React + Redux.	\N
-6	published	1	2025-10-28 16:08:58.982+00	2025-10-28 17:16:12.928+00	Portfolio website	2025-08-01	\N	0eeb942b-e35a-44e8-a37d-52b9cdb24309	https://www.rikwanders.tech/	\N	Personal portfolio website showcasing my professional experience, skills, and services as a freelance/independent developer. Including personal dashboard with AI features for efficient job matching.	\N
 7	published	6	2025-10-28 16:56:49.268+00	2025-10-28 17:50:01.47+00	Monkful	2013-09-03	2014-10-04	0eeb942b-e35a-44e8-a37d-52b9cdb24309	https://github.com/gitaarik/monkful	10	Python package to easily create RESTful API's for MongoEngine documents used for MongoDB database. Inspired by Django REST framework. Used in production at Travelbird.	\N
 5	published	7	2025-10-27 18:58:56.208+00	2025-10-28 17:52:38.819+00	Adyengo	2013-08-06	2020-05-07	0eeb942b-e35a-44e8-a37d-52b9cdb24309	https://github.com/gitaarik/adyengo	10	Open-source Django package for Adyen payment integration with recurring payment support. Used in production at Tender-it.	\N
+6	published	1	2025-10-28 16:08:58.982+00	2025-10-28 18:47:13.252+00	Portfolio website	2025-08-01	\N	0eeb942b-e35a-44e8-a37d-52b9cdb24309	https://www.rikwanders.tech/	\N	Personal portfolio website showcasing my professional experience, skills, and services as a freelance/independent developer. Including personal dashboard with AI features for efficient job matching.	\N
 \.
 
 
@@ -9212,7 +9240,7 @@ Festivalinfo	Amsterdam, NL	Festival / event information website	Internship Web D
 -- Name: directus_activity_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_activity_id_seq', 3790, true);
+SELECT pg_catalog.setval('public.directus_activity_id_seq', 3803, true);
 
 
 --
@@ -9254,7 +9282,7 @@ SELECT pg_catalog.setval('public.directus_relations_id_seq', 27, true);
 -- Name: directus_revisions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_revisions_id_seq', 3697, true);
+SELECT pg_catalog.setval('public.directus_revisions_id_seq', 3710, true);
 
 
 --
@@ -9289,7 +9317,7 @@ SELECT pg_catalog.setval('public.salary_expectations_id_seq', 2, true);
 -- Name: side_project_technologies_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.side_project_technologies_id_seq', 31, true);
+SELECT pg_catalog.setval('public.side_project_technologies_id_seq', 33, true);
 
 
 --
@@ -10283,5 +10311,5 @@ ALTER TABLE ONLY public.work_experiences
 -- PostgreSQL database dump complete
 --
 
-\unrestrict QTtXzjT4nnvYPAZZS0Piq2Wk6fJR25cbgwU74ygdebPFrciHJBnMwlZ7yFni1FM
+\unrestrict ki6ks5yqQNmiuNE1j7AkHpHm8REo57sIghXlD3SuoWFb5gaw7rSSFy6RDBgiHR2
 
