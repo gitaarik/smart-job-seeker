@@ -129,8 +129,8 @@
           Technologies Used:
         </h4>
         <ul class="flex flex-wrap gap-2 print:gap-[5px]">
-          {#each data.technologies as tech (tech)}
-            <TechTag {tech} />
+          {#each data.technologies as tech (tech.name)}
+            <TechTag tech={tech.name} />
           {/each}
         </ul>
       </div>

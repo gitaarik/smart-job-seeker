@@ -11,6 +11,7 @@
   import { resume } from "$lib/data/resume";
   import { formatDateRangeVerbose } from "$lib/tools/date-utils";
   import InfoBoxes from "./InfoBoxes.svelte";
+  import TechTag from "./TechTag.svelte";
 
   let props = $props();
   const profile = props.profile;
@@ -19,17 +20,17 @@
 <InfoSection title="Side Projects" icon={faCode}>
   <div>
     {#each profile.side_projects as project, index (project.name)}
-      <div class="break-inside-avoid {index === 0 ? 'mt-12' : ''}">
-        <header class="mb-2">
+      <div class="break-inside-avoid {index === 0 ? 'mt-10' : ''}">
+        <header class="mb-4">
           <h3 class="text-2xl font-semibold text-ocean">
             {project.name}
           </h3>
         </header>
 
-        <div class="space-y-4">
-          <p class="leading-relaxed print:text-sm">{project.summary}</p>
+        <p class="leading-relaxed print:text-sm">{project.summary}</p>
 
-          {#if project.url}
+        {#if project.url}
+          <div class="flex justify-start mt-6">
             <a
               href={project.url}
               target="_blank"
@@ -40,13 +41,17 @@
                 size="lg"
               />
 
-              <span class="font-medium">
+              <span class="font-medium nowrap">
                 {#if project.url_label}
                   {project.url_label}
                 {:else}
                   {
-                    project.url.replace("https://github.com/", "")
-                      .replace("https://www.github.com/", "").replace(
+                    project.url.replace(
+                      "https://github.com/",
+                      "",
+                    )
+                      .replace("https://www.github.com/", "")
+                      .replace(
                         /\/$/,
                         "",
                       )
@@ -67,24 +72,27 @@
                 </span>
               {/if}
             </a>
-          {/if}
+          </div>
+        {/if}
 
-          {#if project.side_project_achievements.length > 0}
-            <h4 class="text-lg font-semibold mb-3">
-              Highlights:
-            </h4>
-            <InfoBoxes items={project.side_project_achievements} />
-          {/if}
-        </div>
+        {#if project.side_project_achievements.length > 0}
+          <h4 class="text-lg font-semibold mt-6 mb-3">
+            Highlights:
+          </h4>
+          <InfoBoxes items={project.side_project_achievements} />
+        {/if}
 
         {#if project.technologies}
-          <h4
-            class="text-lg mt-6 font-semibold mb-3"
-          >
-            Technologies:
-          </h4>
-
-          {project.technologies}
+          <div class="mt-4">
+            <h4 class="text-lg print:text-base font-semibold mb-3 print:mb-2">
+              Technologies Used:
+            </h4>
+            <ul class="flex flex-wrap gap-2 print:gap-[5px]">
+              {#each project.technologies as tech (tech)}
+                <TechTag {tech} />
+              {/each}
+            </ul>
+          </div>
         {/if}
       </div>
 
