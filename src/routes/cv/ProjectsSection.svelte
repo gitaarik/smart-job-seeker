@@ -75,14 +75,14 @@
           </div>
         {/if}
 
-        {#if project.side_project_achievements.length > 0}
+        {#if project.side_project_achievements.length}
           <h4 class="text-lg font-semibold mt-6 mb-3">
             Highlights:
           </h4>
           <InfoBoxes items={project.side_project_achievements} />
         {/if}
 
-        {#if project.side_project_technologies}
+        {#if project.side_project_technologies.length}
           <div class="mt-4">
             <h4 class="text-lg print:text-base font-semibold mb-3 print:mb-2">
               Technologies Used:
