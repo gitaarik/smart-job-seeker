@@ -622,6 +622,7 @@ model profiles {
   headline              String?                 @db.VarChar(255)
   profile_picture       String?                 @db.Uuid
   summary               String?
+  nationality           String?                 @db.VarChar(255)
   application_questions application_questions[]
   cheat_sheets          cheat_sheets[]
   dev_methodologies     dev_methodologies[]
