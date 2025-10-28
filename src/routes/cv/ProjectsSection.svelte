@@ -29,18 +29,18 @@
         <div class="space-y-4">
           <p class="leading-relaxed print:text-sm">{project.summary}</p>
 
-          {#if project.url && project.url.includes("github.com")}
+          {#if project.url}
             <a
               href={project.url}
               target="_blank"
-              class="inline-flex items-center gap-2 px-5 py-3 bg-ocean text-white rounded-lg hover:bg-teal transition-colors duration-200"
+              class="inline-flex items-center gap-2 px-5 py-3 bg-ocean text-white rounded-lg hover:bg-ocean/85 transition-all"
             >
               <FontAwesomeIcon
                 icon={faGithub}
-                class="w-4 h-4"
+                size="lg"
               />
 
-              <span class="text-sm font-medium">
+              <span class="font-medium">
                 {#if project.url_label}
                   {project.url_label}
                 {:else}
@@ -60,9 +60,10 @@
                 >
                   <FontAwesomeIcon
                     icon={faStar}
-                    class="w-3 h-3 text-yellow-500"
+                    size="md"
+                    class="text-yellow-500"
                   />
-                  <span class="text-sm">{project.stars}</span>
+                  <span>{project.stars}</span>
                 </span>
               {/if}
             </a>
