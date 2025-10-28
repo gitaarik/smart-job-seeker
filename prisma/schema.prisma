@@ -785,8 +785,24 @@ model side_projects {
   stars                     Int?
   summary                   String?
   technologies              Json?                       @db.Json
+  url_label                 String?                     @db.VarChar(255)
   side_project_achievements side_project_achievements[]
   profiles                  profiles?                   @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "side_projects_profile_foreign")
+}
+
+model salary_expectations {
+  id               Int       @id @default(autoincrement())
+  sort             Int?
+  date_created     DateTime? @db.Timestamptz(6)
+  date_updated     DateTime? @db.Timestamptz(6)
+  job_title        String?   @db.VarChar(255)
+  company_type     String    @db.VarChar(255)
+  employment_type  String    @db.VarChar(255)
+  work_arrangement String    @db.VarChar(255)
+  region           String    @db.VarChar(255)
+  hourly_rate      Int?
+  month_salary     Int?
+  year_salary      Int?
 }
 
 enum Role {
