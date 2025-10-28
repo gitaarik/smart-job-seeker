@@ -39,7 +39,21 @@
                 icon={faGithub}
                 class="w-4 h-4"
               />
-              <span class="text-sm font-medium">View on GitHub</span>
+
+              <span class="text-sm font-medium">
+                {#if project.url_label}
+                  {project.url_label}
+                {:else}
+                  {
+                    project.url.replace("https://github.com/", "")
+                      .replace("https://www.github.com/", "").replace(
+                        /\/$/,
+                        "",
+                      )
+                  }
+                {/if}
+              </span>
+
               {#if project.stars}
                 <span
                   class="flex items-center gap-1 ml-2 pl-2 border-l border-white/30"
