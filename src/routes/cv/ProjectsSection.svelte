@@ -82,14 +82,14 @@
           <InfoBoxes items={project.side_project_achievements} />
         {/if}
 
-        {#if project.technologies}
+        {#if project.side_project_technologies}
           <div class="mt-4">
             <h4 class="text-lg print:text-base font-semibold mb-3 print:mb-2">
               Technologies Used:
             </h4>
             <ul class="flex flex-wrap gap-2 print:gap-[5px]">
-              {#each project.technologies as tech (tech)}
-                <TechTag {tech} />
+              {#each project.side_project_technologies as tech (tech.name)}
+                <TechTag tech={tech.name} />
               {/each}
             </ul>
           </div>

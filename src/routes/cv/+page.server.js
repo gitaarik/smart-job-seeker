@@ -24,6 +24,7 @@ export async function load({ locals }) {
       side_projects: {
         include: {
           side_project_achievements: { orderBy: { sort: "asc" } },
+          side_project_technologies: { orderBy: { sort: "asc" } },
         },
         orderBy: { sort: "asc" },
       },
