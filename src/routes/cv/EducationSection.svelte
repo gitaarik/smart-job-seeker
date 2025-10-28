@@ -6,7 +6,7 @@
     faGraduationCap,
     faBuilding,
     faMapMarkerAlt,
-    faCalendar,
+    faCalendarAlt,
     faBook,
     faLink,
   } from "@fortawesome/free-solid-svg-icons";
@@ -62,7 +62,7 @@
 
                 <li class="flex items-center">
                   <FontAwesomeIcon
-                    icon={faCalendar}
+                    icon={faCalendarAlt}
                     class="mr-1 flex-shrink-0 w-3 h-3"
                   />
                   <span>
