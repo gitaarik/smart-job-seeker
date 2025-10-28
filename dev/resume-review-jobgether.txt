@@ -1,0 +1,201 @@
+https://jobgether.com/talent/cv-review
+
+Latest CV Review Your Current Score: 86/100 Generated on: 10/28/25 Benchmark
+
+Against top-tier senior engineer resumes, Rik’s CV ranks strongly on impact
+orientation, technical breadth, and leadership. It showcases a decade-plus track
+record of shipping and scaling production systems in Python/Django and React,
+with quantifiable results and clear ownership. To reach elite level, add a
+sharper executive summary, standardize ATS-friendly titles/keywords, clarify
+project metrics (e.g., star counts), and add an Education/Certifications section
+alongside Languages and links. With these refinements, the profile will match
+the polish of high-performing resumes used for global remote roles and tech lead
+positions. Strengths
+
+1 - Impact and outcome orientation
+
+    Frequent quantified results (+40% revenue, +30% engagement, -80% deploy time, +80% test coverage).
+    Strong scalability outcomes (thousands of orders/min, SQL optimization 30–60%).
+    Demonstrates process improvements (TDD adoption, CI/CD orchestration).
+
+2 - Technical breadth across the stack
+
+    Backend depth in Python/Django/DRF with Celery, testing, and performance tuning.
+    Modern frontend experience (React, React Native, TypeScript, Svelte, Web Components).
+    Database versatility and performance (PostgreSQL, MySQL, Elasticsearch).
+    DevOps exposure (Docker Compose, Ansible, GitHub Actions, AWS, Linode, Vercel).
+
+3 - Leadership and team impact
+
+    Led agile teams (3–5 devs) with measurable productivity improvement (+25%).
+    Introduced code review rigor, TDD, and release cadence improvements.
+    Built high-impact features (ticket scan app, subscription systems) that drive revenue and market entry.
+
+4 - Open-source and thought leadership
+
+    Multiple open-source projects with substantial traction (Git stars in the hundreds/thousands).
+    Demonstrates community contribution and technical communication capability (Git Submodules Guide).
+
+5 - Remote and startup fit
+
+    5+ years remote experience; thrives in agile/startup contexts.
+    Shipped end-to-end platforms for non-technical founders (consultative approach).
+
+6 - Clear, concise bullet style
+
+    Bullets consistently follow Action + Result pattern.
+    Readable structure with strong verbs and metrics.
+
+Areas for Improvement
+
+1 - Content Gaps & Weaknesses
+
+    No Education or Certifications section is present; many hiring systems expect it.
+    Project star counts are listed as plain numbers (143, 108, 1022) without labels; unclear to non-technical readers and ATS.
+    Some achievements could include scale/context (monthly active users, revenue bands, traffic volume, data sizes).
+    Leadership scope could expand on responsibilities (hiring, mentoring, roadmapping, cross-functional alignment, stakeholder management).
+    Security, reliability, and observability practices are mentioned broadly but could be evidenced (e.g., SLOs, incident reduction, SOC2/GDPR).
+    Missing Languages section (valuable for international remote roles).
+
+2 - Structure & Organization
+
+    Contact and links are fragmented; provide explicit, labeled URLs (e.g., LinkedIn, GitHub, portfolio).
+    Project entries lack consistent structure (title, link, role, stack, impact, traction).
+    Consider a brief Tech Stack line under each role to improve scannability for recruiters.
+    Normalize job titles to market standards (e.g., Lead Developer → Lead Software Engineer / Engineering Lead).
+    Ensure consistent punctuation and tense (avoid first-person phrasing in projects).
+
+3 - Language & Expression
+
+    Remove subjective, generic claims in the summary (e.g., “Always current with industry trends”). Replace with concrete strengths and domains.
+    Maintain third-person, impact-focused bullets (avoid “I used” in projects).
+    Use consistent past tense for completed roles and present tense for current work.
+
+4 - ATS & Recruiter Optimization
+
+    Add standard keywords used by recruiters: microservices, asynchronous processing, message queues, caching, observability, IaC, OAuth/OIDC, JWT, API rate limiting, RBAC (only if applicable).
+    Clarify employment types and locations uniformly; include Remote where relevant.
+    Use standard job title variants in parentheses to match searches (Senior Full-Stack Engineer, Tech Lead).
+    Label GitHub star counts and package downloads explicitly so ATS can parse the nouns.
+
+5 - Visual & Design Elements
+
+    Use consistent separators (commas or en dashes) and avoid decorative characters that may confuse ATS.
+    Standardize bullet punctuation; end with periods or omit consistently.
+    Make all links explicit and clickable (https://...).
+    Ensure uniform date format across roles (MM/YYYY – MM/YYYY).
+
+6 - Education & Certifications
+
+    Add Education (degree or “Professional Development” if non-traditional).
+    Include relevant recent certifications or notable coursework (e.g., AWS, security, data engineering).
+    If no degree, include selected courses with institutions and dates to satisfy ATS filters.
+
+Actionable Recommendations
+
+    Professional Summary / Profile Statement
+
+        Reframe the summary to a crisp, impact- and scope-led value proposition with core stacks, scale, leadership, and domains.
+
+        Example:
+            Senior Full-Stack Engineer and Engineering Lead with 12+ years building and scaling high-traffic, data-heavy products in Python/Django, Node.js, and React. Led agile teams (3–5) to ship revenue-driving features, reduce deploy times by 80%, and raise test coverage to 80%+. Scaled systems to thousands of orders/min through SQL and application-level optimizations. DevOps-minded (Docker, CI/CD, Ansible, AWS, Vercel) with strong UX sensibilities. Open-source contributor (1k+ stars) and 5+ years remote. Looking to lead end-to-end product delivery for growth-stage teams.
+
+        Option with domain flavor (e-commerce/ticketing, search, subscriptions) and security/observability.
+
+        Example:
+            Senior Full-Stack Engineer specializing in e-commerce/ticketing, search, and subscription platforms. 12+ years optimizing Python/Django backends, React frontends, and data pipelines at scale (thousands of orders/min). Implemented TDD (80%+ coverage), CI/CD (-80% deploy time), and observability to improve reliability. Led teams of 3–5 engineers, mentored peers, and partnered with founders. Open-source author with widely adopted projects. Remote-first, security-aware (OWASP, GDPR).
+
+    Experience Section
+
+    Recommendations:
+        For each role, add a one-line scope statement (team size, ownership, stack, domain).
+        Add a Tech Stack line (e.g., Python, Django, DRF, Postgres, Redis, Celery, React, AWS, Docker, Ansible).
+        Keep bullets outcome-first: Action + Result + Metric + Scope (when applicable).
+        Label scale explicitly (e.g., 2M MAU, 50M requests/day, 2TB dataset, 100K daily scans) where possible.
+        Normalize titles to match recruiter searches (Lead Software Engineer / Engineering Lead).
+        Group similar achievements to avoid repetition (e.g., performance/scalability, DevOps, product outcomes).
+        Convert project numbers to labeled metrics (GitHub Stars, NPM Downloads, PyPI Downloads).
+        Remove first-person phrasing in projects; keep consistent tense and punctuation.
+
+    Example revision:
+
+        Lead Software Engineer (Engineering Lead), Chipta
+
+        09/2014 – 06/2024, Amsterdam, NL (Remote/Hybrid)
+            Led a 3–5 engineer team to improve throughput and delivery cadence (+25% team output) via agile rituals, code reviews, and roadmapping.
+            Scaled ticketing platform to thousands of orders/min by optimizing PostgreSQL queries and Python/Django services (30–60% faster critical paths).
+            Launched React Native ticket-scan app with WebSockets, reducing entry friction and contributing to +40% revenue uplift.
+            Raised engineering quality by establishing TDD and a comprehensive Django/Selenium suite (80%+ coverage), cutting regressions by ~90%.
+            Built CI/CD on Linode with Ansible and GitHub Actions, reducing deploy time by 80% and enabling frequent, low-risk releases.
+            Standardized local development with Docker Compose (4 microservices) to streamline onboarding and parity across environments.
+            Tech Stack: Python, Django, DRF, Celery, PostgreSQL, React, React Native, WebSockets, Docker Compose, Ansible, GitHub Actions, Linode/AWS.
+
+    Skill Section
+        Group skills by Backend, Frontend, Datastores, DevOps/Cloud, Testing/Quality, Architecture/Patterns, Security/Compliance, Product/Process.
+        Add missing or clarifying keywords if applicable: Redis (often used with Celery), Nginx, Gunicorn/Uvicorn, AsyncIO, OAuth2/OIDC, JWT, RBAC, GraphQL or gRPC (if relevant), API rate limiting/caching, Message queues (RabbitMQ/Kafka), Feature flags, Observability (Prometheus, Grafana, OpenTelemetry), Sentry, Terraform/IaC, Kubernetes (only if used), Secrets management (Vault/SOPS).
+        Under Cloud, break down AWS services actually used (e.g., EC2, S3, RDS, CloudFront, IAM) to increase keyword matches.
+        Add Collaboration/Leadership tools if relevant (Jira, Confluence, Notion) and Agile (Scrum/Kanban).
+        For UX, add accessibility (a11y), responsive design, and design systems if applicable.
+
+    ATS & Recruiter Optimization
+        Add standard title variants to headers: Senior Full-Stack Engineer (Lead Developer / Engineering Lead).
+        Include synonyms and related keywords: microservices, asynchronous tasks, message queue (Celery/Redis/RabbitMQ), caching, rate limiting, CI/CD, IaC, observability, SLOs, incident response, security hardening, GDPR/PII, access control (RBAC).
+        Replace bare numbers in Projects with explicit labels: GitHub Stars: 143; PyPI Downloads: X; NPM Downloads: Y.
+        Ensure all links are explicit with protocol (https://) and labeled (GitHub, LinkedIn, Portfolio).
+        Avoid special characters and multi-column layouts that some ATS fail to parse; use clean bullets and simple section headers.
+        Normalize location and work arrangement (Remote, Hybrid) to aid recruiter filters.
+
+    Formatting & Layout
+        Condense contact block into a single, labeled line with URLs: Email | Phone | Location (CET) | Portfolio | GitHub | LinkedIn.
+        Add section order: Summary, Core Skills, Experience, Projects (Selected Open Source), Education & Certifications, Languages.
+        Add a one-line scope and a Tech Stack line per role before achievement bullets.
+        Label project metrics and add links inline under each project.
+        Use consistent date format (MM/YYYY – MM/YYYY) and consistent punctuation for bullets.
+        Target 1–2 pages. Given depth, a tight 2-page version is acceptable for senior/lead roles.
+
+    Education & Certifications
+
+    Recommendations:
+        Add Education (degree and institution). If non-traditional, add Professional Development with reputable courses (e.g., Coursera, edX, AWS, Django, React).
+        Include recent, relevant certifications if available (e.g., AWS Certified Developer/SAA, Security certs, Elasticsearch).
+        Add a short list of standout coursework or capstone projects if degree is older or unrelated.
+        Place Education below Projects and above Languages for mid/senior profiles.
+
+    Consider format like:
+
+        B.Sc. (Example) Computer Science, with Professional Development, Example University of Amsterdam (Example), 2010 – 2013 (Example) | Ongoing PD
+            Professional Development: AWS Cloud Practitioner (2024), Elasticsearch Engineer I (2023), Django Security Best Practices (2022) – examples
+            Capstone/Thesis: Performance optimization of high-traffic Django applications – example
+
+    Optional Additions
+        Add a Languages section (e.g., Dutch – Native, English – Fluent/C2, Spanish – Working proficiency) to reinforce international readiness.
+        Add a brief “Selected Open Source” section with stars/downloads and impact lines; keep 2–4 top items.
+        Add “Public Speaking / Publications” if any meetups, blogs, or talks exist (link to slides/posts).
+        Add “References available upon request” only if space permits; not required but acceptable internationally.
+        Consider a short “Domains” line in Summary: ticketing/e-commerce, search/relevance, subscriptions/payments.
+
+Final Summary
+
+Rik, your CV is already strong: impact-rich, technically broad, and
+leadership-forward. It clearly shows you can scale systems, lead small teams,
+and deliver product outcomes. To reach an exceptional, recruiter-ready level,
+tighten the summary into a value proposition, standardize titles/keywords for
+ATS, clarify and label your project traction metrics, and add
+Education/Certifications and Languages. Introduce a scope line and Tech Stack
+per role, and keep bullets outcome-first with labeled scale. These refinements
+will align your profile with elite senior/lead resumes used in global remote
+hiring.
+
+Next Steps:
+
+    Rewrite the Professional Summary using one of the provided options (value proposition, domains, leadership scope).
+    Normalize titles and add a Tech Stack line and one-line scope for each role, then refine bullets with Action + Result + Metric.
+    Clean and consolidate contact/links with explicit labels and URLs (add LinkedIn URL).
+    Reformat Projects with labeled metrics (GitHub Stars/NPM/PyPI) and add concise impact lines.
+    Add Education/Certifications (or Professional Development) and a Languages section.
+    Standardize formatting: dates, punctuation, and ATS-friendly characters; ensure all links are clickable.
+
+If you implement these updates, your potential score could rise to ~92–95/100,
+and you could see a 20–35% improvement in interview conversions for senior
+full-stack and engineering lead roles, depending on role-market fit and tailored
+applications.
