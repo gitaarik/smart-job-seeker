@@ -5,11 +5,11 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faBuilding,
-    faCalendar,
+    faCalendarAlt,
     faGlobe,
     faLink,
     faMapMarkerAlt,
-    faUser,
+    faUserTie,
   } from "@fortawesome/free-solid-svg-icons";
   import { formatDateRangeVerbose } from "$lib/tools/date-utils";
   import { getImg } from "$lib/tools/get-img";
@@ -37,7 +37,7 @@
           <div class="space-y-2">
             <div class="flex items-center">
               <FontAwesomeIcon
-                icon={faUser}
+                icon={faUserTie}
                 class="mr-2 flex-shrink-0 w-3 h-3"
               />
               <span>{data.position}</span>
@@ -65,7 +65,7 @@
                   data.website.replace("https://", "").replace(
                     "www.",
                     "",
-                  )
+                  ).replace(/\/$/, "")
                 }</a>
               </div>
             {/if}
@@ -74,7 +74,7 @@
           <div class="space-y-2">
             <div class="flex items-center">
               <FontAwesomeIcon
-                icon={faCalendar}
+                icon={faCalendarAlt}
                 class="mr-2 flex-shrink-0 w-3 h-3"
               />
               <span>{

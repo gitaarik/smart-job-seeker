@@ -41,7 +41,6 @@
     <ProfessionalExperience profile={data.profile} />
     <EducationSection profile={data.profile} />
     <ProjectsSection profile={data.profile} />
-    <HobbiesInterestsSection />
     <ReferencesSection />
   </div>
 </div>
