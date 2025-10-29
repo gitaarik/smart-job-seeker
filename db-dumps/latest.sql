@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict khyNWQb6hDd1mqzm9oysbQBkwJpZHdXFFoqQGdZtrrWN11vHxwAyse5z0JDwW00
+\restrict lJUkpisl5e4ZaD3y0OFhGULD0AzhhuUlktT8ipQNy8ArI3EnK1ltTu7trv6IZto
 
 -- Dumped from database version 15.14 (Debian 15.14-1.pgdg13+1)
 -- Dumped by pg_dump version 15.14 (Debian 15.14-1.pgdg13+1)
@@ -980,6 +980,46 @@ CREATE TABLE public.languages (
 ALTER TABLE public.languages OWNER TO postgres;
 
 --
+-- Name: profile_versions; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.profile_versions (
+    id integer NOT NULL,
+    status character varying(255) DEFAULT 'draft'::character varying NOT NULL,
+    sort integer,
+    date_created timestamp with time zone,
+    date_updated timestamp with time zone,
+    name character varying(255),
+    description text,
+    profile uuid
+);
+
+
+ALTER TABLE public.profile_versions OWNER TO postgres;
+
+--
+-- Name: profile_versions_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.profile_versions_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.profile_versions_id_seq OWNER TO postgres;
+
+--
+-- Name: profile_versions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.profile_versions_id_seq OWNED BY public.profile_versions.id;
+
+
+--
 -- Name: profiles; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -1511,6 +1551,13 @@ ALTER TABLE ONLY public.directus_webhooks ALTER COLUMN id SET DEFAULT nextval('p
 --
 
 ALTER TABLE ONLY public.education ALTER COLUMN id SET DEFAULT nextval('public.education_id_seq'::regclass);
+
+
+--
+-- Name: profile_versions id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.profile_versions ALTER COLUMN id SET DEFAULT nextval('public.profile_versions_id_seq'::regclass);
 
 
 --
@@ -5377,6 +5424,54 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 4185	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:12:44.057+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	dev_methodologies	fd9086a3-071a-458c-9e50-accbf3bff907	http://localhost:8055
 4186	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:12:49.706+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	tech_skills	46	http://localhost:8055
 4187	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:12:49.711+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	tech_skill_categories	4b779c47-4943-47c6-856e-20b3001a2fb5	http://localhost:8055
+4188	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:42:55.049+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	288	http://localhost:8055
+4189	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:42:55.052+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	289	http://localhost:8055
+4190	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:42:55.054+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	290	http://localhost:8055
+4191	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:42:55.057+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	291	http://localhost:8055
+4192	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:42:55.06+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	292	http://localhost:8055
+4193	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:42:55.065+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	profile_versions	http://localhost:8055
+4194	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:43:10.089+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	293	http://localhost:8055
+4195	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:43:31.262+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	294	http://localhost:8055
+4196	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:43:42.083+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	profile_versions	http://localhost:8055
+4197	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:44:13.856+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	295	http://localhost:8055
+4198	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:44:13.949+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	296	http://localhost:8055
+4199	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:44:19.674+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	295	http://localhost:8055
+4200	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:44:21.457+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	289	http://localhost:8055
+4201	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:44:23.738+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	288	http://localhost:8055
+4202	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:44:23.743+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	295	http://localhost:8055
+4203	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:44:23.75+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	289	http://localhost:8055
+4204	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:44:23.755+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	290	http://localhost:8055
+4205	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:44:23.76+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	291	http://localhost:8055
+4206	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:44:23.765+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	292	http://localhost:8055
+4207	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:44:23.769+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	293	http://localhost:8055
+4208	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:44:23.772+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	294	http://localhost:8055
+4209	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:44:26.026+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	293	http://localhost:8055
+4210	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:44:27.721+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	294	http://localhost:8055
+4211	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:44:37.673+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	languages	http://localhost:8055
+4212	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:44:37.673+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	profiles	http://localhost:8055
+4213	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:44:37.677+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	highlights	http://localhost:8055
+4214	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:44:37.677+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	tech_skill_types	http://localhost:8055
+4215	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:44:37.683+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	tech_skill_categories	http://localhost:8055
+4216	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:44:37.687+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	soft_skills	http://localhost:8055
+4217	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:44:37.692+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	dev_methodologies	http://localhost:8055
+4218	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:44:37.7+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	work_experiences	http://localhost:8055
+4219	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:44:37.705+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	education	http://localhost:8055
+4220	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:44:37.709+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	side_projects	http://localhost:8055
+4221	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:44:37.716+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	references	http://localhost:8055
+4222	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:44:37.721+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	profile_versions	http://localhost:8055
+4223	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:44:37.724+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	salary_expectations	http://localhost:8055
+4224	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:44:37.726+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	project_stories	http://localhost:8055
+4225	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:44:37.731+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	application_questions	http://localhost:8055
+4226	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:44:37.733+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	cheat_sheets	http://localhost:8055
+4227	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:45:32.45+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	295	http://localhost:8055
+4228	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:46:59.698+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	profile_versions	1	http://localhost:8055
+4229	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:46:59.704+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	profiles	0eeb942b-e35a-44e8-a37d-52b9cdb24309	http://localhost:8055
+4230	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:47:19.685+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	295	http://localhost:8055
+4231	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:47:35.047+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	profile_versions	2	http://localhost:8055
+4232	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:48:10.207+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	profile_versions	3	http://localhost:8055
+4233	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:48:14.99+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	profile_versions	3	http://localhost:8055
+4234	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:48:26.477+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	profile_versions	4	http://localhost:8055
+4235	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:48:32.316+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	profile_versions	4	http://localhost:8055
 \.
 
 
@@ -5386,25 +5481,26 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 
 COPY public.directus_collections (collection, icon, note, display_template, hidden, singleton, translations, archive_field, archive_app_filter, archive_value, unarchive_value, sort_field, accountability, color, item_duplication_fields, sort, "group", collapse, preview_url, versioning) FROM stdin;
 work_experience_technologies	\N	\N	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	2	work_experiences	open	\N	f
-side_project_achievements	\N	\N	{{title}} | {{description}}	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	1	side_projects	open	\N	f
-side_project_technologies	\N	\N	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	2	side_projects	open	\N	f
-work_experience_achievements	\N	\N	{{title}} | {{description}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	1	work_experiences	open	\N	f
-tech_skills	\N	\N	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	1	tech_skill_categories	open	\N	f
-profiles	\N	\N	{{name}}	f	f	\N	\N	t	\N	\N	\N	all	\N	\N	1	\N	open	\N	f
-languages	\N	\N	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	1	profiles	open	\N	f
-highlights	\N	\N	{{text}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	2	profiles	open	\N	f
 tech_skill_types	\N	\N	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	2	\N	open	\N	f
+side_project_achievements	\N	\N	{{title}} | {{description}}	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	1	side_projects	open	\N	f
 tech_skill_categories	\N	\N	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	3	profiles	open	\N	f
+side_project_technologies	\N	\N	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	2	side_projects	open	\N	f
 soft_skills	\N	\N	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	4	profiles	open	\N	f
 dev_methodologies	\N	\N	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	5	profiles	open	\N	f
+work_experience_achievements	\N	\N	{{title}} | {{description}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	1	work_experiences	open	\N	f
 work_experiences	\N	\N	{{name}} | {{location}} | {{position}} | {{start_date}} - {{end_date}}	f	f	\N	\N	t	\N	\N	sort	all	\N	[]	6	profiles	open	\N	f
 education	\N	\N	{{area}}  | {{institution}} | {{start_date}} - {{end_date}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	7	profiles	open	\N	f
 side_projects	\N	\N	{{name}} | {{start_date}} - {{end_date}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	8	profiles	open	\N	f
 references	\N	\N	{{author}} - {{author_position}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	9	profiles	open	\N	f
-salary_expectations	\N	\N	\N	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	10	profiles	open	\N	f
-project_stories	\N	\N	{{title}}	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	11	profiles	open	\N	f
-application_questions	\N	\N	\N	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	12	profiles	open	\N	f
-cheat_sheets	\N	\N	{{title}}	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	13	profiles	open	\N	f
+profile_versions	\N	\N	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	10	profiles	open	\N	f
+salary_expectations	\N	\N	\N	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	11	profiles	open	\N	f
+project_stories	\N	\N	{{title}}	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	12	profiles	open	\N	f
+application_questions	\N	\N	\N	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	13	profiles	open	\N	f
+cheat_sheets	\N	\N	{{title}}	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	14	profiles	open	\N	f
+tech_skills	\N	\N	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	1	tech_skill_categories	open	\N	f
+languages	\N	\N	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	1	profiles	open	\N	f
+profiles	\N	\N	{{name}}	f	f	\N	\N	t	\N	\N	\N	all	\N	\N	1	\N	open	\N	f
+highlights	\N	\N	{{text}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	2	profiles	open	\N	f
 \.
 
 
@@ -5651,14 +5747,23 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 277	references	author	\N	input	\N	\N	\N	f	f	7	half	\N	\N	\N	f	\N	\N	\N
 278	references	author_position	\N	input	\N	\N	\N	f	f	8	half	\N	\N	\N	f	\N	\N	\N
 279	references	text	\N	input-rich-text-md	\N	\N	\N	f	f	9	full	\N	\N	\N	f	\N	\N	\N
+296	profiles	versions	o2m	list-o2m	\N	\N	\N	f	f	33	full	\N	\N	\N	f	\N	\N	\N
 273	references	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	3	half	\N	\N	\N	f	\N	\N	\N
 271	profiles	nationality	\N	input	\N	\N	\N	f	f	7	half	\N	Optional, necessary for certain jobs	\N	f	\N	\N	\N
 283	profiles	location_url	\N	input	\N	\N	\N	f	f	14	half	\N	The URL to the location on Google Maps for example	\N	f	\N	\N	\N
 284	profiles	location_timezone	\N	input	{"defaultView":{"center":{"lng":8.762165609257522,"lat":52.54172826198658},"zoom":3.245457944279851,"bearing":0,"pitch":0},"geometryType":"Point"}	\N	\N	f	f	15	half	\N	The timezone of the location, as written text, for example: CET/GMT+1	\N	f	\N	\N	\N
+290	profile_versions	sort	\N	input	\N	\N	\N	f	t	4	full	\N	\N	\N	f	\N	\N	\N
 281	profiles	references	o2m	list-o2m	\N	\N	\N	f	f	32	full	\N	\N	\N	f	\N	\N	\N
 285	work_experiences	tags	cast-json	tags	\N	\N	\N	f	f	18	full	\N	\N	\N	f	\N	\N	\N
 286	side_projects	tags	cast-json	tags	\N	\N	\N	f	f	16	full	\N	\N	\N	f	\N	\N	\N
 287	education	tags	cast-json	tags	\N	\N	\N	f	f	17	full	\N	\N	\N	f	\N	\N	\N
+291	profile_versions	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	5	half	\N	\N	\N	f	\N	\N	\N
+288	profile_versions	id	\N	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N
+289	profile_versions	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	3	half	\N	\N	\N	f	\N	\N	\N
+292	profile_versions	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	6	half	\N	\N	\N	f	\N	\N	\N
+295	profile_versions	profile	m2o	select-dropdown-m2o	{"enableCreate":false}	related-values	{"template":"{{name}}"}	f	f	2	half	\N	\N	\N	f	\N	\N	\N
+293	profile_versions	name	\N	input	\N	\N	\N	f	f	7	half	\N	\N	\N	f	\N	\N	\N
+294	profile_versions	description	\N	input	\N	\N	\N	f	f	8	half	\N	\N	\N	f	\N	\N	\N
 \.
 
 
@@ -5854,13 +5959,14 @@ COPY public.directus_presets (id, bookmark, "user", role, collection, search, la
 7	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	tech_skill_categories	\N	\N	{"tabular":{"fields":["name","status","profile"],"page":1}}	{"tabular":{"widths":{"name":623.2000122070312,"status":98.6666259765625,"profile":128.800048828125}}}	\N	\N	bookmark	\N
 17	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	project_stories	\N	\N	{"tabular":{"page":1,"fields":["title","category","profile"]}}	{"tabular":{"widths":{"title":489.20001220703125,"category":226.00006103515625,"profile":125.199951171875},"spacing":"cozy"}}	\N	\N	bookmark	\N
 4	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	languages	\N	\N	{"tabular":{"page":1,"fields":["name","language_code","proficiency","status","profile"]}}	{"tabular":{"widths":{"name":287.60003662109375,"language_code":165.20001220703125,"proficiency":176.4000244140625,"status":96.4000244140625,"profile":132.39990234375}}}	\N	\N	bookmark	\N
-3	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	profiles	\N	\N	{"tabular":{"page":1,"fields":["name","title","core_stack","subtitle"]}}	{"tabular":{"widths":{"name":126.66665649414062,"title":231.66668701171875,"core_stack":278.3333740234375,"subtitle":343.3333740234375}}}	\N	\N	bookmark	\N
 10	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	soft_skills	\N	\N	{"tabular":{"page":1,"fields":["name","status","profile"]}}	{"tabular":{"widths":{"name":587,"status":98.5999755859375,"profile":125.199951171875}}}	\N	\N	bookmark	\N
 18	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	side_projects	\N	\N	{"tabular":{"fields":["name","stars","start_date","end_date","status","profile"],"page":1}}	{"tabular":{"widths":{"name":326.33331298828125,"stars":90.66668701171875,"start_date":182.3333740234375,"end_date":169.666748046875,"status":90.6666259765625,"profile":121.3333740234375}}}	\N	\N	bookmark	\N
 22	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	education	\N	\N	{"tabular":{"page":1,"fields":["institution","study_type","area","location","graduation_year","status","profile"]}}	{"tabular":{"widths":{"institution":229.20001220703125,"study_type":211.73333740234375,"area":214.2667236328125,"location":144.5999755859375,"graduation_year":160,"status":91.4666748046875,"profile":123.13330078125}}}	\N	\N	bookmark	\N
 19	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	side_project_achievements	\N	\N	{"tabular":{"page":1}}	\N	\N	\N	bookmark	\N
 20	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	salary_expectations	\N	tabular	{"tabular":{"fields":["job_title","employment_type","work_arrangement","company_type","region","hourly_rate","daily_rate","month_salary","year_salary"],"page":1}}	{"tabular":{"widths":{"job_title":189,"employment_type":94,"work_arrangement":90,"company_type":109,"region":140.66668701171875,"hourly_rate":126,"daily_rate":114.6666259765625,"month_salary":137,"year_salary":123.3333740234375},"spacing":"cozy"},"kanban":{"groupOrder":{"groupField":"company_type","sortMap":{"startup":0,"scaleup":1,"agency":2,"enterprise":3,"big_tech":4}}}}	\N	\N	bookmark	\N
 12	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	dev_methodologies	\N	\N	{"tabular":{"page":1,"fields":["name","status","profile"]}}	{"tabular":{"widths":{"name":591,"status":94.5999755859375,"profile":132.60003662109375}}}	\N	\N	bookmark	\N
+23	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	profile_versions	\N	\N	{"tabular":{"page":1,"fields":["name","description","status","profile"]}}	{"tabular":{"widths":{"name":192.66668701171875,"description":349.79998779296875,"status":160,"profile":146.7999267578125}}}	\N	\N	bookmark	\N
+3	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	profiles	\N	\N	{"tabular":{"page":1,"fields":["name","title","core_stack","subtitle"]}}	{"tabular":{"widths":{"name":126.66665649414062,"title":231.66668701171875,"core_stack":278.3333740234375,"subtitle":343.3333740234375}}}	\N	\N	bookmark	\N
 \.
 
 
@@ -5890,6 +5996,7 @@ COPY public.directus_relations (id, many_collection, many_field, one_collection,
 27	side_project_technologies	side_project	side_projects	technologies	\N	\N	\N	sort	nullify
 28	references	profile	profiles	references	\N	\N	\N	\N	nullify
 11	tech_skills	tech_type	tech_skill_types	\N	\N	\N	\N	\N	nullify
+29	profile_versions	profile	profiles	versions	\N	\N	\N	\N	nullify
 \.
 
 
@@ -9447,6 +9554,7 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 3957	4050	directus_fields	49	{"id":49,"collection":"profiles","field":"core_stack","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":6,"width":"half","translations":null,"note":"Short list of your core technology stack that you are most familiar with.","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"core_stack","sort":6,"group":null}	\N	\N
 3958	4051	directus_fields	271	{"id":271,"collection":"profiles","field":"nationality","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":7,"width":"half","translations":null,"note":"Optional, necessary for certain jobs","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"nationality","sort":7,"group":null}	\N	\N
 3959	4052	directus_fields	48	{"id":48,"collection":"profiles","field":"subtitle","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":8,"width":"full","translations":null,"note":"A short sentence complementing your work title, giving more insight to your expertise.","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"subtitle","sort":8,"group":null}	\N	\N
+4100	4194	directus_fields	293	{"sort":6,"interface":"input","special":null,"collection":"profile_versions","field":"name"}	{"sort":6,"interface":"input","special":null,"collection":"profile_versions","field":"name"}	\N	\N
 3960	4053	directus_fields	53	{"id":53,"collection":"profiles","field":"headline","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":9,"width":"full","translations":null,"note":"Brief professional tagline that summarizes your key qualifications.","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"headline","sort":9,"group":null}	\N	\N
 3961	4054	directus_fields	54	{"id":54,"collection":"profiles","field":"profile_picture","special":["file"],"interface":"file-image","options":{"crop":false},"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":10,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"profile_picture","sort":10,"group":null}	\N	\N
 3962	4055	directus_fields	27	{"id":27,"collection":"profiles","field":"email_address","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":11,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"email_address","sort":11,"group":null}	\N	\N
@@ -9479,6 +9587,7 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 3989	4082	directus_fields	49	{"id":49,"collection":"profiles","field":"core_stack","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":6,"width":"half","translations":null,"note":"Short list of your core technology stack that you are most familiar with.","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"core_stack","sort":6,"group":null}	\N	\N
 3990	4083	directus_fields	271	{"id":271,"collection":"profiles","field":"nationality","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":7,"width":"half","translations":null,"note":"Optional, necessary for certain jobs","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"nationality","sort":7,"group":null}	\N	\N
 3991	4084	directus_fields	48	{"id":48,"collection":"profiles","field":"subtitle","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":8,"width":"full","translations":null,"note":"A short sentence complementing your work title, giving more insight to your expertise.","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"subtitle","sort":8,"group":null}	\N	\N
+4101	4195	directus_fields	294	{"sort":7,"interface":"input","special":null,"collection":"profile_versions","field":"description"}	{"sort":7,"interface":"input","special":null,"collection":"profile_versions","field":"description"}	\N	\N
 3992	4085	directus_fields	53	{"id":53,"collection":"profiles","field":"headline","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":9,"width":"full","translations":null,"note":"Brief professional tagline that summarizes your key qualifications.","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"headline","sort":9,"group":null}	\N	\N
 3993	4086	directus_fields	54	{"id":54,"collection":"profiles","field":"profile_picture","special":["file"],"interface":"file-image","options":{"crop":false},"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":10,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"profile_picture","sort":10,"group":null}	\N	\N
 3994	4087	directus_fields	27	{"id":27,"collection":"profiles","field":"email_address","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":11,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"email_address","sort":11,"group":null}	\N	\N
@@ -9495,6 +9604,7 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 4005	4098	directus_fields	61	{"id":61,"collection":"profiles","field":"highlights","special":["o2m"],"interface":"list-o2m","options":{"enableSelect":false},"display":"related-values","display_options":{"template":"{{text}}"},"readonly":false,"hidden":false,"sort":22,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"highlights","sort":22,"group":null}	\N	\N
 4006	4099	directus_fields	190	{"id":190,"collection":"profiles","field":"tech_skill_categories","special":["o2m"],"interface":"list-o2m","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":23,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"tech_skill_categories","sort":23,"group":null}	\N	\N
 4007	4100	directus_fields	101	{"id":101,"collection":"profiles","field":"soft_skills","special":["o2m"],"interface":"list-o2m","options":{"enableSelect":false},"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":24,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"soft_skills","sort":24,"group":null}	\N	\N
+4138	4232	profile_versions	3	{"name":"fullstack-react","status":"published","description":"Full-stack React SWE"}	{"name":"fullstack-react","status":"published","description":"Full-stack React SWE"}	\N	\N
 4008	4101	directus_fields	109	{"id":109,"collection":"profiles","field":"dev_methodologies","special":["o2m"],"interface":"list-o2m","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":25,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"dev_methodologies","sort":25,"group":null}	\N	\N
 4009	4102	directus_fields	113	{"id":113,"collection":"profiles","field":"work_experiences","special":["o2m"],"interface":"list-o2m","options":null,"display":"related-values","display_options":{"template":"{{name}}"},"readonly":false,"hidden":false,"sort":26,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"work_experiences","sort":26,"group":null}	\N	\N
 4010	4103	directus_fields	208	{"id":208,"collection":"profiles","field":"education","special":["o2m"],"interface":"list-o2m","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":27,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"education","sort":27,"group":null}	\N	\N
@@ -9525,6 +9635,7 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 4039	4132	work_experience_achievements	8e32e85b-f8d8-4fcf-af76-cb8f18ad91d9	{"id":"8e32e85b-f8d8-4fcf-af76-cb8f18ad91d9","status":"published","sort":1,"date_created":"2025-10-19T17:55:53.073Z","date_updated":"2025-10-29T12:44:56.996Z","title":"Team Leadership","description":"Optimized development team (3-5 devs) output with 25%, by leading agile methods and strict code review processes","work_experience":"a37c89e0-2b6d-44e1-911a-c1399611562a","fa_icon":"users","tags":[]}	{"tags":[],"date_updated":"2025-10-29T12:44:56.996Z"}	4040	\N
 4041	4134	work_experiences	9438cadf-950b-470f-98f6-7645bb772fd3	{"name":"Festivalinfo","location":"Amsterdam, NL","description":"Festival / event information website","position":"Internship Web Developer","summary":"Contributed to the stability and expansion of the platforms festivalinfo.nl, podiuminfo.nl, cabaretinfo.nl and agendainfo.nl, by fixing bugs and creating various new features.","id":"9438cadf-950b-470f-98f6-7645bb772fd3","logo":"98539d12-2738-4fe6-8c87-38502f5ff46a","status":"published","sort":7,"profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","date_created":"2025-10-27T15:01:31.379Z","date_updated":"2025-10-29T12:49:01.681Z","start_date":"2006-03-05","end_date":"2006-08-25","website":"https://www.festivalinfo.nl","tags":["cv"],"achievements":[],"work_experience_technologies":["d1ecb60d-4593-414d-a4d2-135d27c08f35","55a656e2-d801-4885-9e51-a6993fb62570","41f661ae-8ce9-4654-81d6-893cb5e2b86e","7cae8237-d689-4725-903f-22f9eb1891e2","e695bcae-9d09-4d09-aeda-7b9eb67eae59"]}	{"tags":["cv"],"date_updated":"2025-10-29T12:49:01.681Z"}	\N	\N
 4042	4135	work_experiences	d68a1e82-cb96-46f9-9e0f-8757ebb75229	{"name":"Budget Advies Groep","location":"Cruquius, NL","description":"Intermediary","position":"Junior Web developer","summary":"Helped with the acquisition of new clients, by creating several website portals that were of interest for different types of clients. Attractive designs and search engine optimization (SEO) were an important aspect in this.","id":"d68a1e82-cb96-46f9-9e0f-8757ebb75229","logo":"2270fabe-758e-4807-9b67-1a4ea5cfb97d","status":"published","sort":6,"profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","date_created":"2025-10-27T14:39:27.907Z","date_updated":"2025-10-29T12:50:02.922Z","start_date":"2006-09-10","end_date":"2007-06-08","website":"https://www.budgetadviesgroep.nl/","tags":["cv"],"achievements":[],"work_experience_technologies":["f87f3934-dc79-49eb-b7b4-69d741e201af","9753e3f3-3af3-487c-8dcb-b65fe05e3b50","f5b7e18c-0f5f-45f3-9751-abaa91fc3fe1","ae35f19b-1b11-468c-8296-d3794a7fee7a","489acefc-ca3f-4bce-84d8-dbfc8784299f","1d1070f2-6d21-4860-bb44-ca59cbecb4c2","7c5cd967-ec34-4566-a3fe-5136482cb086"]}	{"tags":["cv"],"date_updated":"2025-10-29T12:50:02.922Z"}	\N	\N
+4140	4234	profile_versions	4	{"status":"published","name":"fullstack-svelte","description":"Full-stack Svelte SWE"}	{"status":"published","name":"fullstack-svelte","description":"Full-stack Svelte SWE"}	\N	\N
 4044	4137	side_projects	6	{"id":6,"status":"published","sort":1,"date_created":"2025-10-28T16:08:58.982Z","date_updated":"2025-10-29T12:50:57.095Z","name":"Portfolio website","start_date":"2025-08-01","end_date":null,"profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","url":"https://www.rikwanders.tech/","stars":null,"summary":"Personal portfolio website showcasing my professional experience, skills, and services as a freelance/independent developer. Including personal dashboard with AI features for efficient job matching.","url_label":null,"tags":["cv"],"achievements":["7c8851f2-84fd-4705-85eb-ee98edf5f0c0","353b6ae9-beac-4c4d-a8cd-e05bbdff2bd1"],"technologies":[19,20,21,22,23,24,32,33,25]}	{"tags":["cv"],"date_updated":"2025-10-29T12:50:57.095Z"}	\N	\N
 4045	4138	side_projects	5	{"id":5,"status":"published","sort":7,"date_created":"2025-10-27T18:58:56.208Z","date_updated":"2025-10-29T12:52:15.900Z","name":"Adyengo","start_date":"2013-08-06","end_date":"2020-05-07","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","url":"https://github.com/gitaarik/adyengo","stars":10,"summary":"Open-source Django package for Adyen payment integration with recurring payment support. Used in production at Tender-it.","url_label":null,"tags":["cv"],"achievements":["5f607df6-9815-41a7-a765-c993759cf5d7","a0d645b7-5052-4b7c-adf1-693a68dc0743"],"technologies":[26,27,28]}	{"tags":["cv"],"date_updated":"2025-10-29T12:52:15.900Z"}	\N	\N
 4046	4139	side_projects	7	{"id":7,"status":"published","sort":6,"date_created":"2025-10-28T16:56:49.268Z","date_updated":"2025-10-29T12:52:20.589Z","name":"Monkful","start_date":"2013-09-03","end_date":"2014-10-04","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","url":"https://github.com/gitaarik/monkful","stars":10,"summary":"Python package to easily create RESTful API's for MongoEngine documents used for MongoDB database. Inspired by Django REST framework. Used in production at Travelbird.","url_label":null,"tags":["cv"],"achievements":["b8a41972-e298-4d49-921e-9dffc6310539","67b14b6b-c1c7-4a69-874c-06b2952c722f"],"technologies":[29,30,31]}	{"tags":["cv"],"date_updated":"2025-10-29T12:52:20.589Z"}	\N	\N
@@ -9572,6 +9683,50 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 4091	4185	dev_methodologies	fd9086a3-071a-458c-9e50-accbf3bff907	{"id":"fd9086a3-071a-458c-9e50-accbf3bff907","status":"published","sort":null,"date_created":"2025-10-19T16:19:23.910Z","date_updated":"2025-10-29T15:12:44.056Z","name":"AI-Assisted Development","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309"}	{"name":"AI-Assisted Development","date_updated":"2025-10-29T15:12:44.056Z"}	\N	\N
 4093	4187	tech_skill_categories	4b779c47-4943-47c6-856e-20b3001a2fb5	{"id":"4b779c47-4943-47c6-856e-20b3001a2fb5","status":"published","sort":8,"date_created":"2025-10-29T15:03:06.594Z","date_updated":"2025-10-29T15:12:49.703Z","name":"Dev Methodologies","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","fa_icon":"user-gear","tech_skills":[43,44,45,46,47,48,49]}	{"date_updated":"2025-10-29T15:12:49.703Z"}	\N	\N
 4092	4186	tech_skills	46	{"id":46,"status":"published","sort":4,"date_created":"2025-10-29T15:06:46.454Z","date_updated":"2025-10-29T15:12:49.706Z","name":"AI-Assisted Development","category":"4b779c47-4943-47c6-856e-20b3001a2fb5","years_experience":"1","level":"proficient","tech_type":4}	{"name":"AI-Assisted Development","date_updated":"2025-10-29T15:12:49.706Z"}	4093	\N
+4094	4188	directus_fields	288	{"sort":1,"hidden":true,"interface":"input","readonly":true,"field":"id","collection":"profile_versions"}	{"sort":1,"hidden":true,"interface":"input","readonly":true,"field":"id","collection":"profile_versions"}	\N	\N
+4095	4189	directus_fields	289	{"sort":2,"width":"full","options":{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]},"interface":"select-dropdown","display":"labels","display_options":{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]},"field":"status","collection":"profile_versions"}	{"sort":2,"width":"full","options":{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]},"interface":"select-dropdown","display":"labels","display_options":{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]},"field":"status","collection":"profile_versions"}	\N	\N
+4096	4190	directus_fields	290	{"sort":3,"interface":"input","hidden":true,"field":"sort","collection":"profile_versions"}	{"sort":3,"interface":"input","hidden":true,"field":"sort","collection":"profile_versions"}	\N	\N
+4097	4191	directus_fields	291	{"sort":4,"special":["date-created"],"interface":"datetime","readonly":true,"hidden":true,"width":"half","display":"datetime","display_options":{"relative":true},"field":"date_created","collection":"profile_versions"}	{"sort":4,"special":["date-created"],"interface":"datetime","readonly":true,"hidden":true,"width":"half","display":"datetime","display_options":{"relative":true},"field":"date_created","collection":"profile_versions"}	\N	\N
+4098	4192	directus_fields	292	{"sort":5,"special":["date-updated"],"interface":"datetime","readonly":true,"hidden":true,"width":"half","display":"datetime","display_options":{"relative":true},"field":"date_updated","collection":"profile_versions"}	{"sort":5,"special":["date-updated"],"interface":"datetime","readonly":true,"hidden":true,"width":"half","display":"datetime","display_options":{"relative":true},"field":"date_updated","collection":"profile_versions"}	\N	\N
+4099	4193	directus_collections	profile_versions	{"sort_field":"sort","archive_field":"status","archive_value":"archived","unarchive_value":"draft","singleton":false,"collection":"profile_versions"}	{"sort_field":"sort","archive_field":"status","archive_value":"archived","unarchive_value":"draft","singleton":false,"collection":"profile_versions"}	\N	\N
+4102	4196	directus_collections	profile_versions	{"collection":"profile_versions","icon":null,"note":null,"display_template":"{{name}}","hidden":false,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":null,"group":null,"collapse":"open","preview_url":null,"versioning":false}	{"display_template":"{{name}}"}	\N	\N
+4103	4197	directus_fields	295	{"sort":8,"special":["m2o"],"interface":"select-dropdown-m2o","options":{"enableSelect":false},"collection":"profile_versions","field":"profile"}	{"sort":8,"special":["m2o"],"interface":"select-dropdown-m2o","options":{"enableSelect":false},"collection":"profile_versions","field":"profile"}	\N	\N
+4104	4198	directus_fields	296	{"sort":33,"special":["o2m"],"interface":"list-o2m","collection":"profiles","field":"versions"}	{"sort":33,"special":["o2m"],"interface":"list-o2m","collection":"profiles","field":"versions"}	\N	\N
+4105	4199	directus_fields	295	{"id":295,"collection":"profile_versions","field":"profile","special":["m2o"],"interface":"select-dropdown-m2o","options":{"enableSelect":false},"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":8,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profile_versions","field":"profile","width":"half"}	\N	\N
+4106	4200	directus_fields	289	{"id":289,"collection":"profile_versions","field":"status","special":null,"interface":"select-dropdown","options":{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]},"display":"labels","display_options":{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]},"readonly":false,"hidden":false,"sort":2,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profile_versions","field":"status","width":"half"}	\N	\N
+4107	4201	directus_fields	288	{"id":288,"collection":"profile_versions","field":"id","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":true,"hidden":true,"sort":1,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profile_versions","field":"id","sort":1,"group":null}	\N	\N
+4108	4202	directus_fields	295	{"id":295,"collection":"profile_versions","field":"profile","special":["m2o"],"interface":"select-dropdown-m2o","options":{"enableSelect":false},"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":2,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profile_versions","field":"profile","sort":2,"group":null}	\N	\N
+4109	4203	directus_fields	289	{"id":289,"collection":"profile_versions","field":"status","special":null,"interface":"select-dropdown","options":{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]},"display":"labels","display_options":{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]},"readonly":false,"hidden":false,"sort":3,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profile_versions","field":"status","sort":3,"group":null}	\N	\N
+4110	4204	directus_fields	290	{"id":290,"collection":"profile_versions","field":"sort","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":true,"sort":4,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profile_versions","field":"sort","sort":4,"group":null}	\N	\N
+4111	4205	directus_fields	291	{"id":291,"collection":"profile_versions","field":"date_created","special":["date-created"],"interface":"datetime","options":null,"display":"datetime","display_options":{"relative":true},"readonly":true,"hidden":true,"sort":5,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profile_versions","field":"date_created","sort":5,"group":null}	\N	\N
+4112	4206	directus_fields	292	{"id":292,"collection":"profile_versions","field":"date_updated","special":["date-updated"],"interface":"datetime","options":null,"display":"datetime","display_options":{"relative":true},"readonly":true,"hidden":true,"sort":6,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profile_versions","field":"date_updated","sort":6,"group":null}	\N	\N
+4113	4207	directus_fields	293	{"id":293,"collection":"profile_versions","field":"name","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":7,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profile_versions","field":"name","sort":7,"group":null}	\N	\N
+4114	4208	directus_fields	294	{"id":294,"collection":"profile_versions","field":"description","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":8,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profile_versions","field":"description","sort":8,"group":null}	\N	\N
+4115	4209	directus_fields	293	{"id":293,"collection":"profile_versions","field":"name","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":7,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profile_versions","field":"name","width":"half"}	\N	\N
+4116	4210	directus_fields	294	{"id":294,"collection":"profile_versions","field":"description","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":8,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profile_versions","field":"description","width":"half"}	\N	\N
+4117	4211	directus_collections	languages	{"collection":"languages","icon":null,"note":null,"display_template":"{{name}}","hidden":false,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":1,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"sort":1,"group":"profiles"}	\N	\N
+4118	4212	directus_collections	profiles	{"collection":"profiles","icon":null,"note":null,"display_template":"{{name}}","hidden":false,"singleton":false,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":null,"accountability":"all","color":null,"item_duplication_fields":null,"sort":1,"group":null,"collapse":"open","preview_url":null,"versioning":false}	{"sort":1,"group":null}	\N	\N
+4119	4213	directus_collections	highlights	{"collection":"highlights","icon":null,"note":null,"display_template":"{{text}}","hidden":false,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":2,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"sort":2,"group":"profiles"}	\N	\N
+4120	4214	directus_collections	tech_skill_types	{"collection":"tech_skill_types","icon":null,"note":null,"display_template":"{{name}}","hidden":false,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":2,"group":null,"collapse":"open","preview_url":null,"versioning":false}	{"sort":2,"group":null}	\N	\N
+4121	4215	directus_collections	tech_skill_categories	{"collection":"tech_skill_categories","icon":null,"note":null,"display_template":"{{name}}","hidden":false,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":3,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"sort":3,"group":"profiles"}	\N	\N
+4122	4216	directus_collections	soft_skills	{"collection":"soft_skills","icon":null,"note":null,"display_template":"{{name}}","hidden":false,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":4,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"sort":4,"group":"profiles"}	\N	\N
+4123	4217	directus_collections	dev_methodologies	{"collection":"dev_methodologies","icon":null,"note":null,"display_template":"{{name}}","hidden":false,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":5,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"sort":5,"group":"profiles"}	\N	\N
+4124	4218	directus_collections	work_experiences	{"collection":"work_experiences","icon":null,"note":null,"display_template":"{{name}} | {{location}} | {{position}} | {{start_date}} - {{end_date}}","hidden":false,"singleton":false,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":[],"sort":6,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"sort":6,"group":"profiles"}	\N	\N
+4125	4219	directus_collections	education	{"collection":"education","icon":null,"note":null,"display_template":"{{area}}  | {{institution}} | {{start_date}} - {{end_date}}","hidden":false,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":7,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"sort":7,"group":"profiles"}	\N	\N
+4126	4220	directus_collections	side_projects	{"collection":"side_projects","icon":null,"note":null,"display_template":"{{name}} | {{start_date}} - {{end_date}}","hidden":false,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":8,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"sort":8,"group":"profiles"}	\N	\N
+4127	4221	directus_collections	references	{"collection":"references","icon":null,"note":null,"display_template":"{{author}} - {{author_position}}","hidden":false,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":9,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"sort":9,"group":"profiles"}	\N	\N
+4128	4222	directus_collections	profile_versions	{"collection":"profile_versions","icon":null,"note":null,"display_template":"{{name}}","hidden":false,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":10,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"sort":10,"group":"profiles"}	\N	\N
+4129	4223	directus_collections	salary_expectations	{"collection":"salary_expectations","icon":null,"note":null,"display_template":null,"hidden":false,"singleton":false,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":11,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"sort":11,"group":"profiles"}	\N	\N
+4130	4224	directus_collections	project_stories	{"collection":"project_stories","icon":null,"note":null,"display_template":"{{title}}","hidden":false,"singleton":false,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":12,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"sort":12,"group":"profiles"}	\N	\N
+4131	4225	directus_collections	application_questions	{"collection":"application_questions","icon":null,"note":null,"display_template":null,"hidden":false,"singleton":false,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":13,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"sort":13,"group":"profiles"}	\N	\N
+4132	4226	directus_collections	cheat_sheets	{"collection":"cheat_sheets","icon":null,"note":null,"display_template":"{{title}}","hidden":false,"singleton":false,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":14,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"sort":14,"group":"profiles"}	\N	\N
+4133	4227	directus_fields	295	{"id":295,"collection":"profile_versions","field":"profile","special":["m2o"],"interface":"select-dropdown-m2o","options":{"enableSelect":false},"display":"related-values","display_options":{"template":"{{name}}"},"readonly":false,"hidden":false,"sort":2,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profile_versions","field":"profile","display":"related-values","display_options":{"template":"{{name}}"}}	\N	\N
+4135	4229	profiles	0eeb942b-e35a-44e8-a37d-52b9cdb24309	{"id":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","date_created":"2025-10-15T16:51:41.394Z","date_updated":"2025-10-29T15:46:59.694Z","name":"Rik Wanders","title":"Senior Full Stack Developer","location":"Ronda, Spain","phone_number":"+31649118511","email_address":"rik@rikwanders.tech","personal_website":"https://www.rikwanders.tech/","subtitle":"Building scalable web applications for remote teams","core_stack":"Python • Node.js • CI/CD • DevOps","linkedin_profile":"https://www.linkedin.com/in/rik-wanders-software","github_profile":"https://github.com/gitaarik","stackoverflow_profile":"https://stackoverflow.com/users/1248175/gitaarik","headline":"Full Stack Developer 12+ years expertise in Python, Django, Node.js, React, CI/CD, DevOps, UX, AI","profile_picture":"e12c8ec6-2cbe-4672-98e9-a33d6ed5869a","summary":"Dutch Senior Full Stack Developer residing in Spain, 12+ years Full Stack Python & Node.js experience, scaling complex, high-traffic & data heavy applications with Django & React, and leading agile development teams. Additional skills in DevOps, CI/CD & UX design. Always current with industry trends, AI, and security practices. Thrives in agile teams and/or startup environments. 5+ years remote work experience.","nationality":"Dutch","location_url":"https://maps.app.goo.gl/WefqeUxUYBD6Q1qF8","location_timezone":"CET/GMT+1","languages":["b636a780-6a9f-4342-adfa-eed183447a17","7024cec2-289e-44e5-a4e8-721805a151a0"],"highlights":["00483bae-b8ef-46bb-8230-0f84c989f971","85956023-2be3-4fa9-9643-fc677ffd97cb","bf60fa32-c241-4a49-9edf-d0a21c3a4b3d","82700d7e-0a60-43af-82a7-1ca8a4fcb43f","912a4cfd-44d1-4b88-bd32-0a67ce05e1bc","311f493d-c89f-4a35-86fc-9605e93f639d","e30e3468-9f74-4bdb-9f33-abcef8eb6f7b"],"application_questions":["073c5b04-8c09-46d5-939a-1ed666898fe0","48a0e21c-ec0d-48d1-97b7-6cbbd5b7cf48","c82ff97a-0f9e-4706-93b3-4eccc16c6127"],"soft_skills":["9f0d1372-15fe-48c5-9c5f-e80e1b82f2a3","7e34478e-9073-43f5-b54b-0e1a774a0cd3","9db2e160-3d6f-43c3-9dbd-acc209f4e4fe","a74f913e-037c-4548-a8d7-d6b96ebaf22f","89c42056-807c-41e6-9e1f-9d7fa08f1b2b","1cc282e5-4323-41a8-a527-c5db37a92da6","b3049619-b765-429d-9700-4522df069f1b","68c01e2b-5d94-4c58-adbf-ba74ffe6f8b7","d28caf31-29e1-4334-8108-c7b6ee0197e4"],"dev_methodologies":["6eff8fef-bded-49f0-b58a-711aea500221","84a7411e-3601-44d3-abc7-251348ece546","01d355bd-7b80-4806-a9c3-c5277a945996","856ee579-71ba-434b-b9e2-7355b8cd8e13","44f7c501-4fef-47b8-8f4f-8a98fe155ed2","4831ab97-9ffa-4518-a701-844fe0a3e5d2","9beb25c0-e7f2-4699-88d5-8619ac65f060","94c1e7c6-f687-4a45-b870-1c922baacd2d","af4c406b-bf9e-4f65-b196-5ff37c57eba9","c9622a84-fb17-4bfe-87c4-cac33d30ef5c","fc191739-71ff-444f-a64f-c4ff739ceadf","a80c302e-c184-4e50-8b7d-c4e4bee261c8","fd9086a3-071a-458c-9e50-accbf3bff907"],"work_experiences":["a37c89e0-2b6d-44e1-911a-c1399611562a","f044625e-b180-4603-b03a-42a5a397403a","13b0c7ab-591a-484c-b47c-46e6df4797e2","9f594b55-31c2-4edf-9d5f-5c71b1c907fc","ca814545-07d2-4bbf-8216-c34aacae83e3","d68a1e82-cb96-46f9-9e0f-8757ebb75229","9438cadf-950b-470f-98f6-7645bb772fd3"],"cheat_sheets":["5059e4f8-7d24-4a2e-9feb-3d2e87ad4d19","449a224d-90b4-4391-83a6-71e2f20cc6e7"],"project_stories":["a6231b1b-df19-4edc-8449-b79792757e8f","b69f20db-19dd-461c-8d52-75ff4d477044","60ba9a92-c2bc-4bdc-a58e-a8a7edb040c2","54337694-621d-4d25-b226-1013c028db3f","1b23a132-c81f-4732-9148-0a2276d8af2b","23ef4361-b1e8-4378-aa25-23cce2ebb4dd","81721bb5-9aba-484a-98a9-9d8ec26e0bb3"],"tech_skill_categories":["e6875da0-e556-45f0-be1e-e469fdaed3a7","78c235f4-2456-40e6-939d-19c855a30aa1","0bcc8c53-eb96-4d3b-8bd5-81faf33000a5","6d549daa-2775-4af9-85c9-c3a50ef155c0","3199b3fb-efbb-478d-9f56-22b428a70623","7b12ae23-7a33-44f6-9dac-9917b7132cdf","4b779c47-4943-47c6-856e-20b3001a2fb5"],"education":[1,2,3,4],"side_projects":[6,1,2,3,4,7,5],"versions":[1],"references":[1,2]}	{"date_updated":"2025-10-29T15:46:59.694Z"}	\N	\N
+4134	4228	profile_versions	1	{"status":"published","name":"fullstack-python","description":"Full-stack Python SWE","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309"}	{"status":"published","name":"fullstack-python","description":"Full-stack Python SWE","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309"}	4135	\N
+4136	4230	directus_fields	295	{"id":295,"collection":"profile_versions","field":"profile","special":["m2o"],"interface":"select-dropdown-m2o","options":{"enableCreate":false},"display":"related-values","display_options":{"template":"{{name}}"},"readonly":false,"hidden":false,"sort":2,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profile_versions","field":"profile","options":{"enableCreate":false}}	\N	\N
+4137	4231	profile_versions	2	{"profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","status":"published","name":"fullstack-django","description":"Full-stack Django SWE"}	{"profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","status":"published","name":"fullstack-django","description":"Full-stack Django SWE"}	\N	\N
+4139	4233	profile_versions	3	{"id":3,"status":"published","sort":null,"date_created":"2025-10-29T15:48:10.206Z","date_updated":"2025-10-29T15:48:14.989Z","name":"fullstack-react","description":"Full-stack React SWE","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309"}	{"profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","date_updated":"2025-10-29T15:48:14.989Z"}	\N	\N
+4141	4235	profile_versions	4	{"id":4,"status":"published","sort":null,"date_created":"2025-10-29T15:48:26.476Z","date_updated":"2025-10-29T15:48:32.315Z","name":"fullstack-svelte","description":"Full-stack Svelte SWE","profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309"}	{"profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","date_updated":"2025-10-29T15:48:32.315Z"}	\N	\N
 \.
 
 
@@ -9589,8 +9744,10 @@ COPY public.directus_roles (id, name, icon, description, parent) FROM stdin;
 --
 
 COPY public.directus_sessions (token, "user", expires, ip, user_agent, share, origin, next_token) FROM stdin;
-dK2UESJdf1opz8wKwRjWVQ8Gp6Kt6UCPmGQ_BjWJQsCy-berevRTtRZjPOg1iMU8	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 15:15:27.959+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	noVaX95Y3UCmZDQf5zgoTHuQksTl45skrwX_PvN_YCy9oTTDXbp31qvjjd0Ry1Ak
-noVaX95Y3UCmZDQf5zgoTHuQksTl45skrwX_PvN_YCy9oTTDXbp31qvjjd0Ry1Ak	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-30 15:15:17.959+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
+uloNVtRZubkEz7Lq4jkY-UrUd3Yrh5H-TOsylsQtceP9Xz2BuOw3_CzGCq1HlOna	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 16:03:41.625+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	CbittONIK7UINaxspXuWDtQRnh9O0pnZHf8uebHJ24BIt4T5GcetiVCWwJ298eEh
+CbittONIK7UINaxspXuWDtQRnh9O0pnZHf8uebHJ24BIt4T5GcetiVCWwJ298eEh	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 16:03:42.347+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	pYjRBsgveLaF_y71KMGJIlCbplkaTGQhBh5A4M_g4IfSI6xcERqSvBD2746-Cu8D
+pYjRBsgveLaF_y71KMGJIlCbplkaTGQhBh5A4M_g4IfSI6xcERqSvBD2746-Cu8D	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 16:03:45.296+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	FDQTePUpx6QaA1dBfCFNU7orN7bqHOPcbKGbUcAM84V4ZGnVsWHEf44oV2nIPpVI
+FDQTePUpx6QaA1dBfCFNU7orN7bqHOPcbKGbUcAM84V4ZGnVsWHEf44oV2nIPpVI	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-30 16:03:35.296+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
 \.
 
 
@@ -9627,7 +9784,7 @@ c530a32f-84cb-4ab9-8a61-7a12a5bcb7e6	en-US	draft	Draft
 --
 
 COPY public.directus_users (id, first_name, last_name, email, password, location, title, description, tags, avatar, language, tfa_secret, status, role, token, last_access, last_page, provider, external_identifier, auth_data, email_notifications, appearance, theme_dark, theme_light, theme_light_overrides, theme_dark_overrides, text_direction) FROM stdin;
-157238bb-6930-4f26-be9c-8b31a9e11ab8	Admin	User	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-10-29 15:15:17.963+00	/content/side_projects/6	default	\N	\N	t	\N	\N	\N	\N	\N	auto
+157238bb-6930-4f26-be9c-8b31a9e11ab8	Admin	User	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-10-29 16:03:35.3+00	/settings/data-model/profile_versions	default	\N	\N	t	\N	\N	\N	\N	\N	auto
 \.
 
 
@@ -9685,11 +9842,23 @@ b636a780-6a9f-4342-adfa-eed183447a17	published	2025-10-17 12:03:30.884+00	\N	Dut
 
 
 --
+-- Data for Name: profile_versions; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.profile_versions (id, status, sort, date_created, date_updated, name, description, profile) FROM stdin;
+1	published	\N	2025-10-29 15:46:59.696+00	\N	fullstack-python	Full-stack Python SWE	0eeb942b-e35a-44e8-a37d-52b9cdb24309
+2	published	\N	2025-10-29 15:47:35.046+00	\N	fullstack-django	Full-stack Django SWE	0eeb942b-e35a-44e8-a37d-52b9cdb24309
+3	published	\N	2025-10-29 15:48:10.206+00	2025-10-29 15:48:14.989+00	fullstack-react	Full-stack React SWE	0eeb942b-e35a-44e8-a37d-52b9cdb24309
+4	published	\N	2025-10-29 15:48:26.476+00	2025-10-29 15:48:32.315+00	fullstack-svelte	Full-stack Svelte SWE	0eeb942b-e35a-44e8-a37d-52b9cdb24309
+\.
+
+
+--
 -- Data for Name: profiles; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.profiles (id, date_created, date_updated, name, title, location, phone_number, email_address, personal_website, subtitle, core_stack, linkedin_profile, github_profile, stackoverflow_profile, headline, profile_picture, summary, nationality, location_url, location_timezone) FROM stdin;
-0eeb942b-e35a-44e8-a37d-52b9cdb24309	2025-10-15 16:51:41.394+00	2025-10-29 11:10:58.95+00	Rik Wanders	Senior Full Stack Developer	Ronda, Spain	+31649118511	rik@rikwanders.tech	https://www.rikwanders.tech/	Building scalable web applications for remote teams	Python • Node.js • CI/CD • DevOps	https://www.linkedin.com/in/rik-wanders-software	https://github.com/gitaarik	https://stackoverflow.com/users/1248175/gitaarik	Full Stack Developer 12+ years expertise in Python, Django, Node.js, React, CI/CD, DevOps, UX, AI	e12c8ec6-2cbe-4672-98e9-a33d6ed5869a	Dutch Senior Full Stack Developer residing in Spain, 12+ years Full Stack Python & Node.js experience, scaling complex, high-traffic & data heavy applications with Django & React, and leading agile development teams. Additional skills in DevOps, CI/CD & UX design. Always current with industry trends, AI, and security practices. Thrives in agile teams and/or startup environments. 5+ years remote work experience.	Dutch	https://maps.app.goo.gl/WefqeUxUYBD6Q1qF8	CET/GMT+1
+0eeb942b-e35a-44e8-a37d-52b9cdb24309	2025-10-15 16:51:41.394+00	2025-10-29 15:46:59.694+00	Rik Wanders	Senior Full Stack Developer	Ronda, Spain	+31649118511	rik@rikwanders.tech	https://www.rikwanders.tech/	Building scalable web applications for remote teams	Python • Node.js • CI/CD • DevOps	https://www.linkedin.com/in/rik-wanders-software	https://github.com/gitaarik	https://stackoverflow.com/users/1248175/gitaarik	Full Stack Developer 12+ years expertise in Python, Django, Node.js, React, CI/CD, DevOps, UX, AI	e12c8ec6-2cbe-4672-98e9-a33d6ed5869a	Dutch Senior Full Stack Developer residing in Spain, 12+ years Full Stack Python & Node.js experience, scaling complex, high-traffic & data heavy applications with Django & React, and leading agile development teams. Additional skills in DevOps, CI/CD & UX design. Always current with industry trends, AI, and security practices. Thrives in agile teams and/or startup environments. 5+ years remote work experience.	Dutch	https://maps.app.goo.gl/WefqeUxUYBD6Q1qF8	CET/GMT+1
 \.
 
 
@@ -10100,14 +10269,14 @@ Tender-it	Amsterdam, NL	Tender platform	Lead Developer	Built comprehensive tende
 -- Name: directus_activity_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_activity_id_seq', 4187, true);
+SELECT pg_catalog.setval('public.directus_activity_id_seq', 4235, true);
 
 
 --
 -- Name: directus_fields_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_fields_id_seq', 287, true);
+SELECT pg_catalog.setval('public.directus_fields_id_seq', 296, true);
 
 
 --
@@ -10128,21 +10297,21 @@ SELECT pg_catalog.setval('public.directus_permissions_id_seq', 1, false);
 -- Name: directus_presets_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_presets_id_seq', 22, true);
+SELECT pg_catalog.setval('public.directus_presets_id_seq', 23, true);
 
 
 --
 -- Name: directus_relations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_relations_id_seq', 28, true);
+SELECT pg_catalog.setval('public.directus_relations_id_seq', 29, true);
 
 
 --
 -- Name: directus_revisions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_revisions_id_seq', 4093, true);
+SELECT pg_catalog.setval('public.directus_revisions_id_seq', 4141, true);
 
 
 --
@@ -10164,6 +10333,13 @@ SELECT pg_catalog.setval('public.directus_webhooks_id_seq', 1, false);
 --
 
 SELECT pg_catalog.setval('public.education_id_seq', 4, true);
+
+
+--
+-- Name: profile_versions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.profile_versions_id_seq', 4, true);
 
 
 --
@@ -10534,6 +10710,14 @@ ALTER TABLE ONLY public.languages
 
 ALTER TABLE ONLY public.profiles
     ADD CONSTRAINT profile_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: profile_versions profile_versions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.profile_versions
+    ADD CONSTRAINT profile_versions_pkey PRIMARY KEY (id);
 
 
 --
@@ -11079,6 +11263,14 @@ ALTER TABLE ONLY public.languages
 
 
 --
+-- Name: profile_versions profile_versions_profile_foreign; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.profile_versions
+    ADD CONSTRAINT profile_versions_profile_foreign FOREIGN KEY (profile) REFERENCES public.profiles(id);
+
+
+--
 -- Name: profiles profiles_profile_picture_foreign; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -11194,5 +11386,5 @@ ALTER TABLE ONLY public.work_experiences
 -- PostgreSQL database dump complete
 --
 
-\unrestrict khyNWQb6hDd1mqzm9oysbQBkwJpZHdXFFoqQGdZtrrWN11vHxwAyse5z0JDwW00
+\unrestrict lJUkpisl5e4ZaD3y0OFhGULD0AzhhuUlktT8ipQNy8ArI3EnK1ltTu7trv6IZto
 
