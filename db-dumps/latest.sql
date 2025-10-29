@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict UiaIoIxtc8XplwJfFLAiN5fDQbepVtUGbjMGbHAlOOoOs29bP9ECK8MaQglhJcr
+\restrict b3L9fl4TavAEO3PpvKlZtubUG6fmtO7g292eUL4rwq8O07DNcKnTGt5ooaunWeH
 
 -- Dumped from database version 15.14 (Debian 15.14-1.pgdg13+1)
 -- Dumped by pg_dump version 15.14 (Debian 15.14-1.pgdg13+1)
@@ -1107,7 +1107,8 @@ CREATE TABLE public.salary_expectations (
     region character varying(255) DEFAULT NULL::character varying NOT NULL,
     hourly_rate integer,
     month_salary integer,
-    year_salary integer
+    year_salary integer,
+    daily_rate integer
 );
 
 
@@ -5047,6 +5048,25 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 3861	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 09:42:48.777+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	273	http://localhost:8055
 3862	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 09:43:19.147+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	references	2	http://localhost:8055
 3863	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 09:43:36.254+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	280	http://localhost:8055
+3864	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 09:45:30.041+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	282	http://localhost:8055
+3865	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 09:45:34.32+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	282	http://localhost:8055
+3866	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 09:45:37.334+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	248	http://localhost:8055
+3867	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 09:45:37.338+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	249	http://localhost:8055
+3868	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 09:45:37.343+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	250	http://localhost:8055
+3869	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 09:45:37.35+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	251	http://localhost:8055
+3870	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 09:45:37.354+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	253	http://localhost:8055
+3871	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 09:45:37.359+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	254	http://localhost:8055
+3872	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 09:45:37.364+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	255	http://localhost:8055
+3873	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 09:45:37.367+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	256	http://localhost:8055
+3874	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 09:45:37.371+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	257	http://localhost:8055
+3875	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 09:45:37.376+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	258	http://localhost:8055
+3876	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 09:45:37.381+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	282	http://localhost:8055
+3877	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 09:45:37.385+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	259	http://localhost:8055
+3878	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 09:45:37.389+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	260	http://localhost:8055
+3879	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 09:47:40.573+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	salary_expectations	2	http://localhost:8055
+3880	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 09:51:02.426+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	salary_expectations	2	http://localhost:8055
+3881	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 09:53:18.829+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	salary_expectations	1	http://localhost:8055
+3882	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 09:55:43.442+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	255	http://localhost:8055
 \.
 
 
@@ -5243,8 +5263,7 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 181	project_stories	reflection	\N	input-rich-text-md	\N	\N	\N	f	f	12	full	\N	Optional extra R for the  [STAR method](https://www.techinterviewhandbook.org/behavioral-interview/#1-learn-the-star-answer-format); Finish your story with a look back at what you learned and took away. [More info](https://www.techinterviewhandbook.org/behavioral-interview/#result)	\N	f	\N	\N	\N
 18	profiles	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	2	half	\N	\N	\N	f	\N	\N	\N
 186	project_stories	profile	m2o	select-dropdown-m2o	\N	related-values	{"template":"{{name}}"}	f	f	5	full	\N	\N	\N	f	\N	\N	\N
-255	salary_expectations	employment_type	\N	select-dropdown	{"choices":[{"text":"Full-time employee (FTE)","value":"fte"},{"text":"Part-time employee (32h)","value":"part_time_32"},{"text":"Part-time employee (20h)","value":"part_time_20"},{"text":"Freelance / Contract","value":"contract"},{"text":"Freelance part-time (32h)","value":"contract_part_time_32"},{"text":"Freelance part-time (20h)","value":"contract_part_time_20"}]}	labels	{"choices":[{"text":"Full-time","value":"fte"}]}	f	f	7	half	\N	\N	\N	f	\N	\N	\N
-254	salary_expectations	company_type	\N	select-dropdown	{"choices":[{"text":"Startup","value":"startup"},{"text":"Scaleup","value":"scaleup"},{"text":"Agency","value":"agency"},{"text":"Enterprise","value":"enterprise"},{"text":"Big Tech","value":"big_tech"}]}	labels	\N	f	f	6	half	\N	\N	\N	f	\N	\N	\N
+255	salary_expectations	employment_type	\N	select-dropdown	{"choices":[{"text":"Full-time employee (FTE)","value":"fte"},{"text":"Part-time employee (32h)","value":"part_time_32"},{"text":"Part-time employee (20h)","value":"part_time_20"},{"text":"Freelance / Contract","value":"contract"},{"text":"Freelance part-time (32h)","value":"contract_part_time_32"},{"text":"Freelance part-time (20h)","value":"contract_part_time_20"}]}	labels	{"choices":[{"text":"FTE","value":"fte"}]}	f	f	7	half	\N	\N	\N	f	\N	\N	\N
 190	profiles	tech_skill_categories	o2m	list-o2m	\N	\N	\N	f	f	21	full	\N	\N	\N	f	\N	\N	\N
 188	profiles	summary	\N	input-multiline	\N	\N	\N	f	f	19	full	\N	\N	\N	f	\N	\N	\N
 189	tech_skill_categories	profile	m2o	select-dropdown-m2o	\N	related-values	{"template":"{{name}}"}	f	f	5	half	\N	\N	\N	f	\N	\N	\N
@@ -5261,6 +5280,7 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 197	education	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	5	half	\N	\N	\N	f	\N	\N	\N
 198	education	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	6	half	\N	\N	\N	f	\N	\N	\N
 201	education	url	\N	input	\N	\N	\N	f	f	11	half	\N	\N	\N	f	\N	\N	\N
+254	salary_expectations	company_type	\N	select-dropdown	{"choices":[{"text":"Startup","value":"startup"},{"text":"Scaleup","value":"scaleup"},{"text":"Agency","value":"agency"},{"text":"Enterprise","value":"enterprise"},{"text":"Big Tech","value":"big_tech"}]}	labels	\N	f	f	6	half	\N	\N	\N	f	\N	\N	\N
 31	languages	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}],"showAsDot":true}	f	f	4	half	\N	\N	\N	f	\N	\N	\N
 199	education	institution	\N	input	\N	\N	\N	f	f	7	half	\N	\N	\N	f	\N	\N	\N
 238	side_project_achievements	title	\N	input	\N	\N	\N	f	f	4	half	\N	\N	\N	f	\N	\N	\N
@@ -5280,9 +5300,12 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 230	side_projects	start_date	\N	datetime	\N	\N	\N	f	f	11	half	\N	\N	\N	f	\N	\N	\N
 227	side_projects	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	3	half	\N	\N	\N	f	\N	\N	\N
 244	side_project_achievements	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	7	half	\N	\N	\N	f	\N	\N	\N
+251	salary_expectations	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	4	half	\N	\N	\N	f	\N	\N	\N
+253	salary_expectations	job_title	\N	input	\N	\N	\N	f	f	5	half	\N	\N	\N	t	\N	\N	\N
 245	side_project_achievements	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	8	half	\N	\N	\N	f	\N	\N	\N
 228	side_projects	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	4	half	\N	\N	\N	f	\N	\N	\N
 232	side_projects	profile	m2o	select-dropdown-m2o	{"template":"{{name}}"}	related-values	{"template":"{{name}}"}	f	f	5	half	\N	\N	\N	f	\N	\N	\N
+256	salary_expectations	work_arrangement	\N	select-dropdown	{"choices":[{"text":"Fully Remote","value":"remote"},{"text":"Hybrid","value":"hybrid"},{"text":"Onsite","value":"onsite"}]}	labels	\N	f	f	8	half	\N	\N	\N	f	\N	\N	\N
 208	profiles	education	o2m	list-o2m	\N	\N	\N	f	f	25	full	\N	\N	\N	f	\N	\N	\N
 233	profiles	side_projects	o2m	list-o2m	\N	related-values	\N	f	f	26	full	\N	\N	\N	f	\N	\N	\N
 246	side_project_achievements	sort	\N	input	\N	\N	\N	f	t	9	full	\N	\N	\N	f	\N	\N	\N
@@ -5290,20 +5313,17 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 249	salary_expectations	sort	\N	input	\N	\N	\N	f	t	2	full	\N	\N	\N	f	\N	\N	\N
 229	side_projects	name	\N	input	\N	\N	\N	f	f	7	half	\N	\N	\N	f	\N	\N	\N
 235	side_projects	stars	\N	input	\N	\N	\N	f	f	8	half	\N	\N	\N	f	\N	\N	\N
-250	salary_expectations	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	3	half	\N	\N	\N	f	\N	\N	\N
-251	salary_expectations	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	4	half	\N	\N	\N	f	\N	\N	\N
-253	salary_expectations	job_title	\N	input	\N	\N	\N	f	f	5	half	\N	\N	\N	t	\N	\N	\N
-256	salary_expectations	work_arrangement	\N	select-dropdown	{"choices":[{"text":"Fully Remote","value":"remote"},{"text":"Hybrid","value":"hybrid"},{"text":"Onsite","value":"onsite"}]}	labels	\N	f	f	8	half	\N	\N	\N	f	\N	\N	\N
-257	salary_expectations	region	\N	select-dropdown	{"choices":[{"text":"US Tech Hubs","value":"us_tech_hubs"},{"text":"US Standard","value":"us_standard"},{"text":"EU Tech Centers","value":"eu_tech_centers"},{"text":"EU West/North","value":"eu_west_north"},{"text":"EU East/South","value":"eu_east_south"},{"text":"London","value":"london"},{"text":"UK Other","value":"uk_other"}]}	labels	{"choices":[{"text":"EU West/North","value":"eu_west_north"}]}	f	f	9	half	\N	\N	\N	f	\N	\N	\N
 258	salary_expectations	hourly_rate	\N	input	\N	\N	\N	f	f	10	half	\N	\N	\N	f	\N	\N	\N
-259	salary_expectations	month_salary	\N	input	\N	\N	\N	f	f	11	half	\N	\N	\N	f	\N	\N	\N
-260	salary_expectations	year_salary	\N	input	\N	\N	\N	f	f	12	half	\N	\N	\N	f	\N	\N	\N
+259	salary_expectations	month_salary	\N	input	\N	\N	\N	f	f	12	half	\N	\N	\N	f	\N	\N	\N
 231	side_projects	end_date	\N	datetime	\N	\N	\N	f	f	12	half	\N	\N	\N	f	\N	\N	\N
 224	side_projects	id	\N	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N
 236	side_projects	summary	\N	input-rich-text-md	\N	\N	\N	f	f	13	full	\N	\N	\N	f	\N	\N	\N
 242	side_projects	achievements	o2m	list-o2m	{"enableSelect":false}	related-values	\N	f	f	14	full	\N	\N	\N	f	\N	\N	\N
+257	salary_expectations	region	\N	select-dropdown	{"choices":[{"text":"US Tech Hubs","value":"us_tech_hubs"},{"text":"US Standard","value":"us_standard"},{"text":"EU Tech Centers","value":"eu_tech_centers"},{"text":"EU West/North","value":"eu_west_north"},{"text":"EU East/South","value":"eu_east_south"},{"text":"London","value":"london"},{"text":"UK Other","value":"uk_other"}]}	labels	{"choices":[{"text":"EU West/North","value":"eu_west_north"}]}	f	f	9	half	\N	\N	\N	f	\N	\N	\N
+260	salary_expectations	year_salary	\N	input	\N	\N	\N	f	f	13	half	\N	\N	\N	f	\N	\N	\N
 226	side_projects	sort	\N	input	\N	\N	\N	f	t	2	full	\N	\N	\N	f	\N	\N	\N
 234	side_projects	url	\N	input	\N	\N	\N	f	f	9	half	\N	\N	\N	f	\N	\N	\N
+250	salary_expectations	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	3	half	\N	\N	\N	f	\N	\N	\N
 225	side_projects	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	6	half	\N	\N	\N	f	\N	\N	\N
 262	side_project_technologies	id	\N	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N
 263	side_project_technologies	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	2	full	\N	\N	\N	f	\N	\N	\N
@@ -5314,6 +5334,7 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 268	side_project_technologies	side_project	m2o	\N	\N	\N	\N	f	f	7	full	\N	\N	\N	f	\N	\N	\N
 280	references	profile	m2o	select-dropdown-m2o	{"template":"{{name}}"}	related-values	{"template":"{{name}}"}	f	f	2	half	\N	\N	\N	f	\N	\N	\N
 269	side_projects	technologies	o2m	list-o2m	{"enableSelect":false}	related-values	{"template":"{{name}}"}	f	f	15	full	\N	\N	\N	f	\N	\N	\N
+282	salary_expectations	daily_rate	\N	input	\N	\N	\N	f	f	11	half	\N	\N	\N	f	\N	\N	\N
 281	profiles	references	o2m	list-o2m	\N	\N	\N	f	f	30	full	\N	\N	\N	f	\N	\N	\N
 272	references	id	\N	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N
 274	references	sort	\N	input	\N	\N	\N	f	t	4	full	\N	\N	\N	f	\N	\N	\N
@@ -5518,11 +5539,11 @@ COPY public.directus_presets (id, bookmark, "user", role, collection, search, la
 21	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	references	\N	\N	{"tabular":{"page":1,"fields":["author","author_position","text","status","profile"]}}	{"tabular":{"widths":{"author":149.6666259765625,"author_position":211,"text":398.6666259765625,"status":98,"profile":124.6666259765625}}}	\N	\N	bookmark	\N
 1	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	work_experiences	\N	\N	{"tabular":{"fields":["name","position","location","description","start_date","end_date","status"],"page":1}}	{"tabular":{"widths":{"name":119.66665649414062,"position":264,"location":136.66668701171875,"description":223.3333740234375,"start_date":119.666748046875,"end_date":120,"status":91}}}	\N	\N	bookmark	\N
 7	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	tech_skill_categories	\N	\N	{"tabular":{"fields":["name","status","profile"],"page":1}}	{"tabular":{"widths":{"name":623.2000122070312,"status":98.6666259765625,"profile":128.800048828125}}}	\N	\N	bookmark	\N
+20	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	salary_expectations	\N	tabular	{"tabular":{"fields":["job_title","employment_type","work_arrangement","company_type","region","hourly_rate","daily_rate","month_salary","year_salary"],"page":1}}	{"tabular":{"widths":{"job_title":189,"employment_type":94,"work_arrangement":90,"company_type":109,"region":140.66668701171875,"hourly_rate":126,"daily_rate":114.6666259765625,"month_salary":137,"year_salary":123.3333740234375},"spacing":"cozy"},"kanban":{"groupOrder":{"groupField":"company_type","sortMap":{"startup":0,"scaleup":1,"agency":2,"enterprise":3,"big_tech":4}}}}	\N	\N	bookmark	\N
 3	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	profiles	\N	\N	{"tabular":{"page":1,"fields":["name","title","core_stack","subtitle"]}}	{"tabular":{"widths":{"name":126.66665649414062,"title":231.66668701171875,"core_stack":278.3333740234375,"subtitle":343.3333740234375}}}	\N	\N	bookmark	\N
 17	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	project_stories	\N	\N	{"tabular":{"page":1,"fields":["title","category","profile"]}}	{"tabular":{"widths":{"title":489.20001220703125,"category":226.00006103515625,"profile":125.199951171875},"spacing":"cozy"}}	\N	\N	bookmark	\N
 4	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	languages	\N	\N	{"tabular":{"page":1,"fields":["name","language_code","proficiency","status","profile"]}}	{"tabular":{"widths":{"name":287.60003662109375,"language_code":165.20001220703125,"proficiency":176.4000244140625,"status":96.4000244140625,"profile":132.39990234375}}}	\N	\N	bookmark	\N
 10	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	soft_skills	\N	\N	{"tabular":{"page":1,"fields":["name","status","profile"]}}	{"tabular":{"widths":{"name":587,"status":98.5999755859375,"profile":125.199951171875}}}	\N	\N	bookmark	\N
-20	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	salary_expectations	\N	tabular	{"tabular":{"fields":["job_title","employment_type","work_arrangement","company_type","region","hourly_rate","month_salary","year_salary"],"page":1}}	{"tabular":{"widths":{"job_title":189,"employment_type":94,"work_arrangement":90,"company_type":109,"region":140.66668701171875,"hourly_rate":129.666748046875,"month_salary":139,"year_salary":123.3333740234375},"spacing":"cozy"},"kanban":{"groupOrder":{"groupField":"company_type","sortMap":{"startup":0,"scaleup":1,"agency":2,"enterprise":3,"big_tech":4}}}}	\N	\N	bookmark	\N
 19	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	side_project_achievements	\N	\N	{"tabular":{"page":1}}	\N	\N	\N	bookmark	\N
 18	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	side_projects	\N	\N	{"tabular":{"fields":["name","stars","start_date","end_date","status","profile"],"page":1}}	{"tabular":{"widths":{"name":326.33331298828125,"stars":90.66668701171875,"start_date":182.3333740234375,"end_date":169.666748046875,"status":90.6666259765625,"profile":121.3333740234375}}}	\N	\N	bookmark	\N
 \.
@@ -8748,6 +8769,7 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 3601	3694	directus_fields	190	{"id":190,"collection":"profiles","field":"tech_skill_categories","special":["o2m"],"interface":"list-o2m","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":21,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"tech_skill_categories","sort":21,"group":null}	\N	\N
 3602	3695	directus_fields	101	{"id":101,"collection":"profiles","field":"soft_skills","special":["o2m"],"interface":"list-o2m","options":{"enableSelect":false},"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":22,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"soft_skills","sort":22,"group":null}	\N	\N
 3603	3696	directus_fields	109	{"id":109,"collection":"profiles","field":"dev_methodologies","special":["o2m"],"interface":"list-o2m","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":23,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"dev_methodologies","sort":23,"group":null}	\N	\N
+3787	3880	salary_expectations	2	{"id":2,"sort":2,"date_created":"2025-10-28T12:26:12.018Z","date_updated":"2025-10-29T09:51:02.425Z","job_title":"Senior Python SWE","company_type":"enterprise","employment_type":"contract","work_arrangement":"remote","region":"eu_west_north","hourly_rate":70,"month_salary":12000,"year_salary":145000,"daily_rate":550}	{"year_salary":145000,"date_updated":"2025-10-29T09:51:02.425Z"}	\N	\N
 3604	3697	directus_fields	113	{"id":113,"collection":"profiles","field":"work_experiences","special":["o2m"],"interface":"list-o2m","options":null,"display":"related-values","display_options":{"template":"{{name}}"},"readonly":false,"hidden":false,"sort":24,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"work_experiences","sort":24,"group":null}	\N	\N
 3605	3698	directus_fields	208	{"id":208,"collection":"profiles","field":"education","special":["o2m"],"interface":"list-o2m","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":25,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"education","sort":25,"group":null}	\N	\N
 3606	3699	directus_fields	233	{"id":233,"collection":"profiles","field":"side_projects","special":["o2m"],"interface":"list-o2m","options":null,"display":"related-values","display_options":null,"readonly":false,"hidden":false,"sort":26,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"side_projects","sort":26,"group":null}	\N	\N
@@ -8913,6 +8935,24 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 3768	3861	directus_fields	273	{"id":273,"collection":"references","field":"status","special":null,"interface":"select-dropdown","options":{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]},"display":"labels","display_options":{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]},"readonly":false,"hidden":false,"sort":3,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"references","field":"status","width":"half"}	\N	\N
 3769	3862	references	2	{"profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","status":"published","author":"Elmar Krack","author_position":"Co-founder of Tender-it","text":"Rik demonstrated exceptional technical leadership by designing and developing our entire platform from the ground up, handling both backend and frontend development with impressive skill."}	{"profile":"0eeb942b-e35a-44e8-a37d-52b9cdb24309","status":"published","author":"Elmar Krack","author_position":"Co-founder of Tender-it","text":"Rik demonstrated exceptional technical leadership by designing and developing our entire platform from the ground up, handling both backend and frontend development with impressive skill."}	\N	\N
 3770	3863	directus_fields	280	{"id":280,"collection":"references","field":"profile","special":["m2o"],"interface":"select-dropdown-m2o","options":{"template":"{{name}}"},"display":"related-values","display_options":{"template":"{{name}}"},"readonly":false,"hidden":false,"sort":2,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"references","field":"profile","display_options":{"template":"{{name}}"}}	\N	\N
+3771	3864	directus_fields	282	{"sort":13,"interface":"input","special":null,"collection":"salary_expectations","field":"daily_rate"}	{"sort":13,"interface":"input","special":null,"collection":"salary_expectations","field":"daily_rate"}	\N	\N
+3772	3865	directus_fields	282	{"id":282,"collection":"salary_expectations","field":"daily_rate","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":13,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"salary_expectations","field":"daily_rate","width":"half"}	\N	\N
+3773	3866	directus_fields	248	{"id":248,"collection":"salary_expectations","field":"id","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":true,"hidden":true,"sort":1,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"salary_expectations","field":"id","sort":1,"group":null}	\N	\N
+3774	3867	directus_fields	249	{"id":249,"collection":"salary_expectations","field":"sort","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":true,"sort":2,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"salary_expectations","field":"sort","sort":2,"group":null}	\N	\N
+3775	3868	directus_fields	250	{"id":250,"collection":"salary_expectations","field":"date_created","special":["date-created"],"interface":"datetime","options":null,"display":"datetime","display_options":{"relative":true},"readonly":true,"hidden":true,"sort":3,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"salary_expectations","field":"date_created","sort":3,"group":null}	\N	\N
+3776	3869	directus_fields	251	{"id":251,"collection":"salary_expectations","field":"date_updated","special":["date-updated"],"interface":"datetime","options":null,"display":"datetime","display_options":{"relative":true},"readonly":true,"hidden":true,"sort":4,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"salary_expectations","field":"date_updated","sort":4,"group":null}	\N	\N
+3777	3870	directus_fields	253	{"id":253,"collection":"salary_expectations","field":"job_title","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":5,"width":"half","translations":null,"note":null,"conditions":null,"required":true,"group":null,"validation":null,"validation_message":null}	{"collection":"salary_expectations","field":"job_title","sort":5,"group":null}	\N	\N
+3778	3871	directus_fields	254	{"id":254,"collection":"salary_expectations","field":"company_type","special":null,"interface":"select-dropdown","options":{"choices":[{"text":"Startup","value":"startup"},{"text":"Scaleup","value":"scaleup"},{"text":"Agency","value":"agency"},{"text":"Enterprise","value":"enterprise"},{"text":"Big Tech","value":"big_tech"}]},"display":"labels","display_options":null,"readonly":false,"hidden":false,"sort":6,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"salary_expectations","field":"company_type","sort":6,"group":null}	\N	\N
+3779	3872	directus_fields	255	{"id":255,"collection":"salary_expectations","field":"employment_type","special":null,"interface":"select-dropdown","options":{"choices":[{"text":"Full-time employee (FTE)","value":"fte"},{"text":"Part-time employee (32h)","value":"part_time_32"},{"text":"Part-time employee (20h)","value":"part_time_20"},{"text":"Freelance / Contract","value":"contract"},{"text":"Freelance part-time (32h)","value":"contract_part_time_32"},{"text":"Freelance part-time (20h)","value":"contract_part_time_20"}]},"display":"labels","display_options":{"choices":[{"text":"Full-time","value":"fte"}]},"readonly":false,"hidden":false,"sort":7,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"salary_expectations","field":"employment_type","sort":7,"group":null}	\N	\N
+3780	3873	directus_fields	256	{"id":256,"collection":"salary_expectations","field":"work_arrangement","special":null,"interface":"select-dropdown","options":{"choices":[{"text":"Fully Remote","value":"remote"},{"text":"Hybrid","value":"hybrid"},{"text":"Onsite","value":"onsite"}]},"display":"labels","display_options":null,"readonly":false,"hidden":false,"sort":8,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"salary_expectations","field":"work_arrangement","sort":8,"group":null}	\N	\N
+3781	3874	directus_fields	257	{"id":257,"collection":"salary_expectations","field":"region","special":null,"interface":"select-dropdown","options":{"choices":[{"text":"US Tech Hubs","value":"us_tech_hubs"},{"text":"US Standard","value":"us_standard"},{"text":"EU Tech Centers","value":"eu_tech_centers"},{"text":"EU West/North","value":"eu_west_north"},{"text":"EU East/South","value":"eu_east_south"},{"text":"London","value":"london"},{"text":"UK Other","value":"uk_other"}]},"display":"labels","display_options":{"choices":[{"text":"EU West/North","value":"eu_west_north"}]},"readonly":false,"hidden":false,"sort":9,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"salary_expectations","field":"region","sort":9,"group":null}	\N	\N
+3782	3875	directus_fields	258	{"id":258,"collection":"salary_expectations","field":"hourly_rate","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":10,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"salary_expectations","field":"hourly_rate","sort":10,"group":null}	\N	\N
+3783	3876	directus_fields	282	{"id":282,"collection":"salary_expectations","field":"daily_rate","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":11,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"salary_expectations","field":"daily_rate","sort":11,"group":null}	\N	\N
+3784	3877	directus_fields	259	{"id":259,"collection":"salary_expectations","field":"month_salary","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":12,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"salary_expectations","field":"month_salary","sort":12,"group":null}	\N	\N
+3785	3878	directus_fields	260	{"id":260,"collection":"salary_expectations","field":"year_salary","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":13,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"salary_expectations","field":"year_salary","sort":13,"group":null}	\N	\N
+3786	3879	salary_expectations	2	{"id":2,"sort":2,"date_created":"2025-10-28T12:26:12.018Z","date_updated":"2025-10-29T09:47:40.572Z","job_title":"Senior Python SWE","company_type":"enterprise","employment_type":"contract","work_arrangement":"remote","region":"eu_west_north","hourly_rate":70,"month_salary":12000,"year_salary":150000,"daily_rate":550}	{"daily_rate":550,"date_updated":"2025-10-29T09:47:40.572Z"}	\N	\N
+3788	3881	salary_expectations	1	{"id":1,"sort":1,"date_created":"2025-10-28T12:14:10.169Z","date_updated":"2025-10-29T09:53:18.828Z","job_title":"Senior Python SWE","company_type":"enterprise","employment_type":"fte","work_arrangement":"remote","region":"eu_west_north","hourly_rate":35,"month_salary":6000,"year_salary":80000,"daily_rate":280}	{"daily_rate":280,"date_updated":"2025-10-29T09:53:18.828Z"}	\N	\N
+3789	3882	directus_fields	255	{"id":255,"collection":"salary_expectations","field":"employment_type","special":null,"interface":"select-dropdown","options":{"choices":[{"text":"Full-time employee (FTE)","value":"fte"},{"text":"Part-time employee (32h)","value":"part_time_32"},{"text":"Part-time employee (20h)","value":"part_time_20"},{"text":"Freelance / Contract","value":"contract"},{"text":"Freelance part-time (32h)","value":"contract_part_time_32"},{"text":"Freelance part-time (20h)","value":"contract_part_time_20"}]},"display":"labels","display_options":{"choices":[{"text":"FTE","value":"fte"}]},"readonly":false,"hidden":false,"sort":7,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"salary_expectations","field":"employment_type","display_options":{"choices":[{"text":"FTE","value":"fte"}]}}	\N	\N
 \.
 
 
@@ -8930,8 +8970,8 @@ COPY public.directus_roles (id, name, icon, description, parent) FROM stdin;
 --
 
 COPY public.directus_sessions (token, "user", expires, ip, user_agent, share, origin, next_token) FROM stdin;
-EoYIM1G4o9HxcPK4EifKZX15Pdht8K3KmMuFPzq7qLm16febviRLA9NR7SwlSQmU	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 09:43:48.608+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	KQoVN_tvJ10uwLW6Qwo-N_WhBfZjmJsul67JlfO1wmj3rmbL3GvOUnDz25ME4g7_
-KQoVN_tvJ10uwLW6Qwo-N_WhBfZjmJsul67JlfO1wmj3rmbL3GvOUnDz25ME4g7_	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-30 09:43:38.608+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
+ksZlAlHX9qr2GsO6p8IU3j2i-Xi7XNomDUXbPnLnl5iQyO7vZXvxzohZMxes5PGN	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-29 09:56:55.039+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	RypCutDtwZh37FciLXd9vEax1KrKz5u2lPnKBt7S4pYYgO9D1IpVBPY3MT3iew86
+RypCutDtwZh37FciLXd9vEax1KrKz5u2lPnKBt7S4pYYgO9D1IpVBPY3MT3iew86	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-30 09:56:45.039+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
 \.
 
 
@@ -8968,7 +9008,7 @@ c530a32f-84cb-4ab9-8a61-7a12a5bcb7e6	en-US	draft	Draft
 --
 
 COPY public.directus_users (id, first_name, last_name, email, password, location, title, description, tags, avatar, language, tfa_secret, status, role, token, last_access, last_page, provider, external_identifier, auth_data, email_notifications, appearance, theme_dark, theme_light, theme_light_overrides, theme_dark_overrides, text_direction) FROM stdin;
-157238bb-6930-4f26-be9c-8b31a9e11ab8	Admin	User	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-10-29 09:43:38.611+00	/content/references	default	\N	\N	t	\N	\N	\N	\N	\N	auto
+157238bb-6930-4f26-be9c-8b31a9e11ab8	Admin	User	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-10-29 09:56:45.042+00	/content/salary_expectations	default	\N	\N	t	\N	\N	\N	\N	\N	auto
 \.
 
 
@@ -9075,9 +9115,9 @@ RtB7Wxcuuw	Test	\N	fullstack-react	\N	7	\N	t	1db24a12-8b1d-4075-9679-e817bd47986
 -- Data for Name: salary_expectations; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.salary_expectations (id, sort, date_created, date_updated, job_title, company_type, employment_type, work_arrangement, region, hourly_rate, month_salary, year_salary) FROM stdin;
-1	1	2025-10-28 12:14:10.169+00	2025-10-28 12:48:18.538+00	Senior Python SWE	enterprise	fte	remote	eu_west_north	35	6000	80000
-2	2	2025-10-28 12:26:12.018+00	2025-10-28 12:48:22.399+00	Senior Python SWE	enterprise	contract	remote	eu_west_north	70	12000	150000
+COPY public.salary_expectations (id, sort, date_created, date_updated, job_title, company_type, employment_type, work_arrangement, region, hourly_rate, month_salary, year_salary, daily_rate) FROM stdin;
+2	2	2025-10-28 12:26:12.018+00	2025-10-29 09:51:02.425+00	Senior Python SWE	enterprise	contract	remote	eu_west_north	70	12000	145000	550
+1	1	2025-10-28 12:14:10.169+00	2025-10-29 09:53:18.828+00	Senior Python SWE	enterprise	fte	remote	eu_west_north	35	6000	80000	280
 \.
 
 
@@ -9431,14 +9471,14 @@ Festivalinfo	Amsterdam, NL	Festival / event information website	Internship Web D
 -- Name: directus_activity_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_activity_id_seq', 3863, true);
+SELECT pg_catalog.setval('public.directus_activity_id_seq', 3882, true);
 
 
 --
 -- Name: directus_fields_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_fields_id_seq', 281, true);
+SELECT pg_catalog.setval('public.directus_fields_id_seq', 282, true);
 
 
 --
@@ -9473,7 +9513,7 @@ SELECT pg_catalog.setval('public.directus_relations_id_seq', 28, true);
 -- Name: directus_revisions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_revisions_id_seq', 3770, true);
+SELECT pg_catalog.setval('public.directus_revisions_id_seq', 3789, true);
 
 
 --
@@ -10525,5 +10565,5 @@ ALTER TABLE ONLY public.work_experiences
 -- PostgreSQL database dump complete
 --
 
-\unrestrict UiaIoIxtc8XplwJfFLAiN5fDQbepVtUGbjMGbHAlOOoOs29bP9ECK8MaQglhJcr
+\unrestrict b3L9fl4TavAEO3PpvKlZtubUG6fmtO7g292eUL4rwq8O07DNcKnTGt5ooaunWeH
 
