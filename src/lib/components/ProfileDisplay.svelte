@@ -104,7 +104,9 @@
       <h2 class="text-xs mt-1">{profile.subtitle}</h2>
     </div>
 
-    <ul class="text-xs mt-2 grid grid-cols-2 grid-cols-[210px_150px] gap-x-2">
+    <ul
+      class="text-xs mt-3 grid grid-cols-2 grid-cols-[210px_150px] gap-x-2 auto-rows-[22px]"
+    >
       <li>
         <!-- <FontAwesomeIcon icon={faEnvelope} class="w-3 mr-1" title="Email" /> -->
 
@@ -218,14 +220,6 @@
           )
         }</a>
       </li>
-
-      <!-- <li> -->
-      <!--   <span class="inline-block w-13 text-right font-bold"> -->
-      <!--     Languages: -->
-      <!--   </span> -->
-      <!---->
-      <!--   Pater -->
-      <!-- </li> -->
     </ul>
   </header>
 
