@@ -4,6 +4,7 @@
     formatDateRangeCompact,
     formatDateRangeYear,
   } from "$lib/tools/date-utils";
+  import { formatProjectUrl } from "$lib/tools/url-utils";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faEnvelope,
@@ -264,19 +265,29 @@
     </h2>
 
     {#each filterOnTags(profile.side_projects) as project (project.name)}
+      {@const { isGithub, displayLabel } = formatProjectUrl(project.url)}
       <div class="mb-2">
         <div class="text-xs font-bold mb-1">
           {project.name} |
-          <FontAwesomeIcon icon={faGithub} class="w-3" title="GitHub" />
-          <FontAwesomeIcon icon={faStar} title="Stars" class="w-3" />
-          {project.stars} |
-          {formatDateRangeYear(project.start_date, project.end_date)} |
           <a
             href={project.url}
             target="_blank"
           >
-            {project.url}
+            {#if isGithub}
+              <FontAwesomeIcon icon={faGithub} class="w-3" title="GitHub" />
+            {/if}
+
+            <span class="underline">
+              {displayLabel}
+            </span>
+
+            {#if isGithub}
+              <FontAwesomeIcon icon={faStar} title="Stars" class="w-3" />
+              {project.stars}
+            {/if}
           </a>
+          |
+          {formatDateRangeYear(project.start_date, project.end_date)}
         </div>
 
         <div class="text-xs">

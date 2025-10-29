@@ -10,6 +10,7 @@
   } from "@fortawesome/free-solid-svg-icons";
   import { resume } from "$lib/data/resume";
   import { formatDateRangeVerbose } from "$lib/tools/date-utils";
+  import { formatProjectUrl } from "$lib/tools/url-utils";
   import InfoBoxes from "./InfoBoxes.svelte";
   import TechTag from "./TechTag.svelte";
 
@@ -30,16 +31,10 @@
         <p class="leading-relaxed print:text-sm">{project.summary}</p>
 
         {#if project.url}
-          {@const isGithub = project.url.includes("github.com")}
-          {@const         displayLabel = project.url_label || (isGithub
-          ? project.url.replace("https://github.com/", "").replace(
-            "https://www.github.com/",
-            "",
-          ).replace(/\/$/, "")
-          : project.url.replace("https://www.", "").replace(
-            "https://",
-            "",
-          ).replace(/\/$/, ""))}
+          {@const { isGithub, displayLabel } = formatProjectUrl(
+            project.url,
+            project.url_label,
+          )}
           <div class="flex justify-start mt-6">
             <a
               href={project.url}
