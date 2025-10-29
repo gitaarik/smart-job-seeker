@@ -10,6 +10,20 @@ import puppeteer from "puppeteer";
 import path from "path";
 import fs from "fs";
 
+// Dynamically import Prisma to avoid issues with client generation
+let prisma: any;
+
+async function initPrisma() {
+  try {
+    const { PrismaClient } = await import("@prisma/client");
+    prisma = new PrismaClient();
+    console.log("✓ Prisma client initialized");
+  } catch (error) {
+    console.error("❌ Failed to initialize Prisma client:", error);
+    throw error;
+  }
+}
+
 async function exportResumeToPDF() {
   console.log("🚀 Starting resume PDF export...");
 
@@ -18,15 +32,24 @@ async function exportResumeToPDF() {
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
 
+  // Fetch the first profile with its versions
+  const profile = await prisma.profiles.findFirst({
+    include: {
+      profile_versions: {
+        orderBy: {
+          sort: "asc",
+        },
+      },
+    },
+  });
+
+  if (!profile) {
+    console.error("❌ No profile found in database");
+    process.exit(1);
+  }
+
   // Define the versions to create
-  const resumeVersions = [
-    "", // Full resume
-    "fullstack-python",
-    "fullstack-django",
-    "fullstack-react",
-    "fullstack-svelte",
-    "datascience",
-  ];
+  const resumeVersions = profile.profile_versions.map((v) => v.name || "");
 
   const versions = resumeVersions.map((version) => ({
     route: `resume?version=${version}`,
@@ -171,6 +194,7 @@ async function exportResumeToPDF() {
     process.exit(1);
   } finally {
     await browser.close();
+    await prisma.$disconnect();
   }
 }
 
@@ -185,17 +209,24 @@ async function checkDevServer() {
 }
 
 async function main() {
-  const serverRunning = await checkDevServer();
+  try {
+    await initPrisma();
 
-  if (!serverRunning) {
-    console.error(
-      "❌ Development server is not running on http://localhost:5173",
-    );
-    console.log("💡 Please start the dev server first with: npm run dev");
+    const serverRunning = await checkDevServer();
+
+    if (!serverRunning) {
+      console.error(
+        "❌ Development server is not running on http://localhost:5173",
+      );
+      console.log("💡 Please start the dev server first with: npm run dev");
+      process.exit(1);
+    }
+
+    await exportResumeToPDF();
+  } catch (error) {
+    console.error("❌ Fatal error:", error);
     process.exit(1);
   }
-
-  await exportResumeToPDF();
 }
 
 // Run if this is the main module
