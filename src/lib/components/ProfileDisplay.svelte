@@ -73,6 +73,17 @@
     }
   }
 
+  const version: string = page.url.searchParams.get("version") || "";
+  let versionObj = getVersion(version);
+  const versionObjs = [versionObj];
+
+  while (versionObj && versionObj.extends_from) {
+    versionObj = getVersion(versionObj.extends_from);
+    versionObjs.push(versionObj);
+  }
+
+  const versionNames = versionObjs.reduce((versionObj) => versionObj.name);
+
   function filterOnTags<T extends { tags?: string[] }>(objList: T[]): T[] {
     return objList.filter((obj) => {
       if ("tags" in obj && obj.tags && obj.tags.length) {
@@ -88,8 +99,11 @@
           const tags = obj.tags.filter((item) =>
             !(["resume", "cv"].includes(item))
           );
-          if (!(tags.length && version)) return true;
-          return tags.includes(version);
+          if (!(tags.length && versionNames.length)) return true;
+
+          return versionNames.find((version) => {
+            return tags.include(version);
+          });
         }
       }
 
@@ -97,19 +111,8 @@
     });
   }
 
-  const version: string = page.url.searchParams.get("version") || "";
-  let versionObj = getVersion(version);
-  const versionObjs = [versionObj];
-
-  while (versionObj && versionObj.extends_from) {
-    versionObj = getVersion(versionObj.extends_from);
-    versionObjs.push(versionObj);
-  }
-
-  console.log(versionObjs);
-
   const work_experiences = filterOnTags(profile.work_experiences);
-  const toggles = versionObj ? versionObj.toggles : [];
+  const toggles = versionObjs.reduce((versionObj) => versionObj.toggles);
 </script>
 
 <svelte:head>
