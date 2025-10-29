@@ -303,13 +303,6 @@
       EDUCATION
     </h2>
 
-    <!-- <p> -->
-    <!--   Mainly self-thaught because of interests, with a relevant background in -->
-    <!--   Network Engineering (Dutch secondary vocational education @ Nova College -->
-    <!--   in Hoofddorp) and a half year internship as a PHP & MySQL developer at -->
-    <!--   Festivalinfo.nl -->
-    <!-- </p> -->
-
     {#each filterOnTags(profile.education) as education (education.area)}
       <div class="mb-2">
         <div class="font-bold">
@@ -330,24 +323,6 @@
           {education.institution}, {education.location}
         </div>
       </div>
-
-      <!-- <div class="flex justify-between mb-3"> -->
-      <!--   <div> -->
-      <!--     <h3 class="font-bold text-sm">{education.area}</h3> -->
-      <!--     <p> -->
-      <!--       <strong>{education.institution}</strong> ({education.studyType}) -->
-      <!--     </p> -->
-      <!--   </div> -->
-      <!---->
-      <!--   <div> -->
-      <!--     { -->
-      <!--       formatDateRangeCompact( -->
-      <!--         education.start_date, -->
-      <!--         education.end_date, -->
-      <!--       ) -->
-      <!--     } -->
-      <!--   </div> -->
-      <!-- </div> -->
     {/each}
   </div>
 
