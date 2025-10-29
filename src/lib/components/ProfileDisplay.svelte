@@ -266,15 +266,17 @@
     {#each filterOnTags(profile.side_projects) as project (project.name)}
       <div class="mb-2">
         <div class="text-xs font-bold mb-1">
-          {project.name} | <a
+          {project.name} |
+          <FontAwesomeIcon icon={faGithub} class="w-3" title="GitHub" />
+          <FontAwesomeIcon icon={faStar} title="Stars" class="w-3" />
+          {project.stars} |
+          {formatDateRangeYear(project.start_date, project.end_date)} |
+          <a
             href={project.url}
             target="_blank"
-          ><FontAwesomeIcon icon={faGithub} class="w-3" title="GitHub" />
-            <FontAwesomeIcon icon={faStar} title="Stars" class="w-3" /> <span
-              class="underline"
-            >{project.stars}</span></a> | {
-            formatDateRangeYear(project.start_date, project.end_date)
-          }
+          >
+            {project.url}
+          </a>
         </div>
 
         <div class="text-xs">
