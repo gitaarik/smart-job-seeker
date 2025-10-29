@@ -38,6 +38,12 @@ export async function loadProfile() {
         orderBy: { sort: "asc" },
       },
       references: { orderBy: { sort: "asc" } },
+      profile_versions: true,
+      // profile_versions: {
+      //   include: {
+      //     toggles: true,
+      //   },
+      // },
     },
   });
 

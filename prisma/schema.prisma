@@ -847,6 +847,7 @@ model profile_versions {
   name         String?   @db.VarChar(255)
   description  String?
   profile      String?   @db.Uuid
+  toggles      Json?     @db.Json
   profiles     profiles? @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "profile_versions_profile_foreign")
 }
 

@@ -85,6 +85,9 @@
   }
 
   const work_experiences = filterOnTags(profile.work_experiences);
+
+  console.log(profile.profile_versions.find((v) => v.name === version));
+  // const toggles = profile.profile_versions
 </script>
 
 <svelte:head>
@@ -384,6 +387,19 @@
         }
       </div>
     {/each}
+  </div>
+
+  <!-- Nationality -->
+  <div class="my-3 break-inside-avoid">
+    <h2 class="text-sm font-bold">
+      NATIONALITY
+    </h2>
+
+    <hr class="mt-1 mb-2" />
+
+    <div>
+      {profile.nationality}
+    </div>
   </div>
 
   {#if type === "cv"}
