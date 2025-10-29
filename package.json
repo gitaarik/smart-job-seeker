@@ -8,7 +8,7 @@
     "docker:dev:init": "dotenvx run -- vite dev --host",
     "docker:dev:cli": "docker compose exec -it app /bin/bash",
     "docker:build-app": "docker-compose exec app npm run build",
-    "docker:export-resume-pdf": "docker-compose exec app npx tsx scripts/export-resume-pdf.ts",
+    "docker:export-profiles-pdf": "docker-compose exec app npx tsx scripts/export-profiles-pdf.ts",
     "docker:pull-db-schema": "docker-compose exec app npx prisma db pull",
     "docker:db:cli": "docker-compose exec database psql -U postgres -d smartjobseeker",
     "docker:db:backup": "docker-compose exec database ./scripts/dump-db.sh",
@@ -28,7 +28,7 @@
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "format": "prettier --write .",
     "lint": "prettier --check . && eslint .",
-    "export-resume-pdf": "npx tsx scripts/export-resume-pdf.ts",
+    "export-profiles-pdf": "npx tsx scripts/export-profiles-pdf.ts",
     "sync-resumes-admin": "cp -r /home/rik/dev/smart-job-seeker/src/lib/resumes/* ~/data/Administratie/Freelancing/Resumes",
     "build-json-resume": "npx tsx scripts/build-json-resume.ts",
     "render-resume": "resumed render dist/resume.json --output dist/resume.html --theme jsonresume-theme-even"

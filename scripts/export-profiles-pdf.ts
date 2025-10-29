@@ -117,7 +117,8 @@ async function exportProfilesToPDF() {
         );
       });
 
-      const outputPath = path.join(versionDir, "Resume Rik Wanders.pdf");
+      const filename = `${version.docType === "cv" ? "CV" : "Resume"} Rik Wanders.pdf`;
+      const outputPath = path.join(versionDir, filename);
 
       // Generate PDF
       console.log("📝 Generating PDF...");
