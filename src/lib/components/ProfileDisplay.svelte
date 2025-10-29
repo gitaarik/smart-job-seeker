@@ -193,17 +193,22 @@
 
   <!-- Summary -->
   <div class="my-4">
-    <h2 class="text-sm font-bold mb-2 border-b-2 border-black">
+    <h2 class="text-sm font-bold">
       SUMMARY
     </h2>
+
+    <hr class="mt-1 mb-2" />
+
     <p class="mt-1 text-xs">{profile.summary}</p>
   </div>
 
   <!-- Work Experience -->
   <div class="my-4">
-    <h2 class="text-sm font-bold mb-2 border-b-2 border-black">
+    <h2 class="text-sm font-bold">
       WORK EXPERIENCE
     </h2>
+
+    <hr class="mt-1 mb-2" />
 
     {#each work_experiences as job, index (index)}
       <div class="mb-2">
@@ -236,9 +241,11 @@
 
   <!-- Skills -->
   <div class="my-4 break-inside-avoid">
-    <h2 class="text-sm font-bold mb-2 border-b-2 border-black">
+    <h2 class="text-sm font-bold">
       SKILLS
     </h2>
+
+    <hr class="mt-1 mb-2" />
 
     <ul class="list-disc ml-3 print:ml-4">
       {#each profile.tech_skill_categories as skillGroup, index (index)}
@@ -260,9 +267,11 @@
 
   <!-- Side Projects -->
   <div class="my-4 break-inside-avoid">
-    <h2 class="text-sm font-bold mb-2 border-b-2 border-black">
+    <h2 class="text-sm font-bold">
       SIDE PROJECTS
     </h2>
+
+    <hr class="mt-1 mb-2" />
 
     {#each filterOnTags(profile.side_projects) as project (project.name)}
       {@const { isGithub, displayLabel } = formatProjectUrl(project.url)}
@@ -272,6 +281,7 @@
           <a
             href={project.url}
             target="_blank"
+            class="hover:text-white/70"
           >
             {#if isGithub}
               <FontAwesomeIcon icon={faGithub} class="w-3" title="GitHub" />
@@ -286,8 +296,6 @@
               {project.stars}
             {/if}
           </a>
-          |
-          {formatDateRangeYear(project.start_date, project.end_date)}
         </div>
 
         <div class="text-xs">
@@ -299,9 +307,11 @@
 
   <!-- Education -->
   <div class="my-3 break-inside-avoid">
-    <h2 class="text-sm font-bold mb-2 border-b-2 border-black">
+    <h2 class="text-sm font-bold">
       EDUCATION
     </h2>
+
+    <hr class="mt-1 mb-2" />
 
     {#each filterOnTags(profile.education) as education (education.area)}
       <div class="mb-2">
@@ -328,9 +338,12 @@
 
   {#if type === "cv"}
     <div class="mb-6">
-      <h2 class="text-sm font-bold mb-2 border-b-2 border-black">
+      <h2 class="text-sm font-bold">
         REFERENCES
       </h2>
+
+      <hr class="mt-1 mb-2" />
+
       {#each profile.references as reference, index (index)}
         <div class="mb-2">
           <h3 class="font-bold">{reference.author}</h3>
