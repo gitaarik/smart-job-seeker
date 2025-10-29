@@ -368,6 +368,24 @@
     {/each}
   </div>
 
+  <!-- Languages -->
+  <div class="my-3 break-inside-avoid">
+    <h2 class="text-sm font-bold">
+      LANGUAGES
+    </h2>
+
+    <hr class="mt-1 mb-2" />
+
+    {#each profile.languages as language (language.language_code)}
+      <div>
+        {language.name}: {
+          language.proficiency.substr(0, 1).toUpperCase() +
+            language.proficiency.substr(1)
+        }
+      </div>
+    {/each}
+  </div>
+
   {#if type === "cv"}
     <div class="mb-6">
       <h2 class="text-sm font-bold">
