@@ -1,11 +1,11 @@
 import { error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { prisma } from "$lib/db";
-import { read } from '$app/server';
+import { read } from "$app/server";
 import path from "path";
 
 const fileImports: Record<string, string> = import.meta.glob(
-  "$lib/resumes/**/**.{pdf,docx}",
+  "$lib/exports/resume/**.{pdf,docx}",
   {
     eager: true,
     import: "default",
@@ -56,7 +56,8 @@ export const GET: RequestHandler = async ({ url }) => {
   const filePath: string = "/" + path.join(
     "src",
     "lib",
-    "resumes",
+    "exports",
+    "resume",
     resumeToken.resumeType,
     resumeFilename,
   );
@@ -74,5 +75,4 @@ export const GET: RequestHandler = async ({ url }) => {
 
   const file = fileImports[filePath];
   return read(file);
-
 };
