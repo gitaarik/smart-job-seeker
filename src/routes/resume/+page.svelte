@@ -4,8 +4,6 @@
   import { page } from "$app/state";
 
   export let data: PageData;
-
-  const type = page.url.searchParams.get("type");
 </script>
 
-<ProfileDisplay profile={data.profile} {type} />
+<ProfileDisplay profile={data.profile} type="resume" />

@@ -3,8 +3,6 @@
   import ProfileDisplay from "$lib/components/ProfileDisplay.svelte";
 
   export let data: PageData;
-
-  const type = "cv";
 </script>
 
-<ProfileDisplay profile={data.profile} {type} />
+<ProfileDisplay profile={data.profile} type="cv" />

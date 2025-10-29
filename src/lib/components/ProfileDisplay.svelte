@@ -1,9 +1,10 @@
 <script lang="ts">
-  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+  import { page } from "$app/state";
   import {
     formatDateRangeCompact,
     formatDateRangeYear,
   } from "$lib/tools/date-utils";
+  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faEnvelope,
     faGlobe,
@@ -56,6 +57,7 @@
 
   export let profile: Profile;
   export let type: string | null = null;
+  const focus = page.url.searchParams.get("focus");
 
   function filterOnTags<T extends { tags?: string }>(objList: T[]): T[] {
     return objList.filter((obj) => {
@@ -65,10 +67,10 @@
             // If the obj has the opposite type tag but not the current type tag
             return false;
           } else {
-            return type ? obj.tags.includes(type) : true;
+            return focus ? obj.tags.includes(focus) : true;
           }
         } else {
-          return type ? obj.tags.includes(type) : true;
+          return focus ? obj.tags.includes(focus) : true;
         }
       }
 
