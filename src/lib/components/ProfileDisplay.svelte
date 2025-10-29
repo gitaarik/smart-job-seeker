@@ -57,20 +57,24 @@
 
   export let profile: Profile;
   export let type: string | null = null;
-  const focus = page.url.searchParams.get("focus");
+  const version = page.url.searchParams.get("version");
 
   function filterOnTags<T extends { tags?: string }>(objList: T[]): T[] {
     return objList.filter((obj) => {
       if ("tags" in obj && obj.tags && obj.tags.length) {
-        if (!obj.tags.includes(type || "resume")) {
-          if (obj.tags.includes(type === "resume" ? "cv" : "resume")) {
-            // If the obj has the opposite type tag but not the current type tag
-            return false;
-          } else {
-            return focus ? obj.tags.includes(focus) : true;
-          }
+        if (
+          !obj.tags.includes(type || "resume") &&
+          obj.tags.includes(type === "resume" ? "cv" : "resume")
+        ) {
+          // If the opposite of `type` is in `obj.tags`, but `type` itself not
+          // For example, when `type` is "cv" and `obj.tags` contains "resume"
+          // but not "cv", then this obj should be hidden.
+          return false;
         } else {
-          return focus ? obj.tags.includes(focus) : true;
+          const tags = obj.tags.filter((item) =>
+            !(["resume", "cv"].includes(item))
+          );
+          return version ? tags.includes(version) : true;
         }
       }
 

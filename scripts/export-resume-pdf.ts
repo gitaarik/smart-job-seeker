@@ -19,7 +19,7 @@ async function exportResumeToPDF() {
   });
 
   // Define the versions to create
-  const resumeTypes = [
+  const resumeVersions = [
     "", // Full resume
     "fullstack-python",
     "fullstack-django",
@@ -28,12 +28,12 @@ async function exportResumeToPDF() {
     "datascience",
   ];
 
-  const versions = resumeTypes.map((type) => ({
-    route: `resume?type=${type}`,
-    dirName: `${type || "full"}`,
+  const versions = resumeVersions.map((version) => ({
+    route: `resume?version=${version}`,
+    dirName: `${version || "full"}`,
     description: `ATS Resume (${
-      type
-        ? type.replace("-", " ").replace(/\b\w/g, (l) => l.toUpperCase())
+      version
+        ? version.replace("-", " ").replace(/\b\w/g, (l) => l.toUpperCase())
         : "Full"
     })`,
     isATS: true,
