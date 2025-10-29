@@ -632,6 +632,7 @@ model profiles {
   education             education[]
   highlights            highlights[]
   languages             languages[]
+  profile_versions      profile_versions[]
   directus_files        directus_files?         @relation(fields: [profile_picture], references: [id], onUpdate: NoAction, map: "profiles_profile_picture_foreign")
   project_stories       project_stories[]
   references            references[]
@@ -835,6 +836,18 @@ model references {
   text            String?
   profile         String?   @db.Uuid
   profiles        profiles? @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "references_profile_foreign")
+}
+
+model profile_versions {
+  id           Int       @id @default(autoincrement())
+  status       String    @default("draft") @db.VarChar(255)
+  sort         Int?
+  date_created DateTime? @db.Timestamptz(6)
+  date_updated DateTime? @db.Timestamptz(6)
+  name         String?   @db.VarChar(255)
+  description  String?
+  profile      String?   @db.Uuid
+  profiles     profiles? @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "profile_versions_profile_foreign")
 }
 
 enum Role {
