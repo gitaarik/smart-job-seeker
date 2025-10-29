@@ -16,7 +16,7 @@
   import { faGithub, faLinkedin } from "@fortawesome/free-brands-svg-icons";
   import { page } from "$app/state";
 
-  const focus = page.url.searchParams.get("focus");
+  const type = page.url.searchParams.get("type");
 
   function filterOnTags(objList: { tags: string }[]) {
     return objList.filter((obj) => {
@@ -26,10 +26,10 @@
             // If the obj has the "cv" tag but not the "resume" tag
             return false;
           } else {
-            return focus ? obj.tags.includes(focus) : true;
+            return type ? obj.tags.includes(type) : true;
           }
         } else {
-          return focus ? obj.tags.includes(focus) : true;
+          return type ? obj.tags.includes(type) : true;
         }
       }
 
