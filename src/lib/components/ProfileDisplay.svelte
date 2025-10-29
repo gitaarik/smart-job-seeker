@@ -54,11 +54,24 @@
       summary: string;
       tags: string[];
     }>;
+    profile_versions: Array<{
+      id: number;
+      name: string;
+      toggles: string[];
+      extends_from: number;
+    }>;
   }
 
   export let profile: Profile;
   export let type: string | null = null;
-  const version = page.url.searchParams.get("version");
+
+  function getVersion(idx: string | number) {
+    if (typeof idx === "number") {
+      return profile.profile_versions.find((v) => v.id === idx);
+    } else {
+      return profile.profile_versions.find((v) => v.name === idx);
+    }
+  }
 
   function filterOnTags<T extends { tags?: string[] }>(objList: T[]): T[] {
     return objList.filter((obj) => {
@@ -84,10 +97,18 @@
     });
   }
 
+  const version: string = page.url.searchParams.get("version") || "";
+  let versionObj = getVersion(version);
+  const versionObjs = [versionObj];
+
+  while (versionObj && versionObj.extends_from) {
+    versionObj = getVersion(versionObj.extends_from);
+    versionObjs.push(versionObj);
+  }
+
+  console.log(versionObjs);
+
   const work_experiences = filterOnTags(profile.work_experiences);
-  const versionObj = profile.profile_versions.find((v) =>
-    v.name === version
-  );
   const toggles = versionObj ? versionObj.toggles : [];
 </script>
 
