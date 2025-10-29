@@ -104,9 +104,14 @@
       <h2 class="text-xs mt-1">{profile.subtitle}</h2>
     </div>
 
-    <ul class="text-xs mt-2 grid grid-cols-2 grid-cols-[170px_110px] gap-x-8">
+    <ul class="text-xs mt-2 grid grid-cols-2 grid-cols-[210px_150px] gap-x-2">
       <li>
-        <FontAwesomeIcon icon={faEnvelope} class="w-3 mr-1" title="Email" />
+        <!-- <FontAwesomeIcon icon={faEnvelope} class="w-3 mr-1" title="Email" /> -->
+
+        <span class="inline-block w-14 text-right font-bold">
+          Email:
+        </span>
+
         <a
           href="mailto:{profile.email_address}"
           class="underline"
@@ -114,7 +119,12 @@
       </li>
 
       <li>
-        <FontAwesomeIcon icon={faPhone} class="w-3 mr-1" title="Phone" />
+        <!-- <FontAwesomeIcon icon={faPhone} class="w-3 mr-1" title="Phone" /> -->
+
+        <span class="inline-block w-13 text-right font-bold">
+          Phone:
+        </span>
+
         <a
           href="tel:{profile.phone_number}"
           class="underline"
@@ -122,11 +132,16 @@
       </li>
 
       <li>
-        <FontAwesomeIcon
-          icon={faLocationDot}
-          class="w-3 mr-1"
-          title="Location"
-        />
+        <!-- <FontAwesomeIcon -->
+        <!--   icon={faLocationDot} -->
+        <!--   class="w-3 mr-1" -->
+        <!--   title="Location" -->
+        <!-- /> -->
+
+        <span class="inline-block w-14 text-right font-bold">
+          Location:
+        </span>
+
         <a
           href={profile.location_url}
           class="underline"
@@ -140,7 +155,12 @@
       </li>
 
       <li>
-        <FontAwesomeIcon icon={faGlobe} class="w-3 mr-1" title="Website" />
+        <!-- <FontAwesomeIcon icon={faGlobe} class="w-3 mr-1" title="Website" /> -->
+
+        <span class="inline-block w-13 text-right font-bold">
+          Website:
+        </span>
+
         <a
           href={profile.personal_website}
           target="_blank"
@@ -154,11 +174,16 @@
       </li>
 
       <li>
-        <FontAwesomeIcon
-          icon={faLinkedin}
-          class="w-3 mr-1"
-          title="LinkedIn"
-        />
+        <!-- <FontAwesomeIcon -->
+        <!--   icon={faLinkedin} -->
+        <!--   class="w-3 mr-1" -->
+        <!--   title="LinkedIn" -->
+        <!-- /> -->
+
+        <span class="inline-block w-14 text-right font-bold">
+          LinkedIn:
+        </span>
+
         <a
           href={profile.linkedin_profile}
           target="_blank"
@@ -172,11 +197,16 @@
       </li>
 
       <li>
-        <FontAwesomeIcon
-          icon={faGithub}
-          class="w-3 mr-1"
-          title="GitHub"
-        />
+        <!-- <FontAwesomeIcon -->
+        <!--   icon={faGithub} -->
+        <!--   class="w-3 mr-1" -->
+        <!--   title="GitHub" -->
+        <!-- /> -->
+
+        <span class="inline-block w-13 text-right font-bold">
+          GitHub:
+        </span>
+
         <a
           href={profile.github_profile}
           target="_blank"
@@ -188,6 +218,14 @@
           )
         }</a>
       </li>
+
+      <!-- <li> -->
+      <!--   <span class="inline-block w-13 text-right font-bold"> -->
+      <!--     Languages: -->
+      <!--   </span> -->
+      <!---->
+      <!--   Pater -->
+      <!-- </li> -->
     </ul>
   </header>
 
