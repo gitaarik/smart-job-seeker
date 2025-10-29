@@ -36,9 +36,9 @@
       note?: string;
       achievements?: Array<{
         description: string;
-        tags?: string;
+        tags: string[];
       }>;
-      tags?: string;
+      tags: string[];
     }>;
     tech_skill_categories: Array<{
       name: string;
@@ -51,7 +51,7 @@
       start_date: Date;
       end_date?: Date;
       summary: string;
-      tags?: string;
+      tags: string[];
     }>;
   }
 
@@ -59,7 +59,7 @@
   export let type: string | null = null;
   const version = page.url.searchParams.get("version");
 
-  function filterOnTags<T extends { tags?: string }>(objList: T[]): T[] {
+  function filterOnTags<T extends { tags?: string[] }>(objList: T[]): T[] {
     return objList.filter((obj) => {
       if ("tags" in obj && obj.tags && obj.tags.length) {
         if (
@@ -74,7 +74,8 @@
           const tags = obj.tags.filter((item) =>
             !(["resume", "cv"].includes(item))
           );
-          return version ? tags.includes(version) : true;
+          if (!(tags.length && version)) return true;
+          return tags.includes(version);
         }
       }
 
