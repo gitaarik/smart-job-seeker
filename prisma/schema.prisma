@@ -58,6 +58,7 @@ model WorkExperience {
   start_date     DateTime?                      @db.Date
   end_date       DateTime?                      @db.Date
   website        String?                        @db.VarChar(255)
+  tags           Json?                          @db.Json
   achievements   work_experience_achievements[]
   technologies   work_experience_technologies[]
   directus_files directus_files?                @relation(fields: [logo], references: [id], onUpdate: NoAction, map: "work_experiences_logo_foreign")
@@ -623,6 +624,8 @@ model profiles {
   profile_picture       String?                 @db.Uuid
   summary               String?
   nationality           String?                 @db.VarChar(255)
+  location_url          String?                 @db.VarChar(255)
+  location_timezone     String?                 @db.VarChar(255)
   application_questions application_questions[]
   cheat_sheets          cheat_sheets[]
   dev_methodologies     dev_methodologies[]
@@ -631,6 +634,7 @@ model profiles {
   languages             languages[]
   directus_files        directus_files?         @relation(fields: [profile_picture], references: [id], onUpdate: NoAction, map: "profiles_profile_picture_foreign")
   project_stories       project_stories[]
+  references            references[]
   side_projects         side_projects[]
   soft_skills           soft_skills[]
   tech_skill_categories tech_skill_categories[]
@@ -786,6 +790,7 @@ model side_projects {
   stars                     Int?
   summary                   String?
   url_label                 String?                     @db.VarChar(255)
+  tags                      Json?                       @db.Json
   side_project_achievements side_project_achievements[]
   side_project_technologies side_project_technologies[]
   profiles                  profiles?                   @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "side_projects_profile_foreign")
@@ -804,6 +809,7 @@ model salary_expectations {
   hourly_rate      Int?
   month_salary     Int?
   year_salary      Int?
+  daily_rate       Int?
 }
 
 model side_project_technologies {
@@ -815,6 +821,19 @@ model side_project_technologies {
   name          String?        @db.VarChar(255)
   side_project  Int?
   side_projects side_projects? @relation(fields: [side_project], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "side_project_technologies_side_project_foreign")
+}
+
+model references {
+  id              Int       @id @default(autoincrement())
+  status          String    @default("draft") @db.VarChar(255)
+  sort            Int?
+  date_created    DateTime? @db.Timestamptz(6)
+  date_updated    DateTime? @db.Timestamptz(6)
+  author          String    @db.VarChar(255)
+  author_position String?   @db.VarChar(255)
+  text            String?
+  profile         String?   @db.Uuid
+  profiles        profiles? @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "references_profile_foreign")
 }
 
 enum Role {

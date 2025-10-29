@@ -1,6 +1,7 @@
 <script lang="ts">
+  import type { PageData } from "./$types";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { resume } from "$lib/data/resume";
+  // import { resume } from "$lib/data/resume";
   import {
     formatDateRangeCompact,
     formatDateRangeYear,
@@ -12,30 +13,42 @@
     faPhone,
     faStar,
   } from "@fortawesome/free-solid-svg-icons";
-  import { faGithub } from "@fortawesome/free-brands-svg-icons";
+  import { faGithub, faLinkedin } from "@fortawesome/free-brands-svg-icons";
   import { page } from "$app/state";
 
-  const type = page.url.searchParams.get("type");
+  const focus = page.url.searchParams.get("focus");
 
-  function filterHighlights(highlights: any[]) {
-    if (!type) return highlights;
-
-    return highlights.filter((highlight) => {
-      if ("tags" in highlight) {
-        return highlight.tags.includes(type);
-      } else {
-        return true;
+  function filterOnTags(objList: { tags: string }[]) {
+    return objList.filter((obj) => {
+      if ("tags" in obj && obj.tags && obj.tags.length) {
+        if (!(obj.tags.includes("resume"))) {
+          if (obj.tags.includes("cv")) {
+            // If the obj has the "cv" tag but not the "resume" tag
+            return false;
+          } else {
+            return focus ? obj.tags.includes(focus) : true;
+          }
+        } else {
+          return focus ? obj.tags.includes(focus) : true;
+        }
       }
+
+      return true;
     });
   }
+
+  export let data: PageData;
+
+  const resume = data.profile;
+  const work_experiences = filterOnTags(resume.work_experiences);
 </script>
 
 <svelte:head>
-  <title>{resume.basics.name}</title>
+  <title>{resume.name}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta
     name="description"
-    content={resume.basics.name}
+    content={resume.name}
   />
 </svelte:head>
 
@@ -45,26 +58,26 @@
   <!-- Header Section -->
   <header class="flex justify-between">
     <div class="w-120">
-      <h1 class="text-2xl font-bold">{resume.basics.name}</h1>
-      <h2 class="text-sm">{resume.basics.label}</h2>
-      <h2 class="text-xs mt-1">{resume.basics.subLabel}</h2>
+      <h1 class="text-2xl font-bold">{resume.name}</h1>
+      <h2 class="text-sm">{resume.title}</h2>
+      <h2 class="text-xs mt-1">{resume.subtitle}</h2>
     </div>
 
     <ul class="text-xs mt-2 grid grid-cols-2 grid-cols-[170px_110px] gap-x-8">
       <li>
         <FontAwesomeIcon icon={faEnvelope} class="w-3 mr-1" title="Email" />
         <a
-          href="mailto:{resume.basics.email}"
+          href="mailto:{resume.email_address}"
           class="underline"
-        >{resume.basics.email}</a>
+        >{resume.email_address}</a>
       </li>
 
       <li>
         <FontAwesomeIcon icon={faPhone} class="w-3 mr-1" title="Phone" />
         <a
-          href="tel:{resume.basics.phone}"
+          href="tel:{resume.phone_number}"
           class="underline"
-        >{resume.basics.phone}</a>
+        >{resume.phone_number}</a>
       </li>
 
       <li>
@@ -74,83 +87,98 @@
           title="Location"
         />
         <a
-          href={resume.basics.location.url}
+          href={resume.location_url}
           class="underline"
           target="_blank"
         >
-          {resume.basics.location.address}
+          {resume.location}
         </a>
-        ({resume.basics.location.timezone})
+        {#if resume.location_timezone}
+          ({resume.location_timezone})
+        {/if}
       </li>
 
       <li>
         <FontAwesomeIcon icon={faGlobe} class="w-3 mr-1" title="Website" />
         <a
-          href={resume.basics.url}
+          href={resume.personal_website}
           target="_blank"
           class="underline"
-        >{resume.basics.url_label}</a>
+        >{
+          resume.personal_website.replace(
+            /^https?:\/\/(www.)?/,
+            "",
+          ).replace(/\/$/, "")
+        }</a>
       </li>
 
-      {#each resume.basics.profiles as profile (profile)}
-        <li>
-          <FontAwesomeIcon
-            icon={profile.icon}
-            class="w-3 mr-1"
-            title={profile.network}
-          />
-          <a
-            href={profile.url}
-            target="_blank"
-            class="underline"
-          >{profile.label}</a>
-        </li>
-      {/each}
+      <li>
+        <FontAwesomeIcon
+          icon={faLinkedin}
+          class="w-3 mr-1"
+          title="LinkedIn"
+        />
+        <a
+          href={resume.linkedin_profile}
+          target="_blank"
+          class="underline"
+        >{
+          resume.linkedin_profile.replace(
+            /^https?:\/\/(www.)?linkedin.com\/in\//,
+            "",
+          )
+        }</a>
+      </li>
+
+      <li>
+        <FontAwesomeIcon
+          icon={faGithub}
+          class="w-3 mr-1"
+          title="LinkedIn"
+        />
+        <a
+          href={resume.github_profile}
+          target="_blank"
+          class="underline"
+        >{
+          resume.github_profile.replace(
+            /^https?:\/\/(www.)?github.com\//,
+            "",
+          )
+        }</a>
+      </li>
     </ul>
   </header>
 
   <!-- Summary -->
   <div class="my-4">
-    <!-- <h2 class="text-sm font-bold mb-2 border-b-2 border-black"> -->
-    <!--   SUMMARY -->
-    <!-- </h2> -->
-    <p class="mt-1 text-xs">{resume.basics.summary}</p>
+    <h2 class="text-sm font-bold mb-2 border-b-2 border-black">
+      SUMMARY
+    </h2>
+    <p class="mt-1 text-xs">{resume.summary}</p>
   </div>
 
-  <!-- Professional Experience -->
+  <!-- Work Experience -->
   <div class="my-4">
     <h2 class="text-sm font-bold mb-2 border-b-2 border-black">
       WORK EXPERIENCE
     </h2>
 
-    {#each resume.work as job, index (index)}
+    {#each work_experiences as job, index (index)}
       <div class="mb-2">
         <div class="text-xs font-bold mb-1">
           {job.name} |
           {job.location} |
           {job.position} |
-          {formatDateRangeCompact(job.startDate, job.endDate)}
+          {formatDateRangeCompact(job.start_date, job.end_date)}
         </div>
-
-        <!-- <div class="flex justify-between mb-1"> -->
-        <!--   <div> -->
-        <!--     <h3 class="font-bold text-sm">{job.position}</h3> -->
-        <!--     <p> -->
-        <!--       <strong>{job.name}</strong> ({job.description}) - {job.location} -->
-        <!--     </p> -->
-        <!--   </div> -->
-        <!---->
-        <!--   <div> -->
-        <!--     {formatDateRange(job.startDate, job.endDate)} -->
-        <!--   </div> -->
-        <!-- </div> -->
 
         {#if job.note}
           <p class="text-sm italic"><strong>Note:</strong> {job.note}</p>
         {/if}
 
-        {#if job.highlights && job.highlights.length > 0}
-          {@const filteredHighlights = filterHighlights(job.highlights)}
+        {#if job.achievements && job.achievements.length > 0}
+          {@const filteredHighlights = filterOnTags(job.achievements)}
           {#if filteredHighlights.length > 0}
             <ul class="list-disc ml-3 print:ml-4">
               {#each filteredHighlights as highlight, index (index)}
@@ -172,11 +200,17 @@
     </h2>
 
     <ul class="list-disc ml-3 print:ml-4">
-      {#each resume.skills as skillGroup, index (index)}
+      {#each resume.tech_skill_categories as skillGroup, index (index)}
         <li class="print:indent-[-6px]">
           <div class="flex items-center">
             <h3 class="font-bold mr-1 print:mr-[10px]">{skillGroup.name}:</h3>
-            <p class="text-xs">{skillGroup.keywords.join(" | ")}</p>
+            <p class="text-xs">
+              {
+                skillGroup.tech_skills.map(
+                  (s: { name: string }) => s.name,
+                ).join(" | ")
+              }
+            </p>
           </div>
         </li>
       {/each}
@@ -232,13 +266,13 @@
   <!--   {/each} -->
   <!-- </div> -->
 
-  <!-- Projects -->
+  <!-- Side Projects -->
   <div class="my-4 break-inside-avoid">
     <h2 class="text-sm font-bold mb-2 border-b-2 border-black">
       SIDE PROJECTS
     </h2>
 
-    {#each resume.projects.slice(0, 3) as project (project.name)}
+    {#each filterOnTags(resume.side_projects) as project (project.name)}
       <div class="mb-2">
         <div class="text-xs font-bold mb-1">
           {project.name} | <a
@@ -248,7 +282,7 @@
             <FontAwesomeIcon icon={faStar} title="Stars" class="w-3" /> <span
               class="underline"
             >{project.stars}</span></a> | {
-            formatDateRangeYear(project.startDate, project.endDate)
+            formatDateRangeYear(project.start_date, project.end_date)
           }
         </div>
 

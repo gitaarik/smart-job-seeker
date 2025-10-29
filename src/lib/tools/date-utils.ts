@@ -28,12 +28,13 @@ export function formatDateRangeVerbose(
 }
 
 export function formatDateRangeCompact(
-  startDate: string,
-  endDate?: string,
+  startDate: Date,
+  endDate?: Date,
 ): string {
-  const formatDate = (date: string) => {
-    const [year, month] = date.split("-");
-    return `${month.padStart(2, "0")}/${year}`;
+  const formatDate = (date: Date) => {
+    const month = String(date.getMonth()).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${month}/${year}`;
   };
 
   const start = formatDate(startDate);
@@ -42,11 +43,11 @@ export function formatDateRangeCompact(
 }
 
 export function formatDateRangeYear(
-  startDate: string,
-  endDate?: string,
+  startDate: Date,
+  endDate?: Date,
 ): string {
-  const startYear = startDate.split("-")[0];
-  const endYear = endDate ? endDate.split("-")[0] : "Present";
+  const startYear = startDate.getFullYear();
+  const endYear = endDate ? endDate.getFullYear() : "Present";
 
   if (endYear === "Present" || startYear === endYear) {
     return endYear === "Present" ? startYear : startYear;
