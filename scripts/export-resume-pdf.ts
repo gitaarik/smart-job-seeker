@@ -24,8 +24,8 @@ async function initPrisma() {
   }
 }
 
-async function exportResumeToPDF() {
-  console.log("🚀 Starting resume PDF export...");
+async function exportProfilesToPDF() {
+  console.log("🚀 Starting profile PDF export (Resume & CV)...");
 
   const browser = await puppeteer.launch({
     headless: "new",
@@ -48,18 +48,22 @@ async function exportResumeToPDF() {
     process.exit(1);
   }
 
-  // Define the versions to create
-  const resumeVersions = profile.profile_versions.map((v) => v.name || "");
+  // Define the versions to create for both resume and cv
+  const profileVersions = profile.profile_versions.map((v) => v.name || "");
+  const documentTypes = ["resume", "cv"];
 
-  const versions = resumeVersions.map((version) => ({
-    route: `resume?version=${version}`,
-    dirName: `${version || "full"}`,
-    description: `ATS Resume (${
-      version
-        ? version.replace("-", " ").replace(/\b\w/g, (l) => l.toUpperCase())
-        : "Full"
-    })`,
-  }));
+  const versions = documentTypes.flatMap((docType) =>
+    profileVersions.map((version) => ({
+      route: `${docType}?version=${version}`,
+      dirName: `${docType}/${version || "full"}`,
+      docType,
+      description: `${docType.toUpperCase()} (${
+        version
+          ? version.replace("-", " ").replace(/\b\w/g, (l) => l.toUpperCase())
+          : "Full"
+      })`,
+    })),
+  );
 
   try {
     const page = await browser.newPage();
@@ -169,7 +173,7 @@ async function main() {
       process.exit(1);
     }
 
-    await exportResumeToPDF();
+    await exportProfilesToPDF();
   } catch (error) {
     console.error("❌ Fatal error:", error);
     process.exit(1);
@@ -181,4 +185,4 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   main();
 }
 
-export { exportResumeToPDF };
+export { exportProfilesToPDF };
