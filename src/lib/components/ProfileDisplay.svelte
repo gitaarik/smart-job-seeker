@@ -82,7 +82,7 @@
     versionObjs.push(versionObj);
   }
 
-  const versionNames = versionObjs.reduce((versionObj) => versionObj.name);
+  const versionNames = versionObjs.map((v) => v?.name).filter(Boolean);
 
   function filterOnTags<T extends { tags?: string[] }>(objList: T[]): T[] {
     return objList.filter((obj) => {
@@ -101,8 +101,8 @@
           );
           if (!(tags.length && versionNames.length)) return true;
 
-          return versionNames.find((version) => {
-            return tags.include(version);
+          return versionNames.some((versionName) => {
+            return tags.includes(versionName);
           });
         }
       }
@@ -112,7 +112,16 @@
   }
 
   const work_experiences = filterOnTags(profile.work_experiences);
-  const toggles = versionObjs.reduce((versionObj) => versionObj.toggles);
+
+  let toggles: string[] = [];
+
+  versionObjs.forEach((versionObj) => {
+    if (versionObj?.toggles?.length) {
+      versionObj.toggles.forEach((toggle) => {
+        toggles.push(toggle);
+      });
+    }
+  });
 </script>
 
 <svelte:head>
