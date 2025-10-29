@@ -278,4 +278,73 @@
       </div>
     {/each}
   </div>
+
+  <!-- Education -->
+  <div class="my-3 break-inside-avoid">
+    <h2 class="text-sm font-bold mb-2 border-b-2 border-black">
+      EDUCATION
+    </h2>
+
+    <!-- <p> -->
+    <!--   Mainly self-thaught because of interests, with a relevant background in -->
+    <!--   Network Engineering (Dutch secondary vocational education @ Nova College -->
+    <!--   in Hoofddorp) and a half year internship as a PHP & MySQL developer at -->
+    <!--   Festivalinfo.nl -->
+    <!-- </p> -->
+
+    {#each filterOnTags(profile.education) as education (education.area)}
+      <div class="mb-2">
+        <div class="font-bold">
+          {education.area}, {education.study_type},
+          {#if education.graduation_year}
+            Graduation Year {education.graduation_year}
+          {:else}
+            {
+              formatDateRangeCompact(
+                education.start_date,
+                education.end_date,
+              )
+            }
+          {/if}
+        </div>
+
+        <div>
+          {education.institution}, {education.location}
+        </div>
+      </div>
+
+      <!-- <div class="flex justify-between mb-3"> -->
+      <!--   <div> -->
+      <!--     <h3 class="font-bold text-sm">{education.area}</h3> -->
+      <!--     <p> -->
+      <!--       <strong>{education.institution}</strong> ({education.studyType}) -->
+      <!--     </p> -->
+      <!--   </div> -->
+      <!---->
+      <!--   <div> -->
+      <!--     { -->
+      <!--       formatDateRangeCompact( -->
+      <!--         education.start_date, -->
+      <!--         education.end_date, -->
+      <!--       ) -->
+      <!--     } -->
+      <!--   </div> -->
+      <!-- </div> -->
+    {/each}
+  </div>
+
+  {#if type === "cv"}
+    <div class="mb-6">
+      <h2 class="text-sm font-bold mb-2 border-b-2 border-black">
+        REFERENCES
+      </h2>
+      {#each profile.references as reference, index (index)}
+        <div class="mb-2">
+          <h3 class="font-bold">{reference.author}</h3>
+          <p class="italic">"{reference.text}"</p>
+        </div>
+      {/each}
+      <p class="mt-2 font-semibold">Contact details available upon request</p>
+    </div>
+  {/if}
 </div>

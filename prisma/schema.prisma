@@ -759,6 +759,7 @@ model education {
   profile         String?         @db.Uuid
   summary         String?
   logo            String?         @db.Uuid
+  tags            Json?           @db.Json
   directus_files  directus_files? @relation(fields: [logo], references: [id], onUpdate: NoAction, map: "education_logo_foreign")
   profiles        profiles?       @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "education_profile_foreign")
 }

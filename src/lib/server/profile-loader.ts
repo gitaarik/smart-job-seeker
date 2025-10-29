@@ -1,11 +1,11 @@
-import { dev } from '$app/environment';
-import { prisma } from '$lib/db';
-import { redirect } from '@sveltejs/kit';
+import { dev } from "$app/environment";
+import { prisma } from "$lib/db";
+import { redirect } from "@sveltejs/kit";
 
 export async function loadProfile() {
-	if (!dev) {
-		throw redirect(302, '/');
-	}
+  if (!dev) {
+    throw redirect(302, "/");
+  }
 
   const profiles = await prisma.profiles.findMany({
     include: {
@@ -37,6 +37,7 @@ export async function loadProfile() {
         },
         orderBy: { sort: "asc" },
       },
+      references: { orderBy: { sort: "asc" } },
     },
   });
 
