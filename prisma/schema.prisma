@@ -839,16 +839,19 @@ model references {
 }
 
 model profile_versions {
-  id           Int       @id @default(autoincrement())
-  status       String    @default("draft") @db.VarChar(255)
-  sort         Int?
-  date_created DateTime? @db.Timestamptz(6)
-  date_updated DateTime? @db.Timestamptz(6)
-  name         String?   @db.VarChar(255)
-  description  String?
-  profile      String?   @db.Uuid
-  toggles      Json?     @db.Json
-  profiles     profiles? @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "profile_versions_profile_foreign")
+  id                     Int                @id @default(autoincrement())
+  status                 String             @default("draft") @db.VarChar(255)
+  sort                   Int?
+  date_created           DateTime?          @db.Timestamptz(6)
+  date_updated           DateTime?          @db.Timestamptz(6)
+  name                   String?            @db.VarChar(255)
+  description            String?
+  profile                String?            @db.Uuid
+  toggles                Json?              @db.Json
+  extends_from           Int?
+  profile_versions       profile_versions?  @relation("profile_versionsToprofile_versions", fields: [extends_from], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "profile_versions_extends_from_foreign")
+  other_profile_versions profile_versions[] @relation("profile_versionsToprofile_versions")
+  profiles               profiles?          @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "profile_versions_profile_foreign")
 }
 
 enum Role {
