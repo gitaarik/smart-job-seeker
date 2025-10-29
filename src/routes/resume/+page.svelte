@@ -235,7 +235,7 @@
   <!-- Projects -->
   <div class="my-4 break-inside-avoid">
     <h2 class="text-sm font-bold mb-2 border-b-2 border-black">
-      NOTABLE PROJECTS
+      SIDE PROJECTS
     </h2>
 
     {#each resume.projects.slice(0, 3) as project (project.name)}
