@@ -360,7 +360,7 @@
               {displayLabel}
             </span>
 
-            {#if isGithub}
+            {#if isGithub && parseInt(project.stars) >= 50}
               <FontAwesomeIcon icon={faStar} title="Stars" class="w-3" />
               {project.stars}
             {/if}
