@@ -1,11 +1,10 @@
 <script lang="ts">
   import type { PageData } from "./$types";
   import ProfileDisplay from "$lib/components/ProfileDisplay.svelte";
-  import { page } from "$app/state";
 
   export let data: PageData;
 
-  const type = page.url.searchParams.get("type");
+  const type = "cv";
 </script>
 
 <ProfileDisplay profile={data.profile} {type} />
