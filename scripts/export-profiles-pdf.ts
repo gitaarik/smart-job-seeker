@@ -62,7 +62,7 @@ async function exportProfilesToPDF() {
           ? version.replace("-", " ").replace(/\b\w/g, (l) => l.toUpperCase())
           : "Full"
       })`,
-    })),
+    }))
   );
 
   try {
@@ -76,7 +76,7 @@ async function exportProfilesToPDF() {
     });
 
     // Create base output directory if it doesn't exist
-    const baseOutputDir = path.join(process.cwd(), "src", "lib", "resumes");
+    const baseOutputDir = path.join(process.cwd(), "src", "lib", "exports");
     if (!fs.existsSync(baseOutputDir)) {
       fs.mkdirSync(baseOutputDir, { recursive: true });
     }
@@ -117,7 +117,9 @@ async function exportProfilesToPDF() {
         );
       });
 
-      const filename = `${version.docType === "cv" ? "CV" : "Resume"} Rik Wanders.pdf`;
+      const filename = `${
+        version.docType === "cv" ? "CV" : "Resume"
+      } Rik Wanders.pdf`;
       const outputPath = path.join(versionDir, filename);
 
       // Generate PDF
@@ -127,12 +129,11 @@ async function exportProfilesToPDF() {
         format: "A4",
         waitForFonts: true,
         margin: {
-            top: "0.4in",
-            right: "0.5in",
-            bottom: "0.4in",
-            left: "0.5in",
-          }
-          ,
+          top: "0.4in",
+          right: "0.5in",
+          bottom: "0.4in",
+          left: "0.5in",
+        },
         printBackground: true,
         preferCSSPageSize: false,
       });
