@@ -1,11 +1,12 @@
 import { error } from "@sveltejs/kit";
-import type { RequestHandler } from "./$types";
+import { dev } from "$app/environment";
 import { prisma } from "$lib/db";
 import { read } from "$app/server";
 import path from "path";
+import type { RequestHandler } from "./$types";
 
 const fileImports: Record<string, string> = import.meta.glob(
-  "$lib/exports/resume/**.{pdf,docx}",
+  "$lib/exports/resume/**/**.{pdf,docx}",
   {
     eager: true,
     import: "default",
@@ -14,43 +15,53 @@ const fileImports: Record<string, string> = import.meta.glob(
 );
 
 export const GET: RequestHandler = async ({ url }) => {
-  const token = url.searchParams.get("t") || url.searchParams.get("token");
+  let version;
+  const urlVersion = url.searchParams.get("version");
 
-  if (!token) {
-    throw error(400, "Token is required");
+  if (dev && urlVersion) {
+    version = urlVersion;
+  } else {
+    const token = url.searchParams.get("t") || url.searchParams.get("token");
+
+    if (!token) {
+      throw error(400, "Token is required");
+    }
+
+    // Find and validate the token
+    const resumeToken = await prisma.resumeToken.findUnique({
+      where: { token },
+      include: { creator: true },
+    });
+
+    if (!resumeToken) {
+      throw error(404, "Invalid token");
+    }
+
+    if (!resumeToken.isActive) {
+      throw error(403, "Token is disabled");
+    }
+
+    // Check if token has expired
+    if (resumeToken.expiresAt && new Date() > resumeToken.expiresAt) {
+      throw error(403, "Token has expired");
+    }
+
+    // Check if max views limit has been reached
+    if (resumeToken.maxViews && resumeToken.viewCount >= resumeToken.maxViews) {
+      throw error(403, "Token view limit has been reached");
+    }
+
+    version = resumeToken.resumeType;
+
+    // Increment view count
+    await prisma.resumeToken.update({
+      where: { id: resumeToken.id },
+      data: { viewCount: { increment: 1 } },
+    });
   }
 
-  // Find and validate the token
-  const resumeToken = await prisma.resumeToken.findUnique({
-    where: { token },
-    include: { creator: true },
-  });
-
-  if (!resumeToken) {
-    throw error(404, "Invalid token");
-  }
-
-  if (!resumeToken.isActive) {
-    throw error(403, "Token is disabled");
-  }
-
-  // Check if token has expired
-  if (resumeToken.expiresAt && new Date() > resumeToken.expiresAt) {
-    throw error(403, "Token has expired");
-  }
-
-  // Check if max views limit has been reached
-  if (resumeToken.maxViews && resumeToken.viewCount >= resumeToken.maxViews) {
-    throw error(403, "Token view limit has been reached");
-  }
-
-  // Increment view count
-  await prisma.resumeToken.update({
-    where: { id: resumeToken.id },
-    data: { viewCount: { increment: 1 } },
-  });
-
-  const resumeFilename = "Resume Rik Wanders.pdf";
+  const resumeFilename =
+    "Rik Wanders - Senior Full Stack Developer - Resume.pdf";
 
   // Construct file path based on resume type
   const filePath: string = "/" + path.join(
@@ -58,7 +69,7 @@ export const GET: RequestHandler = async ({ url }) => {
     "lib",
     "exports",
     "resume",
-    resumeToken.resumeType,
+    version,
     resumeFilename,
   );
 

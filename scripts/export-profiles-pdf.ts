@@ -117,9 +117,9 @@ async function exportProfilesToPDF() {
         );
       });
 
-      const filename = `${
-        version.docType === "cv" ? "CV" : "Resume"
-      } Rik Wanders.pdf`;
+      const versionName = version.docType === "cv" ? "CV" : "Resume";
+      const filename =
+        `Rik Wanders - Senior Full Stack Developer - ${versionName}.pdf`;
       const outputPath = path.join(versionDir, filename);
 
       // Generate PDF
