@@ -1,0 +1,2122 @@
+{
+  "profile": {
+    "name": "Rik Wanders",
+    "title": "Senior Full-Stack Developer",
+    "location": "Ronda, Spain",
+    "phone_number": "+31649118511",
+    "email_address": "rik@rikwanders.tech",
+    "personal_website": "https://www.rikwanders.tech/",
+    "subtitle": "Building scalable web applications for remote teams",
+    "core_stack": "Python • Node.js • CI/CD • DevOps",
+    "linkedin_profile": "https://www.linkedin.com/in/rik-wanders-software",
+    "github_profile": "https://github.com/gitaarik",
+    "stackoverflow_profile": "https://stackoverflow.com/users/1248175/gitaarik",
+    "headline": "Full-Stack Developer 10+ years expertise in Python, Django, Node.js, React, CI/CD, DevOps, UX, AI",
+    "summary": "Dutch Senior Full-Stack Developer residing in Spain. 10+ years Python & Node.js experience, scaling complex, high-traffic & data heavy applications with Django & React, and leading development teams. Additional skills in DevOps, CI/CD & UXD. Current with industry trends, AI & security. Thrives in agile teams / startup environments. 5+ years remote work experience.",
+    "nationality": "Dutch",
+    "location_url": "https://maps.app.goo.gl/WefqeUxUYBD6Q1qF8",
+    "location_timezone": "CET/GMT+1",
+    "profile_versions": [
+      {
+        "status": "published",
+        "sort": 1,
+        "name": "fullstack-django",
+        "description": "Fullstack Django SWE",
+        "toggles": null,
+        "extends_from": null
+      },
+      {
+        "status": "published",
+        "sort": 2,
+        "name": "fullstack-python",
+        "description": "Fullstack Python SWE",
+        "toggles": null,
+        "extends_from": null
+      },
+      {
+        "status": "published",
+        "sort": 3,
+        "name": "fullstack-svelte",
+        "description": "Fullstack Svelte SWE",
+        "toggles": null,
+        "extends_from": 3
+      },
+      {
+        "status": "published",
+        "sort": 4,
+        "name": "fullstack-react",
+        "description": "Fullstack React SWE",
+        "toggles": null,
+        "extends_from": null
+      },
+      {
+        "status": "published",
+        "sort": 5,
+        "name": "fullstack-django-nationality",
+        "description": "Fullstack Django SWE + Nationality",
+        "toggles": [
+          "nationality"
+        ],
+        "extends_from": 2
+      },
+      {
+        "status": "published",
+        "sort": null,
+        "name": "fullstack-django-svelte",
+        "description": "Full-stack Django & Svelte SWE",
+        "toggles": null,
+        "extends_from": 4
+      }
+    ],
+    "highlights": [
+      {
+        "status": "published",
+        "sort": 1,
+        "text": "18+ years of full-stack development experience",
+        "fa_icon": "gem"
+      },
+      {
+        "status": "published",
+        "sort": 2,
+        "text": "Expertise in modern Python, JavaScript & Node.js ecosystems",
+        "fa_icon": "code"
+      },
+      {
+        "status": "published",
+        "sort": 3,
+        "text": "Team leadership and project management experience",
+        "fa_icon": "users"
+      },
+      {
+        "status": "published",
+        "sort": 4,
+        "text": "Additional experience in DevOps & CI/CD",
+        "fa_icon": "server"
+      },
+      {
+        "status": "published",
+        "sort": 5,
+        "text": "Skilled in developing scalable solutions for high-traffic applications",
+        "fa_icon": "rocket"
+      },
+      {
+        "status": "published",
+        "sort": 6,
+        "text": "5+ years remote work and distributed team collaboration experience",
+        "fa_icon": "home"
+      },
+      {
+        "status": "published",
+        "sort": 7,
+        "text": "AI-accelerated development skills with security best practices",
+        "fa_icon": "robot"
+      }
+    ],
+    "tech_skill_categories": [
+      {
+        "status": "published",
+        "sort": 1,
+        "name": "Backend",
+        "fa_icon": "python",
+        "tech_skills": [
+          {
+            "status": "published",
+            "sort": 1,
+            "name": "Python",
+            "years_experience": "12",
+            "level": "expert",
+            "tech_type": 1
+          },
+          {
+            "status": "published",
+            "sort": 2,
+            "name": "Django",
+            "years_experience": "12",
+            "level": "expert",
+            "tech_type": 2
+          },
+          {
+            "status": "published",
+            "sort": 3,
+            "name": "Django REST Framework (DRF)",
+            "years_experience": "12",
+            "level": "expert",
+            "tech_type": 2
+          },
+          {
+            "status": "published",
+            "sort": 4,
+            "name": "Flask",
+            "years_experience": "4",
+            "level": "proficient",
+            "tech_type": 2
+          },
+          {
+            "status": "published",
+            "sort": 5,
+            "name": "FastAPI",
+            "years_experience": "1",
+            "level": "proficient",
+            "tech_type": 2
+          },
+          {
+            "status": "published",
+            "sort": 6,
+            "name": "RESTful APIs",
+            "years_experience": "12",
+            "level": "expert",
+            "tech_type": null
+          },
+          {
+            "status": "published",
+            "sort": 7,
+            "name": "LLM integrations",
+            "years_experience": "1",
+            "level": "proficient",
+            "tech_type": 13
+          },
+          {
+            "status": "published",
+            "sort": 8,
+            "name": "pytest",
+            "years_experience": "12",
+            "level": "proficient",
+            "tech_type": 2
+          }
+        ]
+      },
+      {
+        "status": "published",
+        "sort": 2,
+        "name": "Frontend",
+        "fa_icon": "node-js",
+        "tech_skills": [
+          {
+            "status": "published",
+            "sort": 16,
+            "name": "JavaScript",
+            "years_experience": "18",
+            "level": "expert",
+            "tech_type": 1
+          },
+          {
+            "status": "published",
+            "sort": 17,
+            "name": "Node.js",
+            "years_experience": "12",
+            "level": "expert",
+            "tech_type": 1
+          },
+          {
+            "status": "published",
+            "sort": 18,
+            "name": "TypeScript",
+            "years_experience": "2",
+            "level": "proficient",
+            "tech_type": 1
+          },
+          {
+            "status": "published",
+            "sort": 19,
+            "name": "React Native",
+            "years_experience": "3",
+            "level": "proficient",
+            "tech_type": 2
+          },
+          {
+            "status": "published",
+            "sort": 20,
+            "name": "React",
+            "years_experience": "12",
+            "level": "expert",
+            "tech_type": 2
+          },
+          {
+            "status": "published",
+            "sort": 21,
+            "name": "Svelte",
+            "years_experience": "2",
+            "level": "proficient",
+            "tech_type": 2
+          },
+          {
+            "status": "published",
+            "sort": 22,
+            "name": "Tailwind CSS",
+            "years_experience": "2",
+            "level": "proficient",
+            "tech_type": 2
+          },
+          {
+            "status": "published",
+            "sort": 23,
+            "name": "Jest",
+            "years_experience": "2",
+            "level": "proficient",
+            "tech_type": 2
+          }
+        ]
+      },
+      {
+        "status": "published",
+        "sort": 4,
+        "name": "Databases",
+        "fa_icon": "database",
+        "tech_skills": [
+          {
+            "status": "published",
+            "sort": 9,
+            "name": "PostgreSQL",
+            "years_experience": "4",
+            "level": "expert",
+            "tech_type": 3
+          },
+          {
+            "status": "published",
+            "sort": 10,
+            "name": "MySQL",
+            "years_experience": "10",
+            "level": "expert",
+            "tech_type": 3
+          },
+          {
+            "status": "published",
+            "sort": 11,
+            "name": "MariaDB",
+            "years_experience": "12",
+            "level": "expert",
+            "tech_type": 3
+          },
+          {
+            "status": "published",
+            "sort": 12,
+            "name": "SQLite",
+            "years_experience": "5",
+            "level": "proficient",
+            "tech_type": 3
+          },
+          {
+            "status": "published",
+            "sort": 13,
+            "name": "SQL optimization",
+            "years_experience": "12",
+            "level": "proficient",
+            "tech_type": 3
+          },
+          {
+            "status": "published",
+            "sort": 14,
+            "name": "Elasticsearch",
+            "years_experience": "3",
+            "level": "proficient",
+            "tech_type": 5
+          },
+          {
+            "status": "published",
+            "sort": 15,
+            "name": "MongoDB",
+            "years_experience": "2",
+            "level": "proficient",
+            "tech_type": 5
+          },
+          {
+            "status": "published",
+            "sort": 16,
+            "name": "Redis",
+            "years_experience": "6",
+            "level": "proficient",
+            "tech_type": 5
+          }
+        ]
+      },
+      {
+        "status": "published",
+        "sort": 5,
+        "name": "Development Tools",
+        "fa_icon": "robot",
+        "tech_skills": [
+          {
+            "status": "published",
+            "sort": 1,
+            "name": "Git",
+            "years_experience": "12",
+            "level": "expert",
+            "tech_type": 6
+          },
+          {
+            "status": "published",
+            "sort": 2,
+            "name": "GitHub",
+            "years_experience": "12",
+            "level": "expert",
+            "tech_type": 6
+          },
+          {
+            "status": "published",
+            "sort": 3,
+            "name": "Git Flow",
+            "years_experience": "8",
+            "level": "expert",
+            "tech_type": 6
+          },
+          {
+            "status": "published",
+            "sort": 4,
+            "name": "Claude Code",
+            "years_experience": "1",
+            "level": "expert",
+            "tech_type": 4
+          },
+          {
+            "status": "published",
+            "sort": 5,
+            "name": "Cursor",
+            "years_experience": "1",
+            "level": "expert",
+            "tech_type": 4
+          },
+          {
+            "status": "published",
+            "sort": 6,
+            "name": "Neovim",
+            "years_experience": "18",
+            "level": "expert",
+            "tech_type": 7
+          },
+          {
+            "status": "published",
+            "sort": 7,
+            "name": "tmux",
+            "years_experience": "18",
+            "level": "expert",
+            "tech_type": 4
+          }
+        ]
+      },
+      {
+        "status": "published",
+        "sort": 6,
+        "name": "DevOps",
+        "fa_icon": "server",
+        "tech_skills": [
+          {
+            "status": "published",
+            "sort": 1,
+            "name": "Docker",
+            "years_experience": "7",
+            "level": "expert",
+            "tech_type": 8
+          },
+          {
+            "status": "published",
+            "sort": 2,
+            "name": "Docker Compose",
+            "years_experience": "5",
+            "level": "expert",
+            "tech_type": 8
+          },
+          {
+            "status": "published",
+            "sort": 3,
+            "name": "GitLab CI/CD",
+            "years_experience": "5",
+            "level": "expert",
+            "tech_type": 9
+          },
+          {
+            "status": "published",
+            "sort": 4,
+            "name": "GitHub Actions",
+            "years_experience": "4",
+            "level": "expert",
+            "tech_type": 9
+          },
+          {
+            "status": "draft",
+            "sort": 5,
+            "name": "Ansible",
+            "years_experience": "4",
+            "level": "proficient",
+            "tech_type": 9
+          },
+          {
+            "status": "published",
+            "sort": 6,
+            "name": "Python Fabric",
+            "years_experience": "5",
+            "level": "expert",
+            "tech_type": 9
+          },
+          {
+            "status": "published",
+            "sort": 7,
+            "name": "Caching strategies",
+            "years_experience": "6",
+            "level": "proficient",
+            "tech_type": 12
+          }
+        ]
+      },
+      {
+        "status": "published",
+        "sort": 7,
+        "name": "Cloud Platforms",
+        "fa_icon": "cloud",
+        "tech_skills": [
+          {
+            "status": "published",
+            "sort": 1,
+            "name": "Amazon Web Services",
+            "years_experience": "4",
+            "level": "proficient",
+            "tech_type": 11
+          },
+          {
+            "status": "published",
+            "sort": 2,
+            "name": "AWS EC2",
+            "years_experience": "4",
+            "level": "proficient",
+            "tech_type": 11
+          },
+          {
+            "status": "published",
+            "sort": 3,
+            "name": "AWS S3",
+            "years_experience": "4",
+            "level": "proficient",
+            "tech_type": 11
+          },
+          {
+            "status": "draft",
+            "sort": 4,
+            "name": "AWS Lambda",
+            "years_experience": "2",
+            "level": "proficient",
+            "tech_type": 11
+          },
+          {
+            "status": "published",
+            "sort": 5,
+            "name": "Vercel",
+            "years_experience": "2",
+            "level": "proficient",
+            "tech_type": 11
+          },
+          {
+            "status": "published",
+            "sort": 6,
+            "name": "Linode",
+            "years_experience": "12",
+            "level": "proficient",
+            "tech_type": 9
+          }
+        ]
+      },
+      {
+        "status": "published",
+        "sort": 8,
+        "name": "Dev Methodologies",
+        "fa_icon": "user-gear",
+        "tech_skills": [
+          {
+            "status": "published",
+            "sort": 1,
+            "name": "Agile",
+            "years_experience": "14",
+            "level": "proficient",
+            "tech_type": 14
+          },
+          {
+            "status": "published",
+            "sort": 2,
+            "name": "Scrum",
+            "years_experience": "5",
+            "level": "proficient",
+            "tech_type": 14
+          },
+          {
+            "status": "published",
+            "sort": 3,
+            "name": "XP",
+            "years_experience": "6",
+            "level": "proficient",
+            "tech_type": 14
+          },
+          {
+            "status": "published",
+            "sort": 4,
+            "name": "AI-Assisted Development",
+            "years_experience": "1",
+            "level": "proficient",
+            "tech_type": 4
+          },
+          {
+            "status": "published",
+            "sort": 5,
+            "name": "Secure by design",
+            "years_experience": "18",
+            "level": "proficient",
+            "tech_type": 14
+          },
+          {
+            "status": "published",
+            "sort": 6,
+            "name": "TDD",
+            "years_experience": "12",
+            "level": "expert",
+            "tech_type": 14
+          },
+          {
+            "status": "published",
+            "sort": 7,
+            "name": "UXD",
+            "years_experience": "12",
+            "level": "proficient",
+            "tech_type": 14
+          }
+        ]
+      }
+    ],
+    "work_experiences": [
+      {
+        "name": "Chipta",
+        "location": "Amsterdam, NL",
+        "description": "Ticketing company",
+        "position": "Lead Developer",
+        "summary": "Led teams of 3-5 developers at innovative ticketing platform for over 7 years, scaling the platform from concept to processing thousands of orders per minute. Optimized platform performance by 30-60%, implemented comprehensive testing suites, and orchestrated CI/CD systems. Built React Native mobile apps that contributed to a 40% revenue increase, modernized frontend interfaces with React, increasing user engagement by 30%. And integrated critical payment systems processing tens of millions in transactions.",
+        "status": "published",
+        "sort": 1,
+        "start_date": "2017-09-10T00:00:00.000Z",
+        "end_date": "2025-03-07T00:00:00.000Z",
+        "website": "https://chipta.com/",
+        "tags": null,
+        "achievements": [
+          {
+            "status": "published",
+            "sort": 1,
+            "title": "Team Leadership",
+            "description": "Led distributed development team (3-5 devs) with agile methods and strict code review processes, optimizing output 25%",
+            "fa_icon": "users",
+            "tags": []
+          },
+          {
+            "status": "published",
+            "sort": 2,
+            "title": "Platform Scalability",
+            "description": "Enabled processing thousands of orders per minute, by optimizating SQL & Python/Django process up to 60% & caching",
+            "fa_icon": "chart-line",
+            "tags": [
+              "fullstack-django",
+              "fullstack-python",
+              "fullstack-react",
+              "fullstack-svelte"
+            ]
+          },
+          {
+            "status": "published",
+            "sort": 3,
+            "title": "Frontend Modernization",
+            "description": "Increased user engagement by +30%, by modernizing frontend UX using React, responsive design & web components",
+            "fa_icon": "paintbrush",
+            "tags": [
+              "fullstack-react",
+              "fullstack-svelte"
+            ]
+          },
+          {
+            "status": "published",
+            "sort": 4,
+            "title": "Mobile App Development",
+            "description": "Contributed to scalability & 40% revenue growth by leading ticket scan app development with React Native & WebSockets",
+            "fa_icon": "mobile",
+            "tags": [
+              "fullstack-react",
+              "fullstack-svelte"
+            ]
+          },
+          {
+            "status": "published",
+            "sort": 5,
+            "title": "Test Driven Development",
+            "description": "Decreased regression with 90%, by establishing TDD with quality testing suite using Django & Selenium (+80% coverage)",
+            "fa_icon": "shield-alt",
+            "tags": [
+              "fullstack-django",
+              "fullstack-python",
+              "fullstack-react",
+              "fullstack-svelte"
+            ]
+          },
+          {
+            "status": "published",
+            "sort": 6,
+            "title": "CI/CD Systems",
+            "description": "Reduced deploy time -80% & enabled regular releases, by orchestrating CI/CD systems on Linode using Ansible & Python",
+            "fa_icon": "robot",
+            "tags": [
+              "fullstack-django",
+              "fullstack-python",
+              "fullstack-react",
+              "fullstack-svelte"
+            ]
+          },
+          {
+            "status": "published",
+            "sort": 7,
+            "title": "Docker Compose Setup",
+            "description": "Streamlined onboarding, by coordinating development environment setup of 4 Docker microservices in Docker Compose",
+            "fa_icon": "docker",
+            "tags": [
+              "fullstack-django",
+              "fullstack-python",
+              "fullstack-react",
+              "fullstack-svelte"
+            ]
+          },
+          {
+            "status": "published",
+            "sort": 8,
+            "title": "Backwards Compatibility",
+            "description": "Maintained backward compatibility with legacy PHP system & database, by customizing Django codebase",
+            "fa_icon": "clock-rotate-left",
+            "tags": [
+              "fullstack-django",
+              "fullstack-python"
+            ]
+          },
+          {
+            "status": "published",
+            "sort": 9,
+            "title": "OAuth Zoom Integration",
+            "description": "Enabled clients to organize automatically managed online events with Zoom, by integrating Zoom with OAuth in Django",
+            "fa_icon": "key",
+            "tags": [
+              "fullstack-django",
+              "fullstack-python",
+              "fullstack-react"
+            ]
+          },
+          {
+            "status": "published",
+            "sort": 10,
+            "title": "REST API implementations",
+            "description": "Allowed users to validate authenticity of 2nd hand tickets, by implementing TicketSwap REST APIs using DRF",
+            "fa_icon": "plug",
+            "tags": [
+              "fullstack-django",
+              "fullstack-python",
+              "fullstack-react"
+            ]
+          },
+          {
+            "status": "published",
+            "sort": 11,
+            "title": "Payment Integrations",
+            "description": "Processed tens of millions in payment transactions, by building payment service integrations (Mollie, Pay.nl, Paypal)",
+            "fa_icon": "credit-card",
+            "tags": [
+              "fullstack-django",
+              "fullstack-python",
+              "fullstack-react"
+            ]
+          },
+          {
+            "status": "published",
+            "sort": 12,
+            "title": "Internationalization",
+            "description": "Facilitated market expansion to eurozone, by implementing Django i18n features (language, country & timezone)",
+            "fa_icon": "globe",
+            "tags": [
+              "fullstack-django"
+            ]
+          }
+        ],
+        "technologies": [
+          {
+            "status": "published",
+            "sort": 1,
+            "name": "Python"
+          },
+          {
+            "status": "published",
+            "sort": 2,
+            "name": "Django"
+          },
+          {
+            "status": "published",
+            "sort": 3,
+            "name": "Django REST Framework"
+          },
+          {
+            "status": "published",
+            "sort": 4,
+            "name": "Django Channels"
+          },
+          {
+            "status": "published",
+            "sort": 5,
+            "name": "Django Silk"
+          },
+          {
+            "status": "published",
+            "sort": 6,
+            "name": "Jinja2"
+          },
+          {
+            "status": "published",
+            "sort": 7,
+            "name": "Weasyprint"
+          },
+          {
+            "status": "published",
+            "sort": 8,
+            "name": "MySQL"
+          },
+          {
+            "status": "published",
+            "sort": 9,
+            "name": "Ansible"
+          },
+          {
+            "status": "published",
+            "sort": 10,
+            "name": "Python Fabric"
+          },
+          {
+            "status": "published",
+            "sort": 11,
+            "name": "Linode"
+          },
+          {
+            "status": "published",
+            "sort": 12,
+            "name": "Nginx"
+          },
+          {
+            "status": "published",
+            "sort": 13,
+            "name": "Redis"
+          },
+          {
+            "status": "published",
+            "sort": 14,
+            "name": "HAProxy"
+          },
+          {
+            "status": "published",
+            "sort": 15,
+            "name": "Selenium"
+          },
+          {
+            "status": "published",
+            "sort": 16,
+            "name": "OAuth"
+          },
+          {
+            "status": "published",
+            "sort": 17,
+            "name": "Node.js"
+          },
+          {
+            "status": "published",
+            "sort": 18,
+            "name": "React"
+          },
+          {
+            "status": "published",
+            "sort": 19,
+            "name": "MobX"
+          },
+          {
+            "status": "published",
+            "sort": 20,
+            "name": "Lit"
+          },
+          {
+            "status": "published",
+            "sort": 21,
+            "name": "Web Components"
+          },
+          {
+            "status": "published",
+            "sort": 22,
+            "name": "Web Sockets"
+          },
+          {
+            "status": "published",
+            "sort": 23,
+            "name": "React Native"
+          }
+        ]
+      },
+      {
+        "name": "Tender-it",
+        "location": "Amsterdam, NL",
+        "description": "Tender platform",
+        "position": "Lead Developer",
+        "summary": "Built comprehensive tender discovery platform from scratch as Lead Developer, designing complete platform using agile methodology in consultation with non-technical founders. Developed industry-first Elasticsearch-powered search engine filtering hundreds of thousands of tenders, engineered automated web crawling systems importing thousands of tenders daily, and implemented subscription-based revenue model with recurring payments and automated notification systems.",
+        "status": "published",
+        "sort": 2,
+        "start_date": "2014-03-09T00:00:00.000Z",
+        "end_date": "2017-06-22T00:00:00.000Z",
+        "tags": null,
+        "achievements": [
+          {
+            "status": "published",
+            "sort": 1,
+            "title": "Product Development",
+            "description": "Delivered complete platform with Python, Django & React in consultation with non-technical founders",
+            "fa_icon": "wrench",
+            "tags": null
+          },
+          {
+            "status": "published",
+            "sort": 2,
+            "title": "Data Automation",
+            "description": "Transformed thousands of tenders daily into structured data, by making web crawlers & importers with Django & Celery",
+            "fa_icon": "microchip",
+            "tags": null
+          },
+          {
+            "status": "published",
+            "sort": 3,
+            "title": "Search Innovation",
+            "description": "Developed industry-first Elasticsearch-powered search engine for filtering & scoring hundreds of thousands of tenders",
+            "fa_icon": "search",
+            "tags": null
+          },
+          {
+            "status": "published",
+            "sort": 4,
+            "title": "Revenue Model",
+            "description": "Enabled market entry via subscription system with monthly/yearly recurring payments, using Django, Celery & Adyen",
+            "fa_icon": "dollar-sign",
+            "tags": [
+              "fullstack-django",
+              "fullstack-python"
+            ]
+          },
+          {
+            "status": "published",
+            "sort": 5,
+            "title": "Notification Mailing System",
+            "description": "Supported user retention by developing automatic notification mailing system for user preferences & saved searches",
+            "fa_icon": "envelope",
+            "tags": [
+              "fullstack-django",
+              "fullstack-python",
+              "fullstack-react"
+            ]
+          },
+          {
+            "status": "published",
+            "sort": 6,
+            "title": "Frontend modernization",
+            "description": "Provided professional platform aesthetics by enhancing frontend in coordination with frontend developer using Vue.js",
+            "fa_icon": "paintbrush",
+            "tags": [
+              "fullstack-react"
+            ]
+          }
+        ],
+        "technologies": [
+          {
+            "status": "published",
+            "sort": 1,
+            "name": "Python"
+          },
+          {
+            "status": "published",
+            "sort": 2,
+            "name": "Django"
+          },
+          {
+            "status": "published",
+            "sort": 3,
+            "name": "Django REST Framework"
+          },
+          {
+            "status": "published",
+            "sort": 4,
+            "name": "Django Celery"
+          },
+          {
+            "status": "published",
+            "sort": 5,
+            "name": "Python Requests"
+          },
+          {
+            "status": "published",
+            "sort": 6,
+            "name": "Beautifulsoup"
+          },
+          {
+            "status": "published",
+            "sort": 7,
+            "name": "Node.js"
+          },
+          {
+            "status": "published",
+            "sort": 8,
+            "name": "React"
+          },
+          {
+            "status": "published",
+            "sort": 9,
+            "name": "Vue.js"
+          },
+          {
+            "status": "published",
+            "sort": 10,
+            "name": "Webpack"
+          },
+          {
+            "status": "published",
+            "sort": 11,
+            "name": "MySQL"
+          },
+          {
+            "status": "published",
+            "sort": 12,
+            "name": "Elasticsearch"
+          },
+          {
+            "status": "published",
+            "sort": 13,
+            "name": "Linode"
+          },
+          {
+            "status": "published",
+            "sort": 14,
+            "name": "Nginx"
+          }
+        ]
+      },
+      {
+        "name": "TravelBird",
+        "location": "Amsterdam, NL",
+        "description": "Online Travel Agent",
+        "position": "Senior Full-Stack Developer",
+        "summary": "Contributed to mobile app development during time of travel industry mobile adoption, shipping native iPhone and Android booking apps in scrum team that handled 15%+ of bookings within first 3 months. Designed REST API using Django REST Framework deployed on AWS to accommodate new iOS & Android apps and mobile website.",
+        "status": "published",
+        "sort": 3,
+        "start_date": "2013-03-17T00:00:00.000Z",
+        "end_date": "2014-08-08T00:00:00.000Z",
+        "website": "https://www.travelbird.com/",
+        "tags": null,
+        "achievements": [
+          {
+            "status": "published",
+            "sort": 1,
+            "title": "Mobile App Development",
+            "description": "Shipped iPhone & Android booking apps in scrum team (4) within 5 months, handling 15%+ of bookings in 3 months",
+            "fa_icon": "mobile",
+            "tags": null
+          },
+          {
+            "status": "published",
+            "sort": 2,
+            "title": "REST API development",
+            "description": "Designed REST API with JWT auth using DRF, deployed on AWS, accommodating iOS & Android apps and mobile website",
+            "fa_icon": "server",
+            "tags": null
+          },
+          {
+            "status": "published",
+            "sort": 3,
+            "title": "Email Marketing Platform",
+            "description": "Supported acquisition by sending thousands of emails with marketing system using Python, Django, Celery & SendGrid",
+            "fa_icon": "envelope",
+            "tags": null
+          }
+        ],
+        "technologies": [
+          {
+            "status": "published",
+            "sort": 1,
+            "name": "Python"
+          },
+          {
+            "status": "published",
+            "sort": 2,
+            "name": "Django"
+          },
+          {
+            "status": "published",
+            "sort": 3,
+            "name": "Django REST Framework"
+          },
+          {
+            "status": "published",
+            "sort": 4,
+            "name": "Django Celery"
+          },
+          {
+            "status": "published",
+            "sort": 5,
+            "name": "Django South"
+          },
+          {
+            "status": "published",
+            "sort": 6,
+            "name": "Django Compressor"
+          },
+          {
+            "status": "published",
+            "sort": 7,
+            "name": "Objective-C"
+          },
+          {
+            "status": "published",
+            "sort": 8,
+            "name": "Xcode"
+          },
+          {
+            "status": "published",
+            "sort": 9,
+            "name": "AWS EC2"
+          },
+          {
+            "status": "published",
+            "sort": 10,
+            "name": "AWS S3"
+          },
+          {
+            "status": "published",
+            "sort": 11,
+            "name": "Sendgrid"
+          },
+          {
+            "status": "published",
+            "sort": 12,
+            "name": "PostgreSQL"
+          },
+          {
+            "status": "published",
+            "sort": 13,
+            "name": "MongoDB"
+          },
+          {
+            "status": "published",
+            "sort": 14,
+            "name": "JavaScript"
+          },
+          {
+            "status": "published",
+            "sort": 15,
+            "name": "gulp.js"
+          },
+          {
+            "status": "published",
+            "sort": 16,
+            "name": "Sass"
+          },
+          {
+            "status": "published",
+            "sort": 17,
+            "name": "Linode"
+          },
+          {
+            "status": "published",
+            "sort": 18,
+            "name": "Nginx"
+          },
+          {
+            "status": "published",
+            "sort": 19,
+            "name": "Varnish"
+          }
+        ]
+      },
+      {
+        "name": "SWIS",
+        "location": "Leiden, NL",
+        "description": "Web Development Agency",
+        "position": "Mid-level Web Developer",
+        "summary": "Delivered web projects for major clients including Bol.com and Gemeente Amsterdam as part of company's best performing Scrum team out of 5 teams. Cultivated advanced frontend & UX skills with jQuery & CSS3, significantly increasing user product engagement and client satisfaction while maintaining agency's reputation for quality delivery.",
+        "status": "published",
+        "sort": 4,
+        "start_date": "2011-08-14T00:00:00.000Z",
+        "end_date": "2013-02-15T00:00:00.000Z",
+        "website": "https://www.swis.nl/",
+        "tags": [
+          "cv"
+        ],
+        "achievements": [
+          {
+            "status": "published",
+            "sort": 1,
+            "title": "Client Delivery",
+            "description": "Delivered web projects for major clients (Bol.com) as part of company's best of 5 Scrum teams using custom PHP CMS",
+            "fa_icon": "handshake",
+            "tags": null
+          },
+          {
+            "status": "published",
+            "sort": 2,
+            "title": "Frontend & CMS Development",
+            "description": "Cultivated advanced frontend & UX skills with jQuery & CSS3, increasing user product engagement & client satisfaction",
+            "fa_icon": "code",
+            "tags": null
+          }
+        ],
+        "technologies": [
+          {
+            "status": "published",
+            "sort": 1,
+            "name": "PHP"
+          },
+          {
+            "status": "published",
+            "sort": 2,
+            "name": "MySQL"
+          },
+          {
+            "status": "published",
+            "sort": 3,
+            "name": "Apache"
+          },
+          {
+            "status": "published",
+            "sort": 4,
+            "name": "Linux"
+          },
+          {
+            "status": "published",
+            "sort": 5,
+            "name": "XAMPP"
+          },
+          {
+            "status": "published",
+            "sort": 6,
+            "name": "HTML5"
+          },
+          {
+            "status": "published",
+            "sort": 7,
+            "name": "CSS3"
+          },
+          {
+            "status": "published",
+            "sort": 8,
+            "name": "JavaScript"
+          },
+          {
+            "status": "published",
+            "sort": 9,
+            "name": "AJAX"
+          },
+          {
+            "status": "published",
+            "sort": 10,
+            "name": "jQuery"
+          },
+          {
+            "status": "published",
+            "sort": 11,
+            "name": "jQuery UI"
+          },
+          {
+            "status": "published",
+            "sort": 12,
+            "name": "Underscore.js"
+          },
+          {
+            "status": "published",
+            "sort": 13,
+            "name": "Bootstrap"
+          },
+          {
+            "status": "published",
+            "sort": 14,
+            "name": "Responsive design"
+          },
+          {
+            "status": "published",
+            "sort": 15,
+            "name": "Firebug"
+          }
+        ]
+      },
+      {
+        "name": "Gamepoint",
+        "location": "The Hague, NL",
+        "description": "Casual Gaming Community",
+        "position": "Junior / Mid-level Web Developer",
+        "summary": "Progressed from junior to mid-level developer within a 10+ developer team at established gaming community platform serving hundreds of thousands of users. Implemented payment integrations and internationalization features, optimized MySQL database structures & queries, and maintained large-scale PHP codebase & Linux server setup while contributing to platform stability and feature development.",
+        "status": "published",
+        "sort": 5,
+        "start_date": "2007-08-12T00:00:00.000Z",
+        "end_date": "2011-06-17T00:00:00.000Z",
+        "website": "https://www.gamepoint.biz/",
+        "tags": [
+          "cv"
+        ],
+        "achievements": [
+          {
+            "status": "published",
+            "sort": 1,
+            "title": "Platform Development",
+            "description": "Implemented payment integrations, internationalization, and optimized MySQL database structures & queries",
+            "fa_icon": "database",
+            "tags": null
+          },
+          {
+            "status": "published",
+            "sort": 2,
+            "title": "Team Collaboration & Growth",
+            "description": "Promoted to mid-level developer in 10+ developer team, maintaining large-scale PHP codebase & Linux servers setup",
+            "fa_icon": "users",
+            "tags": null
+          }
+        ],
+        "technologies": [
+          {
+            "status": "published",
+            "sort": 1,
+            "name": "PHP"
+          },
+          {
+            "status": "published",
+            "sort": 2,
+            "name": "MySQL"
+          },
+          {
+            "status": "published",
+            "sort": 3,
+            "name": "Linux"
+          },
+          {
+            "status": "published",
+            "sort": 4,
+            "name": "nginx"
+          },
+          {
+            "status": "published",
+            "sort": 5,
+            "name": "Memcached"
+          },
+          {
+            "status": "published",
+            "sort": 6,
+            "name": "HTML"
+          },
+          {
+            "status": "published",
+            "sort": 7,
+            "name": "CSS"
+          },
+          {
+            "status": "published",
+            "sort": 8,
+            "name": "JavaScript"
+          },
+          {
+            "status": "published",
+            "sort": 9,
+            "name": "jQuery"
+          },
+          {
+            "status": "published",
+            "sort": 10,
+            "name": "AJAX"
+          },
+          {
+            "status": "published",
+            "sort": 11,
+            "name": "YUI Library"
+          }
+        ]
+      },
+      {
+        "name": "Budget Advies Groep",
+        "location": "Cruquius, NL",
+        "description": "Intermediary",
+        "position": "Junior Web developer",
+        "summary": "Helped with the acquisition of new clients, by creating several website portals that were of interest for different types of clients. Attractive designs and search engine optimization (SEO) were an important aspect in this.",
+        "status": "published",
+        "sort": 6,
+        "start_date": "2006-09-10T00:00:00.000Z",
+        "end_date": "2007-06-08T00:00:00.000Z",
+        "website": "https://www.budgetadviesgroep.nl/",
+        "tags": [
+          "cv"
+        ],
+        "achievements": [],
+        "technologies": [
+          {
+            "status": "published",
+            "sort": 1,
+            "name": "PHP"
+          },
+          {
+            "status": "published",
+            "sort": 2,
+            "name": "JavaScript"
+          },
+          {
+            "status": "published",
+            "sort": 3,
+            "name": "jQuery"
+          },
+          {
+            "status": "published",
+            "sort": 4,
+            "name": "HTML"
+          },
+          {
+            "status": "published",
+            "sort": 5,
+            "name": "CSS"
+          },
+          {
+            "status": "published",
+            "sort": 6,
+            "name": "Apache"
+          },
+          {
+            "status": "published",
+            "sort": 7,
+            "name": "Photoshop"
+          }
+        ]
+      },
+      {
+        "name": "Festivalinfo",
+        "location": "Amsterdam, NL",
+        "description": "Festival / event information website",
+        "position": "Internship Web Developer",
+        "summary": "Contributed to the stability and expansion of the platforms festivalinfo.nl, podiuminfo.nl, cabaretinfo.nl and agendainfo.nl, by fixing bugs and creating various new features.",
+        "status": "published",
+        "sort": 7,
+        "start_date": "2006-03-05T00:00:00.000Z",
+        "end_date": "2006-08-25T00:00:00.000Z",
+        "website": "https://www.festivalinfo.nl",
+        "tags": [
+          "cv"
+        ],
+        "achievements": [],
+        "technologies": [
+          {
+            "status": "published",
+            "sort": 1,
+            "name": "PHP"
+          },
+          {
+            "status": "published",
+            "sort": 2,
+            "name": "JavaScript"
+          },
+          {
+            "status": "published",
+            "sort": 3,
+            "name": "jQuery"
+          },
+          {
+            "status": "published",
+            "sort": 4,
+            "name": "HTML"
+          },
+          {
+            "status": "published",
+            "sort": 5,
+            "name": "CSS"
+          }
+        ]
+      }
+    ],
+    "side_projects": [
+      {
+        "status": "published",
+        "sort": 1,
+        "name": "Portfolio website",
+        "start_date": "2025-08-01T00:00:00.000Z",
+        "end_date": null,
+        "url": "https://www.rikwanders.tech/",
+        "stars": null,
+        "summary": "Personal portfolio website showcasing my professional experience, skills, and services as a freelance/independent developer. Including personal dashboard with AI features for efficient job matching. Using Svelte & Directus CMS.",
+        "tags": [
+          "fullstack-svelte",
+          "fullstack-react"
+        ],
+        "achievements": [
+          {
+            "title": "Hands-On Learning",
+            "fa_icon": "brain",
+            "description": "Used this personal project to learn new modern technologies and LLM integrations",
+            "status": "published",
+            "sort": 1
+          },
+          {
+            "title": "Personal dashboard system",
+            "fa_icon": "gears",
+            "description": "Continiously developing a personal AI-powered dashboard for efficient job matching",
+            "status": "published",
+            "sort": 2
+          }
+        ],
+        "technologies": [
+          {
+            "status": "published",
+            "sort": 1,
+            "name": "Sveltekit"
+          },
+          {
+            "status": "published",
+            "sort": 2,
+            "name": "Tailwind CSS"
+          },
+          {
+            "status": "published",
+            "sort": 3,
+            "name": "Vercel"
+          },
+          {
+            "status": "published",
+            "sort": 4,
+            "name": "LLM"
+          },
+          {
+            "status": "published",
+            "sort": 5,
+            "name": "OpenAI"
+          },
+          {
+            "status": "published",
+            "sort": 6,
+            "name": "Google Gemini"
+          },
+          {
+            "status": "published",
+            "sort": 7,
+            "name": "Prisma ORM"
+          },
+          {
+            "status": "published",
+            "sort": 8,
+            "name": "Directus (Headless CMS)"
+          },
+          {
+            "status": "published",
+            "sort": 9,
+            "name": "Selenium"
+          }
+        ]
+      },
+      {
+        "status": "published",
+        "sort": 2,
+        "name": "LitState",
+        "start_date": "2020-11-15T00:00:00.000Z",
+        "end_date": "2023-01-18T00:00:00.000Z",
+        "url": "https://github.com/gitaarik/lit-state",
+        "stars": 155,
+        "summary": "Reactive state management library for Lit Web Components, Open-sourced on GitHub & NPM. Used in production at Chipta (ticket shop). Lit + LitState is a simpler, lightweight and browser-native alternative to React + Redux.",
+        "tags": [
+          "fullstack-svelte",
+          "fullstack-react"
+        ],
+        "achievements": [
+          {
+            "title": "Open source package",
+            "fa_icon": "code",
+            "description": "Released open-source NPM package providing unique reactive state management for Lit",
+            "status": "draft",
+            "sort": 1
+          },
+          {
+            "title": "150+ GitHub stars",
+            "fa_icon": "star",
+            "description": "Received appreciation in community with 155 GitHub stars",
+            "status": "draft",
+            "sort": 2
+          },
+          {
+            "title": "Production usage",
+            "fa_icon": "server",
+            "description": "Succesfully used library in production at Chipta",
+            "status": "published",
+            "sort": 3
+          },
+          {
+            "title": "GitHub Issue Engagement",
+            "fa_icon": "github",
+            "description": "Engaged with package users on GitHub, handling issues and pull requests",
+            "status": "published",
+            "sort": 4
+          },
+          {
+            "title": "Documentation",
+            "fa_icon": "book",
+            "description": "Created quality documentation including quick-start, working examples and advanced features ",
+            "status": "published",
+            "sort": 5
+          },
+          {
+            "title": "Extensibility",
+            "fa_icon": "puzzle-piece",
+            "description": "Added plugin development support for functionality extensibility",
+            "status": "published",
+            "sort": 6
+          }
+        ],
+        "technologies": [
+          {
+            "status": "published",
+            "sort": 1,
+            "name": "Javascript"
+          },
+          {
+            "status": "published",
+            "sort": 2,
+            "name": "Node.js"
+          },
+          {
+            "status": "published",
+            "sort": 3,
+            "name": "NPM"
+          },
+          {
+            "status": "published",
+            "sort": 4,
+            "name": "Lit"
+          },
+          {
+            "status": "published",
+            "sort": 5,
+            "name": "Web Components"
+          },
+          {
+            "status": "published",
+            "sort": 6,
+            "name": "Snowpack"
+          }
+        ]
+      },
+      {
+        "status": "published",
+        "sort": 3,
+        "name": "Django Admin Relation Links",
+        "start_date": "2014-01-15T00:00:00.000Z",
+        "end_date": "2014-01-15T00:00:00.000Z",
+        "url": "https://github.com/gitaarik/django-admin-relation-links",
+        "stars": 108,
+        "summary": "Django Admin navigation enhancement, simplifying navigation between related database objects. Open-sourced on GitHub and PyPi. Used in production at Chipta & Tender-it.",
+        "tags": [
+          "fullstack-django",
+          "fullstack-python",
+          "fullstack-react"
+        ],
+        "achievements": [
+          {
+            "title": "Open-source Python package",
+            "fa_icon": "python",
+            "description": "Released open-source Python package on PyPi as easily installable Django Admin extension",
+            "status": "draft",
+            "sort": 1
+          },
+          {
+            "title": "100+ GitHub stars",
+            "fa_icon": "star",
+            "description": "Received appreciation in community with 108 GitHub stars & usage by 133 projects",
+            "status": "draft",
+            "sort": 2
+          },
+          {
+            "title": "GitHub Issue engagement",
+            "fa_icon": "github",
+            "description": "Engaged with users handling GitHub Issues and Pull Requests",
+            "status": "published",
+            "sort": 3
+          },
+          {
+            "title": "Production usage",
+            "fa_icon": "server",
+            "description": "Used extension succesfully in projects at Chipta & Tender-it",
+            "status": "published",
+            "sort": 4
+          }
+        ],
+        "technologies": [
+          {
+            "status": "published",
+            "sort": 1,
+            "name": "Python"
+          },
+          {
+            "status": "published",
+            "sort": 2,
+            "name": "Django"
+          },
+          {
+            "status": "published",
+            "sort": 3,
+            "name": "HTML5"
+          }
+        ]
+      },
+      {
+        "status": "published",
+        "sort": 4,
+        "name": "Git Submodules Guide",
+        "start_date": "2014-01-15T00:00:00.000Z",
+        "end_date": "2014-01-15T00:00:00.000Z",
+        "url": "https://gist.github.com/gitaarik/8735255",
+        "stars": 1028,
+        "summary": "Popular GitHub Gist explaining Git submodules fundamentals. Helped many developers understand submodules effectively.",
+        "url_label": "gist.github.com/gitaarik/8735255",
+        "tags": [
+          "fullstack-python",
+          "fullstack-django",
+          "fullstack-react",
+          "fullstack-svelte"
+        ],
+        "achievements": [
+          {
+            "title": " 1000+ GitHub stars",
+            "fa_icon": "star",
+            "description": "Widespread community appreciation with 1028 GitHub stars",
+            "status": "published",
+            "sort": 1
+          },
+          {
+            "title": "Community engagement",
+            "fa_icon": "users",
+            "description": "Responded and engaged in followup questions and feedback of community",
+            "status": "published",
+            "sort": 2
+          },
+          {
+            "title": "Maintained",
+            "fa_icon": "book",
+            "description": "Documentation up-to-date with latest git release and related developments",
+            "status": "published",
+            "sort": 3
+          },
+          {
+            "title": "Professional application",
+            "fa_icon": "user-tie",
+            "description": "Succesfully used to onboard developers in projects using git submodules at TravelBird & Chipta",
+            "status": "published",
+            "sort": 4
+          }
+        ],
+        "technologies": [
+          {
+            "status": "published",
+            "sort": 1,
+            "name": "Git"
+          },
+          {
+            "status": "published",
+            "sort": 2,
+            "name": "Git Submodules"
+          },
+          {
+            "status": "published",
+            "sort": 3,
+            "name": "Shell"
+          }
+        ]
+      },
+      {
+        "status": "published",
+        "sort": 5,
+        "name": "Jazzchords",
+        "start_date": "2013-06-24T00:00:00.000Z",
+        "end_date": "2017-12-08T00:00:00.000Z",
+        "url": "https://github.com/gitaarik/jazzchords",
+        "stars": 12,
+        "summary": "Web application for creating and printing professional chord charts using Python/Django and modern frontend technologies.",
+        "tags": [
+          "fullstack-django"
+        ],
+        "achievements": [
+          {
+            "title": "Personal usage",
+            "fa_icon": "heart",
+            "description": "Succesfully used project for creating and printing beautiful guitar chord charts for personal use",
+            "status": "published",
+            "sort": 1
+          },
+          {
+            "title": "Hands-On Learning",
+            "fa_icon": "brain",
+            "description": "Used this personal project to learn a new frontend framework (Ember.js)",
+            "status": "published",
+            "sort": 2
+          }
+        ],
+        "technologies": [
+          {
+            "status": "published",
+            "sort": 1,
+            "name": "Python"
+          },
+          {
+            "status": "published",
+            "sort": 2,
+            "name": "Django"
+          },
+          {
+            "status": "published",
+            "sort": 3,
+            "name": "JavaScript"
+          },
+          {
+            "status": "published",
+            "sort": 4,
+            "name": "Ember.js"
+          },
+          {
+            "status": "published",
+            "sort": 5,
+            "name": "HTML"
+          },
+          {
+            "status": "published",
+            "sort": 6,
+            "name": "CSS"
+          }
+        ]
+      },
+      {
+        "status": "published",
+        "sort": 6,
+        "name": "Adyengo",
+        "start_date": "2013-08-06T00:00:00.000Z",
+        "end_date": "2020-05-07T00:00:00.000Z",
+        "url": "https://github.com/gitaarik/adyengo",
+        "stars": 10,
+        "summary": "Open-source Django package for Adyen payment integration with recurring payment support. Used in production at Tender-it.",
+        "tags": [
+          "fullstack-django",
+          "fullstack-django-svelte"
+        ],
+        "achievements": [
+          {
+            "title": "Production usage",
+            "fa_icon": "server",
+            "description": "Used in production at Tender-it for processing subscription payments",
+            "status": "published",
+            "sort": 1
+          },
+          {
+            "title": "Documentation",
+            "fa_icon": "book",
+            "description": "Created clear documentation for package usage with examples and test pages",
+            "status": "published",
+            "sort": 2
+          }
+        ],
+        "technologies": [
+          {
+            "status": "published",
+            "sort": 1,
+            "name": "Python"
+          },
+          {
+            "status": "published",
+            "sort": 2,
+            "name": "Django"
+          },
+          {
+            "status": "published",
+            "sort": 3,
+            "name": "HTML"
+          }
+        ]
+      },
+      {
+        "status": "published",
+        "sort": 7,
+        "name": "Monkful",
+        "start_date": "2013-09-03T00:00:00.000Z",
+        "end_date": "2014-10-04T00:00:00.000Z",
+        "url": "https://github.com/gitaarik/monkful",
+        "stars": 10,
+        "summary": "Python package to easily create RESTful API's for MongoEngine documents used for MongoDB database. Inspired by Django REST framework. Used in production at Travelbird.",
+        "tags": [
+          "fullstack-python",
+          "fullstack-django",
+          "fullstack-django-svelte"
+        ],
+        "achievements": [
+          {
+            "title": "Production usage",
+            "fa_icon": "server",
+            "description": "Used in production at Travelbird for creating REST APIs for MongoDB collections",
+            "status": "published",
+            "sort": 1
+          },
+          {
+            "title": "Documentation",
+            "fa_icon": "book",
+            "description": "Created clear documentation for package usage with examples and thoughtful explanations",
+            "status": "published",
+            "sort": 2
+          }
+        ],
+        "technologies": [
+          {
+            "status": "published",
+            "sort": 1,
+            "name": "Python"
+          },
+          {
+            "status": "published",
+            "sort": 2,
+            "name": "Flask"
+          },
+          {
+            "status": "published",
+            "sort": 3,
+            "name": "MongoEngine"
+          }
+        ]
+      }
+    ],
+    "education": [
+      {
+        "status": "published",
+        "sort": 1,
+        "institution": "Nova College",
+        "location": "Hoofddorp, NL",
+        "url": "https://www.novacollege.nl/",
+        "area": "Software Development",
+        "study_type": "Dutch Vocational Education (MBO)",
+        "graduation_year": 2007,
+        "start_date": "2004-08-01T00:00:00.000Z",
+        "end_date": "2007-06-15T00:00:00.000Z",
+        "summary": "Comprehensive 4-year program including foundational computer science, algorithms, and data structures.",
+        "tags": null
+      },
+      {
+        "status": "published",
+        "sort": 2,
+        "institution": "Mediacollege Amsterdam",
+        "location": "Amsterdam, NL",
+        "url": "https://www.ma-web.nl/",
+        "area": "Audio technician",
+        "study_type": "Dutch Vocational Education (MBO)",
+        "graduation_year": null,
+        "start_date": "2003-08-03T00:00:00.000Z",
+        "end_date": "2004-06-11T00:00:00.000Z",
+        "summary": "I liked many aspects of the field (music & tech), but ultimately decided that it wasn't something I wanted to pursue in.",
+        "tags": [
+          "cv"
+        ]
+      },
+      {
+        "status": "published",
+        "sort": 3,
+        "institution": "Kaj Munk College",
+        "location": "Hoofddorp, NL",
+        "url": "https://kajmunk.nl/",
+        "area": "Pre-vocational education",
+        "study_type": "Dutch VMBO-t education",
+        "graduation_year": 2003,
+        "start_date": "1999-08-01T00:00:00.000Z",
+        "end_date": "2003-06-13T00:00:00.000Z",
+        "summary": "Educated in topics like maths, physics, chemistry, biology, geography, economy, history, social studies, Dutch & English.",
+        "tags": [
+          "cv"
+        ]
+      },
+      {
+        "status": "published",
+        "sort": 4,
+        "institution": "Valkenburgschool",
+        "location": "Heemstede, NL",
+        "url": null,
+        "area": "Primary education",
+        "study_type": "Dutch primary education",
+        "graduation_year": 1999,
+        "start_date": "1991-08-04T00:00:00.000Z",
+        "end_date": "1999-06-04T00:00:00.000Z",
+        "summary": "Educated in core subjects like Dutch, maths, science, history, geography, gym & creative activities (art, music).",
+        "tags": [
+          "cv"
+        ]
+      }
+    ],
+    "languages": [
+      {
+        "status": "published",
+        "sort": null,
+        "name": "Dutch",
+        "language_code": "nl",
+        "proficiency": "native"
+      },
+      {
+        "status": "published",
+        "sort": null,
+        "name": "English",
+        "language_code": "en",
+        "proficiency": "fluent"
+      }
+    ],
+    "references": [
+      {
+        "status": "published",
+        "sort": null,
+        "author": "Michaël de Groot",
+        "author_position": "Founder of Chipta",
+        "text": "Rik modernized our client-facing interfaces and implemented optimizations that delivered substantial performance improvements. His work enabled us to process thousands of tickets rapidly during our busiest periods."
+      },
+      {
+        "status": "published",
+        "sort": null,
+        "author": "Elmar Krack",
+        "author_position": "Co-founder of Tender-it",
+        "text": "Rik demonstrated exceptional technical leadership by designing and developing our entire platform from the ground up, handling both backend and frontend development with impressive skill."
+      }
+    ],
+    "project_stories": [
+      {
+        "sort": 1,
+        "title": "Ticketshop performance for big events",
+        "situation": "- Big event clients selling thousands of tickets\n- Ticketshop having hard times handling large traffic spikes\n- Performance bottlenecks in processing the orders\n- Clients needed reliable ticketshop to sell their tickets fast",
+        "task": "- Speed up ticketshop order processing\n- Handle high-traffic ticketshop spikes\n- Work with DevOps (Michaël) on scaling",
+        "action": "- Optimized SQL queries - got 30-60% speed boost\n- Refactored Python/Django order processing code\n- Worked with DevOps (Michaël) on flexible scaling setup",
+        "result": "- Big event clients successfully kept/onboarded\n- 30-60% faster ticket order processing\n- Scalable ticketshop ready for large events",
+        "reflection": "- I didn't realize how many queries were being done before optimizing\n- Optimizing complex SQL queries in Django can be challenging\n- But tools like Silk make debugging very user friendly",
+        "category": "high_impact_projects"
+      },
+      {
+        "sort": 2,
+        "title": "Zoom OAuth integration during COVID",
+        "situation": "- COVID hit and clients needed virtual events\n- No Zoom integration in our platform\n- Event organizers needed seamless online solution",
+        "task": "- Learn Zoom API and OAuth quickly\n- Integrate client accounts with dashboard\n- Enable automatic Zoom management for Chipta events",
+        "action": "- Mastered Zoom OAuth and API documentation\n- Navigated strict app admittance process\n- Built dashboard integration for client accounts\n- Created automatic Zoom event management system",
+        "result": "- Many clients successfully organized online events\n- Helped company survive COVID with less than 40% profit loss\n- Seamless Chipta-Zoom integration in production",
+        "reflection": "- Zoom Marketplace submission requirements were much more than I expected\n- After COVID was over, the online event hype disappeared again\n- COVID was a hard time to be strategical\n- Clients do appreciate quick acting and temporary solutions",
+        "category": "high_impact_projects"
+      },
+      {
+        "sort": 3,
+        "title": "React Native App Technical Challenges",
+        "situation": "- Leading React Native mobile app development at Chipta\n- React Native framework had significant bugs and limitations\n- Limited documentation and community support available\n- Tight deadline before festival season start",
+        "task": "- Navigate technical challenges with immature framework\n- Find solutions to framework bugs and limitations\n- Deliver functional app on schedule\n- Ensure app met performance and reliability requirements",
+        "action": "- Helped developer to tackle complex technical issues\n- Researched React Native & plugins source code to understand underlying problems\n- Created custom patches for framework bugs we encountered\n- Made architecture decisions to work around limitations",
+        "result": "- Delivered app on time before festival season started\n- App significantly improved event scalability and reach\n- Contributed to 40% revenue increase from mobile ticket sales\n- Developer gained valuable React Native expertise\n- Established foundation for future mobile development projects",
+        "reflection": "- Learned that new hip projects from major companies are not necessarily stable or well documented from the start\n- Was ultimately happy with choosing React Native\n- Because it matured and is still one of the main ways of creating apps",
+        "category": "challenging_situations"
+      },
+      {
+        "sort": 4,
+        "title": "Introduced agile / async team workflow @ Chipta",
+        "situation": "- Early days at Chipta with minimal team structure\n- 3-5 developers working without established methodologies\n- Changing requirements from management causing confusion with devs\n- Need to scale development processes as team grew",
+        "task": "- Introduce structured development methodologies\n- Get all team members aligned on new processes\n- Implement tools and workflows for better collaboration\n- Improve team efficiency and productivity",
+        "action": "- Progressively introduced Scrum/Agile methodologies with team buy-in\n- Implemented Zulip for structured async collaboration\n- Established GitLab Merge Request workflow with code reviews\n- Introduced Git flow and commit message conventions\n- Set up and managed comprehensive issue ticket system",
+        "result": "- Successfully transitioned team to structured development process\n- Improved team coordination and reduced miscommunication\n- Increased development efficiency and code quality\n- Created scalable processes that supported team growth over 7 years",
+        "reflection": "- An efficient team workflow makes a big difference\n- There are many ways to do Agile and every team is unique",
+        "category": "leadership_moments"
+      },
+      {
+        "sort": 5,
+        "title": "TicketSwap integration deadline for major client",
+        "situation": "- Major event organizer prospect required TicketSwap integration\n- Hard deadline of 3 weeks to deliver or lose the prospect\n- Complex coordination needed with external development team",
+        "task": "- Build secure TicketSwap API integration for second-hand ticket validation\n- Coordinate with TicketSwap developers on protocols and implementation steps\n- Deliver working solution within 3-week deadline to close the deal",
+        "action": "- Contacted TicketSwap's technical team to establish communication protocols\n- Coordinated step-by-step implementation process with their developers\n- Built secure integration with comprehensive testing suite\n- Managed coordination between TicketSwap team, prospect, and internal stakeholders",
+        "result": "- Delivered integration on time and secured the client\n- Eliminated ticket fraud for integrated events\n- Became competitive advantage leading to 15% increase in sales",
+        "reflection": "- Things can be done very fast when all parties have interests\n- Direct communication between devs of two companies is very efficient",
+        "category": "leadership_moments"
+      },
+      {
+        "sort": 6,
+        "title": "Automated integration testing with Selenium",
+        "situation": "- Manual integration testing required before each production deployment\n- Testing process took up to 1.5 hours per release\n- Process was error prone because of human errors\n- Time-consuming manual process slowed down development cycle",
+        "task": "- Eliminate manual testing bottleneck\n- Enable faster, more reliable deployments\n- Reduce time investment required for each release\n- Improve reliability of test results",
+        "action": "- Researched automated testing solutions and selected Selenium\n- Built comprehensive Selenium test suite covering the existing manual test procedures\n- Integrated automated tests into deployment pipeline\n- Created documentation for developers on running tests and creating new ones",
+        "result": "- Reduced integration testing time from 1.5 hours to 5 minutes\n- Enabled any developer to run complete integration test suite\n- Increased deployment frequency and confidence\n- Eliminated testing bottleneck and improved development velocity",
+        "reflection": "- Learned Selenium is pretty cool and not that hard\n- Learned that creating integration tests is totally worth it if you need to test for every release\n- Now that I know Selenium, would apply it faster to save time earlier",
+        "category": "learning_experiences"
+      },
+      {
+        "sort": 7,
+        "title": "Onboarding junior developer to Django system",
+        "situation": "- New junior developer joined comprehensive Django project\n- Developer needed to learn Django framework\n- Complex system with frontend integration\n- Multiple new skills needed simultaneously",
+        "task": "- Guide developer through system architecture\n- Teach Django best practices\n- Train on frontend technologies\n- Make developer productive on assigned projects",
+        "action": "- Created structured learning plan covering Django and frontend\n- Paired programming sessions to demonstrate system\n- Regular code reviews with detailed explanations\n- Gradually increased project complexity and responsibility",
+        "result": "- Developer became productive within first month\n- Successfully delivered assigned project features\n- Developer gained confidence in both Django and frontend\n- Created reusable onboarding process for future hires",
+        "reflection": "- Learned I need to ask more feedback from developers to understand what they actually need\n- Junior developer could be stuck without me knowing it\n- Check in to developers progress and have evaluation sessions\n\n- It's useful when developer creates own docs / notes\n- There are always things to improve about the onboarding process\n- It's a fun process helping a developer getting up and running",
+        "category": "learning_experiences"
+      }
+    ],
+    "application_questions": [
+      {
+        "sort": 1,
+        "question": "Tell us about your experience building a project with a Python backend.\n\n- What kind of project was it?\n- What technologies and frameworks did you use (e.g., Flask, FastAPI, Django, etc.)?\n- (Optional) Please share a link (GitHub repo, live demo, or case study) if available.",
+        "answer": "At Chipta I've build the Django backend from the ground up. I attached Django to an existing database, enabling a smooth transition from the previous system. I even modified Django to work with an existing translation system.\n\nI added React to the project for dynamic frontend pages, and used Django REST Framework to create APIs accommodating the React frontend. Many APIs were for admin pages so needed authentication and permission checks. I also implemented pagination, nested routing (using drf-nested-routers), filtering (using django-filter), field-based filtering (using drf-flex-fields), and custom APIs with custom urls.\n\nChipta is a ticketing system for event organizers. They can use the system to create a ticket shop and sell their tickets online. I've scaled the system to be able to handle thousands of ticket orders per minute. To optimize the SQL queries and Python processes, I used tools like Django Silk and Django Debug Toolbar.\n\nChipta has processed millions of euros in transactions. I developed the ticketshop, API and server processes that handle these transactions. I used payment provider SDKs to create the payments and forward users to the payment page.\n\nTo mail the tickets to users, I used Django's EmailMultiAlternatives class to send pretty HTML emails including inline images, not requiring loading external resources.\n\nTo create ticket PDFs, I used Django-WeasyPrint, which uses Weasyprint under the hood, and transforms a Django HTML template, including styles and images, to a PDF file.\n\nI used Python Fabric to build a comprehensive custom CI/CD pipeline to deploy the project to our servers.\n\nI used Selenium to write integration tests to automatically test our frontend.\n\nYou can sign up and create a ticketshop yourself at: https://chipta.com/",
+        "title": "Python backend building experience",
+        "source": "AuditOne"
+      },
+      {
+        "sort": 2,
+        "question": "Have you built or worked on systems that manage a lot of structured information or documents (e.g., internal platforms, CRMs, audit systems, or similar)? *\n\n- Describe what the system did and how you contributed.\n- What kind of data or documents were handled?\n- How did you design the backend (APIs, database, integrations, etc.)?\n- (Optional) Did you add any AI-powered or automation features using Python?",
+        "answer": "At Tender-it, I created a Django + Celery project that ran web crawlers that scraped tender data from various sources in various formats, then parsed that data into one format and saved it to the database. A A tender is a formal competitive bidding process for contracts, usually big government projects. The scripts would import thousands of tenders each day. Then I created a web platform with an Elasticsearch-based search engine to search, filter, sort and score these tenders.\n\nSome sources offered a REST API with JSON or structured data in some way. In those cases it was easy to get the data parse it. But many sources had out-of-date technology, and I needed to use unconventional methods to get the data, like website scraping, API reverse engineering, zip files with XML files over FTP, CSV files over email.\n\nSo I created a base class for importing the data and a base class for parsing the data. Then for each source I created a class, inheriting the base class and implementing the required methods. The base classes provided many helper methods for implementing common functionality. Like this I could easily add new sources.\n\nI imported all structured data into the MariaDB database. Then I created records in Elasticsearch with all the data that should be search-able, with a reference to the complete data in the database. In this way I could use Elasticsearch to efficiently find the desired record, and when found, fetch the complete info from the database.",
+        "title": "Data management system experience",
+        "source": "AuditOne"
+      },
+      {
+        "sort": 3,
+        "question": "Tell us about a project where you built or shipped a full-stack application. What was your role, and what technologies did you use?",
+        "answer": "At Chipta, I led a project creating a ticket scanning app, to scan and validate event entrance tickets, using the phone camera. I decided on using React Native, and guided a medior developer to set up the project and make architectural decisions. I focused on providing the REST APIs and the related business logic.\n\nThe scan app would often be used by multiple people at the same time. So I had to make sure to keep the scan apps synchronized, so the same ticket could not be used multiple times. I used a websocket connection between the apps and the Django backend, using Django Channels. With an open websocket connection, I could instantly send data from the app to the backend and vice-versa, without any request overhead. This allowed me to create a custom protocol to send various types of data, like ticket scans, or undo-ing a scan, or even adding more valid tickets.\n\nWhen an app scanned a ticket, it send data about it to the backend over the websocket connection. Then the backend would broadcast this scan data to the other scan apps with open websocket connections, synchronizing the apps. Also, if an administrator would update the status of a visitor's ticket in the backend, it would also be broadcasted over the websockets.\n\nWe also created functionality for offline usage. The scan app would locally cache the tickets, and if the internet connection would be temporarily gone, still be able to scan tickets. After connection came back, it would restore synchronization and have custom conflict resolution in case of conflicts.\n\nThe scan app was successfully released on the Google Play Store and Apple App Store, under the name \"Chipta\". Hundreds of event organizers have successfully used it to validate tickets from over a million of visitors at their events. The app was very important for Chipta's growth as it significantly reduced custom scanner hardware costs and management, and  contributed to a 40% revenue increase in the 2 years after the release.\n\nChipta in the Google Play Store:\nhttps://play.google.com/store/apps/details?id=com.chipta\n\nChipta in the Apple App Store:\nhttps://apps.apple.com/us/app/chipta/id1156524548",
+        "title": "Full-stack app building experience",
+        "source": "AuditOne"
+      }
+    ],
+    "cheat_sheets": [
+      {
+        "sort": null,
+        "title": "Intro Talk - EN",
+        "content": "# Interview Introduction Cheat Sheet\n\n## Main\n\n- Dutch Senior Full Stack Developer\n- 18+ years of experience\n- currently based in Spain\n- specialize in Python & Node.js ecosystems\n- Strong on both back & frontend\n\n## More\n\n- Lot of experience scaling high-traffic applications\n- 5+ years remote work experience\n- Experience in both startup and enterprise environments\n- Agile methodologies expert\n\n## Chipta\n\n- 10 years Lead Developer @ Chipta\n- Managed teams of 3-5 developers\n- Built ticketing platform:\n  - Served thousands of events\n  - Processing thousands of tickets/minute\n  - Processed tens of millions in ticket sales\n- High-traffic page performance improvements (40-60%)\n\n### Achievements\n\n- Transformed proof-of-concept into competitive ticketing platform\n- Serving thousands of events\n- Processing high-volume traffic reliably\n\n### Left because\n\nDidn't reach the breakthrough we hoped for.\n\n## Tender-it\n\n- Built complete platform from scratch\n- Agile workflow with non-technical founders\n- Extensive search engine using Elasticsearch\n- Crawling websites, process & import data\n- Built subscription system with recurring payments\n\n### Achievements\n\n- Delivered complete product to requirements of founders\n- Helping companies find appropriate tenders easily\n\n### Left because\n\nCompetitor overtook us.\n\n## TravelBird\n\n- Rapidly growing company\n- Part of innovative mobile team\n- Objective-C + XCode\n- API architect for mobile apps\n\n### Left because\n\nWasn't satisfied with company reorganization.\n\n## 🔧 Technical Expertise\n\n### Expert\n\n- Python (Django, DRF, Channels, Silk, Celery)\n- JavaScript/Node.js (React, MobX, Svelte, Lit, Webcomponents)\n- SQL databases (PostgreSQL, MySQL, SQLite)\n- Linux, DevOps, CI/CD\n- Vercel, Linode, AWS\n- AI-accelerated development (Claude Code, Cursor)\n\n## Work principles\n\n- Agile, Scrum, Kanban\n- Security-first mindset\n- TDD\n- Component-based development\n- UX\n- Code reviewing\n- Documentation\n\n## Concrete Achievements\n\n- Platform scaling\n  - Profiling\n  - Query optimization\n  - Algorithmic optimization\n  - Caching\n  - Load balancing\n  - Auto-scaling servers\n\n- API integrations\n  - Connect DB to third-parties\n  - OAuth integrations for account sharing\n\n- Payment integrations\n  - Mollie\n  - Pay.nl\n  - Adyen\n  - Paypal\n\n- Internationalization\n  - Translations\n  - Location-aware content\n  - Multi-currency support\n\n- Test suite\n  - TDD\n  - Unit tests\n  - Integration tests (with Selenium)\n\n## 👤 Personal Touch (when appropriate)\n\n- Playing guitar since age 12, had a band\n- Got into web development by creating website for band\n- Travel & nature lover\n  - Walked Camino de Santiago\n  - Traveled around Mexico & Ecuador\n\n## Current situation\n\n- Renting out house in NL\n- Traveled south in camper\n- Family/friends across Spain & Portugal\n- Currently working from sister's office in southern Spain\n  - Plenty of space & dedicated workspace\n\n## What I'm Looking For\n\n- Remote work\n- Projects 6-12 months\n- Long-term part-time\n- Innovative agile (startup) environments\n\n## Recent technologies of interest?\n\n- AI-accelerated development (Claude, Cursor)\n- AI / LLM integrations (OpenAI API)\n- Svelte & Tailwind\n- Machine Learning & Data Science\n\n## Recent projects\n\n- Handy House Manual\n- SmartFeed\n- Smart Home integrations (ESP32, Raspi)\n- Portfolio & CV\n\n---\n\n## Common Follow-up Questions\n\n### Challenging projects?\n\n- Scaling (Chipta)\n  - Figuring out what/why slow\n  - How to optimize\n  - Testing optimizations\n\n- Team leadership (Chipta)\n  - Guidance, what someone needs\n  - Estimate someone's skills\n  - Reviewing code & giving feedback\n\n- Developing complete project (Tender-it)\n  - Taking responsibility of full stack\n    - Dealing with problems on all layers of stack\n  - Scrum planning\n  - Coordinating with non-technical founders\n\n- Mobile app development (TravelBird & Chipta)\n  - Learning new technologies\n  - App/Play store review policies\n  - Testing on various devices\n  - Web Sockets for Chipta Scan App\n\n### Why remote work?\"\n\n- Love traveling & nature\n- Efficiency & flexibility\n- Stay focussed with Scrum / Agile methodologies\n- Collaboration software (Slack, Teams, Zoom)\n- 5+ years experience\n- I believe in it\n"
+      },
+      {
+        "sort": null,
+        "title": "Why I quit Chipta",
+        "content": "After 10 incredible years at Chipta, I'm proud of what we accomplished - we\nbuilt a robust ticketing platform that scaled to handle thousands of tickets per\nminute and served thousands of events. I led the technical development from\nconcept through significant growth, and we created a solid product that competed\nwell in the market.\n\nHowever, after a decade of dedication, the company hadn't achieved the market\nbreakthrough we'd hoped for. While we had technical success and served our\nclients well, the business faced ongoing challenges in scaling to the next\nlevel. I realized it was time for me to seek new challenges where I could apply\neverything I'd learned in a fresh environment with different growth\nopportunities.\n\nThose 10 years taught me invaluable lessons about building scalable systems,\nleading teams, and the realities of startup growth. I'm excited to bring that\nexperience to a new role where I can make an immediate impact."
+      }
+    ],
+    "salary_expectations": [
+      {
+        "sort": 1,
+        "job_title": "Senior Python SWE",
+        "company_type": "enterprise",
+        "employment_type": "fte",
+        "work_arrangement": "remote",
+        "region": "eu_west_north",
+        "hourly_rate": 35,
+        "month_salary": 6000,
+        "year_salary": 80000,
+        "daily_rate": 280
+      },
+      {
+        "sort": 2,
+        "job_title": "Senior Python SWE",
+        "company_type": "enterprise",
+        "employment_type": "contract",
+        "work_arrangement": "remote",
+        "region": "eu_west_north",
+        "hourly_rate": 70,
+        "month_salary": 12000,
+        "year_salary": 145000,
+        "daily_rate": 550
+      },
+      {
+        "sort": null,
+        "job_title": "Senior Full-Stack SWE",
+        "company_type": "agency",
+        "employment_type": "contract",
+        "work_arrangement": "remote",
+        "region": "eu_east_south",
+        "hourly_rate": 60,
+        "month_salary": 10000,
+        "year_salary": 125000,
+        "daily_rate": 450
+      }
+    ]
+  }
+}
