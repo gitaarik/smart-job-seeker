@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict nkxjbZ1mj3yGLVLy2wddT3sJMGBJXHECmbTnU3B4dHQxgjuDqSCP7smRNtdRdtR
+\restrict 2XMalIG6Otn1uKBs6x9Ec4dhyilVQ5ZLB6nT9uWTjFZ6kcQdQmjlQ6DN4TTiRzO
 
 -- Dumped from database version 15.14 (Debian 15.14-1.pgdg13+1)
 -- Dumped by pg_dump version 15.14 (Debian 15.14-1.pgdg13+1)
@@ -10997,7 +10997,7 @@ c530a32f-84cb-4ab9-8a61-7a12a5bcb7e6	en-US	draft	Draft
 --
 
 COPY public.directus_users (id, first_name, last_name, email, password, location, title, description, tags, avatar, language, tfa_secret, status, role, token, last_access, last_page, provider, external_identifier, auth_data, email_notifications, appearance, theme_dark, theme_light, theme_light_overrides, theme_dark_overrides, text_direction) FROM stdin;
-157238bb-6930-4f26-be9c-8b31a9e11ab8	Admin	User	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-10-30 16:02:53.487+00	/settings/data-model	default	\N	\N	t	\N	\N	\N	\N	\N	auto
+157238bb-6930-4f26-be9c-8b31a9e11ab8	Admin	User	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-10-30 16:02:53.487+00	/content/profiles/0eeb942b-e35a-44e8-a37d-52b9cdb24309	default	\N	\N	t	\N	\N	\N	\N	\N	auto
 \.
 
 
@@ -12675,5 +12675,5 @@ ALTER TABLE ONLY public.work_experiences
 -- PostgreSQL database dump complete
 --
 
-\unrestrict nkxjbZ1mj3yGLVLy2wddT3sJMGBJXHECmbTnU3B4dHQxgjuDqSCP7smRNtdRdtR
+\unrestrict 2XMalIG6Otn1uKBs6x9Ec4dhyilVQ5ZLB6nT9uWTjFZ6kcQdQmjlQ6DN4TTiRzO
 
