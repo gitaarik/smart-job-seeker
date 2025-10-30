@@ -385,21 +385,27 @@
     {#each filterOnTags(profile.education) as education (education.area)}
       <div class="mb-2">
         <div class="font-bold">
-          {education.area}, {education.study_type},
-          {#if education.graduation_year}
-            Graduation Year {education.graduation_year}
-          {:else}
-            {
-              formatDateRangeCompact(
-                education.start_date,
-                education.end_date,
-              )
-            }
+          {education.area}, {education.study_type}{#if type === "cv"},
+
+            {#if education.graduation_year}
+              Graduation Year {education.graduation_year}
+            {:else}
+              {
+                formatDateRangeCompact(
+                  education.start_date,
+                  education.end_date,
+                )
+              }
+            {/if}
           {/if}
         </div>
 
         <div>
           {education.institution}, {education.location}
+        </div>
+
+        <div>
+          {education.summary}
         </div>
       </div>
     {/each}
