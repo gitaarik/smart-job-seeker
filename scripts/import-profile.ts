@@ -30,7 +30,7 @@ interface ImportedProfile {
       name?: string;
       description?: string;
       toggles?: any;
-      extends_from?: number | null;
+      extends_from?: string | null;
     }>;
     highlights: Array<{
       status?: string;
@@ -291,6 +291,20 @@ async function importProfile(
         `Importing ${data.profile_versions.length} profile versions...`,
       );
       for (const version of data.profile_versions) {
+        let extendsFromId: number | null = null;
+
+        // If extends_from is specified, look up the ID by name
+        if (version.extends_from) {
+          const extendsFromVersion = await prisma.profile_versions.findFirst({
+            where: {
+              name: version.extends_from,
+              profile: profile.id,
+            },
+            select: { id: true },
+          });
+          extendsFromId = extendsFromVersion?.id ?? null;
+        }
+
         await prisma.profile_versions.create({
           data: {
             status: version.status || "draft",
@@ -298,7 +312,7 @@ async function importProfile(
             name: version.name,
             description: version.description,
             toggles: version.toggles,
-            extends_from: version.extends_from,
+            extends_from: extendsFromId,
             profile: profile.id,
           },
         });

@@ -29,7 +29,7 @@ interface ExportedProfile {
       name?: string;
       description?: string;
       toggles?: any;
-      extends_from?: number | null;
+      extends_from?: string | null;
     }>;
     highlights: Array<{
       status?: string;
@@ -181,7 +181,11 @@ async function exportProfile(profileId: string): Promise<void> {
             name: true,
             description: true,
             toggles: true,
-            extends_from: true,
+            profile_versions: {
+              select: {
+                name: true,
+              },
+            },
           },
           orderBy: { sort: "asc" },
         },
@@ -393,7 +397,14 @@ async function exportProfile(profileId: string): Promise<void> {
         nationality: profile.nationality || undefined,
         location_url: profile.location_url || undefined,
         location_timezone: profile.location_timezone || undefined,
-        profile_versions: profile.profile_versions,
+        profile_versions: profile.profile_versions.map((pv) => ({
+          status: pv.status || undefined,
+          sort: pv.sort,
+          name: pv.name || undefined,
+          description: pv.description || undefined,
+          toggles: pv.toggles,
+          extends_from: pv.profile_versions?.name,
+        })),
         highlights: profile.highlights,
         tech_skill_categories: profile.tech_skill_categories.map((cat) => ({
           status: cat.status || undefined,

@@ -22,16 +22,14 @@
         "sort": 1,
         "name": "fullstack-django",
         "description": "Fullstack Django SWE",
-        "toggles": null,
-        "extends_from": null
+        "toggles": null
       },
       {
         "status": "published",
         "sort": 2,
         "name": "fullstack-python",
         "description": "Fullstack Python SWE",
-        "toggles": null,
-        "extends_from": null
+        "toggles": null
       },
       {
         "status": "published",
@@ -39,15 +37,14 @@
         "name": "fullstack-svelte",
         "description": "Fullstack Svelte SWE",
         "toggles": null,
-        "extends_from": 3
+        "extends_from": "fullstack-react"
       },
       {
         "status": "published",
         "sort": 4,
         "name": "fullstack-react",
         "description": "Fullstack React SWE",
-        "toggles": null,
-        "extends_from": null
+        "toggles": null
       },
       {
         "status": "published",
@@ -57,7 +54,7 @@
         "toggles": [
           "nationality"
         ],
-        "extends_from": 2
+        "extends_from": "fullstack-django"
       },
       {
         "status": "published",
@@ -65,7 +62,7 @@
         "name": "fullstack-django-svelte",
         "description": "Full-stack Django & Svelte SWE",
         "toggles": null,
-        "extends_from": 4
+        "extends_from": "fullstack-svelte"
       }
     ],
     "highlights": [
