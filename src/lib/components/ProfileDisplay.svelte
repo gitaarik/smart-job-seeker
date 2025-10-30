@@ -153,7 +153,7 @@
 
         <a
           href="mailto:{profile.email_address}"
-          class="underline"
+          class="underline hover:text-slate-600"
         >{profile.email_address}</a>
       </li>
 
@@ -166,7 +166,7 @@
 
         <a
           href="tel:{profile.phone_number}"
-          class="underline"
+          class="underline hover:text-slate-600"
         >{profile.phone_number}</a>
       </li>
 
@@ -183,7 +183,7 @@
 
         <a
           href={profile.location_url}
-          class="underline"
+          class="underline hover:text-slate-600"
           target="_blank"
         >
           {profile.location}
@@ -203,7 +203,7 @@
         <a
           href={profile.personal_website}
           target="_blank"
-          class="underline"
+          class="underline hover:text-slate-600"
         >{
           profile.personal_website.replace(
             /^https?:\/\/(www.)?/,
@@ -226,7 +226,7 @@
         <a
           href={profile.linkedin_profile}
           target="_blank"
-          class="underline"
+          class="underline hover:text-slate-600"
         >{
           profile.linkedin_profile.replace(
             /^https?:\/\/(www.)?linkedin.com\/in\//,
@@ -249,7 +249,7 @@
         <a
           href={profile.github_profile}
           target="_blank"
-          class="underline"
+          class="underline hover:text-slate-600"
         >{
           profile.github_profile.replace(
             /^https?:\/\/(www.)?github.com\//,
@@ -350,7 +350,7 @@
           <a
             href={project.url}
             target="_blank"
-            class="hover:text-white/70"
+            class="hover:text-slate-600"
           >
             {#if isGithub}
               <FontAwesomeIcon icon={faGithub} class="w-3" title="GitHub" />
@@ -405,7 +405,7 @@
         </div>
 
         <div>
-          {education.summary}
+          - {education.summary}
         </div>
       </div>
     {/each}
