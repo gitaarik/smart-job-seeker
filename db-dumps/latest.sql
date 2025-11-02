@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict IaTR5w3uCLke3OUW5kqLIQjzZ8eKLYtjNPmu6NI903xd7eKoOIiEhERgHn34j8N
+\restrict NwDOH9JcOjL6f4wcWjMNIcVpLjn6GA5d39U5LGF06aoln9NoS2xwycWMj1za3dM
 
 -- Dumped from database version 15.14 (Debian 15.14-1.pgdg13+1)
 -- Dumped by pg_dump version 15.14 (Debian 15.14-1.pgdg13+1)
@@ -1723,15 +1723,6 @@ COPY public.application_questions (id, sort, date_created, date_updated, questio
 1	1	2025-10-20 12:33:01.867+00	2025-10-20 15:25:34.417+00	Tell us about your experience building a project with a Python backend.\n\n- What kind of project was it?\n- What technologies and frameworks did you use (e.g., Flask, FastAPI, Django, etc.)?\n- (Optional) Please share a link (GitHub repo, live demo, or case study) if available.	At Chipta I've build the Django backend from the ground up. I attached Django to an existing database, enabling a smooth transition from the previous system. I even modified Django to work with an existing translation system.\n\nI added React to the project for dynamic frontend pages, and used Django REST Framework to create APIs accommodating the React frontend. Many APIs were for admin pages so needed authentication and permission checks. I also implemented pagination, nested routing (using drf-nested-routers), filtering (using django-filter), field-based filtering (using drf-flex-fields), and custom APIs with custom urls.\n\nChipta is a ticketing system for event organizers. They can use the system to create a ticket shop and sell their tickets online. I've scaled the system to be able to handle thousands of ticket orders per minute. To optimize the SQL queries and Python processes, I used tools like Django Silk and Django Debug Toolbar.\n\nChipta has processed millions of euros in transactions. I developed the ticketshop, API and server processes that handle these transactions. I used payment provider SDKs to create the payments and forward users to the payment page.\n\nTo mail the tickets to users, I used Django's EmailMultiAlternatives class to send pretty HTML emails including inline images, not requiring loading external resources.\n\nTo create ticket PDFs, I used Django-WeasyPrint, which uses Weasyprint under the hood, and transforms a Django HTML template, including styles and images, to a PDF file.\n\nI used Python Fabric to build a comprehensive custom CI/CD pipeline to deploy the project to our servers.\n\nI used Selenium to write integration tests to automatically test our frontend.\n\nYou can sign up and create a ticketshop yourself at: https://chipta.com/	Python backend building experience	2	AuditOne
 3	2	2025-10-20 13:49:08.162+00	2025-10-20 14:23:38.115+00	Have you built or worked on systems that manage a lot of structured information or documents (e.g., internal platforms, CRMs, audit systems, or similar)? *\n\n- Describe what the system did and how you contributed.\n- What kind of data or documents were handled?\n- How did you design the backend (APIs, database, integrations, etc.)?\n- (Optional) Did you add any AI-powered or automation features using Python?	At Tender-it, I created a Django + Celery project that ran web crawlers that scraped tender data from various sources in various formats, then parsed that data into one format and saved it to the database. A A tender is a formal competitive bidding process for contracts, usually big government projects. The scripts would import thousands of tenders each day. Then I created a web platform with an Elasticsearch-based search engine to search, filter, sort and score these tenders.\n\nSome sources offered a REST API with JSON or structured data in some way. In those cases it was easy to get the data parse it. But many sources had out-of-date technology, and I needed to use unconventional methods to get the data, like website scraping, API reverse engineering, zip files with XML files over FTP, CSV files over email.\n\nSo I created a base class for importing the data and a base class for parsing the data. Then for each source I created a class, inheriting the base class and implementing the required methods. The base classes provided many helper methods for implementing common functionality. Like this I could easily add new sources.\n\nI imported all structured data into the MariaDB database. Then I created records in Elasticsearch with all the data that should be search-able, with a reference to the complete data in the database. In this way I could use Elasticsearch to efficiently find the desired record, and when found, fetch the complete info from the database.	Data management system experience	2	AuditOne
 4	3	2025-10-20 14:25:16.929+00	2025-10-20 15:22:56.279+00	Tell us about a project where you built or shipped a full-stack application. What was your role, and what technologies did you use?	At Chipta, I led a project creating a ticket scanning app, to scan and validate event entrance tickets, using the phone camera. I decided on using React Native, and guided a medior developer to set up the project and make architectural decisions. I focused on providing the REST APIs and the related business logic.\n\nThe scan app would often be used by multiple people at the same time. So I had to make sure to keep the scan apps synchronized, so the same ticket could not be used multiple times. I used a websocket connection between the apps and the Django backend, using Django Channels. With an open websocket connection, I could instantly send data from the app to the backend and vice-versa, without any request overhead. This allowed me to create a custom protocol to send various types of data, like ticket scans, or undo-ing a scan, or even adding more valid tickets.\n\nWhen an app scanned a ticket, it send data about it to the backend over the websocket connection. Then the backend would broadcast this scan data to the other scan apps with open websocket connections, synchronizing the apps. Also, if an administrator would update the status of a visitor's ticket in the backend, it would also be broadcasted over the websockets.\n\nWe also created functionality for offline usage. The scan app would locally cache the tickets, and if the internet connection would be temporarily gone, still be able to scan tickets. After connection came back, it would restore synchronization and have custom conflict resolution in case of conflicts.\n\nThe scan app was successfully released on the Google Play Store and Apple App Store, under the name "Chipta". Hundreds of event organizers have successfully used it to validate tickets from over a million of visitors at their events. The app was very important for Chipta's growth as it significantly reduced custom scanner hardware costs and management, and  contributed to a 40% revenue increase in the 2 years after the release.\n\nChipta in the Google Play Store:\nhttps://play.google.com/store/apps/details?id=com.chipta\n\nChipta in the Apple App Store:\nhttps://apps.apple.com/us/app/chipta/id1156524548	Full-stack app building experience	2	AuditOne
-5	1	\N	\N	Tell us about your experience building a project with a Python backend.\n\n- What kind of project was it?\n- What technologies and frameworks did you use (e.g., Flask, FastAPI, Django, etc.)?\n- (Optional) Please share a link (GitHub repo, live demo, or case study) if available.	At Chipta I've build the Django backend from the ground up. I attached Django to an existing database, enabling a smooth transition from the previous system. I even modified Django to work with an existing translation system.\n\nI added React to the project for dynamic frontend pages, and used Django REST Framework to create APIs accommodating the React frontend. Many APIs were for admin pages so needed authentication and permission checks. I also implemented pagination, nested routing (using drf-nested-routers), filtering (using django-filter), field-based filtering (using drf-flex-fields), and custom APIs with custom urls.\n\nChipta is a ticketing system for event organizers. They can use the system to create a ticket shop and sell their tickets online. I've scaled the system to be able to handle thousands of ticket orders per minute. To optimize the SQL queries and Python processes, I used tools like Django Silk and Django Debug Toolbar.\n\nChipta has processed millions of euros in transactions. I developed the ticketshop, API and server processes that handle these transactions. I used payment provider SDKs to create the payments and forward users to the payment page.\n\nTo mail the tickets to users, I used Django's EmailMultiAlternatives class to send pretty HTML emails including inline images, not requiring loading external resources.\n\nTo create ticket PDFs, I used Django-WeasyPrint, which uses Weasyprint under the hood, and transforms a Django HTML template, including styles and images, to a PDF file.\n\nI used Python Fabric to build a comprehensive custom CI/CD pipeline to deploy the project to our servers.\n\nI used Selenium to write integration tests to automatically test our frontend.\n\nYou can sign up and create a ticketshop yourself at: https://chipta.com/	Python backend building experience	6	AuditOne
-7	2	\N	\N	Have you built or worked on systems that manage a lot of structured information or documents (e.g., internal platforms, CRMs, audit systems, or similar)? *\n\n- Describe what the system did and how you contributed.\n- What kind of data or documents were handled?\n- How did you design the backend (APIs, database, integrations, etc.)?\n- (Optional) Did you add any AI-powered or automation features using Python?	At Tender-it, I created a Django + Celery project that ran web crawlers that scraped tender data from various sources in various formats, then parsed that data into one format and saved it to the database. A A tender is a formal competitive bidding process for contracts, usually big government projects. The scripts would import thousands of tenders each day. Then I created a web platform with an Elasticsearch-based search engine to search, filter, sort and score these tenders.\n\nSome sources offered a REST API with JSON or structured data in some way. In those cases it was easy to get the data parse it. But many sources had out-of-date technology, and I needed to use unconventional methods to get the data, like website scraping, API reverse engineering, zip files with XML files over FTP, CSV files over email.\n\nSo I created a base class for importing the data and a base class for parsing the data. Then for each source I created a class, inheriting the base class and implementing the required methods. The base classes provided many helper methods for implementing common functionality. Like this I could easily add new sources.\n\nI imported all structured data into the MariaDB database. Then I created records in Elasticsearch with all the data that should be search-able, with a reference to the complete data in the database. In this way I could use Elasticsearch to efficiently find the desired record, and when found, fetch the complete info from the database.	Data management system experience	6	AuditOne
-8	3	\N	\N	Tell us about a project where you built or shipped a full-stack application. What was your role, and what technologies did you use?	At Chipta, I led a project creating a ticket scanning app, to scan and validate event entrance tickets, using the phone camera. I decided on using React Native, and guided a medior developer to set up the project and make architectural decisions. I focused on providing the REST APIs and the related business logic.\n\nThe scan app would often be used by multiple people at the same time. So I had to make sure to keep the scan apps synchronized, so the same ticket could not be used multiple times. I used a websocket connection between the apps and the Django backend, using Django Channels. With an open websocket connection, I could instantly send data from the app to the backend and vice-versa, without any request overhead. This allowed me to create a custom protocol to send various types of data, like ticket scans, or undo-ing a scan, or even adding more valid tickets.\n\nWhen an app scanned a ticket, it send data about it to the backend over the websocket connection. Then the backend would broadcast this scan data to the other scan apps with open websocket connections, synchronizing the apps. Also, if an administrator would update the status of a visitor's ticket in the backend, it would also be broadcasted over the websockets.\n\nWe also created functionality for offline usage. The scan app would locally cache the tickets, and if the internet connection would be temporarily gone, still be able to scan tickets. After connection came back, it would restore synchronization and have custom conflict resolution in case of conflicts.\n\nThe scan app was successfully released on the Google Play Store and Apple App Store, under the name "Chipta". Hundreds of event organizers have successfully used it to validate tickets from over a million of visitors at their events. The app was very important for Chipta's growth as it significantly reduced custom scanner hardware costs and management, and  contributed to a 40% revenue increase in the 2 years after the release.\n\nChipta in the Google Play Store:\nhttps://play.google.com/store/apps/details?id=com.chipta\n\nChipta in the Apple App Store:\nhttps://apps.apple.com/us/app/chipta/id1156524548	Full-stack app building experience	6	AuditOne
-9	1	\N	\N	Tell us about your experience building a project with a Python backend.\n\n- What kind of project was it?\n- What technologies and frameworks did you use (e.g., Flask, FastAPI, Django, etc.)?\n- (Optional) Please share a link (GitHub repo, live demo, or case study) if available.	At Chipta I've build the Django backend from the ground up. I attached Django to an existing database, enabling a smooth transition from the previous system. I even modified Django to work with an existing translation system.\n\nI added React to the project for dynamic frontend pages, and used Django REST Framework to create APIs accommodating the React frontend. Many APIs were for admin pages so needed authentication and permission checks. I also implemented pagination, nested routing (using drf-nested-routers), filtering (using django-filter), field-based filtering (using drf-flex-fields), and custom APIs with custom urls.\n\nChipta is a ticketing system for event organizers. They can use the system to create a ticket shop and sell their tickets online. I've scaled the system to be able to handle thousands of ticket orders per minute. To optimize the SQL queries and Python processes, I used tools like Django Silk and Django Debug Toolbar.\n\nChipta has processed millions of euros in transactions. I developed the ticketshop, API and server processes that handle these transactions. I used payment provider SDKs to create the payments and forward users to the payment page.\n\nTo mail the tickets to users, I used Django's EmailMultiAlternatives class to send pretty HTML emails including inline images, not requiring loading external resources.\n\nTo create ticket PDFs, I used Django-WeasyPrint, which uses Weasyprint under the hood, and transforms a Django HTML template, including styles and images, to a PDF file.\n\nI used Python Fabric to build a comprehensive custom CI/CD pipeline to deploy the project to our servers.\n\nI used Selenium to write integration tests to automatically test our frontend.\n\nYou can sign up and create a ticketshop yourself at: https://chipta.com/	Python backend building experience	10	AuditOne
-11	2	\N	\N	Have you built or worked on systems that manage a lot of structured information or documents (e.g., internal platforms, CRMs, audit systems, or similar)? *\n\n- Describe what the system did and how you contributed.\n- What kind of data or documents were handled?\n- How did you design the backend (APIs, database, integrations, etc.)?\n- (Optional) Did you add any AI-powered or automation features using Python?	At Tender-it, I created a Django + Celery project that ran web crawlers that scraped tender data from various sources in various formats, then parsed that data into one format and saved it to the database. A A tender is a formal competitive bidding process for contracts, usually big government projects. The scripts would import thousands of tenders each day. Then I created a web platform with an Elasticsearch-based search engine to search, filter, sort and score these tenders.\n\nSome sources offered a REST API with JSON or structured data in some way. In those cases it was easy to get the data parse it. But many sources had out-of-date technology, and I needed to use unconventional methods to get the data, like website scraping, API reverse engineering, zip files with XML files over FTP, CSV files over email.\n\nSo I created a base class for importing the data and a base class for parsing the data. Then for each source I created a class, inheriting the base class and implementing the required methods. The base classes provided many helper methods for implementing common functionality. Like this I could easily add new sources.\n\nI imported all structured data into the MariaDB database. Then I created records in Elasticsearch with all the data that should be search-able, with a reference to the complete data in the database. In this way I could use Elasticsearch to efficiently find the desired record, and when found, fetch the complete info from the database.	Data management system experience	10	AuditOne
-12	3	\N	\N	Tell us about a project where you built or shipped a full-stack application. What was your role, and what technologies did you use?	At Chipta, I led a project creating a ticket scanning app, to scan and validate event entrance tickets, using the phone camera. I decided on using React Native, and guided a medior developer to set up the project and make architectural decisions. I focused on providing the REST APIs and the related business logic.\n\nThe scan app would often be used by multiple people at the same time. So I had to make sure to keep the scan apps synchronized, so the same ticket could not be used multiple times. I used a websocket connection between the apps and the Django backend, using Django Channels. With an open websocket connection, I could instantly send data from the app to the backend and vice-versa, without any request overhead. This allowed me to create a custom protocol to send various types of data, like ticket scans, or undo-ing a scan, or even adding more valid tickets.\n\nWhen an app scanned a ticket, it send data about it to the backend over the websocket connection. Then the backend would broadcast this scan data to the other scan apps with open websocket connections, synchronizing the apps. Also, if an administrator would update the status of a visitor's ticket in the backend, it would also be broadcasted over the websockets.\n\nWe also created functionality for offline usage. The scan app would locally cache the tickets, and if the internet connection would be temporarily gone, still be able to scan tickets. After connection came back, it would restore synchronization and have custom conflict resolution in case of conflicts.\n\nThe scan app was successfully released on the Google Play Store and Apple App Store, under the name "Chipta". Hundreds of event organizers have successfully used it to validate tickets from over a million of visitors at their events. The app was very important for Chipta's growth as it significantly reduced custom scanner hardware costs and management, and  contributed to a 40% revenue increase in the 2 years after the release.\n\nChipta in the Google Play Store:\nhttps://play.google.com/store/apps/details?id=com.chipta\n\nChipta in the Apple App Store:\nhttps://apps.apple.com/us/app/chipta/id1156524548	Full-stack app building experience	10	AuditOne
-13	1	\N	\N	Tell us about your experience building a project with a Python backend.\n\n- What kind of project was it?\n- What technologies and frameworks did you use (e.g., Flask, FastAPI, Django, etc.)?\n- (Optional) Please share a link (GitHub repo, live demo, or case study) if available.	At Chipta I've build the Django backend from the ground up. I attached Django to an existing database, enabling a smooth transition from the previous system. I even modified Django to work with an existing translation system.\n\nI added React to the project for dynamic frontend pages, and used Django REST Framework to create APIs accommodating the React frontend. Many APIs were for admin pages so needed authentication and permission checks. I also implemented pagination, nested routing (using drf-nested-routers), filtering (using django-filter), field-based filtering (using drf-flex-fields), and custom APIs with custom urls.\n\nChipta is a ticketing system for event organizers. They can use the system to create a ticket shop and sell their tickets online. I've scaled the system to be able to handle thousands of ticket orders per minute. To optimize the SQL queries and Python processes, I used tools like Django Silk and Django Debug Toolbar.\n\nChipta has processed millions of euros in transactions. I developed the ticketshop, API and server processes that handle these transactions. I used payment provider SDKs to create the payments and forward users to the payment page.\n\nTo mail the tickets to users, I used Django's EmailMultiAlternatives class to send pretty HTML emails including inline images, not requiring loading external resources.\n\nTo create ticket PDFs, I used Django-WeasyPrint, which uses Weasyprint under the hood, and transforms a Django HTML template, including styles and images, to a PDF file.\n\nI used Python Fabric to build a comprehensive custom CI/CD pipeline to deploy the project to our servers.\n\nI used Selenium to write integration tests to automatically test our frontend.\n\nYou can sign up and create a ticketshop yourself at: https://chipta.com/	Python backend building experience	14	AuditOne
-15	2	\N	\N	Have you built or worked on systems that manage a lot of structured information or documents (e.g., internal platforms, CRMs, audit systems, or similar)? *\n\n- Describe what the system did and how you contributed.\n- What kind of data or documents were handled?\n- How did you design the backend (APIs, database, integrations, etc.)?\n- (Optional) Did you add any AI-powered or automation features using Python?	At Tender-it, I created a Django + Celery project that ran web crawlers that scraped tender data from various sources in various formats, then parsed that data into one format and saved it to the database. A A tender is a formal competitive bidding process for contracts, usually big government projects. The scripts would import thousands of tenders each day. Then I created a web platform with an Elasticsearch-based search engine to search, filter, sort and score these tenders.\n\nSome sources offered a REST API with JSON or structured data in some way. In those cases it was easy to get the data parse it. But many sources had out-of-date technology, and I needed to use unconventional methods to get the data, like website scraping, API reverse engineering, zip files with XML files over FTP, CSV files over email.\n\nSo I created a base class for importing the data and a base class for parsing the data. Then for each source I created a class, inheriting the base class and implementing the required methods. The base classes provided many helper methods for implementing common functionality. Like this I could easily add new sources.\n\nI imported all structured data into the MariaDB database. Then I created records in Elasticsearch with all the data that should be search-able, with a reference to the complete data in the database. In this way I could use Elasticsearch to efficiently find the desired record, and when found, fetch the complete info from the database.	Data management system experience	14	AuditOne
-16	3	\N	\N	Tell us about a project where you built or shipped a full-stack application. What was your role, and what technologies did you use?	At Chipta, I led a project creating a ticket scanning app, to scan and validate event entrance tickets, using the phone camera. I decided on using React Native, and guided a medior developer to set up the project and make architectural decisions. I focused on providing the REST APIs and the related business logic.\n\nThe scan app would often be used by multiple people at the same time. So I had to make sure to keep the scan apps synchronized, so the same ticket could not be used multiple times. I used a websocket connection between the apps and the Django backend, using Django Channels. With an open websocket connection, I could instantly send data from the app to the backend and vice-versa, without any request overhead. This allowed me to create a custom protocol to send various types of data, like ticket scans, or undo-ing a scan, or even adding more valid tickets.\n\nWhen an app scanned a ticket, it send data about it to the backend over the websocket connection. Then the backend would broadcast this scan data to the other scan apps with open websocket connections, synchronizing the apps. Also, if an administrator would update the status of a visitor's ticket in the backend, it would also be broadcasted over the websockets.\n\nWe also created functionality for offline usage. The scan app would locally cache the tickets, and if the internet connection would be temporarily gone, still be able to scan tickets. After connection came back, it would restore synchronization and have custom conflict resolution in case of conflicts.\n\nThe scan app was successfully released on the Google Play Store and Apple App Store, under the name "Chipta". Hundreds of event organizers have successfully used it to validate tickets from over a million of visitors at their events. The app was very important for Chipta's growth as it significantly reduced custom scanner hardware costs and management, and  contributed to a 40% revenue increase in the 2 years after the release.\n\nChipta in the Google Play Store:\nhttps://play.google.com/store/apps/details?id=com.chipta\n\nChipta in the Apple App Store:\nhttps://apps.apple.com/us/app/chipta/id1156524548	Full-stack app building experience	14	AuditOne
 \.
 
 
@@ -1752,12 +1743,6 @@ COPY public.applications (id, status, date_created, date_updated, vacancy, profi
 COPY public.cheat_sheets (id, sort, date_created, date_updated, title, content, profile) FROM stdin;
 17	\N	2025-10-22 10:39:34.925+00	\N	Intro Talk - EN	# Interview Introduction Cheat Sheet\n\n## Main\n\n- Dutch Senior Full Stack Developer\n- 18+ years of experience\n- currently based in Spain\n- specialize in Python & Node.js ecosystems\n- Strong on both back & frontend\n\n## More\n\n- Lot of experience scaling high-traffic applications\n- 5+ years remote work experience\n- Experience in both startup and enterprise environments\n- Agile methodologies expert\n\n## Chipta\n\n- 10 years Lead Developer @ Chipta\n- Managed teams of 3-5 developers\n- Built ticketing platform:\n  - Served thousands of events\n  - Processing thousands of tickets/minute\n  - Processed tens of millions in ticket sales\n- High-traffic page performance improvements (40-60%)\n\n### Achievements\n\n- Transformed proof-of-concept into competitive ticketing platform\n- Serving thousands of events\n- Processing high-volume traffic reliably\n\n### Left because\n\nDidn't reach the breakthrough we hoped for.\n\n## Tender-it\n\n- Built complete platform from scratch\n- Agile workflow with non-technical founders\n- Extensive search engine using Elasticsearch\n- Crawling websites, process & import data\n- Built subscription system with recurring payments\n\n### Achievements\n\n- Delivered complete product to requirements of founders\n- Helping companies find appropriate tenders easily\n\n### Left because\n\nCompetitor overtook us.\n\n## TravelBird\n\n- Rapidly growing company\n- Part of innovative mobile team\n- Objective-C + XCode\n- API architect for mobile apps\n\n### Left because\n\nWasn't satisfied with company reorganization.\n\n## 🔧 Technical Expertise\n\n### Expert\n\n- Python (Django, DRF, Channels, Silk, Celery)\n- JavaScript/Node.js (React, MobX, Svelte, Lit, Webcomponents)\n- SQL databases (PostgreSQL, MySQL, SQLite)\n- Linux, DevOps, CI/CD\n- Vercel, Linode, AWS\n- AI-accelerated development (Claude Code, Cursor)\n\n## Work principles\n\n- Agile, Scrum, Kanban\n- Security-first mindset\n- TDD\n- Component-based development\n- UX\n- Code reviewing\n- Documentation\n\n## Concrete Achievements\n\n- Platform scaling\n  - Profiling\n  - Query optimization\n  - Algorithmic optimization\n  - Caching\n  - Load balancing\n  - Auto-scaling servers\n\n- API integrations\n  - Connect DB to third-parties\n  - OAuth integrations for account sharing\n\n- Payment integrations\n  - Mollie\n  - Pay.nl\n  - Adyen\n  - Paypal\n\n- Internationalization\n  - Translations\n  - Location-aware content\n  - Multi-currency support\n\n- Test suite\n  - TDD\n  - Unit tests\n  - Integration tests (with Selenium)\n\n## 👤 Personal Touch (when appropriate)\n\n- Playing guitar since age 12, had a band\n- Got into web development by creating website for band\n- Travel & nature lover\n  - Walked Camino de Santiago\n  - Traveled around Mexico & Ecuador\n\n## Current situation\n\n- Renting out house in NL\n- Traveled south in camper\n- Family/friends across Spain & Portugal\n- Currently working from sister's office in southern Spain\n  - Plenty of space & dedicated workspace\n\n## What I'm Looking For\n\n- Remote work\n- Projects 6-12 months\n- Long-term part-time\n- Innovative agile (startup) environments\n\n## Recent technologies of interest?\n\n- AI-accelerated development (Claude, Cursor)\n- AI / LLM integrations (OpenAI API)\n- Svelte & Tailwind\n- Machine Learning & Data Science\n\n## Recent projects\n\n- Handy House Manual\n- SmartFeed\n- Smart Home integrations (ESP32, Raspi)\n- Portfolio & CV\n\n---\n\n## Common Follow-up Questions\n\n### Challenging projects?\n\n- Scaling (Chipta)\n  - Figuring out what/why slow\n  - How to optimize\n  - Testing optimizations\n\n- Team leadership (Chipta)\n  - Guidance, what someone needs\n  - Estimate someone's skills\n  - Reviewing code & giving feedback\n\n- Developing complete project (Tender-it)\n  - Taking responsibility of full stack\n    - Dealing with problems on all layers of stack\n  - Scrum planning\n  - Coordinating with non-technical founders\n\n- Mobile app development (TravelBird & Chipta)\n  - Learning new technologies\n  - App/Play store review policies\n  - Testing on various devices\n  - Web Sockets for Chipta Scan App\n\n### Why remote work?"\n\n- Love traveling & nature\n- Efficiency & flexibility\n- Stay focussed with Scrum / Agile methodologies\n- Collaboration software (Slack, Teams, Zoom)\n- 5+ years experience\n- I believe in it\n	2
 18	\N	2025-10-22 15:59:20.769+00	\N	Why I quit Chipta	After 10 incredible years at Chipta, I'm proud of what we accomplished - we\nbuilt a robust ticketing platform that scaled to handle thousands of tickets per\nminute and served thousands of events. I led the technical development from\nconcept through significant growth, and we created a solid product that competed\nwell in the market.\n\nHowever, after a decade of dedication, the company hadn't achieved the market\nbreakthrough we'd hoped for. While we had technical success and served our\nclients well, the business faced ongoing challenges in scaling to the next\nlevel. I realized it was time for me to seek new challenges where I could apply\neverything I'd learned in a fresh environment with different growth\nopportunities.\n\nThose 10 years taught me invaluable lessons about building scalable systems,\nleading teams, and the realities of startup growth. I'm excited to bring that\nexperience to a new role where I can make an immediate impact.	2
-19	\N	\N	\N	Intro Talk - EN	# Interview Introduction Cheat Sheet\n\n## Main\n\n- Dutch Senior Full Stack Developer\n- 18+ years of experience\n- currently based in Spain\n- specialize in Python & Node.js ecosystems\n- Strong on both back & frontend\n\n## More\n\n- Lot of experience scaling high-traffic applications\n- 5+ years remote work experience\n- Experience in both startup and enterprise environments\n- Agile methodologies expert\n\n## Chipta\n\n- 10 years Lead Developer @ Chipta\n- Managed teams of 3-5 developers\n- Built ticketing platform:\n  - Served thousands of events\n  - Processing thousands of tickets/minute\n  - Processed tens of millions in ticket sales\n- High-traffic page performance improvements (40-60%)\n\n### Achievements\n\n- Transformed proof-of-concept into competitive ticketing platform\n- Serving thousands of events\n- Processing high-volume traffic reliably\n\n### Left because\n\nDidn't reach the breakthrough we hoped for.\n\n## Tender-it\n\n- Built complete platform from scratch\n- Agile workflow with non-technical founders\n- Extensive search engine using Elasticsearch\n- Crawling websites, process & import data\n- Built subscription system with recurring payments\n\n### Achievements\n\n- Delivered complete product to requirements of founders\n- Helping companies find appropriate tenders easily\n\n### Left because\n\nCompetitor overtook us.\n\n## TravelBird\n\n- Rapidly growing company\n- Part of innovative mobile team\n- Objective-C + XCode\n- API architect for mobile apps\n\n### Left because\n\nWasn't satisfied with company reorganization.\n\n## 🔧 Technical Expertise\n\n### Expert\n\n- Python (Django, DRF, Channels, Silk, Celery)\n- JavaScript/Node.js (React, MobX, Svelte, Lit, Webcomponents)\n- SQL databases (PostgreSQL, MySQL, SQLite)\n- Linux, DevOps, CI/CD\n- Vercel, Linode, AWS\n- AI-accelerated development (Claude Code, Cursor)\n\n## Work principles\n\n- Agile, Scrum, Kanban\n- Security-first mindset\n- TDD\n- Component-based development\n- UX\n- Code reviewing\n- Documentation\n\n## Concrete Achievements\n\n- Platform scaling\n  - Profiling\n  - Query optimization\n  - Algorithmic optimization\n  - Caching\n  - Load balancing\n  - Auto-scaling servers\n\n- API integrations\n  - Connect DB to third-parties\n  - OAuth integrations for account sharing\n\n- Payment integrations\n  - Mollie\n  - Pay.nl\n  - Adyen\n  - Paypal\n\n- Internationalization\n  - Translations\n  - Location-aware content\n  - Multi-currency support\n\n- Test suite\n  - TDD\n  - Unit tests\n  - Integration tests (with Selenium)\n\n## 👤 Personal Touch (when appropriate)\n\n- Playing guitar since age 12, had a band\n- Got into web development by creating website for band\n- Travel & nature lover\n  - Walked Camino de Santiago\n  - Traveled around Mexico & Ecuador\n\n## Current situation\n\n- Renting out house in NL\n- Traveled south in camper\n- Family/friends across Spain & Portugal\n- Currently working from sister's office in southern Spain\n  - Plenty of space & dedicated workspace\n\n## What I'm Looking For\n\n- Remote work\n- Projects 6-12 months\n- Long-term part-time\n- Innovative agile (startup) environments\n\n## Recent technologies of interest?\n\n- AI-accelerated development (Claude, Cursor)\n- AI / LLM integrations (OpenAI API)\n- Svelte & Tailwind\n- Machine Learning & Data Science\n\n## Recent projects\n\n- Handy House Manual\n- SmartFeed\n- Smart Home integrations (ESP32, Raspi)\n- Portfolio & CV\n\n---\n\n## Common Follow-up Questions\n\n### Challenging projects?\n\n- Scaling (Chipta)\n  - Figuring out what/why slow\n  - How to optimize\n  - Testing optimizations\n\n- Team leadership (Chipta)\n  - Guidance, what someone needs\n  - Estimate someone's skills\n  - Reviewing code & giving feedback\n\n- Developing complete project (Tender-it)\n  - Taking responsibility of full stack\n    - Dealing with problems on all layers of stack\n  - Scrum planning\n  - Coordinating with non-technical founders\n\n- Mobile app development (TravelBird & Chipta)\n  - Learning new technologies\n  - App/Play store review policies\n  - Testing on various devices\n  - Web Sockets for Chipta Scan App\n\n### Why remote work?"\n\n- Love traveling & nature\n- Efficiency & flexibility\n- Stay focussed with Scrum / Agile methodologies\n- Collaboration software (Slack, Teams, Zoom)\n- 5+ years experience\n- I believe in it\n	6
-20	\N	\N	\N	Why I quit Chipta	After 10 incredible years at Chipta, I'm proud of what we accomplished - we\nbuilt a robust ticketing platform that scaled to handle thousands of tickets per\nminute and served thousands of events. I led the technical development from\nconcept through significant growth, and we created a solid product that competed\nwell in the market.\n\nHowever, after a decade of dedication, the company hadn't achieved the market\nbreakthrough we'd hoped for. While we had technical success and served our\nclients well, the business faced ongoing challenges in scaling to the next\nlevel. I realized it was time for me to seek new challenges where I could apply\neverything I'd learned in a fresh environment with different growth\nopportunities.\n\nThose 10 years taught me invaluable lessons about building scalable systems,\nleading teams, and the realities of startup growth. I'm excited to bring that\nexperience to a new role where I can make an immediate impact.	6
-21	\N	\N	\N	Intro Talk - EN	# Interview Introduction Cheat Sheet\n\n## Main\n\n- Dutch Senior Full Stack Developer\n- 18+ years of experience\n- currently based in Spain\n- specialize in Python & Node.js ecosystems\n- Strong on both back & frontend\n\n## More\n\n- Lot of experience scaling high-traffic applications\n- 5+ years remote work experience\n- Experience in both startup and enterprise environments\n- Agile methodologies expert\n\n## Chipta\n\n- 10 years Lead Developer @ Chipta\n- Managed teams of 3-5 developers\n- Built ticketing platform:\n  - Served thousands of events\n  - Processing thousands of tickets/minute\n  - Processed tens of millions in ticket sales\n- High-traffic page performance improvements (40-60%)\n\n### Achievements\n\n- Transformed proof-of-concept into competitive ticketing platform\n- Serving thousands of events\n- Processing high-volume traffic reliably\n\n### Left because\n\nDidn't reach the breakthrough we hoped for.\n\n## Tender-it\n\n- Built complete platform from scratch\n- Agile workflow with non-technical founders\n- Extensive search engine using Elasticsearch\n- Crawling websites, process & import data\n- Built subscription system with recurring payments\n\n### Achievements\n\n- Delivered complete product to requirements of founders\n- Helping companies find appropriate tenders easily\n\n### Left because\n\nCompetitor overtook us.\n\n## TravelBird\n\n- Rapidly growing company\n- Part of innovative mobile team\n- Objective-C + XCode\n- API architect for mobile apps\n\n### Left because\n\nWasn't satisfied with company reorganization.\n\n## 🔧 Technical Expertise\n\n### Expert\n\n- Python (Django, DRF, Channels, Silk, Celery)\n- JavaScript/Node.js (React, MobX, Svelte, Lit, Webcomponents)\n- SQL databases (PostgreSQL, MySQL, SQLite)\n- Linux, DevOps, CI/CD\n- Vercel, Linode, AWS\n- AI-accelerated development (Claude Code, Cursor)\n\n## Work principles\n\n- Agile, Scrum, Kanban\n- Security-first mindset\n- TDD\n- Component-based development\n- UX\n- Code reviewing\n- Documentation\n\n## Concrete Achievements\n\n- Platform scaling\n  - Profiling\n  - Query optimization\n  - Algorithmic optimization\n  - Caching\n  - Load balancing\n  - Auto-scaling servers\n\n- API integrations\n  - Connect DB to third-parties\n  - OAuth integrations for account sharing\n\n- Payment integrations\n  - Mollie\n  - Pay.nl\n  - Adyen\n  - Paypal\n\n- Internationalization\n  - Translations\n  - Location-aware content\n  - Multi-currency support\n\n- Test suite\n  - TDD\n  - Unit tests\n  - Integration tests (with Selenium)\n\n## 👤 Personal Touch (when appropriate)\n\n- Playing guitar since age 12, had a band\n- Got into web development by creating website for band\n- Travel & nature lover\n  - Walked Camino de Santiago\n  - Traveled around Mexico & Ecuador\n\n## Current situation\n\n- Renting out house in NL\n- Traveled south in camper\n- Family/friends across Spain & Portugal\n- Currently working from sister's office in southern Spain\n  - Plenty of space & dedicated workspace\n\n## What I'm Looking For\n\n- Remote work\n- Projects 6-12 months\n- Long-term part-time\n- Innovative agile (startup) environments\n\n## Recent technologies of interest?\n\n- AI-accelerated development (Claude, Cursor)\n- AI / LLM integrations (OpenAI API)\n- Svelte & Tailwind\n- Machine Learning & Data Science\n\n## Recent projects\n\n- Handy House Manual\n- SmartFeed\n- Smart Home integrations (ESP32, Raspi)\n- Portfolio & CV\n\n---\n\n## Common Follow-up Questions\n\n### Challenging projects?\n\n- Scaling (Chipta)\n  - Figuring out what/why slow\n  - How to optimize\n  - Testing optimizations\n\n- Team leadership (Chipta)\n  - Guidance, what someone needs\n  - Estimate someone's skills\n  - Reviewing code & giving feedback\n\n- Developing complete project (Tender-it)\n  - Taking responsibility of full stack\n    - Dealing with problems on all layers of stack\n  - Scrum planning\n  - Coordinating with non-technical founders\n\n- Mobile app development (TravelBird & Chipta)\n  - Learning new technologies\n  - App/Play store review policies\n  - Testing on various devices\n  - Web Sockets for Chipta Scan App\n\n### Why remote work?"\n\n- Love traveling & nature\n- Efficiency & flexibility\n- Stay focussed with Scrum / Agile methodologies\n- Collaboration software (Slack, Teams, Zoom)\n- 5+ years experience\n- I believe in it\n	10
-22	\N	\N	\N	Why I quit Chipta	After 10 incredible years at Chipta, I'm proud of what we accomplished - we\nbuilt a robust ticketing platform that scaled to handle thousands of tickets per\nminute and served thousands of events. I led the technical development from\nconcept through significant growth, and we created a solid product that competed\nwell in the market.\n\nHowever, after a decade of dedication, the company hadn't achieved the market\nbreakthrough we'd hoped for. While we had technical success and served our\nclients well, the business faced ongoing challenges in scaling to the next\nlevel. I realized it was time for me to seek new challenges where I could apply\neverything I'd learned in a fresh environment with different growth\nopportunities.\n\nThose 10 years taught me invaluable lessons about building scalable systems,\nleading teams, and the realities of startup growth. I'm excited to bring that\nexperience to a new role where I can make an immediate impact.	10
-23	\N	\N	\N	Intro Talk - EN	# Interview Introduction Cheat Sheet\n\n## Main\n\n- Dutch Senior Full Stack Developer\n- 18+ years of experience\n- currently based in Spain\n- specialize in Python & Node.js ecosystems\n- Strong on both back & frontend\n\n## More\n\n- Lot of experience scaling high-traffic applications\n- 5+ years remote work experience\n- Experience in both startup and enterprise environments\n- Agile methodologies expert\n\n## Chipta\n\n- 10 years Lead Developer @ Chipta\n- Managed teams of 3-5 developers\n- Built ticketing platform:\n  - Served thousands of events\n  - Processing thousands of tickets/minute\n  - Processed tens of millions in ticket sales\n- High-traffic page performance improvements (40-60%)\n\n### Achievements\n\n- Transformed proof-of-concept into competitive ticketing platform\n- Serving thousands of events\n- Processing high-volume traffic reliably\n\n### Left because\n\nDidn't reach the breakthrough we hoped for.\n\n## Tender-it\n\n- Built complete platform from scratch\n- Agile workflow with non-technical founders\n- Extensive search engine using Elasticsearch\n- Crawling websites, process & import data\n- Built subscription system with recurring payments\n\n### Achievements\n\n- Delivered complete product to requirements of founders\n- Helping companies find appropriate tenders easily\n\n### Left because\n\nCompetitor overtook us.\n\n## TravelBird\n\n- Rapidly growing company\n- Part of innovative mobile team\n- Objective-C + XCode\n- API architect for mobile apps\n\n### Left because\n\nWasn't satisfied with company reorganization.\n\n## 🔧 Technical Expertise\n\n### Expert\n\n- Python (Django, DRF, Channels, Silk, Celery)\n- JavaScript/Node.js (React, MobX, Svelte, Lit, Webcomponents)\n- SQL databases (PostgreSQL, MySQL, SQLite)\n- Linux, DevOps, CI/CD\n- Vercel, Linode, AWS\n- AI-accelerated development (Claude Code, Cursor)\n\n## Work principles\n\n- Agile, Scrum, Kanban\n- Security-first mindset\n- TDD\n- Component-based development\n- UX\n- Code reviewing\n- Documentation\n\n## Concrete Achievements\n\n- Platform scaling\n  - Profiling\n  - Query optimization\n  - Algorithmic optimization\n  - Caching\n  - Load balancing\n  - Auto-scaling servers\n\n- API integrations\n  - Connect DB to third-parties\n  - OAuth integrations for account sharing\n\n- Payment integrations\n  - Mollie\n  - Pay.nl\n  - Adyen\n  - Paypal\n\n- Internationalization\n  - Translations\n  - Location-aware content\n  - Multi-currency support\n\n- Test suite\n  - TDD\n  - Unit tests\n  - Integration tests (with Selenium)\n\n## 👤 Personal Touch (when appropriate)\n\n- Playing guitar since age 12, had a band\n- Got into web development by creating website for band\n- Travel & nature lover\n  - Walked Camino de Santiago\n  - Traveled around Mexico & Ecuador\n\n## Current situation\n\n- Renting out house in NL\n- Traveled south in camper\n- Family/friends across Spain & Portugal\n- Currently working from sister's office in southern Spain\n  - Plenty of space & dedicated workspace\n\n## What I'm Looking For\n\n- Remote work\n- Projects 6-12 months\n- Long-term part-time\n- Innovative agile (startup) environments\n\n## Recent technologies of interest?\n\n- AI-accelerated development (Claude, Cursor)\n- AI / LLM integrations (OpenAI API)\n- Svelte & Tailwind\n- Machine Learning & Data Science\n\n## Recent projects\n\n- Handy House Manual\n- SmartFeed\n- Smart Home integrations (ESP32, Raspi)\n- Portfolio & CV\n\n---\n\n## Common Follow-up Questions\n\n### Challenging projects?\n\n- Scaling (Chipta)\n  - Figuring out what/why slow\n  - How to optimize\n  - Testing optimizations\n\n- Team leadership (Chipta)\n  - Guidance, what someone needs\n  - Estimate someone's skills\n  - Reviewing code & giving feedback\n\n- Developing complete project (Tender-it)\n  - Taking responsibility of full stack\n    - Dealing with problems on all layers of stack\n  - Scrum planning\n  - Coordinating with non-technical founders\n\n- Mobile app development (TravelBird & Chipta)\n  - Learning new technologies\n  - App/Play store review policies\n  - Testing on various devices\n  - Web Sockets for Chipta Scan App\n\n### Why remote work?"\n\n- Love traveling & nature\n- Efficiency & flexibility\n- Stay focussed with Scrum / Agile methodologies\n- Collaboration software (Slack, Teams, Zoom)\n- 5+ years experience\n- I believe in it\n	14
-24	\N	\N	\N	Why I quit Chipta	After 10 incredible years at Chipta, I'm proud of what we accomplished - we\nbuilt a robust ticketing platform that scaled to handle thousands of tickets per\nminute and served thousands of events. I led the technical development from\nconcept through significant growth, and we created a solid product that competed\nwell in the market.\n\nHowever, after a decade of dedication, the company hadn't achieved the market\nbreakthrough we'd hoped for. While we had technical success and served our\nclients well, the business faced ongoing challenges in scaling to the next\nlevel. I realized it was time for me to seek new challenges where I could apply\neverything I'd learned in a fresh environment with different growth\nopportunities.\n\nThose 10 years taught me invaluable lessons about building scalable systems,\nleading teams, and the realities of startup growth. I'm excited to bring that\nexperience to a new role where I can make an immediate impact.	14
 \.
 
 
@@ -6206,7 +6191,23 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 4837	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 20:28:30.554+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	profiles	af36bad2-397d-4475-be6c-575b2ed4f450	http://localhost:8055
 4838	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 20:28:35.419+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	profiles	f6a7ec7f-abdb-4132-bcfc-c453e553e5f5	http://localhost:8055
 4839	login	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 20:29:08.129+00	172.18.0.5	node	directus_users	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N
+4841	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 22:01:35.703+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	55	http://localhost:8055
 4840	login	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 21:45:50.319+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_users	157238bb-6930-4f26-be9c-8b31a9e11ab8	http://localhost:8055
+4842	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 22:01:35.712+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	60	http://localhost:8055
+4843	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 22:01:35.717+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	56	http://localhost:8055
+4844	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 22:01:35.725+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	62	http://localhost:8055
+4845	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 22:01:35.73+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	57	http://localhost:8055
+4846	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 22:01:35.735+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	58	http://localhost:8055
+4847	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 22:01:35.741+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	59	http://localhost:8055
+4848	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 22:01:35.747+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	132	http://localhost:8055
+4849	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 22:08:20.86+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	profiles	6	http://localhost:8055
+4850	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 22:08:30.893+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	profiles	10	http://localhost:8055
+4851	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 22:08:40.047+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	profiles	78	http://localhost:8055
+4852	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 22:08:50.035+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	profiles	70	http://localhost:8055
+4853	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 22:08:50.036+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	profiles	62	http://localhost:8055
+4854	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 22:08:59.861+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	profiles	46	http://localhost:8055
+4855	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 22:08:59.862+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	profiles	54	http://localhost:8055
+4856	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 22:09:11.915+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	profiles	14	http://localhost:8055
 \.
 
 
@@ -6271,13 +6272,6 @@ COPY public.directus_extensions (enabled, id, folder, source, bundle) FROM stdin
 --
 
 COPY public.directus_fields (id, collection, field, special, interface, options, display, display_options, readonly, hidden, sort, width, translations, note, conditions, required, "group", validation, validation_message) FROM stdin;
-60	highlights	profile	m2o	select-dropdown-m2o	\N	related-values	{"template":"{{name}}"}	f	f	3	half	\N	\N	\N	f	\N	\N	\N
-62	highlights	text	\N	input	\N	\N	\N	f	f	4	full	\N	\N	\N	t	\N	\N	\N
-57	highlights	sort	\N	input	\N	\N	\N	f	t	5	full	\N	\N	\N	f	\N	\N	\N
-58	highlights	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	6	half	\N	\N	\N	f	\N	\N	\N
-55	highlights	id	integer	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N
-56	highlights	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	2	half	\N	\N	\N	f	\N	\N	\N
-59	highlights	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	7	half	\N	\N	\N	f	\N	\N	\N
 86	tech_skill_types	id	\N	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N
 87	tech_skill_types	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	2	full	\N	\N	\N	f	\N	\N	\N
 88	tech_skill_types	sort	\N	input	\N	\N	\N	f	t	3	full	\N	\N	\N	f	\N	\N	\N
@@ -6327,6 +6321,10 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 174	cheat_sheets	profile	m2o	select-dropdown-m2o	\N	related-values	{"template":"{{name}}"}	f	f	5	full	\N	\N	\N	f	\N	\N	\N
 168	cheat_sheets	id	integer	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N
 170	cheat_sheets	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	3	half	\N	\N	\N	f	\N	\N	\N
+62	highlights	text	\N	input	\N	\N	\N	f	f	4	full	\N	\N	\N	t	\N	\N	\N
+57	highlights	sort	\N	input	\N	\N	\N	f	t	5	full	\N	\N	\N	f	\N	\N	\N
+58	highlights	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	6	half	\N	\N	\N	f	\N	\N	\N
+59	highlights	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	7	half	\N	\N	\N	f	\N	\N	\N
 95	soft_skills	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	3	half	\N	\N	\N	f	\N	\N	\N
 103	dev_methodologies	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	3	half	\N	\N	\N	f	\N	\N	\N
 124	work_experience_achievements	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	5	half	\N	\N	\N	f	\N	\N	\N
@@ -6358,7 +6356,6 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 131	work_experience_achievements	fa_icon	\N	input	\N	\N	\N	f	f	8	half	\N	Font Awesome icon name	\N	f	\N	\N	\N
 108	dev_methodologies	profile	m2o	select-dropdown-m2o	{"template":null}	related-values	{"template":"{{name}}"}	f	f	2	half	\N	\N	\N	f	\N	\N	\N
 127	work_experience_achievements	description	\N	input	\N	\N	\N	f	f	9	full	\N	\N	\N	f	\N	\N	\N
-132	highlights	fa_icon	\N	input	\N	\N	\N	f	f	8	full	\N	Font Awesome icon name	\N	f	\N	\N	\N
 133	work_experience_achievements	tags	cast-json	tags	{"whitespace":"-","capitalization":"lowercase","alphabetize":true}	\N	\N	f	f	10	full	\N	\N	\N	f	\N	\N	\N
 121	work_experience_achievements	id	integer	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N
 128	work_experience_achievements	work_experience	m2o	select-dropdown-m2o	\N	related-values	{"template":"{{name}}"}	f	f	2	half	\N	\N	\N	f	\N	\N	\N
@@ -6525,6 +6522,10 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 91	tech_skill_types	name	\N	input	\N	\N	\N	f	f	6	half	\N	\N	\N	f	\N	\N	\N
 318	tech_skill_types	slug	\N	input	\N	\N	\N	f	f	7	half	\N	\N	\N	f	\N	\N	\N
 319	tech_skills	years_experience2	\N	\N	\N	\N	\N	f	f	\N	full	\N	\N	\N	f	\N	\N	\N
+55	highlights	id	integer	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N
+60	highlights	profile	m2o	select-dropdown-m2o	\N	related-values	{"template":"{{name}}"}	f	f	2	half	\N	\N	\N	f	\N	\N	\N
+56	highlights	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	3	half	\N	\N	\N	f	\N	\N	\N
+132	highlights	fa_icon	\N	input	\N	\N	\N	f	f	8	full	\N	Font Awesome icon name	\N	f	\N	\N	\N
 \.
 
 
@@ -6713,26 +6714,28 @@ abf8a154-5b1c-4a46-ac9c-7300570f4f17	$t:public_label	public	$t:public_descriptio
 --
 
 COPY public.directus_presets (id, bookmark, "user", role, collection, search, layout, layout_query, layout_options, refresh_interval, filter, icon, color) FROM stdin;
-11	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	work_experience_achievements	\N	\N	{"tabular":{"fields":["title","description","work_experience","status"],"page":1}}	{"tabular":{"widths":{"title":213.5999755859375,"description":388,"work_experience":162.2000732421875,"status":90}}}	\N	\N	bookmark	\N
 16	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	cheat_sheets	\N	\N	{"tabular":{"fields":["title","profile"],"page":1}}	{"tabular":{"widths":{"title":549.7999877929688,"profile":277.00006103515625}}}	\N	\N	bookmark	\N
 8	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	highlights	\N	\N	{"tabular":{"fields":["text","fa_icon","status","profile"],"page":1}}	{"tabular":{"widths":{"text":584.800048828125,"fa_icon":99.4000244140625,"status":91,"profile":121.7999267578125}}}	\N	\N	bookmark	\N
-21	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	references	\N	\N	{"tabular":{"page":1,"fields":["author","author_position","text","status","profile"]}}	{"tabular":{"widths":{"author":149.6666259765625,"author_position":211,"text":398.6666259765625,"status":98,"profile":124.6666259765625}}}	\N	\N	bookmark	\N
 17	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	project_stories	\N	\N	{"tabular":{"page":1,"fields":["title","category","profile"]}}	{"tabular":{"widths":{"title":489.20001220703125,"category":226.00006103515625,"profile":125.199951171875},"spacing":"cozy"}}	\N	\N	bookmark	\N
 4	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	languages	\N	\N	{"tabular":{"page":1,"fields":["name","language_code","proficiency","status","profile"]}}	{"tabular":{"widths":{"name":287.60003662109375,"language_code":165.20001220703125,"proficiency":176.4000244140625,"status":96.4000244140625,"profile":132.39990234375}}}	\N	\N	bookmark	\N
 18	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	side_projects	\N	\N	{"tabular":{"fields":["name","stars","start_date","end_date","status","profile"],"page":1}}	{"tabular":{"widths":{"name":326.33331298828125,"stars":90.66668701171875,"start_date":182.3333740234375,"end_date":169.666748046875,"status":90.6666259765625,"profile":121.3333740234375}}}	\N	\N	bookmark	\N
 10	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	soft_skills	\N	\N	{"tabular":{"page":1,"fields":["name","status","profile"]}}	{"tabular":{"widths":{"name":587,"status":98.5999755859375,"profile":125.199951171875}}}	\N	\N	bookmark	\N
 7	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	tech_skill_categories	\N	\N	{"tabular":{"fields":["name","status","profile"],"page":1}}	{"tabular":{"widths":{"name":623.2000122070312,"status":98.6666259765625,"profile":128.800048828125}}}	\N	\N	bookmark	\N
 22	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	education	\N	\N	{"tabular":{"page":1,"fields":["institution","study_type","area","location","graduation_year","status","profile"]}}	{"tabular":{"widths":{"institution":229.20001220703125,"study_type":211.73333740234375,"area":214.2667236328125,"location":144.5999755859375,"graduation_year":160,"status":91.4666748046875,"profile":123.13330078125}}}	\N	\N	bookmark	\N
-19	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	side_project_achievements	\N	\N	{"tabular":{"page":1}}	\N	\N	\N	bookmark	\N
 12	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	dev_methodologies	\N	\N	{"tabular":{"page":1,"fields":["name","status","profile"]}}	{"tabular":{"widths":{"name":591,"status":94.5999755859375,"profile":132.60003662109375}}}	\N	\N	bookmark	\N
-25	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	applications	\N	\N	{"tabular":{"fields":["vacancy","profile","status"]}}	{"tabular":{"widths":{"vacancy":746.9999389648438,"profile":140.33331298828125,"status":106}}}	\N	\N	bookmark	\N
 9	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	tech_skill_types	\N	\N	{"tabular":{"fields":["name","slug","status"],"page":1}}	{"tabular":{"widths":{"name":520.3333129882812,"slug":302,"status":118}}}	\N	\N	bookmark	\N
 6	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	tech_skills	\N	tabular	{"tabular":{"fields":["name","category","years_experience","level","status"],"page":1}}	{"tabular":{"widths":{"name":273,"category":183,"years_experience":165.66668701171875,"level":119.2000732421875,"status":96},"align":{"status":"left"}}}	\N	\N	bookmark	\N
-20	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	salary_expectations	\N	tabular	{"tabular":{"fields":["job_title","employment_type","work_arrangement","company_type","region","hourly_rate","daily_rate","month_salary","year_salary"],"page":1}}	{"tabular":{"widths":{"job_title":189,"employment_type":94,"work_arrangement":90,"company_type":109,"region":140.66668701171875,"hourly_rate":126,"daily_rate":114.6666259765625,"month_salary":137,"year_salary":123.3333740234375},"spacing":"cozy"},"kanban":{"groupOrder":{"groupField":"company_type","sortMap":{"startup":0,"scaleup":1,"agency":2,"enterprise":3,"big_tech":4}}}}	\N	\N	bookmark	\N
 1	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	work_experiences	\N	\N	{"tabular":{"fields":["name","position","location","description","start_date","end_date","status"],"page":1}}	{"tabular":{"widths":{"name":119.66665649414062,"position":264,"location":136.66668701171875,"description":223.3333740234375,"start_date":119.666748046875,"end_date":120,"status":91}}}	\N	\N	bookmark	\N
+26	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	work_experience_technologies	\N	\N	{"tabular":{"fields":["name","work_experience","status"]}}	{"tabular":{"widths":{"name":160,"work_experience":217.33331298828125,"status":127.33331298828125}}}	\N	\N	bookmark	\N
 23	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	profile_versions	\N	\N	{"tabular":{"page":1,"fields":["name","description","status","profile"]}}	{"tabular":{"widths":{"name":274.199951171875,"description":384.4666748046875,"status":107.199951171875,"profile":146.7999267578125}}}	\N	\N	bookmark	\N
+25	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	applications	\N	\N	{"tabular":{"fields":["vacancy","profile","status"],"page":1}}	{"tabular":{"widths":{"vacancy":746.9999389648438,"profile":140.33331298828125,"status":106}}}	\N	\N	bookmark	\N
 24	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	vacancies	\N	\N	{"tabular":{"page":1,"fields":["title","job_poster","import_source","status"]}}	{"tabular":{"widths":{"title":426.33331298828125,"job_poster":234.66668701171875,"import_source":160,"status":104}}}	\N	\N	bookmark	\N
 14	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	application_questions	\N	\N	{"tabular":{"page":1,"fields":["title","question"]}}	{"tabular":{"widths":{"title":316.4000244140625,"question":500.199951171875}}}	\N	\N	bookmark	\N
+11	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	work_experience_achievements	\N	\N	{"tabular":{"fields":["title","description","work_experience","status"],"page":1}}	{"tabular":{"widths":{"title":213.5999755859375,"description":388,"work_experience":162.2000732421875,"status":90}}}	\N	\N	bookmark	\N
+21	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	references	\N	\N	{"tabular":{"page":1,"fields":["author","author_position","text","status","profile"]}}	{"tabular":{"widths":{"author":149.6666259765625,"author_position":211,"text":398.6666259765625,"status":98,"profile":124.6666259765625}}}	\N	\N	bookmark	\N
+19	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	side_project_achievements	\N	\N	{"tabular":{"page":1}}	\N	\N	\N	bookmark	\N
+27	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	side_project_technologies	\N	\N	{"tabular":{"page":1}}	\N	\N	\N	bookmark	\N
+20	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	salary_expectations	\N	tabular	{"tabular":{"fields":["job_title","employment_type","work_arrangement","company_type","region","hourly_rate","daily_rate","month_salary","year_salary"],"page":1}}	{"tabular":{"widths":{"job_title":189,"employment_type":94,"work_arrangement":90,"company_type":109,"region":140.66668701171875,"hourly_rate":126,"daily_rate":114.6666259765625,"month_salary":137,"year_salary":123.3333740234375},"spacing":"cozy"},"kanban":{"groupOrder":{"groupField":"company_type","sortMap":{"startup":0,"scaleup":1,"agency":2,"enterprise":3,"big_tech":4}}}}	\N	\N	bookmark	\N
 3	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	profiles	\N	\N	{"tabular":{"page":1,"fields":["name","title","core_stack","subtitle"]}}	{"tabular":{"widths":{"name":126.66665649414062,"title":231.66668701171875,"core_stack":278.3333740234375,"subtitle":343.3333740234375}}}	\N	\N	bookmark	\N
 \.
 
@@ -6743,31 +6746,31 @@ COPY public.directus_presets (id, bookmark, "user", role, collection, search, la
 
 COPY public.directus_relations (id, many_collection, many_field, one_collection, one_field, one_collection_field, one_allowed_collections, junction_field, sort_field, one_deselect_action) FROM stdin;
 1	work_experiences	logo	directus_files	\N	\N	\N	\N	\N	nullify
-3	languages	profile	profiles	languages	\N	\N	\N	\N	nullify
 5	profiles	profile_picture	directus_files	\N	\N	\N	\N	\N	nullify
-16	application_questions	profile	profiles	application_questions	\N	\N	\N	\N	nullify
-10	tech_skills	category	tech_skill_categories	tech_skills	\N	\N	\N	sort	nullify
-15	work_experience_achievements	work_experience	work_experiences	achievements	\N	\N	\N	sort	nullify
-17	work_experience_technologies	work_experience	work_experiences	work_experience_technologies	\N	\N	\N	sort	nullify
-14	work_experiences	profile	profiles	work_experiences	\N	\N	\N	sort	nullify
-6	highlights	profile	profiles	highlights	\N	\N	\N	sort	nullify
-21	tech_skill_categories	profile	profiles	tech_skill_categories	\N	\N	\N	sort	nullify
 12	soft_skills	profile	profiles	soft_skills	\N	\N	\N	sort	nullify
 13	dev_methodologies	profile	profiles	dev_methodologies	\N	\N	\N	sort	nullify
-18	cheat_sheets	profile	profiles	cheat_sheets	\N	\N	\N	sort	nullify
-20	project_stories	profile	profiles	project_stories	\N	\N	\N	sort	nullify
-22	education	profile	profiles	education	\N	\N	\N	sort	nullify
 23	education	logo	directus_files	\N	\N	\N	\N	\N	nullify
-25	side_projects	profile	profiles	side_projects	\N	\N	\N	sort	nullify
-26	side_project_achievements	side_project	side_projects	achievements	\N	\N	\N	sort	nullify
-27	side_project_technologies	side_project	side_projects	technologies	\N	\N	\N	sort	nullify
-28	references	profile	profiles	references	\N	\N	\N	\N	nullify
 11	tech_skills	tech_type	tech_skill_types	\N	\N	\N	\N	\N	nullify
-29	profile_versions	profile	profiles	versions	\N	\N	\N	\N	nullify
 30	profile_versions	extends_from	profile_versions	\N	\N	\N	\N	\N	nullify
 31	applications	vacancy	vacancies	\N	\N	\N	\N	\N	nullify
 32	applications	profile	profiles	applications	\N	\N	\N	\N	nullify
 33	applications	cv_file_sent	directus_files	\N	\N	\N	\N	\N	nullify
+10	tech_skills	category	tech_skill_categories	tech_skills	\N	\N	\N	sort	nullify
+21	tech_skill_categories	profile	profiles	tech_skill_categories	\N	\N	\N	sort	nullify
+6	highlights	profile	profiles	highlights	\N	\N	\N	sort	nullify
+29	profile_versions	profile	profiles	versions	\N	\N	\N	\N	nullify
+15	work_experience_achievements	work_experience	work_experiences	achievements	\N	\N	\N	sort	nullify
+17	work_experience_technologies	work_experience	work_experiences	work_experience_technologies	\N	\N	\N	sort	nullify
+14	work_experiences	profile	profiles	work_experiences	\N	\N	\N	sort	nullify
+25	side_projects	profile	profiles	side_projects	\N	\N	\N	sort	nullify
+26	side_project_achievements	side_project	side_projects	achievements	\N	\N	\N	sort	nullify
+27	side_project_technologies	side_project	side_projects	technologies	\N	\N	\N	sort	nullify
+22	education	profile	profiles	education	\N	\N	\N	sort	nullify
+3	languages	profile	profiles	languages	\N	\N	\N	\N	nullify
+28	references	profile	profiles	references	\N	\N	\N	\N	nullify
+18	cheat_sheets	profile	profiles	cheat_sheets	\N	\N	\N	sort	nullify
+16	application_questions	profile	profiles	application_questions	\N	\N	\N	\N	nullify
+20	project_stories	profile	profiles	project_stories	\N	\N	\N	sort	nullify
 \.
 
 
@@ -6776,6 +6779,14 @@ COPY public.directus_relations (id, many_collection, many_field, one_collection,
 --
 
 COPY public.directus_revisions (id, activity, collection, item, data, delta, parent, version) FROM stdin;
+4737	4841	directus_fields	55	{"id":55,"collection":"highlights","field":"id","special":["integer"],"interface":"input","options":null,"display":null,"display_options":null,"readonly":true,"hidden":true,"sort":1,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"highlights","field":"id","sort":1,"group":null}	\N	\N
+4738	4842	directus_fields	60	{"id":60,"collection":"highlights","field":"profile","special":["m2o"],"interface":"select-dropdown-m2o","options":null,"display":"related-values","display_options":{"template":"{{name}}"},"readonly":false,"hidden":false,"sort":2,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"highlights","field":"profile","sort":2,"group":null}	\N	\N
+4739	4843	directus_fields	56	{"id":56,"collection":"highlights","field":"status","special":null,"interface":"select-dropdown","options":{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]},"display":"labels","display_options":{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]},"readonly":false,"hidden":false,"sort":3,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"highlights","field":"status","sort":3,"group":null}	\N	\N
+4740	4844	directus_fields	62	{"id":62,"collection":"highlights","field":"text","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":4,"width":"full","translations":null,"note":null,"conditions":null,"required":true,"group":null,"validation":null,"validation_message":null}	{"collection":"highlights","field":"text","sort":4,"group":null}	\N	\N
+4741	4845	directus_fields	57	{"id":57,"collection":"highlights","field":"sort","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":true,"sort":5,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"highlights","field":"sort","sort":5,"group":null}	\N	\N
+4742	4846	directus_fields	58	{"id":58,"collection":"highlights","field":"date_created","special":["date-created"],"interface":"datetime","options":null,"display":"datetime","display_options":{"relative":true},"readonly":true,"hidden":true,"sort":6,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"highlights","field":"date_created","sort":6,"group":null}	\N	\N
+4743	4847	directus_fields	59	{"id":59,"collection":"highlights","field":"date_updated","special":["date-updated"],"interface":"datetime","options":null,"display":"datetime","display_options":{"relative":true},"readonly":true,"hidden":true,"sort":7,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"highlights","field":"date_updated","sort":7,"group":null}	\N	\N
+4744	4848	directus_fields	132	{"id":132,"collection":"highlights","field":"fa_icon","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":8,"width":"full","translations":null,"note":"Font Awesome icon name","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"highlights","field":"fa_icon","sort":8,"group":null}	\N	\N
 \.
 
 
@@ -6800,8 +6811,9 @@ cEo2N4QijcSWPQrqqi729OL0xVyHpvfRN_4FAZeFT4IdvEaSgp_iMr3f1yfCqrip	157238bb-6930-4
 xvu8kNst20zp0P1S70SHTij9ct7Mv3P3cg9wFDygm0Nv6yzi0-q32VPeMPRHQUSq	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-09 20:07:49.931+00	172.18.0.2	node	\N	\N	\N
 VRoO6ns6OjSnroBRxszQc4D4_ZN-hNTopfjA8rQEcw8EL0_BICekHQF8kYxHdmP8	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-09 20:10:44.651+00	172.18.0.5	node	\N	\N	\N
 sZe7yh0vBp7Q0rjtS8gUPwFc6JQhHXtiIhMZaV1Nfae3T7hxMuLnEfVvXebVte1q	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-09 20:26:00.882+00	172.18.0.5	node	\N	\N	\N
-OuBEyzyiaFdtU_DIT9EXfjt8rLMKwq_bE0bwK7EKu3-P_0MybB2I3hLhVlChVMT4	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 21:57:20.919+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	3LiEsuf4_c797xF8rNeRE5TFga0YZcYvepyBCUqGsH2AyeLUiGaJiwcM2ERoKiA0
-3LiEsuf4_c797xF8rNeRE5TFga0YZcYvepyBCUqGsH2AyeLUiGaJiwcM2ERoKiA0	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-03 21:57:10.919+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
+Xx2k0xIZRTkC4AuvNHpk2KA3VwgAtQsCq6Dr8i8QHvZ1rERGinCThnVNZmHQytJB	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 22:09:03.487+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	2t4H9VnCQCfpcQ-XRusPn3Jop0IosZFnGb9n-DoazQnshfoYvwhpSrIF_8TniITe
+2t4H9VnCQCfpcQ-XRusPn3Jop0IosZFnGb9n-DoazQnshfoYvwhpSrIF_8TniITe	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 22:09:11.773+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	PuGzweaw3pLpV4MTLx64vhysFnf66Cr1onMuZoJAMqbyAqvFTU_0N9xtiTMDJ-ku
+PuGzweaw3pLpV4MTLx64vhysFnf66Cr1onMuZoJAMqbyAqvFTU_0N9xtiTMDJ-ku	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-03 22:09:01.773+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
 \.
 
 
@@ -6838,7 +6850,7 @@ c530a32f-84cb-4ab9-8a61-7a12a5bcb7e6	en-US	draft	Draft
 --
 
 COPY public.directus_users (id, first_name, last_name, email, password, location, title, description, tags, avatar, language, tfa_secret, status, role, token, last_access, last_page, provider, external_identifier, auth_data, email_notifications, appearance, theme_dark, theme_light, theme_light_overrides, theme_dark_overrides, text_direction) FROM stdin;
-157238bb-6930-4f26-be9c-8b31a9e11ab8	Rik	Wanders	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-11-02 21:57:10.923+00	/settings/data-model	default	\N	\N	t	\N	\N	\N	\N	\N	auto
+157238bb-6930-4f26-be9c-8b31a9e11ab8	Rik	Wanders	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-11-02 22:09:01.776+00	/content/profiles	default	\N	\N	t	\N	\N	\N	\N	\N	auto
 \.
 
 
@@ -6867,18 +6879,6 @@ COPY public.education (id, status, sort, date_created, date_updated, institution
 1	published	1	2025-10-27 15:28:42.781+00	2025-10-30 11:36:24.852+00	Nova College	Hoofddorp, NL	https://www.novacollege.nl/	Software Development	Dutch Vocational Education (MBO)	2007	2004-08-01	2007-06-15	2	Comprehensive 4-year program including foundational computer science, algorithms, and data structures.	b552c378-ca18-45d8-a473-b653de8d7dee	\N
 2	published	2	2025-10-27 15:35:50.238+00	2025-10-30 11:55:42.881+00	Mediacollege Amsterdam	Amsterdam, NL	https://www.ma-web.nl/	Audio technician	Dutch Vocational Education (MBO)	\N	2003-08-03	2004-06-11	2	I liked many aspects of the field (music & tech), but ultimately decided that it wasn't something I wanted to pursue in.	c3517da2-cebc-49c1-a070-b823d77a9fae	["cv"]
 3	published	3	2025-10-27 15:37:50.475+00	2025-10-30 11:57:10.446+00	Kaj Munk College	Hoofddorp, NL	https://kajmunk.nl/	Pre-vocational education	Dutch VMBO-t education	2003	1999-08-01	2003-06-13	2	Educated in topics like maths, physics, chemistry, biology, geography, economy, history, social studies, Dutch & English.	2de99240-8d94-4fb8-948d-5ac4fc236321	["cv"]
-5	published	1	\N	\N	Nova College	Hoofddorp, NL	https://www.novacollege.nl/	Software Development	Dutch Vocational Education (MBO)	2007	2004-08-01	2007-06-15	6	Comprehensive 4-year program including foundational computer science, algorithms, and data structures.	\N	null
-6	published	2	\N	\N	Mediacollege Amsterdam	Amsterdam, NL	https://www.ma-web.nl/	Audio technician	Dutch Vocational Education (MBO)	\N	2003-08-03	2004-06-11	6	I liked many aspects of the field (music & tech), but ultimately decided that it wasn't something I wanted to pursue in.	\N	["cv"]
-7	published	3	\N	\N	Kaj Munk College	Hoofddorp, NL	https://kajmunk.nl/	Pre-vocational education	Dutch VMBO-t education	2003	1999-08-01	2003-06-13	6	Educated in topics like maths, physics, chemistry, biology, geography, economy, history, social studies, Dutch & English.	\N	["cv"]
-8	published	4	\N	\N	Valkenburgschool	Heemstede, NL	\N	Primary education	Dutch primary education	1999	1991-08-04	1999-06-04	6	Educated in core subjects like Dutch, maths, science, history, geography, gym & creative activities (art, music).	\N	["cv"]
-9	published	1	\N	\N	Nova College	Hoofddorp, NL	https://www.novacollege.nl/	Software Development	Dutch Vocational Education (MBO)	2007	2004-08-01	2007-06-15	10	Comprehensive 4-year program including foundational computer science, algorithms, and data structures.	\N	null
-10	published	2	\N	\N	Mediacollege Amsterdam	Amsterdam, NL	https://www.ma-web.nl/	Audio technician	Dutch Vocational Education (MBO)	\N	2003-08-03	2004-06-11	10	I liked many aspects of the field (music & tech), but ultimately decided that it wasn't something I wanted to pursue in.	\N	["cv"]
-11	published	3	\N	\N	Kaj Munk College	Hoofddorp, NL	https://kajmunk.nl/	Pre-vocational education	Dutch VMBO-t education	2003	1999-08-01	2003-06-13	10	Educated in topics like maths, physics, chemistry, biology, geography, economy, history, social studies, Dutch & English.	\N	["cv"]
-12	published	4	\N	\N	Valkenburgschool	Heemstede, NL	\N	Primary education	Dutch primary education	1999	1991-08-04	1999-06-04	10	Educated in core subjects like Dutch, maths, science, history, geography, gym & creative activities (art, music).	\N	["cv"]
-13	published	1	\N	\N	Nova College	Hoofddorp, NL	https://www.novacollege.nl/	Software Development	Dutch Vocational Education (MBO)	2007	2004-08-01	2007-06-15	14	Comprehensive 4-year program including foundational computer science, algorithms, and data structures.	\N	null
-14	published	2	\N	\N	Mediacollege Amsterdam	Amsterdam, NL	https://www.ma-web.nl/	Audio technician	Dutch Vocational Education (MBO)	\N	2003-08-03	2004-06-11	14	I liked many aspects of the field (music & tech), but ultimately decided that it wasn't something I wanted to pursue in.	\N	["cv"]
-15	published	3	\N	\N	Kaj Munk College	Hoofddorp, NL	https://kajmunk.nl/	Pre-vocational education	Dutch VMBO-t education	2003	1999-08-01	2003-06-13	14	Educated in topics like maths, physics, chemistry, biology, geography, economy, history, social studies, Dutch & English.	\N	["cv"]
-16	published	4	\N	\N	Valkenburgschool	Heemstede, NL	\N	Primary education	Dutch primary education	1999	1991-08-04	1999-06-04	14	Educated in core subjects like Dutch, maths, science, history, geography, gym & creative activities (art, music).	\N	["cv"]
 \.
 
 
@@ -6894,62 +6894,6 @@ COPY public.highlights (id, status, sort, date_created, date_updated, profile, t
 42	published	6	2025-10-17 14:38:05.602+00	2025-10-19 18:21:00.713+00	2	5+ years remote work and distributed team collaboration experience	home
 43	published	7	2025-10-17 14:38:05.603+00	2025-10-19 18:21:05.815+00	2	AI-accelerated development skills with security best practices	robot
 44	published	1	2025-10-17 14:38:05.591+00	2025-10-30 10:58:16.142+00	2	18+ years of full-stack development experience	gem
-45	published	1	\N	\N	46	18+ years of full-stack development experience	gem
-47	published	2	\N	\N	46	Expertise in modern Python, JavaScript & Node.js ecosystems	code
-48	published	3	\N	\N	46	Team leadership and project management experience	users
-49	published	4	\N	\N	46	Additional experience in DevOps & CI/CD	server
-50	published	5	\N	\N	46	Skilled in developing scalable solutions for high-traffic applications	rocket
-51	published	6	\N	\N	46	5+ years remote work and distributed team collaboration experience	home
-52	published	7	\N	\N	46	AI-accelerated development skills with security best practices	robot
-53	published	1	\N	\N	54	18+ years of full-stack development experience	gem
-55	published	2	\N	\N	54	Expertise in modern Python, JavaScript & Node.js ecosystems	code
-56	published	3	\N	\N	54	Team leadership and project management experience	users
-57	published	4	\N	\N	54	Additional experience in DevOps & CI/CD	server
-58	published	5	\N	\N	54	Skilled in developing scalable solutions for high-traffic applications	rocket
-59	published	6	\N	\N	54	5+ years remote work and distributed team collaboration experience	home
-60	published	7	\N	\N	54	AI-accelerated development skills with security best practices	robot
-61	published	1	\N	\N	62	18+ years of full-stack development experience	gem
-63	published	2	\N	\N	62	Expertise in modern Python, JavaScript & Node.js ecosystems	code
-64	published	3	\N	\N	62	Team leadership and project management experience	users
-65	published	4	\N	\N	62	Additional experience in DevOps & CI/CD	server
-66	published	5	\N	\N	62	Skilled in developing scalable solutions for high-traffic applications	rocket
-67	published	6	\N	\N	62	5+ years remote work and distributed team collaboration experience	home
-68	published	7	\N	\N	62	AI-accelerated development skills with security best practices	robot
-69	published	1	\N	\N	70	18+ years of full-stack development experience	gem
-71	published	2	\N	\N	70	Expertise in modern Python, JavaScript & Node.js ecosystems	code
-72	published	3	\N	\N	70	Team leadership and project management experience	users
-73	published	4	\N	\N	70	Additional experience in DevOps & CI/CD	server
-74	published	5	\N	\N	70	Skilled in developing scalable solutions for high-traffic applications	rocket
-75	published	6	\N	\N	70	5+ years remote work and distributed team collaboration experience	home
-76	published	7	\N	\N	70	AI-accelerated development skills with security best practices	robot
-77	published	1	\N	\N	78	18+ years of full-stack development experience	gem
-79	published	2	\N	\N	78	Expertise in modern Python, JavaScript & Node.js ecosystems	code
-80	published	3	\N	\N	78	Team leadership and project management experience	users
-81	published	4	\N	\N	78	Additional experience in DevOps & CI/CD	server
-82	published	5	\N	\N	78	Skilled in developing scalable solutions for high-traffic applications	rocket
-83	published	6	\N	\N	78	5+ years remote work and distributed team collaboration experience	home
-84	published	7	\N	\N	78	AI-accelerated development skills with security best practices	robot
-85	published	1	\N	\N	6	18+ years of full-stack development experience	gem
-86	published	2	\N	\N	6	Expertise in modern Python, JavaScript & Node.js ecosystems	code
-87	published	3	\N	\N	6	Team leadership and project management experience	users
-88	published	4	\N	\N	6	Additional experience in DevOps & CI/CD	server
-89	published	5	\N	\N	6	Skilled in developing scalable solutions for high-traffic applications	rocket
-90	published	6	\N	\N	6	5+ years remote work and distributed team collaboration experience	home
-91	published	7	\N	\N	6	AI-accelerated development skills with security best practices	robot
-92	published	1	\N	\N	10	18+ years of full-stack development experience	gem
-93	published	2	\N	\N	10	Expertise in modern Python, JavaScript & Node.js ecosystems	code
-94	published	3	\N	\N	10	Team leadership and project management experience	users
-95	published	4	\N	\N	10	Additional experience in DevOps & CI/CD	server
-96	published	5	\N	\N	10	Skilled in developing scalable solutions for high-traffic applications	rocket
-97	published	6	\N	\N	10	5+ years remote work and distributed team collaboration experience	home
-98	published	7	\N	\N	10	AI-accelerated development skills with security best practices	robot
-99	published	1	\N	\N	14	18+ years of full-stack development experience	gem
-100	published	2	\N	\N	14	Expertise in modern Python, JavaScript & Node.js ecosystems	code
-101	published	3	\N	\N	14	Team leadership and project management experience	users
-102	published	4	\N	\N	14	Additional experience in DevOps & CI/CD	server
-103	published	5	\N	\N	14	Skilled in developing scalable solutions for high-traffic applications	rocket
-104	published	6	\N	\N	14	5+ years remote work and distributed team collaboration experience	home
-105	published	7	\N	\N	14	AI-accelerated development skills with security best practices	robot
 \.
 
 
@@ -6960,12 +6904,6 @@ COPY public.highlights (id, status, sort, date_created, date_updated, profile, t
 COPY public.languages (id, status, date_created, date_updated, name, language_code, proficiency, profile, sort) FROM stdin;
 106	published	2025-10-17 12:03:30.884+00	\N	Dutch	nl	native	2	\N
 107	published	2025-10-17 12:03:30.887+00	\N	English	en	fluent	2	\N
-108	published	\N	\N	Dutch	nl	native	6	\N
-109	published	\N	\N	English	en	fluent	6	\N
-110	published	\N	\N	Dutch	nl	native	10	\N
-111	published	\N	\N	English	en	fluent	10	\N
-112	published	\N	\N	Dutch	nl	native	14	\N
-113	published	\N	\N	English	en	fluent	14	\N
 \.
 
 
@@ -6980,54 +6918,6 @@ COPY public.profile_versions (id, status, sort, date_created, date_updated, name
 5	published	5	2025-10-29 17:39:29.179+00	2025-10-29 18:09:18.098+00	fullstack-django-nationality	Fullstack Django SWE + Nationality	2	["nationality"]	2
 6	published	\N	2025-10-30 12:24:54.875+00	\N	fullstack-django-svelte	Full-stack Django & Svelte SWE	2	\N	4
 4	published	3	2025-10-29 15:48:26.476+00	2025-10-30 12:25:06.635+00	fullstack-svelte	Fullstack Svelte SWE	2	\N	3
-7	published	1	\N	\N	fullstack-django	Fullstack Django SWE	46	null	\N
-8	published	2	\N	\N	fullstack-python	Fullstack Python SWE	46	null	\N
-9	published	3	\N	\N	fullstack-svelte	Fullstack Svelte SWE	46	null	\N
-10	published	4	\N	\N	fullstack-react	Fullstack React SWE	46	null	\N
-11	published	5	\N	\N	fullstack-django-nationality	Fullstack Django SWE + Nationality	46	["nationality"]	7
-12	published	\N	\N	\N	fullstack-django-svelte	Full-stack Django & Svelte SWE	46	null	9
-13	published	1	\N	\N	fullstack-django	Fullstack Django SWE	54	null	\N
-14	published	2	\N	\N	fullstack-python	Fullstack Python SWE	54	null	\N
-15	published	3	\N	\N	fullstack-svelte	Fullstack Svelte SWE	54	null	\N
-16	published	4	\N	\N	fullstack-react	Fullstack React SWE	54	null	\N
-17	published	5	\N	\N	fullstack-django-nationality	Fullstack Django SWE + Nationality	54	["nationality"]	13
-18	published	\N	\N	\N	fullstack-django-svelte	Full-stack Django & Svelte SWE	54	null	15
-19	published	1	\N	\N	fullstack-django	Fullstack Django SWE	62	null	\N
-20	published	2	\N	\N	fullstack-python	Fullstack Python SWE	62	null	\N
-21	published	3	\N	\N	fullstack-svelte	Fullstack Svelte SWE	62	null	\N
-22	published	4	\N	\N	fullstack-react	Fullstack React SWE	62	null	\N
-23	published	5	\N	\N	fullstack-django-nationality	Fullstack Django SWE + Nationality	62	["nationality"]	19
-24	published	\N	\N	\N	fullstack-django-svelte	Full-stack Django & Svelte SWE	62	null	21
-25	published	1	\N	\N	fullstack-django	Fullstack Django SWE	70	null	\N
-26	published	2	\N	\N	fullstack-python	Fullstack Python SWE	70	null	\N
-27	published	3	\N	\N	fullstack-svelte	Fullstack Svelte SWE	70	null	\N
-28	published	4	\N	\N	fullstack-react	Fullstack React SWE	70	null	\N
-29	published	5	\N	\N	fullstack-django-nationality	Fullstack Django SWE + Nationality	70	["nationality"]	25
-30	published	\N	\N	\N	fullstack-django-svelte	Full-stack Django & Svelte SWE	70	null	27
-31	published	1	\N	\N	fullstack-django	Fullstack Django SWE	78	null	\N
-32	published	2	\N	\N	fullstack-python	Fullstack Python SWE	78	null	\N
-33	published	3	\N	\N	fullstack-svelte	Fullstack Svelte SWE	78	null	\N
-34	published	4	\N	\N	fullstack-react	Fullstack React SWE	78	null	\N
-35	published	5	\N	\N	fullstack-django-nationality	Fullstack Django SWE + Nationality	78	["nationality"]	31
-36	published	\N	\N	\N	fullstack-django-svelte	Full-stack Django & Svelte SWE	78	null	33
-37	published	1	\N	\N	fullstack-django	Fullstack Django SWE	6	null	\N
-38	published	2	\N	\N	fullstack-python	Fullstack Python SWE	6	null	\N
-39	published	3	\N	\N	fullstack-svelte	Fullstack Svelte SWE	6	null	\N
-40	published	4	\N	\N	fullstack-react	Fullstack React SWE	6	null	\N
-41	published	5	\N	\N	fullstack-django-nationality	Fullstack Django SWE + Nationality	6	["nationality"]	37
-42	published	\N	\N	\N	fullstack-django-svelte	Full-stack Django & Svelte SWE	6	null	39
-43	published	1	\N	\N	fullstack-django	Fullstack Django SWE	10	null	\N
-44	published	2	\N	\N	fullstack-python	Fullstack Python SWE	10	null	\N
-45	published	3	\N	\N	fullstack-svelte	Fullstack Svelte SWE	10	null	\N
-46	published	4	\N	\N	fullstack-react	Fullstack React SWE	10	null	\N
-47	published	5	\N	\N	fullstack-django-nationality	Fullstack Django SWE + Nationality	10	["nationality"]	43
-48	published	\N	\N	\N	fullstack-django-svelte	Full-stack Django & Svelte SWE	10	null	45
-49	published	1	\N	\N	fullstack-django	Fullstack Django SWE	14	null	\N
-50	published	2	\N	\N	fullstack-python	Fullstack Python SWE	14	null	\N
-51	published	3	\N	\N	fullstack-svelte	Fullstack Svelte SWE	14	null	\N
-52	published	4	\N	\N	fullstack-react	Fullstack React SWE	14	null	\N
-53	published	5	\N	\N	fullstack-django-nationality	Fullstack Django SWE + Nationality	14	["nationality"]	49
-54	published	\N	\N	\N	fullstack-django-svelte	Full-stack Django & Svelte SWE	14	null	51
 \.
 
 
@@ -7037,14 +6927,6 @@ COPY public.profile_versions (id, status, sort, date_created, date_updated, name
 
 COPY public.profiles (id, date_created, date_updated, name, title, location, phone_number, email_address, personal_website, subtitle, core_stack, linkedin_profile, github_profile, stackoverflow_profile, headline, profile_picture, summary, nationality, location_url, location_timezone) FROM stdin;
 2	2025-10-15 16:51:41.394+00	2025-10-30 12:23:17.636+00	Rik Wanders	Senior Full-Stack Developer	Ronda, Spain	+31649118511	rik@rikwanders.tech	https://www.rikwanders.tech/	Building scalable web applications for remote teams	Python • Node.js • CI/CD • DevOps	https://www.linkedin.com/in/rik-wanders-software	https://github.com/gitaarik	https://stackoverflow.com/users/1248175/gitaarik	Full-Stack Developer 10+ years expertise in Python, Django, Node.js, React, CI/CD, DevOps, UX, AI	e12c8ec6-2cbe-4672-98e9-a33d6ed5869a	Dutch Senior Full-Stack Developer residing in Spain. 10+ years Python & Node.js experience, scaling complex, high-traffic & data heavy applications with Django & React, and leading development teams. Additional skills in DevOps, CI/CD & UXD. Current with industry trends, AI & security. Thrives in agile teams / startup environments. 5+ years remote work experience.	Dutch	https://maps.app.goo.gl/WefqeUxUYBD6Q1qF8	CET/GMT+1
-70	2025-11-02 20:20:26.507+00	2025-11-02 20:28:06.817+00	-	Senior Full-Stack Developer	Ronda, Spain	+31649118511	rik@rikwanders.tech	https://www.rikwanders.tech/	Building scalable web applications for remote teams	Python • Node.js • CI/CD • DevOps	https://www.linkedin.com/in/rik-wanders-software	https://github.com/gitaarik	https://stackoverflow.com/users/1248175/gitaarik	Full-Stack Developer 10+ years expertise in Python, Django, Node.js, React, CI/CD, DevOps, UX, AI	\N	Dutch Senior Full-Stack Developer residing in Spain. 10+ years Python & Node.js experience, scaling complex, high-traffic & data heavy applications with Django & React, and leading development teams. Additional skills in DevOps, CI/CD & UXD. Current with industry trends, AI & security. Thrives in agile teams / startup environments. 5+ years remote work experience.	Dutch	https://maps.app.goo.gl/WefqeUxUYBD6Q1qF8	CET/GMT+1
-62	2025-11-02 20:20:01.364+00	2025-11-02 20:28:19.277+00	-	Senior Full-Stack Developer	Ronda, Spain	+31649118511	rik@rikwanders.tech	https://www.rikwanders.tech/	Building scalable web applications for remote teams	Python • Node.js • CI/CD • DevOps	https://www.linkedin.com/in/rik-wanders-software	https://github.com/gitaarik	https://stackoverflow.com/users/1248175/gitaarik	Full-Stack Developer 10+ years expertise in Python, Django, Node.js, React, CI/CD, DevOps, UX, AI	\N	Dutch Senior Full-Stack Developer residing in Spain. 10+ years Python & Node.js experience, scaling complex, high-traffic & data heavy applications with Django & React, and leading development teams. Additional skills in DevOps, CI/CD & UXD. Current with industry trends, AI & security. Thrives in agile teams / startup environments. 5+ years remote work experience.	Dutch	https://maps.app.goo.gl/WefqeUxUYBD6Q1qF8	CET/GMT+1
-10	2025-11-02 20:25:42.815+00	2025-11-02 20:28:23.304+00	-	Senior Full-Stack Developer	Ronda, Spain	+31649118511	rik@rikwanders.tech	https://www.rikwanders.tech/	Building scalable web applications for remote teams	Python • Node.js • CI/CD • DevOps	https://www.linkedin.com/in/rik-wanders-software	https://github.com/gitaarik	https://stackoverflow.com/users/1248175/gitaarik	Full-Stack Developer 10+ years expertise in Python, Django, Node.js, React, CI/CD, DevOps, UX, AI	\N	Dutch Senior Full-Stack Developer residing in Spain. 10+ years Python & Node.js experience, scaling complex, high-traffic & data heavy applications with Django & React, and leading development teams. Additional skills in DevOps, CI/CD & UXD. Current with industry trends, AI & security. Thrives in agile teams / startup environments. 5+ years remote work experience.	Dutch	https://maps.app.goo.gl/WefqeUxUYBD6Q1qF8	CET/GMT+1
-54	2025-11-02 20:19:33.094+00	2025-11-02 20:28:27.098+00	-	Senior Full-Stack Developer	Ronda, Spain	+31649118511	rik@rikwanders.tech	https://www.rikwanders.tech/	Building scalable web applications for remote teams	Python • Node.js • CI/CD • DevOps	https://www.linkedin.com/in/rik-wanders-software	https://github.com/gitaarik	https://stackoverflow.com/users/1248175/gitaarik	Full-Stack Developer 10+ years expertise in Python, Django, Node.js, React, CI/CD, DevOps, UX, AI	\N	Dutch Senior Full-Stack Developer residing in Spain. 10+ years Python & Node.js experience, scaling complex, high-traffic & data heavy applications with Django & React, and leading development teams. Additional skills in DevOps, CI/CD & UXD. Current with industry trends, AI & security. Thrives in agile teams / startup environments. 5+ years remote work experience.	Dutch	https://maps.app.goo.gl/WefqeUxUYBD6Q1qF8	CET/GMT+1
-6	2025-11-02 20:25:36.995+00	2025-11-02 20:28:30.553+00	-	Senior Full-Stack Developer	Ronda, Spain	+31649118511	rik@rikwanders.tech	https://www.rikwanders.tech/	Building scalable web applications for remote teams	Python • Node.js • CI/CD • DevOps	https://www.linkedin.com/in/rik-wanders-software	https://github.com/gitaarik	https://stackoverflow.com/users/1248175/gitaarik	Full-Stack Developer 10+ years expertise in Python, Django, Node.js, React, CI/CD, DevOps, UX, AI	\N	Dutch Senior Full-Stack Developer residing in Spain. 10+ years Python & Node.js experience, scaling complex, high-traffic & data heavy applications with Django & React, and leading development teams. Additional skills in DevOps, CI/CD & UXD. Current with industry trends, AI & security. Thrives in agile teams / startup environments. 5+ years remote work experience.	Dutch	https://maps.app.goo.gl/WefqeUxUYBD6Q1qF8	CET/GMT+1
-46	2025-11-02 20:15:29.688+00	2025-11-02 20:28:35.418+00	-	Senior Full-Stack Developer	Ronda, Spain	+31649118511	rik@rikwanders.tech	https://www.rikwanders.tech/	Building scalable web applications for remote teams	Python • Node.js • CI/CD • DevOps	https://www.linkedin.com/in/rik-wanders-software	https://github.com/gitaarik	https://stackoverflow.com/users/1248175/gitaarik	Full-Stack Developer 10+ years expertise in Python, Django, Node.js, React, CI/CD, DevOps, UX, AI	\N	Dutch Senior Full-Stack Developer residing in Spain. 10+ years Python & Node.js experience, scaling complex, high-traffic & data heavy applications with Django & React, and leading development teams. Additional skills in DevOps, CI/CD & UXD. Current with industry trends, AI & security. Thrives in agile teams / startup environments. 5+ years remote work experience.	Dutch	https://maps.app.goo.gl/WefqeUxUYBD6Q1qF8	CET/GMT+1
-78	2025-11-02 20:23:59.427+00	2025-11-02 20:27:38.263+00	_	Senior Full-Stack Developer	Ronda, Spain	+31649118511	rik@rikwanders.tech	https://www.rikwanders.tech/	Building scalable web applications for remote teams	Python • Node.js • CI/CD • DevOps	https://www.linkedin.com/in/rik-wanders-software	https://github.com/gitaarik	https://stackoverflow.com/users/1248175/gitaarik	Full-Stack Developer 10+ years expertise in Python, Django, Node.js, React, CI/CD, DevOps, UX, AI	\N	Dutch Senior Full-Stack Developer residing in Spain. 10+ years Python & Node.js experience, scaling complex, high-traffic & data heavy applications with Django & React, and leading development teams. Additional skills in DevOps, CI/CD & UXD. Current with industry trends, AI & security. Thrives in agile teams / startup environments. 5+ years remote work experience.	Dutch	https://maps.app.goo.gl/WefqeUxUYBD6Q1qF8	CET/GMT+1
-14	2025-11-02 20:28:48.662+00	2025-11-02 20:28:48.662+00	Rik Wanders	Senior Full-Stack Developer	Ronda, Spain	+31649118511	rik@rikwanders.tech	https://www.rikwanders.tech/	Building scalable web applications for remote teams	Python • Node.js • CI/CD • DevOps	https://www.linkedin.com/in/rik-wanders-software	https://github.com/gitaarik	https://stackoverflow.com/users/1248175/gitaarik	Full-Stack Developer 10+ years expertise in Python, Django, Node.js, React, CI/CD, DevOps, UX, AI	\N	Dutch Senior Full-Stack Developer residing in Spain. 10+ years Python & Node.js experience, scaling complex, high-traffic & data heavy applications with Django & React, and leading development teams. Additional skills in DevOps, CI/CD & UXD. Current with industry trends, AI & security. Thrives in agile teams / startup environments. 5+ years remote work experience.	Dutch	https://maps.app.goo.gl/WefqeUxUYBD6Q1qF8	CET/GMT+1
 \.
 
 
@@ -7059,28 +6941,7 @@ COPY public.project_stories (id, sort, date_created, date_updated, title, situat
 117	3	2025-10-22 13:57:36.777+00	2025-10-22 14:09:29.042+00	React Native App Technical Challenges	- Leading React Native mobile app development at Chipta\n- React Native framework had significant bugs and limitations\n- Limited documentation and community support available\n- Tight deadline before festival season start	- Navigate technical challenges with immature framework\n- Find solutions to framework bugs and limitations\n- Deliver functional app on schedule\n- Ensure app met performance and reliability requirements	- Helped developer to tackle complex technical issues\n- Researched React Native & plugins source code to understand underlying problems\n- Created custom patches for framework bugs we encountered\n- Made architecture decisions to work around limitations	- Delivered app on time before festival season started\n- App significantly improved event scalability and reach\n- Contributed to 40% revenue increase from mobile ticket sales\n- Developer gained valuable React Native expertise\n- Established foundation for future mobile development projects	- Learned that new hip projects from major companies are not necessarily stable or well documented from the start\n- Was ultimately happy with choosing React Native\n- Because it matured and is still one of the main ways of creating apps	challenging_situations	2
 118	4	2025-10-22 11:06:06.406+00	2025-10-22 11:17:50.677+00	Introduced agile / async team workflow @ Chipta	- Early days at Chipta with minimal team structure\n- 3-5 developers working without established methodologies\n- Changing requirements from management causing confusion with devs\n- Need to scale development processes as team grew	- Introduce structured development methodologies\n- Get all team members aligned on new processes\n- Implement tools and workflows for better collaboration\n- Improve team efficiency and productivity	- Progressively introduced Scrum/Agile methodologies with team buy-in\n- Implemented Zulip for structured async collaboration\n- Established GitLab Merge Request workflow with code reviews\n- Introduced Git flow and commit message conventions\n- Set up and managed comprehensive issue ticket system	- Successfully transitioned team to structured development process\n- Improved team coordination and reduced miscommunication\n- Increased development efficiency and code quality\n- Created scalable processes that supported team growth over 7 years	- An efficient team workflow makes a big difference\n- There are many ways to do Agile and every team is unique	leadership_moments	2
 119	5	2025-10-22 13:45:09.415+00	2025-10-22 14:13:28.577+00	TicketSwap integration deadline for major client	- Major event organizer prospect required TicketSwap integration\n- Hard deadline of 3 weeks to deliver or lose the prospect\n- Complex coordination needed with external development team	- Build secure TicketSwap API integration for second-hand ticket validation\n- Coordinate with TicketSwap developers on protocols and implementation steps\n- Deliver working solution within 3-week deadline to close the deal	- Contacted TicketSwap's technical team to establish communication protocols\n- Coordinated step-by-step implementation process with their developers\n- Built secure integration with comprehensive testing suite\n- Managed coordination between TicketSwap team, prospect, and internal stakeholders	- Delivered integration on time and secured the client\n- Eliminated ticket fraud for integrated events\n- Became competitive advantage leading to 15% increase in sales	- Things can be done very fast when all parties have interests\n- Direct communication between devs of two companies is very efficient	leadership_moments	2
-132	5	\N	\N	TicketSwap integration deadline for major client	- Major event organizer prospect required TicketSwap integration\n- Hard deadline of 3 weeks to deliver or lose the prospect\n- Complex coordination needed with external development team	- Build secure TicketSwap API integration for second-hand ticket validation\n- Coordinate with TicketSwap developers on protocols and implementation steps\n- Deliver working solution within 3-week deadline to close the deal	- Contacted TicketSwap's technical team to establish communication protocols\n- Coordinated step-by-step implementation process with their developers\n- Built secure integration with comprehensive testing suite\n- Managed coordination between TicketSwap team, prospect, and internal stakeholders	- Delivered integration on time and secured the client\n- Eliminated ticket fraud for integrated events\n- Became competitive advantage leading to 15% increase in sales	- Things can be done very fast when all parties have interests\n- Direct communication between devs of two companies is very efficient	leadership_moments	10
 120	6	2025-10-22 14:12:18.013+00	2025-10-22 15:02:44.822+00	Automated integration testing with Selenium	- Manual integration testing required before each production deployment\n- Testing process took up to 1.5 hours per release\n- Process was error prone because of human errors\n- Time-consuming manual process slowed down development cycle	- Eliminate manual testing bottleneck\n- Enable faster, more reliable deployments\n- Reduce time investment required for each release\n- Improve reliability of test results	- Researched automated testing solutions and selected Selenium\n- Built comprehensive Selenium test suite covering the existing manual test procedures\n- Integrated automated tests into deployment pipeline\n- Created documentation for developers on running tests and creating new ones	- Reduced integration testing time from 1.5 hours to 5 minutes\n- Enabled any developer to run complete integration test suite\n- Increased deployment frequency and confidence\n- Eliminated testing bottleneck and improved development velocity	- Learned Selenium is pretty cool and not that hard\n- Learned that creating integration tests is totally worth it if you need to test for every release\n- Now that I know Selenium, would apply it faster to save time earlier	learning_experiences	2
-121	1	\N	\N	Ticketshop performance for big events	- Big event clients selling thousands of tickets\n- Ticketshop having hard times handling large traffic spikes\n- Performance bottlenecks in processing the orders\n- Clients needed reliable ticketshop to sell their tickets fast	- Speed up ticketshop order processing\n- Handle high-traffic ticketshop spikes\n- Work with DevOps (Michaël) on scaling	- Optimized SQL queries - got 30-60% speed boost\n- Refactored Python/Django order processing code\n- Worked with DevOps (Michaël) on flexible scaling setup	- Big event clients successfully kept/onboarded\n- 30-60% faster ticket order processing\n- Scalable ticketshop ready for large events	- I didn't realize how many queries were being done before optimizing\n- Optimizing complex SQL queries in Django can be challenging\n- But tools like Silk make debugging very user friendly	high_impact_projects	6
-122	2	\N	\N	Zoom OAuth integration during COVID	- COVID hit and clients needed virtual events\n- No Zoom integration in our platform\n- Event organizers needed seamless online solution	- Learn Zoom API and OAuth quickly\n- Integrate client accounts with dashboard\n- Enable automatic Zoom management for Chipta events	- Mastered Zoom OAuth and API documentation\n- Navigated strict app admittance process\n- Built dashboard integration for client accounts\n- Created automatic Zoom event management system	- Many clients successfully organized online events\n- Helped company survive COVID with less than 40% profit loss\n- Seamless Chipta-Zoom integration in production	- Zoom Marketplace submission requirements were much more than I expected\n- After COVID was over, the online event hype disappeared again\n- COVID was a hard time to be strategical\n- Clients do appreciate quick acting and temporary solutions	high_impact_projects	6
-123	3	\N	\N	React Native App Technical Challenges	- Leading React Native mobile app development at Chipta\n- React Native framework had significant bugs and limitations\n- Limited documentation and community support available\n- Tight deadline before festival season start	- Navigate technical challenges with immature framework\n- Find solutions to framework bugs and limitations\n- Deliver functional app on schedule\n- Ensure app met performance and reliability requirements	- Helped developer to tackle complex technical issues\n- Researched React Native & plugins source code to understand underlying problems\n- Created custom patches for framework bugs we encountered\n- Made architecture decisions to work around limitations	- Delivered app on time before festival season started\n- App significantly improved event scalability and reach\n- Contributed to 40% revenue increase from mobile ticket sales\n- Developer gained valuable React Native expertise\n- Established foundation for future mobile development projects	- Learned that new hip projects from major companies are not necessarily stable or well documented from the start\n- Was ultimately happy with choosing React Native\n- Because it matured and is still one of the main ways of creating apps	challenging_situations	6
-124	4	\N	\N	Introduced agile / async team workflow @ Chipta	- Early days at Chipta with minimal team structure\n- 3-5 developers working without established methodologies\n- Changing requirements from management causing confusion with devs\n- Need to scale development processes as team grew	- Introduce structured development methodologies\n- Get all team members aligned on new processes\n- Implement tools and workflows for better collaboration\n- Improve team efficiency and productivity	- Progressively introduced Scrum/Agile methodologies with team buy-in\n- Implemented Zulip for structured async collaboration\n- Established GitLab Merge Request workflow with code reviews\n- Introduced Git flow and commit message conventions\n- Set up and managed comprehensive issue ticket system	- Successfully transitioned team to structured development process\n- Improved team coordination and reduced miscommunication\n- Increased development efficiency and code quality\n- Created scalable processes that supported team growth over 7 years	- An efficient team workflow makes a big difference\n- There are many ways to do Agile and every team is unique	leadership_moments	6
-125	5	\N	\N	TicketSwap integration deadline for major client	- Major event organizer prospect required TicketSwap integration\n- Hard deadline of 3 weeks to deliver or lose the prospect\n- Complex coordination needed with external development team	- Build secure TicketSwap API integration for second-hand ticket validation\n- Coordinate with TicketSwap developers on protocols and implementation steps\n- Deliver working solution within 3-week deadline to close the deal	- Contacted TicketSwap's technical team to establish communication protocols\n- Coordinated step-by-step implementation process with their developers\n- Built secure integration with comprehensive testing suite\n- Managed coordination between TicketSwap team, prospect, and internal stakeholders	- Delivered integration on time and secured the client\n- Eliminated ticket fraud for integrated events\n- Became competitive advantage leading to 15% increase in sales	- Things can be done very fast when all parties have interests\n- Direct communication between devs of two companies is very efficient	leadership_moments	6
-139	5	\N	\N	TicketSwap integration deadline for major client	- Major event organizer prospect required TicketSwap integration\n- Hard deadline of 3 weeks to deliver or lose the prospect\n- Complex coordination needed with external development team	- Build secure TicketSwap API integration for second-hand ticket validation\n- Coordinate with TicketSwap developers on protocols and implementation steps\n- Deliver working solution within 3-week deadline to close the deal	- Contacted TicketSwap's technical team to establish communication protocols\n- Coordinated step-by-step implementation process with their developers\n- Built secure integration with comprehensive testing suite\n- Managed coordination between TicketSwap team, prospect, and internal stakeholders	- Delivered integration on time and secured the client\n- Eliminated ticket fraud for integrated events\n- Became competitive advantage leading to 15% increase in sales	- Things can be done very fast when all parties have interests\n- Direct communication between devs of two companies is very efficient	leadership_moments	14
-126	6	\N	\N	Automated integration testing with Selenium	- Manual integration testing required before each production deployment\n- Testing process took up to 1.5 hours per release\n- Process was error prone because of human errors\n- Time-consuming manual process slowed down development cycle	- Eliminate manual testing bottleneck\n- Enable faster, more reliable deployments\n- Reduce time investment required for each release\n- Improve reliability of test results	- Researched automated testing solutions and selected Selenium\n- Built comprehensive Selenium test suite covering the existing manual test procedures\n- Integrated automated tests into deployment pipeline\n- Created documentation for developers on running tests and creating new ones	- Reduced integration testing time from 1.5 hours to 5 minutes\n- Enabled any developer to run complete integration test suite\n- Increased deployment frequency and confidence\n- Eliminated testing bottleneck and improved development velocity	- Learned Selenium is pretty cool and not that hard\n- Learned that creating integration tests is totally worth it if you need to test for every release\n- Now that I know Selenium, would apply it faster to save time earlier	learning_experiences	6
-127	7	\N	\N	Onboarding junior developer to Django system	- New junior developer joined comprehensive Django project\n- Developer needed to learn Django framework\n- Complex system with frontend integration\n- Multiple new skills needed simultaneously	- Guide developer through system architecture\n- Teach Django best practices\n- Train on frontend technologies\n- Make developer productive on assigned projects	- Created structured learning plan covering Django and frontend\n- Paired programming sessions to demonstrate system\n- Regular code reviews with detailed explanations\n- Gradually increased project complexity and responsibility	- Developer became productive within first month\n- Successfully delivered assigned project features\n- Developer gained confidence in both Django and frontend\n- Created reusable onboarding process for future hires	- Learned I need to ask more feedback from developers to understand what they actually need\n- Junior developer could be stuck without me knowing it\n- Check in to developers progress and have evaluation sessions\n\n- It's useful when developer creates own docs / notes\n- There are always things to improve about the onboarding process\n- It's a fun process helping a developer getting up and running	learning_experiences	6
-128	1	\N	\N	Ticketshop performance for big events	- Big event clients selling thousands of tickets\n- Ticketshop having hard times handling large traffic spikes\n- Performance bottlenecks in processing the orders\n- Clients needed reliable ticketshop to sell their tickets fast	- Speed up ticketshop order processing\n- Handle high-traffic ticketshop spikes\n- Work with DevOps (Michaël) on scaling	- Optimized SQL queries - got 30-60% speed boost\n- Refactored Python/Django order processing code\n- Worked with DevOps (Michaël) on flexible scaling setup	- Big event clients successfully kept/onboarded\n- 30-60% faster ticket order processing\n- Scalable ticketshop ready for large events	- I didn't realize how many queries were being done before optimizing\n- Optimizing complex SQL queries in Django can be challenging\n- But tools like Silk make debugging very user friendly	high_impact_projects	10
-129	2	\N	\N	Zoom OAuth integration during COVID	- COVID hit and clients needed virtual events\n- No Zoom integration in our platform\n- Event organizers needed seamless online solution	- Learn Zoom API and OAuth quickly\n- Integrate client accounts with dashboard\n- Enable automatic Zoom management for Chipta events	- Mastered Zoom OAuth and API documentation\n- Navigated strict app admittance process\n- Built dashboard integration for client accounts\n- Created automatic Zoom event management system	- Many clients successfully organized online events\n- Helped company survive COVID with less than 40% profit loss\n- Seamless Chipta-Zoom integration in production	- Zoom Marketplace submission requirements were much more than I expected\n- After COVID was over, the online event hype disappeared again\n- COVID was a hard time to be strategical\n- Clients do appreciate quick acting and temporary solutions	high_impact_projects	10
-130	3	\N	\N	React Native App Technical Challenges	- Leading React Native mobile app development at Chipta\n- React Native framework had significant bugs and limitations\n- Limited documentation and community support available\n- Tight deadline before festival season start	- Navigate technical challenges with immature framework\n- Find solutions to framework bugs and limitations\n- Deliver functional app on schedule\n- Ensure app met performance and reliability requirements	- Helped developer to tackle complex technical issues\n- Researched React Native & plugins source code to understand underlying problems\n- Created custom patches for framework bugs we encountered\n- Made architecture decisions to work around limitations	- Delivered app on time before festival season started\n- App significantly improved event scalability and reach\n- Contributed to 40% revenue increase from mobile ticket sales\n- Developer gained valuable React Native expertise\n- Established foundation for future mobile development projects	- Learned that new hip projects from major companies are not necessarily stable or well documented from the start\n- Was ultimately happy with choosing React Native\n- Because it matured and is still one of the main ways of creating apps	challenging_situations	10
-131	4	\N	\N	Introduced agile / async team workflow @ Chipta	- Early days at Chipta with minimal team structure\n- 3-5 developers working without established methodologies\n- Changing requirements from management causing confusion with devs\n- Need to scale development processes as team grew	- Introduce structured development methodologies\n- Get all team members aligned on new processes\n- Implement tools and workflows for better collaboration\n- Improve team efficiency and productivity	- Progressively introduced Scrum/Agile methodologies with team buy-in\n- Implemented Zulip for structured async collaboration\n- Established GitLab Merge Request workflow with code reviews\n- Introduced Git flow and commit message conventions\n- Set up and managed comprehensive issue ticket system	- Successfully transitioned team to structured development process\n- Improved team coordination and reduced miscommunication\n- Increased development efficiency and code quality\n- Created scalable processes that supported team growth over 7 years	- An efficient team workflow makes a big difference\n- There are many ways to do Agile and every team is unique	leadership_moments	10
-133	6	\N	\N	Automated integration testing with Selenium	- Manual integration testing required before each production deployment\n- Testing process took up to 1.5 hours per release\n- Process was error prone because of human errors\n- Time-consuming manual process slowed down development cycle	- Eliminate manual testing bottleneck\n- Enable faster, more reliable deployments\n- Reduce time investment required for each release\n- Improve reliability of test results	- Researched automated testing solutions and selected Selenium\n- Built comprehensive Selenium test suite covering the existing manual test procedures\n- Integrated automated tests into deployment pipeline\n- Created documentation for developers on running tests and creating new ones	- Reduced integration testing time from 1.5 hours to 5 minutes\n- Enabled any developer to run complete integration test suite\n- Increased deployment frequency and confidence\n- Eliminated testing bottleneck and improved development velocity	- Learned Selenium is pretty cool and not that hard\n- Learned that creating integration tests is totally worth it if you need to test for every release\n- Now that I know Selenium, would apply it faster to save time earlier	learning_experiences	10
-134	7	\N	\N	Onboarding junior developer to Django system	- New junior developer joined comprehensive Django project\n- Developer needed to learn Django framework\n- Complex system with frontend integration\n- Multiple new skills needed simultaneously	- Guide developer through system architecture\n- Teach Django best practices\n- Train on frontend technologies\n- Make developer productive on assigned projects	- Created structured learning plan covering Django and frontend\n- Paired programming sessions to demonstrate system\n- Regular code reviews with detailed explanations\n- Gradually increased project complexity and responsibility	- Developer became productive within first month\n- Successfully delivered assigned project features\n- Developer gained confidence in both Django and frontend\n- Created reusable onboarding process for future hires	- Learned I need to ask more feedback from developers to understand what they actually need\n- Junior developer could be stuck without me knowing it\n- Check in to developers progress and have evaluation sessions\n\n- It's useful when developer creates own docs / notes\n- There are always things to improve about the onboarding process\n- It's a fun process helping a developer getting up and running	learning_experiences	10
-135	1	\N	\N	Ticketshop performance for big events	- Big event clients selling thousands of tickets\n- Ticketshop having hard times handling large traffic spikes\n- Performance bottlenecks in processing the orders\n- Clients needed reliable ticketshop to sell their tickets fast	- Speed up ticketshop order processing\n- Handle high-traffic ticketshop spikes\n- Work with DevOps (Michaël) on scaling	- Optimized SQL queries - got 30-60% speed boost\n- Refactored Python/Django order processing code\n- Worked with DevOps (Michaël) on flexible scaling setup	- Big event clients successfully kept/onboarded\n- 30-60% faster ticket order processing\n- Scalable ticketshop ready for large events	- I didn't realize how many queries were being done before optimizing\n- Optimizing complex SQL queries in Django can be challenging\n- But tools like Silk make debugging very user friendly	high_impact_projects	14
-136	2	\N	\N	Zoom OAuth integration during COVID	- COVID hit and clients needed virtual events\n- No Zoom integration in our platform\n- Event organizers needed seamless online solution	- Learn Zoom API and OAuth quickly\n- Integrate client accounts with dashboard\n- Enable automatic Zoom management for Chipta events	- Mastered Zoom OAuth and API documentation\n- Navigated strict app admittance process\n- Built dashboard integration for client accounts\n- Created automatic Zoom event management system	- Many clients successfully organized online events\n- Helped company survive COVID with less than 40% profit loss\n- Seamless Chipta-Zoom integration in production	- Zoom Marketplace submission requirements were much more than I expected\n- After COVID was over, the online event hype disappeared again\n- COVID was a hard time to be strategical\n- Clients do appreciate quick acting and temporary solutions	high_impact_projects	14
-137	3	\N	\N	React Native App Technical Challenges	- Leading React Native mobile app development at Chipta\n- React Native framework had significant bugs and limitations\n- Limited documentation and community support available\n- Tight deadline before festival season start	- Navigate technical challenges with immature framework\n- Find solutions to framework bugs and limitations\n- Deliver functional app on schedule\n- Ensure app met performance and reliability requirements	- Helped developer to tackle complex technical issues\n- Researched React Native & plugins source code to understand underlying problems\n- Created custom patches for framework bugs we encountered\n- Made architecture decisions to work around limitations	- Delivered app on time before festival season started\n- App significantly improved event scalability and reach\n- Contributed to 40% revenue increase from mobile ticket sales\n- Developer gained valuable React Native expertise\n- Established foundation for future mobile development projects	- Learned that new hip projects from major companies are not necessarily stable or well documented from the start\n- Was ultimately happy with choosing React Native\n- Because it matured and is still one of the main ways of creating apps	challenging_situations	14
-138	4	\N	\N	Introduced agile / async team workflow @ Chipta	- Early days at Chipta with minimal team structure\n- 3-5 developers working without established methodologies\n- Changing requirements from management causing confusion with devs\n- Need to scale development processes as team grew	- Introduce structured development methodologies\n- Get all team members aligned on new processes\n- Implement tools and workflows for better collaboration\n- Improve team efficiency and productivity	- Progressively introduced Scrum/Agile methodologies with team buy-in\n- Implemented Zulip for structured async collaboration\n- Established GitLab Merge Request workflow with code reviews\n- Introduced Git flow and commit message conventions\n- Set up and managed comprehensive issue ticket system	- Successfully transitioned team to structured development process\n- Improved team coordination and reduced miscommunication\n- Increased development efficiency and code quality\n- Created scalable processes that supported team growth over 7 years	- An efficient team workflow makes a big difference\n- There are many ways to do Agile and every team is unique	leadership_moments	14
-140	6	\N	\N	Automated integration testing with Selenium	- Manual integration testing required before each production deployment\n- Testing process took up to 1.5 hours per release\n- Process was error prone because of human errors\n- Time-consuming manual process slowed down development cycle	- Eliminate manual testing bottleneck\n- Enable faster, more reliable deployments\n- Reduce time investment required for each release\n- Improve reliability of test results	- Researched automated testing solutions and selected Selenium\n- Built comprehensive Selenium test suite covering the existing manual test procedures\n- Integrated automated tests into deployment pipeline\n- Created documentation for developers on running tests and creating new ones	- Reduced integration testing time from 1.5 hours to 5 minutes\n- Enabled any developer to run complete integration test suite\n- Increased deployment frequency and confidence\n- Eliminated testing bottleneck and improved development velocity	- Learned Selenium is pretty cool and not that hard\n- Learned that creating integration tests is totally worth it if you need to test for every release\n- Now that I know Selenium, would apply it faster to save time earlier	learning_experiences	14
-141	7	\N	\N	Onboarding junior developer to Django system	- New junior developer joined comprehensive Django project\n- Developer needed to learn Django framework\n- Complex system with frontend integration\n- Multiple new skills needed simultaneously	- Guide developer through system architecture\n- Teach Django best practices\n- Train on frontend technologies\n- Make developer productive on assigned projects	- Created structured learning plan covering Django and frontend\n- Paired programming sessions to demonstrate system\n- Regular code reviews with detailed explanations\n- Gradually increased project complexity and responsibility	- Developer became productive within first month\n- Successfully delivered assigned project features\n- Developer gained confidence in both Django and frontend\n- Created reusable onboarding process for future hires	- Learned I need to ask more feedback from developers to understand what they actually need\n- Junior developer could be stuck without me knowing it\n- Check in to developers progress and have evaluation sessions\n\n- It's useful when developer creates own docs / notes\n- There are always things to improve about the onboarding process\n- It's a fun process helping a developer getting up and running	learning_experiences	14
 \.
 
 
@@ -7170,105 +7031,6 @@ COPY public.side_project_technologies (id, status, sort, date_created, date_upda
 32	published	7	2025-10-28 18:46:44.882+00	2025-10-28 18:47:13.278+00	Prisma ORM	6
 33	published	8	2025-10-28 18:46:44.885+00	2025-10-28 18:47:13.283+00	Directus (Headless CMS)	6
 25	published	9	2025-10-28 16:48:29.896+00	2025-10-28 18:47:13.287+00	Selenium	6
-34	published	1	\N	\N	Sveltekit	8
-35	published	2	\N	\N	Tailwind CSS	8
-36	published	3	\N	\N	Vercel	8
-37	published	4	\N	\N	LLM	8
-38	published	5	\N	\N	OpenAI	8
-39	published	6	\N	\N	Google Gemini	8
-40	published	7	\N	\N	Prisma ORM	8
-41	published	8	\N	\N	Directus (Headless CMS)	8
-42	published	9	\N	\N	Selenium	8
-43	published	1	\N	\N	Javascript	9
-44	published	2	\N	\N	Node.js	9
-45	published	3	\N	\N	NPM	9
-46	published	4	\N	\N	Lit	9
-47	published	5	\N	\N	Web Components	9
-48	published	6	\N	\N	Snowpack	9
-49	published	1	\N	\N	Python	10
-50	published	2	\N	\N	Django	10
-51	published	3	\N	\N	HTML5	10
-52	published	1	\N	\N	Git	11
-53	published	2	\N	\N	Git Submodules	11
-54	published	3	\N	\N	Shell	11
-55	published	1	\N	\N	Python	12
-56	published	2	\N	\N	Django	12
-57	published	3	\N	\N	JavaScript	12
-58	published	4	\N	\N	Ember.js	12
-59	published	5	\N	\N	HTML	12
-60	published	6	\N	\N	CSS	12
-61	published	1	\N	\N	Python	13
-62	published	2	\N	\N	Django	13
-63	published	3	\N	\N	HTML	13
-64	published	1	\N	\N	Python	14
-65	published	2	\N	\N	Flask	14
-66	published	3	\N	\N	MongoEngine	14
-67	published	1	\N	\N	Sveltekit	15
-68	published	2	\N	\N	Tailwind CSS	15
-69	published	3	\N	\N	Vercel	15
-70	published	4	\N	\N	LLM	15
-71	published	5	\N	\N	OpenAI	15
-72	published	6	\N	\N	Google Gemini	15
-73	published	7	\N	\N	Prisma ORM	15
-74	published	8	\N	\N	Directus (Headless CMS)	15
-75	published	9	\N	\N	Selenium	15
-76	published	1	\N	\N	Javascript	16
-77	published	2	\N	\N	Node.js	16
-78	published	3	\N	\N	NPM	16
-79	published	4	\N	\N	Lit	16
-80	published	5	\N	\N	Web Components	16
-81	published	6	\N	\N	Snowpack	16
-82	published	1	\N	\N	Python	17
-83	published	2	\N	\N	Django	17
-84	published	3	\N	\N	HTML5	17
-85	published	1	\N	\N	Git	18
-86	published	2	\N	\N	Git Submodules	18
-87	published	3	\N	\N	Shell	18
-88	published	1	\N	\N	Python	19
-89	published	2	\N	\N	Django	19
-90	published	3	\N	\N	JavaScript	19
-91	published	4	\N	\N	Ember.js	19
-92	published	5	\N	\N	HTML	19
-93	published	6	\N	\N	CSS	19
-94	published	1	\N	\N	Python	20
-95	published	2	\N	\N	Django	20
-96	published	3	\N	\N	HTML	20
-97	published	1	\N	\N	Python	21
-98	published	2	\N	\N	Flask	21
-99	published	3	\N	\N	MongoEngine	21
-100	published	1	\N	\N	Sveltekit	22
-101	published	2	\N	\N	Tailwind CSS	22
-102	published	3	\N	\N	Vercel	22
-103	published	4	\N	\N	LLM	22
-104	published	5	\N	\N	OpenAI	22
-105	published	6	\N	\N	Google Gemini	22
-106	published	7	\N	\N	Prisma ORM	22
-107	published	8	\N	\N	Directus (Headless CMS)	22
-108	published	9	\N	\N	Selenium	22
-109	published	1	\N	\N	Javascript	23
-110	published	2	\N	\N	Node.js	23
-111	published	3	\N	\N	NPM	23
-112	published	4	\N	\N	Lit	23
-113	published	5	\N	\N	Web Components	23
-114	published	6	\N	\N	Snowpack	23
-115	published	1	\N	\N	Python	24
-116	published	2	\N	\N	Django	24
-117	published	3	\N	\N	HTML5	24
-118	published	1	\N	\N	Git	25
-119	published	2	\N	\N	Git Submodules	25
-120	published	3	\N	\N	Shell	25
-121	published	1	\N	\N	Python	26
-122	published	2	\N	\N	Django	26
-123	published	3	\N	\N	JavaScript	26
-124	published	4	\N	\N	Ember.js	26
-125	published	5	\N	\N	HTML	26
-126	published	6	\N	\N	CSS	26
-127	published	1	\N	\N	Python	27
-128	published	2	\N	\N	Django	27
-129	published	3	\N	\N	HTML	27
-130	published	1	\N	\N	Python	28
-131	published	2	\N	\N	Flask	28
-132	published	3	\N	\N	MongoEngine	28
 \.
 
 
@@ -7284,27 +7046,6 @@ COPY public.side_projects (id, status, sort, date_created, date_updated, name, s
 3	published	4	2025-10-27 18:56:41.56+00	2025-10-29 16:48:48.211+00	Git Submodules Guide	2014-01-15	2014-01-15	2	https://gist.github.com/gitaarik/8735255	1028	Popular GitHub Gist explaining Git submodules fundamentals. Helped many developers understand submodules effectively.	gist.github.com/gitaarik/8735255	["fullstack-python","fullstack-django","fullstack-react","fullstack-svelte"]
 4	published	5	2025-10-27 18:57:47.942+00	2025-10-29 16:49:14.414+00	Jazzchords	2013-06-24	2017-12-08	2	https://github.com/gitaarik/jazzchords	12	Web application for creating and printing professional chord charts using Python/Django and modern frontend technologies.	\N	["fullstack-django"]
 2	published	3	2025-10-27 17:48:27.988+00	2025-10-29 16:55:40.696+00	Django Admin Relation Links	2014-01-15	2014-01-15	2	https://github.com/gitaarik/django-admin-relation-links	108	Django Admin navigation enhancement, simplifying navigation between related database objects. Open-sourced on GitHub and PyPi. Used in production at Chipta & Tender-it.	\N	["fullstack-django","fullstack-python","fullstack-react"]
-8	published	1	\N	\N	Portfolio website	2025-08-01	\N	6	https://www.rikwanders.tech/	\N	Personal portfolio website showcasing my professional experience, skills, and services as a freelance/independent developer. Including personal dashboard with AI features for efficient job matching. Using Svelte & Directus CMS.	\N	["fullstack-svelte","fullstack-react"]
-9	published	2	\N	\N	LitState	2020-11-15	2023-01-18	6	https://github.com/gitaarik/lit-state	155	Reactive state management library for Lit Web Components, Open-sourced on GitHub & NPM. Used in production at Chipta (ticket shop). Lit + LitState is a simpler, lightweight and browser-native alternative to React + Redux.	\N	["fullstack-svelte","fullstack-react"]
-10	published	3	\N	\N	Django Admin Relation Links	2014-01-15	2014-01-15	6	https://github.com/gitaarik/django-admin-relation-links	108	Django Admin navigation enhancement, simplifying navigation between related database objects. Open-sourced on GitHub and PyPi. Used in production at Chipta & Tender-it.	\N	["fullstack-django","fullstack-python","fullstack-react"]
-11	published	4	\N	\N	Git Submodules Guide	2014-01-15	2014-01-15	6	https://gist.github.com/gitaarik/8735255	1028	Popular GitHub Gist explaining Git submodules fundamentals. Helped many developers understand submodules effectively.	gist.github.com/gitaarik/8735255	["fullstack-python","fullstack-django","fullstack-react","fullstack-svelte"]
-12	published	5	\N	\N	Jazzchords	2013-06-24	2017-12-08	6	https://github.com/gitaarik/jazzchords	12	Web application for creating and printing professional chord charts using Python/Django and modern frontend technologies.	\N	["fullstack-django"]
-13	published	6	\N	\N	Adyengo	2013-08-06	2020-05-07	6	https://github.com/gitaarik/adyengo	10	Open-source Django package for Adyen payment integration with recurring payment support. Used in production at Tender-it.	\N	["fullstack-django","fullstack-django-svelte"]
-14	published	7	\N	\N	Monkful	2013-09-03	2014-10-04	6	https://github.com/gitaarik/monkful	10	Python package to easily create RESTful API's for MongoEngine documents used for MongoDB database. Inspired by Django REST framework. Used in production at Travelbird.	\N	["fullstack-python","fullstack-django","fullstack-django-svelte"]
-15	published	1	\N	\N	Portfolio website	2025-08-01	\N	10	https://www.rikwanders.tech/	\N	Personal portfolio website showcasing my professional experience, skills, and services as a freelance/independent developer. Including personal dashboard with AI features for efficient job matching. Using Svelte & Directus CMS.	\N	["fullstack-svelte","fullstack-react"]
-16	published	2	\N	\N	LitState	2020-11-15	2023-01-18	10	https://github.com/gitaarik/lit-state	155	Reactive state management library for Lit Web Components, Open-sourced on GitHub & NPM. Used in production at Chipta (ticket shop). Lit + LitState is a simpler, lightweight and browser-native alternative to React + Redux.	\N	["fullstack-svelte","fullstack-react"]
-17	published	3	\N	\N	Django Admin Relation Links	2014-01-15	2014-01-15	10	https://github.com/gitaarik/django-admin-relation-links	108	Django Admin navigation enhancement, simplifying navigation between related database objects. Open-sourced on GitHub and PyPi. Used in production at Chipta & Tender-it.	\N	["fullstack-django","fullstack-python","fullstack-react"]
-18	published	4	\N	\N	Git Submodules Guide	2014-01-15	2014-01-15	10	https://gist.github.com/gitaarik/8735255	1028	Popular GitHub Gist explaining Git submodules fundamentals. Helped many developers understand submodules effectively.	gist.github.com/gitaarik/8735255	["fullstack-python","fullstack-django","fullstack-react","fullstack-svelte"]
-19	published	5	\N	\N	Jazzchords	2013-06-24	2017-12-08	10	https://github.com/gitaarik/jazzchords	12	Web application for creating and printing professional chord charts using Python/Django and modern frontend technologies.	\N	["fullstack-django"]
-20	published	6	\N	\N	Adyengo	2013-08-06	2020-05-07	10	https://github.com/gitaarik/adyengo	10	Open-source Django package for Adyen payment integration with recurring payment support. Used in production at Tender-it.	\N	["fullstack-django","fullstack-django-svelte"]
-21	published	7	\N	\N	Monkful	2013-09-03	2014-10-04	10	https://github.com/gitaarik/monkful	10	Python package to easily create RESTful API's for MongoEngine documents used for MongoDB database. Inspired by Django REST framework. Used in production at Travelbird.	\N	["fullstack-python","fullstack-django","fullstack-django-svelte"]
-22	published	1	\N	\N	Portfolio website	2025-08-01	\N	14	https://www.rikwanders.tech/	\N	Personal portfolio website showcasing my professional experience, skills, and services as a freelance/independent developer. Including personal dashboard with AI features for efficient job matching. Using Svelte & Directus CMS.	\N	["fullstack-svelte","fullstack-react"]
-23	published	2	\N	\N	LitState	2020-11-15	2023-01-18	14	https://github.com/gitaarik/lit-state	155	Reactive state management library for Lit Web Components, Open-sourced on GitHub & NPM. Used in production at Chipta (ticket shop). Lit + LitState is a simpler, lightweight and browser-native alternative to React + Redux.	\N	["fullstack-svelte","fullstack-react"]
-24	published	3	\N	\N	Django Admin Relation Links	2014-01-15	2014-01-15	14	https://github.com/gitaarik/django-admin-relation-links	108	Django Admin navigation enhancement, simplifying navigation between related database objects. Open-sourced on GitHub and PyPi. Used in production at Chipta & Tender-it.	\N	["fullstack-django","fullstack-python","fullstack-react"]
-25	published	4	\N	\N	Git Submodules Guide	2014-01-15	2014-01-15	14	https://gist.github.com/gitaarik/8735255	1028	Popular GitHub Gist explaining Git submodules fundamentals. Helped many developers understand submodules effectively.	gist.github.com/gitaarik/8735255	["fullstack-python","fullstack-django","fullstack-react","fullstack-svelte"]
-26	published	5	\N	\N	Jazzchords	2013-06-24	2017-12-08	14	https://github.com/gitaarik/jazzchords	12	Web application for creating and printing professional chord charts using Python/Django and modern frontend technologies.	\N	["fullstack-django"]
-27	published	6	\N	\N	Adyengo	2013-08-06	2020-05-07	14	https://github.com/gitaarik/adyengo	10	Open-source Django package for Adyen payment integration with recurring payment support. Used in production at Tender-it.	\N	["fullstack-django","fullstack-django-svelte"]
-28	published	7	\N	\N	Monkful	2013-09-03	2014-10-04	14	https://github.com/gitaarik/monkful	10	Python package to easily create RESTful API's for MongoEngine documents used for MongoDB database. Inspired by Django REST framework. Used in production at Travelbird.	\N	["fullstack-python","fullstack-django","fullstack-django-svelte"]
 \.
 
 
@@ -7337,38 +7078,6 @@ COPY public.tech_skill_categories (id, status, sort, date_created, date_updated,
 155	published	8	2025-10-29 15:03:06.594+00	2025-10-29 15:12:49.703+00	Dev Methodologies	2	user-gear
 156	published	4	2025-10-17 15:12:51.928+00	2025-10-30 13:47:22.659+00	Databases	2	database
 157	published	6	2025-10-22 17:29:35.678+00	2025-10-30 13:49:16.398+00	DevOps	2	server
-158	published	1	\N	\N	Backend	46	python
-159	published	1	\N	\N	Backend	54	python
-160	published	1	\N	\N	Backend	62	python
-161	published	1	\N	\N	Backend	70	python
-162	published	1	\N	\N	Backend	78	python
-163	published	2	\N	\N	Frontend	78	node-js
-164	published	4	\N	\N	Databases	78	database
-165	published	5	\N	\N	Development Tools	78	robot
-166	published	6	\N	\N	DevOps	78	server
-167	published	7	\N	\N	Cloud Platforms	78	cloud
-168	published	8	\N	\N	Dev Methodologies	78	user-gear
-169	published	1	\N	\N	Backend	6	python
-170	published	2	\N	\N	Frontend	6	node-js
-171	published	4	\N	\N	Databases	6	database
-172	published	5	\N	\N	Development Tools	6	robot
-173	published	6	\N	\N	DevOps	6	server
-174	published	7	\N	\N	Cloud Platforms	6	cloud
-175	published	8	\N	\N	Dev Methodologies	6	user-gear
-176	published	1	\N	\N	Backend	10	python
-177	published	2	\N	\N	Frontend	10	node-js
-178	published	4	\N	\N	Databases	10	database
-179	published	5	\N	\N	Development Tools	10	robot
-180	published	6	\N	\N	DevOps	10	server
-181	published	7	\N	\N	Cloud Platforms	10	cloud
-182	published	8	\N	\N	Dev Methodologies	10	user-gear
-183	published	1	\N	\N	Backend	14	python
-184	published	2	\N	\N	Frontend	14	node-js
-185	published	4	\N	\N	Databases	14	database
-186	published	5	\N	\N	Development Tools	14	robot
-187	published	6	\N	\N	DevOps	14	server
-188	published	7	\N	\N	Cloud Platforms	14	cloud
-189	published	8	\N	\N	Dev Methodologies	14	user-gear
 \.
 
 
@@ -7450,81 +7159,6 @@ COPY public.work_experience_achievements (id, status, sort, date_created, date_u
 217	published	9	2025-10-19 18:49:52.949+00	2025-10-30 11:43:52.576+00	OAuth Zoom Integration	Enabled clients to organize automatically managed online events with Zoom, by integrating Zoom with OAuth in Django	200	key	["fullstack-django","fullstack-python","fullstack-react"]
 218	published	10	2025-10-19 18:45:13.313+00	2025-10-30 11:45:23.6+00	REST API implementations	Allowed users to validate authenticity of 2nd hand tickets, by implementing TicketSwap REST APIs using DRF	200	plug	["fullstack-django","fullstack-python","fullstack-react"]
 219	published	11	2025-10-19 18:51:40.478+00	2025-10-30 11:45:35.19+00	Payment Integrations	Processed tens of millions in payment transactions, by building payment service integrations (Mollie, Pay.nl, Paypal)	200	credit-card	["fullstack-django","fullstack-python","fullstack-react"]
-220	published	1	\N	\N	Team Leadership	Led distributed development team (3-5 devs) with agile methods and strict code review processes, optimizing output 25%	221	users	[]
-222	published	2	\N	\N	Platform Scalability	Enabled processing thousands of orders per minute, by optimizating SQL & Python/Django process up to 60% & caching	221	chart-line	["fullstack-django","fullstack-python","fullstack-react","fullstack-svelte"]
-223	published	3	\N	\N	Frontend Modernization	Increased user engagement by +30%, by modernizing frontend UX using React, responsive design & web components	221	paintbrush	["fullstack-react","fullstack-svelte"]
-224	published	4	\N	\N	Mobile App Development	Contributed to scalability & 40% revenue growth by leading ticket scan app development with React Native & WebSockets	221	mobile	["fullstack-react","fullstack-svelte"]
-225	published	5	\N	\N	Test Driven Development	Decreased regression with 90%, by establishing TDD with quality testing suite using Django & Selenium (+80% coverage)	221	shield-alt	["fullstack-django","fullstack-python","fullstack-react","fullstack-svelte"]
-226	published	6	\N	\N	CI/CD Systems	Reduced deploy time -80% & enabled regular releases, by orchestrating CI/CD systems on Linode using Ansible & Python	221	robot	["fullstack-django","fullstack-python","fullstack-react","fullstack-svelte"]
-227	published	7	\N	\N	Docker Compose Setup	Streamlined onboarding, by coordinating development environment setup of 4 Docker microservices in Docker Compose	221	docker	["fullstack-django","fullstack-python","fullstack-react","fullstack-svelte"]
-228	published	8	\N	\N	Backwards Compatibility	Maintained backward compatibility with legacy PHP system & database, by customizing Django codebase	221	clock-rotate-left	["fullstack-django","fullstack-python"]
-229	published	9	\N	\N	OAuth Zoom Integration	Enabled clients to organize automatically managed online events with Zoom, by integrating Zoom with OAuth in Django	221	key	["fullstack-django","fullstack-python","fullstack-react"]
-230	published	10	\N	\N	REST API implementations	Allowed users to validate authenticity of 2nd hand tickets, by implementing TicketSwap REST APIs using DRF	221	plug	["fullstack-django","fullstack-python","fullstack-react"]
-231	published	11	\N	\N	Payment Integrations	Processed tens of millions in payment transactions, by building payment service integrations (Mollie, Pay.nl, Paypal)	221	credit-card	["fullstack-django","fullstack-python","fullstack-react"]
-232	published	12	\N	\N	Internationalization	Facilitated market expansion to eurozone, by implementing Django i18n features (language, country & timezone)	221	globe	["fullstack-django"]
-233	published	1	\N	\N	Product Development	Delivered complete platform with Python, Django & React in consultation with non-technical founders	234	wrench	null
-235	published	2	\N	\N	Data Automation	Transformed thousands of tenders daily into structured data, by making web crawlers & importers with Django & Celery	234	microchip	null
-236	published	3	\N	\N	Search Innovation	Developed industry-first Elasticsearch-powered search engine for filtering & scoring hundreds of thousands of tenders	234	search	null
-237	published	4	\N	\N	Revenue Model	Enabled market entry via subscription system with monthly/yearly recurring payments, using Django, Celery & Adyen	234	dollar-sign	["fullstack-django","fullstack-python"]
-238	published	5	\N	\N	Notification Mailing System	Supported user retention by developing automatic notification mailing system for user preferences & saved searches	234	envelope	["fullstack-django","fullstack-python","fullstack-react"]
-239	published	6	\N	\N	Frontend modernization	Provided professional platform aesthetics by enhancing frontend in coordination with frontend developer using Vue.js	234	paintbrush	["fullstack-react"]
-240	published	1	\N	\N	Mobile App Development	Shipped iPhone & Android booking apps in scrum team (4) within 5 months, handling 15%+ of bookings in 3 months	241	mobile	null
-242	published	2	\N	\N	REST API development	Designed REST API with JWT auth using DRF, deployed on AWS, accommodating iOS & Android apps and mobile website	241	server	null
-243	published	3	\N	\N	Email Marketing Platform	Supported acquisition by sending thousands of emails with marketing system using Python, Django, Celery & SendGrid	241	envelope	null
-244	published	1	\N	\N	Client Delivery	Delivered web projects for major clients (Bol.com) as part of company's best of 5 Scrum teams using custom PHP CMS	245	handshake	null
-246	published	2	\N	\N	Frontend & CMS Development	Cultivated advanced frontend & UX skills with jQuery & CSS3, increasing user product engagement & client satisfaction	245	code	null
-247	published	1	\N	\N	Platform Development	Implemented payment integrations, internationalization, and optimized MySQL database structures & queries	248	database	null
-249	published	2	\N	\N	Team Collaboration & Growth	Promoted to mid-level developer in 10+ developer team, maintaining large-scale PHP codebase & Linux servers setup	248	users	null
-250	published	1	\N	\N	Team Leadership	Led distributed development team (3-5 devs) with agile methods and strict code review processes, optimizing output 25%	251	users	[]
-252	published	2	\N	\N	Platform Scalability	Enabled processing thousands of orders per minute, by optimizating SQL & Python/Django process up to 60% & caching	251	chart-line	["fullstack-django","fullstack-python","fullstack-react","fullstack-svelte"]
-253	published	3	\N	\N	Frontend Modernization	Increased user engagement by +30%, by modernizing frontend UX using React, responsive design & web components	251	paintbrush	["fullstack-react","fullstack-svelte"]
-254	published	4	\N	\N	Mobile App Development	Contributed to scalability & 40% revenue growth by leading ticket scan app development with React Native & WebSockets	251	mobile	["fullstack-react","fullstack-svelte"]
-255	published	5	\N	\N	Test Driven Development	Decreased regression with 90%, by establishing TDD with quality testing suite using Django & Selenium (+80% coverage)	251	shield-alt	["fullstack-django","fullstack-python","fullstack-react","fullstack-svelte"]
-256	published	6	\N	\N	CI/CD Systems	Reduced deploy time -80% & enabled regular releases, by orchestrating CI/CD systems on Linode using Ansible & Python	251	robot	["fullstack-django","fullstack-python","fullstack-react","fullstack-svelte"]
-257	published	7	\N	\N	Docker Compose Setup	Streamlined onboarding, by coordinating development environment setup of 4 Docker microservices in Docker Compose	251	docker	["fullstack-django","fullstack-python","fullstack-react","fullstack-svelte"]
-258	published	8	\N	\N	Backwards Compatibility	Maintained backward compatibility with legacy PHP system & database, by customizing Django codebase	251	clock-rotate-left	["fullstack-django","fullstack-python"]
-259	published	9	\N	\N	OAuth Zoom Integration	Enabled clients to organize automatically managed online events with Zoom, by integrating Zoom with OAuth in Django	251	key	["fullstack-django","fullstack-python","fullstack-react"]
-260	published	10	\N	\N	REST API implementations	Allowed users to validate authenticity of 2nd hand tickets, by implementing TicketSwap REST APIs using DRF	251	plug	["fullstack-django","fullstack-python","fullstack-react"]
-261	published	11	\N	\N	Payment Integrations	Processed tens of millions in payment transactions, by building payment service integrations (Mollie, Pay.nl, Paypal)	251	credit-card	["fullstack-django","fullstack-python","fullstack-react"]
-262	published	12	\N	\N	Internationalization	Facilitated market expansion to eurozone, by implementing Django i18n features (language, country & timezone)	251	globe	["fullstack-django"]
-263	published	1	\N	\N	Product Development	Delivered complete platform with Python, Django & React in consultation with non-technical founders	264	wrench	null
-265	published	2	\N	\N	Data Automation	Transformed thousands of tenders daily into structured data, by making web crawlers & importers with Django & Celery	264	microchip	null
-266	published	3	\N	\N	Search Innovation	Developed industry-first Elasticsearch-powered search engine for filtering & scoring hundreds of thousands of tenders	264	search	null
-267	published	4	\N	\N	Revenue Model	Enabled market entry via subscription system with monthly/yearly recurring payments, using Django, Celery & Adyen	264	dollar-sign	["fullstack-django","fullstack-python"]
-268	published	5	\N	\N	Notification Mailing System	Supported user retention by developing automatic notification mailing system for user preferences & saved searches	264	envelope	["fullstack-django","fullstack-python","fullstack-react"]
-269	published	6	\N	\N	Frontend modernization	Provided professional platform aesthetics by enhancing frontend in coordination with frontend developer using Vue.js	264	paintbrush	["fullstack-react"]
-270	published	1	\N	\N	Mobile App Development	Shipped iPhone & Android booking apps in scrum team (4) within 5 months, handling 15%+ of bookings in 3 months	271	mobile	null
-272	published	2	\N	\N	REST API development	Designed REST API with JWT auth using DRF, deployed on AWS, accommodating iOS & Android apps and mobile website	271	server	null
-273	published	3	\N	\N	Email Marketing Platform	Supported acquisition by sending thousands of emails with marketing system using Python, Django, Celery & SendGrid	271	envelope	null
-274	published	1	\N	\N	Client Delivery	Delivered web projects for major clients (Bol.com) as part of company's best of 5 Scrum teams using custom PHP CMS	275	handshake	null
-276	published	2	\N	\N	Frontend & CMS Development	Cultivated advanced frontend & UX skills with jQuery & CSS3, increasing user product engagement & client satisfaction	275	code	null
-277	published	1	\N	\N	Platform Development	Implemented payment integrations, internationalization, and optimized MySQL database structures & queries	278	database	null
-279	published	2	\N	\N	Team Collaboration & Growth	Promoted to mid-level developer in 10+ developer team, maintaining large-scale PHP codebase & Linux servers setup	278	users	null
-280	published	1	\N	\N	Team Leadership	Led distributed development team (3-5 devs) with agile methods and strict code review processes, optimizing output 25%	281	users	[]
-282	published	2	\N	\N	Platform Scalability	Enabled processing thousands of orders per minute, by optimizating SQL & Python/Django process up to 60% & caching	281	chart-line	["fullstack-django","fullstack-python","fullstack-react","fullstack-svelte"]
-283	published	3	\N	\N	Frontend Modernization	Increased user engagement by +30%, by modernizing frontend UX using React, responsive design & web components	281	paintbrush	["fullstack-react","fullstack-svelte"]
-284	published	4	\N	\N	Mobile App Development	Contributed to scalability & 40% revenue growth by leading ticket scan app development with React Native & WebSockets	281	mobile	["fullstack-react","fullstack-svelte"]
-285	published	5	\N	\N	Test Driven Development	Decreased regression with 90%, by establishing TDD with quality testing suite using Django & Selenium (+80% coverage)	281	shield-alt	["fullstack-django","fullstack-python","fullstack-react","fullstack-svelte"]
-286	published	6	\N	\N	CI/CD Systems	Reduced deploy time -80% & enabled regular releases, by orchestrating CI/CD systems on Linode using Ansible & Python	281	robot	["fullstack-django","fullstack-python","fullstack-react","fullstack-svelte"]
-287	published	7	\N	\N	Docker Compose Setup	Streamlined onboarding, by coordinating development environment setup of 4 Docker microservices in Docker Compose	281	docker	["fullstack-django","fullstack-python","fullstack-react","fullstack-svelte"]
-288	published	8	\N	\N	Backwards Compatibility	Maintained backward compatibility with legacy PHP system & database, by customizing Django codebase	281	clock-rotate-left	["fullstack-django","fullstack-python"]
-289	published	9	\N	\N	OAuth Zoom Integration	Enabled clients to organize automatically managed online events with Zoom, by integrating Zoom with OAuth in Django	281	key	["fullstack-django","fullstack-python","fullstack-react"]
-290	published	10	\N	\N	REST API implementations	Allowed users to validate authenticity of 2nd hand tickets, by implementing TicketSwap REST APIs using DRF	281	plug	["fullstack-django","fullstack-python","fullstack-react"]
-291	published	11	\N	\N	Payment Integrations	Processed tens of millions in payment transactions, by building payment service integrations (Mollie, Pay.nl, Paypal)	281	credit-card	["fullstack-django","fullstack-python","fullstack-react"]
-292	published	12	\N	\N	Internationalization	Facilitated market expansion to eurozone, by implementing Django i18n features (language, country & timezone)	281	globe	["fullstack-django"]
-293	published	1	\N	\N	Product Development	Delivered complete platform with Python, Django & React in consultation with non-technical founders	294	wrench	null
-295	published	2	\N	\N	Data Automation	Transformed thousands of tenders daily into structured data, by making web crawlers & importers with Django & Celery	294	microchip	null
-296	published	3	\N	\N	Search Innovation	Developed industry-first Elasticsearch-powered search engine for filtering & scoring hundreds of thousands of tenders	294	search	null
-297	published	4	\N	\N	Revenue Model	Enabled market entry via subscription system with monthly/yearly recurring payments, using Django, Celery & Adyen	294	dollar-sign	["fullstack-django","fullstack-python"]
-298	published	5	\N	\N	Notification Mailing System	Supported user retention by developing automatic notification mailing system for user preferences & saved searches	294	envelope	["fullstack-django","fullstack-python","fullstack-react"]
-299	published	6	\N	\N	Frontend modernization	Provided professional platform aesthetics by enhancing frontend in coordination with frontend developer using Vue.js	294	paintbrush	["fullstack-react"]
-300	published	1	\N	\N	Mobile App Development	Shipped iPhone & Android booking apps in scrum team (4) within 5 months, handling 15%+ of bookings in 3 months	301	mobile	null
-302	published	2	\N	\N	REST API development	Designed REST API with JWT auth using DRF, deployed on AWS, accommodating iOS & Android apps and mobile website	301	server	null
-303	published	3	\N	\N	Email Marketing Platform	Supported acquisition by sending thousands of emails with marketing system using Python, Django, Celery & SendGrid	301	envelope	null
-304	published	1	\N	\N	Client Delivery	Delivered web projects for major clients (Bol.com) as part of company's best of 5 Scrum teams using custom PHP CMS	305	handshake	null
-306	published	2	\N	\N	Frontend & CMS Development	Cultivated advanced frontend & UX skills with jQuery & CSS3, increasing user product engagement & client satisfaction	305	code	null
-307	published	1	\N	\N	Platform Development	Implemented payment integrations, internationalization, and optimized MySQL database structures & queries	308	database	null
-309	published	2	\N	\N	Team Collaboration & Growth	Promoted to mid-level developer in 10+ developer team, maintaining large-scale PHP codebase & Linux servers setup	308	users	null
 \.
 
 
@@ -7627,288 +7261,6 @@ COPY public.work_experience_technologies (id, status, sort, date_created, date_u
 403	published	4	2025-10-27 14:43:03.367+00	2025-10-27 15:14:10.049+00	HTML	399
 404	published	6	2025-10-27 14:43:03.37+00	2025-10-27 15:14:10.053+00	Apache	399
 405	published	7	2025-10-27 14:43:25.645+00	2025-10-27 15:14:10.056+00	Photoshop	399
-406	published	1	\N	\N	Python	221
-407	published	2	\N	\N	Django	221
-408	published	3	\N	\N	Django REST Framework	221
-409	published	4	\N	\N	Django Channels	221
-410	published	5	\N	\N	Django Silk	221
-411	published	6	\N	\N	Jinja2	221
-412	published	7	\N	\N	Weasyprint	221
-413	published	8	\N	\N	MySQL	221
-414	published	9	\N	\N	Ansible	221
-415	published	10	\N	\N	Python Fabric	221
-416	published	11	\N	\N	Linode	221
-417	published	12	\N	\N	Nginx	221
-418	published	13	\N	\N	Redis	221
-419	published	14	\N	\N	HAProxy	221
-420	published	15	\N	\N	Selenium	221
-421	published	16	\N	\N	OAuth	221
-422	published	17	\N	\N	Node.js	221
-423	published	18	\N	\N	React	221
-424	published	19	\N	\N	MobX	221
-425	published	20	\N	\N	Lit	221
-426	published	21	\N	\N	Web Components	221
-427	published	22	\N	\N	Web Sockets	221
-428	published	23	\N	\N	React Native	221
-429	published	1	\N	\N	Python	234
-430	published	2	\N	\N	Django	234
-431	published	3	\N	\N	Django REST Framework	234
-432	published	4	\N	\N	Django Celery	234
-433	published	5	\N	\N	Python Requests	234
-434	published	6	\N	\N	Beautifulsoup	234
-435	published	7	\N	\N	Node.js	234
-436	published	8	\N	\N	React	234
-437	published	9	\N	\N	Vue.js	234
-438	published	10	\N	\N	Webpack	234
-439	published	11	\N	\N	MySQL	234
-440	published	12	\N	\N	Elasticsearch	234
-441	published	13	\N	\N	Linode	234
-442	published	14	\N	\N	Nginx	234
-443	published	1	\N	\N	Python	241
-444	published	2	\N	\N	Django	241
-445	published	3	\N	\N	Django REST Framework	241
-446	published	4	\N	\N	Django Celery	241
-447	published	5	\N	\N	Django South	241
-448	published	6	\N	\N	Django Compressor	241
-449	published	7	\N	\N	Objective-C	241
-450	published	8	\N	\N	Xcode	241
-451	published	9	\N	\N	AWS EC2	241
-452	published	10	\N	\N	AWS S3	241
-453	published	11	\N	\N	Sendgrid	241
-454	published	12	\N	\N	PostgreSQL	241
-455	published	13	\N	\N	MongoDB	241
-456	published	14	\N	\N	JavaScript	241
-457	published	15	\N	\N	gulp.js	241
-458	published	16	\N	\N	Sass	241
-459	published	17	\N	\N	Linode	241
-460	published	18	\N	\N	Nginx	241
-461	published	19	\N	\N	Varnish	241
-462	published	1	\N	\N	PHP	245
-463	published	2	\N	\N	MySQL	245
-464	published	3	\N	\N	Apache	245
-465	published	4	\N	\N	Linux	245
-466	published	5	\N	\N	XAMPP	245
-467	published	6	\N	\N	HTML5	245
-468	published	7	\N	\N	CSS3	245
-469	published	8	\N	\N	JavaScript	245
-470	published	9	\N	\N	AJAX	245
-471	published	10	\N	\N	jQuery	245
-472	published	11	\N	\N	jQuery UI	245
-473	published	12	\N	\N	Underscore.js	245
-474	published	13	\N	\N	Bootstrap	245
-475	published	14	\N	\N	Responsive design	245
-476	published	15	\N	\N	Firebug	245
-477	published	1	\N	\N	PHP	248
-478	published	2	\N	\N	MySQL	248
-479	published	3	\N	\N	Linux	248
-480	published	4	\N	\N	nginx	248
-481	published	5	\N	\N	Memcached	248
-482	published	6	\N	\N	HTML	248
-483	published	7	\N	\N	CSS	248
-484	published	8	\N	\N	JavaScript	248
-485	published	9	\N	\N	jQuery	248
-486	published	10	\N	\N	AJAX	248
-487	published	11	\N	\N	YUI Library	248
-488	published	1	\N	\N	PHP	489
-490	published	2	\N	\N	JavaScript	489
-491	published	3	\N	\N	jQuery	489
-492	published	4	\N	\N	HTML	489
-493	published	5	\N	\N	CSS	489
-494	published	6	\N	\N	Apache	489
-495	published	7	\N	\N	Photoshop	489
-496	published	1	\N	\N	PHP	497
-498	published	2	\N	\N	JavaScript	497
-499	published	3	\N	\N	jQuery	497
-500	published	4	\N	\N	HTML	497
-501	published	5	\N	\N	CSS	497
-502	published	1	\N	\N	Python	251
-503	published	2	\N	\N	Django	251
-504	published	3	\N	\N	Django REST Framework	251
-505	published	4	\N	\N	Django Channels	251
-506	published	5	\N	\N	Django Silk	251
-507	published	6	\N	\N	Jinja2	251
-508	published	7	\N	\N	Weasyprint	251
-509	published	8	\N	\N	MySQL	251
-510	published	9	\N	\N	Ansible	251
-511	published	10	\N	\N	Python Fabric	251
-512	published	11	\N	\N	Linode	251
-513	published	12	\N	\N	Nginx	251
-514	published	13	\N	\N	Redis	251
-515	published	14	\N	\N	HAProxy	251
-516	published	15	\N	\N	Selenium	251
-517	published	16	\N	\N	OAuth	251
-518	published	17	\N	\N	Node.js	251
-519	published	18	\N	\N	React	251
-520	published	19	\N	\N	MobX	251
-521	published	20	\N	\N	Lit	251
-522	published	21	\N	\N	Web Components	251
-523	published	22	\N	\N	Web Sockets	251
-524	published	23	\N	\N	React Native	251
-525	published	1	\N	\N	Python	264
-526	published	2	\N	\N	Django	264
-527	published	3	\N	\N	Django REST Framework	264
-528	published	4	\N	\N	Django Celery	264
-529	published	5	\N	\N	Python Requests	264
-530	published	6	\N	\N	Beautifulsoup	264
-531	published	7	\N	\N	Node.js	264
-532	published	8	\N	\N	React	264
-533	published	9	\N	\N	Vue.js	264
-534	published	10	\N	\N	Webpack	264
-535	published	11	\N	\N	MySQL	264
-536	published	12	\N	\N	Elasticsearch	264
-537	published	13	\N	\N	Linode	264
-538	published	14	\N	\N	Nginx	264
-539	published	1	\N	\N	Python	271
-540	published	2	\N	\N	Django	271
-541	published	3	\N	\N	Django REST Framework	271
-542	published	4	\N	\N	Django Celery	271
-543	published	5	\N	\N	Django South	271
-544	published	6	\N	\N	Django Compressor	271
-545	published	7	\N	\N	Objective-C	271
-546	published	8	\N	\N	Xcode	271
-547	published	9	\N	\N	AWS EC2	271
-548	published	10	\N	\N	AWS S3	271
-549	published	11	\N	\N	Sendgrid	271
-550	published	12	\N	\N	PostgreSQL	271
-551	published	13	\N	\N	MongoDB	271
-552	published	14	\N	\N	JavaScript	271
-553	published	15	\N	\N	gulp.js	271
-554	published	16	\N	\N	Sass	271
-555	published	17	\N	\N	Linode	271
-556	published	18	\N	\N	Nginx	271
-557	published	19	\N	\N	Varnish	271
-558	published	1	\N	\N	PHP	275
-559	published	2	\N	\N	MySQL	275
-560	published	3	\N	\N	Apache	275
-561	published	4	\N	\N	Linux	275
-562	published	5	\N	\N	XAMPP	275
-563	published	6	\N	\N	HTML5	275
-564	published	7	\N	\N	CSS3	275
-565	published	8	\N	\N	JavaScript	275
-566	published	9	\N	\N	AJAX	275
-567	published	10	\N	\N	jQuery	275
-568	published	11	\N	\N	jQuery UI	275
-569	published	12	\N	\N	Underscore.js	275
-570	published	13	\N	\N	Bootstrap	275
-571	published	14	\N	\N	Responsive design	275
-572	published	15	\N	\N	Firebug	275
-573	published	1	\N	\N	PHP	278
-574	published	2	\N	\N	MySQL	278
-575	published	3	\N	\N	Linux	278
-576	published	4	\N	\N	nginx	278
-577	published	5	\N	\N	Memcached	278
-578	published	6	\N	\N	HTML	278
-579	published	7	\N	\N	CSS	278
-580	published	8	\N	\N	JavaScript	278
-581	published	9	\N	\N	jQuery	278
-582	published	10	\N	\N	AJAX	278
-583	published	11	\N	\N	YUI Library	278
-584	published	1	\N	\N	PHP	585
-586	published	2	\N	\N	JavaScript	585
-587	published	3	\N	\N	jQuery	585
-588	published	4	\N	\N	HTML	585
-589	published	5	\N	\N	CSS	585
-590	published	6	\N	\N	Apache	585
-591	published	7	\N	\N	Photoshop	585
-592	published	1	\N	\N	PHP	593
-594	published	2	\N	\N	JavaScript	593
-595	published	3	\N	\N	jQuery	593
-596	published	4	\N	\N	HTML	593
-597	published	5	\N	\N	CSS	593
-598	published	1	\N	\N	Python	281
-599	published	2	\N	\N	Django	281
-600	published	3	\N	\N	Django REST Framework	281
-601	published	4	\N	\N	Django Channels	281
-602	published	5	\N	\N	Django Silk	281
-603	published	6	\N	\N	Jinja2	281
-604	published	7	\N	\N	Weasyprint	281
-605	published	8	\N	\N	MySQL	281
-606	published	9	\N	\N	Ansible	281
-607	published	10	\N	\N	Python Fabric	281
-608	published	11	\N	\N	Linode	281
-609	published	12	\N	\N	Nginx	281
-610	published	13	\N	\N	Redis	281
-611	published	14	\N	\N	HAProxy	281
-612	published	15	\N	\N	Selenium	281
-613	published	16	\N	\N	OAuth	281
-614	published	17	\N	\N	Node.js	281
-615	published	18	\N	\N	React	281
-616	published	19	\N	\N	MobX	281
-617	published	20	\N	\N	Lit	281
-618	published	21	\N	\N	Web Components	281
-619	published	22	\N	\N	Web Sockets	281
-620	published	23	\N	\N	React Native	281
-621	published	1	\N	\N	Python	294
-622	published	2	\N	\N	Django	294
-623	published	3	\N	\N	Django REST Framework	294
-624	published	4	\N	\N	Django Celery	294
-625	published	5	\N	\N	Python Requests	294
-626	published	6	\N	\N	Beautifulsoup	294
-627	published	7	\N	\N	Node.js	294
-628	published	8	\N	\N	React	294
-629	published	9	\N	\N	Vue.js	294
-630	published	10	\N	\N	Webpack	294
-631	published	11	\N	\N	MySQL	294
-632	published	12	\N	\N	Elasticsearch	294
-633	published	13	\N	\N	Linode	294
-634	published	14	\N	\N	Nginx	294
-635	published	1	\N	\N	Python	301
-636	published	2	\N	\N	Django	301
-637	published	3	\N	\N	Django REST Framework	301
-638	published	4	\N	\N	Django Celery	301
-639	published	5	\N	\N	Django South	301
-640	published	6	\N	\N	Django Compressor	301
-641	published	7	\N	\N	Objective-C	301
-642	published	8	\N	\N	Xcode	301
-643	published	9	\N	\N	AWS EC2	301
-644	published	10	\N	\N	AWS S3	301
-645	published	11	\N	\N	Sendgrid	301
-646	published	12	\N	\N	PostgreSQL	301
-647	published	13	\N	\N	MongoDB	301
-648	published	14	\N	\N	JavaScript	301
-649	published	15	\N	\N	gulp.js	301
-650	published	16	\N	\N	Sass	301
-651	published	17	\N	\N	Linode	301
-652	published	18	\N	\N	Nginx	301
-653	published	19	\N	\N	Varnish	301
-654	published	1	\N	\N	PHP	305
-655	published	2	\N	\N	MySQL	305
-656	published	3	\N	\N	Apache	305
-657	published	4	\N	\N	Linux	305
-658	published	5	\N	\N	XAMPP	305
-659	published	6	\N	\N	HTML5	305
-660	published	7	\N	\N	CSS3	305
-661	published	8	\N	\N	JavaScript	305
-662	published	9	\N	\N	AJAX	305
-663	published	10	\N	\N	jQuery	305
-664	published	11	\N	\N	jQuery UI	305
-665	published	12	\N	\N	Underscore.js	305
-666	published	13	\N	\N	Bootstrap	305
-667	published	14	\N	\N	Responsive design	305
-668	published	15	\N	\N	Firebug	305
-669	published	1	\N	\N	PHP	308
-670	published	2	\N	\N	MySQL	308
-671	published	3	\N	\N	Linux	308
-672	published	4	\N	\N	nginx	308
-673	published	5	\N	\N	Memcached	308
-674	published	6	\N	\N	HTML	308
-675	published	7	\N	\N	CSS	308
-676	published	8	\N	\N	JavaScript	308
-677	published	9	\N	\N	jQuery	308
-678	published	10	\N	\N	AJAX	308
-679	published	11	\N	\N	YUI Library	308
-680	published	1	\N	\N	PHP	681
-682	published	2	\N	\N	JavaScript	681
-683	published	3	\N	\N	jQuery	681
-684	published	4	\N	\N	HTML	681
-685	published	5	\N	\N	CSS	681
-686	published	6	\N	\N	Apache	681
-687	published	7	\N	\N	Photoshop	681
-688	published	1	\N	\N	PHP	689
-690	published	2	\N	\N	JavaScript	689
-691	published	3	\N	\N	jQuery	689
-692	published	4	\N	\N	HTML	689
-693	published	5	\N	\N	CSS	689
 \.
 
 
@@ -7924,27 +7276,6 @@ Chipta	Amsterdam, NL	Ticketing company	Lead Developer	Led teams of 3-5 developer
 Festivalinfo	Amsterdam, NL	Festival / event information website	Internship Web Developer	Contributed to the stability and expansion of the platforms festivalinfo.nl, podiuminfo.nl, cabaretinfo.nl and agendainfo.nl, by fixing bugs and creating various new features.	393	98539d12-2738-4fe6-8c87-38502f5ff46a	published	7	2	2025-10-27 15:01:31.379+00	2025-10-29 12:49:01.681+00	2006-03-05	2006-08-25	https://www.festivalinfo.nl	["cv"]
 Budget Advies Groep	Cruquius, NL	Intermediary	Junior Web developer	Helped with the acquisition of new clients, by creating several website portals that were of interest for different types of clients. Attractive designs and search engine optimization (SEO) were an important aspect in this.	399	2270fabe-758e-4807-9b67-1a4ea5cfb97d	published	6	2	2025-10-27 14:39:27.907+00	2025-10-29 12:50:02.922+00	2006-09-10	2007-06-08	https://www.budgetadviesgroep.nl/	["cv"]
 TravelBird	Amsterdam, NL	Online Travel Agent	Senior Full-Stack Developer	Contributed to mobile app development during time of travel industry mobile adoption, shipping native iPhone and Android booking apps in scrum team that handled 15%+ of bookings within first 3 months. Designed REST API using Django REST Framework deployed on AWS to accommodate new iOS & Android apps and mobile website.	198	39be710f-64de-48b5-96c5-4dee614d66f8	published	3	2	2025-10-20 15:51:50.788+00	2025-10-30 12:46:05.125+00	2013-03-17	2014-08-08	https://www.travelbird.com/	\N
-Chipta	Amsterdam, NL	Ticketing company	Lead Developer	Led teams of 3-5 developers at innovative ticketing platform for over 7 years, scaling the platform from concept to processing thousands of orders per minute. Optimized platform performance by 30-60%, implemented comprehensive testing suites, and orchestrated CI/CD systems. Built React Native mobile apps that contributed to a 40% revenue increase, modernized frontend interfaces with React, increasing user engagement by 30%. And integrated critical payment systems processing tens of millions in transactions.	221	\N	published	1	6	\N	\N	2017-09-10	2025-03-07	https://chipta.com/	null
-Tender-it	Amsterdam, NL	Tender platform	Lead Developer	Built comprehensive tender discovery platform from scratch as Lead Developer, designing complete platform using agile methodology in consultation with non-technical founders. Developed industry-first Elasticsearch-powered search engine filtering hundreds of thousands of tenders, engineered automated web crawling systems importing thousands of tenders daily, and implemented subscription-based revenue model with recurring payments and automated notification systems.	234	\N	published	2	6	\N	\N	2014-03-09	2017-06-22	\N	null
-TravelBird	Amsterdam, NL	Online Travel Agent	Senior Full-Stack Developer	Contributed to mobile app development during time of travel industry mobile adoption, shipping native iPhone and Android booking apps in scrum team that handled 15%+ of bookings within first 3 months. Designed REST API using Django REST Framework deployed on AWS to accommodate new iOS & Android apps and mobile website.	241	\N	published	3	6	\N	\N	2013-03-17	2014-08-08	https://www.travelbird.com/	null
-SWIS	Leiden, NL	Web Development Agency	Mid-level Web Developer	Delivered web projects for major clients including Bol.com and Gemeente Amsterdam as part of company's best performing Scrum team out of 5 teams. Cultivated advanced frontend & UX skills with jQuery & CSS3, significantly increasing user product engagement and client satisfaction while maintaining agency's reputation for quality delivery.	245	\N	published	4	6	\N	\N	2011-08-14	2013-02-15	https://www.swis.nl/	["cv"]
-Gamepoint	The Hague, NL	Casual Gaming Community	Junior / Mid-level Web Developer	Progressed from junior to mid-level developer within a 10+ developer team at established gaming community platform serving hundreds of thousands of users. Implemented payment integrations and internationalization features, optimized MySQL database structures & queries, and maintained large-scale PHP codebase & Linux server setup while contributing to platform stability and feature development.	248	\N	published	5	6	\N	\N	2007-08-12	2011-06-17	https://www.gamepoint.biz/	["cv"]
-Budget Advies Groep	Cruquius, NL	Intermediary	Junior Web developer	Helped with the acquisition of new clients, by creating several website portals that were of interest for different types of clients. Attractive designs and search engine optimization (SEO) were an important aspect in this.	489	\N	published	6	6	\N	\N	2006-09-10	2007-06-08	https://www.budgetadviesgroep.nl/	["cv"]
-Festivalinfo	Amsterdam, NL	Festival / event information website	Internship Web Developer	Contributed to the stability and expansion of the platforms festivalinfo.nl, podiuminfo.nl, cabaretinfo.nl and agendainfo.nl, by fixing bugs and creating various new features.	497	\N	published	7	6	\N	\N	2006-03-05	2006-08-25	https://www.festivalinfo.nl	["cv"]
-Chipta	Amsterdam, NL	Ticketing company	Lead Developer	Led teams of 3-5 developers at innovative ticketing platform for over 7 years, scaling the platform from concept to processing thousands of orders per minute. Optimized platform performance by 30-60%, implemented comprehensive testing suites, and orchestrated CI/CD systems. Built React Native mobile apps that contributed to a 40% revenue increase, modernized frontend interfaces with React, increasing user engagement by 30%. And integrated critical payment systems processing tens of millions in transactions.	251	\N	published	1	10	\N	\N	2017-09-10	2025-03-07	https://chipta.com/	null
-Tender-it	Amsterdam, NL	Tender platform	Lead Developer	Built comprehensive tender discovery platform from scratch as Lead Developer, designing complete platform using agile methodology in consultation with non-technical founders. Developed industry-first Elasticsearch-powered search engine filtering hundreds of thousands of tenders, engineered automated web crawling systems importing thousands of tenders daily, and implemented subscription-based revenue model with recurring payments and automated notification systems.	264	\N	published	2	10	\N	\N	2014-03-09	2017-06-22	\N	null
-TravelBird	Amsterdam, NL	Online Travel Agent	Senior Full-Stack Developer	Contributed to mobile app development during time of travel industry mobile adoption, shipping native iPhone and Android booking apps in scrum team that handled 15%+ of bookings within first 3 months. Designed REST API using Django REST Framework deployed on AWS to accommodate new iOS & Android apps and mobile website.	271	\N	published	3	10	\N	\N	2013-03-17	2014-08-08	https://www.travelbird.com/	null
-SWIS	Leiden, NL	Web Development Agency	Mid-level Web Developer	Delivered web projects for major clients including Bol.com and Gemeente Amsterdam as part of company's best performing Scrum team out of 5 teams. Cultivated advanced frontend & UX skills with jQuery & CSS3, significantly increasing user product engagement and client satisfaction while maintaining agency's reputation for quality delivery.	275	\N	published	4	10	\N	\N	2011-08-14	2013-02-15	https://www.swis.nl/	["cv"]
-Gamepoint	The Hague, NL	Casual Gaming Community	Junior / Mid-level Web Developer	Progressed from junior to mid-level developer within a 10+ developer team at established gaming community platform serving hundreds of thousands of users. Implemented payment integrations and internationalization features, optimized MySQL database structures & queries, and maintained large-scale PHP codebase & Linux server setup while contributing to platform stability and feature development.	278	\N	published	5	10	\N	\N	2007-08-12	2011-06-17	https://www.gamepoint.biz/	["cv"]
-Budget Advies Groep	Cruquius, NL	Intermediary	Junior Web developer	Helped with the acquisition of new clients, by creating several website portals that were of interest for different types of clients. Attractive designs and search engine optimization (SEO) were an important aspect in this.	585	\N	published	6	10	\N	\N	2006-09-10	2007-06-08	https://www.budgetadviesgroep.nl/	["cv"]
-Festivalinfo	Amsterdam, NL	Festival / event information website	Internship Web Developer	Contributed to the stability and expansion of the platforms festivalinfo.nl, podiuminfo.nl, cabaretinfo.nl and agendainfo.nl, by fixing bugs and creating various new features.	593	\N	published	7	10	\N	\N	2006-03-05	2006-08-25	https://www.festivalinfo.nl	["cv"]
-Chipta	Amsterdam, NL	Ticketing company	Lead Developer	Led teams of 3-5 developers at innovative ticketing platform for over 7 years, scaling the platform from concept to processing thousands of orders per minute. Optimized platform performance by 30-60%, implemented comprehensive testing suites, and orchestrated CI/CD systems. Built React Native mobile apps that contributed to a 40% revenue increase, modernized frontend interfaces with React, increasing user engagement by 30%. And integrated critical payment systems processing tens of millions in transactions.	281	\N	published	1	14	\N	\N	2017-09-10	2025-03-07	https://chipta.com/	null
-Tender-it	Amsterdam, NL	Tender platform	Lead Developer	Built comprehensive tender discovery platform from scratch as Lead Developer, designing complete platform using agile methodology in consultation with non-technical founders. Developed industry-first Elasticsearch-powered search engine filtering hundreds of thousands of tenders, engineered automated web crawling systems importing thousands of tenders daily, and implemented subscription-based revenue model with recurring payments and automated notification systems.	294	\N	published	2	14	\N	\N	2014-03-09	2017-06-22	\N	null
-TravelBird	Amsterdam, NL	Online Travel Agent	Senior Full-Stack Developer	Contributed to mobile app development during time of travel industry mobile adoption, shipping native iPhone and Android booking apps in scrum team that handled 15%+ of bookings within first 3 months. Designed REST API using Django REST Framework deployed on AWS to accommodate new iOS & Android apps and mobile website.	301	\N	published	3	14	\N	\N	2013-03-17	2014-08-08	https://www.travelbird.com/	null
-SWIS	Leiden, NL	Web Development Agency	Mid-level Web Developer	Delivered web projects for major clients including Bol.com and Gemeente Amsterdam as part of company's best performing Scrum team out of 5 teams. Cultivated advanced frontend & UX skills with jQuery & CSS3, significantly increasing user product engagement and client satisfaction while maintaining agency's reputation for quality delivery.	305	\N	published	4	14	\N	\N	2011-08-14	2013-02-15	https://www.swis.nl/	["cv"]
-Gamepoint	The Hague, NL	Casual Gaming Community	Junior / Mid-level Web Developer	Progressed from junior to mid-level developer within a 10+ developer team at established gaming community platform serving hundreds of thousands of users. Implemented payment integrations and internationalization features, optimized MySQL database structures & queries, and maintained large-scale PHP codebase & Linux server setup while contributing to platform stability and feature development.	308	\N	published	5	14	\N	\N	2007-08-12	2011-06-17	https://www.gamepoint.biz/	["cv"]
-Budget Advies Groep	Cruquius, NL	Intermediary	Junior Web developer	Helped with the acquisition of new clients, by creating several website portals that were of interest for different types of clients. Attractive designs and search engine optimization (SEO) were an important aspect in this.	681	\N	published	6	14	\N	\N	2006-09-10	2007-06-08	https://www.budgetadviesgroep.nl/	["cv"]
-Festivalinfo	Amsterdam, NL	Festival / event information website	Internship Web Developer	Contributed to the stability and expansion of the platforms festivalinfo.nl, podiuminfo.nl, cabaretinfo.nl and agendainfo.nl, by fixing bugs and creating various new features.	689	\N	published	7	14	\N	\N	2006-03-05	2006-08-25	https://www.festivalinfo.nl	["cv"]
 \.
 
 
@@ -7959,7 +7290,7 @@ SELECT pg_catalog.setval('public.applications_id_seq', 2, true);
 -- Name: directus_activity_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_activity_id_seq', 4840, true);
+SELECT pg_catalog.setval('public.directus_activity_id_seq', 4856, true);
 
 
 --
@@ -7987,7 +7318,7 @@ SELECT pg_catalog.setval('public.directus_permissions_id_seq', 1, false);
 -- Name: directus_presets_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_presets_id_seq', 25, true);
+SELECT pg_catalog.setval('public.directus_presets_id_seq', 27, true);
 
 
 --
@@ -8001,7 +7332,7 @@ SELECT pg_catalog.setval('public.directus_relations_id_seq', 33, true);
 -- Name: directus_revisions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_revisions_id_seq', 4736, true);
+SELECT pg_catalog.setval('public.directus_revisions_id_seq', 4744, true);
 
 
 --
@@ -8587,7 +7918,7 @@ CREATE UNIQUE INDEX users_email_key ON public.users USING btree (email);
 --
 
 ALTER TABLE ONLY public.application_questions
-    ADD CONSTRAINT application_questions_profile_foreign FOREIGN KEY (profile) REFERENCES public.profiles(id);
+    ADD CONSTRAINT application_questions_profile_foreign FOREIGN KEY (profile) REFERENCES public.profiles(id) ON DELETE CASCADE;
 
 
 --
@@ -8619,7 +7950,7 @@ ALTER TABLE ONLY public.applications
 --
 
 ALTER TABLE ONLY public.cheat_sheets
-    ADD CONSTRAINT cheat_sheets_profile_foreign FOREIGN KEY (profile) REFERENCES public.profiles(id);
+    ADD CONSTRAINT cheat_sheets_profile_foreign FOREIGN KEY (profile) REFERENCES public.profiles(id) ON DELETE CASCADE;
 
 
 --
@@ -8987,7 +8318,7 @@ ALTER TABLE ONLY public.education
 --
 
 ALTER TABLE ONLY public.education
-    ADD CONSTRAINT education_profile_foreign FOREIGN KEY (profile) REFERENCES public.profiles(id);
+    ADD CONSTRAINT education_profile_foreign FOREIGN KEY (profile) REFERENCES public.profiles(id) ON DELETE CASCADE;
 
 
 --
@@ -8995,7 +8326,7 @@ ALTER TABLE ONLY public.education
 --
 
 ALTER TABLE ONLY public.highlights
-    ADD CONSTRAINT highlights_profile_foreign FOREIGN KEY (profile) REFERENCES public.profiles(id);
+    ADD CONSTRAINT highlights_profile_foreign FOREIGN KEY (profile) REFERENCES public.profiles(id) ON DELETE CASCADE;
 
 
 --
@@ -9003,7 +8334,7 @@ ALTER TABLE ONLY public.highlights
 --
 
 ALTER TABLE ONLY public.languages
-    ADD CONSTRAINT languages_profile_foreign FOREIGN KEY (profile) REFERENCES public.profiles(id) ON DELETE SET NULL;
+    ADD CONSTRAINT languages_profile_foreign FOREIGN KEY (profile) REFERENCES public.profiles(id) ON DELETE CASCADE;
 
 
 --
@@ -9019,7 +8350,7 @@ ALTER TABLE ONLY public.profile_versions
 --
 
 ALTER TABLE ONLY public.profile_versions
-    ADD CONSTRAINT profile_versions_profile_foreign FOREIGN KEY (profile) REFERENCES public.profiles(id);
+    ADD CONSTRAINT profile_versions_profile_foreign FOREIGN KEY (profile) REFERENCES public.profiles(id) ON DELETE CASCADE;
 
 
 --
@@ -9035,7 +8366,7 @@ ALTER TABLE ONLY public.profiles
 --
 
 ALTER TABLE ONLY public.project_stories
-    ADD CONSTRAINT project_stories_profile_foreign FOREIGN KEY (profile) REFERENCES public.profiles(id);
+    ADD CONSTRAINT project_stories_profile_foreign FOREIGN KEY (profile) REFERENCES public.profiles(id) ON DELETE CASCADE;
 
 
 --
@@ -9043,7 +8374,7 @@ ALTER TABLE ONLY public.project_stories
 --
 
 ALTER TABLE ONLY public."references"
-    ADD CONSTRAINT references_profile_foreign FOREIGN KEY (profile) REFERENCES public.profiles(id);
+    ADD CONSTRAINT references_profile_foreign FOREIGN KEY (profile) REFERENCES public.profiles(id) ON DELETE CASCADE;
 
 
 --
@@ -9051,7 +8382,7 @@ ALTER TABLE ONLY public."references"
 --
 
 ALTER TABLE ONLY public.side_project_achievements
-    ADD CONSTRAINT side_project_achievements_side_project_foreign FOREIGN KEY (side_project) REFERENCES public.side_projects(id);
+    ADD CONSTRAINT side_project_achievements_side_project_foreign FOREIGN KEY (side_project) REFERENCES public.side_projects(id) ON DELETE CASCADE;
 
 
 --
@@ -9059,7 +8390,7 @@ ALTER TABLE ONLY public.side_project_achievements
 --
 
 ALTER TABLE ONLY public.side_project_technologies
-    ADD CONSTRAINT side_project_technologies_side_project_foreign FOREIGN KEY (side_project) REFERENCES public.side_projects(id);
+    ADD CONSTRAINT side_project_technologies_side_project_foreign FOREIGN KEY (side_project) REFERENCES public.side_projects(id) ON DELETE CASCADE;
 
 
 --
@@ -9067,7 +8398,7 @@ ALTER TABLE ONLY public.side_project_technologies
 --
 
 ALTER TABLE ONLY public.side_projects
-    ADD CONSTRAINT side_projects_profile_foreign FOREIGN KEY (profile) REFERENCES public.profiles(id);
+    ADD CONSTRAINT side_projects_profile_foreign FOREIGN KEY (profile) REFERENCES public.profiles(id) ON DELETE CASCADE;
 
 
 --
@@ -9083,7 +8414,7 @@ ALTER TABLE ONLY public.soft_skills
 --
 
 ALTER TABLE ONLY public.tech_skill_categories
-    ADD CONSTRAINT tech_skill_categories_profile_foreign FOREIGN KEY (profile) REFERENCES public.profiles(id) ON DELETE SET NULL;
+    ADD CONSTRAINT tech_skill_categories_profile_foreign FOREIGN KEY (profile) REFERENCES public.profiles(id) ON DELETE CASCADE;
 
 
 --
@@ -9091,7 +8422,7 @@ ALTER TABLE ONLY public.tech_skill_categories
 --
 
 ALTER TABLE ONLY public.tech_skills
-    ADD CONSTRAINT tech_skills_category_foreign FOREIGN KEY (category) REFERENCES public.tech_skill_categories(id);
+    ADD CONSTRAINT tech_skills_category_foreign FOREIGN KEY (category) REFERENCES public.tech_skill_categories(id) ON DELETE CASCADE;
 
 
 --
@@ -9107,7 +8438,7 @@ ALTER TABLE ONLY public.tech_skills
 --
 
 ALTER TABLE ONLY public.work_experience_achievements
-    ADD CONSTRAINT work_experience_achievements_work_experience_foreign FOREIGN KEY (work_experience) REFERENCES public.work_experiences(id);
+    ADD CONSTRAINT work_experience_achievements_work_experience_foreign FOREIGN KEY (work_experience) REFERENCES public.work_experiences(id) ON DELETE CASCADE;
 
 
 --
@@ -9115,7 +8446,7 @@ ALTER TABLE ONLY public.work_experience_achievements
 --
 
 ALTER TABLE ONLY public.work_experience_technologies
-    ADD CONSTRAINT work_experience_technologies_work_experience_foreign FOREIGN KEY (work_experience) REFERENCES public.work_experiences(id);
+    ADD CONSTRAINT work_experience_technologies_work_experience_foreign FOREIGN KEY (work_experience) REFERENCES public.work_experiences(id) ON DELETE CASCADE;
 
 
 --
@@ -9131,12 +8462,12 @@ ALTER TABLE ONLY public.work_experiences
 --
 
 ALTER TABLE ONLY public.work_experiences
-    ADD CONSTRAINT work_experiences_profile_foreign FOREIGN KEY (profile) REFERENCES public.profiles(id);
+    ADD CONSTRAINT work_experiences_profile_foreign FOREIGN KEY (profile) REFERENCES public.profiles(id) ON DELETE CASCADE;
 
 
 --
 -- PostgreSQL database dump complete
 --
 
-\unrestrict IaTR5w3uCLke3OUW5kqLIQjzZ8eKLYtjNPmu6NI903xd7eKoOIiEhERgHn34j8N
+\unrestrict NwDOH9JcOjL6f4wcWjMNIcVpLjn6GA5d39U5LGF06aoln9NoS2xwycWMj1za3dM
 
