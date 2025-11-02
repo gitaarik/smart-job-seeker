@@ -9,14 +9,14 @@ datasource db {
 }
 
 model application_questions {
-  id           String    @id @db.Uuid
+  id           Int       @id @default(autoincrement())
   sort         Int?
   date_created DateTime? @db.Timestamptz(6)
   date_updated DateTime? @db.Timestamptz(6)
   question     String?
   answer       String?
   title        String?   @db.VarChar(255)
-  profile      String?   @db.Uuid
+  profile      Int?
   source       String?   @db.VarChar(255)
   profiles     profiles? @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "application_questions_profile_foreign")
 }
@@ -27,7 +27,7 @@ model applications {
   date_created          DateTime?       @db.Timestamptz(6)
   date_updated          DateTime?       @db.Timestamptz(6)
   vacancy               Int?
-  profile               String          @db.Uuid
+  profile               Int
   cv_sent_through       String?         @db.VarChar(255)
   cv_file_sent          String?         @db.Uuid
   application_sent_date DateTime?       @db.Date
@@ -37,24 +37,24 @@ model applications {
 }
 
 model cheat_sheets {
-  id           String    @id @db.Uuid
+  id           Int       @id @default(autoincrement())
   sort         Int?
   date_created DateTime? @db.Timestamptz(6)
   date_updated DateTime? @db.Timestamptz(6)
   title        String?   @db.VarChar(255)
   content      String?
-  profile      String?   @db.Uuid
+  profile      Int?
   profiles     profiles? @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "cheat_sheets_profile_foreign")
 }
 
 model dev_methodologies {
-  id           String    @id @db.Uuid
+  id           Int       @id @default(autoincrement())
   status       String    @default("draft") @db.VarChar(255)
   sort         Int?
   date_created DateTime? @db.Timestamptz(6)
   date_updated DateTime? @db.Timestamptz(6)
   name         String?   @db.VarChar(255)
-  profile      String    @db.Uuid
+  profile      Int
   profiles     profiles  @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "dev_methodologies_profile_foreign")
 }
 
@@ -562,7 +562,7 @@ model education {
   graduation_year Int?
   start_date      DateTime?       @db.Date
   end_date        DateTime?       @db.Date
-  profile         String?         @db.Uuid
+  profile         Int?
   summary         String?
   logo            String?         @db.Uuid
   tags            Json?           @db.Json
@@ -571,26 +571,26 @@ model education {
 }
 
 model highlights {
-  id           String    @id @db.Uuid
+  id           Int       @id @default(autoincrement())
   status       String    @default("draft") @db.VarChar(255)
   sort         Int?
   date_created DateTime? @db.Timestamptz(6)
   date_updated DateTime? @db.Timestamptz(6)
-  profile      String?   @db.Uuid
+  profile      Int?
   text         String?   @db.VarChar(255)
   fa_icon      String?   @db.VarChar(255)
   profiles     profiles? @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "highlights_profile_foreign")
 }
 
 model languages {
-  id            String    @id @db.Uuid
+  id            Int       @id @default(autoincrement())
   status        String    @default("draft") @db.VarChar(255)
   date_created  DateTime? @db.Timestamptz(6)
   date_updated  DateTime? @db.Timestamptz(6)
   name          String?   @db.VarChar(255)
   language_code String?   @db.VarChar(255)
   proficiency   String?   @db.VarChar(255)
-  profile       String?   @db.Uuid
+  profile       Int?
   sort          Int?
   profiles      profiles? @relation(fields: [profile], references: [id], onUpdate: NoAction, map: "languages_profile_foreign")
 }
@@ -603,7 +603,7 @@ model profile_versions {
   date_updated           DateTime?          @db.Timestamptz(6)
   name                   String?            @db.VarChar(255)
   description            String?
-  profile                String?            @db.Uuid
+  profile                Int?
   toggles                Json?              @db.Json
   extends_from           Int?
   profile_versions       profile_versions?  @relation("profile_versionsToprofile_versions", fields: [extends_from], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "profile_versions_extends_from_foreign")
@@ -612,7 +612,7 @@ model profile_versions {
 }
 
 model profiles {
-  id                    String                  @id(map: "profile_pkey") @db.Uuid
+  id                    Int                     @id(map: "profile_pkey") @default(autoincrement())
   date_created          DateTime?               @db.Timestamptz(6)
   date_updated          DateTime?               @db.Timestamptz(6)
   name                  String?                 @db.VarChar(255)
@@ -650,7 +650,7 @@ model profiles {
 }
 
 model project_stories {
-  id           String    @id @db.Uuid
+  id           Int       @id @default(autoincrement())
   sort         Int?
   date_created DateTime? @db.Timestamptz(6)
   date_updated DateTime? @db.Timestamptz(6)
@@ -661,7 +661,7 @@ model project_stories {
   result       String?
   reflection   String?
   category     String?   @db.VarChar(255)
-  profile      String?   @db.Uuid
+  profile      Int?
   profiles     profiles? @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "project_stories_profile_foreign")
 }
 
@@ -674,7 +674,7 @@ model references {
   author          String    @db.VarChar(255)
   author_position String?   @db.VarChar(255)
   text            String?
-  profile         String?   @db.Uuid
+  profile         Int?
   profiles        profiles? @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "references_profile_foreign")
 }
 
@@ -710,7 +710,7 @@ model salary_expectations {
 }
 
 model side_project_achievements {
-  id            String         @id @db.Uuid
+  id            Int            @id @default(autoincrement())
   title         String?        @db.VarChar(255)
   fa_icon       String?        @db.VarChar(255)
   description   String?        @db.VarChar(255)
@@ -742,7 +742,7 @@ model side_projects {
   name                      String?                     @db.VarChar(255)
   start_date                DateTime?                   @db.Date
   end_date                  DateTime?                   @db.Date
-  profile                   String?                     @db.Uuid
+  profile                   Int?
   url                       String?                     @db.VarChar(255)
   stars                     Int?
   summary                   String?
@@ -754,24 +754,24 @@ model side_projects {
 }
 
 model soft_skills {
-  id           String    @id @db.Uuid
+  id           Int       @id @default(autoincrement())
   status       String    @default("draft") @db.VarChar(255)
   sort         Int?
   date_created DateTime? @db.Timestamptz(6)
   date_updated DateTime? @db.Timestamptz(6)
   name         String?   @db.VarChar(255)
-  profile      String?   @db.Uuid
+  profile      Int?
   profiles     profiles? @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "soft_skills_profile_foreign")
 }
 
 model tech_skill_categories {
-  id           String        @id @db.Uuid
+  id           Int           @id @default(autoincrement())
   status       String        @default("draft") @db.VarChar(255)
   sort         Int?
   date_created DateTime?     @db.Timestamptz(6)
   date_updated DateTime?     @db.Timestamptz(6)
   name         String?       @db.VarChar(255)
-  profile      String?       @db.Uuid
+  profile      Int?
   fa_icon      String?       @db.VarChar(255)
   profiles     profiles?     @relation(fields: [profile], references: [id], onUpdate: NoAction, map: "tech_skill_categories_profile_foreign")
   tech_skills  tech_skills[]
@@ -795,7 +795,7 @@ model tech_skills {
   date_created          DateTime?              @db.Timestamptz(6)
   date_updated          DateTime?              @db.Timestamptz(6)
   name                  String?                @db.VarChar(255)
-  category              String?                @db.Uuid
+  category              Int?
   level                 String?                @db.VarChar(255)
   tech_type             Int?
   years_experience      Int?
@@ -832,7 +832,7 @@ model vacancies {
 }
 
 model work_experience_achievements {
-  id               String            @id @db.Uuid
+  id               Int               @id @default(autoincrement())
   status           String            @default("draft") @db.VarChar(255)
   sort             Int?
   date_created     DateTime?         @db.Timestamptz(6)
@@ -846,7 +846,7 @@ model work_experience_achievements {
 }
 
 model work_experience_technologies {
-  id               String            @id @db.Uuid
+  id               Int               @id @default(autoincrement())
   status           String            @default("draft") @db.VarChar(255)
   sort             Int?
   date_created     DateTime?         @db.Timestamptz(6)
@@ -866,7 +866,7 @@ model work_experiences {
   logo                         String?                        @db.Uuid
   status                       String                         @default("draft") @db.VarChar(255)
   sort                         Int?
-  profile                      String?                        @db.Uuid
+  profile                      Int?
   date_created                 DateTime?                      @db.Timestamptz(6)
   date_updated                 DateTime?                      @db.Timestamptz(6)
   start_date                   DateTime?                      @db.Date

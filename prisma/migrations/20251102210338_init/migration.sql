@@ -2,86 +2,57 @@
 CREATE TYPE "Role" AS ENUM ('USER', 'ADMIN', 'SUPER_ADMIN');
 
 -- CreateTable
-CREATE TABLE "users" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "email" TEXT NOT NULL,
-    "password" TEXT NOT NULL,
-    "firstName" TEXT,
-    "lastName" TEXT,
-    "isEmailVerified" BOOLEAN NOT NULL DEFAULT false,
-    "emailVerifyToken" TEXT,
-    "passwordResetToken" TEXT,
-    "passwordResetExpiry" TIMESTAMP(3),
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-    "role" "Role" NOT NULL DEFAULT 'USER',
-
-    CONSTRAINT "users_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "resume_tokens" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "token" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "description" TEXT,
-    "resumeType" TEXT NOT NULL,
-    "expiresAt" TIMESTAMP(3),
-    "viewCount" INTEGER NOT NULL DEFAULT 0,
-    "maxViews" INTEGER,
-    "isActive" BOOLEAN NOT NULL DEFAULT true,
-    "createdBy" UUID NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "resume_tokens_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "work_experiences" (
-    "name" TEXT NOT NULL,
-    "location" TEXT NOT NULL,
-    "description" TEXT NOT NULL,
-    "position" TEXT NOT NULL,
-    "summary" TEXT NOT NULL,
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "logo" UUID,
-    "status" VARCHAR(255) NOT NULL DEFAULT 'draft',
-    "sort" INTEGER,
-    "profile" UUID,
-    "date_created" TIMESTAMPTZ(6),
-    "date_updated" TIMESTAMPTZ(6),
-    "start_date" DATE,
-    "end_date" DATE,
-    "website" VARCHAR(255),
-
-    CONSTRAINT "work_experiences_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "application_questions" (
-    "id" UUID NOT NULL,
+    "id" SERIAL NOT NULL,
     "sort" INTEGER,
     "date_created" TIMESTAMPTZ(6),
     "date_updated" TIMESTAMPTZ(6),
     "question" TEXT,
     "answer" TEXT,
     "title" VARCHAR(255),
-    "profile" UUID,
+    "profile" INTEGER,
     "source" VARCHAR(255),
 
     CONSTRAINT "application_questions_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
+CREATE TABLE "applications" (
+    "id" SERIAL NOT NULL,
+    "status" VARCHAR(255) NOT NULL DEFAULT 'draft',
+    "date_created" TIMESTAMPTZ(6),
+    "date_updated" TIMESTAMPTZ(6),
+    "vacancy" INTEGER,
+    "profile" INTEGER NOT NULL,
+    "cv_sent_through" VARCHAR(255),
+    "cv_file_sent" UUID,
+    "application_sent_date" DATE,
+
+    CONSTRAINT "applications_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "cheat_sheets" (
+    "id" SERIAL NOT NULL,
+    "sort" INTEGER,
+    "date_created" TIMESTAMPTZ(6),
+    "date_updated" TIMESTAMPTZ(6),
+    "title" VARCHAR(255),
+    "content" TEXT,
+    "profile" INTEGER,
+
+    CONSTRAINT "cheat_sheets_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "dev_methodologies" (
-    "id" UUID NOT NULL,
+    "id" SERIAL NOT NULL,
     "status" VARCHAR(255) NOT NULL DEFAULT 'draft',
     "sort" INTEGER,
     "date_created" TIMESTAMPTZ(6),
     "date_updated" TIMESTAMPTZ(6),
     "name" VARCHAR(255),
-    "profile" UUID NOT NULL,
+    "profile" INTEGER NOT NULL,
 
     CONSTRAINT "dev_methodologies_pkey" PRIMARY KEY ("id")
 );
@@ -568,13 +539,36 @@ CREATE TABLE "directus_webhooks" (
 );
 
 -- CreateTable
-CREATE TABLE "highlights" (
-    "id" UUID NOT NULL,
+CREATE TABLE "education" (
+    "id" SERIAL NOT NULL,
     "status" VARCHAR(255) NOT NULL DEFAULT 'draft',
     "sort" INTEGER,
     "date_created" TIMESTAMPTZ(6),
     "date_updated" TIMESTAMPTZ(6),
-    "profile" UUID,
+    "institution" VARCHAR(255),
+    "location" VARCHAR(255),
+    "url" VARCHAR(255),
+    "area" VARCHAR(255),
+    "study_type" VARCHAR(255),
+    "graduation_year" INTEGER,
+    "start_date" DATE,
+    "end_date" DATE,
+    "profile" INTEGER,
+    "summary" TEXT,
+    "logo" UUID,
+    "tags" JSON,
+
+    CONSTRAINT "education_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "highlights" (
+    "id" SERIAL NOT NULL,
+    "status" VARCHAR(255) NOT NULL DEFAULT 'draft',
+    "sort" INTEGER,
+    "date_created" TIMESTAMPTZ(6),
+    "date_updated" TIMESTAMPTZ(6),
+    "profile" INTEGER,
     "text" VARCHAR(255),
     "fa_icon" VARCHAR(255),
 
@@ -583,21 +577,38 @@ CREATE TABLE "highlights" (
 
 -- CreateTable
 CREATE TABLE "languages" (
-    "id" UUID NOT NULL,
+    "id" SERIAL NOT NULL,
     "status" VARCHAR(255) NOT NULL DEFAULT 'draft',
     "date_created" TIMESTAMPTZ(6),
     "date_updated" TIMESTAMPTZ(6),
     "name" VARCHAR(255),
     "language_code" VARCHAR(255),
     "proficiency" VARCHAR(255),
-    "profile" UUID,
+    "profile" INTEGER,
+    "sort" INTEGER,
 
     CONSTRAINT "languages_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
+CREATE TABLE "profile_versions" (
+    "id" SERIAL NOT NULL,
+    "status" VARCHAR(255) NOT NULL DEFAULT 'draft',
+    "sort" INTEGER,
+    "date_created" TIMESTAMPTZ(6),
+    "date_updated" TIMESTAMPTZ(6),
+    "name" VARCHAR(255),
+    "description" TEXT,
+    "profile" INTEGER,
+    "toggles" JSON,
+    "extends_from" INTEGER,
+
+    CONSTRAINT "profile_versions_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "profiles" (
-    "id" UUID NOT NULL,
+    "id" SERIAL NOT NULL,
     "date_created" TIMESTAMPTZ(6),
     "date_updated" TIMESTAMPTZ(6),
     "name" VARCHAR(255),
@@ -614,31 +625,154 @@ CREATE TABLE "profiles" (
     "headline" VARCHAR(255),
     "profile_picture" UUID,
     "summary" TEXT,
+    "nationality" VARCHAR(255),
+    "location_url" VARCHAR(255),
+    "location_timezone" VARCHAR(255),
 
     CONSTRAINT "profile_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "soft_skills" (
-    "id" UUID NOT NULL,
+CREATE TABLE "project_stories" (
+    "id" SERIAL NOT NULL,
+    "sort" INTEGER,
+    "date_created" TIMESTAMPTZ(6),
+    "date_updated" TIMESTAMPTZ(6),
+    "title" VARCHAR(255),
+    "situation" TEXT,
+    "task" TEXT,
+    "action" TEXT,
+    "result" TEXT,
+    "reflection" TEXT,
+    "category" VARCHAR(255),
+    "profile" INTEGER,
+
+    CONSTRAINT "project_stories_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "references" (
+    "id" SERIAL NOT NULL,
+    "status" VARCHAR(255) NOT NULL DEFAULT 'draft',
+    "sort" INTEGER,
+    "date_created" TIMESTAMPTZ(6),
+    "date_updated" TIMESTAMPTZ(6),
+    "author" VARCHAR(255) NOT NULL,
+    "author_position" VARCHAR(255),
+    "text" TEXT,
+    "profile" INTEGER,
+
+    CONSTRAINT "references_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "resume_tokens" (
+    "token" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "resumeType" TEXT NOT NULL,
+    "expiresAt" TIMESTAMP(3),
+    "viewCount" INTEGER NOT NULL DEFAULT 0,
+    "maxViews" INTEGER,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "createdBy" UUID NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+
+    CONSTRAINT "resume_tokens_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "salary_expectations" (
+    "id" SERIAL NOT NULL,
+    "sort" INTEGER,
+    "date_created" TIMESTAMPTZ(6),
+    "date_updated" TIMESTAMPTZ(6),
+    "job_title" VARCHAR(255),
+    "company_type" VARCHAR(255) NOT NULL,
+    "employment_type" VARCHAR(255) NOT NULL,
+    "work_arrangement" VARCHAR(255) NOT NULL,
+    "region" VARCHAR(255) NOT NULL,
+    "hourly_rate" INTEGER,
+    "month_salary" INTEGER,
+    "year_salary" INTEGER,
+    "daily_rate" INTEGER,
+
+    CONSTRAINT "salary_expectations_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "side_project_achievements" (
+    "id" SERIAL NOT NULL,
+    "title" VARCHAR(255),
+    "fa_icon" VARCHAR(255),
+    "description" VARCHAR(255),
+    "side_project" INTEGER,
+    "status" VARCHAR(255) NOT NULL DEFAULT 'draft',
+    "date_created" TIMESTAMPTZ(6),
+    "date_updated" TIMESTAMPTZ(6),
+    "sort" INTEGER,
+
+    CONSTRAINT "side_project_achievements_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "side_project_technologies" (
+    "id" SERIAL NOT NULL,
     "status" VARCHAR(255) NOT NULL DEFAULT 'draft',
     "sort" INTEGER,
     "date_created" TIMESTAMPTZ(6),
     "date_updated" TIMESTAMPTZ(6),
     "name" VARCHAR(255),
-    "profile" UUID,
+    "side_project" INTEGER,
+
+    CONSTRAINT "side_project_technologies_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "side_projects" (
+    "id" SERIAL NOT NULL,
+    "status" VARCHAR(255) NOT NULL DEFAULT 'draft',
+    "sort" INTEGER,
+    "date_created" TIMESTAMPTZ(6),
+    "date_updated" TIMESTAMPTZ(6),
+    "name" VARCHAR(255),
+    "start_date" DATE,
+    "end_date" DATE,
+    "profile" INTEGER,
+    "url" VARCHAR(255),
+    "stars" INTEGER,
+    "summary" TEXT,
+    "url_label" VARCHAR(255),
+    "tags" JSON,
+
+    CONSTRAINT "side_projects_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "soft_skills" (
+    "id" SERIAL NOT NULL,
+    "status" VARCHAR(255) NOT NULL DEFAULT 'draft',
+    "sort" INTEGER,
+    "date_created" TIMESTAMPTZ(6),
+    "date_updated" TIMESTAMPTZ(6),
+    "name" VARCHAR(255),
+    "profile" INTEGER,
 
     CONSTRAINT "soft_skills_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "tech_skill_categories" (
-    "id" UUID NOT NULL,
+    "id" SERIAL NOT NULL,
     "status" VARCHAR(255) NOT NULL DEFAULT 'draft',
     "sort" INTEGER,
     "date_created" TIMESTAMPTZ(6),
     "date_updated" TIMESTAMPTZ(6),
     "name" VARCHAR(255),
+    "profile" INTEGER,
+    "fa_icon" VARCHAR(255),
 
     CONSTRAINT "tech_skill_categories_pkey" PRIMARY KEY ("id")
 );
@@ -663,19 +797,51 @@ CREATE TABLE "tech_skills" (
     "sort" INTEGER,
     "date_created" TIMESTAMPTZ(6),
     "date_updated" TIMESTAMPTZ(6),
-    "profile" UUID,
     "name" VARCHAR(255),
-    "category" UUID,
-    "years_experience" VARCHAR(255),
+    "category" INTEGER,
     "level" VARCHAR(255),
     "tech_type" INTEGER,
+    "years_experience" INTEGER,
 
     CONSTRAINT "tech_skills_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
+CREATE TABLE "users" (
+    "email" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
+    "firstName" TEXT,
+    "lastName" TEXT,
+    "isEmailVerified" BOOLEAN NOT NULL DEFAULT false,
+    "emailVerifyToken" TEXT,
+    "passwordResetToken" TEXT,
+    "passwordResetExpiry" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "role" "Role" NOT NULL DEFAULT 'USER',
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+
+    CONSTRAINT "users_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "vacancies" (
+    "id" SERIAL NOT NULL,
+    "status" VARCHAR(255) NOT NULL DEFAULT 'draft',
+    "date_created" TIMESTAMPTZ(6),
+    "date_updated" TIMESTAMPTZ(6),
+    "source_url" VARCHAR(255),
+    "title" VARCHAR(255),
+    "job_description" TEXT,
+    "job_poster" VARCHAR(255),
+    "import_source" VARCHAR(255),
+
+    CONSTRAINT "vacancies_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "work_experience_achievements" (
-    "id" UUID NOT NULL,
+    "id" SERIAL NOT NULL,
     "status" VARCHAR(255) NOT NULL DEFAULT 'draft',
     "sort" INTEGER,
     "date_created" TIMESTAMPTZ(6),
@@ -691,7 +857,7 @@ CREATE TABLE "work_experience_achievements" (
 
 -- CreateTable
 CREATE TABLE "work_experience_technologies" (
-    "id" UUID NOT NULL,
+    "id" SERIAL NOT NULL,
     "status" VARCHAR(255) NOT NULL DEFAULT 'draft',
     "sort" INTEGER,
     "date_created" TIMESTAMPTZ(6),
@@ -703,41 +869,26 @@ CREATE TABLE "work_experience_technologies" (
 );
 
 -- CreateTable
-CREATE TABLE "cheat_sheets" (
-    "id" UUID NOT NULL,
+CREATE TABLE "work_experiences" (
+    "name" TEXT NOT NULL,
+    "location" TEXT NOT NULL,
+    "description" TEXT NOT NULL,
+    "position" TEXT NOT NULL,
+    "summary" TEXT NOT NULL,
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "logo" UUID,
+    "status" VARCHAR(255) NOT NULL DEFAULT 'draft',
     "sort" INTEGER,
+    "profile" INTEGER,
     "date_created" TIMESTAMPTZ(6),
     "date_updated" TIMESTAMPTZ(6),
-    "title" VARCHAR(255),
-    "content" TEXT,
-    "profile" UUID,
+    "start_date" DATE,
+    "end_date" DATE,
+    "website" VARCHAR(255),
+    "tags" JSON,
 
-    CONSTRAINT "cheat_sheets_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "work_experiences_pkey" PRIMARY KEY ("id")
 );
-
--- CreateTable
-CREATE TABLE "project_stories" (
-    "id" UUID NOT NULL,
-    "sort" INTEGER,
-    "date_created" TIMESTAMPTZ(6),
-    "date_updated" TIMESTAMPTZ(6),
-    "title" VARCHAR(255),
-    "situation" TEXT,
-    "task" TEXT,
-    "action" TEXT,
-    "result" TEXT,
-    "reflection" TEXT,
-    "category" VARCHAR(255),
-    "profile" UUID,
-
-    CONSTRAINT "project_stories_pkey" PRIMARY KEY ("id")
-);
-
--- CreateIndex
-CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
-
--- CreateIndex
-CREATE UNIQUE INDEX "resume_tokens_token_key" ON "resume_tokens"("token");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "directus_flows_operation_unique" ON "directus_flows"("operation");
@@ -757,17 +908,29 @@ CREATE UNIQUE INDEX "directus_users_token_unique" ON "directus_users"("token");
 -- CreateIndex
 CREATE UNIQUE INDEX "directus_users_external_identifier_unique" ON "directus_users"("external_identifier");
 
--- AddForeignKey
-ALTER TABLE "resume_tokens" ADD CONSTRAINT "resume_tokens_createdBy_fkey" FOREIGN KEY ("createdBy") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- CreateIndex
+CREATE UNIQUE INDEX "resume_tokens_token_key" ON "resume_tokens"("token");
 
--- AddForeignKey
-ALTER TABLE "work_experiences" ADD CONSTRAINT "work_experiences_logo_foreign" FOREIGN KEY ("logo") REFERENCES "directus_files"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
+-- CreateIndex
+CREATE UNIQUE INDEX "tech_skill_types_slug_key" ON "tech_skill_types"("slug");
 
--- AddForeignKey
-ALTER TABLE "work_experiences" ADD CONSTRAINT "work_experiences_profile_foreign" FOREIGN KEY ("profile") REFERENCES "profiles"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+-- CreateIndex
+CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
 -- AddForeignKey
 ALTER TABLE "application_questions" ADD CONSTRAINT "application_questions_profile_foreign" FOREIGN KEY ("profile") REFERENCES "profiles"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "applications" ADD CONSTRAINT "applications_cv_file_sent_foreign" FOREIGN KEY ("cv_file_sent") REFERENCES "directus_files"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "applications" ADD CONSTRAINT "applications_profile_foreign" FOREIGN KEY ("profile") REFERENCES "profiles"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "applications" ADD CONSTRAINT "applications_vacancy_foreign" FOREIGN KEY ("vacancy") REFERENCES "vacancies"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "cheat_sheets" ADD CONSTRAINT "cheat_sheets_profile_foreign" FOREIGN KEY ("profile") REFERENCES "profiles"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
 ALTER TABLE "dev_methodologies" ADD CONSTRAINT "dev_methodologies_profile_foreign" FOREIGN KEY ("profile") REFERENCES "profiles"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
@@ -902,22 +1065,49 @@ ALTER TABLE "directus_versions" ADD CONSTRAINT "directus_versions_user_updated_f
 ALTER TABLE "directus_webhooks" ADD CONSTRAINT "directus_webhooks_migrated_flow_foreign" FOREIGN KEY ("migrated_flow") REFERENCES "directus_flows"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
 
 -- AddForeignKey
+ALTER TABLE "education" ADD CONSTRAINT "education_logo_foreign" FOREIGN KEY ("logo") REFERENCES "directus_files"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "education" ADD CONSTRAINT "education_profile_foreign" FOREIGN KEY ("profile") REFERENCES "profiles"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
 ALTER TABLE "highlights" ADD CONSTRAINT "highlights_profile_foreign" FOREIGN KEY ("profile") REFERENCES "profiles"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
 ALTER TABLE "languages" ADD CONSTRAINT "languages_profile_foreign" FOREIGN KEY ("profile") REFERENCES "profiles"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
 
 -- AddForeignKey
+ALTER TABLE "profile_versions" ADD CONSTRAINT "profile_versions_extends_from_foreign" FOREIGN KEY ("extends_from") REFERENCES "profile_versions"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "profile_versions" ADD CONSTRAINT "profile_versions_profile_foreign" FOREIGN KEY ("profile") REFERENCES "profiles"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
 ALTER TABLE "profiles" ADD CONSTRAINT "profiles_profile_picture_foreign" FOREIGN KEY ("profile_picture") REFERENCES "directus_files"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "project_stories" ADD CONSTRAINT "project_stories_profile_foreign" FOREIGN KEY ("profile") REFERENCES "profiles"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "references" ADD CONSTRAINT "references_profile_foreign" FOREIGN KEY ("profile") REFERENCES "profiles"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "side_project_achievements" ADD CONSTRAINT "side_project_achievements_side_project_foreign" FOREIGN KEY ("side_project") REFERENCES "side_projects"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "side_project_technologies" ADD CONSTRAINT "side_project_technologies_side_project_foreign" FOREIGN KEY ("side_project") REFERENCES "side_projects"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "side_projects" ADD CONSTRAINT "side_projects_profile_foreign" FOREIGN KEY ("profile") REFERENCES "profiles"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
 ALTER TABLE "soft_skills" ADD CONSTRAINT "soft_skills_profile_foreign" FOREIGN KEY ("profile") REFERENCES "profiles"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE "tech_skills" ADD CONSTRAINT "tech_skills_category_foreign" FOREIGN KEY ("category") REFERENCES "tech_skill_categories"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "tech_skill_categories" ADD CONSTRAINT "tech_skill_categories_profile_foreign" FOREIGN KEY ("profile") REFERENCES "profiles"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE "tech_skills" ADD CONSTRAINT "tech_skills_profile_foreign" FOREIGN KEY ("profile") REFERENCES "profiles"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "tech_skills" ADD CONSTRAINT "tech_skills_category_foreign" FOREIGN KEY ("category") REFERENCES "tech_skill_categories"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
 ALTER TABLE "tech_skills" ADD CONSTRAINT "tech_skills_tech_type_foreign" FOREIGN KEY ("tech_type") REFERENCES "tech_skill_types"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
@@ -929,8 +1119,7 @@ ALTER TABLE "work_experience_achievements" ADD CONSTRAINT "work_experience_achie
 ALTER TABLE "work_experience_technologies" ADD CONSTRAINT "work_experience_technologies_work_experience_foreign" FOREIGN KEY ("work_experience") REFERENCES "work_experiences"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE "cheat_sheets" ADD CONSTRAINT "cheat_sheets_profile_foreign" FOREIGN KEY ("profile") REFERENCES "profiles"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "work_experiences" ADD CONSTRAINT "work_experiences_logo_foreign" FOREIGN KEY ("logo") REFERENCES "directus_files"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE "project_stories" ADD CONSTRAINT "project_stories_profile_foreign" FOREIGN KEY ("profile") REFERENCES "profiles"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-
+ALTER TABLE "work_experiences" ADD CONSTRAINT "work_experiences_profile_foreign" FOREIGN KEY ("profile") REFERENCES "profiles"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;

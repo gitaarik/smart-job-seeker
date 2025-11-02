@@ -26,7 +26,8 @@
       "Bash(cat:*)",
       "Bash(DATABASE_URL='postgres://postgres:postgres@localhost:5432/smartjobseeker' npx prisma migrate status:*)",
       "Bash(DATABASE_URL='postgres://postgres:postgres@localhost:5432/smartjobseeker' npx prisma db pull:*)",
-      "Bash(DATABASE_URL='postgres://postgres:postgres@localhost:5432/smartjobseeker' npx prisma generate:*)"
+      "Bash(DATABASE_URL='postgres://postgres:postgres@localhost:5432/smartjobseeker' npx prisma generate:*)",
+      "Bash(docker exec:*)"
     ],
     "deny": [],
     "ask": []
