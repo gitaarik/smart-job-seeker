@@ -22,7 +22,11 @@
       "WebFetch(domain:directus.io)",
       "Bash(bash:*)",
       "Bash(npx tsc:*)",
-      "Bash(docker-compose:*)"
+      "Bash(docker-compose:*)",
+      "Bash(cat:*)",
+      "Bash(DATABASE_URL='postgres://postgres:postgres@localhost:5432/smartjobseeker' npx prisma migrate status:*)",
+      "Bash(DATABASE_URL='postgres://postgres:postgres@localhost:5432/smartjobseeker' npx prisma db pull:*)",
+      "Bash(DATABASE_URL='postgres://postgres:postgres@localhost:5432/smartjobseeker' npx prisma generate:*)"
     ],
     "deny": [],
     "ask": []

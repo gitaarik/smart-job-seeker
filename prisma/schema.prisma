@@ -8,65 +8,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  email               String    @unique
-  password            String
-  firstName           String?
-  lastName            String?
-  isEmailVerified     Boolean   @default(false)
-  emailVerifyToken    String?
-  passwordResetToken  String?
-  passwordResetExpiry DateTime?
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
-  role                Role      @default(USER)
-  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-
-  @@map("users")
-}
-
-model ResumeToken {
-  token       String    @unique
-  name        String
-  description String?
-  resumeType  String
-  expiresAt   DateTime?
-  viewCount   Int       @default(0)
-  maxViews    Int?
-  isActive    Boolean   @default(true)
-  createdBy   String    @db.Uuid
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-
-  @@map("resume_tokens")
-}
-
-model WorkExperience {
-  name           String
-  location       String
-  description    String
-  position       String
-  summary        String
-  id             String                         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  logo           String?                        @db.Uuid
-  status         String                         @default("draft") @db.VarChar(255)
-  sort           Int?
-  profile        String?                        @db.Uuid
-  date_created   DateTime?                      @db.Timestamptz(6)
-  date_updated   DateTime?                      @db.Timestamptz(6)
-  start_date     DateTime?                      @db.Date
-  end_date       DateTime?                      @db.Date
-  website        String?                        @db.VarChar(255)
-  tags           Json?                          @db.Json
-  achievements   work_experience_achievements[]
-  technologies   work_experience_technologies[]
-  directus_files directus_files?                @relation(fields: [logo], references: [id], onUpdate: NoAction, map: "work_experiences_logo_foreign")
-  profiles       profiles?                      @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "work_experiences_profile_foreign")
-
-  @@map("work_experiences")
-}
-
 model application_questions {
   id           String    @id @db.Uuid
   sort         Int?
@@ -78,6 +19,32 @@ model application_questions {
   profile      String?   @db.Uuid
   source       String?   @db.VarChar(255)
   profiles     profiles? @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "application_questions_profile_foreign")
+}
+
+model applications {
+  id                    Int             @id @default(autoincrement())
+  status                String          @default("draft") @db.VarChar(255)
+  date_created          DateTime?       @db.Timestamptz(6)
+  date_updated          DateTime?       @db.Timestamptz(6)
+  vacancy               Int?
+  profile               String          @db.Uuid
+  cv_sent_through       String?         @db.VarChar(255)
+  cv_file_sent          String?         @db.Uuid
+  application_sent_date DateTime?       @db.Date
+  directus_files        directus_files? @relation(fields: [cv_file_sent], references: [id], onUpdate: NoAction, map: "applications_cv_file_sent_foreign")
+  profiles              profiles        @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "applications_profile_foreign")
+  vacancies             vacancies?      @relation(fields: [vacancy], references: [id], onUpdate: NoAction, map: "applications_vacancy_foreign")
+}
+
+model cheat_sheets {
+  id           String    @id @db.Uuid
+  sort         Int?
+  date_created DateTime? @db.Timestamptz(6)
+  date_updated DateTime? @db.Timestamptz(6)
+  title        String?   @db.VarChar(255)
+  content      String?
+  profile      String?   @db.Uuid
+  profiles     profiles? @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "cheat_sheets_profile_foreign")
 }
 
 model dev_methodologies {
@@ -234,7 +201,7 @@ model directus_files {
   directus_settings_directus_settings_public_foregroundTodirectus_files directus_settings[] @relation("directus_settings_public_foregroundTodirectus_files")
   education                                                             education[]
   profiles                                                              profiles[]
-  work_experiences                                                      WorkExperience[]
+  work_experiences                                                      work_experiences[]
 }
 
 model directus_flows {
@@ -581,6 +548,28 @@ model directus_webhooks {
   directus_flows                directus_flows? @relation(fields: [migrated_flow], references: [id], onUpdate: NoAction, map: "directus_webhooks_migrated_flow_foreign")
 }
 
+model education {
+  id              Int             @id @default(autoincrement())
+  status          String          @default("draft") @db.VarChar(255)
+  sort            Int?
+  date_created    DateTime?       @db.Timestamptz(6)
+  date_updated    DateTime?       @db.Timestamptz(6)
+  institution     String?         @db.VarChar(255)
+  location        String?         @db.VarChar(255)
+  url             String?         @db.VarChar(255)
+  area            String?         @db.VarChar(255)
+  study_type      String?         @db.VarChar(255)
+  graduation_year Int?
+  start_date      DateTime?       @db.Date
+  end_date        DateTime?       @db.Date
+  profile         String?         @db.Uuid
+  summary         String?
+  logo            String?         @db.Uuid
+  tags            Json?           @db.Json
+  directus_files  directus_files? @relation(fields: [logo], references: [id], onUpdate: NoAction, map: "education_logo_foreign")
+  profiles        profiles?       @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "education_profile_foreign")
+}
+
 model highlights {
   id           String    @id @db.Uuid
   status       String    @default("draft") @db.VarChar(255)
@@ -604,6 +593,22 @@ model languages {
   profile       String?   @db.Uuid
   sort          Int?
   profiles      profiles? @relation(fields: [profile], references: [id], onUpdate: NoAction, map: "languages_profile_foreign")
+}
+
+model profile_versions {
+  id                     Int                @id @default(autoincrement())
+  status                 String             @default("draft") @db.VarChar(255)
+  sort                   Int?
+  date_created           DateTime?          @db.Timestamptz(6)
+  date_updated           DateTime?          @db.Timestamptz(6)
+  name                   String?            @db.VarChar(255)
+  description            String?
+  profile                String?            @db.Uuid
+  toggles                Json?              @db.Json
+  extends_from           Int?
+  profile_versions       profile_versions?  @relation("profile_versionsToprofile_versions", fields: [extends_from], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "profile_versions_extends_from_foreign")
+  other_profile_versions profile_versions[] @relation("profile_versionsToprofile_versions")
+  profiles               profiles?          @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "profile_versions_profile_foreign")
 }
 
 model profiles {
@@ -641,7 +646,111 @@ model profiles {
   side_projects         side_projects[]
   soft_skills           soft_skills[]
   tech_skill_categories tech_skill_categories[]
-  work_experiences      WorkExperience[]
+  work_experiences      work_experiences[]
+}
+
+model project_stories {
+  id           String    @id @db.Uuid
+  sort         Int?
+  date_created DateTime? @db.Timestamptz(6)
+  date_updated DateTime? @db.Timestamptz(6)
+  title        String?   @db.VarChar(255)
+  situation    String?
+  task         String?
+  action       String?
+  result       String?
+  reflection   String?
+  category     String?   @db.VarChar(255)
+  profile      String?   @db.Uuid
+  profiles     profiles? @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "project_stories_profile_foreign")
+}
+
+model references {
+  id              Int       @id @default(autoincrement())
+  status          String    @default("draft") @db.VarChar(255)
+  sort            Int?
+  date_created    DateTime? @db.Timestamptz(6)
+  date_updated    DateTime? @db.Timestamptz(6)
+  author          String    @db.VarChar(255)
+  author_position String?   @db.VarChar(255)
+  text            String?
+  profile         String?   @db.Uuid
+  profiles        profiles? @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "references_profile_foreign")
+}
+
+model resume_tokens {
+  token       String    @unique
+  name        String
+  description String?
+  resumeType  String
+  expiresAt   DateTime?
+  viewCount   Int       @default(0)
+  maxViews    Int?
+  isActive    Boolean   @default(true)
+  createdBy   String    @db.Uuid
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+}
+
+model salary_expectations {
+  id               Int       @id @default(autoincrement())
+  sort             Int?
+  date_created     DateTime? @db.Timestamptz(6)
+  date_updated     DateTime? @db.Timestamptz(6)
+  job_title        String?   @db.VarChar(255)
+  company_type     String    @db.VarChar(255)
+  employment_type  String    @db.VarChar(255)
+  work_arrangement String    @db.VarChar(255)
+  region           String    @db.VarChar(255)
+  hourly_rate      Int?
+  month_salary     Int?
+  year_salary      Int?
+  daily_rate       Int?
+}
+
+model side_project_achievements {
+  id            String         @id @db.Uuid
+  title         String?        @db.VarChar(255)
+  fa_icon       String?        @db.VarChar(255)
+  description   String?        @db.VarChar(255)
+  side_project  Int?
+  status        String         @default("draft") @db.VarChar(255)
+  date_created  DateTime?      @db.Timestamptz(6)
+  date_updated  DateTime?      @db.Timestamptz(6)
+  sort          Int?
+  side_projects side_projects? @relation(fields: [side_project], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "side_project_achievements_side_project_foreign")
+}
+
+model side_project_technologies {
+  id            Int            @id @default(autoincrement())
+  status        String         @default("draft") @db.VarChar(255)
+  sort          Int?
+  date_created  DateTime?      @db.Timestamptz(6)
+  date_updated  DateTime?      @db.Timestamptz(6)
+  name          String?        @db.VarChar(255)
+  side_project  Int?
+  side_projects side_projects? @relation(fields: [side_project], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "side_project_technologies_side_project_foreign")
+}
+
+model side_projects {
+  id                        Int                         @id @default(autoincrement())
+  status                    String                      @default("draft") @db.VarChar(255)
+  sort                      Int?
+  date_created              DateTime?                   @db.Timestamptz(6)
+  date_updated              DateTime?                   @db.Timestamptz(6)
+  name                      String?                     @db.VarChar(255)
+  start_date                DateTime?                   @db.Date
+  end_date                  DateTime?                   @db.Date
+  profile                   String?                     @db.Uuid
+  url                       String?                     @db.VarChar(255)
+  stars                     Int?
+  summary                   String?
+  url_label                 String?                     @db.VarChar(255)
+  tags                      Json?                       @db.Json
+  side_project_achievements side_project_achievements[]
+  side_project_technologies side_project_technologies[]
+  profiles                  profiles?                   @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "side_projects_profile_foreign")
 }
 
 model soft_skills {
@@ -694,182 +803,19 @@ model tech_skills {
   tech_skill_types      tech_skill_types?      @relation(fields: [tech_type], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tech_skills_tech_type_foreign")
 }
 
-model work_experience_achievements {
-  id               String          @id @db.Uuid
-  status           String          @default("draft") @db.VarChar(255)
-  sort             Int?
-  date_created     DateTime?       @db.Timestamptz(6)
-  date_updated     DateTime?       @db.Timestamptz(6)
-  title            String?         @db.VarChar(255)
-  description      String?         @db.VarChar(255)
-  work_experience  String?         @db.Uuid
-  fa_icon          String?         @db.VarChar(255)
-  tags             Json?           @db.Json
-  work_experiences WorkExperience? @relation(fields: [work_experience], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "work_experience_achievements_work_experience_foreign")
-}
-
-model work_experience_technologies {
-  id               String          @id @db.Uuid
-  status           String          @default("draft") @db.VarChar(255)
-  sort             Int?
-  date_created     DateTime?       @db.Timestamptz(6)
-  date_updated     DateTime?       @db.Timestamptz(6)
-  name             String?         @db.VarChar(255)
-  work_experience  String?         @db.Uuid
-  work_experiences WorkExperience? @relation(fields: [work_experience], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "work_experience_technologies_work_experience_foreign")
-}
-
-model cheat_sheets {
-  id           String    @id @db.Uuid
-  sort         Int?
-  date_created DateTime? @db.Timestamptz(6)
-  date_updated DateTime? @db.Timestamptz(6)
-  title        String?   @db.VarChar(255)
-  content      String?
-  profile      String?   @db.Uuid
-  profiles     profiles? @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "cheat_sheets_profile_foreign")
-}
-
-model project_stories {
-  id           String    @id @db.Uuid
-  sort         Int?
-  date_created DateTime? @db.Timestamptz(6)
-  date_updated DateTime? @db.Timestamptz(6)
-  title        String?   @db.VarChar(255)
-  situation    String?
-  task         String?
-  action       String?
-  result       String?
-  reflection   String?
-  category     String?   @db.VarChar(255)
-  profile      String?   @db.Uuid
-  profiles     profiles? @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "project_stories_profile_foreign")
-}
-
-model education {
-  id              Int             @id @default(autoincrement())
-  status          String          @default("draft") @db.VarChar(255)
-  sort            Int?
-  date_created    DateTime?       @db.Timestamptz(6)
-  date_updated    DateTime?       @db.Timestamptz(6)
-  institution     String?         @db.VarChar(255)
-  location        String?         @db.VarChar(255)
-  url             String?         @db.VarChar(255)
-  area            String?         @db.VarChar(255)
-  study_type      String?         @db.VarChar(255)
-  graduation_year Int?
-  start_date      DateTime?       @db.Date
-  end_date        DateTime?       @db.Date
-  profile         String?         @db.Uuid
-  summary         String?
-  logo            String?         @db.Uuid
-  tags            Json?           @db.Json
-  directus_files  directus_files? @relation(fields: [logo], references: [id], onUpdate: NoAction, map: "education_logo_foreign")
-  profiles        profiles?       @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "education_profile_foreign")
-}
-
-model side_project_achievements {
-  id            String         @id @db.Uuid
-  title         String?        @db.VarChar(255)
-  fa_icon       String?        @db.VarChar(255)
-  description   String?        @db.VarChar(255)
-  side_project  Int?
-  status        String         @default("draft") @db.VarChar(255)
-  date_created  DateTime?      @db.Timestamptz(6)
-  date_updated  DateTime?      @db.Timestamptz(6)
-  sort          Int?
-  side_projects side_projects? @relation(fields: [side_project], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "side_project_achievements_side_project_foreign")
-}
-
-model side_projects {
-  id                        Int                         @id @default(autoincrement())
-  status                    String                      @default("draft") @db.VarChar(255)
-  sort                      Int?
-  date_created              DateTime?                   @db.Timestamptz(6)
-  date_updated              DateTime?                   @db.Timestamptz(6)
-  name                      String?                     @db.VarChar(255)
-  start_date                DateTime?                   @db.Date
-  end_date                  DateTime?                   @db.Date
-  profile                   String?                     @db.Uuid
-  url                       String?                     @db.VarChar(255)
-  stars                     Int?
-  summary                   String?
-  url_label                 String?                     @db.VarChar(255)
-  tags                      Json?                       @db.Json
-  side_project_achievements side_project_achievements[]
-  side_project_technologies side_project_technologies[]
-  profiles                  profiles?                   @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "side_projects_profile_foreign")
-}
-
-model salary_expectations {
-  id               Int       @id @default(autoincrement())
-  sort             Int?
-  date_created     DateTime? @db.Timestamptz(6)
-  date_updated     DateTime? @db.Timestamptz(6)
-  job_title        String?   @db.VarChar(255)
-  company_type     String    @db.VarChar(255)
-  employment_type  String    @db.VarChar(255)
-  work_arrangement String    @db.VarChar(255)
-  region           String    @db.VarChar(255)
-  hourly_rate      Int?
-  month_salary     Int?
-  year_salary      Int?
-  daily_rate       Int?
-}
-
-model side_project_technologies {
-  id            Int            @id @default(autoincrement())
-  status        String         @default("draft") @db.VarChar(255)
-  sort          Int?
-  date_created  DateTime?      @db.Timestamptz(6)
-  date_updated  DateTime?      @db.Timestamptz(6)
-  name          String?        @db.VarChar(255)
-  side_project  Int?
-  side_projects side_projects? @relation(fields: [side_project], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "side_project_technologies_side_project_foreign")
-}
-
-model references {
-  id              Int       @id @default(autoincrement())
-  status          String    @default("draft") @db.VarChar(255)
-  sort            Int?
-  date_created    DateTime? @db.Timestamptz(6)
-  date_updated    DateTime? @db.Timestamptz(6)
-  author          String    @db.VarChar(255)
-  author_position String?   @db.VarChar(255)
-  text            String?
-  profile         String?   @db.Uuid
-  profiles        profiles? @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "references_profile_foreign")
-}
-
-model profile_versions {
-  id                     Int                @id @default(autoincrement())
-  status                 String             @default("draft") @db.VarChar(255)
-  sort                   Int?
-  date_created           DateTime?          @db.Timestamptz(6)
-  date_updated           DateTime?          @db.Timestamptz(6)
-  name                   String?            @db.VarChar(255)
-  description            String?
-  profile                String?            @db.Uuid
-  toggles                Json?              @db.Json
-  extends_from           Int?
-  profile_versions       profile_versions?  @relation("profile_versionsToprofile_versions", fields: [extends_from], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "profile_versions_extends_from_foreign")
-  other_profile_versions profile_versions[] @relation("profile_versionsToprofile_versions")
-  profiles               profiles?          @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "profile_versions_profile_foreign")
-}
-
-model applications {
-  id                    Int             @id @default(autoincrement())
-  status                String          @default("draft") @db.VarChar(255)
-  date_created          DateTime?       @db.Timestamptz(6)
-  date_updated          DateTime?       @db.Timestamptz(6)
-  vacancy               Int?
-  profile               String          @db.Uuid
-  cv_sent_through       String?         @db.VarChar(255)
-  cv_file_sent          String?         @db.Uuid
-  application_sent_date DateTime?       @db.Date
-  directus_files        directus_files? @relation(fields: [cv_file_sent], references: [id], onUpdate: NoAction, map: "applications_cv_file_sent_foreign")
-  profiles              profiles        @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "applications_profile_foreign")
-  vacancies             vacancies?      @relation(fields: [vacancy], references: [id], onUpdate: NoAction, map: "applications_vacancy_foreign")
+model users {
+  email               String    @unique
+  password            String
+  firstName           String?
+  lastName            String?
+  isEmailVerified     Boolean   @default(false)
+  emailVerifyToken    String?
+  passwordResetToken  String?
+  passwordResetExpiry DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime
+  role                Role      @default(USER)
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
 }
 
 model vacancies {
@@ -883,6 +829,54 @@ model vacancies {
   job_poster      String?        @db.VarChar(255)
   import_source   String?        @db.VarChar(255)
   applications    applications[]
+}
+
+model work_experience_achievements {
+  id               String            @id @db.Uuid
+  status           String            @default("draft") @db.VarChar(255)
+  sort             Int?
+  date_created     DateTime?         @db.Timestamptz(6)
+  date_updated     DateTime?         @db.Timestamptz(6)
+  title            String?           @db.VarChar(255)
+  description      String?           @db.VarChar(255)
+  work_experience  String?           @db.Uuid
+  fa_icon          String?           @db.VarChar(255)
+  tags             Json?             @db.Json
+  work_experiences work_experiences? @relation(fields: [work_experience], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "work_experience_achievements_work_experience_foreign")
+}
+
+model work_experience_technologies {
+  id               String            @id @db.Uuid
+  status           String            @default("draft") @db.VarChar(255)
+  sort             Int?
+  date_created     DateTime?         @db.Timestamptz(6)
+  date_updated     DateTime?         @db.Timestamptz(6)
+  name             String?           @db.VarChar(255)
+  work_experience  String?           @db.Uuid
+  work_experiences work_experiences? @relation(fields: [work_experience], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "work_experience_technologies_work_experience_foreign")
+}
+
+model work_experiences {
+  name                         String
+  location                     String
+  description                  String
+  position                     String
+  summary                      String
+  id                           String                         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  logo                         String?                        @db.Uuid
+  status                       String                         @default("draft") @db.VarChar(255)
+  sort                         Int?
+  profile                      String?                        @db.Uuid
+  date_created                 DateTime?                      @db.Timestamptz(6)
+  date_updated                 DateTime?                      @db.Timestamptz(6)
+  start_date                   DateTime?                      @db.Date
+  end_date                     DateTime?                      @db.Date
+  website                      String?                        @db.VarChar(255)
+  tags                         Json?                          @db.Json
+  work_experience_achievements work_experience_achievements[]
+  work_experience_technologies work_experience_technologies[]
+  directus_files               directus_files?                @relation(fields: [logo], references: [id], onUpdate: NoAction, map: "work_experiences_logo_foreign")
+  profiles                     profiles?                      @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "work_experiences_profile_foreign")
 }
 
 enum Role {
