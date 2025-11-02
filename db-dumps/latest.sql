@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict bhO9FIpzgupGg89SG3uhnxsidVWqdbg48AAyqZCjoeiGG2PVYP0txXsWd31fY9C
+\restrict Ov4TkbEAPxA4UASsPg7feY7RYJTXKNTgbapTmwIa0vX0xmvAWXSzEGAsw7ezADQ
 
 -- Dumped from database version 15.14 (Debian 15.14-1.pgdg13+1)
 -- Dumped by pg_dump version 15.14 (Debian 15.14-1.pgdg13+1)
@@ -6172,6 +6172,7 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 4823	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 17:00:41.244+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	tech_skill_types	11	http://localhost:8055
 4824	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 17:00:51.102+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	tech_skill_types	12	http://localhost:8055
 4825	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 17:01:00.302+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	tech_skill_types	14	http://localhost:8055
+4826	login	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 17:15:39.946+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_users	157238bb-6930-4f26-be9c-8b31a9e11ab8	http://localhost:8055
 \.
 
 
@@ -6291,6 +6292,7 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 100	soft_skills	profile	m2o	select-dropdown-m2o	\N	related-values	{"template":"{{name}}"}	f	f	2	half	\N	\N	\N	f	\N	\N	\N
 174	cheat_sheets	profile	m2o	select-dropdown-m2o	\N	related-values	{"template":"{{name}}"}	f	f	5	full	\N	\N	\N	f	\N	\N	\N
 168	cheat_sheets	id	uuid	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N
+170	cheat_sheets	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	3	half	\N	\N	\N	f	\N	\N	\N
 95	soft_skills	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	3	half	\N	\N	\N	f	\N	\N	\N
 103	dev_methodologies	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	3	half	\N	\N	\N	f	\N	\N	\N
 124	work_experience_achievements	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	5	half	\N	\N	\N	f	\N	\N	\N
@@ -6340,7 +6342,6 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 172	cheat_sheets	title	\N	input	\N	\N	\N	f	f	6	full	\N	\N	\N	t	\N	\N	\N
 173	cheat_sheets	content	\N	input-rich-text-md	\N	\N	\N	f	f	7	full	\N	\N	\N	f	\N	\N	\N
 169	cheat_sheets	sort	\N	input	\N	\N	\N	f	t	2	full	\N	\N	\N	f	\N	\N	\N
-170	cheat_sheets	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	3	half	\N	\N	\N	f	\N	\N	\N
 165	project_stories	sort	\N	input	\N	\N	\N	f	t	2	full	\N	\N	\N	f	\N	\N	\N
 179	project_stories	action	\N	input-rich-text-md	\N	\N	\N	f	f	10	full	\N	The A from the [STAR method](https://www.techinterviewhandbook.org/behavioral-interview/#1-learn-the-star-answer-format)	\N	f	\N	\N	\N
 113	profiles	work_experiences	o2m	list-o2m	\N	related-values	{"template":"{{name}}"}	f	f	26	full	\N	\N	\N	f	\N	\N	\N
@@ -6383,6 +6384,8 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 259	salary_expectations	month_salary	\N	input	\N	\N	\N	f	f	12	half	\N	\N	\N	f	\N	\N	\N
 208	profiles	education	o2m	list-o2m	\N	\N	\N	f	f	27	full	\N	\N	\N	f	\N	\N	\N
 233	profiles	side_projects	o2m	list-o2m	\N	related-values	\N	f	f	28	full	\N	\N	\N	f	\N	\N	\N
+231	side_projects	end_date	\N	datetime	\N	\N	\N	f	f	12	half	\N	\N	\N	f	\N	\N	\N
+224	side_projects	id	\N	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N
 72	tech_skill_categories	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	6	half	\N	\N	\N	f	\N	\N	\N
 191	tech_skill_categories	fa_icon	\N	input	\N	\N	\N	f	f	8	half	\N	\N	\N	f	\N	\N	\N
 64	tech_skills	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	5	half	\N	\N	\N	f	\N	\N	\N
@@ -6421,8 +6424,6 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 232	side_projects	profile	m2o	select-dropdown-m2o	{"template":"{{name}}"}	related-values	{"template":"{{name}}"}	f	f	5	half	\N	\N	\N	f	\N	\N	\N
 256	salary_expectations	work_arrangement	\N	select-dropdown	{"choices":[{"text":"Fully Remote","value":"remote"},{"text":"Hybrid","value":"hybrid"},{"text":"Onsite","value":"onsite"}]}	labels	\N	f	f	8	half	\N	\N	\N	f	\N	\N	\N
 246	side_project_achievements	sort	\N	input	\N	\N	\N	f	t	9	full	\N	\N	\N	f	\N	\N	\N
-231	side_projects	end_date	\N	datetime	\N	\N	\N	f	f	12	half	\N	\N	\N	f	\N	\N	\N
-224	side_projects	id	\N	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N
 236	side_projects	summary	\N	input-rich-text-md	\N	\N	\N	f	f	13	full	\N	\N	\N	f	\N	\N	\N
 242	side_projects	achievements	o2m	list-o2m	{"enableSelect":false}	related-values	\N	f	f	14	full	\N	\N	\N	f	\N	\N	\N
 257	salary_expectations	region	\N	select-dropdown	{"choices":[{"text":"US Tech Hubs","value":"us_tech_hubs"},{"text":"US Standard","value":"us_standard"},{"text":"EU Tech Centers","value":"eu_tech_centers"},{"text":"EU West/North","value":"eu_west_north"},{"text":"EU East/South","value":"eu_east_south"},{"text":"London","value":"london"},{"text":"UK Other","value":"uk_other"}]}	labels	{"choices":[{"text":"EU West/North","value":"eu_west_north"}]}	f	f	9	half	\N	\N	\N	f	\N	\N	\N
@@ -6679,13 +6680,11 @@ abf8a154-5b1c-4a46-ac9c-7300570f4f17	$t:public_label	public	$t:public_descriptio
 COPY public.directus_presets (id, bookmark, "user", role, collection, search, layout, layout_query, layout_options, refresh_interval, filter, icon, color) FROM stdin;
 11	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	work_experience_achievements	\N	\N	{"tabular":{"fields":["title","description","work_experience","status"],"page":1}}	{"tabular":{"widths":{"title":213.5999755859375,"description":388,"work_experience":162.2000732421875,"status":90}}}	\N	\N	bookmark	\N
 14	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	application_questions	\N	\N	{"tabular":{"page":1,"fields":["title","question"]}}	{"tabular":{"widths":{"title":316.4000244140625,"question":500.199951171875}}}	\N	\N	bookmark	\N
-6	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	tech_skills	\N	tabular	{"tabular":{"fields":["name","category","years_experience","level","status","profile"],"page":1}}	{"tabular":{"widths":{"name":273,"category":183,"years_experience":101.4000244140625,"level":119.2000732421875,"status":96,"profile":124},"align":{"status":"left"}}}	\N	\N	bookmark	\N
 16	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	cheat_sheets	\N	\N	{"tabular":{"fields":["title","profile"],"page":1}}	{"tabular":{"widths":{"title":549.7999877929688,"profile":277.00006103515625}}}	\N	\N	bookmark	\N
 1	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	work_experiences	\N	\N	{"tabular":{"fields":["name","position","location","description","start_date","end_date","status"],"page":1}}	{"tabular":{"widths":{"name":119.66665649414062,"position":264,"location":136.66668701171875,"description":223.3333740234375,"start_date":119.666748046875,"end_date":120,"status":91}}}	\N	\N	bookmark	\N
 8	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	highlights	\N	\N	{"tabular":{"fields":["text","fa_icon","status","profile"],"page":1}}	{"tabular":{"widths":{"text":584.800048828125,"fa_icon":99.4000244140625,"status":91,"profile":121.7999267578125}}}	\N	\N	bookmark	\N
 21	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	references	\N	\N	{"tabular":{"page":1,"fields":["author","author_position","text","status","profile"]}}	{"tabular":{"widths":{"author":149.6666259765625,"author_position":211,"text":398.6666259765625,"status":98,"profile":124.6666259765625}}}	\N	\N	bookmark	\N
 17	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	project_stories	\N	\N	{"tabular":{"page":1,"fields":["title","category","profile"]}}	{"tabular":{"widths":{"title":489.20001220703125,"category":226.00006103515625,"profile":125.199951171875},"spacing":"cozy"}}	\N	\N	bookmark	\N
-3	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	profiles	\N	\N	{"tabular":{"page":1,"fields":["name","title","core_stack","subtitle"]}}	{"tabular":{"widths":{"name":126.66665649414062,"title":231.66668701171875,"core_stack":278.3333740234375,"subtitle":343.3333740234375}}}	\N	\N	bookmark	\N
 4	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	languages	\N	\N	{"tabular":{"page":1,"fields":["name","language_code","proficiency","status","profile"]}}	{"tabular":{"widths":{"name":287.60003662109375,"language_code":165.20001220703125,"proficiency":176.4000244140625,"status":96.4000244140625,"profile":132.39990234375}}}	\N	\N	bookmark	\N
 18	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	side_projects	\N	\N	{"tabular":{"fields":["name","stars","start_date","end_date","status","profile"],"page":1}}	{"tabular":{"widths":{"name":326.33331298828125,"stars":90.66668701171875,"start_date":182.3333740234375,"end_date":169.666748046875,"status":90.6666259765625,"profile":121.3333740234375}}}	\N	\N	bookmark	\N
 10	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	soft_skills	\N	\N	{"tabular":{"page":1,"fields":["name","status","profile"]}}	{"tabular":{"widths":{"name":587,"status":98.5999755859375,"profile":125.199951171875}}}	\N	\N	bookmark	\N
@@ -6698,6 +6697,8 @@ COPY public.directus_presets (id, bookmark, "user", role, collection, search, la
 25	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	applications	\N	\N	{"tabular":{"fields":["vacancy","profile","status"]}}	{"tabular":{"widths":{"vacancy":746.9999389648438,"profile":140.33331298828125,"status":106}}}	\N	\N	bookmark	\N
 24	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	vacancies	\N	\N	{"tabular":{"page":1,"fields":["title","job_poster","import_source","status"]}}	{"tabular":{"widths":{"title":426.33331298828125,"job_poster":234.66668701171875,"import_source":160,"status":104}}}	\N	\N	bookmark	\N
 9	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	tech_skill_types	\N	\N	{"tabular":{"fields":["name","slug","status"],"page":1}}	{"tabular":{"widths":{"name":520.3333129882812,"slug":302,"status":118}}}	\N	\N	bookmark	\N
+3	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	profiles	\N	\N	{"tabular":{"page":1,"fields":["name","title","core_stack","subtitle"]}}	{"tabular":{"widths":{"name":126.66665649414062,"title":231.66668701171875,"core_stack":278.3333740234375,"subtitle":343.3333740234375}}}	\N	\N	bookmark	\N
+6	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	tech_skills	\N	tabular	{"tabular":{"fields":["name","category","years_experience","level","status","profile"],"page":1}}	{"tabular":{"widths":{"name":273,"category":183,"years_experience":101.4000244140625,"level":119.2000732421875,"status":96,"profile":124},"align":{"status":"left"}}}	\N	\N	bookmark	\N
 \.
 
 
@@ -11066,8 +11067,10 @@ COPY public.directus_roles (id, name, icon, description, parent) FROM stdin;
 --
 
 COPY public.directus_sessions (token, "user", expires, ip, user_agent, share, origin, next_token) FROM stdin;
-RnEWIhanyge0y7iuKIHmo_fl0g-HT3IIGVIaXrh-QCYaX-mvg0AP4gYNwfFDSt9z	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 16:58:26.115+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	yfyRKshFLFOSDHDJ2fDus64hjesC7iQeTKF3U8blZr0GLGhQkJgnOxFDJuT31lSX
 yfyRKshFLFOSDHDJ2fDus64hjesC7iQeTKF3U8blZr0GLGhQkJgnOxFDJuT31lSX	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-03 16:58:16.115+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
+fdAXx7x1GqawYek-0TmBncTp3a_W78swYcOXk-gL4qGBrDj9RTgsHQCxYU2Qqy1x	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 17:17:21.722+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	TmrTWgbZh1wmWfjn4geOaOTQOyxvZr-NO4Tcpe-5tFk-nplLspXOQDuX_OK5GTrR
+TmrTWgbZh1wmWfjn4geOaOTQOyxvZr-NO4Tcpe-5tFk-nplLspXOQDuX_OK5GTrR	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 17:17:22.614+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	fKZCKKagVRkz5aleo2i2pggd5BncsblQ6rr-FMudno-M7QZpzbUZJMMmYDqQzXVT
+fKZCKKagVRkz5aleo2i2pggd5BncsblQ6rr-FMudno-M7QZpzbUZJMMmYDqQzXVT	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-03 17:17:12.614+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
 \.
 
 
@@ -11104,7 +11107,7 @@ c530a32f-84cb-4ab9-8a61-7a12a5bcb7e6	en-US	draft	Draft
 --
 
 COPY public.directus_users (id, first_name, last_name, email, password, location, title, description, tags, avatar, language, tfa_secret, status, role, token, last_access, last_page, provider, external_identifier, auth_data, email_notifications, appearance, theme_dark, theme_light, theme_light_overrides, theme_dark_overrides, text_direction) FROM stdin;
-157238bb-6930-4f26-be9c-8b31a9e11ab8	Rik	Wanders	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-11-02 16:58:16.118+00	/content/tech_skill_types	default	\N	\N	t	\N	\N	\N	\N	\N	auto
+157238bb-6930-4f26-be9c-8b31a9e11ab8	Rik	Wanders	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-11-02 17:17:12.617+00	/settings/data-model/tech_skills	default	\N	\N	t	\N	\N	\N	\N	\N	auto
 \.
 
 
@@ -11610,7 +11613,7 @@ SELECT pg_catalog.setval('public.applications_id_seq', 2, true);
 -- Name: directus_activity_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_activity_id_seq', 4825, true);
+SELECT pg_catalog.setval('public.directus_activity_id_seq', 4826, true);
 
 
 --
@@ -12782,5 +12785,5 @@ ALTER TABLE ONLY public.work_experiences
 -- PostgreSQL database dump complete
 --
 
-\unrestrict bhO9FIpzgupGg89SG3uhnxsidVWqdbg48AAyqZCjoeiGG2PVYP0txXsWd31fY9C
+\unrestrict Ov4TkbEAPxA4UASsPg7feY7RYJTXKNTgbapTmwIa0vX0xmvAWXSzEGAsw7ezADQ
 
