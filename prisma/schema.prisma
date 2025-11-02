@@ -796,9 +796,9 @@ model tech_skills {
   date_updated          DateTime?              @db.Timestamptz(6)
   name                  String?                @db.VarChar(255)
   category              String?                @db.Uuid
-  years_experience      Int?
   level                 String?                @db.VarChar(255)
   tech_type             Int?
+  years_experience      Int?
   tech_skill_categories tech_skill_categories? @relation(fields: [category], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tech_skills_category_foreign")
   tech_skill_types      tech_skill_types?      @relation(fields: [tech_type], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tech_skills_tech_type_foreign")
 }
