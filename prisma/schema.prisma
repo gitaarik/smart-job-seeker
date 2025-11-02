@@ -839,7 +839,7 @@ model work_experience_achievements {
   date_updated     DateTime?         @db.Timestamptz(6)
   title            String?           @db.VarChar(255)
   description      String?           @db.VarChar(255)
-  work_experience  String?           @db.Uuid
+  work_experience  Int?
   fa_icon          String?           @db.VarChar(255)
   tags             Json?             @db.Json
   work_experiences work_experiences? @relation(fields: [work_experience], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "work_experience_achievements_work_experience_foreign")
@@ -852,7 +852,7 @@ model work_experience_technologies {
   date_created     DateTime?         @db.Timestamptz(6)
   date_updated     DateTime?         @db.Timestamptz(6)
   name             String?           @db.VarChar(255)
-  work_experience  String?           @db.Uuid
+  work_experience  Int?
   work_experiences work_experiences? @relation(fields: [work_experience], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "work_experience_technologies_work_experience_foreign")
 }
 
@@ -862,7 +862,7 @@ model work_experiences {
   description                  String
   position                     String
   summary                      String
-  id                           String                         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                           Int                            @id @default(autoincrement())
   logo                         String?                        @db.Uuid
   status                       String                         @default("draft") @db.VarChar(255)
   sort                         Int?

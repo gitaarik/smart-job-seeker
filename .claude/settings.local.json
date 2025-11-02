@@ -32,7 +32,9 @@
       "Bash(do echo \"=== $table ===\")",
       "Bash(done)",
       "Bash(python3:*)",
-      "Bash(npm run docker:db:restore:*)"
+      "Bash(npm run docker:db:restore:*)",
+      "Bash(npm run docker:export-profile-json:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []

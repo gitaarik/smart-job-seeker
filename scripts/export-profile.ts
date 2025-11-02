@@ -170,202 +170,223 @@ async function exportProfile(profileId: string): Promise<void> {
   try {
     console.log(`Exporting profile: ${profileId}`);
 
-    // Fetch profile with all relations
-    const profile = await prisma.profiles.findUnique({
-      where: { id: profileId },
-      include: {
-        profile_versions: {
-          select: {
-            status: true,
-            sort: true,
-            name: true,
-            description: true,
-            toggles: true,
-            profile_versions: {
-              select: {
-                name: true,
-              },
-            },
-          },
-          orderBy: { sort: "asc" },
-        },
-        highlights: {
-          select: {
-            status: true,
-            sort: true,
-            text: true,
-            fa_icon: true,
-          },
-          orderBy: { sort: "asc" },
-        },
-        tech_skill_categories: {
-          select: {
-            status: true,
-            sort: true,
-            name: true,
-            fa_icon: true,
-            tech_skills: {
-              select: {
-                status: true,
-                sort: true,
-                name: true,
-                years_experience: true,
-                level: true,
-                tech_skill_types: {
-                  select: {
-                    slug: true,
-                  },
-                },
-              },
-              orderBy: { sort: "asc" },
-            },
-          },
-          orderBy: { sort: "asc" },
-        },
-        work_experiences: {
-          select: {
-            name: true,
-            location: true,
-            description: true,
-            position: true,
-            summary: true,
-            status: true,
-            sort: true,
-            start_date: true,
-            end_date: true,
-            website: true,
-            tags: true,
-            work_experience_achievements: {
-              select: {
-                status: true,
-                sort: true,
-                title: true,
-                description: true,
-                fa_icon: true,
-                tags: true,
-              },
-              orderBy: { sort: "asc" },
-            },
-            work_experience_technologies: {
-              select: {
-                status: true,
-                sort: true,
-                name: true,
-              },
-              orderBy: { sort: "asc" },
-            },
-          },
-          orderBy: { sort: "asc" },
-        },
-        side_projects: {
-          select: {
-            status: true,
-            sort: true,
-            name: true,
-            start_date: true,
-            end_date: true,
-            url: true,
-            stars: true,
-            summary: true,
-            url_label: true,
-            tags: true,
-            side_project_achievements: {
-              select: {
-                title: true,
-                fa_icon: true,
-                description: true,
-                status: true,
-                sort: true,
-              },
-              orderBy: { sort: "asc" },
-            },
-            side_project_technologies: {
-              select: {
-                status: true,
-                sort: true,
-                name: true,
-              },
-              orderBy: { sort: "asc" },
-            },
-          },
-          orderBy: { sort: "asc" },
-        },
-        education: {
-          select: {
-            status: true,
-            sort: true,
-            institution: true,
-            location: true,
-            url: true,
-            area: true,
-            study_type: true,
-            graduation_year: true,
-            start_date: true,
-            end_date: true,
-            summary: true,
-            tags: true,
-          },
-          orderBy: { sort: "asc" },
-        },
-        languages: {
-          select: {
-            status: true,
-            sort: true,
-            name: true,
-            language_code: true,
-            proficiency: true,
-          },
-          orderBy: { sort: "asc" },
-        },
-        references: {
-          select: {
-            status: true,
-            sort: true,
-            author: true,
-            author_position: true,
-            text: true,
-          },
-          orderBy: { sort: "asc" },
-        },
-        project_stories: {
-          select: {
-            sort: true,
-            title: true,
-            situation: true,
-            task: true,
-            action: true,
-            result: true,
-            reflection: true,
-            category: true,
-          },
-          orderBy: { sort: "asc" },
-        },
-        application_questions: {
-          select: {
-            sort: true,
-            question: true,
-            answer: true,
-            title: true,
-            source: true,
-          },
-          orderBy: { sort: "asc" },
-        },
-        cheat_sheets: {
-          select: {
-            sort: true,
-            title: true,
-            content: true,
-          },
-          orderBy: { sort: "asc" },
-        },
-      },
+    const id = parseInt(profileId, 10);
+
+    // Fetch base profile first
+    const baseProfile = await prisma.profiles.findUnique({
+      where: { id },
     });
 
-    if (!profile) {
-      throw new Error(`Profile not found: ${profileId}`);
+    if (!baseProfile) {
+      console.error(`Profile with ID ${id} not found`);
+      return;
     }
 
-    // Fetch salary expectations (not directly related to profile)
+    // Fetch relations separately to avoid Prisma protocol limitations with large nested queries
+    const [
+      profile_versions,
+      highlights,
+      tech_skill_categories,
+      work_experiences_base,
+      side_projects,
+      education,
+      languages,
+      references,
+      project_stories,
+      application_questions,
+      cheat_sheets,
+      work_experience_achievements_all,
+      work_experience_technologies_all,
+      side_project_achievements_all,
+      side_project_technologies_all,
+    ] = await Promise.all([
+      prisma.profile_versions.findMany({
+        where: { profile: id },
+        select: {
+          status: true,
+          sort: true,
+          name: true,
+          description: true,
+          toggles: true,
+          other_profile_versions: { select: { name: true } },
+        },
+        orderBy: { sort: "asc" },
+      }),
+      prisma.highlights.findMany({
+        where: { profile: id },
+        select: { status: true, sort: true, text: true, fa_icon: true },
+        orderBy: { sort: "asc" },
+      }),
+      prisma.tech_skill_categories.findMany({
+        where: { profile: id },
+        select: {
+          status: true,
+          sort: true,
+          name: true,
+          fa_icon: true,
+          tech_skills: {
+            select: {
+              status: true,
+              sort: true,
+              name: true,
+              years_experience: true,
+              level: true,
+              tech_skill_types: { select: { slug: true } },
+            },
+            orderBy: { sort: "asc" },
+          },
+        },
+        orderBy: { sort: "asc" },
+      }),
+      prisma.work_experiences.findMany({
+        where: { profile: id },
+        orderBy: { sort: "asc" },
+      }),
+      prisma.side_projects.findMany({
+        where: { profile: id },
+        select: {
+          status: true,
+          sort: true,
+          name: true,
+          start_date: true,
+          end_date: true,
+          url: true,
+          stars: true,
+          summary: true,
+          url_label: true,
+          tags: true,
+          side_project_achievements: {
+            select: {
+              title: true,
+              fa_icon: true,
+              description: true,
+              status: true,
+              sort: true,
+            },
+            orderBy: { sort: "asc" },
+          },
+          side_project_technologies: {
+            select: { status: true, sort: true, name: true },
+            orderBy: { sort: "asc" },
+          },
+        },
+        orderBy: { sort: "asc" },
+      }),
+      prisma.education.findMany({
+        where: { profile: id },
+        select: {
+          status: true,
+          sort: true,
+          institution: true,
+          location: true,
+          url: true,
+          area: true,
+          study_type: true,
+          graduation_year: true,
+          start_date: true,
+          end_date: true,
+          summary: true,
+          tags: true,
+        },
+        orderBy: { sort: "asc" },
+      }),
+      prisma.languages.findMany({
+        where: { profile: id },
+        select: {
+          status: true,
+          sort: true,
+          name: true,
+          language_code: true,
+          proficiency: true,
+        },
+        orderBy: { sort: "asc" },
+      }),
+      prisma.references.findMany({
+        where: { profile: id },
+        select: {
+          status: true,
+          sort: true,
+          author: true,
+          author_position: true,
+          text: true,
+        },
+        orderBy: { sort: "asc" },
+      }),
+      prisma.project_stories.findMany({
+        where: { profile: id },
+        select: {
+          sort: true,
+          title: true,
+          situation: true,
+          task: true,
+          action: true,
+          result: true,
+          reflection: true,
+          category: true,
+        },
+        orderBy: { sort: "asc" },
+      }),
+      prisma.application_questions.findMany({
+        where: { profile: id },
+        select: {
+          sort: true,
+          question: true,
+          answer: true,
+          title: true,
+          source: true,
+        },
+        orderBy: { sort: "asc" },
+      }),
+      prisma.cheat_sheets.findMany({
+        where: { profile: id },
+        select: { sort: true, title: true, content: true },
+        orderBy: { sort: "asc" },
+      }),
+      // Nested relations - fetched separately to avoid protocol limits
+      prisma.work_experience_achievements.findMany({
+        select: {
+          work_experience: true,
+          status: true,
+          sort: true,
+          title: true,
+          description: true,
+          fa_icon: true,
+          tags: true,
+        },
+        orderBy: { sort: "asc" },
+      }),
+      prisma.work_experience_technologies.findMany({
+        select: {
+          work_experience: true,
+          status: true,
+          sort: true,
+          name: true,
+        },
+        orderBy: { sort: "asc" },
+      }),
+      prisma.side_project_achievements.findMany({
+        select: {
+          side_project: true,
+          title: true,
+          fa_icon: true,
+          description: true,
+          status: true,
+          sort: true,
+        },
+        orderBy: { sort: "asc" },
+      }),
+      prisma.side_project_technologies.findMany({
+        select: {
+          side_project: true,
+          status: true,
+          sort: true,
+          name: true,
+        },
+        orderBy: { sort: "asc" },
+      }),
+    ]);
+
+    // Fetch salary expectations
     const salaryExpectations = await prisma.salary_expectations.findMany({
       select: {
         sort: true,
@@ -385,32 +406,32 @@ async function exportProfile(profileId: string): Promise<void> {
     // Build the export object
     const exportData: ExportedProfile = {
       profile: {
-        name: profile.name || undefined,
-        title: profile.title || undefined,
-        location: profile.location || undefined,
-        phone_number: profile.phone_number || undefined,
-        email_address: profile.email_address || undefined,
-        personal_website: profile.personal_website || undefined,
-        subtitle: profile.subtitle || undefined,
-        core_stack: profile.core_stack || undefined,
-        linkedin_profile: profile.linkedin_profile || undefined,
-        github_profile: profile.github_profile || undefined,
-        stackoverflow_profile: profile.stackoverflow_profile || undefined,
-        headline: profile.headline || undefined,
-        summary: profile.summary || undefined,
-        nationality: profile.nationality || undefined,
-        location_url: profile.location_url || undefined,
-        location_timezone: profile.location_timezone || undefined,
-        profile_versions: profile.profile_versions.map((pv) => ({
+        name: baseProfile.name || undefined,
+        title: baseProfile.title || undefined,
+        location: baseProfile.location || undefined,
+        phone_number: baseProfile.phone_number || undefined,
+        email_address: baseProfile.email_address || undefined,
+        personal_website: baseProfile.personal_website || undefined,
+        subtitle: baseProfile.subtitle || undefined,
+        core_stack: baseProfile.core_stack || undefined,
+        linkedin_profile: baseProfile.linkedin_profile || undefined,
+        github_profile: baseProfile.github_profile || undefined,
+        stackoverflow_profile: baseProfile.stackoverflow_profile || undefined,
+        headline: baseProfile.headline || undefined,
+        summary: baseProfile.summary || undefined,
+        nationality: baseProfile.nationality || undefined,
+        location_url: baseProfile.location_url || undefined,
+        location_timezone: baseProfile.location_timezone || undefined,
+        profile_versions: profile_versions.map((pv) => ({
           status: pv.status || undefined,
           sort: pv.sort,
           name: pv.name || undefined,
           description: pv.description || undefined,
           toggles: pv.toggles,
-          extends_from: pv.profile_versions?.name,
+          extends_from: pv.other_profile_versions?.name,
         })),
-        highlights: profile.highlights,
-        tech_skill_categories: profile.tech_skill_categories.map((cat) => ({
+        highlights,
+        tech_skill_categories: tech_skill_categories.map((cat) => ({
           status: cat.status || undefined,
           sort: cat.sort,
           name: cat.name || undefined,
@@ -424,7 +445,7 @@ async function exportProfile(profileId: string): Promise<void> {
             tech_type: skill.tech_skill_types?.slug || null,
           })),
         })),
-        work_experiences: profile.work_experiences.map((work) => ({
+        work_experiences: work_experiences_base.map((work) => ({
           name: work.name || undefined,
           location: work.location || undefined,
           description: work.description || undefined,
@@ -436,10 +457,10 @@ async function exportProfile(profileId: string): Promise<void> {
           end_date: work.end_date,
           website: work.website || undefined,
           tags: work.tags,
-          achievements: work.work_experience_achievements,
-          technologies: work.work_experience_technologies,
+          achievements: work_experience_achievements_all.filter((a) => a.work_experience === work.id),
+          technologies: work_experience_technologies_all.filter((t) => t.work_experience === work.id),
         })),
-        side_projects: profile.side_projects.map((proj) => ({
+        side_projects: side_projects.map((proj) => ({
           status: proj.status || undefined,
           sort: proj.sort,
           name: proj.name || undefined,
@@ -450,15 +471,15 @@ async function exportProfile(profileId: string): Promise<void> {
           summary: proj.summary || undefined,
           url_label: proj.url_label || undefined,
           tags: proj.tags,
-          achievements: proj.side_project_achievements,
-          technologies: proj.side_project_technologies,
+          achievements: side_project_achievements_all.filter((a) => a.side_project === proj.id),
+          technologies: side_project_technologies_all.filter((t) => t.side_project === proj.id),
         })),
-        education: profile.education,
-        languages: profile.languages,
-        references: profile.references,
-        project_stories: profile.project_stories,
-        application_questions: profile.application_questions,
-        cheat_sheets: profile.cheat_sheets,
+        education,
+        languages,
+        references,
+        project_stories,
+        application_questions,
+        cheat_sheets,
         salary_expectations: salaryExpectations,
       },
     };
@@ -470,10 +491,10 @@ async function exportProfile(profileId: string): Promise<void> {
     }
 
     // Generate filename with timestamp and profile name
-    const profileName = profile.name?.replace(/\s+/g, "-").toLowerCase() ||
-      "profile";
+    const profileName = baseProfile.name
+      ?.replace(/\s+/g, "-")
+      .toLowerCase() || "profile";
     const timestamp = new Date().toISOString().split("T")[0];
-    // const filename = `${outputDir}/${profileName}-${timestamp}.json`;
     const filename = `${outputDir}/${profileName}.json`;
 
     // Write to file
@@ -483,48 +504,46 @@ async function exportProfile(profileId: string): Promise<void> {
     console.log(`📁 File: ${filename}`);
     console.log(`📊 Exported data summary:`);
     console.log(
-      `   - Profile versions: ${exportData.profile.profile_versions.length}`,
+      `   - Profile versions: ${exportData.profile.profile_versions.length}`
     );
     console.log(`   - Highlights: ${exportData.profile.highlights.length}`);
     console.log(
-      `   - Tech skill categories: ${exportData.profile.tech_skill_categories.length}`,
+      `   - Tech skill categories: ${exportData.profile.tech_skill_categories.length}`
     );
     console.log(
-      `   - Work experiences: ${exportData.profile.work_experiences.length}`,
+      `   - Work experiences: ${exportData.profile.work_experiences.length}`
     );
     console.log(
-      `   - Side projects: ${exportData.profile.side_projects.length}`,
+      `   - Side projects: ${exportData.profile.side_projects.length}`
     );
     console.log(`   - Education: ${exportData.profile.education.length}`);
     console.log(`   - Languages: ${exportData.profile.languages.length}`);
     console.log(`   - References: ${exportData.profile.references.length}`);
     console.log(
-      `   - Project stories: ${exportData.profile.project_stories.length}`,
+      `   - Project stories: ${exportData.profile.project_stories.length}`
     );
     console.log(
-      `   - Application questions: ${exportData.profile.application_questions.length}`,
+      `   - Application questions: ${exportData.profile.application_questions.length}`
     );
     console.log(`   - Cheat sheets: ${exportData.profile.cheat_sheets.length}`);
   } catch (error) {
     console.error("Error exporting profile:", error);
-    throw error;
-  } finally {
-    await prisma.$disconnect();
+    process.exit(1);
   }
 }
 
-// Get profile ID from command line arguments
+// Main execution
 const profileId = process.argv[2];
-
 if (!profileId) {
-  console.error("Usage: npx tsx scripts/export-profile.ts <profile-id>");
-  console.error(
-    "Example: npx tsx scripts/export-profile.ts 123e4567-e89b-12d3-a456-426614174000",
-  );
+  console.error("Please provide a profile ID as an argument");
   process.exit(1);
 }
 
-exportProfile(profileId).catch((error) => {
-  console.error("Export failed:", error);
-  process.exit(1);
-});
+exportProfile(profileId)
+  .catch((error) => {
+    console.error("Export failed:", error);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

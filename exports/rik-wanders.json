@@ -36,8 +36,7 @@
         "sort": 3,
         "name": "fullstack-svelte",
         "description": "Fullstack Svelte SWE",
-        "toggles": null,
-        "extends_from": "fullstack-react"
+        "toggles": null
       },
       {
         "status": "published",
@@ -53,16 +52,14 @@
         "description": "Fullstack Django SWE + Nationality",
         "toggles": [
           "nationality"
-        ],
-        "extends_from": "fullstack-django"
+        ]
       },
       {
         "status": "published",
         "sort": null,
         "name": "fullstack-django-svelte",
         "description": "Full-stack Django & Svelte SWE",
-        "toggles": null,
-        "extends_from": "fullstack-svelte"
+        "toggles": null
       }
     ],
     "highlights": [
@@ -115,464 +112,49 @@
         "sort": 1,
         "name": "Backend",
         "fa_icon": "python",
-        "tech_skills": [
-          {
-            "status": "published",
-            "sort": 1,
-            "name": "Python",
-            "years_experience": 12,
-            "level": "expert",
-            "tech_type": "programming-language"
-          },
-          {
-            "status": "published",
-            "sort": 2,
-            "name": "Django",
-            "years_experience": 12,
-            "level": "expert",
-            "tech_type": "framework-library"
-          },
-          {
-            "status": "published",
-            "sort": 3,
-            "name": "Django REST Framework (DRF)",
-            "years_experience": 12,
-            "level": "expert",
-            "tech_type": "framework-library"
-          },
-          {
-            "status": "published",
-            "sort": 4,
-            "name": "Flask",
-            "years_experience": 4,
-            "level": "proficient",
-            "tech_type": "framework-library"
-          },
-          {
-            "status": "published",
-            "sort": 5,
-            "name": "FastAPI",
-            "years_experience": 1,
-            "level": "proficient",
-            "tech_type": "framework-library"
-          },
-          {
-            "status": "published",
-            "sort": 6,
-            "name": "RESTful APIs",
-            "years_experience": 12,
-            "level": "expert",
-            "tech_type": null
-          },
-          {
-            "status": "published",
-            "sort": 7,
-            "name": "LLM integrations",
-            "years_experience": 1,
-            "level": "proficient",
-            "tech_type": "apis-integration-technologies"
-          },
-          {
-            "status": "published",
-            "sort": 8,
-            "name": "pytest",
-            "years_experience": 12,
-            "level": "proficient",
-            "tech_type": "framework-library"
-          }
-        ]
+        "tech_skills": []
       },
       {
         "status": "published",
         "sort": 2,
         "name": "Frontend",
         "fa_icon": "node-js",
-        "tech_skills": [
-          {
-            "status": "published",
-            "sort": 16,
-            "name": "JavaScript",
-            "years_experience": 18,
-            "level": "expert",
-            "tech_type": "programming-language"
-          },
-          {
-            "status": "published",
-            "sort": 17,
-            "name": "Node.js",
-            "years_experience": 12,
-            "level": "expert",
-            "tech_type": "programming-language"
-          },
-          {
-            "status": "published",
-            "sort": 18,
-            "name": "TypeScript",
-            "years_experience": 2,
-            "level": "proficient",
-            "tech_type": "programming-language"
-          },
-          {
-            "status": "published",
-            "sort": 19,
-            "name": "React Native",
-            "years_experience": 3,
-            "level": "proficient",
-            "tech_type": "framework-library"
-          },
-          {
-            "status": "published",
-            "sort": 20,
-            "name": "React",
-            "years_experience": 12,
-            "level": "expert",
-            "tech_type": "framework-library"
-          },
-          {
-            "status": "published",
-            "sort": 21,
-            "name": "Svelte",
-            "years_experience": 2,
-            "level": "proficient",
-            "tech_type": "framework-library"
-          },
-          {
-            "status": "published",
-            "sort": 22,
-            "name": "Tailwind CSS",
-            "years_experience": 2,
-            "level": "proficient",
-            "tech_type": "framework-library"
-          },
-          {
-            "status": "published",
-            "sort": 23,
-            "name": "Jest",
-            "years_experience": 2,
-            "level": "proficient",
-            "tech_type": "framework-library"
-          }
-        ]
+        "tech_skills": []
       },
       {
         "status": "published",
         "sort": 4,
         "name": "Databases",
         "fa_icon": "database",
-        "tech_skills": [
-          {
-            "status": "published",
-            "sort": 9,
-            "name": "PostgreSQL",
-            "years_experience": 4,
-            "level": "expert",
-            "tech_type": "relational-database"
-          },
-          {
-            "status": "published",
-            "sort": 10,
-            "name": "MySQL",
-            "years_experience": 10,
-            "level": "expert",
-            "tech_type": "relational-database"
-          },
-          {
-            "status": "published",
-            "sort": 11,
-            "name": "MariaDB",
-            "years_experience": 12,
-            "level": "expert",
-            "tech_type": "relational-database"
-          },
-          {
-            "status": "published",
-            "sort": 12,
-            "name": "SQLite",
-            "years_experience": 5,
-            "level": "proficient",
-            "tech_type": "relational-database"
-          },
-          {
-            "status": "published",
-            "sort": 13,
-            "name": "SQL optimization",
-            "years_experience": 12,
-            "level": "proficient",
-            "tech_type": "relational-database"
-          },
-          {
-            "status": "published",
-            "sort": 14,
-            "name": "Elasticsearch",
-            "years_experience": 3,
-            "level": "proficient",
-            "tech_type": "nosql-database"
-          },
-          {
-            "status": "published",
-            "sort": 15,
-            "name": "MongoDB",
-            "years_experience": 2,
-            "level": "proficient",
-            "tech_type": "nosql-database"
-          },
-          {
-            "status": "published",
-            "sort": 16,
-            "name": "Redis",
-            "years_experience": 6,
-            "level": "proficient",
-            "tech_type": "nosql-database"
-          }
-        ]
+        "tech_skills": []
       },
       {
         "status": "published",
         "sort": 5,
         "name": "Development Tools",
         "fa_icon": "robot",
-        "tech_skills": [
-          {
-            "status": "published",
-            "sort": 1,
-            "name": "Git",
-            "years_experience": 12,
-            "level": "expert",
-            "tech_type": "version-control-collaboration-tool"
-          },
-          {
-            "status": "published",
-            "sort": 2,
-            "name": "GitHub",
-            "years_experience": 12,
-            "level": "expert",
-            "tech_type": "version-control-collaboration-tool"
-          },
-          {
-            "status": "published",
-            "sort": 3,
-            "name": "Git Flow",
-            "years_experience": 8,
-            "level": "expert",
-            "tech_type": "version-control-collaboration-tool"
-          },
-          {
-            "status": "published",
-            "sort": 4,
-            "name": "Claude Code",
-            "years_experience": 1,
-            "level": "expert",
-            "tech_type": "development-tool"
-          },
-          {
-            "status": "published",
-            "sort": 5,
-            "name": "Cursor",
-            "years_experience": 1,
-            "level": "expert",
-            "tech_type": "development-tool"
-          },
-          {
-            "status": "published",
-            "sort": 6,
-            "name": "Neovim",
-            "years_experience": 18,
-            "level": "expert",
-            "tech_type": "code-editor-ide"
-          },
-          {
-            "status": "published",
-            "sort": 7,
-            "name": "tmux",
-            "years_experience": 18,
-            "level": "expert",
-            "tech_type": "development-tool"
-          }
-        ]
+        "tech_skills": []
       },
       {
         "status": "published",
         "sort": 6,
         "name": "DevOps",
         "fa_icon": "server",
-        "tech_skills": [
-          {
-            "status": "published",
-            "sort": 1,
-            "name": "Docker",
-            "years_experience": 7,
-            "level": "expert",
-            "tech_type": "container-orchestration-tool"
-          },
-          {
-            "status": "published",
-            "sort": 2,
-            "name": "Docker Compose",
-            "years_experience": 5,
-            "level": "expert",
-            "tech_type": "container-orchestration-tool"
-          },
-          {
-            "status": "published",
-            "sort": 3,
-            "name": "GitLab CI/CD",
-            "years_experience": 5,
-            "level": "expert",
-            "tech_type": "ci-cd-automation-tool"
-          },
-          {
-            "status": "published",
-            "sort": 4,
-            "name": "GitHub Actions",
-            "years_experience": 4,
-            "level": "expert",
-            "tech_type": "ci-cd-automation-tool"
-          },
-          {
-            "status": "draft",
-            "sort": 5,
-            "name": "Ansible",
-            "years_experience": 4,
-            "level": "proficient",
-            "tech_type": "ci-cd-automation-tool"
-          },
-          {
-            "status": "published",
-            "sort": 6,
-            "name": "Python Fabric",
-            "years_experience": 5,
-            "level": "expert",
-            "tech_type": "ci-cd-automation-tool"
-          },
-          {
-            "status": "published",
-            "sort": 7,
-            "name": "Caching strategies",
-            "years_experience": 6,
-            "level": "proficient",
-            "tech_type": "networking-caching-load-balancing"
-          }
-        ]
+        "tech_skills": []
       },
       {
         "status": "published",
         "sort": 7,
         "name": "Cloud Platforms",
         "fa_icon": "cloud",
-        "tech_skills": [
-          {
-            "status": "published",
-            "sort": 1,
-            "name": "Amazon Web Services",
-            "years_experience": 4,
-            "level": "proficient",
-            "tech_type": "cloud-platform-service"
-          },
-          {
-            "status": "published",
-            "sort": 2,
-            "name": "AWS EC2",
-            "years_experience": 4,
-            "level": "proficient",
-            "tech_type": "cloud-platform-service"
-          },
-          {
-            "status": "published",
-            "sort": 3,
-            "name": "AWS S3",
-            "years_experience": 4,
-            "level": "proficient",
-            "tech_type": "cloud-platform-service"
-          },
-          {
-            "status": "draft",
-            "sort": 4,
-            "name": "AWS Lambda",
-            "years_experience": 2,
-            "level": "proficient",
-            "tech_type": "cloud-platform-service"
-          },
-          {
-            "status": "published",
-            "sort": 5,
-            "name": "Vercel",
-            "years_experience": 2,
-            "level": "proficient",
-            "tech_type": "cloud-platform-service"
-          },
-          {
-            "status": "published",
-            "sort": 6,
-            "name": "Linode",
-            "years_experience": 12,
-            "level": "proficient",
-            "tech_type": "ci-cd-automation-tool"
-          }
-        ]
+        "tech_skills": []
       },
       {
         "status": "published",
         "sort": 8,
         "name": "Dev Methodologies",
         "fa_icon": "user-gear",
-        "tech_skills": [
-          {
-            "status": "published",
-            "sort": 1,
-            "name": "Agile",
-            "years_experience": 14,
-            "level": "proficient",
-            "tech_type": "development-methodology"
-          },
-          {
-            "status": "published",
-            "sort": 2,
-            "name": "Scrum",
-            "years_experience": 5,
-            "level": "proficient",
-            "tech_type": "development-methodology"
-          },
-          {
-            "status": "published",
-            "sort": 3,
-            "name": "XP",
-            "years_experience": 6,
-            "level": "proficient",
-            "tech_type": "development-methodology"
-          },
-          {
-            "status": "published",
-            "sort": 4,
-            "name": "AI-Assisted Development",
-            "years_experience": 1,
-            "level": "proficient",
-            "tech_type": "development-tool"
-          },
-          {
-            "status": "published",
-            "sort": 5,
-            "name": "Secure by design",
-            "years_experience": 18,
-            "level": "proficient",
-            "tech_type": "development-methodology"
-          },
-          {
-            "status": "published",
-            "sort": 6,
-            "name": "TDD",
-            "years_experience": 12,
-            "level": "expert",
-            "tech_type": "development-methodology"
-          },
-          {
-            "status": "published",
-            "sort": 7,
-            "name": "UXD",
-            "years_experience": 12,
-            "level": "proficient",
-            "tech_type": "development-methodology"
-          }
-        ]
+        "tech_skills": []
       }
     ],
     "work_experiences": [
@@ -590,6 +172,7 @@
         "tags": null,
         "achievements": [
           {
+            "work_experience": 200,
             "status": "published",
             "sort": 1,
             "title": "Team Leadership",
@@ -598,6 +181,7 @@
             "tags": []
           },
           {
+            "work_experience": 200,
             "status": "published",
             "sort": 2,
             "title": "Platform Scalability",
@@ -611,6 +195,7 @@
             ]
           },
           {
+            "work_experience": 200,
             "status": "published",
             "sort": 3,
             "title": "Frontend Modernization",
@@ -622,6 +207,7 @@
             ]
           },
           {
+            "work_experience": 200,
             "status": "published",
             "sort": 4,
             "title": "Mobile App Development",
@@ -633,6 +219,7 @@
             ]
           },
           {
+            "work_experience": 200,
             "status": "published",
             "sort": 5,
             "title": "Test Driven Development",
@@ -646,6 +233,7 @@
             ]
           },
           {
+            "work_experience": 200,
             "status": "published",
             "sort": 6,
             "title": "CI/CD Systems",
@@ -659,6 +247,7 @@
             ]
           },
           {
+            "work_experience": 200,
             "status": "published",
             "sort": 7,
             "title": "Docker Compose Setup",
@@ -672,6 +261,7 @@
             ]
           },
           {
+            "work_experience": 200,
             "status": "published",
             "sort": 8,
             "title": "Backwards Compatibility",
@@ -683,6 +273,7 @@
             ]
           },
           {
+            "work_experience": 200,
             "status": "published",
             "sort": 9,
             "title": "OAuth Zoom Integration",
@@ -695,6 +286,7 @@
             ]
           },
           {
+            "work_experience": 200,
             "status": "published",
             "sort": 10,
             "title": "REST API implementations",
@@ -707,6 +299,7 @@
             ]
           },
           {
+            "work_experience": 200,
             "status": "published",
             "sort": 11,
             "title": "Payment Integrations",
@@ -719,6 +312,7 @@
             ]
           },
           {
+            "work_experience": 200,
             "status": "published",
             "sort": 12,
             "title": "Internationalization",
@@ -731,116 +325,139 @@
         ],
         "technologies": [
           {
+            "work_experience": 200,
             "status": "published",
             "sort": 1,
             "name": "Python"
           },
           {
+            "work_experience": 200,
             "status": "published",
             "sort": 2,
             "name": "Django"
           },
           {
+            "work_experience": 200,
             "status": "published",
             "sort": 3,
             "name": "Django REST Framework"
           },
           {
+            "work_experience": 200,
             "status": "published",
             "sort": 4,
             "name": "Django Channels"
           },
           {
+            "work_experience": 200,
             "status": "published",
             "sort": 5,
             "name": "Django Silk"
           },
           {
+            "work_experience": 200,
             "status": "published",
             "sort": 6,
             "name": "Jinja2"
           },
           {
+            "work_experience": 200,
             "status": "published",
             "sort": 7,
             "name": "Weasyprint"
           },
           {
+            "work_experience": 200,
             "status": "published",
             "sort": 8,
             "name": "MySQL"
           },
           {
+            "work_experience": 200,
             "status": "published",
             "sort": 9,
             "name": "Ansible"
           },
           {
+            "work_experience": 200,
             "status": "published",
             "sort": 10,
             "name": "Python Fabric"
           },
           {
+            "work_experience": 200,
             "status": "published",
             "sort": 11,
             "name": "Linode"
           },
           {
+            "work_experience": 200,
             "status": "published",
             "sort": 12,
             "name": "Nginx"
           },
           {
+            "work_experience": 200,
             "status": "published",
             "sort": 13,
             "name": "Redis"
           },
           {
+            "work_experience": 200,
             "status": "published",
             "sort": 14,
             "name": "HAProxy"
           },
           {
+            "work_experience": 200,
             "status": "published",
             "sort": 15,
             "name": "Selenium"
           },
           {
+            "work_experience": 200,
             "status": "published",
             "sort": 16,
             "name": "OAuth"
           },
           {
+            "work_experience": 200,
             "status": "published",
             "sort": 17,
             "name": "Node.js"
           },
           {
+            "work_experience": 200,
             "status": "published",
             "sort": 18,
             "name": "React"
           },
           {
+            "work_experience": 200,
             "status": "published",
             "sort": 19,
             "name": "MobX"
           },
           {
+            "work_experience": 200,
             "status": "published",
             "sort": 20,
             "name": "Lit"
           },
           {
+            "work_experience": 200,
             "status": "published",
             "sort": 21,
             "name": "Web Components"
           },
           {
+            "work_experience": 200,
             "status": "published",
             "sort": 22,
             "name": "Web Sockets"
           },
           {
+            "work_experience": 200,
             "status": "published",
             "sort": 23,
             "name": "React Native"
@@ -860,6 +477,7 @@
         "tags": null,
         "achievements": [
           {
+            "work_experience": 196,
             "status": "published",
             "sort": 1,
             "title": "Product Development",
@@ -868,6 +486,7 @@
             "tags": null
           },
           {
+            "work_experience": 196,
             "status": "published",
             "sort": 2,
             "title": "Data Automation",
@@ -876,6 +495,7 @@
             "tags": null
           },
           {
+            "work_experience": 196,
             "status": "published",
             "sort": 3,
             "title": "Search Innovation",
@@ -884,6 +504,7 @@
             "tags": null
           },
           {
+            "work_experience": 196,
             "status": "published",
             "sort": 4,
             "title": "Revenue Model",
@@ -895,6 +516,7 @@
             ]
           },
           {
+            "work_experience": 196,
             "status": "published",
             "sort": 5,
             "title": "Notification Mailing System",
@@ -907,6 +529,7 @@
             ]
           },
           {
+            "work_experience": 196,
             "status": "published",
             "sort": 6,
             "title": "Frontend modernization",
@@ -919,71 +542,85 @@
         ],
         "technologies": [
           {
+            "work_experience": 196,
             "status": "published",
             "sort": 1,
             "name": "Python"
           },
           {
+            "work_experience": 196,
             "status": "published",
             "sort": 2,
             "name": "Django"
           },
           {
+            "work_experience": 196,
             "status": "published",
             "sort": 3,
             "name": "Django REST Framework"
           },
           {
+            "work_experience": 196,
             "status": "published",
             "sort": 4,
             "name": "Django Celery"
           },
           {
+            "work_experience": 196,
             "status": "published",
             "sort": 5,
             "name": "Python Requests"
           },
           {
+            "work_experience": 196,
             "status": "published",
             "sort": 6,
             "name": "Beautifulsoup"
           },
           {
+            "work_experience": 196,
             "status": "published",
             "sort": 7,
             "name": "Node.js"
           },
           {
+            "work_experience": 196,
             "status": "published",
             "sort": 8,
             "name": "React"
           },
           {
+            "work_experience": 196,
             "status": "published",
             "sort": 9,
             "name": "Vue.js"
           },
           {
+            "work_experience": 196,
             "status": "published",
             "sort": 10,
             "name": "Webpack"
           },
           {
+            "work_experience": 196,
             "status": "published",
             "sort": 11,
             "name": "MySQL"
           },
           {
+            "work_experience": 196,
             "status": "published",
             "sort": 12,
             "name": "Elasticsearch"
           },
           {
+            "work_experience": 196,
             "status": "published",
             "sort": 13,
             "name": "Linode"
           },
           {
+            "work_experience": 196,
             "status": "published",
             "sort": 14,
             "name": "Nginx"
@@ -1004,6 +641,7 @@
         "tags": null,
         "achievements": [
           {
+            "work_experience": 198,
             "status": "published",
             "sort": 1,
             "title": "Mobile App Development",
@@ -1012,6 +650,7 @@
             "tags": null
           },
           {
+            "work_experience": 198,
             "status": "published",
             "sort": 2,
             "title": "REST API development",
@@ -1020,6 +659,7 @@
             "tags": null
           },
           {
+            "work_experience": 198,
             "status": "published",
             "sort": 3,
             "title": "Email Marketing Platform",
@@ -1030,96 +670,115 @@
         ],
         "technologies": [
           {
+            "work_experience": 198,
             "status": "published",
             "sort": 1,
             "name": "Python"
           },
           {
+            "work_experience": 198,
             "status": "published",
             "sort": 2,
             "name": "Django"
           },
           {
+            "work_experience": 198,
             "status": "published",
             "sort": 3,
             "name": "Django REST Framework"
           },
           {
+            "work_experience": 198,
             "status": "published",
             "sort": 4,
             "name": "Django Celery"
           },
           {
+            "work_experience": 198,
             "status": "published",
             "sort": 5,
             "name": "Django South"
           },
           {
+            "work_experience": 198,
             "status": "published",
             "sort": 6,
             "name": "Django Compressor"
           },
           {
+            "work_experience": 198,
             "status": "published",
             "sort": 7,
             "name": "Objective-C"
           },
           {
+            "work_experience": 198,
             "status": "published",
             "sort": 8,
             "name": "Xcode"
           },
           {
+            "work_experience": 198,
             "status": "published",
             "sort": 9,
             "name": "AWS EC2"
           },
           {
+            "work_experience": 198,
             "status": "published",
             "sort": 10,
             "name": "AWS S3"
           },
           {
+            "work_experience": 198,
             "status": "published",
             "sort": 11,
             "name": "Sendgrid"
           },
           {
+            "work_experience": 198,
             "status": "published",
             "sort": 12,
             "name": "PostgreSQL"
           },
           {
+            "work_experience": 198,
             "status": "published",
             "sort": 13,
             "name": "MongoDB"
           },
           {
+            "work_experience": 198,
             "status": "published",
             "sort": 14,
             "name": "JavaScript"
           },
           {
+            "work_experience": 198,
             "status": "published",
             "sort": 15,
             "name": "gulp.js"
           },
           {
+            "work_experience": 198,
             "status": "published",
             "sort": 16,
             "name": "Sass"
           },
           {
+            "work_experience": 198,
             "status": "published",
             "sort": 17,
             "name": "Linode"
           },
           {
+            "work_experience": 198,
             "status": "published",
             "sort": 18,
             "name": "Nginx"
           },
           {
+            "work_experience": 198,
             "status": "published",
             "sort": 19,
             "name": "Varnish"
@@ -1142,6 +801,7 @@
         ],
         "achievements": [
           {
+            "work_experience": 191,
             "status": "published",
             "sort": 1,
             "title": "Client Delivery",
@@ -1150,6 +810,7 @@
             "tags": null
           },
           {
+            "work_experience": 191,
             "status": "published",
             "sort": 2,
             "title": "Frontend & CMS Development",
@@ -1160,76 +821,91 @@
         ],
         "technologies": [
           {
+            "work_experience": 191,
             "status": "published",
             "sort": 1,
             "name": "PHP"
           },
           {
+            "work_experience": 191,
             "status": "published",
             "sort": 2,
             "name": "MySQL"
           },
           {
+            "work_experience": 191,
             "status": "published",
             "sort": 3,
             "name": "Apache"
           },
           {
+            "work_experience": 191,
             "status": "published",
             "sort": 4,
             "name": "Linux"
           },
           {
+            "work_experience": 191,
             "status": "published",
             "sort": 5,
             "name": "XAMPP"
           },
           {
+            "work_experience": 191,
             "status": "published",
             "sort": 6,
             "name": "HTML5"
           },
           {
+            "work_experience": 191,
             "status": "published",
             "sort": 7,
             "name": "CSS3"
           },
           {
+            "work_experience": 191,
             "status": "published",
             "sort": 8,
             "name": "JavaScript"
           },
           {
+            "work_experience": 191,
             "status": "published",
             "sort": 9,
             "name": "AJAX"
           },
           {
+            "work_experience": 191,
             "status": "published",
             "sort": 10,
             "name": "jQuery"
           },
           {
+            "work_experience": 191,
             "status": "published",
             "sort": 11,
             "name": "jQuery UI"
           },
           {
+            "work_experience": 191,
             "status": "published",
             "sort": 12,
             "name": "Underscore.js"
           },
           {
+            "work_experience": 191,
             "status": "published",
             "sort": 13,
             "name": "Bootstrap"
           },
           {
+            "work_experience": 191,
             "status": "published",
             "sort": 14,
             "name": "Responsive design"
           },
           {
+            "work_experience": 191,
             "status": "published",
             "sort": 15,
             "name": "Firebug"
@@ -1252,6 +928,7 @@
         ],
         "achievements": [
           {
+            "work_experience": 193,
             "status": "published",
             "sort": 1,
             "title": "Platform Development",
@@ -1260,6 +937,7 @@
             "tags": null
           },
           {
+            "work_experience": 193,
             "status": "published",
             "sort": 2,
             "title": "Team Collaboration & Growth",
@@ -1270,56 +948,67 @@
         ],
         "technologies": [
           {
+            "work_experience": 193,
             "status": "published",
             "sort": 1,
             "name": "PHP"
           },
           {
+            "work_experience": 193,
             "status": "published",
             "sort": 2,
             "name": "MySQL"
           },
           {
+            "work_experience": 193,
             "status": "published",
             "sort": 3,
             "name": "Linux"
           },
           {
+            "work_experience": 193,
             "status": "published",
             "sort": 4,
             "name": "nginx"
           },
           {
+            "work_experience": 193,
             "status": "published",
             "sort": 5,
             "name": "Memcached"
           },
           {
+            "work_experience": 193,
             "status": "published",
             "sort": 6,
             "name": "HTML"
           },
           {
+            "work_experience": 193,
             "status": "published",
             "sort": 7,
             "name": "CSS"
           },
           {
+            "work_experience": 193,
             "status": "published",
             "sort": 8,
             "name": "JavaScript"
           },
           {
+            "work_experience": 193,
             "status": "published",
             "sort": 9,
             "name": "jQuery"
           },
           {
+            "work_experience": 193,
             "status": "published",
             "sort": 10,
             "name": "AJAX"
           },
           {
+            "work_experience": 193,
             "status": "published",
             "sort": 11,
             "name": "YUI Library"
@@ -1343,36 +1032,43 @@
         "achievements": [],
         "technologies": [
           {
+            "work_experience": 399,
             "status": "published",
             "sort": 1,
             "name": "PHP"
           },
           {
+            "work_experience": 399,
             "status": "published",
             "sort": 2,
             "name": "JavaScript"
           },
           {
+            "work_experience": 399,
             "status": "published",
             "sort": 3,
             "name": "jQuery"
           },
           {
+            "work_experience": 399,
             "status": "published",
             "sort": 4,
             "name": "HTML"
           },
           {
+            "work_experience": 399,
             "status": "published",
             "sort": 5,
             "name": "CSS"
           },
           {
+            "work_experience": 399,
             "status": "published",
             "sort": 6,
             "name": "Apache"
           },
           {
+            "work_experience": 399,
             "status": "published",
             "sort": 7,
             "name": "Photoshop"
@@ -1396,26 +1092,31 @@
         "achievements": [],
         "technologies": [
           {
+            "work_experience": 393,
             "status": "published",
             "sort": 1,
             "name": "PHP"
           },
           {
+            "work_experience": 393,
             "status": "published",
             "sort": 2,
             "name": "JavaScript"
           },
           {
+            "work_experience": 393,
             "status": "published",
             "sort": 3,
             "name": "jQuery"
           },
           {
+            "work_experience": 393,
             "status": "published",
             "sort": 4,
             "name": "HTML"
           },
           {
+            "work_experience": 393,
             "status": "published",
             "sort": 5,
             "name": "CSS"
@@ -1437,69 +1138,8 @@
           "fullstack-svelte",
           "fullstack-react"
         ],
-        "achievements": [
-          {
-            "title": "Hands-On Learning",
-            "fa_icon": "brain",
-            "description": "Used this personal project to learn new modern technologies and LLM integrations",
-            "status": "published",
-            "sort": 1
-          },
-          {
-            "title": "Personal dashboard system",
-            "fa_icon": "gears",
-            "description": "Continiously developing a personal AI-powered dashboard for efficient job matching",
-            "status": "published",
-            "sort": 2
-          }
-        ],
-        "technologies": [
-          {
-            "status": "published",
-            "sort": 1,
-            "name": "Sveltekit"
-          },
-          {
-            "status": "published",
-            "sort": 2,
-            "name": "Tailwind CSS"
-          },
-          {
-            "status": "published",
-            "sort": 3,
-            "name": "Vercel"
-          },
-          {
-            "status": "published",
-            "sort": 4,
-            "name": "LLM"
-          },
-          {
-            "status": "published",
-            "sort": 5,
-            "name": "OpenAI"
-          },
-          {
-            "status": "published",
-            "sort": 6,
-            "name": "Google Gemini"
-          },
-          {
-            "status": "published",
-            "sort": 7,
-            "name": "Prisma ORM"
-          },
-          {
-            "status": "published",
-            "sort": 8,
-            "name": "Directus (Headless CMS)"
-          },
-          {
-            "status": "published",
-            "sort": 9,
-            "name": "Selenium"
-          }
-        ]
+        "achievements": [],
+        "technologies": []
       },
       {
         "status": "published",
@@ -1514,82 +1154,8 @@
           "fullstack-svelte",
           "fullstack-react"
         ],
-        "achievements": [
-          {
-            "title": "Open source package",
-            "fa_icon": "code",
-            "description": "Released open-source NPM package providing unique reactive state management for Lit",
-            "status": "draft",
-            "sort": 1
-          },
-          {
-            "title": "150+ GitHub stars",
-            "fa_icon": "star",
-            "description": "Received appreciation in community with 155 GitHub stars",
-            "status": "draft",
-            "sort": 2
-          },
-          {
-            "title": "Production usage",
-            "fa_icon": "server",
-            "description": "Succesfully used library in production at Chipta",
-            "status": "published",
-            "sort": 3
-          },
-          {
-            "title": "GitHub Issue Engagement",
-            "fa_icon": "github",
-            "description": "Engaged with package users on GitHub, handling issues and pull requests",
-            "status": "published",
-            "sort": 4
-          },
-          {
-            "title": "Documentation",
-            "fa_icon": "book",
-            "description": "Created quality documentation including quick-start, working examples and advanced features ",
-            "status": "published",
-            "sort": 5
-          },
-          {
-            "title": "Extensibility",
-            "fa_icon": "puzzle-piece",
-            "description": "Added plugin development support for functionality extensibility",
-            "status": "published",
-            "sort": 6
-          }
-        ],
-        "technologies": [
-          {
-            "status": "published",
-            "sort": 1,
-            "name": "Javascript"
-          },
-          {
-            "status": "published",
-            "sort": 2,
-            "name": "Node.js"
-          },
-          {
-            "status": "published",
-            "sort": 3,
-            "name": "NPM"
-          },
-          {
-            "status": "published",
-            "sort": 4,
-            "name": "Lit"
-          },
-          {
-            "status": "published",
-            "sort": 5,
-            "name": "Web Components"
-          },
-          {
-            "status": "published",
-            "sort": 6,
-            "name": "Snowpack"
-          }
-        ]
+        "achievements": [],
+        "technologies": []
       },
       {
         "status": "published",
@@ -1605,53 +1171,8 @@
           "fullstack-python",
           "fullstack-react"
         ],
-        "achievements": [
-          {
-            "title": "Open-source Python package",
-            "fa_icon": "python",
-            "description": "Released open-source Python package on PyPi as easily installable Django Admin extension",
-            "status": "draft",
-            "sort": 1
-          },
-          {
-            "title": "100+ GitHub stars",
-            "fa_icon": "star",
-            "description": "Received appreciation in community with 108 GitHub stars & usage by 133 projects",
-            "status": "draft",
-            "sort": 2
-          },
-          {
-            "title": "GitHub Issue engagement",
-            "fa_icon": "github",
-            "description": "Engaged with users handling GitHub Issues and Pull Requests",
-            "status": "published",
-            "sort": 3
-          },
-          {
-            "title": "Production usage",
-            "fa_icon": "server",
-            "description": "Used extension succesfully in projects at Chipta & Tender-it",
-            "status": "published",
-            "sort": 4
-          }
-        ],
-        "technologies": [
-          {
-            "status": "published",
-            "sort": 1,
-            "name": "Python"
-          },
-          {
-            "status": "published",
-            "sort": 2,
-            "name": "Django"
-          },
-          {
-            "status": "published",
-            "sort": 3,
-            "name": "HTML5"
-          }
-        ]
+        "achievements": [],
+        "technologies": []
       },
       {
         "status": "published",
@@ -1669,53 +1190,8 @@
           "fullstack-react",
           "fullstack-svelte"
         ],
-        "achievements": [
-          {
-            "title": " 1000+ GitHub stars",
-            "fa_icon": "star",
-            "description": "Widespread community appreciation with 1028 GitHub stars",
-            "status": "published",
-            "sort": 1
-          },
-          {
-            "title": "Community engagement",
-            "fa_icon": "users",
-            "description": "Responded and engaged in followup questions and feedback of community",
-            "status": "published",
-            "sort": 2
-          },
-          {
-            "title": "Maintained",
-            "fa_icon": "book",
-            "description": "Documentation up-to-date with latest git release and related developments",
-            "status": "published",
-            "sort": 3
-          },
-          {
-            "title": "Professional application",
-            "fa_icon": "user-tie",
-            "description": "Succesfully used to onboard developers in projects using git submodules at TravelBird & Chipta",
-            "status": "published",
-            "sort": 4
-          }
-        ],
-        "technologies": [
-          {
-            "status": "published",
-            "sort": 1,
-            "name": "Git"
-          },
-          {
-            "status": "published",
-            "sort": 2,
-            "name": "Git Submodules"
-          },
-          {
-            "status": "published",
-            "sort": 3,
-            "name": "Shell"
-          }
-        ]
+        "achievements": [],
+        "technologies": []
       },
       {
         "status": "published",
@@ -1729,54 +1205,8 @@
         "tags": [
           "fullstack-django"
         ],
-        "achievements": [
-          {
-            "title": "Personal usage",
-            "fa_icon": "heart",
-            "description": "Succesfully used project for creating and printing beautiful guitar chord charts for personal use",
-            "status": "published",
-            "sort": 1
-          },
-          {
-            "title": "Hands-On Learning",
-            "fa_icon": "brain",
-            "description": "Used this personal project to learn a new frontend framework (Ember.js)",
-            "status": "published",
-            "sort": 2
-          }
-        ],
-        "technologies": [
-          {
-            "status": "published",
-            "sort": 1,
-            "name": "Python"
-          },
-          {
-            "status": "published",
-            "sort": 2,
-            "name": "Django"
-          },
-          {
-            "status": "published",
-            "sort": 3,
-            "name": "JavaScript"
-          },
-          {
-            "status": "published",
-            "sort": 4,
-            "name": "Ember.js"
-          },
-          {
-            "status": "published",
-            "sort": 5,
-            "name": "HTML"
-          },
-          {
-            "status": "published",
-            "sort": 6,
-            "name": "CSS"
-          }
-        ]
+        "achievements": [],
+        "technologies": []
       },
       {
         "status": "published",
@@ -1791,39 +1221,8 @@
           "fullstack-django",
           "fullstack-django-svelte"
         ],
-        "achievements": [
-          {
-            "title": "Production usage",
-            "fa_icon": "server",
-            "description": "Used in production at Tender-it for processing subscription payments",
-            "status": "published",
-            "sort": 1
-          },
-          {
-            "title": "Documentation",
-            "fa_icon": "book",
-            "description": "Created clear documentation for package usage with examples and test pages",
-            "status": "published",
-            "sort": 2
-          }
-        ],
-        "technologies": [
-          {
-            "status": "published",
-            "sort": 1,
-            "name": "Python"
-          },
-          {
-            "status": "published",
-            "sort": 2,
-            "name": "Django"
-          },
-          {
-            "status": "published",
-            "sort": 3,
-            "name": "HTML"
-          }
-        ]
+        "achievements": [],
+        "technologies": []
       },
       {
         "status": "published",
@@ -1839,39 +1238,8 @@
           "fullstack-django",
           "fullstack-django-svelte"
         ],
-        "achievements": [
-          {
-            "title": "Production usage",
-            "fa_icon": "server",
-            "description": "Used in production at Travelbird for creating REST APIs for MongoDB collections",
-            "status": "published",
-            "sort": 1
-          },
-          {
-            "title": "Documentation",
-            "fa_icon": "book",
-            "description": "Created clear documentation for package usage with examples and thoughtful explanations",
-            "status": "published",
-            "sort": 2
-          }
-        ],
-        "technologies": [
-          {
-            "status": "published",
-            "sort": 1,
-            "name": "Python"
-          },
-          {
-            "status": "published",
-            "sort": 2,
-            "name": "Flask"
-          },
-          {
-            "status": "published",
-            "sort": 3,
-            "name": "MongoEngine"
-          }
-        ]
+        "achievements": [],
+        "technologies": []
       }
     ],
     "education": [
@@ -1954,22 +1322,7 @@
         "proficiency": "fluent"
       }
     ],
-    "references": [
-      {
-        "status": "published",
-        "sort": null,
-        "author": "Michaël de Groot",
-        "author_position": "Founder of Chipta",
-        "text": "Rik modernized our client-facing interfaces and implemented optimizations that delivered substantial performance improvements. His work enabled us to process thousands of tickets rapidly during our busiest periods."
-      },
-      {
-        "status": "published",
-        "sort": null,
-        "author": "Elmar Krack",
-        "author_position": "Co-founder of Tender-it",
-        "text": "Rik demonstrated exceptional technical leadership by designing and developing our entire platform from the ground up, handling both backend and frontend development with impressive skill."
-      }
-    ],
+    "references": [],
     "project_stories": [
       {
         "sort": 1,
@@ -2091,6 +1444,42 @@
         "daily_rate": 280
       },
       {
+        "sort": 1,
+        "job_title": "Senior Python SWE",
+        "company_type": "enterprise",
+        "employment_type": "fte",
+        "work_arrangement": "remote",
+        "region": "eu_west_north",
+        "hourly_rate": 35,
+        "month_salary": 6000,
+        "year_salary": 80000,
+        "daily_rate": 280
+      },
+      {
+        "sort": 1,
+        "job_title": "Senior Python SWE",
+        "company_type": "enterprise",
+        "employment_type": "fte",
+        "work_arrangement": "remote",
+        "region": "eu_west_north",
+        "hourly_rate": 35,
+        "month_salary": 6000,
+        "year_salary": 80000,
+        "daily_rate": 280
+      },
+      {
+        "sort": 1,
+        "job_title": "Senior Python SWE",
+        "company_type": "enterprise",
+        "employment_type": "fte",
+        "work_arrangement": "remote",
+        "region": "eu_west_north",
+        "hourly_rate": 35,
+        "month_salary": 6000,
+        "year_salary": 80000,
+        "daily_rate": 280
+      },
+      {
         "sort": 2,
         "job_title": "Senior Python SWE",
         "company_type": "enterprise",
@@ -2101,6 +1490,78 @@
         "month_salary": 12000,
         "year_salary": 145000,
         "daily_rate": 550
+      },
+      {
+        "sort": 2,
+        "job_title": "Senior Python SWE",
+        "company_type": "enterprise",
+        "employment_type": "contract",
+        "work_arrangement": "remote",
+        "region": "eu_west_north",
+        "hourly_rate": 70,
+        "month_salary": 12000,
+        "year_salary": 145000,
+        "daily_rate": 550
+      },
+      {
+        "sort": 2,
+        "job_title": "Senior Python SWE",
+        "company_type": "enterprise",
+        "employment_type": "contract",
+        "work_arrangement": "remote",
+        "region": "eu_west_north",
+        "hourly_rate": 70,
+        "month_salary": 12000,
+        "year_salary": 145000,
+        "daily_rate": 550
+      },
+      {
+        "sort": 2,
+        "job_title": "Senior Python SWE",
+        "company_type": "enterprise",
+        "employment_type": "contract",
+        "work_arrangement": "remote",
+        "region": "eu_west_north",
+        "hourly_rate": 70,
+        "month_salary": 12000,
+        "year_salary": 145000,
+        "daily_rate": 550
+      },
+      {
+        "sort": null,
+        "job_title": "Senior Full-Stack SWE",
+        "company_type": "agency",
+        "employment_type": "contract",
+        "work_arrangement": "remote",
+        "region": "eu_east_south",
+        "hourly_rate": 60,
+        "month_salary": 10000,
+        "year_salary": 125000,
+        "daily_rate": 450
+      },
+      {
+        "sort": null,
+        "job_title": "Senior Full-Stack SWE",
+        "company_type": "agency",
+        "employment_type": "contract",
+        "work_arrangement": "remote",
+        "region": "eu_east_south",
+        "hourly_rate": 60,
+        "month_salary": 10000,
+        "year_salary": 125000,
+        "daily_rate": 450
+      },
+      {
+        "sort": null,
+        "job_title": "Senior Full-Stack SWE",
+        "company_type": "agency",
+        "employment_type": "contract",
+        "work_arrangement": "remote",
+        "region": "eu_east_south",
+        "hourly_rate": 60,
+        "month_salary": 10000,
+        "year_salary": 125000,
+        "daily_rate": 450
       },
       {
         "sort": null,
