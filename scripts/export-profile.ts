@@ -235,7 +235,7 @@ async function exportProfile(profileId: string): Promise<void> {
             end_date: true,
             website: true,
             tags: true,
-            achievements: {
+            work_experience_achievements: {
               select: {
                 status: true,
                 sort: true,
@@ -246,7 +246,7 @@ async function exportProfile(profileId: string): Promise<void> {
               },
               orderBy: { sort: "asc" },
             },
-            technologies: {
+            work_experience_technologies: {
               select: {
                 status: true,
                 sort: true,
@@ -436,8 +436,8 @@ async function exportProfile(profileId: string): Promise<void> {
           end_date: work.end_date,
           website: work.website || undefined,
           tags: work.tags,
-          achievements: work.achievements,
-          technologies: work.technologies,
+          achievements: work.work_experience_achievements,
+          technologies: work.work_experience_technologies,
         })),
         side_projects: profile.side_projects.map((proj) => ({
           status: proj.status || undefined,
