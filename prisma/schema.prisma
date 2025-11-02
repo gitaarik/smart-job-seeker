@@ -784,7 +784,7 @@ model tech_skill_types {
   date_created DateTime?     @db.Timestamptz(6)
   date_updated DateTime?     @db.Timestamptz(6)
   name         String?       @db.VarChar(255)
-  slug         String?       @db.VarChar(255)
+  slug         String?       @unique @db.VarChar(255)
   tech_skills  tech_skills[]
 }
 
