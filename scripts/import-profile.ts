@@ -211,7 +211,7 @@ async function importProfile(
           prisma.work_experience_technologies.deleteMany({
             where: { work_experiences: { profile: profileId } },
           }),
-          prisma.WorkExperience.deleteMany({ where: { profile: profileId } }),
+          prisma.work_experiences.deleteMany({ where: { profile: profileId } }),
           prisma.side_project_achievements.deleteMany({
             where: { side_projects: { profile: profileId } },
           }),
@@ -395,7 +395,7 @@ async function importProfile(
         `Importing ${data.work_experiences.length} work experiences...`,
       );
       for (const work of data.work_experiences) {
-        const createdWork = await prisma.WorkExperience.create({
+        const createdWork = await prisma.work_experiences.create({
           data: {
             id: uuidv4(),
             name: work.name || "",
