@@ -651,6 +651,7 @@ CREATE TABLE "tech_skill_types" (
     "date_created" TIMESTAMPTZ(6),
     "date_updated" TIMESTAMPTZ(6),
     "name" VARCHAR(255),
+    "slug" VARCHAR(255),
 
     CONSTRAINT "tech_skill_types_pkey" PRIMARY KEY ("id")
 );
