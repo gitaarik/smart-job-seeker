@@ -10,7 +10,7 @@
     "docker:build-app": "docker-compose exec app npm run build",
     "docker:export-profiles-pdf": "docker-compose exec app npx tsx scripts/export-profiles-pdf.ts",
     "docker:update-schema": "docker-compose exec app npx prisma db pull && docker-compose exec app npx prisma generate",
-    "docker:export-profile-json": "docker-compose exec app npx tsx scripts/export-profile.ts",
+    "docker:export-profile-json": "bash scripts/export-profile-docker.sh",
     "docker:db:cli": "docker-compose exec database psql -U postgres -d smartjobseeker",
     "docker:db:backup": "docker-compose exec database ./scripts/dump-db.sh",
     "docker:db:restore": "docker-compose exec database ./scripts/restore-last-db-dump.sh",

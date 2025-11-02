@@ -473,7 +473,8 @@ async function exportProfile(profileId: string): Promise<void> {
     const profileName = profile.name?.replace(/\s+/g, "-").toLowerCase() ||
       "profile";
     const timestamp = new Date().toISOString().split("T")[0];
-    const filename = `${outputDir}/${profileName}-${timestamp}.json`;
+    // const filename = `${outputDir}/${profileName}-${timestamp}.json`;
+    const filename = `${outputDir}/${profileName}.json`;
 
     // Write to file
     writeFileSync(filename, JSON.stringify(exportData, null, 2));

@@ -21,7 +21,8 @@
       "Bash(docker volume:*)",
       "WebFetch(domain:directus.io)",
       "Bash(bash:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(docker-compose:*)"
     ],
     "deny": [],
     "ask": []
