@@ -11,6 +11,7 @@
     "docker:export-profiles-pdf": "docker-compose exec app npx tsx scripts/export-profiles-pdf.ts",
     "docker:update-schema": "docker-compose exec app npx prisma db pull && docker-compose exec app npx prisma generate",
     "docker:export-profile-json": "bash scripts/export-profile-docker.sh",
+    "docker:clear-directus-cache": "docker compose exec app npm run clear-directus-cache",
     "docker:db:cli": "docker-compose exec database psql -U postgres -d smartjobseeker",
     "docker:db:backup": "docker-compose exec database ./scripts/dump-db.sh",
     "docker:db:restore": "docker-compose exec database ./scripts/restore-last-db-dump.sh",
@@ -33,7 +34,8 @@
     "export-profiles-pdf": "npx tsx scripts/export-profiles-pdf.ts",
     "sync-resumes-admin": "cp -r /home/rik/dev/smart-job-seeker/src/lib/exports/* ~/data/Administratie/Freelancing/",
     "build-json-resume": "npx tsx scripts/build-json-resume.ts",
-    "render-resume": "resumed render dist/resume.json --output dist/resume.html --theme jsonresume-theme-even"
+    "render-resume": "resumed render dist/resume.json --output dist/resume.html --theme jsonresume-theme-even",
+    "clear-directus-cache": "npx tsx scripts/clear-directus-cache.ts"
   },
   "devDependencies": {
     "@eslint/compat": "^1.2.5",
