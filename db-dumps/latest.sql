@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 2503xng9qAe8f391DR5z2RSNvSHQ0EFqgmyAyvgmQgYgW4otLVtJyafRgvhV6a8
+\restrict s2Tv3daMJcv49Z65juhnGbRj9cFDkXoydRO88bCqtJlJLjYdv1DtMLwgMnfjCEY
 
 -- Dumped from database version 15.14 (Debian 15.14-1.pgdg13+1)
 -- Dumped by pg_dump version 15.14 (Debian 15.14-1.pgdg13+1)
@@ -6206,6 +6206,7 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 4837	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 20:28:30.554+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	profiles	af36bad2-397d-4475-be6c-575b2ed4f450	http://localhost:8055
 4838	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 20:28:35.419+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	profiles	f6a7ec7f-abdb-4132-bcfc-c453e553e5f5	http://localhost:8055
 4839	login	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 20:29:08.129+00	172.18.0.5	node	directus_users	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N
+4840	login	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 21:45:50.319+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_users	157238bb-6930-4f26-be9c-8b31a9e11ab8	http://localhost:8055
 \.
 
 
@@ -6713,7 +6714,6 @@ abf8a154-5b1c-4a46-ac9c-7300570f4f17	$t:public_label	public	$t:public_descriptio
 
 COPY public.directus_presets (id, bookmark, "user", role, collection, search, layout, layout_query, layout_options, refresh_interval, filter, icon, color) FROM stdin;
 11	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	work_experience_achievements	\N	\N	{"tabular":{"fields":["title","description","work_experience","status"],"page":1}}	{"tabular":{"widths":{"title":213.5999755859375,"description":388,"work_experience":162.2000732421875,"status":90}}}	\N	\N	bookmark	\N
-14	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	application_questions	\N	\N	{"tabular":{"page":1,"fields":["title","question"]}}	{"tabular":{"widths":{"title":316.4000244140625,"question":500.199951171875}}}	\N	\N	bookmark	\N
 16	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	cheat_sheets	\N	\N	{"tabular":{"fields":["title","profile"],"page":1}}	{"tabular":{"widths":{"title":549.7999877929688,"profile":277.00006103515625}}}	\N	\N	bookmark	\N
 8	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	highlights	\N	\N	{"tabular":{"fields":["text","fa_icon","status","profile"],"page":1}}	{"tabular":{"widths":{"text":584.800048828125,"fa_icon":99.4000244140625,"status":91,"profile":121.7999267578125}}}	\N	\N	bookmark	\N
 21	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	references	\N	\N	{"tabular":{"page":1,"fields":["author","author_position","text","status","profile"]}}	{"tabular":{"widths":{"author":149.6666259765625,"author_position":211,"text":398.6666259765625,"status":98,"profile":124.6666259765625}}}	\N	\N	bookmark	\N
@@ -6724,14 +6724,15 @@ COPY public.directus_presets (id, bookmark, "user", role, collection, search, la
 7	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	tech_skill_categories	\N	\N	{"tabular":{"fields":["name","status","profile"],"page":1}}	{"tabular":{"widths":{"name":623.2000122070312,"status":98.6666259765625,"profile":128.800048828125}}}	\N	\N	bookmark	\N
 22	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	education	\N	\N	{"tabular":{"page":1,"fields":["institution","study_type","area","location","graduation_year","status","profile"]}}	{"tabular":{"widths":{"institution":229.20001220703125,"study_type":211.73333740234375,"area":214.2667236328125,"location":144.5999755859375,"graduation_year":160,"status":91.4666748046875,"profile":123.13330078125}}}	\N	\N	bookmark	\N
 19	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	side_project_achievements	\N	\N	{"tabular":{"page":1}}	\N	\N	\N	bookmark	\N
-20	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	salary_expectations	\N	tabular	{"tabular":{"fields":["job_title","employment_type","work_arrangement","company_type","region","hourly_rate","daily_rate","month_salary","year_salary"],"page":1}}	{"tabular":{"widths":{"job_title":189,"employment_type":94,"work_arrangement":90,"company_type":109,"region":140.66668701171875,"hourly_rate":126,"daily_rate":114.6666259765625,"month_salary":137,"year_salary":123.3333740234375},"spacing":"cozy"},"kanban":{"groupOrder":{"groupField":"company_type","sortMap":{"startup":0,"scaleup":1,"agency":2,"enterprise":3,"big_tech":4}}}}	\N	\N	bookmark	\N
 12	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	dev_methodologies	\N	\N	{"tabular":{"page":1,"fields":["name","status","profile"]}}	{"tabular":{"widths":{"name":591,"status":94.5999755859375,"profile":132.60003662109375}}}	\N	\N	bookmark	\N
-23	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	profile_versions	\N	\N	{"tabular":{"page":1,"fields":["name","description","status","profile"]}}	{"tabular":{"widths":{"name":274.199951171875,"description":384.4666748046875,"status":107.199951171875,"profile":146.7999267578125}}}	\N	\N	bookmark	\N
 25	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	applications	\N	\N	{"tabular":{"fields":["vacancy","profile","status"]}}	{"tabular":{"widths":{"vacancy":746.9999389648438,"profile":140.33331298828125,"status":106}}}	\N	\N	bookmark	\N
 1	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	work_experiences	\N	\N	{"tabular":{"fields":["name","position","location","description","start_date","end_date","status"],"page":1}}	{"tabular":{"widths":{"name":119.66665649414062,"position":264,"location":136.66668701171875,"description":223.3333740234375,"start_date":119.666748046875,"end_date":120,"status":91}}}	\N	\N	bookmark	\N
-24	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	vacancies	\N	\N	{"tabular":{"page":1,"fields":["title","job_poster","import_source","status"]}}	{"tabular":{"widths":{"title":426.33331298828125,"job_poster":234.66668701171875,"import_source":160,"status":104}}}	\N	\N	bookmark	\N
 9	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	tech_skill_types	\N	\N	{"tabular":{"fields":["name","slug","status"],"page":1}}	{"tabular":{"widths":{"name":520.3333129882812,"slug":302,"status":118}}}	\N	\N	bookmark	\N
 6	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	tech_skills	\N	tabular	{"tabular":{"fields":["name","category","years_experience","level","status"],"page":1}}	{"tabular":{"widths":{"name":273,"category":183,"years_experience":165.66668701171875,"level":119.2000732421875,"status":96},"align":{"status":"left"}}}	\N	\N	bookmark	\N
+20	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	salary_expectations	\N	tabular	{"tabular":{"fields":["job_title","employment_type","work_arrangement","company_type","region","hourly_rate","daily_rate","month_salary","year_salary"],"page":1}}	{"tabular":{"widths":{"job_title":189,"employment_type":94,"work_arrangement":90,"company_type":109,"region":140.66668701171875,"hourly_rate":126,"daily_rate":114.6666259765625,"month_salary":137,"year_salary":123.3333740234375},"spacing":"cozy"},"kanban":{"groupOrder":{"groupField":"company_type","sortMap":{"startup":0,"scaleup":1,"agency":2,"enterprise":3,"big_tech":4}}}}	\N	\N	bookmark	\N
+23	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	profile_versions	\N	\N	{"tabular":{"page":1,"fields":["name","description","status","profile"]}}	{"tabular":{"widths":{"name":274.199951171875,"description":384.4666748046875,"status":107.199951171875,"profile":146.7999267578125}}}	\N	\N	bookmark	\N
+24	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	vacancies	\N	\N	{"tabular":{"page":1,"fields":["title","job_poster","import_source","status"]}}	{"tabular":{"widths":{"title":426.33331298828125,"job_poster":234.66668701171875,"import_source":160,"status":104}}}	\N	\N	bookmark	\N
+14	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	application_questions	\N	\N	{"tabular":{"page":1,"fields":["title","question"]}}	{"tabular":{"widths":{"title":316.4000244140625,"question":500.199951171875}}}	\N	\N	bookmark	\N
 3	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	profiles	\N	\N	{"tabular":{"page":1,"fields":["name","title","core_stack","subtitle"]}}	{"tabular":{"widths":{"name":126.66665649414062,"title":231.66668701171875,"core_stack":278.3333740234375,"subtitle":343.3333740234375}}}	\N	\N	bookmark	\N
 \.
 
@@ -6771,6 +6772,14 @@ COPY public.directus_relations (id, many_collection, many_field, one_collection,
 
 
 --
+-- Data for Name: directus_revisions; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.directus_revisions (id, activity, collection, item, data, delta, parent, version) FROM stdin;
+\.
+
+
+--
 -- Data for Name: directus_roles; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -6784,16 +6793,14 @@ COPY public.directus_roles (id, name, icon, description, parent) FROM stdin;
 --
 
 COPY public.directus_sessions (token, "user", expires, ip, user_agent, share, origin, next_token) FROM stdin;
-Xmt8lcJOJsFjHzwoybgeEolQaxXOXuZH9pR7q7lVvYw598pZvBumpvDUffgBIHr1	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 20:29:11.254+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	AYm8hxHG9CuvoEpPc23KalQtZwBm96Cx7w5oHSBmVIDGUmwFudP5Ha-CNEgxsy0Q
 yfyRKshFLFOSDHDJ2fDus64hjesC7iQeTKF3U8blZr0GLGhQkJgnOxFDJuT31lSX	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-03 16:58:16.115+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
-AYm8hxHG9CuvoEpPc23KalQtZwBm96Cx7w5oHSBmVIDGUmwFudP5Ha-CNEgxsy0Q	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 20:29:13.345+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	MisuhjC-SPtKln8FPBnEZCs6wTYFErTj0ZMtqf3bNlFdpmEmxGbn9M97IAXESSQN
 y6whbp82EsIATqPecnJ-qf_QWamYXHaWuuipzt91yhhjZ6qrOZsri0YlXBrv9vDL	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-09 20:29:08.127+00	172.18.0.5	node	\N	\N	\N
-MisuhjC-SPtKln8FPBnEZCs6wTYFErTj0ZMtqf3bNlFdpmEmxGbn9M97IAXESSQN	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-02 20:29:20.475+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	cEo2N4QijcSWPQrqqi729OL0xVyHpvfRN_4FAZeFT4IdvEaSgp_iMr3f1yfCqrip
 cEo2N4QijcSWPQrqqi729OL0xVyHpvfRN_4FAZeFT4IdvEaSgp_iMr3f1yfCqrip	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-03 20:29:10.475+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
 6mjgc4eeO1h9rcTmfrbjOdKtmG0W3ihb0eVVfnrmltaREfltCnIgqmZ_-f6ImuMS	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-09 20:19:46.197+00	172.18.0.5	node	\N	\N	\N
 xvu8kNst20zp0P1S70SHTij9ct7Mv3P3cg9wFDygm0Nv6yzi0-q32VPeMPRHQUSq	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-09 20:07:49.931+00	172.18.0.2	node	\N	\N	\N
 VRoO6ns6OjSnroBRxszQc4D4_ZN-hNTopfjA8rQEcw8EL0_BICekHQF8kYxHdmP8	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-09 20:10:44.651+00	172.18.0.5	node	\N	\N	\N
 sZe7yh0vBp7Q0rjtS8gUPwFc6JQhHXtiIhMZaV1Nfae3T7hxMuLnEfVvXebVte1q	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-09 20:26:00.882+00	172.18.0.5	node	\N	\N	\N
+gD5jBN8CHDjs10HZLmNaLdaW7tkA5IKD_V7FmIitr_APmn2evaXtqqfiJZHe24PG	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-09 21:45:50.315+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
 \.
 
 
@@ -6830,7 +6837,7 @@ c530a32f-84cb-4ab9-8a61-7a12a5bcb7e6	en-US	draft	Draft
 --
 
 COPY public.directus_users (id, first_name, last_name, email, password, location, title, description, tags, avatar, language, tfa_secret, status, role, token, last_access, last_page, provider, external_identifier, auth_data, email_notifications, appearance, theme_dark, theme_light, theme_light_overrides, theme_dark_overrides, text_direction) FROM stdin;
-157238bb-6930-4f26-be9c-8b31a9e11ab8	Rik	Wanders	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-11-02 20:29:10.477+00	/content/profiles/fcf70e88-8d61-4c4c-881e-9201c597a518	default	\N	\N	t	\N	\N	\N	\N	\N	auto
+157238bb-6930-4f26-be9c-8b31a9e11ab8	Rik	Wanders	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-11-02 21:45:50.322+00	/content/profiles	default	\N	\N	t	\N	\N	\N	\N	\N	auto
 \.
 
 
@@ -7051,26 +7058,26 @@ COPY public.project_stories (id, sort, date_created, date_updated, title, situat
 117	3	2025-10-22 13:57:36.777+00	2025-10-22 14:09:29.042+00	React Native App Technical Challenges	- Leading React Native mobile app development at Chipta\n- React Native framework had significant bugs and limitations\n- Limited documentation and community support available\n- Tight deadline before festival season start	- Navigate technical challenges with immature framework\n- Find solutions to framework bugs and limitations\n- Deliver functional app on schedule\n- Ensure app met performance and reliability requirements	- Helped developer to tackle complex technical issues\n- Researched React Native & plugins source code to understand underlying problems\n- Created custom patches for framework bugs we encountered\n- Made architecture decisions to work around limitations	- Delivered app on time before festival season started\n- App significantly improved event scalability and reach\n- Contributed to 40% revenue increase from mobile ticket sales\n- Developer gained valuable React Native expertise\n- Established foundation for future mobile development projects	- Learned that new hip projects from major companies are not necessarily stable or well documented from the start\n- Was ultimately happy with choosing React Native\n- Because it matured and is still one of the main ways of creating apps	challenging_situations	2
 118	4	2025-10-22 11:06:06.406+00	2025-10-22 11:17:50.677+00	Introduced agile / async team workflow @ Chipta	- Early days at Chipta with minimal team structure\n- 3-5 developers working without established methodologies\n- Changing requirements from management causing confusion with devs\n- Need to scale development processes as team grew	- Introduce structured development methodologies\n- Get all team members aligned on new processes\n- Implement tools and workflows for better collaboration\n- Improve team efficiency and productivity	- Progressively introduced Scrum/Agile methodologies with team buy-in\n- Implemented Zulip for structured async collaboration\n- Established GitLab Merge Request workflow with code reviews\n- Introduced Git flow and commit message conventions\n- Set up and managed comprehensive issue ticket system	- Successfully transitioned team to structured development process\n- Improved team coordination and reduced miscommunication\n- Increased development efficiency and code quality\n- Created scalable processes that supported team growth over 7 years	- An efficient team workflow makes a big difference\n- There are many ways to do Agile and every team is unique	leadership_moments	2
 119	5	2025-10-22 13:45:09.415+00	2025-10-22 14:13:28.577+00	TicketSwap integration deadline for major client	- Major event organizer prospect required TicketSwap integration\n- Hard deadline of 3 weeks to deliver or lose the prospect\n- Complex coordination needed with external development team	- Build secure TicketSwap API integration for second-hand ticket validation\n- Coordinate with TicketSwap developers on protocols and implementation steps\n- Deliver working solution within 3-week deadline to close the deal	- Contacted TicketSwap's technical team to establish communication protocols\n- Coordinated step-by-step implementation process with their developers\n- Built secure integration with comprehensive testing suite\n- Managed coordination between TicketSwap team, prospect, and internal stakeholders	- Delivered integration on time and secured the client\n- Eliminated ticket fraud for integrated events\n- Became competitive advantage leading to 15% increase in sales	- Things can be done very fast when all parties have interests\n- Direct communication between devs of two companies is very efficient	leadership_moments	2
+132	5	\N	\N	TicketSwap integration deadline for major client	- Major event organizer prospect required TicketSwap integration\n- Hard deadline of 3 weeks to deliver or lose the prospect\n- Complex coordination needed with external development team	- Build secure TicketSwap API integration for second-hand ticket validation\n- Coordinate with TicketSwap developers on protocols and implementation steps\n- Deliver working solution within 3-week deadline to close the deal	- Contacted TicketSwap's technical team to establish communication protocols\n- Coordinated step-by-step implementation process with their developers\n- Built secure integration with comprehensive testing suite\n- Managed coordination between TicketSwap team, prospect, and internal stakeholders	- Delivered integration on time and secured the client\n- Eliminated ticket fraud for integrated events\n- Became competitive advantage leading to 15% increase in sales	- Things can be done very fast when all parties have interests\n- Direct communication between devs of two companies is very efficient	leadership_moments	10
 120	6	2025-10-22 14:12:18.013+00	2025-10-22 15:02:44.822+00	Automated integration testing with Selenium	- Manual integration testing required before each production deployment\n- Testing process took up to 1.5 hours per release\n- Process was error prone because of human errors\n- Time-consuming manual process slowed down development cycle	- Eliminate manual testing bottleneck\n- Enable faster, more reliable deployments\n- Reduce time investment required for each release\n- Improve reliability of test results	- Researched automated testing solutions and selected Selenium\n- Built comprehensive Selenium test suite covering the existing manual test procedures\n- Integrated automated tests into deployment pipeline\n- Created documentation for developers on running tests and creating new ones	- Reduced integration testing time from 1.5 hours to 5 minutes\n- Enabled any developer to run complete integration test suite\n- Increased deployment frequency and confidence\n- Eliminated testing bottleneck and improved development velocity	- Learned Selenium is pretty cool and not that hard\n- Learned that creating integration tests is totally worth it if you need to test for every release\n- Now that I know Selenium, would apply it faster to save time earlier	learning_experiences	2
 121	1	\N	\N	Ticketshop performance for big events	- Big event clients selling thousands of tickets\n- Ticketshop having hard times handling large traffic spikes\n- Performance bottlenecks in processing the orders\n- Clients needed reliable ticketshop to sell their tickets fast	- Speed up ticketshop order processing\n- Handle high-traffic ticketshop spikes\n- Work with DevOps (Michaël) on scaling	- Optimized SQL queries - got 30-60% speed boost\n- Refactored Python/Django order processing code\n- Worked with DevOps (Michaël) on flexible scaling setup	- Big event clients successfully kept/onboarded\n- 30-60% faster ticket order processing\n- Scalable ticketshop ready for large events	- I didn't realize how many queries were being done before optimizing\n- Optimizing complex SQL queries in Django can be challenging\n- But tools like Silk make debugging very user friendly	high_impact_projects	6
 122	2	\N	\N	Zoom OAuth integration during COVID	- COVID hit and clients needed virtual events\n- No Zoom integration in our platform\n- Event organizers needed seamless online solution	- Learn Zoom API and OAuth quickly\n- Integrate client accounts with dashboard\n- Enable automatic Zoom management for Chipta events	- Mastered Zoom OAuth and API documentation\n- Navigated strict app admittance process\n- Built dashboard integration for client accounts\n- Created automatic Zoom event management system	- Many clients successfully organized online events\n- Helped company survive COVID with less than 40% profit loss\n- Seamless Chipta-Zoom integration in production	- Zoom Marketplace submission requirements were much more than I expected\n- After COVID was over, the online event hype disappeared again\n- COVID was a hard time to be strategical\n- Clients do appreciate quick acting and temporary solutions	high_impact_projects	6
 123	3	\N	\N	React Native App Technical Challenges	- Leading React Native mobile app development at Chipta\n- React Native framework had significant bugs and limitations\n- Limited documentation and community support available\n- Tight deadline before festival season start	- Navigate technical challenges with immature framework\n- Find solutions to framework bugs and limitations\n- Deliver functional app on schedule\n- Ensure app met performance and reliability requirements	- Helped developer to tackle complex technical issues\n- Researched React Native & plugins source code to understand underlying problems\n- Created custom patches for framework bugs we encountered\n- Made architecture decisions to work around limitations	- Delivered app on time before festival season started\n- App significantly improved event scalability and reach\n- Contributed to 40% revenue increase from mobile ticket sales\n- Developer gained valuable React Native expertise\n- Established foundation for future mobile development projects	- Learned that new hip projects from major companies are not necessarily stable or well documented from the start\n- Was ultimately happy with choosing React Native\n- Because it matured and is still one of the main ways of creating apps	challenging_situations	6
 124	4	\N	\N	Introduced agile / async team workflow @ Chipta	- Early days at Chipta with minimal team structure\n- 3-5 developers working without established methodologies\n- Changing requirements from management causing confusion with devs\n- Need to scale development processes as team grew	- Introduce structured development methodologies\n- Get all team members aligned on new processes\n- Implement tools and workflows for better collaboration\n- Improve team efficiency and productivity	- Progressively introduced Scrum/Agile methodologies with team buy-in\n- Implemented Zulip for structured async collaboration\n- Established GitLab Merge Request workflow with code reviews\n- Introduced Git flow and commit message conventions\n- Set up and managed comprehensive issue ticket system	- Successfully transitioned team to structured development process\n- Improved team coordination and reduced miscommunication\n- Increased development efficiency and code quality\n- Created scalable processes that supported team growth over 7 years	- An efficient team workflow makes a big difference\n- There are many ways to do Agile and every team is unique	leadership_moments	6
 125	5	\N	\N	TicketSwap integration deadline for major client	- Major event organizer prospect required TicketSwap integration\n- Hard deadline of 3 weeks to deliver or lose the prospect\n- Complex coordination needed with external development team	- Build secure TicketSwap API integration for second-hand ticket validation\n- Coordinate with TicketSwap developers on protocols and implementation steps\n- Deliver working solution within 3-week deadline to close the deal	- Contacted TicketSwap's technical team to establish communication protocols\n- Coordinated step-by-step implementation process with their developers\n- Built secure integration with comprehensive testing suite\n- Managed coordination between TicketSwap team, prospect, and internal stakeholders	- Delivered integration on time and secured the client\n- Eliminated ticket fraud for integrated events\n- Became competitive advantage leading to 15% increase in sales	- Things can be done very fast when all parties have interests\n- Direct communication between devs of two companies is very efficient	leadership_moments	6
+139	5	\N	\N	TicketSwap integration deadline for major client	- Major event organizer prospect required TicketSwap integration\n- Hard deadline of 3 weeks to deliver or lose the prospect\n- Complex coordination needed with external development team	- Build secure TicketSwap API integration for second-hand ticket validation\n- Coordinate with TicketSwap developers on protocols and implementation steps\n- Deliver working solution within 3-week deadline to close the deal	- Contacted TicketSwap's technical team to establish communication protocols\n- Coordinated step-by-step implementation process with their developers\n- Built secure integration with comprehensive testing suite\n- Managed coordination between TicketSwap team, prospect, and internal stakeholders	- Delivered integration on time and secured the client\n- Eliminated ticket fraud for integrated events\n- Became competitive advantage leading to 15% increase in sales	- Things can be done very fast when all parties have interests\n- Direct communication between devs of two companies is very efficient	leadership_moments	14
 126	6	\N	\N	Automated integration testing with Selenium	- Manual integration testing required before each production deployment\n- Testing process took up to 1.5 hours per release\n- Process was error prone because of human errors\n- Time-consuming manual process slowed down development cycle	- Eliminate manual testing bottleneck\n- Enable faster, more reliable deployments\n- Reduce time investment required for each release\n- Improve reliability of test results	- Researched automated testing solutions and selected Selenium\n- Built comprehensive Selenium test suite covering the existing manual test procedures\n- Integrated automated tests into deployment pipeline\n- Created documentation for developers on running tests and creating new ones	- Reduced integration testing time from 1.5 hours to 5 minutes\n- Enabled any developer to run complete integration test suite\n- Increased deployment frequency and confidence\n- Eliminated testing bottleneck and improved development velocity	- Learned Selenium is pretty cool and not that hard\n- Learned that creating integration tests is totally worth it if you need to test for every release\n- Now that I know Selenium, would apply it faster to save time earlier	learning_experiences	6
 127	7	\N	\N	Onboarding junior developer to Django system	- New junior developer joined comprehensive Django project\n- Developer needed to learn Django framework\n- Complex system with frontend integration\n- Multiple new skills needed simultaneously	- Guide developer through system architecture\n- Teach Django best practices\n- Train on frontend technologies\n- Make developer productive on assigned projects	- Created structured learning plan covering Django and frontend\n- Paired programming sessions to demonstrate system\n- Regular code reviews with detailed explanations\n- Gradually increased project complexity and responsibility	- Developer became productive within first month\n- Successfully delivered assigned project features\n- Developer gained confidence in both Django and frontend\n- Created reusable onboarding process for future hires	- Learned I need to ask more feedback from developers to understand what they actually need\n- Junior developer could be stuck without me knowing it\n- Check in to developers progress and have evaluation sessions\n\n- It's useful when developer creates own docs / notes\n- There are always things to improve about the onboarding process\n- It's a fun process helping a developer getting up and running	learning_experiences	6
 128	1	\N	\N	Ticketshop performance for big events	- Big event clients selling thousands of tickets\n- Ticketshop having hard times handling large traffic spikes\n- Performance bottlenecks in processing the orders\n- Clients needed reliable ticketshop to sell their tickets fast	- Speed up ticketshop order processing\n- Handle high-traffic ticketshop spikes\n- Work with DevOps (Michaël) on scaling	- Optimized SQL queries - got 30-60% speed boost\n- Refactored Python/Django order processing code\n- Worked with DevOps (Michaël) on flexible scaling setup	- Big event clients successfully kept/onboarded\n- 30-60% faster ticket order processing\n- Scalable ticketshop ready for large events	- I didn't realize how many queries were being done before optimizing\n- Optimizing complex SQL queries in Django can be challenging\n- But tools like Silk make debugging very user friendly	high_impact_projects	10
 129	2	\N	\N	Zoom OAuth integration during COVID	- COVID hit and clients needed virtual events\n- No Zoom integration in our platform\n- Event organizers needed seamless online solution	- Learn Zoom API and OAuth quickly\n- Integrate client accounts with dashboard\n- Enable automatic Zoom management for Chipta events	- Mastered Zoom OAuth and API documentation\n- Navigated strict app admittance process\n- Built dashboard integration for client accounts\n- Created automatic Zoom event management system	- Many clients successfully organized online events\n- Helped company survive COVID with less than 40% profit loss\n- Seamless Chipta-Zoom integration in production	- Zoom Marketplace submission requirements were much more than I expected\n- After COVID was over, the online event hype disappeared again\n- COVID was a hard time to be strategical\n- Clients do appreciate quick acting and temporary solutions	high_impact_projects	10
 130	3	\N	\N	React Native App Technical Challenges	- Leading React Native mobile app development at Chipta\n- React Native framework had significant bugs and limitations\n- Limited documentation and community support available\n- Tight deadline before festival season start	- Navigate technical challenges with immature framework\n- Find solutions to framework bugs and limitations\n- Deliver functional app on schedule\n- Ensure app met performance and reliability requirements	- Helped developer to tackle complex technical issues\n- Researched React Native & plugins source code to understand underlying problems\n- Created custom patches for framework bugs we encountered\n- Made architecture decisions to work around limitations	- Delivered app on time before festival season started\n- App significantly improved event scalability and reach\n- Contributed to 40% revenue increase from mobile ticket sales\n- Developer gained valuable React Native expertise\n- Established foundation for future mobile development projects	- Learned that new hip projects from major companies are not necessarily stable or well documented from the start\n- Was ultimately happy with choosing React Native\n- Because it matured and is still one of the main ways of creating apps	challenging_situations	10
 131	4	\N	\N	Introduced agile / async team workflow @ Chipta	- Early days at Chipta with minimal team structure\n- 3-5 developers working without established methodologies\n- Changing requirements from management causing confusion with devs\n- Need to scale development processes as team grew	- Introduce structured development methodologies\n- Get all team members aligned on new processes\n- Implement tools and workflows for better collaboration\n- Improve team efficiency and productivity	- Progressively introduced Scrum/Agile methodologies with team buy-in\n- Implemented Zulip for structured async collaboration\n- Established GitLab Merge Request workflow with code reviews\n- Introduced Git flow and commit message conventions\n- Set up and managed comprehensive issue ticket system	- Successfully transitioned team to structured development process\n- Improved team coordination and reduced miscommunication\n- Increased development efficiency and code quality\n- Created scalable processes that supported team growth over 7 years	- An efficient team workflow makes a big difference\n- There are many ways to do Agile and every team is unique	leadership_moments	10
-132	5	\N	\N	TicketSwap integration deadline for major client	- Major event organizer prospect required TicketSwap integration\n- Hard deadline of 3 weeks to deliver or lose the prospect\n- Complex coordination needed with external development team	- Build secure TicketSwap API integration for second-hand ticket validation\n- Coordinate with TicketSwap developers on protocols and implementation steps\n- Deliver working solution within 3-week deadline to close the deal	- Contacted TicketSwap's technical team to establish communication protocols\n- Coordinated step-by-step implementation process with their developers\n- Built secure integration with comprehensive testing suite\n- Managed coordination between TicketSwap team, prospect, and internal stakeholders	- Delivered integration on time and secured the client\n- Eliminated ticket fraud for integrated events\n- Became competitive advantage leading to 15% increase in sales	- Things can be done very fast when all parties have interests\n- Direct communication between devs of two companies is very efficient	leadership_moments	10
 133	6	\N	\N	Automated integration testing with Selenium	- Manual integration testing required before each production deployment\n- Testing process took up to 1.5 hours per release\n- Process was error prone because of human errors\n- Time-consuming manual process slowed down development cycle	- Eliminate manual testing bottleneck\n- Enable faster, more reliable deployments\n- Reduce time investment required for each release\n- Improve reliability of test results	- Researched automated testing solutions and selected Selenium\n- Built comprehensive Selenium test suite covering the existing manual test procedures\n- Integrated automated tests into deployment pipeline\n- Created documentation for developers on running tests and creating new ones	- Reduced integration testing time from 1.5 hours to 5 minutes\n- Enabled any developer to run complete integration test suite\n- Increased deployment frequency and confidence\n- Eliminated testing bottleneck and improved development velocity	- Learned Selenium is pretty cool and not that hard\n- Learned that creating integration tests is totally worth it if you need to test for every release\n- Now that I know Selenium, would apply it faster to save time earlier	learning_experiences	10
 134	7	\N	\N	Onboarding junior developer to Django system	- New junior developer joined comprehensive Django project\n- Developer needed to learn Django framework\n- Complex system with frontend integration\n- Multiple new skills needed simultaneously	- Guide developer through system architecture\n- Teach Django best practices\n- Train on frontend technologies\n- Make developer productive on assigned projects	- Created structured learning plan covering Django and frontend\n- Paired programming sessions to demonstrate system\n- Regular code reviews with detailed explanations\n- Gradually increased project complexity and responsibility	- Developer became productive within first month\n- Successfully delivered assigned project features\n- Developer gained confidence in both Django and frontend\n- Created reusable onboarding process for future hires	- Learned I need to ask more feedback from developers to understand what they actually need\n- Junior developer could be stuck without me knowing it\n- Check in to developers progress and have evaluation sessions\n\n- It's useful when developer creates own docs / notes\n- There are always things to improve about the onboarding process\n- It's a fun process helping a developer getting up and running	learning_experiences	10
 135	1	\N	\N	Ticketshop performance for big events	- Big event clients selling thousands of tickets\n- Ticketshop having hard times handling large traffic spikes\n- Performance bottlenecks in processing the orders\n- Clients needed reliable ticketshop to sell their tickets fast	- Speed up ticketshop order processing\n- Handle high-traffic ticketshop spikes\n- Work with DevOps (Michaël) on scaling	- Optimized SQL queries - got 30-60% speed boost\n- Refactored Python/Django order processing code\n- Worked with DevOps (Michaël) on flexible scaling setup	- Big event clients successfully kept/onboarded\n- 30-60% faster ticket order processing\n- Scalable ticketshop ready for large events	- I didn't realize how many queries were being done before optimizing\n- Optimizing complex SQL queries in Django can be challenging\n- But tools like Silk make debugging very user friendly	high_impact_projects	14
 136	2	\N	\N	Zoom OAuth integration during COVID	- COVID hit and clients needed virtual events\n- No Zoom integration in our platform\n- Event organizers needed seamless online solution	- Learn Zoom API and OAuth quickly\n- Integrate client accounts with dashboard\n- Enable automatic Zoom management for Chipta events	- Mastered Zoom OAuth and API documentation\n- Navigated strict app admittance process\n- Built dashboard integration for client accounts\n- Created automatic Zoom event management system	- Many clients successfully organized online events\n- Helped company survive COVID with less than 40% profit loss\n- Seamless Chipta-Zoom integration in production	- Zoom Marketplace submission requirements were much more than I expected\n- After COVID was over, the online event hype disappeared again\n- COVID was a hard time to be strategical\n- Clients do appreciate quick acting and temporary solutions	high_impact_projects	14
 137	3	\N	\N	React Native App Technical Challenges	- Leading React Native mobile app development at Chipta\n- React Native framework had significant bugs and limitations\n- Limited documentation and community support available\n- Tight deadline before festival season start	- Navigate technical challenges with immature framework\n- Find solutions to framework bugs and limitations\n- Deliver functional app on schedule\n- Ensure app met performance and reliability requirements	- Helped developer to tackle complex technical issues\n- Researched React Native & plugins source code to understand underlying problems\n- Created custom patches for framework bugs we encountered\n- Made architecture decisions to work around limitations	- Delivered app on time before festival season started\n- App significantly improved event scalability and reach\n- Contributed to 40% revenue increase from mobile ticket sales\n- Developer gained valuable React Native expertise\n- Established foundation for future mobile development projects	- Learned that new hip projects from major companies are not necessarily stable or well documented from the start\n- Was ultimately happy with choosing React Native\n- Because it matured and is still one of the main ways of creating apps	challenging_situations	14
 138	4	\N	\N	Introduced agile / async team workflow @ Chipta	- Early days at Chipta with minimal team structure\n- 3-5 developers working without established methodologies\n- Changing requirements from management causing confusion with devs\n- Need to scale development processes as team grew	- Introduce structured development methodologies\n- Get all team members aligned on new processes\n- Implement tools and workflows for better collaboration\n- Improve team efficiency and productivity	- Progressively introduced Scrum/Agile methodologies with team buy-in\n- Implemented Zulip for structured async collaboration\n- Established GitLab Merge Request workflow with code reviews\n- Introduced Git flow and commit message conventions\n- Set up and managed comprehensive issue ticket system	- Successfully transitioned team to structured development process\n- Improved team coordination and reduced miscommunication\n- Increased development efficiency and code quality\n- Created scalable processes that supported team growth over 7 years	- An efficient team workflow makes a big difference\n- There are many ways to do Agile and every team is unique	leadership_moments	14
-139	5	\N	\N	TicketSwap integration deadline for major client	- Major event organizer prospect required TicketSwap integration\n- Hard deadline of 3 weeks to deliver or lose the prospect\n- Complex coordination needed with external development team	- Build secure TicketSwap API integration for second-hand ticket validation\n- Coordinate with TicketSwap developers on protocols and implementation steps\n- Deliver working solution within 3-week deadline to close the deal	- Contacted TicketSwap's technical team to establish communication protocols\n- Coordinated step-by-step implementation process with their developers\n- Built secure integration with comprehensive testing suite\n- Managed coordination between TicketSwap team, prospect, and internal stakeholders	- Delivered integration on time and secured the client\n- Eliminated ticket fraud for integrated events\n- Became competitive advantage leading to 15% increase in sales	- Things can be done very fast when all parties have interests\n- Direct communication between devs of two companies is very efficient	leadership_moments	14
 140	6	\N	\N	Automated integration testing with Selenium	- Manual integration testing required before each production deployment\n- Testing process took up to 1.5 hours per release\n- Process was error prone because of human errors\n- Time-consuming manual process slowed down development cycle	- Eliminate manual testing bottleneck\n- Enable faster, more reliable deployments\n- Reduce time investment required for each release\n- Improve reliability of test results	- Researched automated testing solutions and selected Selenium\n- Built comprehensive Selenium test suite covering the existing manual test procedures\n- Integrated automated tests into deployment pipeline\n- Created documentation for developers on running tests and creating new ones	- Reduced integration testing time from 1.5 hours to 5 minutes\n- Enabled any developer to run complete integration test suite\n- Increased deployment frequency and confidence\n- Eliminated testing bottleneck and improved development velocity	- Learned Selenium is pretty cool and not that hard\n- Learned that creating integration tests is totally worth it if you need to test for every release\n- Now that I know Selenium, would apply it faster to save time earlier	learning_experiences	14
 141	7	\N	\N	Onboarding junior developer to Django system	- New junior developer joined comprehensive Django project\n- Developer needed to learn Django framework\n- Complex system with frontend integration\n- Multiple new skills needed simultaneously	- Guide developer through system architecture\n- Teach Django best practices\n- Train on frontend technologies\n- Make developer productive on assigned projects	- Created structured learning plan covering Django and frontend\n- Paired programming sessions to demonstrate system\n- Regular code reviews with detailed explanations\n- Gradually increased project complexity and responsibility	- Developer became productive within first month\n- Successfully delivered assigned project features\n- Developer gained confidence in both Django and frontend\n- Created reusable onboarding process for future hires	- Learned I need to ask more feedback from developers to understand what they actually need\n- Junior developer could be stuck without me knowing it\n- Check in to developers progress and have evaluation sessions\n\n- It's useful when developer creates own docs / notes\n- There are always things to improve about the onboarding process\n- It's a fun process helping a developer getting up and running	learning_experiences	14
 \.
@@ -7081,14 +7088,6 @@ COPY public.project_stories (id, sort, date_created, date_updated, title, situat
 --
 
 COPY public."references" (id, status, sort, date_created, date_updated, author, author_position, text, profile) FROM stdin;
-1	published	\N	2025-10-29 09:42:36.975+00	\N	Michaël de Groot	Founder of Chipta	Rik modernized our client-facing interfaces and implemented optimizations that delivered substantial performance improvements. His work enabled us to process thousands of tickets rapidly during our busiest periods.	0eeb942b-e35a-44e8-a37d-52b9cdb24309
-2	published	\N	2025-10-29 09:43:19.145+00	\N	Elmar Krack	Co-founder of Tender-it	Rik demonstrated exceptional technical leadership by designing and developing our entire platform from the ground up, handling both backend and frontend development with impressive skill.	0eeb942b-e35a-44e8-a37d-52b9cdb24309
-3	published	\N	\N	\N	Michaël de Groot	Founder of Chipta	Rik modernized our client-facing interfaces and implemented optimizations that delivered substantial performance improvements. His work enabled us to process thousands of tickets rapidly during our busiest periods.	af36bad2-397d-4475-be6c-575b2ed4f450
-4	published	\N	\N	\N	Elmar Krack	Co-founder of Tender-it	Rik demonstrated exceptional technical leadership by designing and developing our entire platform from the ground up, handling both backend and frontend development with impressive skill.	af36bad2-397d-4475-be6c-575b2ed4f450
-5	published	\N	\N	\N	Michaël de Groot	Founder of Chipta	Rik modernized our client-facing interfaces and implemented optimizations that delivered substantial performance improvements. His work enabled us to process thousands of tickets rapidly during our busiest periods.	72c712e7-b165-4afb-a4d2-e68c5a735586
-6	published	\N	\N	\N	Elmar Krack	Co-founder of Tender-it	Rik demonstrated exceptional technical leadership by designing and developing our entire platform from the ground up, handling both backend and frontend development with impressive skill.	72c712e7-b165-4afb-a4d2-e68c5a735586
-7	published	\N	\N	\N	Michaël de Groot	Founder of Chipta	Rik modernized our client-facing interfaces and implemented optimizations that delivered substantial performance improvements. His work enabled us to process thousands of tickets rapidly during our busiest periods.	fcf70e88-8d61-4c4c-881e-9201c597a518
-8	published	\N	\N	\N	Elmar Krack	Co-founder of Tender-it	Rik demonstrated exceptional technical leadership by designing and developing our entire platform from the ground up, handling both backend and frontend development with impressive skill.	fcf70e88-8d61-4c4c-881e-9201c597a518
 \.
 
 
@@ -7129,94 +7128,6 @@ COPY public.salary_expectations (id, sort, date_created, date_updated, job_title
 --
 
 COPY public.side_project_achievements (id, title, fa_icon, description, side_project, status, date_created, date_updated, sort) FROM stdin;
-a0d645b7-5052-4b7c-adf1-693a68dc0743	Documentation	book	Created clear documentation for package usage with examples and test pages	5	published	2025-10-28 17:52:38.82+00	\N	2
-5f4d1cb6-b09c-4226-8e23-6aa3271cd50e	100+ GitHub stars	star	Received appreciation in community with 108 GitHub stars & usage by 133 projects	2	draft	2025-10-27 18:51:34.707+00	2025-10-28 15:18:10.806+00	2
-3c112423-5d8c-43a1-a5f3-27ee654f963e	GitHub Issue engagement	github	Engaged with users handling GitHub Issues and Pull Requests	2	published	2025-10-27 18:51:34.709+00	\N	3
-33c7b5f7-aed7-4287-90af-76d11dcbbe8c	Community engagement	users	Responded and engaged in followup questions and feedback of community	3	published	2025-10-28 15:21:31.02+00	2025-10-28 15:27:14.991+00	2
-d76e19f7-e052-4908-9e25-11e048e9be81	Open-source Python package	python	Released open-source Python package on PyPi as easily installable Django Admin extension	2	draft	2025-10-27 18:51:34.703+00	2025-10-28 17:08:09.753+00	1
-80816dfd-dfe0-4344-ba45-464fbf5d483f	Maintained	book	Documentation up-to-date with latest git release and related developments	3	published	2025-10-28 15:24:46.862+00	2025-10-28 15:28:42.084+00	3
-9b496336-6477-4df7-907b-e9f966ebdad6	Production usage	server	Used extension succesfully in projects at Chipta & Tender-it	2	published	2025-10-27 18:51:34.713+00	2025-10-28 17:08:26.36+00	4
-96b9b460-11e1-4a78-a670-f1e927b8fa3f	Professional application	user-tie	Succesfully used to onboard developers in projects using git submodules at TravelBird & Chipta	3	published	2025-10-28 15:30:38.372+00	2025-10-28 17:09:28.535+00	4
-7c8851f2-84fd-4705-85eb-ee98edf5f0c0	Hands-On Learning	brain	Used this personal project to learn new modern technologies and LLM integrations	6	published	2025-10-28 16:25:58.75+00	2025-10-28 17:16:12.931+00	1
-a03b8a42-ed2b-44ff-8929-7a91fe0fa71c	150+ GitHub stars	star	Received appreciation in community with 155 GitHub stars	1	draft	\N	2025-10-28 14:28:37.128+00	2
-588f6a19-29f4-4407-a8e8-167b21aad49f	Open source package	code	Released open-source NPM package providing unique reactive state management for Lit	1	draft	\N	2025-10-28 14:29:28.406+00	1
-d9f209e9-4864-416b-a3ab-4431bdd5378e	Production usage	server	Succesfully used library in production at Chipta	1	published	2025-10-27 18:33:10.772+00	2025-10-28 14:45:55.187+00	3
-0f30dd84-edc1-4c72-bd51-c3a51ec5b12c	GitHub Issue Engagement	github	Engaged with package users on GitHub, handling issues and pull requests	1	published	2025-10-27 18:31:24.496+00	2025-10-28 14:48:00.471+00	4
-cce59be6-b885-4c07-a602-2fb5919c4d46	Extensibility	puzzle-piece	Added plugin development support for functionality extensibility	1	published	2025-10-28 15:04:30.49+00	\N	6
-a131f0cb-991f-4763-b506-f6f59a228953	Documentation	book	Created quality documentation including quick-start, working examples and advanced features 	1	published	2025-10-28 14:13:24.552+00	2025-10-28 15:07:27.153+00	5
-fbb65929-a1c4-43d6-b8b1-7d83ad1bab71	 1000+ GitHub stars	star	Widespread community appreciation with 1028 GitHub stars	3	published	2025-10-28 15:11:21.102+00	\N	1
-084a7d22-51ee-461a-b273-792da77b5872	Hands-On Learning	brain	Used this personal project to learn a new frontend framework (Ember.js)	4	published	2025-10-28 15:51:12.188+00	2025-10-28 16:24:52.862+00	2
-353b6ae9-beac-4c4d-a8cd-e05bbdff2bd1	Personal dashboard system	gears	Continiously developing a personal AI-powered dashboard for efficient job matching	6	published	2025-10-28 16:35:52.814+00	\N	2
-6b3a3810-6236-41a8-865b-a614876cf3ab	Personal usage	heart	Succesfully used project for creating and printing beautiful guitar chord charts for personal use	4	published	2025-10-28 15:44:18.457+00	2025-10-28 17:40:38.667+00	1
-b8a41972-e298-4d49-921e-9dffc6310539	Production usage	server	Used in production at Travelbird for creating REST APIs for MongoDB collections	7	published	2025-10-28 17:25:24.475+00	2025-10-28 17:41:31.142+00	1
-5f607df6-9815-41a7-a765-c993759cf5d7	Production usage	server	Used in production at Tender-it for processing subscription payments	5	published	2025-10-28 17:32:11.377+00	2025-10-28 17:41:49.736+00	1
-67b14b6b-c1c7-4a69-874c-06b2952c722f	Documentation	book	Created clear documentation for package usage with examples and thoughtful explanations	7	published	2025-10-28 17:48:57.081+00	2025-10-28 17:50:01.473+00	2
-af9792af-608a-4b7e-a034-57853faa23fa	Hands-On Learning	brain	Used this personal project to learn new modern technologies and LLM integrations	8	published	\N	\N	1
-7da99a57-47d6-4263-8509-e106dd96be95	Personal dashboard system	gears	Continiously developing a personal AI-powered dashboard for efficient job matching	8	published	\N	\N	2
-e594560b-a835-48c6-808b-1160f39577a4	Open source package	code	Released open-source NPM package providing unique reactive state management for Lit	9	draft	\N	\N	1
-6cdb4754-4a5e-4964-9a7a-0d638db303c8	150+ GitHub stars	star	Received appreciation in community with 155 GitHub stars	9	draft	\N	\N	2
-48d01f04-d3d6-4544-8e84-47503fd1171e	Production usage	server	Succesfully used library in production at Chipta	9	published	\N	\N	3
-6c0f0c3e-a5f7-487d-8ee3-93b30d4b35c0	GitHub Issue Engagement	github	Engaged with package users on GitHub, handling issues and pull requests	9	published	\N	\N	4
-6a07039e-4ad6-4bac-a57f-9b830309fb8b	Documentation	book	Created quality documentation including quick-start, working examples and advanced features 	9	published	\N	\N	5
-cf1dcb8e-349d-4f29-b449-398acfe0f3c4	Extensibility	puzzle-piece	Added plugin development support for functionality extensibility	9	published	\N	\N	6
-ad75a8eb-e30e-438b-8b23-86dd03a84e03	Open-source Python package	python	Released open-source Python package on PyPi as easily installable Django Admin extension	10	draft	\N	\N	1
-e4a043d2-859d-4040-be88-3b5462f15c8a	100+ GitHub stars	star	Received appreciation in community with 108 GitHub stars & usage by 133 projects	10	draft	\N	\N	2
-2a0022fb-160f-473f-8087-f998b224394c	GitHub Issue engagement	github	Engaged with users handling GitHub Issues and Pull Requests	10	published	\N	\N	3
-af7c0ac8-9244-4159-a6d2-81347d47c6c8	Production usage	server	Used extension succesfully in projects at Chipta & Tender-it	10	published	\N	\N	4
-0f496c7f-cdef-44be-898f-3d877f0cad1b	 1000+ GitHub stars	star	Widespread community appreciation with 1028 GitHub stars	11	published	\N	\N	1
-c86111ac-90fd-4a5f-9609-100038ee14bd	Community engagement	users	Responded and engaged in followup questions and feedback of community	11	published	\N	\N	2
-1cb7f4e7-c0b1-41f0-8654-e47637a9294e	Maintained	book	Documentation up-to-date with latest git release and related developments	11	published	\N	\N	3
-1a52a3b5-4768-441e-aa2b-edcde8907cb5	Professional application	user-tie	Succesfully used to onboard developers in projects using git submodules at TravelBird & Chipta	11	published	\N	\N	4
-3620da3e-bab7-4f8c-bd21-01abb7b4ecec	Personal usage	heart	Succesfully used project for creating and printing beautiful guitar chord charts for personal use	12	published	\N	\N	1
-ce6eb955-ced0-4adb-bc50-7529e978788f	Hands-On Learning	brain	Used this personal project to learn a new frontend framework (Ember.js)	12	published	\N	\N	2
-72c669b7-041c-410b-8905-cb631ec88564	Production usage	server	Used in production at Tender-it for processing subscription payments	13	published	\N	\N	1
-b91b2b99-cbf9-4682-9f9d-aa126bb97167	Documentation	book	Created clear documentation for package usage with examples and test pages	13	published	\N	\N	2
-168b6fbc-f13a-49f4-b4c1-b5547d7bc17c	Production usage	server	Used in production at Travelbird for creating REST APIs for MongoDB collections	14	published	\N	\N	1
-20d9b571-7f59-4727-8ec4-29243cd31ab9	Documentation	book	Created clear documentation for package usage with examples and thoughtful explanations	14	published	\N	\N	2
-480c355b-3c3b-400d-ae72-e726e5ec85c6	Hands-On Learning	brain	Used this personal project to learn new modern technologies and LLM integrations	15	published	\N	\N	1
-76187a9f-7fc4-480a-a63b-c79140d6a3bc	Personal dashboard system	gears	Continiously developing a personal AI-powered dashboard for efficient job matching	15	published	\N	\N	2
-f8bb722a-a546-4da8-8748-c1a18629132a	Open source package	code	Released open-source NPM package providing unique reactive state management for Lit	16	draft	\N	\N	1
-fa410d43-7f77-4002-bba1-bdfd6fe9f270	150+ GitHub stars	star	Received appreciation in community with 155 GitHub stars	16	draft	\N	\N	2
-198a6ba0-4cc8-493a-aeef-86babed158ce	Production usage	server	Succesfully used library in production at Chipta	16	published	\N	\N	3
-9b006917-cee1-443f-8d23-43b977bc3b99	GitHub Issue Engagement	github	Engaged with package users on GitHub, handling issues and pull requests	16	published	\N	\N	4
-53d63096-1fcc-4030-9da7-10479e4b1ada	Documentation	book	Created quality documentation including quick-start, working examples and advanced features 	16	published	\N	\N	5
-79dcf69f-5ce0-4cbf-97f0-915ff6672cd1	Extensibility	puzzle-piece	Added plugin development support for functionality extensibility	16	published	\N	\N	6
-d971a3e8-a897-457b-8141-83b34f036b86	Open-source Python package	python	Released open-source Python package on PyPi as easily installable Django Admin extension	17	draft	\N	\N	1
-71a29a1b-9ad3-499c-8b22-b494bd3d19d1	100+ GitHub stars	star	Received appreciation in community with 108 GitHub stars & usage by 133 projects	17	draft	\N	\N	2
-d3962c8d-dc06-4ec2-ac9e-7aad8e975a41	GitHub Issue engagement	github	Engaged with users handling GitHub Issues and Pull Requests	17	published	\N	\N	3
-99e1009b-1768-49bc-b266-3796c64975b0	Production usage	server	Used extension succesfully in projects at Chipta & Tender-it	17	published	\N	\N	4
-70dbfb95-1087-477a-bdd3-90855d238b48	 1000+ GitHub stars	star	Widespread community appreciation with 1028 GitHub stars	18	published	\N	\N	1
-001432d3-af1e-4607-8149-847bbf92df8f	Community engagement	users	Responded and engaged in followup questions and feedback of community	18	published	\N	\N	2
-f91f9ac8-a93f-45c6-ad4f-32fceca4bcd1	Maintained	book	Documentation up-to-date with latest git release and related developments	18	published	\N	\N	3
-d175be2f-1fca-4a8a-80e6-091d5f7853f7	Professional application	user-tie	Succesfully used to onboard developers in projects using git submodules at TravelBird & Chipta	18	published	\N	\N	4
-9870abb4-06a0-41a3-9af2-02495534320e	Personal usage	heart	Succesfully used project for creating and printing beautiful guitar chord charts for personal use	19	published	\N	\N	1
-0d1673a7-62bd-41f5-9445-ccbfa63e60de	Hands-On Learning	brain	Used this personal project to learn a new frontend framework (Ember.js)	19	published	\N	\N	2
-4b925d0c-a1c6-4d41-b4a5-c80efd6e0d00	Production usage	server	Used in production at Tender-it for processing subscription payments	20	published	\N	\N	1
-defdead8-b096-417c-a1d1-dcb87fd68a4c	Documentation	book	Created clear documentation for package usage with examples and test pages	20	published	\N	\N	2
-e01e9c4e-4b86-44e2-95c5-db1e476405f9	Production usage	server	Used in production at Travelbird for creating REST APIs for MongoDB collections	21	published	\N	\N	1
-a5c9970a-3388-4adb-a558-250e2e1aaf2a	Documentation	book	Created clear documentation for package usage with examples and thoughtful explanations	21	published	\N	\N	2
-1ba3ce9c-e635-4fef-936b-2528421d4163	Hands-On Learning	brain	Used this personal project to learn new modern technologies and LLM integrations	22	published	\N	\N	1
-e14896f7-ecc4-46d7-9b5a-27ad5bfe2c79	Personal dashboard system	gears	Continiously developing a personal AI-powered dashboard for efficient job matching	22	published	\N	\N	2
-945660ce-ffd3-4dd7-9421-814949cbea08	Open source package	code	Released open-source NPM package providing unique reactive state management for Lit	23	draft	\N	\N	1
-8b77ee5f-c036-4439-999e-01de0bf10bc3	150+ GitHub stars	star	Received appreciation in community with 155 GitHub stars	23	draft	\N	\N	2
-7facf5cd-0d31-49d3-9599-67747c24d37f	Production usage	server	Succesfully used library in production at Chipta	23	published	\N	\N	3
-6dc60d95-8761-40b3-9e24-2ddf53f28f9a	GitHub Issue Engagement	github	Engaged with package users on GitHub, handling issues and pull requests	23	published	\N	\N	4
-de39c1ff-1688-4a9c-966f-baa9f7e42199	Documentation	book	Created quality documentation including quick-start, working examples and advanced features 	23	published	\N	\N	5
-8a5115cc-16f3-4749-b8eb-328361db1168	Extensibility	puzzle-piece	Added plugin development support for functionality extensibility	23	published	\N	\N	6
-ce315fda-ce5a-4411-84c6-e460c803fef1	Open-source Python package	python	Released open-source Python package on PyPi as easily installable Django Admin extension	24	draft	\N	\N	1
-055b2b96-d75a-4301-b8d2-defa30a60892	100+ GitHub stars	star	Received appreciation in community with 108 GitHub stars & usage by 133 projects	24	draft	\N	\N	2
-22b9ba9b-e585-48f9-a1b8-dd36b6c0cc7d	GitHub Issue engagement	github	Engaged with users handling GitHub Issues and Pull Requests	24	published	\N	\N	3
-2dc8f207-6598-4377-85e4-b438ea4945a4	Production usage	server	Used extension succesfully in projects at Chipta & Tender-it	24	published	\N	\N	4
-9c118354-afe5-4d95-a30b-43282b2ebacb	 1000+ GitHub stars	star	Widespread community appreciation with 1028 GitHub stars	25	published	\N	\N	1
-3fc4112e-add8-45ad-a5df-f5b1448d4a44	Community engagement	users	Responded and engaged in followup questions and feedback of community	25	published	\N	\N	2
-eaa91a4b-1abf-469d-917d-7fd9280ac96e	Maintained	book	Documentation up-to-date with latest git release and related developments	25	published	\N	\N	3
-73a324c8-e8e1-4894-add6-71104c295f6e	Professional application	user-tie	Succesfully used to onboard developers in projects using git submodules at TravelBird & Chipta	25	published	\N	\N	4
-bb91095e-be21-471d-9a27-0d112d30c593	Personal usage	heart	Succesfully used project for creating and printing beautiful guitar chord charts for personal use	26	published	\N	\N	1
-99cced85-f3a7-4b6f-ad10-24d123f91640	Hands-On Learning	brain	Used this personal project to learn a new frontend framework (Ember.js)	26	published	\N	\N	2
-15e24254-913c-4c26-b8de-48e42129153a	Production usage	server	Used in production at Tender-it for processing subscription payments	27	published	\N	\N	1
-79add36c-b34e-4ac1-815b-710819f04a4c	Documentation	book	Created clear documentation for package usage with examples and test pages	27	published	\N	\N	2
-eaf2677e-8d98-49c2-bece-f76207185608	Production usage	server	Used in production at Travelbird for creating REST APIs for MongoDB collections	28	published	\N	\N	1
-2c1c7f54-5e98-47c8-a588-318bdecd7072	Documentation	book	Created clear documentation for package usage with examples and thoughtful explanations	28	published	\N	\N	2
 \.
 
 
@@ -7487,261 +7398,6 @@ COPY public.tech_skill_types (id, status, sort, date_created, date_updated, name
 --
 
 COPY public.tech_skills (id, status, sort, date_created, date_updated, name, category, level, tech_type, years_experience) FROM stdin;
-23	published	15	2025-10-17 17:09:52.916+00	\N	MongoDB	0bcc8c53-eb96-4d3b-8bd5-81faf33000a5	proficient	5	2
-2	published	16	2025-10-17 16:02:34.588+00	\N	JavaScript	78c235f4-2456-40e6-939d-19c855a30aa1	expert	1	18
-11	published	17	2025-10-17 16:55:49.756+00	\N	Node.js	78c235f4-2456-40e6-939d-19c855a30aa1	expert	1	12
-12	published	18	2025-10-17 16:56:44.833+00	\N	TypeScript	78c235f4-2456-40e6-939d-19c855a30aa1	proficient	1	2
-1	published	1	2025-10-17 15:11:59.895+00	2025-10-17 16:00:38.293+00	Python	e6875da0-e556-45f0-be1e-e469fdaed3a7	expert	1	12
-6	published	4	2025-10-17 16:42:47.554+00	\N	Flask	e6875da0-e556-45f0-be1e-e469fdaed3a7	proficient	2	4
-7	published	5	2025-10-17 16:43:46.247+00	\N	FastAPI	e6875da0-e556-45f0-be1e-e469fdaed3a7	proficient	2	1
-8	published	6	2025-10-17 16:45:28.783+00	\N	RESTful APIs	e6875da0-e556-45f0-be1e-e469fdaed3a7	expert	\N	12
-9	published	7	2025-10-17 16:49:12.448+00	\N	LLM integrations	e6875da0-e556-45f0-be1e-e469fdaed3a7	proficient	13	1
-4	published	2	2025-10-17 16:38:48.185+00	\N	Django	e6875da0-e556-45f0-be1e-e469fdaed3a7	expert	2	12
-5	published	3	2025-10-17 16:42:03.762+00	\N	Django REST Framework (DRF)	e6875da0-e556-45f0-be1e-e469fdaed3a7	expert	2	12
-15	published	21	2025-10-17 17:04:22.335+00	\N	Svelte	78c235f4-2456-40e6-939d-19c855a30aa1	proficient	2	2
-18	published	10	2025-10-17 17:06:28.288+00	\N	MySQL	0bcc8c53-eb96-4d3b-8bd5-81faf33000a5	expert	3	10
-3	published	9	2025-10-17 16:03:18.66+00	2025-10-17 16:37:50.808+00	PostgreSQL	0bcc8c53-eb96-4d3b-8bd5-81faf33000a5	expert	3	4
-10	published	8	2025-10-17 16:53:10.394+00	\N	pytest	e6875da0-e556-45f0-be1e-e469fdaed3a7	proficient	2	12
-13	published	20	2025-10-17 16:57:04.639+00	\N	React	78c235f4-2456-40e6-939d-19c855a30aa1	expert	2	12
-19	published	11	2025-10-17 17:07:14.543+00	\N	MariaDB	0bcc8c53-eb96-4d3b-8bd5-81faf33000a5	expert	3	12
-16	published	22	2025-10-17 17:04:43.06+00	\N	Tailwind CSS	78c235f4-2456-40e6-939d-19c855a30aa1	proficient	2	2
-17	published	23	2025-10-17 17:04:59.917+00	\N	Jest	78c235f4-2456-40e6-939d-19c855a30aa1	proficient	2	2
-20	published	12	2025-10-17 17:07:50.873+00	2025-10-19 18:14:57.198+00	SQLite	0bcc8c53-eb96-4d3b-8bd5-81faf33000a5	proficient	3	5
-21	published	13	2025-10-17 17:08:46.459+00	\N	SQL optimization	0bcc8c53-eb96-4d3b-8bd5-81faf33000a5	proficient	3	12
-22	published	14	2025-10-17 17:09:24.629+00	\N	Elasticsearch	0bcc8c53-eb96-4d3b-8bd5-81faf33000a5	proficient	5	3
-14	published	19	2025-10-17 17:01:46.443+00	2025-10-22 17:26:38.431+00	React Native	78c235f4-2456-40e6-939d-19c855a30aa1	proficient	2	3
-48	published	6	2025-10-29 15:07:52.748+00	2025-10-29 15:09:08.39+00	TDD	4b779c47-4943-47c6-856e-20b3001a2fb5	expert	14	12
-29	published	1	2025-10-23 13:20:47.71+00	\N	Docker	3199b3fb-efbb-478d-9f56-22b428a70623	expert	8	7
-30	published	2	2025-10-23 13:21:28.557+00	\N	Docker Compose	3199b3fb-efbb-478d-9f56-22b428a70623	expert	8	5
-31	published	3	2025-10-23 13:23:53.249+00	\N	GitLab CI/CD	3199b3fb-efbb-478d-9f56-22b428a70623	expert	9	5
-32	published	4	2025-10-23 13:23:53.252+00	\N	GitHub Actions	3199b3fb-efbb-478d-9f56-22b428a70623	expert	9	4
-33	draft	5	2025-10-23 13:23:53.254+00	\N	Ansible	3199b3fb-efbb-478d-9f56-22b428a70623	proficient	9	4
-34	published	6	2025-10-23 13:24:24.052+00	\N	Python Fabric	3199b3fb-efbb-478d-9f56-22b428a70623	expert	9	5
-38	published	2	2025-10-27 12:40:19.756+00	\N	AWS EC2	7b12ae23-7a33-44f6-9dac-9917b7132cdf	proficient	11	4
-39	published	3	2025-10-27 12:40:19.759+00	\N	AWS S3	7b12ae23-7a33-44f6-9dac-9917b7132cdf	proficient	11	4
-40	draft	4	2025-10-27 12:40:19.761+00	\N	AWS Lambda	7b12ae23-7a33-44f6-9dac-9917b7132cdf	proficient	11	2
-35	published	1	2025-10-23 13:27:43.001+00	2025-10-27 12:40:19.768+00	Amazon Web Services	7b12ae23-7a33-44f6-9dac-9917b7132cdf	proficient	11	4
-36	published	5	2025-10-23 13:27:43.003+00	2025-10-27 12:40:19.772+00	Vercel	7b12ae23-7a33-44f6-9dac-9917b7132cdf	proficient	11	2
-37	published	6	2025-10-23 13:27:43.005+00	2025-10-27 12:40:19.776+00	Linode	7b12ae23-7a33-44f6-9dac-9917b7132cdf	proficient	9	12
-25	published	2	2025-10-23 12:49:54.138+00	2025-10-27 12:48:15.287+00	GitHub	6d549daa-2775-4af9-85c9-c3a50ef155c0	expert	6	12
-24	published	1	2025-10-17 17:12:49.093+00	2025-10-27 12:48:15.292+00	Git	6d549daa-2775-4af9-85c9-c3a50ef155c0	expert	6	12
-26	published	3	2025-10-23 12:51:23.842+00	2025-10-27 12:48:15.295+00	Git Flow	6d549daa-2775-4af9-85c9-c3a50ef155c0	expert	6	8
-27	published	4	2025-10-23 12:51:23.844+00	2025-10-27 12:48:15.299+00	Claude Code	6d549daa-2775-4af9-85c9-c3a50ef155c0	expert	4	1
-28	published	5	2025-10-23 12:52:45.616+00	2025-10-27 12:48:15.303+00	Cursor	6d549daa-2775-4af9-85c9-c3a50ef155c0	expert	4	1
-41	published	6	2025-10-27 12:50:28.734+00	\N	Neovim	6d549daa-2775-4af9-85c9-c3a50ef155c0	expert	7	18
-42	published	7	2025-10-27 12:50:28.738+00	\N	tmux	6d549daa-2775-4af9-85c9-c3a50ef155c0	expert	4	18
-44	published	2	2025-10-29 15:05:07.033+00	2025-10-29 15:05:21.076+00	Scrum	4b779c47-4943-47c6-856e-20b3001a2fb5	proficient	14	5
-43	published	1	2025-10-29 15:03:40.489+00	2025-10-29 15:05:39.529+00	Agile	4b779c47-4943-47c6-856e-20b3001a2fb5	proficient	14	14
-47	published	5	2025-10-29 15:07:12.716+00	\N	Secure by design	4b779c47-4943-47c6-856e-20b3001a2fb5	proficient	14	18
-49	published	7	2025-10-29 15:08:20.292+00	2025-10-29 15:09:08.387+00	UXD	4b779c47-4943-47c6-856e-20b3001a2fb5	proficient	14	12
-45	published	3	2025-10-29 15:06:21.344+00	2025-10-29 15:09:08.393+00	XP	4b779c47-4943-47c6-856e-20b3001a2fb5	proficient	14	6
-46	published	4	2025-10-29 15:06:46.454+00	2025-10-29 15:12:49.706+00	AI-Assisted Development	4b779c47-4943-47c6-856e-20b3001a2fb5	proficient	4	1
-50	published	16	2025-10-30 13:47:22.663+00	\N	Redis	0bcc8c53-eb96-4d3b-8bd5-81faf33000a5	proficient	5	6
-51	published	7	2025-10-30 13:49:16.401+00	\N	Caching strategies	3199b3fb-efbb-478d-9f56-22b428a70623	proficient	12	6
-52	published	1	\N	\N	Python	adc76c12-545a-49ca-a2bf-47b7a87eb831	expert	1	12
-53	published	2	\N	\N	Django	adc76c12-545a-49ca-a2bf-47b7a87eb831	expert	2	12
-54	published	3	\N	\N	Django REST Framework (DRF)	adc76c12-545a-49ca-a2bf-47b7a87eb831	expert	2	12
-55	published	4	\N	\N	Flask	adc76c12-545a-49ca-a2bf-47b7a87eb831	proficient	2	4
-56	published	5	\N	\N	FastAPI	adc76c12-545a-49ca-a2bf-47b7a87eb831	proficient	2	1
-57	published	6	\N	\N	RESTful APIs	adc76c12-545a-49ca-a2bf-47b7a87eb831	expert	\N	12
-58	published	7	\N	\N	LLM integrations	adc76c12-545a-49ca-a2bf-47b7a87eb831	proficient	13	1
-59	published	8	\N	\N	pytest	adc76c12-545a-49ca-a2bf-47b7a87eb831	proficient	2	12
-60	published	16	\N	\N	JavaScript	b01c0694-776d-48bc-a532-008e667b080d	expert	1	18
-61	published	17	\N	\N	Node.js	b01c0694-776d-48bc-a532-008e667b080d	expert	1	12
-62	published	18	\N	\N	TypeScript	b01c0694-776d-48bc-a532-008e667b080d	proficient	1	2
-63	published	19	\N	\N	React Native	b01c0694-776d-48bc-a532-008e667b080d	proficient	2	3
-64	published	20	\N	\N	React	b01c0694-776d-48bc-a532-008e667b080d	expert	2	12
-65	published	21	\N	\N	Svelte	b01c0694-776d-48bc-a532-008e667b080d	proficient	2	2
-66	published	22	\N	\N	Tailwind CSS	b01c0694-776d-48bc-a532-008e667b080d	proficient	2	2
-67	published	23	\N	\N	Jest	b01c0694-776d-48bc-a532-008e667b080d	proficient	2	2
-68	published	9	\N	\N	PostgreSQL	7c22dd57-9017-445f-abf9-d50eb649fc4f	expert	3	4
-69	published	10	\N	\N	MySQL	7c22dd57-9017-445f-abf9-d50eb649fc4f	expert	3	10
-70	published	11	\N	\N	MariaDB	7c22dd57-9017-445f-abf9-d50eb649fc4f	expert	3	12
-71	published	12	\N	\N	SQLite	7c22dd57-9017-445f-abf9-d50eb649fc4f	proficient	3	5
-72	published	13	\N	\N	SQL optimization	7c22dd57-9017-445f-abf9-d50eb649fc4f	proficient	3	12
-73	published	14	\N	\N	Elasticsearch	7c22dd57-9017-445f-abf9-d50eb649fc4f	proficient	5	3
-74	published	15	\N	\N	MongoDB	7c22dd57-9017-445f-abf9-d50eb649fc4f	proficient	5	2
-75	published	16	\N	\N	Redis	7c22dd57-9017-445f-abf9-d50eb649fc4f	proficient	5	6
-76	published	1	\N	\N	Git	8180ec10-e964-4192-8255-c4f5885ad021	expert	6	12
-77	published	2	\N	\N	GitHub	8180ec10-e964-4192-8255-c4f5885ad021	expert	6	12
-78	published	3	\N	\N	Git Flow	8180ec10-e964-4192-8255-c4f5885ad021	expert	6	8
-79	published	4	\N	\N	Claude Code	8180ec10-e964-4192-8255-c4f5885ad021	expert	4	1
-80	published	5	\N	\N	Cursor	8180ec10-e964-4192-8255-c4f5885ad021	expert	4	1
-81	published	6	\N	\N	Neovim	8180ec10-e964-4192-8255-c4f5885ad021	expert	7	18
-82	published	7	\N	\N	tmux	8180ec10-e964-4192-8255-c4f5885ad021	expert	4	18
-83	published	1	\N	\N	Docker	6205d170-57a3-4446-a337-1eec4ad5a1e3	expert	8	7
-84	published	2	\N	\N	Docker Compose	6205d170-57a3-4446-a337-1eec4ad5a1e3	expert	8	5
-85	published	3	\N	\N	GitLab CI/CD	6205d170-57a3-4446-a337-1eec4ad5a1e3	expert	9	5
-86	published	4	\N	\N	GitHub Actions	6205d170-57a3-4446-a337-1eec4ad5a1e3	expert	9	4
-87	draft	5	\N	\N	Ansible	6205d170-57a3-4446-a337-1eec4ad5a1e3	proficient	9	4
-88	published	6	\N	\N	Python Fabric	6205d170-57a3-4446-a337-1eec4ad5a1e3	expert	9	5
-89	published	7	\N	\N	Caching strategies	6205d170-57a3-4446-a337-1eec4ad5a1e3	proficient	12	6
-90	published	1	\N	\N	Amazon Web Services	6ef0eaf1-2033-4b33-8abd-b26e613ab18c	proficient	11	4
-91	published	2	\N	\N	AWS EC2	6ef0eaf1-2033-4b33-8abd-b26e613ab18c	proficient	11	4
-92	published	3	\N	\N	AWS S3	6ef0eaf1-2033-4b33-8abd-b26e613ab18c	proficient	11	4
-93	draft	4	\N	\N	AWS Lambda	6ef0eaf1-2033-4b33-8abd-b26e613ab18c	proficient	11	2
-94	published	5	\N	\N	Vercel	6ef0eaf1-2033-4b33-8abd-b26e613ab18c	proficient	11	2
-95	published	6	\N	\N	Linode	6ef0eaf1-2033-4b33-8abd-b26e613ab18c	proficient	9	12
-96	published	1	\N	\N	Agile	fa1f774c-80af-45c6-bd23-94fd0ceb3ef8	proficient	14	14
-97	published	2	\N	\N	Scrum	fa1f774c-80af-45c6-bd23-94fd0ceb3ef8	proficient	14	5
-98	published	3	\N	\N	XP	fa1f774c-80af-45c6-bd23-94fd0ceb3ef8	proficient	14	6
-99	published	4	\N	\N	AI-Assisted Development	fa1f774c-80af-45c6-bd23-94fd0ceb3ef8	proficient	4	1
-100	published	5	\N	\N	Secure by design	fa1f774c-80af-45c6-bd23-94fd0ceb3ef8	proficient	14	18
-101	published	6	\N	\N	TDD	fa1f774c-80af-45c6-bd23-94fd0ceb3ef8	expert	14	12
-102	published	7	\N	\N	UXD	fa1f774c-80af-45c6-bd23-94fd0ceb3ef8	proficient	14	12
-103	published	1	\N	\N	Python	25749f4b-a8ca-4f9d-9372-10c4c21e7de1	expert	1	12
-104	published	2	\N	\N	Django	25749f4b-a8ca-4f9d-9372-10c4c21e7de1	expert	2	12
-105	published	3	\N	\N	Django REST Framework (DRF)	25749f4b-a8ca-4f9d-9372-10c4c21e7de1	expert	2	12
-106	published	4	\N	\N	Flask	25749f4b-a8ca-4f9d-9372-10c4c21e7de1	proficient	2	4
-107	published	5	\N	\N	FastAPI	25749f4b-a8ca-4f9d-9372-10c4c21e7de1	proficient	2	1
-108	published	6	\N	\N	RESTful APIs	25749f4b-a8ca-4f9d-9372-10c4c21e7de1	expert	\N	12
-109	published	7	\N	\N	LLM integrations	25749f4b-a8ca-4f9d-9372-10c4c21e7de1	proficient	13	1
-110	published	8	\N	\N	pytest	25749f4b-a8ca-4f9d-9372-10c4c21e7de1	proficient	2	12
-111	published	16	\N	\N	JavaScript	ac91bd57-5223-424e-b495-833803215576	expert	1	18
-112	published	17	\N	\N	Node.js	ac91bd57-5223-424e-b495-833803215576	expert	1	12
-113	published	18	\N	\N	TypeScript	ac91bd57-5223-424e-b495-833803215576	proficient	1	2
-114	published	19	\N	\N	React Native	ac91bd57-5223-424e-b495-833803215576	proficient	2	3
-115	published	20	\N	\N	React	ac91bd57-5223-424e-b495-833803215576	expert	2	12
-116	published	21	\N	\N	Svelte	ac91bd57-5223-424e-b495-833803215576	proficient	2	2
-117	published	22	\N	\N	Tailwind CSS	ac91bd57-5223-424e-b495-833803215576	proficient	2	2
-118	published	23	\N	\N	Jest	ac91bd57-5223-424e-b495-833803215576	proficient	2	2
-119	published	9	\N	\N	PostgreSQL	b41126ed-6657-4367-9fda-be5924944624	expert	3	4
-120	published	10	\N	\N	MySQL	b41126ed-6657-4367-9fda-be5924944624	expert	3	10
-121	published	11	\N	\N	MariaDB	b41126ed-6657-4367-9fda-be5924944624	expert	3	12
-122	published	12	\N	\N	SQLite	b41126ed-6657-4367-9fda-be5924944624	proficient	3	5
-123	published	13	\N	\N	SQL optimization	b41126ed-6657-4367-9fda-be5924944624	proficient	3	12
-124	published	14	\N	\N	Elasticsearch	b41126ed-6657-4367-9fda-be5924944624	proficient	5	3
-125	published	15	\N	\N	MongoDB	b41126ed-6657-4367-9fda-be5924944624	proficient	5	2
-126	published	16	\N	\N	Redis	b41126ed-6657-4367-9fda-be5924944624	proficient	5	6
-127	published	1	\N	\N	Git	6b181fdc-0b2e-4517-8906-007aa437306f	expert	6	12
-128	published	2	\N	\N	GitHub	6b181fdc-0b2e-4517-8906-007aa437306f	expert	6	12
-129	published	3	\N	\N	Git Flow	6b181fdc-0b2e-4517-8906-007aa437306f	expert	6	8
-130	published	4	\N	\N	Claude Code	6b181fdc-0b2e-4517-8906-007aa437306f	expert	4	1
-131	published	5	\N	\N	Cursor	6b181fdc-0b2e-4517-8906-007aa437306f	expert	4	1
-132	published	6	\N	\N	Neovim	6b181fdc-0b2e-4517-8906-007aa437306f	expert	7	18
-133	published	7	\N	\N	tmux	6b181fdc-0b2e-4517-8906-007aa437306f	expert	4	18
-134	published	1	\N	\N	Docker	89ec4a55-6241-4496-92c9-5b5427c56f29	expert	8	7
-135	published	2	\N	\N	Docker Compose	89ec4a55-6241-4496-92c9-5b5427c56f29	expert	8	5
-136	published	3	\N	\N	GitLab CI/CD	89ec4a55-6241-4496-92c9-5b5427c56f29	expert	9	5
-137	published	4	\N	\N	GitHub Actions	89ec4a55-6241-4496-92c9-5b5427c56f29	expert	9	4
-138	draft	5	\N	\N	Ansible	89ec4a55-6241-4496-92c9-5b5427c56f29	proficient	9	4
-139	published	6	\N	\N	Python Fabric	89ec4a55-6241-4496-92c9-5b5427c56f29	expert	9	5
-140	published	7	\N	\N	Caching strategies	89ec4a55-6241-4496-92c9-5b5427c56f29	proficient	12	6
-141	published	1	\N	\N	Amazon Web Services	d20029ee-a75f-4673-ae63-ea080b7d3261	proficient	11	4
-142	published	2	\N	\N	AWS EC2	d20029ee-a75f-4673-ae63-ea080b7d3261	proficient	11	4
-143	published	3	\N	\N	AWS S3	d20029ee-a75f-4673-ae63-ea080b7d3261	proficient	11	4
-144	draft	4	\N	\N	AWS Lambda	d20029ee-a75f-4673-ae63-ea080b7d3261	proficient	11	2
-145	published	5	\N	\N	Vercel	d20029ee-a75f-4673-ae63-ea080b7d3261	proficient	11	2
-146	published	6	\N	\N	Linode	d20029ee-a75f-4673-ae63-ea080b7d3261	proficient	9	12
-147	published	1	\N	\N	Agile	9e3ba111-e0dd-4445-a196-6e1ea8b1783a	proficient	14	14
-148	published	2	\N	\N	Scrum	9e3ba111-e0dd-4445-a196-6e1ea8b1783a	proficient	14	5
-149	published	3	\N	\N	XP	9e3ba111-e0dd-4445-a196-6e1ea8b1783a	proficient	14	6
-150	published	4	\N	\N	AI-Assisted Development	9e3ba111-e0dd-4445-a196-6e1ea8b1783a	proficient	4	1
-151	published	5	\N	\N	Secure by design	9e3ba111-e0dd-4445-a196-6e1ea8b1783a	proficient	14	18
-152	published	6	\N	\N	TDD	9e3ba111-e0dd-4445-a196-6e1ea8b1783a	expert	14	12
-153	published	7	\N	\N	UXD	9e3ba111-e0dd-4445-a196-6e1ea8b1783a	proficient	14	12
-154	published	1	\N	\N	Python	c803713e-8332-4631-be7d-fe4aff9b6b5b	expert	1	12
-155	published	2	\N	\N	Django	c803713e-8332-4631-be7d-fe4aff9b6b5b	expert	2	12
-156	published	3	\N	\N	Django REST Framework (DRF)	c803713e-8332-4631-be7d-fe4aff9b6b5b	expert	2	12
-157	published	4	\N	\N	Flask	c803713e-8332-4631-be7d-fe4aff9b6b5b	proficient	2	4
-158	published	5	\N	\N	FastAPI	c803713e-8332-4631-be7d-fe4aff9b6b5b	proficient	2	1
-159	published	6	\N	\N	RESTful APIs	c803713e-8332-4631-be7d-fe4aff9b6b5b	expert	\N	12
-160	published	7	\N	\N	LLM integrations	c803713e-8332-4631-be7d-fe4aff9b6b5b	proficient	13	1
-161	published	8	\N	\N	pytest	c803713e-8332-4631-be7d-fe4aff9b6b5b	proficient	2	12
-162	published	16	\N	\N	JavaScript	f92ae3ab-79a6-4b07-a14d-c68405fea39d	expert	1	18
-163	published	17	\N	\N	Node.js	f92ae3ab-79a6-4b07-a14d-c68405fea39d	expert	1	12
-164	published	18	\N	\N	TypeScript	f92ae3ab-79a6-4b07-a14d-c68405fea39d	proficient	1	2
-165	published	19	\N	\N	React Native	f92ae3ab-79a6-4b07-a14d-c68405fea39d	proficient	2	3
-166	published	20	\N	\N	React	f92ae3ab-79a6-4b07-a14d-c68405fea39d	expert	2	12
-167	published	21	\N	\N	Svelte	f92ae3ab-79a6-4b07-a14d-c68405fea39d	proficient	2	2
-168	published	22	\N	\N	Tailwind CSS	f92ae3ab-79a6-4b07-a14d-c68405fea39d	proficient	2	2
-169	published	23	\N	\N	Jest	f92ae3ab-79a6-4b07-a14d-c68405fea39d	proficient	2	2
-170	published	9	\N	\N	PostgreSQL	3b1a1640-d3e6-4038-b828-049da8deff04	expert	3	4
-171	published	10	\N	\N	MySQL	3b1a1640-d3e6-4038-b828-049da8deff04	expert	3	10
-172	published	11	\N	\N	MariaDB	3b1a1640-d3e6-4038-b828-049da8deff04	expert	3	12
-173	published	12	\N	\N	SQLite	3b1a1640-d3e6-4038-b828-049da8deff04	proficient	3	5
-174	published	13	\N	\N	SQL optimization	3b1a1640-d3e6-4038-b828-049da8deff04	proficient	3	12
-175	published	14	\N	\N	Elasticsearch	3b1a1640-d3e6-4038-b828-049da8deff04	proficient	5	3
-176	published	15	\N	\N	MongoDB	3b1a1640-d3e6-4038-b828-049da8deff04	proficient	5	2
-177	published	16	\N	\N	Redis	3b1a1640-d3e6-4038-b828-049da8deff04	proficient	5	6
-178	published	1	\N	\N	Git	8f0315fe-2e33-458f-9386-8f33b460223a	expert	6	12
-179	published	2	\N	\N	GitHub	8f0315fe-2e33-458f-9386-8f33b460223a	expert	6	12
-180	published	3	\N	\N	Git Flow	8f0315fe-2e33-458f-9386-8f33b460223a	expert	6	8
-181	published	4	\N	\N	Claude Code	8f0315fe-2e33-458f-9386-8f33b460223a	expert	4	1
-182	published	5	\N	\N	Cursor	8f0315fe-2e33-458f-9386-8f33b460223a	expert	4	1
-183	published	6	\N	\N	Neovim	8f0315fe-2e33-458f-9386-8f33b460223a	expert	7	18
-184	published	7	\N	\N	tmux	8f0315fe-2e33-458f-9386-8f33b460223a	expert	4	18
-185	published	1	\N	\N	Docker	ac503c2a-73e2-4892-aca8-d3380c902356	expert	8	7
-186	published	2	\N	\N	Docker Compose	ac503c2a-73e2-4892-aca8-d3380c902356	expert	8	5
-187	published	3	\N	\N	GitLab CI/CD	ac503c2a-73e2-4892-aca8-d3380c902356	expert	9	5
-188	published	4	\N	\N	GitHub Actions	ac503c2a-73e2-4892-aca8-d3380c902356	expert	9	4
-189	draft	5	\N	\N	Ansible	ac503c2a-73e2-4892-aca8-d3380c902356	proficient	9	4
-190	published	6	\N	\N	Python Fabric	ac503c2a-73e2-4892-aca8-d3380c902356	expert	9	5
-191	published	7	\N	\N	Caching strategies	ac503c2a-73e2-4892-aca8-d3380c902356	proficient	12	6
-192	published	1	\N	\N	Amazon Web Services	4bd85726-49be-4c34-8a6d-89f4d5666966	proficient	11	4
-193	published	2	\N	\N	AWS EC2	4bd85726-49be-4c34-8a6d-89f4d5666966	proficient	11	4
-194	published	3	\N	\N	AWS S3	4bd85726-49be-4c34-8a6d-89f4d5666966	proficient	11	4
-195	draft	4	\N	\N	AWS Lambda	4bd85726-49be-4c34-8a6d-89f4d5666966	proficient	11	2
-196	published	5	\N	\N	Vercel	4bd85726-49be-4c34-8a6d-89f4d5666966	proficient	11	2
-197	published	6	\N	\N	Linode	4bd85726-49be-4c34-8a6d-89f4d5666966	proficient	9	12
-198	published	1	\N	\N	Agile	4033d4b4-a6a7-4a37-a91e-a5843957825c	proficient	14	14
-199	published	2	\N	\N	Scrum	4033d4b4-a6a7-4a37-a91e-a5843957825c	proficient	14	5
-200	published	3	\N	\N	XP	4033d4b4-a6a7-4a37-a91e-a5843957825c	proficient	14	6
-201	published	4	\N	\N	AI-Assisted Development	4033d4b4-a6a7-4a37-a91e-a5843957825c	proficient	4	1
-202	published	5	\N	\N	Secure by design	4033d4b4-a6a7-4a37-a91e-a5843957825c	proficient	14	18
-203	published	6	\N	\N	TDD	4033d4b4-a6a7-4a37-a91e-a5843957825c	expert	14	12
-204	published	7	\N	\N	UXD	4033d4b4-a6a7-4a37-a91e-a5843957825c	proficient	14	12
-205	published	1	\N	\N	Python	0e6f4894-7789-4d5d-8368-33eadc9a4f19	expert	1	12
-206	published	2	\N	\N	Django	0e6f4894-7789-4d5d-8368-33eadc9a4f19	expert	2	12
-207	published	3	\N	\N	Django REST Framework (DRF)	0e6f4894-7789-4d5d-8368-33eadc9a4f19	expert	2	12
-208	published	4	\N	\N	Flask	0e6f4894-7789-4d5d-8368-33eadc9a4f19	proficient	2	4
-209	published	5	\N	\N	FastAPI	0e6f4894-7789-4d5d-8368-33eadc9a4f19	proficient	2	1
-210	published	6	\N	\N	RESTful APIs	0e6f4894-7789-4d5d-8368-33eadc9a4f19	expert	\N	12
-211	published	7	\N	\N	LLM integrations	0e6f4894-7789-4d5d-8368-33eadc9a4f19	proficient	13	1
-212	published	8	\N	\N	pytest	0e6f4894-7789-4d5d-8368-33eadc9a4f19	proficient	2	12
-213	published	16	\N	\N	JavaScript	3b22efdb-3d46-4740-8e05-62a85d37f62e	expert	1	18
-214	published	17	\N	\N	Node.js	3b22efdb-3d46-4740-8e05-62a85d37f62e	expert	1	12
-215	published	18	\N	\N	TypeScript	3b22efdb-3d46-4740-8e05-62a85d37f62e	proficient	1	2
-216	published	19	\N	\N	React Native	3b22efdb-3d46-4740-8e05-62a85d37f62e	proficient	2	3
-217	published	20	\N	\N	React	3b22efdb-3d46-4740-8e05-62a85d37f62e	expert	2	12
-218	published	21	\N	\N	Svelte	3b22efdb-3d46-4740-8e05-62a85d37f62e	proficient	2	2
-219	published	22	\N	\N	Tailwind CSS	3b22efdb-3d46-4740-8e05-62a85d37f62e	proficient	2	2
-220	published	23	\N	\N	Jest	3b22efdb-3d46-4740-8e05-62a85d37f62e	proficient	2	2
-221	published	9	\N	\N	PostgreSQL	541e0869-30bb-4c8f-bc9d-580abe785614	expert	3	4
-222	published	10	\N	\N	MySQL	541e0869-30bb-4c8f-bc9d-580abe785614	expert	3	10
-223	published	11	\N	\N	MariaDB	541e0869-30bb-4c8f-bc9d-580abe785614	expert	3	12
-224	published	12	\N	\N	SQLite	541e0869-30bb-4c8f-bc9d-580abe785614	proficient	3	5
-225	published	13	\N	\N	SQL optimization	541e0869-30bb-4c8f-bc9d-580abe785614	proficient	3	12
-226	published	14	\N	\N	Elasticsearch	541e0869-30bb-4c8f-bc9d-580abe785614	proficient	5	3
-227	published	15	\N	\N	MongoDB	541e0869-30bb-4c8f-bc9d-580abe785614	proficient	5	2
-228	published	16	\N	\N	Redis	541e0869-30bb-4c8f-bc9d-580abe785614	proficient	5	6
-229	published	1	\N	\N	Git	ac8a1a96-c548-4372-9ad1-00e027eec93d	expert	6	12
-230	published	2	\N	\N	GitHub	ac8a1a96-c548-4372-9ad1-00e027eec93d	expert	6	12
-231	published	3	\N	\N	Git Flow	ac8a1a96-c548-4372-9ad1-00e027eec93d	expert	6	8
-232	published	4	\N	\N	Claude Code	ac8a1a96-c548-4372-9ad1-00e027eec93d	expert	4	1
-233	published	5	\N	\N	Cursor	ac8a1a96-c548-4372-9ad1-00e027eec93d	expert	4	1
-234	published	6	\N	\N	Neovim	ac8a1a96-c548-4372-9ad1-00e027eec93d	expert	7	18
-235	published	7	\N	\N	tmux	ac8a1a96-c548-4372-9ad1-00e027eec93d	expert	4	18
-236	published	1	\N	\N	Docker	c422eb49-679d-42ca-a422-8c2fe7afb947	expert	8	7
-237	published	2	\N	\N	Docker Compose	c422eb49-679d-42ca-a422-8c2fe7afb947	expert	8	5
-238	published	3	\N	\N	GitLab CI/CD	c422eb49-679d-42ca-a422-8c2fe7afb947	expert	9	5
-239	published	4	\N	\N	GitHub Actions	c422eb49-679d-42ca-a422-8c2fe7afb947	expert	9	4
-240	draft	5	\N	\N	Ansible	c422eb49-679d-42ca-a422-8c2fe7afb947	proficient	9	4
-241	published	6	\N	\N	Python Fabric	c422eb49-679d-42ca-a422-8c2fe7afb947	expert	9	5
-242	published	7	\N	\N	Caching strategies	c422eb49-679d-42ca-a422-8c2fe7afb947	proficient	12	6
-243	published	1	\N	\N	Amazon Web Services	949ad9c4-3e62-446a-b178-b34cffb5e362	proficient	11	4
-244	published	2	\N	\N	AWS EC2	949ad9c4-3e62-446a-b178-b34cffb5e362	proficient	11	4
-245	published	3	\N	\N	AWS S3	949ad9c4-3e62-446a-b178-b34cffb5e362	proficient	11	4
-246	draft	4	\N	\N	AWS Lambda	949ad9c4-3e62-446a-b178-b34cffb5e362	proficient	11	2
-247	published	5	\N	\N	Vercel	949ad9c4-3e62-446a-b178-b34cffb5e362	proficient	11	2
-248	published	6	\N	\N	Linode	949ad9c4-3e62-446a-b178-b34cffb5e362	proficient	9	12
-249	published	1	\N	\N	Agile	340e5bf7-86e2-4592-bc09-118935237538	proficient	14	14
-250	published	2	\N	\N	Scrum	340e5bf7-86e2-4592-bc09-118935237538	proficient	14	5
-251	published	3	\N	\N	XP	340e5bf7-86e2-4592-bc09-118935237538	proficient	14	6
-252	published	4	\N	\N	AI-Assisted Development	340e5bf7-86e2-4592-bc09-118935237538	proficient	4	1
-253	published	5	\N	\N	Secure by design	340e5bf7-86e2-4592-bc09-118935237538	proficient	14	18
-254	published	6	\N	\N	TDD	340e5bf7-86e2-4592-bc09-118935237538	expert	14	12
-255	published	7	\N	\N	UXD	340e5bf7-86e2-4592-bc09-118935237538	proficient	14	12
 \.
 
 
@@ -8302,7 +7958,7 @@ SELECT pg_catalog.setval('public.applications_id_seq', 2, true);
 -- Name: directus_activity_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_activity_id_seq', 4839, true);
+SELECT pg_catalog.setval('public.directus_activity_id_seq', 4840, true);
 
 
 --
@@ -9481,5 +9137,5 @@ ALTER TABLE ONLY public.work_experiences
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 2503xng9qAe8f391DR5z2RSNvSHQ0EFqgmyAyvgmQgYgW4otLVtJyafRgvhV6a8
+\unrestrict s2Tv3daMJcv49Z65juhnGbRj9cFDkXoydRO88bCqtJlJLjYdv1DtMLwgMnfjCEY
 
