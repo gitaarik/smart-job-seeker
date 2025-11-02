@@ -27,7 +27,12 @@
       "Bash(DATABASE_URL='postgres://postgres:postgres@localhost:5432/smartjobseeker' npx prisma migrate status:*)",
       "Bash(DATABASE_URL='postgres://postgres:postgres@localhost:5432/smartjobseeker' npx prisma db pull:*)",
       "Bash(DATABASE_URL='postgres://postgres:postgres@localhost:5432/smartjobseeker' npx prisma generate:*)",
-      "Bash(docker exec:*)"
+      "Bash(docker exec:*)",
+      "Bash(for table in education references side_projects work_experiences)",
+      "Bash(do echo \"=== $table ===\")",
+      "Bash(done)",
+      "Bash(python3:*)",
+      "Bash(npm run docker:db:restore:*)"
     ],
     "deny": [],
     "ask": []
