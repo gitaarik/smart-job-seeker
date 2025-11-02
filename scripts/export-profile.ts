@@ -48,7 +48,7 @@ interface ExportedProfile {
         name?: string;
         years_experience?: string;
         level?: string;
-        tech_type?: number | null;
+        tech_type?: string | null;
       }>;
     }>;
     work_experiences: Array<{
@@ -211,7 +211,11 @@ async function exportProfile(profileId: string): Promise<void> {
                 name: true,
                 years_experience: true,
                 level: true,
-                tech_type: true,
+                tech_skill_types: {
+                  select: {
+                    slug: true,
+                  },
+                },
               },
               orderBy: { sort: "asc" },
             },
@@ -411,7 +415,14 @@ async function exportProfile(profileId: string): Promise<void> {
           sort: cat.sort,
           name: cat.name || undefined,
           fa_icon: cat.fa_icon || undefined,
-          tech_skills: cat.tech_skills,
+          tech_skills: cat.tech_skills.map((skill) => ({
+            status: skill.status || undefined,
+            sort: skill.sort,
+            name: skill.name || undefined,
+            years_experience: skill.years_experience || undefined,
+            level: skill.level || undefined,
+            tech_type: skill.tech_skill_types?.slug || null,
+          })),
         })),
         work_experiences: profile.work_experiences.map((work) => ({
           name: work.name || undefined,

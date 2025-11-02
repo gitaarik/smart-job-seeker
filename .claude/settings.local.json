@@ -19,7 +19,9 @@
       "Bash(chmod:*)",
       "WebFetch(domain:dotenvx.com)",
       "Bash(docker volume:*)",
-      "WebFetch(domain:directus.io)"
+      "WebFetch(domain:directus.io)",
+      "Bash(bash:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []

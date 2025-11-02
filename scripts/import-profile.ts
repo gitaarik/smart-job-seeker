@@ -49,7 +49,7 @@ interface ImportedProfile {
         name?: string;
         years_experience?: string;
         level?: string;
-        tech_type?: number | null;
+        tech_type?: string | null;
       }>;
     }>;
     work_experiences: Array<{
@@ -356,6 +356,23 @@ async function importProfile(
         // Import tech skills
         if (category.tech_skills && category.tech_skills.length > 0) {
           for (const skill of category.tech_skills) {
+            let techTypeId: number | null = null;
+
+            // If tech_type slug is provided, look up the ID
+            if (skill.tech_type) {
+              const techType = await prisma.tech_skill_types.findUnique({
+                where: { slug: skill.tech_type },
+                select: { id: true },
+              });
+              if (!techType) {
+                console.warn(
+                  `Warning: Tech skill type slug not found: ${skill.tech_type}`,
+                );
+              } else {
+                techTypeId = techType.id;
+              }
+            }
+
             await prisma.tech_skills.create({
               data: {
                 status: skill.status || "draft",
@@ -364,7 +381,7 @@ async function importProfile(
                 category: createdCategory.id,
                 years_experience: skill.years_experience,
                 level: skill.level,
-                tech_type: skill.tech_type,
+                tech_type: techTypeId,
               },
             });
           }
