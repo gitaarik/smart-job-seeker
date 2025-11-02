@@ -9,16 +9,16 @@ datasource db {
 }
 
 model application_questions {
-  id           Int       @id @default(autoincrement())
+  id           Int       @id
   sort         Int?
   date_created DateTime? @db.Timestamptz(6)
   date_updated DateTime? @db.Timestamptz(6)
   question     String?
   answer       String?
   title        String?   @db.VarChar(255)
-  profile      Int?
+  profile      Int
   source       String?   @db.VarChar(255)
-  profiles     profiles? @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "application_questions_profile_foreign")
+  profiles     profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "application_questions_profile_foreign")
 }
 
 model applications {
@@ -37,18 +37,18 @@ model applications {
 }
 
 model cheat_sheets {
-  id           Int       @id @default(autoincrement())
+  id           Int       @id
   sort         Int?
   date_created DateTime? @db.Timestamptz(6)
   date_updated DateTime? @db.Timestamptz(6)
   title        String?   @db.VarChar(255)
   content      String?
-  profile      Int?
-  profiles     profiles? @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "cheat_sheets_profile_foreign")
+  profile      Int
+  profiles     profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "cheat_sheets_profile_foreign")
 }
 
 model dev_methodologies {
-  id           Int       @id @default(autoincrement())
+  id           Int       @id
   status       String    @default("draft") @db.VarChar(255)
   sort         Int?
   date_created DateTime? @db.Timestamptz(6)
@@ -562,37 +562,37 @@ model education {
   graduation_year Int?
   start_date      DateTime?       @db.Date
   end_date        DateTime?       @db.Date
-  profile         Int?
+  profile         Int
   summary         String?
   logo            String?         @db.Uuid
   tags            Json?           @db.Json
   directus_files  directus_files? @relation(fields: [logo], references: [id], onUpdate: NoAction, map: "education_logo_foreign")
-  profiles        profiles?       @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "education_profile_foreign")
+  profiles        profiles        @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "education_profile_foreign")
 }
 
 model highlights {
-  id           Int       @id @default(autoincrement())
+  id           Int       @id
   status       String    @default("draft") @db.VarChar(255)
   sort         Int?
   date_created DateTime? @db.Timestamptz(6)
   date_updated DateTime? @db.Timestamptz(6)
-  profile      Int?
+  profile      Int
   text         String?   @db.VarChar(255)
   fa_icon      String?   @db.VarChar(255)
-  profiles     profiles? @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "highlights_profile_foreign")
+  profiles     profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "highlights_profile_foreign")
 }
 
 model languages {
-  id            Int       @id @default(autoincrement())
+  id            Int       @id
   status        String    @default("draft") @db.VarChar(255)
   date_created  DateTime? @db.Timestamptz(6)
   date_updated  DateTime? @db.Timestamptz(6)
   name          String?   @db.VarChar(255)
   language_code String?   @db.VarChar(255)
   proficiency   String?   @db.VarChar(255)
-  profile       Int?
+  profile       Int
   sort          Int?
-  profiles      profiles? @relation(fields: [profile], references: [id], onUpdate: NoAction, map: "languages_profile_foreign")
+  profiles      profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "languages_profile_foreign")
 }
 
 model profile_versions {
@@ -603,16 +603,16 @@ model profile_versions {
   date_updated           DateTime?          @db.Timestamptz(6)
   name                   String?            @db.VarChar(255)
   description            String?
-  profile                Int?
+  profile                Int
   toggles                Json?              @db.Json
   extends_from           Int?
   profile_versions       profile_versions?  @relation("profile_versionsToprofile_versions", fields: [extends_from], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "profile_versions_extends_from_foreign")
   other_profile_versions profile_versions[] @relation("profile_versionsToprofile_versions")
-  profiles               profiles?          @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "profile_versions_profile_foreign")
+  profiles               profiles           @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "profile_versions_profile_foreign")
 }
 
 model profiles {
-  id                    Int                     @id(map: "profile_pkey") @default(autoincrement())
+  id                    Int                     @id(map: "profile_pkey")
   date_created          DateTime?               @db.Timestamptz(6)
   date_updated          DateTime?               @db.Timestamptz(6)
   name                  String?                 @db.VarChar(255)
@@ -650,7 +650,7 @@ model profiles {
 }
 
 model project_stories {
-  id           Int       @id @default(autoincrement())
+  id           Int       @id
   sort         Int?
   date_created DateTime? @db.Timestamptz(6)
   date_updated DateTime? @db.Timestamptz(6)
@@ -661,8 +661,8 @@ model project_stories {
   result       String?
   reflection   String?
   category     String?   @db.VarChar(255)
-  profile      Int?
-  profiles     profiles? @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "project_stories_profile_foreign")
+  profile      Int
+  profiles     profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "project_stories_profile_foreign")
 }
 
 model references {
@@ -674,8 +674,8 @@ model references {
   author          String    @db.VarChar(255)
   author_position String?   @db.VarChar(255)
   text            String?
-  profile         Int?
-  profiles        profiles? @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "references_profile_foreign")
+  profile         Int
+  profiles        profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "references_profile_foreign")
 }
 
 model resume_tokens {
@@ -710,27 +710,27 @@ model salary_expectations {
 }
 
 model side_project_achievements {
-  id            Int            @id @default(autoincrement())
-  title         String?        @db.VarChar(255)
-  fa_icon       String?        @db.VarChar(255)
-  description   String?        @db.VarChar(255)
-  side_project  Int?
-  status        String         @default("draft") @db.VarChar(255)
-  date_created  DateTime?      @db.Timestamptz(6)
-  date_updated  DateTime?      @db.Timestamptz(6)
+  id            Int           @id
+  title         String?       @db.VarChar(255)
+  fa_icon       String?       @db.VarChar(255)
+  description   String?       @db.VarChar(255)
+  side_project  Int
+  status        String        @default("draft") @db.VarChar(255)
+  date_created  DateTime?     @db.Timestamptz(6)
+  date_updated  DateTime?     @db.Timestamptz(6)
   sort          Int?
-  side_projects side_projects? @relation(fields: [side_project], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "side_project_achievements_side_project_foreign")
+  side_projects side_projects @relation(fields: [side_project], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "side_project_achievements_side_project_foreign")
 }
 
 model side_project_technologies {
-  id            Int            @id @default(autoincrement())
-  status        String         @default("draft") @db.VarChar(255)
+  id            Int           @id @default(autoincrement())
+  status        String        @default("draft") @db.VarChar(255)
   sort          Int?
-  date_created  DateTime?      @db.Timestamptz(6)
-  date_updated  DateTime?      @db.Timestamptz(6)
-  name          String?        @db.VarChar(255)
-  side_project  Int?
-  side_projects side_projects? @relation(fields: [side_project], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "side_project_technologies_side_project_foreign")
+  date_created  DateTime?     @db.Timestamptz(6)
+  date_updated  DateTime?     @db.Timestamptz(6)
+  name          String?       @db.VarChar(255)
+  side_project  Int
+  side_projects side_projects @relation(fields: [side_project], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "side_project_technologies_side_project_foreign")
 }
 
 model side_projects {
@@ -742,7 +742,7 @@ model side_projects {
   name                      String?                     @db.VarChar(255)
   start_date                DateTime?                   @db.Date
   end_date                  DateTime?                   @db.Date
-  profile                   Int?
+  profile                   Int
   url                       String?                     @db.VarChar(255)
   stars                     Int?
   summary                   String?
@@ -750,11 +750,11 @@ model side_projects {
   tags                      Json?                       @db.Json
   side_project_achievements side_project_achievements[]
   side_project_technologies side_project_technologies[]
-  profiles                  profiles?                   @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "side_projects_profile_foreign")
+  profiles                  profiles                    @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "side_projects_profile_foreign")
 }
 
 model soft_skills {
-  id           Int       @id @default(autoincrement())
+  id           Int       @id
   status       String    @default("draft") @db.VarChar(255)
   sort         Int?
   date_created DateTime? @db.Timestamptz(6)
@@ -765,15 +765,15 @@ model soft_skills {
 }
 
 model tech_skill_categories {
-  id           Int           @id @default(autoincrement())
+  id           Int           @id
   status       String        @default("draft") @db.VarChar(255)
   sort         Int?
   date_created DateTime?     @db.Timestamptz(6)
   date_updated DateTime?     @db.Timestamptz(6)
   name         String?       @db.VarChar(255)
-  profile      Int?
+  profile      Int
   fa_icon      String?       @db.VarChar(255)
-  profiles     profiles?     @relation(fields: [profile], references: [id], onUpdate: NoAction, map: "tech_skill_categories_profile_foreign")
+  profiles     profiles      @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "tech_skill_categories_profile_foreign")
   tech_skills  tech_skills[]
 }
 
@@ -789,18 +789,18 @@ model tech_skill_types {
 }
 
 model tech_skills {
-  id                    Int                    @id @default(autoincrement())
-  status                String                 @default("draft") @db.VarChar(255)
+  id                    Int                   @id @default(autoincrement())
+  status                String                @default("draft") @db.VarChar(255)
   sort                  Int?
-  date_created          DateTime?              @db.Timestamptz(6)
-  date_updated          DateTime?              @db.Timestamptz(6)
-  name                  String?                @db.VarChar(255)
-  category              Int?
-  level                 String?                @db.VarChar(255)
+  date_created          DateTime?             @db.Timestamptz(6)
+  date_updated          DateTime?             @db.Timestamptz(6)
+  name                  String?               @db.VarChar(255)
+  category              Int
+  level                 String?               @db.VarChar(255)
   tech_type             Int?
   years_experience      Int?
-  tech_skill_categories tech_skill_categories? @relation(fields: [category], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tech_skills_category_foreign")
-  tech_skill_types      tech_skill_types?      @relation(fields: [tech_type], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tech_skills_tech_type_foreign")
+  tech_skill_categories tech_skill_categories @relation(fields: [category], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "tech_skills_category_foreign")
+  tech_skill_types      tech_skill_types?     @relation(fields: [tech_type], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tech_skills_tech_type_foreign")
 }
 
 model users {
@@ -815,7 +815,7 @@ model users {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime
   role                Role      @default(USER)
-  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                  Int       @id
 }
 
 model vacancies {
@@ -832,28 +832,28 @@ model vacancies {
 }
 
 model work_experience_achievements {
-  id               Int               @id @default(autoincrement())
-  status           String            @default("draft") @db.VarChar(255)
+  id               Int              @id
+  status           String           @default("draft") @db.VarChar(255)
   sort             Int?
-  date_created     DateTime?         @db.Timestamptz(6)
-  date_updated     DateTime?         @db.Timestamptz(6)
-  title            String?           @db.VarChar(255)
-  description      String?           @db.VarChar(255)
-  work_experience  Int?
-  fa_icon          String?           @db.VarChar(255)
-  tags             Json?             @db.Json
-  work_experiences work_experiences? @relation(fields: [work_experience], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "work_experience_achievements_work_experience_foreign")
+  date_created     DateTime?        @db.Timestamptz(6)
+  date_updated     DateTime?        @db.Timestamptz(6)
+  title            String?          @db.VarChar(255)
+  description      String?          @db.VarChar(255)
+  work_experience  Int
+  fa_icon          String?          @db.VarChar(255)
+  tags             Json?            @db.Json
+  work_experiences work_experiences @relation(fields: [work_experience], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "work_experience_achievements_work_experience_foreign")
 }
 
 model work_experience_technologies {
-  id               Int               @id @default(autoincrement())
-  status           String            @default("draft") @db.VarChar(255)
+  id               Int              @id
+  status           String           @default("draft") @db.VarChar(255)
   sort             Int?
-  date_created     DateTime?         @db.Timestamptz(6)
-  date_updated     DateTime?         @db.Timestamptz(6)
-  name             String?           @db.VarChar(255)
-  work_experience  Int?
-  work_experiences work_experiences? @relation(fields: [work_experience], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "work_experience_technologies_work_experience_foreign")
+  date_created     DateTime?        @db.Timestamptz(6)
+  date_updated     DateTime?        @db.Timestamptz(6)
+  name             String?          @db.VarChar(255)
+  work_experience  Int
+  work_experiences work_experiences @relation(fields: [work_experience], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "work_experience_technologies_work_experience_foreign")
 }
 
 model work_experiences {
@@ -862,11 +862,11 @@ model work_experiences {
   description                  String
   position                     String
   summary                      String
-  id                           Int                            @id @default(autoincrement())
+  id                           Int                            @id
   logo                         String?                        @db.Uuid
   status                       String                         @default("draft") @db.VarChar(255)
   sort                         Int?
-  profile                      Int?
+  profile                      Int
   date_created                 DateTime?                      @db.Timestamptz(6)
   date_updated                 DateTime?                      @db.Timestamptz(6)
   start_date                   DateTime?                      @db.Date
@@ -876,7 +876,7 @@ model work_experiences {
   work_experience_achievements work_experience_achievements[]
   work_experience_technologies work_experience_technologies[]
   directus_files               directus_files?                @relation(fields: [logo], references: [id], onUpdate: NoAction, map: "work_experiences_logo_foreign")
-  profiles                     profiles?                      @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "work_experiences_profile_foreign")
+  profiles                     profiles                       @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "work_experiences_profile_foreign")
 }
 
 enum Role {
