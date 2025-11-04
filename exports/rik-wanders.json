@@ -1326,7 +1326,7 @@
     "project_stories": [
       {
         "sort": 1,
-        "title": "Ticketshop performance for big events",
+        "title": "Ticketshop performance scaling for big events",
         "situation": "- Big event clients selling thousands of tickets\n- Ticketshop having hard times handling large traffic spikes\n- Performance bottlenecks in processing the orders\n- Clients needed reliable ticketshop to sell their tickets fast",
         "task": "- Speed up ticketshop order processing\n- Handle high-traffic ticketshop spikes\n- Work with DevOps (Michaël) on scaling",
         "action": "- Optimized SQL queries - got 30-60% speed boost\n- Refactored Python/Django order processing code\n- Worked with DevOps (Michaël) on flexible scaling setup",
@@ -1336,6 +1336,16 @@
       },
       {
         "sort": 2,
+        "title": "LitState - State management library for Lit",
+        "situation": "- I used the library \"Lit\" as a lightweight React replacement\n- Very satisfied about it, but lacked state management library\n- State management between multiple components cumbersome",
+        "task": "- Wanted to create a dedicated state management library for Lit\n- Wanted to keep it simple but elegant and easy to use\n- Wanted to be able to re-use it in any project using Lit",
+        "action": "- Created LitState, a state management library for Lit\n- Open-sourced & distributed as an NPM package\n- Created complete and clear documentation",
+        "result": "- Does exactly what I need\n- Tiny source code, but very intuitive\n- Works very efficiently\n- Used successfully in production at Chipta\n- Got GitHub user engagement, PRs and issues\n- Maintained package",
+        "reflection": "- Was very much fun creating an open-source NPM package\n- I'm still happy about the result\n- It's sad Lit hasn't gained more popularity\n- I still think it's good modern technology for today:\n  - Lit is still much faster than React\n  - LitState is still a very efficient and useful state management library",
+        "category": "high_impact_projects"
+      },
+      {
+        "sort": 3,
         "title": "Zoom OAuth integration during COVID",
         "situation": "- COVID hit and clients needed virtual events\n- No Zoom integration in our platform\n- Event organizers needed seamless online solution",
         "task": "- Learn Zoom API and OAuth quickly\n- Integrate client accounts with dashboard\n- Enable automatic Zoom management for Chipta events",
@@ -1343,16 +1353,6 @@
         "result": "- Many clients successfully organized online events\n- Helped company survive COVID with less than 40% profit loss\n- Seamless Chipta-Zoom integration in production",
         "reflection": "- Zoom Marketplace submission requirements were much more than I expected\n- After COVID was over, the online event hype disappeared again\n- COVID was a hard time to be strategical\n- Clients do appreciate quick acting and temporary solutions",
         "category": "high_impact_projects"
-      },
-      {
-        "sort": 3,
-        "title": "React Native App Technical Challenges",
-        "situation": "- Leading React Native mobile app development at Chipta\n- React Native framework had significant bugs and limitations\n- Limited documentation and community support available\n- Tight deadline before festival season start",
-        "task": "- Navigate technical challenges with immature framework\n- Find solutions to framework bugs and limitations\n- Deliver functional app on schedule\n- Ensure app met performance and reliability requirements",
-        "action": "- Helped developer to tackle complex technical issues\n- Researched React Native & plugins source code to understand underlying problems\n- Created custom patches for framework bugs we encountered\n- Made architecture decisions to work around limitations",
-        "result": "- Delivered app on time before festival season started\n- App significantly improved event scalability and reach\n- Contributed to 40% revenue increase from mobile ticket sales\n- Developer gained valuable React Native expertise\n- Established foundation for future mobile development projects",
-        "reflection": "- Learned that new hip projects from major companies are not necessarily stable or well documented from the start\n- Was ultimately happy with choosing React Native\n- Because it matured and is still one of the main ways of creating apps",
-        "category": "challenging_situations"
       },
       {
         "sort": 4,
@@ -1393,6 +1393,16 @@
         "result": "- Developer became productive within first month\n- Successfully delivered assigned project features\n- Developer gained confidence in both Django and frontend\n- Created reusable onboarding process for future hires",
         "reflection": "- Learned I need to ask more feedback from developers to understand what they actually need\n- Junior developer could be stuck without me knowing it\n- Check in to developers progress and have evaluation sessions\n\n- It's useful when developer creates own docs / notes\n- There are always things to improve about the onboarding process\n- It's a fun process helping a developer getting up and running",
         "category": "learning_experiences"
+      },
+      {
+        "sort": 8,
+        "title": "React Native App Technical Challenges",
+        "situation": "- Leading React Native mobile app development at Chipta\n- React Native framework had significant bugs and limitations\n- Limited documentation and community support available\n- Tight deadline before festival season start",
+        "task": "- Navigate technical challenges with immature framework\n- Find solutions to framework bugs and limitations\n- Deliver functional app on schedule\n- Ensure app met performance and reliability requirements",
+        "action": "- Helped developer to tackle complex technical issues\n- Researched React Native & plugins source code to understand underlying problems\n- Created custom patches for framework bugs we encountered\n- Made architecture decisions to work around limitations",
+        "result": "- Delivered app on time before festival season started\n- App significantly improved event scalability and reach\n- Contributed to 40% revenue increase from mobile ticket sales\n- Developer gained valuable React Native expertise\n- Established foundation for future mobile development projects",
+        "reflection": "- Learned that new hip projects from major companies are not necessarily stable or well documented from the start\n- Was ultimately happy with choosing React Native\n- Because it matured and is still one of the main ways of creating apps",
+        "category": "challenging_situations"
       }
     ],
     "application_questions": [
@@ -1421,13 +1431,13 @@
     "cheat_sheets": [
       {
         "sort": null,
-        "title": "Intro Talk - EN",
-        "content": "# Interview Introduction Cheat Sheet\n\n## Main\n\n- Dutch Senior Full Stack Developer\n- 18+ years of experience\n- currently based in Spain\n- specialize in Python & Node.js ecosystems\n- Strong on both back & frontend\n\n## More\n\n- Lot of experience scaling high-traffic applications\n- 5+ years remote work experience\n- Experience in both startup and enterprise environments\n- Agile methodologies expert\n\n## Chipta\n\n- 10 years Lead Developer @ Chipta\n- Managed teams of 3-5 developers\n- Built ticketing platform:\n  - Served thousands of events\n  - Processing thousands of tickets/minute\n  - Processed tens of millions in ticket sales\n- High-traffic page performance improvements (40-60%)\n\n### Achievements\n\n- Transformed proof-of-concept into competitive ticketing platform\n- Serving thousands of events\n- Processing high-volume traffic reliably\n\n### Left because\n\nDidn't reach the breakthrough we hoped for.\n\n## Tender-it\n\n- Built complete platform from scratch\n- Agile workflow with non-technical founders\n- Extensive search engine using Elasticsearch\n- Crawling websites, process & import data\n- Built subscription system with recurring payments\n\n### Achievements\n\n- Delivered complete product to requirements of founders\n- Helping companies find appropriate tenders easily\n\n### Left because\n\nCompetitor overtook us.\n\n## TravelBird\n\n- Rapidly growing company\n- Part of innovative mobile team\n- Objective-C + XCode\n- API architect for mobile apps\n\n### Left because\n\nWasn't satisfied with company reorganization.\n\n## 🔧 Technical Expertise\n\n### Expert\n\n- Python (Django, DRF, Channels, Silk, Celery)\n- JavaScript/Node.js (React, MobX, Svelte, Lit, Webcomponents)\n- SQL databases (PostgreSQL, MySQL, SQLite)\n- Linux, DevOps, CI/CD\n- Vercel, Linode, AWS\n- AI-accelerated development (Claude Code, Cursor)\n\n## Work principles\n\n- Agile, Scrum, Kanban\n- Security-first mindset\n- TDD\n- Component-based development\n- UX\n- Code reviewing\n- Documentation\n\n## Concrete Achievements\n\n- Platform scaling\n  - Profiling\n  - Query optimization\n  - Algorithmic optimization\n  - Caching\n  - Load balancing\n  - Auto-scaling servers\n\n- API integrations\n  - Connect DB to third-parties\n  - OAuth integrations for account sharing\n\n- Payment integrations\n  - Mollie\n  - Pay.nl\n  - Adyen\n  - Paypal\n\n- Internationalization\n  - Translations\n  - Location-aware content\n  - Multi-currency support\n\n- Test suite\n  - TDD\n  - Unit tests\n  - Integration tests (with Selenium)\n\n## 👤 Personal Touch (when appropriate)\n\n- Playing guitar since age 12, had a band\n- Got into web development by creating website for band\n- Travel & nature lover\n  - Walked Camino de Santiago\n  - Traveled around Mexico & Ecuador\n\n## Current situation\n\n- Renting out house in NL\n- Traveled south in camper\n- Family/friends across Spain & Portugal\n- Currently working from sister's office in southern Spain\n  - Plenty of space & dedicated workspace\n\n## What I'm Looking For\n\n- Remote work\n- Projects 6-12 months\n- Long-term part-time\n- Innovative agile (startup) environments\n\n## Recent technologies of interest?\n\n- AI-accelerated development (Claude, Cursor)\n- AI / LLM integrations (OpenAI API)\n- Svelte & Tailwind\n- Machine Learning & Data Science\n\n## Recent projects\n\n- Handy House Manual\n- SmartFeed\n- Smart Home integrations (ESP32, Raspi)\n- Portfolio & CV\n\n---\n\n## Common Follow-up Questions\n\n### Challenging projects?\n\n- Scaling (Chipta)\n  - Figuring out what/why slow\n  - How to optimize\n  - Testing optimizations\n\n- Team leadership (Chipta)\n  - Guidance, what someone needs\n  - Estimate someone's skills\n  - Reviewing code & giving feedback\n\n- Developing complete project (Tender-it)\n  - Taking responsibility of full stack\n    - Dealing with problems on all layers of stack\n  - Scrum planning\n  - Coordinating with non-technical founders\n\n- Mobile app development (TravelBird & Chipta)\n  - Learning new technologies\n  - App/Play store review policies\n  - Testing on various devices\n  - Web Sockets for Chipta Scan App\n\n### Why remote work?\"\n\n- Love traveling & nature\n- Efficiency & flexibility\n- Stay focussed with Scrum / Agile methodologies\n- Collaboration software (Slack, Teams, Zoom)\n- 5+ years experience\n- I believe in it\n"
+        "title": "Why I quit Chipta",
+        "content": "After 10 incredible years at Chipta, I'm proud of what we accomplished - we\nbuilt a robust ticketing platform that scaled to handle thousands of tickets per\nminute and served thousands of events. I led the technical development from\nconcept through significant growth, and we created a solid product that competed\nwell in the market.\n\nHowever, after a decade of dedication, the company hadn't achieved the market\nbreakthrough we'd hoped for. While we had technical success and served our\nclients well, the business faced ongoing challenges in scaling to the next\nlevel. I realized it was time for me to seek new challenges where I could apply\neverything I'd learned in a fresh environment with different growth\nopportunities.\n\nThose 10 years taught me invaluable lessons about building scalable systems,\nleading teams, and the realities of startup growth. I'm excited to bring that\nexperience to a new role where I can make an immediate impact."
       },
       {
         "sort": null,
-        "title": "Why I quit Chipta",
-        "content": "After 10 incredible years at Chipta, I'm proud of what we accomplished - we\nbuilt a robust ticketing platform that scaled to handle thousands of tickets per\nminute and served thousands of events. I led the technical development from\nconcept through significant growth, and we created a solid product that competed\nwell in the market.\n\nHowever, after a decade of dedication, the company hadn't achieved the market\nbreakthrough we'd hoped for. While we had technical success and served our\nclients well, the business faced ongoing challenges in scaling to the next\nlevel. I realized it was time for me to seek new challenges where I could apply\neverything I'd learned in a fresh environment with different growth\nopportunities.\n\nThose 10 years taught me invaluable lessons about building scalable systems,\nleading teams, and the realities of startup growth. I'm excited to bring that\nexperience to a new role where I can make an immediate impact."
+        "title": "Intro Talk - EN",
+        "content": "# Interview Introduction Cheat Sheet\n\n## Main\n\n- Dutch Senior Full Stack Developer\n- 18+ years of experience\n- currently based in Spain\n- specialize in Python & Node.js ecosystems\n- Strong on both back & frontend\n\n## More\n\n- Lot of experience scaling high-traffic applications\n- 5+ years remote work experience\n- Experience in both startup and enterprise environments\n- Agile methodologies experience\n\n## Chipta\n\n- 10 years Lead Developer @ Chipta\n- Managed teams of 3-5 developers\n- Built ticketing platform:\n  - Served thousands of events\n  - Processing thousands of tickets/minute\n  - Processed tens of millions in ticket sales\n- High-traffic page performance improvements (40-60%)\n\n### Achievements\n\n- Transformed proof-of-concept into competitive ticketing platform\n- Serving thousands of events\n- Processing high-volume traffic reliably\n\n### Left because\n\nDidn't reach the breakthrough we hoped for.\n\n## Tender-it\n\n- Built complete platform from scratch\n- Agile workflow with non-technical founders\n- Extensive search engine using Elasticsearch\n- Crawling websites, process & import data\n- Built subscription system with recurring payments\n\n### Achievements\n\n- Delivered complete product to requirements of founders\n- Helping companies find appropriate tenders easily\n\n### Left because\n\nCompetitor overtook us.\n\n## TravelBird\n\n- Rapidly growing company\n- Part of innovative mobile team\n- Objective-C + XCode\n- API architect for mobile apps\n\n### Left because\n\nWasn't satisfied with company reorganization.\n\n## 🔧 Technical Expertise\n\n### Expert\n\n- Python (Django, DRF, Channels, Silk, Celery)\n- JavaScript/Node.js (React, MobX, Svelte, Lit, Webcomponents)\n- SQL databases (PostgreSQL, MySQL, SQLite)\n- Linux, DevOps, CI/CD\n- Vercel, Linode, AWS\n- AI-accelerated development (Claude Code, Cursor)\n\n## Work principles\n\n- Agile, Scrum, Kanban\n- Security-first mindset\n- TDD\n- Component-based development\n- UX\n- Code reviewing\n- Documentation\n\n## Concrete Achievements\n\n- Platform scaling\n  - Profiling\n  - Query optimization\n  - Algorithmic optimization\n  - Caching\n  - Load balancing\n  - Auto-scaling servers\n\n- API integrations\n  - Connect DB to third-parties\n  - OAuth integrations for account sharing\n\n- Payment integrations\n  - Mollie\n  - Pay.nl\n  - Adyen\n  - Paypal\n\n- Internationalization\n  - Translations\n  - Location-aware content\n  - Multi-currency support\n\n- Test suite\n  - TDD\n  - Unit tests\n  - Integration tests (with Selenium)\n\n## 👤 Personal Touch (when appropriate)\n\n- Playing guitar since age 12, had a band\n- Got into web development by creating website for band\n- Travel & nature lover\n  - Walked Camino de Santiago\n  - Traveled around Mexico & Ecuador\n\n## Current situation\n\n- Renting out house in NL\n- Traveled south in camper\n- Family/friends across Spain & Portugal\n- Currently working from sister's office in southern Spain\n  - Plenty of space & dedicated workspace\n\n## What I'm Looking For\n\n- Remote work\n- Projects 6-12 months\n- Long-term part-time\n- Innovative agile (startup) environments\n\n## Recent technologies of interest?\n\n- AI-accelerated development (Claude, Cursor)\n- AI / LLM integrations (OpenAI API)\n- Svelte & Tailwind\n- Machine Learning & Data Science\n\n## Recent projects\n\n- Handy House Manual\n- SmartFeed\n- Smart Home integrations (ESP32, Raspi)\n- Portfolio & CV\n\n---\n\n## Common Follow-up Questions\n\n### Challenging projects?\n\n- Scaling (Chipta)\n  - Figuring out what/why slow\n  - How to optimize\n  - Testing optimizations\n\n- Team leadership (Chipta)\n  - Guidance, what someone needs\n  - Estimate someone's skills\n  - Reviewing code & giving feedback\n\n- Developing complete project (Tender-it)\n  - Taking responsibility of full stack\n    - Dealing with problems on all layers of stack\n  - Scrum planning\n  - Coordinating with non-technical founders\n\n- Mobile app development (TravelBird & Chipta)\n  - Learning new technologies\n  - App/Play store review policies\n  - Testing on various devices\n  - Web Sockets for Chipta Scan App\n\n### Why remote work?\"\n\n- Love traveling & nature\n- Efficiency & flexibility\n- Stay focussed with Scrum / Agile methodologies\n- Collaboration software (Slack, Teams, Zoom)\n- 5+ years experience\n- I believe in it\n"
       }
     ],
     "salary_expectations": [
@@ -1444,42 +1454,6 @@
         "daily_rate": 280
       },
       {
-        "sort": 1,
-        "job_title": "Senior Python SWE",
-        "company_type": "enterprise",
-        "employment_type": "fte",
-        "work_arrangement": "remote",
-        "region": "eu_west_north",
-        "hourly_rate": 35,
-        "month_salary": 6000,
-        "year_salary": 80000,
-        "daily_rate": 280
-      },
-      {
-        "sort": 1,
-        "job_title": "Senior Python SWE",
-        "company_type": "enterprise",
-        "employment_type": "fte",
-        "work_arrangement": "remote",
-        "region": "eu_west_north",
-        "hourly_rate": 35,
-        "month_salary": 6000,
-        "year_salary": 80000,
-        "daily_rate": 280
-      },
-      {
-        "sort": 1,
-        "job_title": "Senior Python SWE",
-        "company_type": "enterprise",
-        "employment_type": "fte",
-        "work_arrangement": "remote",
-        "region": "eu_west_north",
-        "hourly_rate": 35,
-        "month_salary": 6000,
-        "year_salary": 80000,
-        "daily_rate": 280
-      },
-      {
         "sort": 2,
         "job_title": "Senior Python SWE",
         "company_type": "enterprise",
@@ -1490,78 +1464,6 @@
         "month_salary": 12000,
         "year_salary": 145000,
         "daily_rate": 550
-      },
-      {
-        "sort": 2,
-        "job_title": "Senior Python SWE",
-        "company_type": "enterprise",
-        "employment_type": "contract",
-        "work_arrangement": "remote",
-        "region": "eu_west_north",
-        "hourly_rate": 70,
-        "month_salary": 12000,
-        "year_salary": 145000,
-        "daily_rate": 550
-      },
-      {
-        "sort": 2,
-        "job_title": "Senior Python SWE",
-        "company_type": "enterprise",
-        "employment_type": "contract",
-        "work_arrangement": "remote",
-        "region": "eu_west_north",
-        "hourly_rate": 70,
-        "month_salary": 12000,
-        "year_salary": 145000,
-        "daily_rate": 550
-      },
-      {
-        "sort": 2,
-        "job_title": "Senior Python SWE",
-        "company_type": "enterprise",
-        "employment_type": "contract",
-        "work_arrangement": "remote",
-        "region": "eu_west_north",
-        "hourly_rate": 70,
-        "month_salary": 12000,
-        "year_salary": 145000,
-        "daily_rate": 550
-      },
-      {
-        "sort": null,
-        "job_title": "Senior Full-Stack SWE",
-        "company_type": "agency",
-        "employment_type": "contract",
-        "work_arrangement": "remote",
-        "region": "eu_east_south",
-        "hourly_rate": 60,
-        "month_salary": 10000,
-        "year_salary": 125000,
-        "daily_rate": 450
-      },
-      {
-        "sort": null,
-        "job_title": "Senior Full-Stack SWE",
-        "company_type": "agency",
-        "employment_type": "contract",
-        "work_arrangement": "remote",
-        "region": "eu_east_south",
-        "hourly_rate": 60,
-        "month_salary": 10000,
-        "year_salary": 125000,
-        "daily_rate": 450
-      },
-      {
-        "sort": null,
-        "job_title": "Senior Full-Stack SWE",
-        "company_type": "agency",
-        "employment_type": "contract",
-        "work_arrangement": "remote",
-        "region": "eu_east_south",
-        "hourly_rate": 60,
-        "month_salary": 10000,
-        "year_salary": 125000,
-        "daily_rate": 450
       },
       {
         "sort": null,
