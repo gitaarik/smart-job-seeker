@@ -9,7 +9,7 @@ datasource db {
 }
 
 model application_questions {
-  id           Int       @id
+  id           Int       @id @default(autoincrement())
   sort         Int?
   date_created DateTime? @db.Timestamptz(6)
   date_updated DateTime? @db.Timestamptz(6)
@@ -39,7 +39,7 @@ model applications {
 }
 
 model cheat_sheets {
-  id           Int       @id
+  id           Int       @id @default(autoincrement())
   sort         Int?
   date_created DateTime? @db.Timestamptz(6)
   date_updated DateTime? @db.Timestamptz(6)
@@ -50,7 +50,7 @@ model cheat_sheets {
 }
 
 model dev_methodologies {
-  id           Int       @id
+  id           Int       @id @default(autoincrement())
   status       String    @default("draft") @db.VarChar(255)
   sort         Int?
   date_created DateTime? @db.Timestamptz(6)
@@ -574,7 +574,7 @@ model education {
 }
 
 model highlights {
-  id           Int       @id
+  id           Int       @id @default(autoincrement())
   status       String    @default("draft") @db.VarChar(255)
   sort         Int?
   date_created DateTime? @db.Timestamptz(6)
@@ -586,7 +586,7 @@ model highlights {
 }
 
 model languages {
-  id            Int       @id
+  id            Int       @id @default(autoincrement())
   status        String    @default("draft") @db.VarChar(255)
   date_created  DateTime? @db.Timestamptz(6)
   date_updated  DateTime? @db.Timestamptz(6)
@@ -654,7 +654,7 @@ model profiles {
 }
 
 model project_stories {
-  id           Int       @id
+  id           Int       @id @default(autoincrement())
   sort         Int?
   date_created DateTime? @db.Timestamptz(6)
   date_updated DateTime? @db.Timestamptz(6)
@@ -716,7 +716,7 @@ model salary_expectations {
 }
 
 model side_project_achievements {
-  id            Int           @id
+  id            Int           @id @default(autoincrement())
   title         String?       @db.VarChar(255)
   fa_icon       String?       @db.VarChar(255)
   description   String?       @db.VarChar(255)
@@ -760,7 +760,7 @@ model side_projects {
 }
 
 model soft_skills {
-  id           Int       @id
+  id           Int       @id @default(autoincrement())
   status       String    @default("draft") @db.VarChar(255)
   sort         Int?
   date_created DateTime? @db.Timestamptz(6)
@@ -771,7 +771,7 @@ model soft_skills {
 }
 
 model tech_skill_categories {
-  id           Int           @id
+  id           Int           @id @default(autoincrement())
   status       String        @default("draft") @db.VarChar(255)
   sort         Int?
   date_created DateTime?     @db.Timestamptz(6)
@@ -839,7 +839,7 @@ model vacancies {
 }
 
 model work_experience_achievements {
-  id               Int              @id
+  id               Int              @id @default(autoincrement())
   status           String           @default("draft") @db.VarChar(255)
   sort             Int?
   date_created     DateTime?        @db.Timestamptz(6)
@@ -853,7 +853,7 @@ model work_experience_achievements {
 }
 
 model work_experience_technologies {
-  id               Int              @id
+  id               Int              @id @default(autoincrement())
   status           String           @default("draft") @db.VarChar(255)
   sort             Int?
   date_created     DateTime?        @db.Timestamptz(6)

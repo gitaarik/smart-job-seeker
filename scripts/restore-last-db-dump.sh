@@ -16,5 +16,7 @@ then
 
   # Import the latest dump
   psql -U postgres -d smartjobseeker < latest.sql
+else
+  echo "Aborted"
 fi
 

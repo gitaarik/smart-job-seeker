@@ -35,7 +35,12 @@
       "Bash(npm run docker:db:restore:*)",
       "Bash(npm run docker:export-profile-json:*)",
       "Bash(git checkout:*)",
-      "Bash(npm run docker:db:cli:*)"
+      "Bash(npm run docker:db:cli:*)",
+      "Bash(npm run docker:db:backup:*)",
+      "Bash(for table in cheat_sheets dev_methodologies highlights languages)",
+      "Bash(do echo \"=== $table ===\" grep -A 2 \"CREATE TABLE public.$table\" db-dumps/latest.sql)",
+      "Bash(cp:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []

@@ -92,6 +92,28 @@ ALTER SEQUENCE public.application_interview_questions_id_seq OWNED BY public.app
 
 
 --
+--
+-- Name: application_questions_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.application_questions_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.application_questions_id_seq OWNER TO postgres;
+
+--
+-- Name: application_questions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.application_questions_id_seq OWNED BY public.application_questions.id;
+
+
 -- Name: application_questions; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -109,6 +131,13 @@ CREATE TABLE public.application_questions (
 
 
 ALTER TABLE public.application_questions OWNER TO postgres;
+
+--
+-- Name: application_questions id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.application_questions ALTER COLUMN id SET DEFAULT nextval('public.application_questions_id_seq'::regclass);
+
 
 --
 -- Name: applications; Type: TABLE; Schema: public; Owner: postgres
@@ -153,6 +182,28 @@ ALTER SEQUENCE public.applications_id_seq OWNED BY public.applications.id;
 
 
 --
+--
+-- Name: cheat_sheets_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.cheat_sheets_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.cheat_sheets_id_seq OWNER TO postgres;
+
+--
+-- Name: cheat_sheets_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.cheat_sheets_id_seq OWNED BY public.cheat_sheets.id;
+
+
 -- Name: cheat_sheets; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -170,6 +221,35 @@ CREATE TABLE public.cheat_sheets (
 ALTER TABLE public.cheat_sheets OWNER TO postgres;
 
 --
+-- Name: cheat_sheets id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.cheat_sheets ALTER COLUMN id SET DEFAULT nextval('public.cheat_sheets_id_seq'::regclass);
+
+
+--
+--
+-- Name: dev_methodologies_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.dev_methodologies_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.dev_methodologies_id_seq OWNER TO postgres;
+
+--
+-- Name: dev_methodologies_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.dev_methodologies_id_seq OWNED BY public.dev_methodologies.id;
+
+
 -- Name: dev_methodologies; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -185,6 +265,13 @@ CREATE TABLE public.dev_methodologies (
 
 
 ALTER TABLE public.dev_methodologies OWNER TO postgres;
+
+--
+-- Name: dev_methodologies id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.dev_methodologies ALTER COLUMN id SET DEFAULT nextval('public.dev_methodologies_id_seq'::regclass);
+
 
 --
 -- Name: directus_access; Type: TABLE; Schema: public; Owner: postgres
@@ -1023,6 +1110,28 @@ ALTER SEQUENCE public.education_id_seq OWNED BY public.education.id;
 
 
 --
+--
+-- Name: highlights_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.highlights_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.highlights_id_seq OWNER TO postgres;
+
+--
+-- Name: highlights_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.highlights_id_seq OWNED BY public.highlights.id;
+
+
 -- Name: highlights; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -1041,6 +1150,35 @@ CREATE TABLE public.highlights (
 ALTER TABLE public.highlights OWNER TO postgres;
 
 --
+-- Name: highlights id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.highlights ALTER COLUMN id SET DEFAULT nextval('public.highlights_id_seq'::regclass);
+
+
+--
+--
+-- Name: languages_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.languages_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.languages_id_seq OWNER TO postgres;
+
+--
+-- Name: languages_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.languages_id_seq OWNED BY public.languages.id;
+
+
 -- Name: languages; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -1058,6 +1196,13 @@ CREATE TABLE public.languages (
 
 
 ALTER TABLE public.languages OWNER TO postgres;
+
+--
+-- Name: languages id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.languages ALTER COLUMN id SET DEFAULT nextval('public.languages_id_seq'::regclass);
+
 
 --
 -- Name: profile_versions; Type: TABLE; Schema: public; Owner: postgres
@@ -1132,6 +1277,28 @@ CREATE TABLE public.profiles (
 ALTER TABLE public.profiles OWNER TO postgres;
 
 --
+--
+-- Name: project_stories_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.project_stories_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.project_stories_id_seq OWNER TO postgres;
+
+--
+-- Name: project_stories_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.project_stories_id_seq OWNED BY public.project_stories.id;
+
+
 -- Name: project_stories; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -1152,6 +1319,13 @@ CREATE TABLE public.project_stories (
 
 
 ALTER TABLE public.project_stories OWNER TO postgres;
+
+--
+-- Name: project_stories id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.project_stories ALTER COLUMN id SET DEFAULT nextval('public.project_stories_id_seq'::regclass);
+
 
 --
 -- Name: references; Type: TABLE; Schema: public; Owner: postgres
@@ -1263,6 +1437,28 @@ ALTER SEQUENCE public.salary_expectations_id_seq OWNED BY public.salary_expectat
 
 
 --
+--
+-- Name: side_project_achievements_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.side_project_achievements_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.side_project_achievements_id_seq OWNER TO postgres;
+
+--
+-- Name: side_project_achievements_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.side_project_achievements_id_seq OWNED BY public.side_project_achievements.id;
+
+
 -- Name: side_project_achievements; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -1280,6 +1476,13 @@ CREATE TABLE public.side_project_achievements (
 
 
 ALTER TABLE public.side_project_achievements OWNER TO postgres;
+
+--
+-- Name: side_project_achievements id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.side_project_achievements ALTER COLUMN id SET DEFAULT nextval('public.side_project_achievements_id_seq'::regclass);
+
 
 --
 -- Name: side_project_technologies; Type: TABLE; Schema: public; Owner: postgres
@@ -1367,6 +1570,28 @@ ALTER SEQUENCE public.side_projects_id_seq OWNED BY public.side_projects.id;
 
 
 --
+--
+-- Name: soft_skills_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.soft_skills_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.soft_skills_id_seq OWNER TO postgres;
+
+--
+-- Name: soft_skills_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.soft_skills_id_seq OWNED BY public.soft_skills.id;
+
+
 -- Name: soft_skills; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -1384,6 +1609,35 @@ CREATE TABLE public.soft_skills (
 ALTER TABLE public.soft_skills OWNER TO postgres;
 
 --
+-- Name: soft_skills id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.soft_skills ALTER COLUMN id SET DEFAULT nextval('public.soft_skills_id_seq'::regclass);
+
+
+--
+--
+-- Name: tech_skill_categories_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.tech_skill_categories_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.tech_skill_categories_id_seq OWNER TO postgres;
+
+--
+-- Name: tech_skill_categories_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.tech_skill_categories_id_seq OWNED BY public.tech_skill_categories.id;
+
+
 -- Name: tech_skill_categories; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -1400,6 +1654,13 @@ CREATE TABLE public.tech_skill_categories (
 
 
 ALTER TABLE public.tech_skill_categories OWNER TO postgres;
+
+--
+-- Name: tech_skill_categories id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.tech_skill_categories ALTER COLUMN id SET DEFAULT nextval('public.tech_skill_categories_id_seq'::regclass);
+
 
 --
 -- Name: tech_skill_types; Type: TABLE; Schema: public; Owner: postgres
@@ -1586,6 +1847,28 @@ ALTER SEQUENCE public.vacancy_resources_id_seq OWNED BY public.vacancy_resources
 
 
 --
+--
+-- Name: work_experience_achievements_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.work_experience_achievements_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.work_experience_achievements_id_seq OWNER TO postgres;
+
+--
+-- Name: work_experience_achievements_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.work_experience_achievements_id_seq OWNED BY public.work_experience_achievements.id;
+
+
 -- Name: work_experience_achievements; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -1606,6 +1889,35 @@ CREATE TABLE public.work_experience_achievements (
 ALTER TABLE public.work_experience_achievements OWNER TO postgres;
 
 --
+-- Name: work_experience_achievements id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.work_experience_achievements ALTER COLUMN id SET DEFAULT nextval('public.work_experience_achievements_id_seq'::regclass);
+
+
+--
+--
+-- Name: work_experience_technologies_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.work_experience_technologies_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.work_experience_technologies_id_seq OWNER TO postgres;
+
+--
+-- Name: work_experience_technologies_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.work_experience_technologies_id_seq OWNED BY public.work_experience_technologies.id;
+
+
 -- Name: work_experience_technologies; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -1621,6 +1933,13 @@ CREATE TABLE public.work_experience_technologies (
 
 
 ALTER TABLE public.work_experience_technologies OWNER TO postgres;
+
+--
+-- Name: work_experience_technologies id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.work_experience_technologies ALTER COLUMN id SET DEFAULT nextval('public.work_experience_technologies_id_seq'::regclass);
+
 
 --
 -- Name: work_experiences; Type: TABLE; Schema: public; Owner: postgres
@@ -7983,6 +8302,73 @@ SELECT pg_catalog.setval('public.application_interview_questions_id_seq', 27, tr
 --
 
 SELECT pg_catalog.setval('public.applications_id_seq', 5, true);
+--
+-- Name: application_questions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.application_questions_id_seq', 5, true);
+
+--
+-- Name: cheat_sheets_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.cheat_sheets_id_seq', 19, true);
+
+--
+-- Name: dev_methodologies_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.dev_methodologies_id_seq', 38, true);
+
+--
+-- Name: highlights_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.highlights_id_seq', 45, true);
+
+--
+-- Name: languages_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.languages_id_seq', 108, true);
+
+--
+-- Name: project_stories_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.project_stories_id_seq', 121, true);
+
+--
+-- Name: side_project_achievements_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.side_project_achievements_id_seq', 1, false);
+
+--
+-- Name: soft_skills_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.soft_skills_id_seq', 151, true);
+
+--
+-- Name: tech_skill_categories_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.tech_skill_categories_id_seq', 158, true);
+
+--
+-- Name: work_experience_achievements_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.work_experience_achievements_id_seq', 220, true);
+
+--
+-- Name: work_experience_technologies_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.work_experience_technologies_id_seq', 406, true);
+
+
 
 
 --
