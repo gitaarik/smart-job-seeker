@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict trymemroIE3KEdbolPXcFidBLmSQ9uXRKg1g5fPJgPWpCmVmLoUprgpQYwftm8v
+\restrict p9cGe0zrteWyurqfamlDz8YamiLBI1p7F70x1Pvw4bc9vRI9zd367cCWqPewZGr
 
 -- Dumped from database version 15.14 (Debian 15.14-1.pgdg13+1)
 -- Dumped by pg_dump version 15.14 (Debian 15.14-1.pgdg13+1)
@@ -63,7 +63,8 @@ CREATE TABLE public.application_interview_questions (
     date_created timestamp with time zone,
     date_updated timestamp with time zone,
     application integer NOT NULL,
-    text text
+    question text NOT NULL,
+    answer text
 );
 
 
@@ -92,7 +93,6 @@ ALTER SEQUENCE public.application_interview_questions_id_seq OWNED BY public.app
 
 
 --
---
 -- Name: application_questions_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -108,17 +108,11 @@ CREATE SEQUENCE public.application_questions_id_seq
 ALTER TABLE public.application_questions_id_seq OWNER TO postgres;
 
 --
--- Name: application_questions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.application_questions_id_seq OWNED BY public.application_questions.id;
-
-
 -- Name: application_questions; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.application_questions (
-    id integer NOT NULL,
+    id integer DEFAULT nextval('public.application_questions_id_seq'::regclass) NOT NULL,
     sort integer,
     date_created timestamp with time zone,
     date_updated timestamp with time zone,
@@ -131,13 +125,6 @@ CREATE TABLE public.application_questions (
 
 
 ALTER TABLE public.application_questions OWNER TO postgres;
-
---
--- Name: application_questions id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.application_questions ALTER COLUMN id SET DEFAULT nextval('public.application_questions_id_seq'::regclass);
-
 
 --
 -- Name: applications; Type: TABLE; Schema: public; Owner: postgres
@@ -182,7 +169,6 @@ ALTER SEQUENCE public.applications_id_seq OWNED BY public.applications.id;
 
 
 --
---
 -- Name: cheat_sheets_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -198,17 +184,11 @@ CREATE SEQUENCE public.cheat_sheets_id_seq
 ALTER TABLE public.cheat_sheets_id_seq OWNER TO postgres;
 
 --
--- Name: cheat_sheets_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.cheat_sheets_id_seq OWNED BY public.cheat_sheets.id;
-
-
 -- Name: cheat_sheets; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.cheat_sheets (
-    id integer NOT NULL,
+    id integer DEFAULT nextval('public.cheat_sheets_id_seq'::regclass) NOT NULL,
     sort integer,
     date_created timestamp with time zone,
     date_updated timestamp with time zone,
@@ -220,14 +200,6 @@ CREATE TABLE public.cheat_sheets (
 
 ALTER TABLE public.cheat_sheets OWNER TO postgres;
 
---
--- Name: cheat_sheets id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.cheat_sheets ALTER COLUMN id SET DEFAULT nextval('public.cheat_sheets_id_seq'::regclass);
-
-
---
 --
 -- Name: dev_methodologies_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
@@ -244,17 +216,11 @@ CREATE SEQUENCE public.dev_methodologies_id_seq
 ALTER TABLE public.dev_methodologies_id_seq OWNER TO postgres;
 
 --
--- Name: dev_methodologies_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.dev_methodologies_id_seq OWNED BY public.dev_methodologies.id;
-
-
 -- Name: dev_methodologies; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.dev_methodologies (
-    id integer NOT NULL,
+    id integer DEFAULT nextval('public.dev_methodologies_id_seq'::regclass) NOT NULL,
     status character varying(255) DEFAULT 'draft'::character varying NOT NULL,
     sort integer,
     date_created timestamp with time zone,
@@ -265,13 +231,6 @@ CREATE TABLE public.dev_methodologies (
 
 
 ALTER TABLE public.dev_methodologies OWNER TO postgres;
-
---
--- Name: dev_methodologies id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.dev_methodologies ALTER COLUMN id SET DEFAULT nextval('public.dev_methodologies_id_seq'::regclass);
-
 
 --
 -- Name: directus_access; Type: TABLE; Schema: public; Owner: postgres
@@ -1110,7 +1069,6 @@ ALTER SEQUENCE public.education_id_seq OWNED BY public.education.id;
 
 
 --
---
 -- Name: highlights_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -1126,17 +1084,11 @@ CREATE SEQUENCE public.highlights_id_seq
 ALTER TABLE public.highlights_id_seq OWNER TO postgres;
 
 --
--- Name: highlights_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.highlights_id_seq OWNED BY public.highlights.id;
-
-
 -- Name: highlights; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.highlights (
-    id integer NOT NULL,
+    id integer DEFAULT nextval('public.highlights_id_seq'::regclass) NOT NULL,
     status character varying(255) DEFAULT 'draft'::character varying NOT NULL,
     sort integer,
     date_created timestamp with time zone,
@@ -1149,14 +1101,6 @@ CREATE TABLE public.highlights (
 
 ALTER TABLE public.highlights OWNER TO postgres;
 
---
--- Name: highlights id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.highlights ALTER COLUMN id SET DEFAULT nextval('public.highlights_id_seq'::regclass);
-
-
---
 --
 -- Name: languages_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
@@ -1173,17 +1117,11 @@ CREATE SEQUENCE public.languages_id_seq
 ALTER TABLE public.languages_id_seq OWNER TO postgres;
 
 --
--- Name: languages_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.languages_id_seq OWNED BY public.languages.id;
-
-
 -- Name: languages; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.languages (
-    id integer NOT NULL,
+    id integer DEFAULT nextval('public.languages_id_seq'::regclass) NOT NULL,
     status character varying(255) DEFAULT 'draft'::character varying NOT NULL,
     date_created timestamp with time zone,
     date_updated timestamp with time zone,
@@ -1196,13 +1134,6 @@ CREATE TABLE public.languages (
 
 
 ALTER TABLE public.languages OWNER TO postgres;
-
---
--- Name: languages id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.languages ALTER COLUMN id SET DEFAULT nextval('public.languages_id_seq'::regclass);
-
 
 --
 -- Name: profile_versions; Type: TABLE; Schema: public; Owner: postgres
@@ -1277,7 +1208,6 @@ CREATE TABLE public.profiles (
 ALTER TABLE public.profiles OWNER TO postgres;
 
 --
---
 -- Name: project_stories_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -1293,17 +1223,11 @@ CREATE SEQUENCE public.project_stories_id_seq
 ALTER TABLE public.project_stories_id_seq OWNER TO postgres;
 
 --
--- Name: project_stories_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.project_stories_id_seq OWNED BY public.project_stories.id;
-
-
 -- Name: project_stories; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.project_stories (
-    id integer NOT NULL,
+    id integer DEFAULT nextval('public.project_stories_id_seq'::regclass) NOT NULL,
     sort integer,
     date_created timestamp with time zone,
     date_updated timestamp with time zone,
@@ -1319,13 +1243,6 @@ CREATE TABLE public.project_stories (
 
 
 ALTER TABLE public.project_stories OWNER TO postgres;
-
---
--- Name: project_stories id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.project_stories ALTER COLUMN id SET DEFAULT nextval('public.project_stories_id_seq'::regclass);
-
 
 --
 -- Name: references; Type: TABLE; Schema: public; Owner: postgres
@@ -1437,7 +1354,6 @@ ALTER SEQUENCE public.salary_expectations_id_seq OWNED BY public.salary_expectat
 
 
 --
---
 -- Name: side_project_achievements_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -1453,17 +1369,11 @@ CREATE SEQUENCE public.side_project_achievements_id_seq
 ALTER TABLE public.side_project_achievements_id_seq OWNER TO postgres;
 
 --
--- Name: side_project_achievements_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.side_project_achievements_id_seq OWNED BY public.side_project_achievements.id;
-
-
 -- Name: side_project_achievements; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.side_project_achievements (
-    id integer NOT NULL,
+    id integer DEFAULT nextval('public.side_project_achievements_id_seq'::regclass) NOT NULL,
     title character varying(255),
     fa_icon character varying(255),
     description character varying(255),
@@ -1476,13 +1386,6 @@ CREATE TABLE public.side_project_achievements (
 
 
 ALTER TABLE public.side_project_achievements OWNER TO postgres;
-
---
--- Name: side_project_achievements id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.side_project_achievements ALTER COLUMN id SET DEFAULT nextval('public.side_project_achievements_id_seq'::regclass);
-
 
 --
 -- Name: side_project_technologies; Type: TABLE; Schema: public; Owner: postgres
@@ -1570,7 +1473,6 @@ ALTER SEQUENCE public.side_projects_id_seq OWNED BY public.side_projects.id;
 
 
 --
---
 -- Name: soft_skills_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -1586,17 +1488,11 @@ CREATE SEQUENCE public.soft_skills_id_seq
 ALTER TABLE public.soft_skills_id_seq OWNER TO postgres;
 
 --
--- Name: soft_skills_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.soft_skills_id_seq OWNED BY public.soft_skills.id;
-
-
 -- Name: soft_skills; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.soft_skills (
-    id integer NOT NULL,
+    id integer DEFAULT nextval('public.soft_skills_id_seq'::regclass) NOT NULL,
     status character varying(255) DEFAULT 'draft'::character varying NOT NULL,
     sort integer,
     date_created timestamp with time zone,
@@ -1608,14 +1504,6 @@ CREATE TABLE public.soft_skills (
 
 ALTER TABLE public.soft_skills OWNER TO postgres;
 
---
--- Name: soft_skills id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.soft_skills ALTER COLUMN id SET DEFAULT nextval('public.soft_skills_id_seq'::regclass);
-
-
---
 --
 -- Name: tech_skill_categories_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
@@ -1632,17 +1520,11 @@ CREATE SEQUENCE public.tech_skill_categories_id_seq
 ALTER TABLE public.tech_skill_categories_id_seq OWNER TO postgres;
 
 --
--- Name: tech_skill_categories_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.tech_skill_categories_id_seq OWNED BY public.tech_skill_categories.id;
-
-
 -- Name: tech_skill_categories; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.tech_skill_categories (
-    id integer NOT NULL,
+    id integer DEFAULT nextval('public.tech_skill_categories_id_seq'::regclass) NOT NULL,
     status character varying(255) DEFAULT 'draft'::character varying NOT NULL,
     sort integer,
     date_created timestamp with time zone,
@@ -1654,13 +1536,6 @@ CREATE TABLE public.tech_skill_categories (
 
 
 ALTER TABLE public.tech_skill_categories OWNER TO postgres;
-
---
--- Name: tech_skill_categories id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.tech_skill_categories ALTER COLUMN id SET DEFAULT nextval('public.tech_skill_categories_id_seq'::regclass);
-
 
 --
 -- Name: tech_skill_types; Type: TABLE; Schema: public; Owner: postgres
@@ -1847,7 +1722,6 @@ ALTER SEQUENCE public.vacancy_resources_id_seq OWNED BY public.vacancy_resources
 
 
 --
---
 -- Name: work_experience_achievements_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -1863,17 +1737,11 @@ CREATE SEQUENCE public.work_experience_achievements_id_seq
 ALTER TABLE public.work_experience_achievements_id_seq OWNER TO postgres;
 
 --
--- Name: work_experience_achievements_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.work_experience_achievements_id_seq OWNED BY public.work_experience_achievements.id;
-
-
 -- Name: work_experience_achievements; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.work_experience_achievements (
-    id integer NOT NULL,
+    id integer DEFAULT nextval('public.work_experience_achievements_id_seq'::regclass) NOT NULL,
     status character varying(255) DEFAULT 'draft'::character varying NOT NULL,
     sort integer,
     date_created timestamp with time zone,
@@ -1888,14 +1756,6 @@ CREATE TABLE public.work_experience_achievements (
 
 ALTER TABLE public.work_experience_achievements OWNER TO postgres;
 
---
--- Name: work_experience_achievements id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.work_experience_achievements ALTER COLUMN id SET DEFAULT nextval('public.work_experience_achievements_id_seq'::regclass);
-
-
---
 --
 -- Name: work_experience_technologies_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
@@ -1912,17 +1772,11 @@ CREATE SEQUENCE public.work_experience_technologies_id_seq
 ALTER TABLE public.work_experience_technologies_id_seq OWNER TO postgres;
 
 --
--- Name: work_experience_technologies_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.work_experience_technologies_id_seq OWNED BY public.work_experience_technologies.id;
-
-
 -- Name: work_experience_technologies; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.work_experience_technologies (
-    id integer NOT NULL,
+    id integer DEFAULT nextval('public.work_experience_technologies_id_seq'::regclass) NOT NULL,
     status character varying(255) DEFAULT 'draft'::character varying NOT NULL,
     sort integer,
     date_created timestamp with time zone,
@@ -1933,13 +1787,6 @@ CREATE TABLE public.work_experience_technologies (
 
 
 ALTER TABLE public.work_experience_technologies OWNER TO postgres;
-
---
--- Name: work_experience_technologies id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.work_experience_technologies ALTER COLUMN id SET DEFAULT nextval('public.work_experience_technologies_id_seq'::regclass);
-
 
 --
 -- Name: work_experiences; Type: TABLE; Schema: public; Owner: postgres
@@ -2132,34 +1979,36 @@ e6a5bb11-c7bd-4db1-80b4-cde2fc9908f5	2ee414cc36f47eeae71c15127ecddc71fb9a7f9f0db
 -- Data for Name: application_interview_questions; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.application_interview_questions (id, sort, date_created, date_updated, application, text) FROM stdin;
-1	\N	2025-11-03 14:35:35.011+00	2025-11-03 14:36:36.554+00	3	In React.js with TypeScript, how would you design a custom hook to manage optimistic updates for a real-time collaborative feature, ensuring type safety and handling potential rollback scenarios?
-4	\N	2025-11-03 14:37:03.851+00	2025-11-03 14:37:25.266+00	3	Propose a concrete TypeScript signature like: useOptimisticUpdate(opts: { key: QueryKey; apply(p: Patch): Item; mutate(p: Patch): Promise; resolve?(server: Item, local: Item): Item; onError?(e): void; }) What would it return?
-3	\N	2025-11-03 14:36:54.955+00	2025-11-03 14:37:25.273+00	3	Briefly outline the hook’s signature: arguments, return values, and generics. What types would you use for Item, Patch, MutationResult, and ConflictResolver?
-2	\N	2025-11-03 14:36:47.947+00	2025-11-03 14:37:25.279+00	3	How would you structure the hook’s API (inputs/returns), and coordinate local cache, server mutation, rollback, and conflict resolution with React Query or SWR while preserving strict TypeScript types?
-5	\N	2025-11-03 14:37:42.924+00	\N	3	What should the hook return to be ergonomic? Specify fields like optimisticItem, isMutating, error, applyPatch, commit, rollback, and how they integrate with React Query’s setQueryData/invalidateQueries.
-6	\N	2025-11-03 14:37:53.887+00	\N	3	How would you ensure rollback integrity across concurrent patches (e.g., queue with versioning vs. snapshot stack), and prevent double-apply when React re-renders?
-7	\N	2025-11-03 14:38:15.489+00	\N	3	Briefly, how would you model version IDs and reconciliation so late server acks don’t overwrite newer local state?
-8	\N	2025-11-03 14:38:30.85+00	2025-11-03 14:38:56.924+00	3	Imagine a multi-tenant FastAPI service handling heavy read/write traffic. How would you design request scoping, DB session management, and tenant data isolation to ensure performance, security, and observability? Walk me through your approach—high level—to implement per-request scoped SQLAlchemy sessions in FastAPI without leaking connections under high concurrency?
-9	\N	2025-11-03 14:39:09.166+00	\N	3	How would you handle transaction boundaries and retries for transient errors (e.g., deadlocks, serialization failures) while preserving idempotency across FastAPI endpoints?
-10	\N	2025-11-03 14:39:20.318+00	\N	3	How would you design idempotency keys for POST endpoints (storage, TTL, request/response hashing), and ensure safe retries across multiple workers without race conditions?
-11	\N	2025-11-03 14:39:30.6+00	\N	3	How would you enforce tenant isolation at the DB layer: separate schemas vs. separate databases vs. row-level security? Explain trade-offs and operational impacts.
-12	\N	2025-11-03 14:39:53.648+00	\N	3	You’re migrating a multi-tenant PostgreSQL system to AWS. Compare using RDS PostgreSQL vs Aurora PostgreSQL for bursty, read-heavy workloads with strict tenant isolation. What would you choose and why?
-13	\N	2025-11-03 14:40:05.518+00	\N	3	How would you enforce strict tenant isolation at the database layer: separate clusters, schemas with RLS, or separate databases? Justify trade-offs and operational impact.
-14	\N	2025-11-03 14:40:16.071+00	\N	3	In a high-throughput OLTP system with mixed OLAP queries, how would you design partitioning (range/list/hash), indexing, and autovacuum settings in PostgreSQL to minimize bloat and hotspots on AWS?
-15	\N	2025-11-03 14:40:25.769+00	\N	3	How would you architect a resilient, cost-efficient cross-region disaster recovery strategy on AWS for PostgreSQL, including RPO/RTO targets, backup/restore, replication, and failover testing?
-16	\N	2025-11-03 14:40:36.018+00	\N	3	For cross-region DR on AWS PostgreSQL, what RPO/RTO would you target and why, and how would you validate them with automated failover drills?
-17	\N	2025-11-03 14:40:52.074+00	\N	3	Let’s move to security: Design a least-privilege, audit-ready access model for PostgreSQL on AWS. Cover IAM auth vs passwords, secrets rotation, pg_hba, roles/permissions, and auditing.
-18	\N	2025-11-03 14:41:08.02+00	\N	3	Imagine you’re designing a multi-tenant, event-driven analytics platform (billions of events/day) with strict data isolation. How would you partition data, design schemas, and enforce isolation across services and storage?
-19	\N	2025-11-03 14:41:19.951+00	\N	3	At that scale, trade-offs matter. How would you design the event ingestion path to handle bursts (10x spikes) while guaranteeing ordering per tenant and exactly-once processing semantics?
-20	\N	2025-11-03 14:41:57.884+00	\N	3	Balancing ordering and exactly-once under bursts is tricky. How would you handle idempotency and deduplication across the ingestion bus, stream processor, and sinks without sacrificing throughput?
-21	\N	2025-11-03 14:42:13.023+00	\N	3	How would you structure code and boundaries (modules, packages, interfaces) to keep this platform maintainable over years, minimizing coupling while enabling independent deployability?
-22	\N	2025-11-03 14:43:03.788+00	\N	3	Imagine a multi-tenant SaaS on PostgreSQL (RDS) with 20k tenants, each with spiky workloads. Would you choose schema-per-tenant, table-partition-per-tenant, or row-level tenancy? Explain trade-offs for performance, isolation, maintainability, and cost on AWS.
-23	\N	2025-11-03 14:43:25.113+00	\N	3	How would you design auto-scaling and connection management on AWS (RDS + PG + possibly PgBouncer/Lambda/ECS) to prevent connection storms and protect primary?
-24	\N	2025-11-03 14:43:45.484+00	\N	3	How would you cap and pool connections end-to-end—app → PgBouncer → RDS—while ensuring transaction pooling safety and avoiding session-level features that break under pooling?
-25	\N	2025-11-03 14:44:07.06+00	\N	3	How would you optimize query performance in PostgreSQL for a high-read application on AWS, incorporating read replicas, caching with ElastiCache, and indexing strategies?
-26	\N	2025-11-03 14:44:40.274+00	2025-11-03 14:45:06.133+00	3	Imagine you inherit a monolith with tangled business logic, poor test coverage, and frequent regressions. How would you incrementally refactor it to improve maintainability without halting feature delivery? Could you outline your first three concrete steps you’d take in the first month, including how you’d measure progress and reduce regression risk?
-27	\N	2025-11-03 14:46:08.652+00	\N	3	What are the top three architectural seams you’d identify to start carving out modules, and how would you enforce boundaries (code, repo, and runtime) to prevent backsliding?
+COPY public.application_interview_questions (id, sort, date_created, date_updated, application, question, answer) FROM stdin;
+1	\N	2025-11-03 14:35:35.011+00	2025-11-03 14:36:36.554+00	3	In React.js with TypeScript, how would you design a custom hook to manage optimistic updates for a real-time collaborative feature, ensuring type safety and handling potential rollback scenarios?	\N
+4	\N	2025-11-03 14:37:03.851+00	2025-11-03 14:37:25.266+00	3	Propose a concrete TypeScript signature like: useOptimisticUpdate(opts: { key: QueryKey; apply(p: Patch): Item; mutate(p: Patch): Promise; resolve?(server: Item, local: Item): Item; onError?(e): void; }) What would it return?	\N
+7	\N	2025-11-03 14:38:15.489+00	\N	3	Briefly, how would you model version IDs and reconciliation so late server acks don’t overwrite newer local state?	\N
+3	\N	2025-11-03 14:36:54.955+00	2025-11-03 14:37:25.273+00	3	Briefly outline the hook’s signature: arguments, return values, and generics. What types would you use for Item, Patch, MutationResult, and ConflictResolver?	\N
+2	\N	2025-11-03 14:36:47.947+00	2025-11-03 14:37:25.279+00	3	How would you structure the hook’s API (inputs/returns), and coordinate local cache, server mutation, rollback, and conflict resolution with React Query or SWR while preserving strict TypeScript types?	\N
+5	\N	2025-11-03 14:37:42.924+00	\N	3	What should the hook return to be ergonomic? Specify fields like optimisticItem, isMutating, error, applyPatch, commit, rollback, and how they integrate with React Query’s setQueryData/invalidateQueries.	\N
+6	\N	2025-11-03 14:37:53.887+00	\N	3	How would you ensure rollback integrity across concurrent patches (e.g., queue with versioning vs. snapshot stack), and prevent double-apply when React re-renders?	\N
+8	\N	2025-11-03 14:38:30.85+00	2025-11-03 14:38:56.924+00	3	Imagine a multi-tenant FastAPI service handling heavy read/write traffic. How would you design request scoping, DB session management, and tenant data isolation to ensure performance, security, and observability? Walk me through your approach—high level—to implement per-request scoped SQLAlchemy sessions in FastAPI without leaking connections under high concurrency?	\N
+9	\N	2025-11-03 14:39:09.166+00	\N	3	How would you handle transaction boundaries and retries for transient errors (e.g., deadlocks, serialization failures) while preserving idempotency across FastAPI endpoints?	\N
+10	\N	2025-11-03 14:39:20.318+00	\N	3	How would you design idempotency keys for POST endpoints (storage, TTL, request/response hashing), and ensure safe retries across multiple workers without race conditions?	\N
+11	\N	2025-11-03 14:39:30.6+00	\N	3	How would you enforce tenant isolation at the DB layer: separate schemas vs. separate databases vs. row-level security? Explain trade-offs and operational impacts.	\N
+12	\N	2025-11-03 14:39:53.648+00	\N	3	You’re migrating a multi-tenant PostgreSQL system to AWS. Compare using RDS PostgreSQL vs Aurora PostgreSQL for bursty, read-heavy workloads with strict tenant isolation. What would you choose and why?	\N
+13	\N	2025-11-03 14:40:05.518+00	\N	3	How would you enforce strict tenant isolation at the database layer: separate clusters, schemas with RLS, or separate databases? Justify trade-offs and operational impact.	\N
+14	\N	2025-11-03 14:40:16.071+00	\N	3	In a high-throughput OLTP system with mixed OLAP queries, how would you design partitioning (range/list/hash), indexing, and autovacuum settings in PostgreSQL to minimize bloat and hotspots on AWS?	\N
+15	\N	2025-11-03 14:40:25.769+00	\N	3	How would you architect a resilient, cost-efficient cross-region disaster recovery strategy on AWS for PostgreSQL, including RPO/RTO targets, backup/restore, replication, and failover testing?	\N
+16	\N	2025-11-03 14:40:36.018+00	\N	3	For cross-region DR on AWS PostgreSQL, what RPO/RTO would you target and why, and how would you validate them with automated failover drills?	\N
+17	\N	2025-11-03 14:40:52.074+00	\N	3	Let’s move to security: Design a least-privilege, audit-ready access model for PostgreSQL on AWS. Cover IAM auth vs passwords, secrets rotation, pg_hba, roles/permissions, and auditing.	\N
+18	\N	2025-11-03 14:41:08.02+00	\N	3	Imagine you’re designing a multi-tenant, event-driven analytics platform (billions of events/day) with strict data isolation. How would you partition data, design schemas, and enforce isolation across services and storage?	\N
+19	\N	2025-11-03 14:41:19.951+00	\N	3	At that scale, trade-offs matter. How would you design the event ingestion path to handle bursts (10x spikes) while guaranteeing ordering per tenant and exactly-once processing semantics?	\N
+20	\N	2025-11-03 14:41:57.884+00	\N	3	Balancing ordering and exactly-once under bursts is tricky. How would you handle idempotency and deduplication across the ingestion bus, stream processor, and sinks without sacrificing throughput?	\N
+21	\N	2025-11-03 14:42:13.023+00	\N	3	How would you structure code and boundaries (modules, packages, interfaces) to keep this platform maintainable over years, minimizing coupling while enabling independent deployability?	\N
+22	\N	2025-11-03 14:43:03.788+00	\N	3	Imagine a multi-tenant SaaS on PostgreSQL (RDS) with 20k tenants, each with spiky workloads. Would you choose schema-per-tenant, table-partition-per-tenant, or row-level tenancy? Explain trade-offs for performance, isolation, maintainability, and cost on AWS.	\N
+23	\N	2025-11-03 14:43:25.113+00	\N	3	How would you design auto-scaling and connection management on AWS (RDS + PG + possibly PgBouncer/Lambda/ECS) to prevent connection storms and protect primary?	\N
+24	\N	2025-11-03 14:43:45.484+00	\N	3	How would you cap and pool connections end-to-end—app → PgBouncer → RDS—while ensuring transaction pooling safety and avoiding session-level features that break under pooling?	\N
+25	\N	2025-11-03 14:44:07.06+00	\N	3	How would you optimize query performance in PostgreSQL for a high-read application on AWS, incorporating read replicas, caching with ElastiCache, and indexing strategies?	\N
+26	\N	2025-11-03 14:44:40.274+00	2025-11-03 14:45:06.133+00	3	Imagine you inherit a monolith with tangled business logic, poor test coverage, and frequent regressions. How would you incrementally refactor it to improve maintainability without halting feature delivery? Could you outline your first three concrete steps you’d take in the first month, including how you’d measure progress and reduce regression risk?	\N
+27	\N	2025-11-03 14:46:08.652+00	\N	3	What are the top three architectural seams you’d identify to start carving out modules, and how would you enforce boundaries (code, repo, and runtime) to prevent backsliding?	\N
+28	\N	2025-11-04 13:29:56.531+00	\N	6	Tell us about a time when you "hacked the system" to your advantage	\N
+29	\N	2025-11-04 13:29:56.534+00	\N	6	Tell us about something you've done in the past that can be considered as evidence of exceptional ability	\N
 \.
 
 
@@ -2184,6 +2033,7 @@ COPY public.applications (id, status, date_created, date_updated, vacancy, profi
 4	discontinued	2025-11-03 16:12:07.464+00	2025-11-03 16:23:37.478+00	4	2	\N	\N	\N	It's a remote job, but for in the Philippines. Maybe a bit too far out of my timezone..
 3	discontinued	2025-11-03 14:06:02.338+00	2025-11-03 16:32:09.751+00	3	2	custom_form	05fde889-f95b-4041-8d92-6e43df495fd9	2025-11-01	Crazy hard interview questions..
 5	discontinued	2025-11-03 16:33:34.298+00	2025-11-03 16:34:53.571+00	5	2	\N	\N	\N	No experience with YANG modeling
+6	draft	2025-11-04 13:19:50.161+00	2025-11-04 13:29:56.529+00	6	2	\N	\N	\N	\N
 \.
 
 
@@ -6928,6 +6778,50 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 5123	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-03 16:33:34.295+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	vacancies	5	http://localhost:8055
 5124	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-03 16:33:34.299+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	applications	5	http://localhost:8055
 5125	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-03 16:34:53.572+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	applications	5	http://localhost:8055
+5126	login	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:13:51.921+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_users	157238bb-6930-4f26-be9c-8b31a9e11ab8	http://localhost:8055
+5127	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:17:14.908+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	vacancies	6	http://localhost:8055
+5128	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:17:53.084+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	vacancy_resources	3	http://localhost:8055
+5129	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:17:53.089+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	vacancies	6	http://localhost:8055
+5130	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:19:50.164+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	applications	6	http://localhost:8055
+5131	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:21:29.939+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	342	http://localhost:8055
+5132	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:23:41.137+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	342	http://localhost:8055
+5133	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:23:52.776+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	343	http://localhost:8055
+5134	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:24:26.887+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	328	http://localhost:8055
+5135	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:24:37.42+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	343	http://localhost:8055
+5136	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:24:49.239+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	344	http://localhost:8055
+5137	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:25:09.502+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	326	http://localhost:8055
+5138	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:25:38.926+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	326	http://localhost:8055
+5139	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:26:37.663+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	327	http://localhost:8055
+5140	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:28:28.014+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	vacancies	http://localhost:8055
+5141	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:29:56.532+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	application_interview_questions	28	http://localhost:8055
+5142	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:29:56.535+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	application_interview_questions	29	http://localhost:8055
+5143	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:29:56.54+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	applications	6	http://localhost:8055
+5144	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:31:18.728+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	project_stories	122	http://localhost:8055
+5145	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:34:26.404+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	project_stories	122	http://localhost:8055
+5146	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:35:50.279+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	project_stories	122	http://localhost:8055
+5147	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:38:56.024+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	177	http://localhost:8055
+5148	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:39:16.442+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	177	http://localhost:8055
+5149	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:39:29.216+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	178	http://localhost:8055
+5150	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:39:37.362+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	179	http://localhost:8055
+5151	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:39:47.823+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	180	http://localhost:8055
+5152	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:39:53.231+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	181	http://localhost:8055
+5153	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:43:07.911+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	project_stories	122	http://localhost:8055
+5154	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:43:19.325+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	project_stories	122	http://localhost:8055
+5155	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:43:38.674+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	project_stories	122	http://localhost:8055
+5156	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:44:13.517+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	project_stories	122	http://localhost:8055
+5157	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:44:56.617+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	project_stories	122	http://localhost:8055
+5158	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:45:02.917+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	project_stories	122	http://localhost:8055
+5159	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:45:06.058+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	project_stories	122	http://localhost:8055
+5160	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:45:22.254+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	project_stories	122	http://localhost:8055
+5161	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:45:48.436+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	project_stories	122	http://localhost:8055
+5162	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:45:57.088+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	project_stories	122	http://localhost:8055
+5163	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:52:13.507+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	project_stories	122	http://localhost:8055
+5164	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:52:42.502+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	project_stories	122	http://localhost:8055
+5165	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:52:56.273+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	project_stories	122	http://localhost:8055
+5166	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:53:54.087+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	project_stories	122	http://localhost:8055
+5167	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:54:27.934+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	project_stories	122	http://localhost:8055
+5168	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:54:35+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	project_stories	122	http://localhost:8055
+5169	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:55:04.286+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	project_stories	114	http://localhost:8055
 \.
 
 
@@ -6960,8 +6854,8 @@ applications	\N	\N	\N	f	f	\N	status	t	archived	draft	\N	all	\N	\N	6	profiles	ope
 application_interview_questions	\N	\N	{{text}}	f	f	\N	\N	t	archived	draft	sort	all	\N	\N	1	applications	open	\N	f
 profiles	\N	\N	{{name}}	f	f	\N	\N	t	\N	\N	\N	all	\N	\N	1	\N	open	\N	f
 tech_skill_types	\N	\N	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	2	\N	open	\N	f
-vacancies	\N	\N	{{title}}	f	f	\N	status	t	archived	draft	\N	all	\N	\N	3	\N	open	\N	f
 vacancy_resources	\N	\N	{{name}}	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	1	vacancies	open	\N	f
+vacancies	\N	\N	{{title}} | {{job_poster}}	f	f	\N	status	t	archived	draft	\N	all	\N	\N	3	\N	open	\N	f
 \.
 
 
@@ -7053,6 +6947,8 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 70	tech_skills	name	\N	input	\N	\N	\N	f	f	7	half	\N	\N	\N	f	\N	\N	\N
 85	tech_skills	level	\N	select-dropdown	{"choices":[{"text":"Expert","value":"expert"},{"text":"Proficient","value":"proficient"},{"text":"Intermediate","value":"intermediate"},{"text":"Beginner","value":"beginner"}],"allowNone":true}	\N	\N	f	f	9	half	\N	\N	\N	f	\N	\N	\N
 95	soft_skills	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	3	half	\N	\N	\N	f	\N	\N	\N
+196	education	sort	\N	input	\N	\N	\N	f	t	2	full	\N	\N	\N	f	\N	\N	\N
+197	education	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	5	half	\N	\N	\N	f	\N	\N	\N
 103	dev_methodologies	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	3	half	\N	\N	\N	f	\N	\N	\N
 124	work_experience_achievements	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	5	half	\N	\N	\N	f	\N	\N	\N
 107	dev_methodologies	name	\N	input	\N	\N	\N	f	f	4	full	\N	\N	\N	t	\N	\N	\N
@@ -7101,13 +6997,12 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 92	tech_skills	tech_type	m2o	select-dropdown-m2o	{}	related-values	{"template":"{{name}}"}	f	f	10	half	\N	\N	\N	f	\N	\N	\N
 169	cheat_sheets	sort	\N	input	\N	\N	\N	f	t	2	full	\N	\N	\N	f	\N	\N	\N
 165	project_stories	sort	\N	input	\N	\N	\N	f	t	2	full	\N	\N	\N	f	\N	\N	\N
-179	project_stories	action	\N	input-rich-text-md	\N	\N	\N	f	f	10	full	\N	The A from the [STAR method](https://www.techinterviewhandbook.org/behavioral-interview/#1-learn-the-star-answer-format)	\N	f	\N	\N	\N
 113	profiles	work_experiences	o2m	list-o2m	\N	related-values	{"template":"{{name}}"}	f	f	26	full	\N	\N	\N	f	\N	\N	\N
 167	project_stories	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	4	half	\N	\N	\N	f	\N	\N	\N
 164	project_stories	id	integer	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N
 176	project_stories	title	\N	input	\N	\N	\N	f	f	6	full	\N	\N	\N	t	\N	\N	\N
-177	project_stories	situation	\N	input-rich-text-md	\N	\N	\N	f	f	8	full	\N	The S from the [STAR method](https://www.techinterviewhandbook.org/behavioral-interview/#1-learn-the-star-answer-format)	\N	f	\N	\N	\N
-178	project_stories	task	\N	input-rich-text-md	\N	\N	\N	f	f	9	full	\N	The T from the [STAR method](https://www.techinterviewhandbook.org/behavioral-interview/#1-learn-the-star-answer-format)	\N	f	\N	\N	\N
+198	education	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	6	half	\N	\N	\N	f	\N	\N	\N
+201	education	url	\N	input	\N	\N	\N	f	f	11	half	\N	\N	\N	f	\N	\N	\N
 166	project_stories	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	3	half	\N	\N	\N	f	\N	\N	\N
 149	work_experience_technologies	id	integer	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N
 112	work_experiences	profile	m2o	select-dropdown-m2o	\N	\N	\N	f	f	2	half	\N	\N	\N	f	\N	\N	\N
@@ -7125,8 +7020,6 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 182	project_stories	category	\N	select-radio	{"choices":[{"text":"High-Impact Projects","value":"high_impact_projects"},{"text":"Challenging Situations","value":"challenging_situations"},{"text":"Leadership Moments","value":"leadership_moments"},{"text":"Learning Experiences","value":"learning_experiences"}]}	labels	\N	f	f	7	full	\N	Which global category of interest this is. [More info](https://www.techinterviewhandbook.org/behavioral-interview/#2-organize-your-key-stories)	\N	t	\N	\N	\N
 193	languages	sort	\N	input	\N	\N	\N	f	t	2	full	\N	\N	\N	f	\N	\N	\N
 110	work_experiences	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}],"showAsDot":true}	f	f	3	half	\N	\N	\N	f	\N	\N	\N
-180	project_stories	result	\N	input-rich-text-md	\N	\N	\N	f	f	11	full	\N	The R from the [STAR method](https://www.techinterviewhandbook.org/behavioral-interview/#1-learn-the-star-answer-format)	\N	f	\N	\N	\N
-181	project_stories	reflection	\N	input-rich-text-md	\N	\N	\N	f	f	12	full	\N	Optional extra R for the  [STAR method](https://www.techinterviewhandbook.org/behavioral-interview/#1-learn-the-star-answer-format); Finish your story with a look back at what you learned and took away. [More info](https://www.techinterviewhandbook.org/behavioral-interview/#result)	\N	f	\N	\N	\N
 49	profiles	core_stack	\N	input	\N	\N	\N	f	f	6	half	\N	Short list of your core technology stack that you are most familiar with.	\N	f	\N	\N	\N
 186	project_stories	profile	m2o	select-dropdown-m2o	\N	related-values	{"template":"{{name}}"}	f	f	5	full	\N	\N	\N	f	\N	\N	\N
 18	profiles	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	2	half	\N	\N	\N	f	\N	\N	\N
@@ -7149,10 +7042,8 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 202	education	area	\N	input	\N	\N	\N	f	f	10	half	\N	\N	\N	f	\N	\N	\N
 188	profiles	summary	\N	input-multiline	\N	\N	\N	f	f	21	full	\N	\N	\N	f	\N	\N	\N
 194	education	id	\N	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N
-196	education	sort	\N	input	\N	\N	\N	f	t	2	full	\N	\N	\N	f	\N	\N	\N
-197	education	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	5	half	\N	\N	\N	f	\N	\N	\N
-198	education	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	6	half	\N	\N	\N	f	\N	\N	\N
-201	education	url	\N	input	\N	\N	\N	f	f	11	half	\N	\N	\N	f	\N	\N	\N
+178	project_stories	task	\N	input-multiline	\N	\N	\N	f	f	9	full	\N	The T from the [STAR method](https://www.techinterviewhandbook.org/behavioral-interview/#1-learn-the-star-answer-format)	\N	f	\N	\N	\N
+180	project_stories	result	\N	input-multiline	\N	\N	\N	f	f	11	full	\N	The R from the [STAR method](https://www.techinterviewhandbook.org/behavioral-interview/#1-learn-the-star-answer-format)	\N	f	\N	\N	\N
 31	languages	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}],"showAsDot":true}	f	f	4	half	\N	\N	\N	f	\N	\N	\N
 199	education	institution	\N	input	\N	\N	\N	f	f	7	half	\N	\N	\N	f	\N	\N	\N
 238	side_project_achievements	title	\N	input	\N	\N	\N	f	f	4	half	\N	\N	\N	f	\N	\N	\N
@@ -7259,10 +7150,7 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 338	salary_expectations	profile	m2o	select-dropdown-m2o	\N	related-values	\N	f	f	5	half	\N	\N	\N	f	\N	\N	\N
 340	salary_expectations	save_stay	alias,no-data	quickifyai-save-and-stay-button	{"links":null,"label":"Save & Stay"}	\N	\N	f	f	15	full	\N	\N	\N	f	\N	\N	\N
 324	application_interview_questions	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	4	half	\N	\N	\N	f	\N	\N	\N
-327	applications	interview_questions	o2m	list-o2m	{"enableSelect":false,"layout":"table","fields":["text"]}	\N	\N	f	f	11	full	\N	\N	\N	f	\N	\N	\N
 341	applications	discontinued_reason	\N	input	\N	\N	\N	f	f	4	full	\N	\N	[{"name":"Only visible if status is discontinued","rule":{"_and":[{"status":{"_neq":"discontinued"}}]},"hidden":true}]	f	\N	\N	\N
-326	application_interview_questions	application	m2o	\N	\N	\N	\N	f	f	5	full	\N	\N	\N	f	\N	\N	\N
-328	application_interview_questions	text	\N	input-multiline	\N	\N	\N	f	f	8	full	\N	\N	\N	t	\N	\N	\N
 329	vacancy_resources	id	\N	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N
 330	vacancy_resources	sort	\N	input	\N	\N	\N	f	t	2	full	\N	\N	\N	f	\N	\N	\N
 331	vacancy_resources	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	3	half	\N	\N	\N	f	\N	\N	\N
@@ -7273,6 +7161,13 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 334	vacancy_resources	url	\N	input	\N	extension-display-link	\N	f	f	6	full	\N	\N	\N	f	\N	\N	\N
 337	vacancies	vacancy_resources	o2m	list-o2m	{"layout":"table","fields":["name","url","file"]}	related-values	\N	f	f	10	full	\N	\N	\N	f	\N	\N	\N
 300	applications	status	\N	select-dropdown	{"choices":[{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"Applied","value":"applied","color":"var(--theme--primary)"},{"text":"Discontinued","value":"discontinued","color":"#241F31"},{"text":"Rejected","value":"rejected","color":"#ED333B"},{"text":"Screening Call","value":"screening_call","color":"#C061CB"},{"text":"Coding Challenge","value":"coding_challenge","color":"#F5C211"},{"text":"Take-Home Assignment","value":"take_home_assignment","color":"#E5A50A"},{"text":"Tech Interview","value":"tech_interview","color":"#2EC27E"}]}	labels	{"choices":[{"text":"Draft","value":"draft","color":null,"background":"#865E3C","foreground":"#FFFFFF"},{"text":"Applied","value":"applied","color":null,"background":"#C061CB","foreground":"#FFFFFF"},{"text":"Discontinued","value":"discontinued","color":null,"background":"#241F31","foreground":"#FFFFFF"},{"text":"Rejected","value":"rejected","color":null,"background":"#ED333B","foreground":"#FFFFFF"},{"text":"Screening Call","value":"screening_call","color":null,"background":"#C061CB","foreground":"#FFFFFF"},{"text":"Coding Challenge","value":"coding_challenge","color":null,"background":"#F5C211","foreground":"#FFFFFF"},{"text":"Take-Home Assignment","value":"take_home_assignment","color":null,"background":"#E5A50A","foreground":"#FFFFFF"},{"text":"Tech Interview","value":"tech_interview","color":null,"background":"#2EC27E","foreground":"#FFFFFF"}]}	f	f	3	half	\N	\N	\N	f	\N	\N	\N
+343	application_interview_questions	question	\N	input-multiline	\N	\N	\N	f	f	9	full	\N	\N	\N	t	\N	\N	\N
+344	application_interview_questions	answer	\N	input-multiline	\N	\N	\N	f	f	10	full	\N	\N	\N	f	\N	\N	\N
+327	applications	interview_questions	o2m	list-o2m	{"enableSelect":false,"layout":"table","fields":["question"]}	\N	\N	f	f	11	full	\N	\N	\N	f	\N	\N	\N
+326	application_interview_questions	application	m2o	select-dropdown-m2o	\N	related-values	{"template":"{{vacancy}}{{status}}"}	f	f	5	full	\N	\N	\N	f	\N	\N	\N
+177	project_stories	situation	\N	input-multiline	\N	\N	\N	f	f	8	full	\N	The S from the [STAR method](https://www.techinterviewhandbook.org/behavioral-interview/#1-learn-the-star-answer-format)	\N	f	\N	\N	\N
+179	project_stories	action	\N	input-multiline	\N	\N	\N	f	f	10	full	\N	The A from the [STAR method](https://www.techinterviewhandbook.org/behavioral-interview/#1-learn-the-star-answer-format)	\N	f	\N	\N	\N
+181	project_stories	reflection	\N	input-multiline	\N	\N	\N	f	f	12	full	\N	Optional extra R for the  [STAR method](https://www.techinterviewhandbook.org/behavioral-interview/#1-learn-the-star-answer-format); Finish your story with a look back at what you learned and took away. [More info](https://www.techinterviewhandbook.org/behavioral-interview/#result)	\N	f	\N	\N	\N
 \.
 
 
@@ -7482,9 +7377,10 @@ COPY public.directus_presets (id, bookmark, "user", role, collection, search, la
 21	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	references	\N	\N	{"tabular":{"page":1,"fields":["author","author_position","text","status","profile"]}}	{"tabular":{"widths":{"author":149.6666259765625,"author_position":211,"text":398.6666259765625,"status":98,"profile":124.6666259765625}}}	\N	\N	bookmark	\N
 19	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	side_project_achievements	\N	\N	{"tabular":{"page":1}}	\N	\N	\N	bookmark	\N
 27	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	side_project_technologies	\N	\N	{"tabular":{"page":1}}	\N	\N	\N	bookmark	\N
+20	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	salary_expectations	\N	tabular	{"tabular":{"fields":["job_title","employment_type","work_arrangement","company_type","region","hourly_rate","daily_rate","month_salary","year_salary"],"page":1}}	{"tabular":{"widths":{"job_title":189,"employment_type":94,"work_arrangement":90,"company_type":109,"region":140.66668701171875,"hourly_rate":126,"daily_rate":114.6666259765625,"month_salary":137,"year_salary":123.3333740234375},"spacing":"cozy"},"kanban":{"groupOrder":{"groupField":"company_type","sortMap":{"startup":0,"scaleup":1,"agency":2,"enterprise":3,"big_tech":4}}}}	\N	\N	bookmark	\N
 3	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	profiles	\N	\N	{"tabular":{"page":1,"fields":["name","title","core_stack","subtitle"]}}	{"tabular":{"widths":{"name":126.66665649414062,"title":231.66668701171875,"core_stack":278.3333740234375,"subtitle":343.3333740234375}}}	\N	\N	bookmark	\N
 25	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	applications	\N	\N	{"tabular":{"fields":["vacancy","profile","status"],"page":1,"sort":["-id"]}}	{"tabular":{"widths":{"vacancy":682.3333740234375,"profile":140.33331298828125,"status":149.6666259765625}}}	\N	\N	bookmark	\N
-20	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	salary_expectations	\N	tabular	{"tabular":{"fields":["job_title","employment_type","work_arrangement","company_type","region","hourly_rate","daily_rate","month_salary","year_salary"],"page":1}}	{"tabular":{"widths":{"job_title":189,"employment_type":94,"work_arrangement":90,"company_type":109,"region":140.66668701171875,"hourly_rate":126,"daily_rate":114.6666259765625,"month_salary":137,"year_salary":123.3333740234375},"spacing":"cozy"},"kanban":{"groupOrder":{"groupField":"company_type","sortMap":{"startup":0,"scaleup":1,"agency":2,"enterprise":3,"big_tech":4}}}}	\N	\N	bookmark	\N
+28	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	application_interview_questions	\N	\N	{"tabular":{"fields":["application","question"]}}	{"tabular":{"widths":{"application":520.3333129882812,"question":815.3333740234375}}}	\N	\N	bookmark	\N
 \.
 
 
@@ -7771,6 +7667,7 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 4987	5110	applications	4	{"id":4,"status":"draft","date_created":"2025-11-03T16:12:07.464Z","date_updated":"2025-11-03T16:21:27.469Z","vacancy":4,"profile":2,"cv_sent_through":null,"cv_file_sent":null,"application_sent_date":null,"discontinued_reason":null,"interview_questions":[]}	{"vacancy":4,"date_updated":"2025-11-03T16:21:27.469Z"}	\N	\N
 4986	5109	vacancies	4	{"id":4,"status":"published","date_created":"2025-11-03T16:12:07.459Z","date_updated":"2025-11-03T16:21:27.464Z","source_url":"https://sveltejobs.com/jobs/full-stack-developer-for-innovative-projects-at-penbrothers-8ab4","title":"Full-Stack Developer for Innovative Projects","job_description":"    You'll work on everything from sleek, intuitive UIs for our customers to backend services that process and integrate AI-transformed orders.\\n    Build and refine web applications using Svelte/React for customer-facing and internal tools.\\n    Develop backend services in Go, connecting to Postgres databases.\\n    Collaborate with AI engineers to integrate OpenAI and in-house ML models into production workflows.\\n    Work with Kubernetes (K8s) to deploy and scale services.\\n    Ensure smooth data flow into ERP systems with a focus on reliability and correctness.\\n    Contribute to product design, from brainstorming UX flows to shaping technical architecture.\\n\\nRequirements\\n\\n    Strong experience in modern frontend frameworks (Svelte and/or React or similar technologies).\\n    Solid knowledge of backend languages (Go, Python, etc.)\\n    Comfort with Postgres and relational data modeling.\\n    Familiarity with Kubernetes, Docker, and cloud-native deployments.\\n    Experience integrating APIs (bonus if with AI/LLM APIs like OpenAI).\\n    A product-focused mindset: you care about end-users and real-world impact.\\n    Ability to thrive in a small, collaborative team with lots of autonomy.\\n\\nBenefits\\n\\n    Meaningful work & Growth: We take every opportunity to stretch ourselves and deliver an excellent client experience.\\n    Employee as our biggest asset: We are genuinely invested in our people’s career and welfare.\\n    Global reach & local impact: Get to work with high-growth startups and dynamic companies from the comfort of your own home.\\n    Powering global startups: We’ve created 1,400 Filipino jobs that empower global start-ups to focus on growth.","job_poster":"Penbrothers","import_source":"svelte_jobs","vacancy_resources":[2]}	{"import_source":"svelte_jobs","date_updated":"2025-11-03T16:21:27.464Z"}	4987	\N
 4989	5112	applications	4	{"id":4,"status":"discontinued","date_created":"2025-11-03T16:12:07.464Z","date_updated":"2025-11-03T16:23:26.757Z","vacancy":4,"profile":2,"cv_sent_through":null,"cv_file_sent":null,"application_sent_date":null,"discontinued_reason":"It's a remote job but for in the Philippines","interview_questions":[]}	{"status":"discontinued","discontinued_reason":"It's a remote job but for in the Philippines","date_updated":"2025-11-03T16:23:26.757Z"}	\N	\N
+4988	5111	directus_fields	300	{"id":300,"collection":"applications","field":"status","special":null,"interface":"select-dropdown","options":{"choices":[{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"Applied","value":"applied","color":"var(--theme--primary)"},{"text":"Discontinued","value":"discontinued","color":"#241F31"},{"text":"Rejected","value":"rejected","color":"#ED333B"},{"text":"Screening Call","value":"screening_call","color":"#C061CB"},{"text":"Coding Challenge","value":"coding_challenge","color":"#F5C211"},{"text":"Take-Home Assignment","value":"take_home_assignment","color":"#E5A50A"},{"text":"Tech Interview","value":"tech_interview","color":"#2EC27E"}]},"display":"labels","display_options":{"choices":[{"text":"Draft","value":"draft"},{"text":"Applied","value":"applied"},{"text":"Rejected","value":"rejected"},{"text":"Screening Call","value":"screening_call"},{"text":"Coding Challenge","value":"coding_challenge"},{"text":"Take-Home Assignment","value":"take_home_assignment"},{"text":"Tech Interview","value":"tech_interview"},{"text":"Discontinued","value":"discontinued"}]},"readonly":false,"hidden":false,"sort":3,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"applications","field":"status","options":{"choices":[{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"Applied","value":"applied","color":"var(--theme--primary)"},{"text":"Discontinued","value":"discontinued","color":"#241F31"},{"text":"Rejected","value":"rejected","color":"#ED333B"},{"text":"Screening Call","value":"screening_call","color":"#C061CB"},{"text":"Coding Challenge","value":"coding_challenge","color":"#F5C211"},{"text":"Take-Home Assignment","value":"take_home_assignment","color":"#E5A50A"},{"text":"Tech Interview","value":"tech_interview","color":"#2EC27E"}]},"display_options":{"choices":[{"text":"Draft","value":"draft"},{"text":"Applied","value":"applied"},{"text":"Rejected","value":"rejected"},{"text":"Screening Call","value":"screening_call"},{"text":"Coding Challenge","value":"coding_challenge"},{"text":"Take-Home Assignment","value":"take_home_assignment"},{"text":"Tech Interview","value":"tech_interview"},{"text":"Discontinued","value":"discontinued"}]}}	\N	\N
 4970	5093	directus_fields	300	{"id":300,"collection":"applications","field":"status","special":null,"interface":"select-dropdown","options":{"choices":[{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"Applied","value":"applied","color":"var(--theme--primary)"},{"text":"Discontinued","value":"discontinued"},{"text":"Rejected","value":"rejected","color":"#ED333B"},{"text":"Screening Call","value":"screening_call","color":"#C061CB"},{"text":"Coding Challenge","value":"coding_challenge","color":"#F5C211"},{"text":"Take-Home Assignment","value":"take_home_assignment","color":"#E5A50A"},{"text":"Tech Interview","value":"tech_interview","color":"#2EC27E"}]},"display":"labels","display_options":{"choices":[{"text":"Draft","value":"draft"},{"text":"Applied","value":"applied"},{"text":"Rejected","value":"rejected"},{"text":"Screening Call","value":"screening_call"},{"text":"Coding Challenge","value":"coding_challenge"},{"text":"Take-Home Assignment","value":"take_home_assignment"},{"text":"Tech Interview","value":"tech_interview"}]},"readonly":false,"hidden":false,"sort":3,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"applications","field":"status","options":{"choices":[{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"Applied","value":"applied","color":"var(--theme--primary)"},{"text":"Discontinued","value":"discontinued"},{"text":"Rejected","value":"rejected","color":"#ED333B"},{"text":"Screening Call","value":"screening_call","color":"#C061CB"},{"text":"Coding Challenge","value":"coding_challenge","color":"#F5C211"},{"text":"Take-Home Assignment","value":"take_home_assignment","color":"#E5A50A"},{"text":"Tech Interview","value":"tech_interview","color":"#2EC27E"}]}}	\N	\N
 4971	5094	directus_fields	341	{"sort":11,"interface":"input","special":null,"collection":"applications","field":"discontinued_reason"}	{"sort":11,"interface":"input","special":null,"collection":"applications","field":"discontinued_reason"}	\N	\N
 4972	5095	directus_fields	299	{"id":299,"collection":"applications","field":"id","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":true,"hidden":true,"sort":1,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"applications","field":"id","sort":1,"group":null}	\N	\N
@@ -7783,13 +7680,13 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 4979	5102	directus_fields	314	{"id":314,"collection":"applications","field":"cv_file_sent","special":["file"],"interface":"file","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":8,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"applications","field":"cv_file_sent","sort":8,"group":null}	\N	\N
 4980	5103	directus_fields	313	{"id":313,"collection":"applications","field":"cv_sent_through","special":null,"interface":"select-dropdown","options":{"choices":[{"text":"LinkedIn Easy Apply","value":"linkedin_easy_apply"},{"text":"Email","value":"email"},{"text":"Custom Application Form","value":"custom_form"}]},"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":9,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"applications","field":"cv_sent_through","sort":9,"group":null}	\N	\N
 4981	5104	directus_fields	315	{"id":315,"collection":"applications","field":"application_sent_date","special":null,"interface":"datetime","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":10,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"applications","field":"application_sent_date","sort":10,"group":null}	\N	\N
-4988	5111	directus_fields	300	{"id":300,"collection":"applications","field":"status","special":null,"interface":"select-dropdown","options":{"choices":[{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"Applied","value":"applied","color":"var(--theme--primary)"},{"text":"Discontinued","value":"discontinued","color":"#241F31"},{"text":"Rejected","value":"rejected","color":"#ED333B"},{"text":"Screening Call","value":"screening_call","color":"#C061CB"},{"text":"Coding Challenge","value":"coding_challenge","color":"#F5C211"},{"text":"Take-Home Assignment","value":"take_home_assignment","color":"#E5A50A"},{"text":"Tech Interview","value":"tech_interview","color":"#2EC27E"}]},"display":"labels","display_options":{"choices":[{"text":"Draft","value":"draft"},{"text":"Applied","value":"applied"},{"text":"Rejected","value":"rejected"},{"text":"Screening Call","value":"screening_call"},{"text":"Coding Challenge","value":"coding_challenge"},{"text":"Take-Home Assignment","value":"take_home_assignment"},{"text":"Tech Interview","value":"tech_interview"},{"text":"Discontinued","value":"discontinued"}]},"readonly":false,"hidden":false,"sort":3,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"applications","field":"status","options":{"choices":[{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"Applied","value":"applied","color":"var(--theme--primary)"},{"text":"Discontinued","value":"discontinued","color":"#241F31"},{"text":"Rejected","value":"rejected","color":"#ED333B"},{"text":"Screening Call","value":"screening_call","color":"#C061CB"},{"text":"Coding Challenge","value":"coding_challenge","color":"#F5C211"},{"text":"Take-Home Assignment","value":"take_home_assignment","color":"#E5A50A"},{"text":"Tech Interview","value":"tech_interview","color":"#2EC27E"}]},"display_options":{"choices":[{"text":"Draft","value":"draft"},{"text":"Applied","value":"applied"},{"text":"Rejected","value":"rejected"},{"text":"Screening Call","value":"screening_call"},{"text":"Coding Challenge","value":"coding_challenge"},{"text":"Take-Home Assignment","value":"take_home_assignment"},{"text":"Tech Interview","value":"tech_interview"},{"text":"Discontinued","value":"discontinued"}]}}	\N	\N
 4990	5113	applications	4	{"id":4,"status":"discontinued","date_created":"2025-11-03T16:12:07.464Z","date_updated":"2025-11-03T16:23:37.478Z","vacancy":4,"profile":2,"cv_sent_through":null,"cv_file_sent":null,"application_sent_date":null,"discontinued_reason":"It's a remote job, but for in the Philippines. Maybe a bit too far out of my timezone..","interview_questions":[]}	{"discontinued_reason":"It's a remote job, but for in the Philippines. Maybe a bit too far out of my timezone..","date_updated":"2025-11-03T16:23:37.478Z"}	\N	\N
 4991	5114	directus_fields	300	{"id":300,"collection":"applications","field":"status","special":null,"interface":"select-dropdown","options":{"choices":[{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"Applied","value":"applied","color":"var(--theme--primary)"},{"text":"Discontinued","value":"discontinued","color":"#241F31"},{"text":"Rejected","value":"rejected","color":"#ED333B"},{"text":"Screening Call","value":"screening_call","color":"#C061CB"},{"text":"Coding Challenge","value":"coding_challenge","color":"#F5C211"},{"text":"Take-Home Assignment","value":"take_home_assignment","color":"#E5A50A"},{"text":"Tech Interview","value":"tech_interview","color":"#2EC27E"}]},"display":"labels","display_options":{"choices":[{"text":"Draft","value":"draft","color":"#C0BFBC"},{"text":"Applied","value":"applied","color":"var(--theme--primary)"},{"text":"Discontinued","value":"discontinued","color":"#241F31"},{"text":"Rejected","value":"rejected","color":"#ED333B"},{"text":"Screening Call","value":"screening_call","color":"#C061CB"},{"text":"Coding Challenge","value":"coding_challenge","color":"#F5C211"},{"text":"Take-Home Assignment","value":"take_home_assignment","color":"#E5A50A"},{"text":"Tech Interview","value":"tech_interview","color":"#2EC27E"}]},"readonly":false,"hidden":false,"sort":3,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"applications","field":"status","display_options":{"choices":[{"text":"Draft","value":"draft","color":"#C0BFBC"},{"text":"Applied","value":"applied","color":"var(--theme--primary)"},{"text":"Discontinued","value":"discontinued","color":"#241F31"},{"text":"Rejected","value":"rejected","color":"#ED333B"},{"text":"Screening Call","value":"screening_call","color":"#C061CB"},{"text":"Coding Challenge","value":"coding_challenge","color":"#F5C211"},{"text":"Take-Home Assignment","value":"take_home_assignment","color":"#E5A50A"},{"text":"Tech Interview","value":"tech_interview","color":"#2EC27E"}]}}	\N	\N
 4992	5115	directus_fields	300	{"id":300,"collection":"applications","field":"status","special":null,"interface":"select-dropdown","options":{"choices":[{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"Applied","value":"applied","color":"var(--theme--primary)"},{"text":"Discontinued","value":"discontinued","color":"#241F31"},{"text":"Rejected","value":"rejected","color":"#ED333B"},{"text":"Screening Call","value":"screening_call","color":"#C061CB"},{"text":"Coding Challenge","value":"coding_challenge","color":"#F5C211"},{"text":"Take-Home Assignment","value":"take_home_assignment","color":"#E5A50A"},{"text":"Tech Interview","value":"tech_interview","color":"#2EC27E"}]},"display":"labels","display_options":{"choices":[{"text":"Draft","value":"draft","color":null,"background":"#C0BFBC"},{"text":"Applied","value":"applied","color":"var(--theme--primary)"},{"text":"Discontinued","value":"discontinued","color":"#241F31"},{"text":"Rejected","value":"rejected","color":"#ED333B"},{"text":"Screening Call","value":"screening_call","color":"#C061CB"},{"text":"Coding Challenge","value":"coding_challenge","color":"#F5C211"},{"text":"Take-Home Assignment","value":"take_home_assignment","color":"#E5A50A"},{"text":"Tech Interview","value":"tech_interview","color":"#2EC27E"}]},"readonly":false,"hidden":false,"sort":3,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"applications","field":"status","display_options":{"choices":[{"text":"Draft","value":"draft","color":null,"background":"#C0BFBC"},{"text":"Applied","value":"applied","color":"var(--theme--primary)"},{"text":"Discontinued","value":"discontinued","color":"#241F31"},{"text":"Rejected","value":"rejected","color":"#ED333B"},{"text":"Screening Call","value":"screening_call","color":"#C061CB"},{"text":"Coding Challenge","value":"coding_challenge","color":"#F5C211"},{"text":"Take-Home Assignment","value":"take_home_assignment","color":"#E5A50A"},{"text":"Tech Interview","value":"tech_interview","color":"#2EC27E"}]}}	\N	\N
 4993	5116	directus_fields	300	{"id":300,"collection":"applications","field":"status","special":null,"interface":"select-dropdown","options":{"choices":[{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"Applied","value":"applied","color":"var(--theme--primary)"},{"text":"Discontinued","value":"discontinued","color":"#241F31"},{"text":"Rejected","value":"rejected","color":"#ED333B"},{"text":"Screening Call","value":"screening_call","color":"#C061CB"},{"text":"Coding Challenge","value":"coding_challenge","color":"#F5C211"},{"text":"Take-Home Assignment","value":"take_home_assignment","color":"#E5A50A"},{"text":"Tech Interview","value":"tech_interview","color":"#2EC27E"}]},"display":"labels","display_options":{"choices":[{"text":"Draft","value":"draft","color":null,"background":"#C0BFBC"},{"text":"Applied","value":"applied","color":null,"background":"#C061CB"},{"text":"Discontinued","value":"discontinued","color":null,"background":"#241F31"},{"text":"Rejected","value":"rejected","color":null,"background":"#ED333B"},{"text":"Screening Call","value":"screening_call","color":null,"background":"#C061CB"},{"text":"Coding Challenge","value":"coding_challenge","color":null,"background":"#F5C211"},{"text":"Take-Home Assignment","value":"take_home_assignment","color":null,"background":"#E5A50A"},{"text":"Tech Interview","value":"tech_interview","color":null,"background":"#2EC27E"}]},"readonly":false,"hidden":false,"sort":3,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"applications","field":"status","display_options":{"choices":[{"text":"Draft","value":"draft","color":null,"background":"#C0BFBC"},{"text":"Applied","value":"applied","color":null,"background":"#C061CB"},{"text":"Discontinued","value":"discontinued","color":null,"background":"#241F31"},{"text":"Rejected","value":"rejected","color":null,"background":"#ED333B"},{"text":"Screening Call","value":"screening_call","color":null,"background":"#C061CB"},{"text":"Coding Challenge","value":"coding_challenge","color":null,"background":"#F5C211"},{"text":"Take-Home Assignment","value":"take_home_assignment","color":null,"background":"#E5A50A"},{"text":"Tech Interview","value":"tech_interview","color":null,"background":"#2EC27E"}]}}	\N	\N
 4994	5117	directus_fields	300	{"id":300,"collection":"applications","field":"status","special":null,"interface":"select-dropdown","options":{"choices":[{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"Applied","value":"applied","color":"var(--theme--primary)"},{"text":"Discontinued","value":"discontinued","color":"#241F31"},{"text":"Rejected","value":"rejected","color":"#ED333B"},{"text":"Screening Call","value":"screening_call","color":"#C061CB"},{"text":"Coding Challenge","value":"coding_challenge","color":"#F5C211"},{"text":"Take-Home Assignment","value":"take_home_assignment","color":"#E5A50A"},{"text":"Tech Interview","value":"tech_interview","color":"#2EC27E"}]},"display":"labels","display_options":{"choices":[{"text":"Draft","value":"draft","color":null,"background":"#CDAB8F"},{"text":"Applied","value":"applied","color":null,"background":"#DC8ADD"},{"text":"Discontinued","value":"discontinued","color":null,"background":"#C0BFBC"},{"text":"Rejected","value":"rejected","color":null,"background":"#F66151"},{"text":"Screening Call","value":"screening_call","color":null,"background":"#99C1F1"},{"text":"Coding Challenge","value":"coding_challenge","color":null,"background":"#F9F06B"},{"text":"Take-Home Assignment","value":"take_home_assignment","color":null,"background":"#F9F06B"},{"text":"Tech Interview","value":"tech_interview","color":null,"background":"#8FF0A4"}]},"readonly":false,"hidden":false,"sort":3,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"applications","field":"status","display_options":{"choices":[{"text":"Draft","value":"draft","color":null,"background":"#CDAB8F"},{"text":"Applied","value":"applied","color":null,"background":"#DC8ADD"},{"text":"Discontinued","value":"discontinued","color":null,"background":"#C0BFBC"},{"text":"Rejected","value":"rejected","color":null,"background":"#F66151"},{"text":"Screening Call","value":"screening_call","color":null,"background":"#99C1F1"},{"text":"Coding Challenge","value":"coding_challenge","color":null,"background":"#F9F06B"},{"text":"Take-Home Assignment","value":"take_home_assignment","color":null,"background":"#F9F06B"},{"text":"Tech Interview","value":"tech_interview","color":null,"background":"#8FF0A4"}]}}	\N	\N
 4995	5118	directus_fields	300	{"id":300,"collection":"applications","field":"status","special":null,"interface":"select-dropdown","options":{"choices":[{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"Applied","value":"applied","color":"var(--theme--primary)"},{"text":"Discontinued","value":"discontinued","color":"#241F31"},{"text":"Rejected","value":"rejected","color":"#ED333B"},{"text":"Screening Call","value":"screening_call","color":"#C061CB"},{"text":"Coding Challenge","value":"coding_challenge","color":"#F5C211"},{"text":"Take-Home Assignment","value":"take_home_assignment","color":"#E5A50A"},{"text":"Tech Interview","value":"tech_interview","color":"#2EC27E"}]},"display":"labels","display_options":{"choices":[{"text":"Draft","value":"draft","color":null,"background":"#865E3C","foreground":"#FFFFFF"},{"text":"Applied","value":"applied","color":null,"background":"#DC8ADD"},{"text":"Discontinued","value":"discontinued","color":null,"background":"#C0BFBC"},{"text":"Rejected","value":"rejected","color":null,"background":"#F66151"},{"text":"Screening Call","value":"screening_call","color":null,"background":"#99C1F1"},{"text":"Coding Challenge","value":"coding_challenge","color":null,"background":"#F9F06B"},{"text":"Take-Home Assignment","value":"take_home_assignment","color":null,"background":"#F9F06B"},{"text":"Tech Interview","value":"tech_interview","color":null,"background":"#8FF0A4"}]},"readonly":false,"hidden":false,"sort":3,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"applications","field":"status","display_options":{"choices":[{"text":"Draft","value":"draft","color":null,"background":"#865E3C","foreground":"#FFFFFF"},{"text":"Applied","value":"applied","color":null,"background":"#DC8ADD"},{"text":"Discontinued","value":"discontinued","color":null,"background":"#C0BFBC"},{"text":"Rejected","value":"rejected","color":null,"background":"#F66151"},{"text":"Screening Call","value":"screening_call","color":null,"background":"#99C1F1"},{"text":"Coding Challenge","value":"coding_challenge","color":null,"background":"#F9F06B"},{"text":"Take-Home Assignment","value":"take_home_assignment","color":null,"background":"#F9F06B"},{"text":"Tech Interview","value":"tech_interview","color":null,"background":"#8FF0A4"}]}}	\N	\N
+5008	5133	directus_fields	343	{"sort":9,"interface":"input-multiline","special":null,"collection":"application_interview_questions","field":"question"}	{"sort":9,"interface":"input-multiline","special":null,"collection":"application_interview_questions","field":"question"}	\N	\N
 4996	5119	directus_fields	300	{"id":300,"collection":"applications","field":"status","special":null,"interface":"select-dropdown","options":{"choices":[{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"Applied","value":"applied","color":"var(--theme--primary)"},{"text":"Discontinued","value":"discontinued","color":"#241F31"},{"text":"Rejected","value":"rejected","color":"#ED333B"},{"text":"Screening Call","value":"screening_call","color":"#C061CB"},{"text":"Coding Challenge","value":"coding_challenge","color":"#F5C211"},{"text":"Take-Home Assignment","value":"take_home_assignment","color":"#E5A50A"},{"text":"Tech Interview","value":"tech_interview","color":"#2EC27E"}]},"display":"labels","display_options":{"choices":[{"text":"Draft","value":"draft","color":null,"background":"#865E3C","foreground":"#FFFFFF"},{"text":"Applied","value":"applied","color":null,"background":"#C061CB","foreground":"#FFFFFF"},{"text":"Discontinued","value":"discontinued","color":null,"background":"#C0BFBC"},{"text":"Rejected","value":"rejected","color":null,"background":"#F66151"},{"text":"Screening Call","value":"screening_call","color":null,"background":"#99C1F1"},{"text":"Coding Challenge","value":"coding_challenge","color":null,"background":"#F9F06B"},{"text":"Take-Home Assignment","value":"take_home_assignment","color":null,"background":"#F9F06B"},{"text":"Tech Interview","value":"tech_interview","color":null,"background":"#8FF0A4"}]},"readonly":false,"hidden":false,"sort":3,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"applications","field":"status","display_options":{"choices":[{"text":"Draft","value":"draft","color":null,"background":"#865E3C","foreground":"#FFFFFF"},{"text":"Applied","value":"applied","color":null,"background":"#C061CB","foreground":"#FFFFFF"},{"text":"Discontinued","value":"discontinued","color":null,"background":"#C0BFBC"},{"text":"Rejected","value":"rejected","color":null,"background":"#F66151"},{"text":"Screening Call","value":"screening_call","color":null,"background":"#99C1F1"},{"text":"Coding Challenge","value":"coding_challenge","color":null,"background":"#F9F06B"},{"text":"Take-Home Assignment","value":"take_home_assignment","color":null,"background":"#F9F06B"},{"text":"Tech Interview","value":"tech_interview","color":null,"background":"#8FF0A4"}]}}	\N	\N
 4997	5120	directus_fields	300	{"id":300,"collection":"applications","field":"status","special":null,"interface":"select-dropdown","options":{"choices":[{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"Applied","value":"applied","color":"var(--theme--primary)"},{"text":"Discontinued","value":"discontinued","color":"#241F31"},{"text":"Rejected","value":"rejected","color":"#ED333B"},{"text":"Screening Call","value":"screening_call","color":"#C061CB"},{"text":"Coding Challenge","value":"coding_challenge","color":"#F5C211"},{"text":"Take-Home Assignment","value":"take_home_assignment","color":"#E5A50A"},{"text":"Tech Interview","value":"tech_interview","color":"#2EC27E"}]},"display":"labels","display_options":{"choices":[{"text":"Draft","value":"draft","color":null,"background":"#865E3C","foreground":"#FFFFFF"},{"text":"Applied","value":"applied","color":null,"background":"#C061CB","foreground":"#FFFFFF"},{"text":"Discontinued","value":"discontinued","color":null,"background":"#241F31","foreground":"#FFFFFF"},{"text":"Rejected","value":"rejected","color":null,"background":"#ED333B","foreground":"#FFFFFF"},{"text":"Screening Call","value":"screening_call","color":null,"background":"#C061CB","foreground":"#FFFFFF"},{"text":"Coding Challenge","value":"coding_challenge","color":null,"background":"#F5C211","foreground":"#FFFFFF"},{"text":"Take-Home Assignment","value":"take_home_assignment","color":null,"background":"#E5A50A","foreground":"#FFFFFF"},{"text":"Tech Interview","value":"tech_interview","color":null,"background":"#2EC27E","foreground":"#FFFFFF"}]},"readonly":false,"hidden":false,"sort":3,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"applications","field":"status","display_options":{"choices":[{"text":"Draft","value":"draft","color":null,"background":"#865E3C","foreground":"#FFFFFF"},{"text":"Applied","value":"applied","color":null,"background":"#C061CB","foreground":"#FFFFFF"},{"text":"Discontinued","value":"discontinued","color":null,"background":"#241F31","foreground":"#FFFFFF"},{"text":"Rejected","value":"rejected","color":null,"background":"#ED333B","foreground":"#FFFFFF"},{"text":"Screening Call","value":"screening_call","color":null,"background":"#C061CB","foreground":"#FFFFFF"},{"text":"Coding Challenge","value":"coding_challenge","color":null,"background":"#F5C211","foreground":"#FFFFFF"},{"text":"Take-Home Assignment","value":"take_home_assignment","color":null,"background":"#E5A50A","foreground":"#FFFFFF"},{"text":"Tech Interview","value":"tech_interview","color":null,"background":"#2EC27E","foreground":"#FFFFFF"}]}}	\N	\N
 4998	5121	applications	3	{"id":3,"status":"discontinued","date_created":"2025-11-03T14:06:02.338Z","date_updated":"2025-11-03T16:31:49.940Z","vacancy":3,"profile":2,"cv_sent_through":"custom_form","cv_file_sent":"05fde889-f95b-4041-8d92-6e43df495fd9","application_sent_date":"2025-11-01","discontinued_reason":"Crazy hard application questions..","interview_questions":[1,4,3,2,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27]}	{"status":"discontinued","discontinued_reason":"Crazy hard application questions..","date_updated":"2025-11-03T16:31:49.940Z"}	\N	\N
@@ -7797,6 +7694,46 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 5001	5124	applications	5	{"vacancy":{"status":"published","title":"Python Software Developer (Fully Remote)","source_url":"https://www.linkedin.com/jobs/view/4332169828/","import_source":"linkedin","job_poster":"Moralis","job_description":"Senior Software Engineer \\n\\n\\nKey Responsibilities:\\n\\n    Design and implement scalable, maintainable, and well-documented systems and APIs.\\n    Develop and maintain services in Python with a strong focus on Django, async programming, typing, pydantic, and pytest.\\n    Apply SOLID principles, data structures, and algorithms to ensure clean, maintainable code.\\n    Build and integrate systems in event-driven architectures.\\n    Develop solutions leveraging YANG models, gNMI/gNOI protocols, and industry API specifications (TMF API, OpenAPI).\\n    Contribute to cloud-native development workflows, including Docker, Helm, and Ansible.\\n    Collaborate with cross-functional teams to ensure system reliability, performance, and security.\\n    Write clear documentation and contribute to knowledge-sharing within the team.\\n\\n\\nRequired Skills & Experience:\\n\\n    High proficiency in Python, with practical experience in Django, Typing, Pydantic, Pytest.\\n    Strong background in systems/API/interface design and documentation.\\n    Experience with event-driven architecture.\\n    Experienced in YANG modeling, gNMI/gNOI protocols, and API standards (TMF, OpenAPI).\\n    Hands-on experience with cloud-native technologies: Docker, Helm, Ansible."},"profile":2}	{"vacancy":{"status":"published","title":"Python Software Developer (Fully Remote)","source_url":"https://www.linkedin.com/jobs/view/4332169828/","import_source":"linkedin","job_poster":"Moralis","job_description":"Senior Software Engineer \\n\\n\\nKey Responsibilities:\\n\\n    Design and implement scalable, maintainable, and well-documented systems and APIs.\\n    Develop and maintain services in Python with a strong focus on Django, async programming, typing, pydantic, and pytest.\\n    Apply SOLID principles, data structures, and algorithms to ensure clean, maintainable code.\\n    Build and integrate systems in event-driven architectures.\\n    Develop solutions leveraging YANG models, gNMI/gNOI protocols, and industry API specifications (TMF API, OpenAPI).\\n    Contribute to cloud-native development workflows, including Docker, Helm, and Ansible.\\n    Collaborate with cross-functional teams to ensure system reliability, performance, and security.\\n    Write clear documentation and contribute to knowledge-sharing within the team.\\n\\n\\nRequired Skills & Experience:\\n\\n    High proficiency in Python, with practical experience in Django, Typing, Pydantic, Pytest.\\n    Strong background in systems/API/interface design and documentation.\\n    Experience with event-driven architecture.\\n    Experienced in YANG modeling, gNMI/gNOI protocols, and API standards (TMF, OpenAPI).\\n    Hands-on experience with cloud-native technologies: Docker, Helm, Ansible."},"profile":2}	\N	\N
 5000	5123	vacancies	5	{"status":"published","title":"Python Software Developer (Fully Remote)","source_url":"https://www.linkedin.com/jobs/view/4332169828/","import_source":"linkedin","job_poster":"Moralis","job_description":"Senior Software Engineer \\n\\n\\nKey Responsibilities:\\n\\n    Design and implement scalable, maintainable, and well-documented systems and APIs.\\n    Develop and maintain services in Python with a strong focus on Django, async programming, typing, pydantic, and pytest.\\n    Apply SOLID principles, data structures, and algorithms to ensure clean, maintainable code.\\n    Build and integrate systems in event-driven architectures.\\n    Develop solutions leveraging YANG models, gNMI/gNOI protocols, and industry API specifications (TMF API, OpenAPI).\\n    Contribute to cloud-native development workflows, including Docker, Helm, and Ansible.\\n    Collaborate with cross-functional teams to ensure system reliability, performance, and security.\\n    Write clear documentation and contribute to knowledge-sharing within the team.\\n\\n\\nRequired Skills & Experience:\\n\\n    High proficiency in Python, with practical experience in Django, Typing, Pydantic, Pytest.\\n    Strong background in systems/API/interface design and documentation.\\n    Experience with event-driven architecture.\\n    Experienced in YANG modeling, gNMI/gNOI protocols, and API standards (TMF, OpenAPI).\\n    Hands-on experience with cloud-native technologies: Docker, Helm, Ansible."}	{"status":"published","title":"Python Software Developer (Fully Remote)","source_url":"https://www.linkedin.com/jobs/view/4332169828/","import_source":"linkedin","job_poster":"Moralis","job_description":"Senior Software Engineer \\n\\n\\nKey Responsibilities:\\n\\n    Design and implement scalable, maintainable, and well-documented systems and APIs.\\n    Develop and maintain services in Python with a strong focus on Django, async programming, typing, pydantic, and pytest.\\n    Apply SOLID principles, data structures, and algorithms to ensure clean, maintainable code.\\n    Build and integrate systems in event-driven architectures.\\n    Develop solutions leveraging YANG models, gNMI/gNOI protocols, and industry API specifications (TMF API, OpenAPI).\\n    Contribute to cloud-native development workflows, including Docker, Helm, and Ansible.\\n    Collaborate with cross-functional teams to ensure system reliability, performance, and security.\\n    Write clear documentation and contribute to knowledge-sharing within the team.\\n\\n\\nRequired Skills & Experience:\\n\\n    High proficiency in Python, with practical experience in Django, Typing, Pydantic, Pytest.\\n    Strong background in systems/API/interface design and documentation.\\n    Experience with event-driven architecture.\\n    Experienced in YANG modeling, gNMI/gNOI protocols, and API standards (TMF, OpenAPI).\\n    Hands-on experience with cloud-native technologies: Docker, Helm, Ansible."}	5001	\N
 5002	5125	applications	5	{"id":5,"status":"discontinued","date_created":"2025-11-03T16:33:34.298Z","date_updated":"2025-11-03T16:34:53.571Z","vacancy":5,"profile":2,"cv_sent_through":null,"cv_file_sent":null,"application_sent_date":null,"discontinued_reason":"No experience with YANG modeling","interview_questions":[]}	{"status":"discontinued","discontinued_reason":"No experience with YANG modeling","date_updated":"2025-11-03T16:34:53.571Z"}	\N	\N
+5003	5127	vacancies	6	{"source_url":"https://www.linkedin.com/jobs/view/4333609605/","import_source":"linkedin","status":"published","title":"Full Stack Software Engineering Position","job_poster":"Flex Living","job_description":"Join The Team Reinventing How The World Rents.\\n\\nAt The Flex, we believe renting a home should be as effortless as ordering an Uber.\\n\\nOur mission is bold: to make renting borderless, instant, and intelligent.\\n\\nThrough Base360.ai — our proprietary platform — we’re building the digital nervous system of the rental world: connecting property data, automating operations, and creating an intelligent layer that powers every stay, everywhere.\\n\\nIf you’re an engineer who thrives at the intersection of automation, AI, and real-world impact, this is your chance to help redefine how millions live and move.\\n\\n💡 What You’ll Build\\n\\nAs a Full Stack Engineer, you’ll architect and scale the systems behind The Flex — from frictionless guest journeys and automated check-ins to predictive pricing and operational intelligence.\\n\\nYou’ll work across the stack and across continents, turning complex real estate problems into clean, efficient, and scalable solutions.\\n\\nYou won’t just ship features — you’ll engineer efficiency, eliminate friction, and build the backbone of the intelligent rental economy.\\n\\n⚙️ Your Mission\\n\\n    Build the Core – Develop scalable, high-performance web apps that power bookings, payments, and automation workflows.\\n    Automate Everything – Design AI-driven scripts and microservices to eliminate repetitive manual tasks.\\n    Integrate Intelligently – Build and optimize APIs linking Base360.ai with key platforms like Airbnb, Stripe, and Twilio.\\n    Ship Fast, Scale Smart – Manage and deploy cloud infrastructure (AWS, serverless) for speed, reliability, and growth.\\n    Solve Problems That Matter – Tackle challenges like global booking sync, predictive pricing, and live operational insights.\\n    Collaborate Deeply – Partner with product, operations, and data teams to bring automation from code to reality.\\n\\n🧠 You’re a Great Fit If You Have\\n\\n    Strong experience with Node.js, React, and AWS (serverless stack preferred).\\n    Expertise in designing and scaling API-first architectures.\\n    Familiarity with FastAPI/Python for automation or data pipelines (bonus points).\\n    A passion for building clean, production-grade systems that scale globally.\\n    Curiosity about automation, real estate tech, and AI-driven operations.\\n    A bias for action — you build fast, learn faster, and love solving hard problems.\\n\\n🌍 Why You’ll Love It Here\\n\\n    Real Impact – Your code will power thousands of stays and disrupt a $4T industry.\\n    Global Mission, Lean Team – No silos. No bureaucracy. Just top performers building fast.\\n    Growth Mindset – We iterate quickly, embrace feedback, and scale what works.\\n    Performance-Driven Rewards – Competitive pay + meaningful upside for exceptional contributors.\\n    Remote-First Culture – Work from anywhere. We care about results, not hours.\\n\\n🚫 Do Not Apply If\\n\\n    You’re looking for a safe, predictable 9–5.\\n    You prefer talking over building.\\n    You’re comfortable being average.\\n    You’re not aiming to be among the top 1% in your craft.\\n\\n"}	{"source_url":"https://www.linkedin.com/jobs/view/4333609605/","import_source":"linkedin","status":"published","title":"Full Stack Software Engineering Position","job_poster":"Flex Living","job_description":"Join The Team Reinventing How The World Rents.\\n\\nAt The Flex, we believe renting a home should be as effortless as ordering an Uber.\\n\\nOur mission is bold: to make renting borderless, instant, and intelligent.\\n\\nThrough Base360.ai — our proprietary platform — we’re building the digital nervous system of the rental world: connecting property data, automating operations, and creating an intelligent layer that powers every stay, everywhere.\\n\\nIf you’re an engineer who thrives at the intersection of automation, AI, and real-world impact, this is your chance to help redefine how millions live and move.\\n\\n💡 What You’ll Build\\n\\nAs a Full Stack Engineer, you’ll architect and scale the systems behind The Flex — from frictionless guest journeys and automated check-ins to predictive pricing and operational intelligence.\\n\\nYou’ll work across the stack and across continents, turning complex real estate problems into clean, efficient, and scalable solutions.\\n\\nYou won’t just ship features — you’ll engineer efficiency, eliminate friction, and build the backbone of the intelligent rental economy.\\n\\n⚙️ Your Mission\\n\\n    Build the Core – Develop scalable, high-performance web apps that power bookings, payments, and automation workflows.\\n    Automate Everything – Design AI-driven scripts and microservices to eliminate repetitive manual tasks.\\n    Integrate Intelligently – Build and optimize APIs linking Base360.ai with key platforms like Airbnb, Stripe, and Twilio.\\n    Ship Fast, Scale Smart – Manage and deploy cloud infrastructure (AWS, serverless) for speed, reliability, and growth.\\n    Solve Problems That Matter – Tackle challenges like global booking sync, predictive pricing, and live operational insights.\\n    Collaborate Deeply – Partner with product, operations, and data teams to bring automation from code to reality.\\n\\n🧠 You’re a Great Fit If You Have\\n\\n    Strong experience with Node.js, React, and AWS (serverless stack preferred).\\n    Expertise in designing and scaling API-first architectures.\\n    Familiarity with FastAPI/Python for automation or data pipelines (bonus points).\\n    A passion for building clean, production-grade systems that scale globally.\\n    Curiosity about automation, real estate tech, and AI-driven operations.\\n    A bias for action — you build fast, learn faster, and love solving hard problems.\\n\\n🌍 Why You’ll Love It Here\\n\\n    Real Impact – Your code will power thousands of stays and disrupt a $4T industry.\\n    Global Mission, Lean Team – No silos. No bureaucracy. Just top performers building fast.\\n    Growth Mindset – We iterate quickly, embrace feedback, and scale what works.\\n    Performance-Driven Rewards – Competitive pay + meaningful upside for exceptional contributors.\\n    Remote-First Culture – Work from anywhere. We care about results, not hours.\\n\\n🚫 Do Not Apply If\\n\\n    You’re looking for a safe, predictable 9–5.\\n    You prefer talking over building.\\n    You’re comfortable being average.\\n    You’re not aiming to be among the top 1% in your craft.\\n\\n"}	\N	\N
+5005	5129	vacancies	6	{"id":6,"status":"published","date_created":"2025-11-04T13:17:14.906Z","date_updated":"2025-11-04T13:17:53.078Z","source_url":"https://www.linkedin.com/jobs/view/4333609605/","title":"Full Stack Software Engineering Position","job_description":"Join The Team Reinventing How The World Rents.\\n\\nAt The Flex, we believe renting a home should be as effortless as ordering an Uber.\\n\\nOur mission is bold: to make renting borderless, instant, and intelligent.\\n\\nThrough Base360.ai — our proprietary platform — we’re building the digital nervous system of the rental world: connecting property data, automating operations, and creating an intelligent layer that powers every stay, everywhere.\\n\\nIf you’re an engineer who thrives at the intersection of automation, AI, and real-world impact, this is your chance to help redefine how millions live and move.\\n\\n💡 What You’ll Build\\n\\nAs a Full Stack Engineer, you’ll architect and scale the systems behind The Flex — from frictionless guest journeys and automated check-ins to predictive pricing and operational intelligence.\\n\\nYou’ll work across the stack and across continents, turning complex real estate problems into clean, efficient, and scalable solutions.\\n\\nYou won’t just ship features — you’ll engineer efficiency, eliminate friction, and build the backbone of the intelligent rental economy.\\n\\n⚙️ Your Mission\\n\\n    Build the Core – Develop scalable, high-performance web apps that power bookings, payments, and automation workflows.\\n    Automate Everything – Design AI-driven scripts and microservices to eliminate repetitive manual tasks.\\n    Integrate Intelligently – Build and optimize APIs linking Base360.ai with key platforms like Airbnb, Stripe, and Twilio.\\n    Ship Fast, Scale Smart – Manage and deploy cloud infrastructure (AWS, serverless) for speed, reliability, and growth.\\n    Solve Problems That Matter – Tackle challenges like global booking sync, predictive pricing, and live operational insights.\\n    Collaborate Deeply – Partner with product, operations, and data teams to bring automation from code to reality.\\n\\n🧠 You’re a Great Fit If You Have\\n\\n    Strong experience with Node.js, React, and AWS (serverless stack preferred).\\n    Expertise in designing and scaling API-first architectures.\\n    Familiarity with FastAPI/Python for automation or data pipelines (bonus points).\\n    A passion for building clean, production-grade systems that scale globally.\\n    Curiosity about automation, real estate tech, and AI-driven operations.\\n    A bias for action — you build fast, learn faster, and love solving hard problems.\\n\\n🌍 Why You’ll Love It Here\\n\\n    Real Impact – Your code will power thousands of stays and disrupt a $4T industry.\\n    Global Mission, Lean Team – No silos. No bureaucracy. Just top performers building fast.\\n    Growth Mindset – We iterate quickly, embrace feedback, and scale what works.\\n    Performance-Driven Rewards – Competitive pay + meaningful upside for exceptional contributors.\\n    Remote-First Culture – Work from anywhere. We care about results, not hours.\\n\\n🚫 Do Not Apply If\\n\\n    You’re looking for a safe, predictable 9–5.\\n    You prefer talking over building.\\n    You’re comfortable being average.\\n    You’re not aiming to be among the top 1% in your craft.\\n\\n","job_poster":"Flex Living","import_source":"linkedin","vacancy_resources":[3]}	{"date_updated":"2025-11-04T13:17:53.078Z"}	\N	\N
+5004	5128	vacancy_resources	3	{"url":"https://jobs.ashbyhq.com/The-Flex/54dd2207-c091-4823-8d9b-20bc59b911c4","name":"Application URL","vacancy":"6"}	{"url":"https://jobs.ashbyhq.com/The-Flex/54dd2207-c091-4823-8d9b-20bc59b911c4","name":"Application URL","vacancy":"6"}	5005	\N
+5006	5130	applications	6	{"profile":2,"vacancy":6}	{"profile":2,"vacancy":6}	\N	\N
+5007	5131	directus_fields	342	{"sort":9,"interface":"input","special":null,"required":true,"collection":"application_interview_questions","field":"question"}	{"sort":9,"interface":"input","special":null,"required":true,"collection":"application_interview_questions","field":"question"}	\N	\N
+5009	5135	directus_fields	343	{"id":343,"collection":"application_interview_questions","field":"question","special":null,"interface":"input-multiline","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":9,"width":"full","translations":null,"note":null,"conditions":null,"required":true,"group":null,"validation":null,"validation_message":null}	{"collection":"application_interview_questions","field":"question","required":true}	\N	\N
+5010	5136	directus_fields	344	{"sort":10,"interface":"input-multiline","special":null,"collection":"application_interview_questions","field":"answer"}	{"sort":10,"interface":"input-multiline","special":null,"collection":"application_interview_questions","field":"answer"}	\N	\N
+5011	5137	directus_fields	326	{"id":326,"collection":"application_interview_questions","field":"application","special":["m2o"],"interface":"select-dropdown-m2o","options":null,"display":"related-values","display_options":null,"readonly":false,"hidden":false,"sort":5,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"application_interview_questions","field":"application","interface":"select-dropdown-m2o","display":"related-values"}	\N	\N
+5012	5138	directus_fields	326	{"id":326,"collection":"application_interview_questions","field":"application","special":["m2o"],"interface":"select-dropdown-m2o","options":null,"display":"related-values","display_options":{"template":"{{vacancy}}{{status}}"},"readonly":false,"hidden":false,"sort":5,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"application_interview_questions","field":"application","display_options":{"template":"{{vacancy}}{{status}}"}}	\N	\N
+5013	5139	directus_fields	327	{"id":327,"collection":"applications","field":"interview_questions","special":["o2m"],"interface":"list-o2m","options":{"enableSelect":false,"layout":"table","fields":["question"]},"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":11,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"applications","field":"interview_questions","options":{"enableSelect":false,"layout":"table","fields":["question"]}}	\N	\N
+5014	5140	directus_collections	vacancies	{"collection":"vacancies","icon":null,"note":null,"display_template":"{{title}} | {{job_poster}}","hidden":false,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":null,"accountability":"all","color":null,"item_duplication_fields":null,"sort":3,"group":null,"collapse":"open","preview_url":null,"versioning":false}	{"display_template":"{{title}} | {{job_poster}}"}	\N	\N
+5017	5143	applications	6	{"id":6,"status":"draft","date_created":"2025-11-04T13:19:50.161Z","date_updated":"2025-11-04T13:29:56.529Z","vacancy":6,"profile":2,"cv_sent_through":null,"cv_file_sent":null,"application_sent_date":null,"discontinued_reason":null,"interview_questions":[28,29]}	{"date_updated":"2025-11-04T13:29:56.529Z"}	\N	\N
+5015	5141	application_interview_questions	28	{"question":"Tell us about a time when you \\"hacked the system\\" to your advantage","application":"6"}	{"question":"Tell us about a time when you \\"hacked the system\\" to your advantage","application":"6"}	5017	\N
+5016	5142	application_interview_questions	29	{"question":"Tell us about something you've done in the past that can be considered as evidence of exceptional ability","application":"6"}	{"question":"Tell us about something you've done in the past that can be considered as evidence of exceptional ability","application":"6"}	5017	\N
+5018	5144	project_stories	122	{"profile":2,"title":"LitState - state management library for Lit (Web Components library)","category":"high_impact_projects"}	{"profile":2,"title":"LitState - state management library for Lit (Web Components library)","category":"high_impact_projects"}	\N	\N
+5019	5145	project_stories	122	{"id":122,"sort":null,"date_created":"2025-11-04T13:31:18.727Z","date_updated":"2025-11-04T13:34:26.403Z","title":"LitState - state management library for Lit (Web Components library)","situation":"- I used the library \\"Lit\\" as a lightweight React replacement\\n- Very satisfied about it, but lacked state management library\\n- State management between multiple components cumbersome","task":null,"action":null,"result":null,"reflection":null,"category":"high_impact_projects","profile":2}	{"situation":"- I used the library \\"Lit\\" as a lightweight React replacement\\n- Very satisfied about it, but lacked state management library\\n- State management between multiple components cumbersome","date_updated":"2025-11-04T13:34:26.403Z"}	\N	\N
+5020	5146	project_stories	122	{"id":122,"sort":null,"date_created":"2025-11-04T13:31:18.727Z","date_updated":"2025-11-04T13:35:50.277Z","title":"LitState - state management library for Lit (Web Components library)","situation":"- I used the library \\"Lit\\" as a lightweight React replacement\\n- Very satisfied about it, but lacked state management library\\n- State management between multiple components cumbersome","task":"- Wanted to create a dedicated state management library for Lit\\n- Wanted to keep it simple but elegant and easy to use\\n- Wanted to be able to re-use it in any project using Lit","action":null,"result":null,"reflection":null,"category":"high_impact_projects","profile":2}	{"task":"- Wanted to create a dedicated state management library for Lit\\n- Wanted to keep it simple but elegant and easy to use\\n- Wanted to be able to re-use it in any project using Lit","date_updated":"2025-11-04T13:35:50.277Z"}	\N	\N
+5021	5147	directus_fields	177	{"id":177,"collection":"project_stories","field":"situation","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":8,"width":"full","translations":null,"note":"The S from the [STAR method](https://www.techinterviewhandbook.org/behavioral-interview/#1-learn-the-star-answer-format)","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"project_stories","field":"situation","interface":"input"}	\N	\N
+5022	5148	directus_fields	177	{"id":177,"collection":"project_stories","field":"situation","special":null,"interface":"input-multiline","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":8,"width":"full","translations":null,"note":"The S from the [STAR method](https://www.techinterviewhandbook.org/behavioral-interview/#1-learn-the-star-answer-format)","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"project_stories","field":"situation","interface":"input-multiline"}	\N	\N
+5023	5149	directus_fields	178	{"id":178,"collection":"project_stories","field":"task","special":null,"interface":"input-multiline","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":9,"width":"full","translations":null,"note":"The T from the [STAR method](https://www.techinterviewhandbook.org/behavioral-interview/#1-learn-the-star-answer-format)","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"project_stories","field":"task","interface":"input-multiline"}	\N	\N
+5024	5150	directus_fields	179	{"id":179,"collection":"project_stories","field":"action","special":null,"interface":"input-multiline","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":10,"width":"full","translations":null,"note":"The A from the [STAR method](https://www.techinterviewhandbook.org/behavioral-interview/#1-learn-the-star-answer-format)","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"project_stories","field":"action","interface":"input-multiline"}	\N	\N
+5025	5151	directus_fields	180	{"id":180,"collection":"project_stories","field":"result","special":null,"interface":"input-multiline","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":11,"width":"full","translations":null,"note":"The R from the [STAR method](https://www.techinterviewhandbook.org/behavioral-interview/#1-learn-the-star-answer-format)","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"project_stories","field":"result","interface":"input-multiline"}	\N	\N
+5026	5152	directus_fields	181	{"id":181,"collection":"project_stories","field":"reflection","special":null,"interface":"input-multiline","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":12,"width":"full","translations":null,"note":"Optional extra R for the  [STAR method](https://www.techinterviewhandbook.org/behavioral-interview/#1-learn-the-star-answer-format); Finish your story with a look back at what you learned and took away. [More info](https://www.techinterviewhandbook.org/behavioral-interview/#result)","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"project_stories","field":"reflection","interface":"input-multiline"}	\N	\N
+5027	5153	project_stories	122	{"id":122,"sort":null,"date_created":"2025-11-04T13:31:18.727Z","date_updated":"2025-11-04T13:43:07.911Z","title":"LitState - state management library for Lit (Web Components library)","situation":"- I used the library \\"Lit\\" as a lightweight React replacement\\n- Very satisfied about it, but lacked state management library\\n- State management between multiple components cumbersome","task":"- Wanted to create a dedicated state management library for Lit\\n- Wanted to keep it simple but elegant and easy to use\\n- Wanted to be able to re-use it in any project using Lit","action":"- Created LitState, a state management library for Lit\\n- Open-sourced & distributed as an NPM package\\n- Tiny source code, but very intuitive\\n- Does exactly what I needed\\n- Works very efficiently\\n- Created complete and clear documentation","result":null,"reflection":null,"category":"high_impact_projects","profile":2}	{"action":"- Created LitState, a state management library for Lit\\n- Open-sourced & distributed as an NPM package\\n- Tiny source code, but very intuitive\\n- Does exactly what I needed\\n- Works very efficiently\\n- Created complete and clear documentation","date_updated":"2025-11-04T13:43:07.911Z"}	\N	\N
+5028	5154	project_stories	122	{"id":122,"sort":null,"date_created":"2025-11-04T13:31:18.727Z","date_updated":"2025-11-04T13:43:19.324Z","title":"LitState - state management library for Lit (Web Components library)","situation":"- I used the library \\"Lit\\" as a lightweight React replacement\\n- Very satisfied about it, but lacked state management library\\n- State management between multiple components cumbersome","task":"- Wanted to create a dedicated state management library for Lit\\n- Wanted to keep it simple but elegant and easy to use\\n- Wanted to be able to re-use it in any project using Lit","action":"- Created LitState, a state management library for Lit\\n- Open-sourced & distributed as an NPM package\\n- Tiny source code, but very intuitive\\n- Works very efficiently\\n- Created complete and clear documentation","result":null,"reflection":null,"category":"high_impact_projects","profile":2}	{"action":"- Created LitState, a state management library for Lit\\n- Open-sourced & distributed as an NPM package\\n- Tiny source code, but very intuitive\\n- Works very efficiently\\n- Created complete and clear documentation","date_updated":"2025-11-04T13:43:19.324Z"}	\N	\N
+5029	5155	project_stories	122	{"id":122,"sort":null,"date_created":"2025-11-04T13:31:18.727Z","date_updated":"2025-11-04T13:43:38.672Z","title":"LitState - state management library for Lit (Web Components library)","situation":"- I used the library \\"Lit\\" as a lightweight React replacement\\n- Very satisfied about it, but lacked state management library\\n- State management between multiple components cumbersome","task":"- Wanted to create a dedicated state management library for Lit\\n- Wanted to keep it simple but elegant and easy to use\\n- Wanted to be able to re-use it in any project using Lit","action":"- Created LitState, a state management library for Lit\\n- Open-sourced & distributed as an NPM package\\n- Created complete and clear documentation","result":"- Does exactly what I need\\n- Tiny source code, but very intuitive\\n- Works very efficiently","reflection":null,"category":"high_impact_projects","profile":2}	{"action":"- Created LitState, a state management library for Lit\\n- Open-sourced & distributed as an NPM package\\n- Created complete and clear documentation","result":"- Does exactly what I need\\n- Tiny source code, but very intuitive\\n- Works very efficiently","date_updated":"2025-11-04T13:43:38.672Z"}	\N	\N
+5030	5156	project_stories	122	{"id":122,"sort":null,"date_created":"2025-11-04T13:31:18.727Z","date_updated":"2025-11-04T13:44:13.516Z","title":"LitState - state management library for Lit (Web Components library)","situation":"- I used the library \\"Lit\\" as a lightweight React replacement\\n- Very satisfied about it, but lacked state management library\\n- State management between multiple components cumbersome","task":"- Wanted to create a dedicated state management library for Lit\\n- Wanted to keep it simple but elegant and easy to use\\n- Wanted to be able to re-use it in any project using Lit","action":"- Created LitState, a state management library for Lit\\n- Open-sourced & distributed as an NPM package\\n- Created complete and clear documentation","result":"- Does exactly what I need\\n- Tiny source code, but very intuitive\\n- Works very efficiently\\n- Used successfully in production at Chipta\\n- ","reflection":null,"category":"high_impact_projects","profile":2}	{"result":"- Does exactly what I need\\n- Tiny source code, but very intuitive\\n- Works very efficiently\\n- Used successfully in production at Chipta\\n- ","date_updated":"2025-11-04T13:44:13.516Z"}	\N	\N
+5031	5157	project_stories	122	{"id":122,"sort":null,"date_created":"2025-11-04T13:31:18.727Z","date_updated":"2025-11-04T13:44:56.616Z","title":"LitState - state management library for Lit (Web Components library)","situation":"- I used the library \\"Lit\\" as a lightweight React replacement\\n- Very satisfied about it, but lacked state management library\\n- State management between multiple components cumbersome","task":"- Wanted to create a dedicated state management library for Lit\\n- Wanted to keep it simple but elegant and easy to use\\n- Wanted to be able to re-use it in any project using Lit","action":"- Created LitState, a state management library for Lit\\n- Open-sourced & distributed as an NPM package\\n- Created complete and clear documentation","result":"- Does exactly what I need\\n- Tiny source code, but very intuitive\\n- Works very efficiently\\n- Used successfully in production at Chipta\\n- Got GitHub user engagement, PRs and issues","reflection":null,"category":"high_impact_projects","profile":2}	{"result":"- Does exactly what I need\\n- Tiny source code, but very intuitive\\n- Works very efficiently\\n- Used successfully in production at Chipta\\n- Got GitHub user engagement, PRs and issues","date_updated":"2025-11-04T13:44:56.616Z"}	\N	\N
+5032	5158	project_stories	122	{"id":122,"sort":null,"date_created":"2025-11-04T13:31:18.727Z","date_updated":"2025-11-04T13:45:02.916Z","title":"LitState - state management library for Lit (Web Components library)","situation":"- I used the library \\"Lit\\" as a lightweight React replacement\\n- Very satisfied about it, but lacked state management library\\n- State management between multiple components cumbersome","task":"- Wanted to create a dedicated state management library for Lit\\n- Wanted to keep it simple but elegant and easy to use\\n- Wanted to be able to re-use it in any project using Lit","action":"- Created LitState, a state management library for Lit\\n- Open-sourced & distributed as an NPM package\\n- Created complete and clear documentation","result":"- Does exactly what I need\\n- Tiny source code, but very intuitive\\n- Works very efficiently\\n- Used successfully in production at Chipta\\n- Got GitHub user engagement, PRs and Issues","reflection":null,"category":"high_impact_projects","profile":2}	{"result":"- Does exactly what I need\\n- Tiny source code, but very intuitive\\n- Works very efficiently\\n- Used successfully in production at Chipta\\n- Got GitHub user engagement, PRs and Issues","date_updated":"2025-11-04T13:45:02.916Z"}	\N	\N
+5033	5159	project_stories	122	{"id":122,"sort":null,"date_created":"2025-11-04T13:31:18.727Z","date_updated":"2025-11-04T13:45:06.057Z","title":"LitState - state management library for Lit (Web Components library)","situation":"- I used the library \\"Lit\\" as a lightweight React replacement\\n- Very satisfied about it, but lacked state management library\\n- State management between multiple components cumbersome","task":"- Wanted to create a dedicated state management library for Lit\\n- Wanted to keep it simple but elegant and easy to use\\n- Wanted to be able to re-use it in any project using Lit","action":"- Created LitState, a state management library for Lit\\n- Open-sourced & distributed as an NPM package\\n- Created complete and clear documentation","result":"- Does exactly what I need\\n- Tiny source code, but very intuitive\\n- Works very efficiently\\n- Used successfully in production at Chipta\\n- Got GitHub user engagement, PRs and issues","reflection":null,"category":"high_impact_projects","profile":2}	{"result":"- Does exactly what I need\\n- Tiny source code, but very intuitive\\n- Works very efficiently\\n- Used successfully in production at Chipta\\n- Got GitHub user engagement, PRs and issues","date_updated":"2025-11-04T13:45:06.057Z"}	\N	\N
+5034	5160	project_stories	122	{"id":122,"sort":null,"date_created":"2025-11-04T13:31:18.727Z","date_updated":"2025-11-04T13:45:22.253Z","title":"LitState - state management library for Lit (Web Components library)","situation":"- I used the library \\"Lit\\" as a lightweight React replacement\\n- Very satisfied about it, but lacked state management library\\n- State management between multiple components cumbersome","task":"- Wanted to create a dedicated state management library for Lit\\n- Wanted to keep it simple but elegant and easy to use\\n- Wanted to be able to re-use it in any project using Lit","action":"- Created LitState, a state management library for Lit\\n- Open-sourced & distributed as an NPM package\\n- Created complete and clear documentation","result":"- Does exactly what I need\\n- Tiny source code, but very intuitive\\n- Works very efficiently\\n- Used successfully in production at Chipta\\n- Got GitHub user engagement, PRs and issues\\n- Maintained package","reflection":null,"category":"high_impact_projects","profile":2}	{"result":"- Does exactly what I need\\n- Tiny source code, but very intuitive\\n- Works very efficiently\\n- Used successfully in production at Chipta\\n- Got GitHub user engagement, PRs and issues\\n- Maintained package","date_updated":"2025-11-04T13:45:22.253Z"}	\N	\N
+5035	5161	project_stories	122	{"id":122,"sort":null,"date_created":"2025-11-04T13:31:18.727Z","date_updated":"2025-11-04T13:45:48.436Z","title":"LitState - state management library for Lit (Web Components library)","situation":"- I used the library \\"Lit\\" as a lightweight React replacement\\n- Very satisfied about it, but lacked state management library\\n- State management between multiple components cumbersome","task":"- Wanted to create a dedicated state management library for Lit\\n- Wanted to keep it simple but elegant and easy to use\\n- Wanted to be able to re-use it in any project using Lit","action":"- Created LitState, a state management library for Lit\\n- Open-sourced & distributed as an NPM package\\n- Created complete and clear documentation","result":"- Does exactly what I need\\n- Tiny source code, but very intuitive\\n- Works very efficiently\\n- Used successfully in production at Chipta\\n- Got GitHub user engagement, PRs and issues\\n- Maintained package","reflection":"- Was very much fun creating an open source NPM package","category":"high_impact_projects","profile":2}	{"reflection":"- Was very much fun creating an open source NPM package","date_updated":"2025-11-04T13:45:48.436Z"}	\N	\N
+5036	5162	project_stories	122	{"id":122,"sort":null,"date_created":"2025-11-04T13:31:18.727Z","date_updated":"2025-11-04T13:45:57.088Z","title":"LitState - state management library for Lit (Web Components library)","situation":"- I used the library \\"Lit\\" as a lightweight React replacement\\n- Very satisfied about it, but lacked state management library\\n- State management between multiple components cumbersome","task":"- Wanted to create a dedicated state management library for Lit\\n- Wanted to keep it simple but elegant and easy to use\\n- Wanted to be able to re-use it in any project using Lit","action":"- Created LitState, a state management library for Lit\\n- Open-sourced & distributed as an NPM package\\n- Created complete and clear documentation","result":"- Does exactly what I need\\n- Tiny source code, but very intuitive\\n- Works very efficiently\\n- Used successfully in production at Chipta\\n- Got GitHub user engagement, PRs and issues\\n- Maintained package","reflection":"- Was very much fun creating an open-source NPM package","category":"high_impact_projects","profile":2}	{"reflection":"- Was very much fun creating an open-source NPM package","date_updated":"2025-11-04T13:45:57.088Z"}	\N	\N
+5037	5163	project_stories	122	{"id":122,"sort":null,"date_created":"2025-11-04T13:31:18.727Z","date_updated":"2025-11-04T13:52:13.506Z","title":"LitState - state management library for Lit (Web Components library)","situation":"- I used the library \\"Lit\\" as a lightweight React replacement\\n- Very satisfied about it, but lacked state management library\\n- State management between multiple components cumbersome","task":"- Wanted to create a dedicated state management library for Lit\\n- Wanted to keep it simple but elegant and easy to use\\n- Wanted to be able to re-use it in any project using Lit","action":"- Created LitState, a state management library for Lit\\n- Open-sourced & distributed as an NPM package\\n- Created complete and clear documentation","result":"- Does exactly what I need\\n- Tiny source code, but very intuitive\\n- Works very efficiently\\n- Used successfully in production at Chipta\\n- Got GitHub user engagement, PRs and issues\\n- Maintained package","reflection":"- Was very much fun creating an open-source NPM package\\n- I'm still happy about the result\\n- It's sad Lit hasn't gained more popularity","category":"high_impact_projects","profile":2}	{"reflection":"- Was very much fun creating an open-source NPM package\\n- I'm still happy about the result\\n- It's sad Lit hasn't gained more popularity","date_updated":"2025-11-04T13:52:13.506Z"}	\N	\N
+5038	5164	project_stories	122	{"id":122,"sort":null,"date_created":"2025-11-04T13:31:18.727Z","date_updated":"2025-11-04T13:52:42.500Z","title":"LitState - state management library for Lit (Web Components library)","situation":"- I used the library \\"Lit\\" as a lightweight React replacement\\n- Very satisfied about it, but lacked state management library\\n- State management between multiple components cumbersome","task":"- Wanted to create a dedicated state management library for Lit\\n- Wanted to keep it simple but elegant and easy to use\\n- Wanted to be able to re-use it in any project using Lit","action":"- Created LitState, a state management library for Lit\\n- Open-sourced & distributed as an NPM package\\n- Created complete and clear documentation","result":"- Does exactly what I need\\n- Tiny source code, but very intuitive\\n- Works very efficiently\\n- Used successfully in production at Chipta\\n- Got GitHub user engagement, PRs and issues\\n- Maintained package","reflection":"- Was very much fun creating an open-source NPM package\\n- I'm still happy about the result\\n- It's sad Lit hasn't gained more popularity\\n- I still think it's good technology for today","category":"high_impact_projects","profile":2}	{"reflection":"- Was very much fun creating an open-source NPM package\\n- I'm still happy about the result\\n- It's sad Lit hasn't gained more popularity\\n- I still think it's good technology for today","date_updated":"2025-11-04T13:52:42.500Z"}	\N	\N
+5039	5165	project_stories	122	{"id":122,"sort":null,"date_created":"2025-11-04T13:31:18.727Z","date_updated":"2025-11-04T13:52:56.273Z","title":"LitState - state management library for Lit (Web Components library)","situation":"- I used the library \\"Lit\\" as a lightweight React replacement\\n- Very satisfied about it, but lacked state management library\\n- State management between multiple components cumbersome","task":"- Wanted to create a dedicated state management library for Lit\\n- Wanted to keep it simple but elegant and easy to use\\n- Wanted to be able to re-use it in any project using Lit","action":"- Created LitState, a state management library for Lit\\n- Open-sourced & distributed as an NPM package\\n- Created complete and clear documentation","result":"- Does exactly what I need\\n- Tiny source code, but very intuitive\\n- Works very efficiently\\n- Used successfully in production at Chipta\\n- Got GitHub user engagement, PRs and issues\\n- Maintained package","reflection":"- Was very much fun creating an open-source NPM package\\n- I'm still happy about the result\\n- It's sad Lit hasn't gained more popularity\\n- I still think it's good modern technology for today","category":"high_impact_projects","profile":2}	{"reflection":"- Was very much fun creating an open-source NPM package\\n- I'm still happy about the result\\n- It's sad Lit hasn't gained more popularity\\n- I still think it's good modern technology for today","date_updated":"2025-11-04T13:52:56.273Z"}	\N	\N
+5040	5166	project_stories	122	{"id":122,"sort":null,"date_created":"2025-11-04T13:31:18.727Z","date_updated":"2025-11-04T13:53:54.085Z","title":"LitState - state management library for Lit (Web Components library)","situation":"- I used the library \\"Lit\\" as a lightweight React replacement\\n- Very satisfied about it, but lacked state management library\\n- State management between multiple components cumbersome","task":"- Wanted to create a dedicated state management library for Lit\\n- Wanted to keep it simple but elegant and easy to use\\n- Wanted to be able to re-use it in any project using Lit","action":"- Created LitState, a state management library for Lit\\n- Open-sourced & distributed as an NPM package\\n- Created complete and clear documentation","result":"- Does exactly what I need\\n- Tiny source code, but very intuitive\\n- Works very efficiently\\n- Used successfully in production at Chipta\\n- Got GitHub user engagement, PRs and issues\\n- Maintained package","reflection":"- Was very much fun creating an open-source NPM package\\n- I'm still happy about the result\\n- It's sad Lit hasn't gained more popularity\\n- I still think it's good modern technology for today:\\n  - Lit is still much faster than React\\n  - LitState is still a very efficient and useful state management library","category":"high_impact_projects","profile":2}	{"reflection":"- Was very much fun creating an open-source NPM package\\n- I'm still happy about the result\\n- It's sad Lit hasn't gained more popularity\\n- I still think it's good modern technology for today:\\n  - Lit is still much faster than React\\n  - LitState is still a very efficient and useful state management library","date_updated":"2025-11-04T13:53:54.085Z"}	\N	\N
+5041	5167	project_stories	122	{"id":122,"sort":3,"date_created":"2025-11-04T13:31:18.727Z","date_updated":"2025-11-04T13:54:27.933Z","title":"LitState - state management library for Lit","situation":"- I used the library \\"Lit\\" as a lightweight React replacement\\n- Very satisfied about it, but lacked state management library\\n- State management between multiple components cumbersome","task":"- Wanted to create a dedicated state management library for Lit\\n- Wanted to keep it simple but elegant and easy to use\\n- Wanted to be able to re-use it in any project using Lit","action":"- Created LitState, a state management library for Lit\\n- Open-sourced & distributed as an NPM package\\n- Created complete and clear documentation","result":"- Does exactly what I need\\n- Tiny source code, but very intuitive\\n- Works very efficiently\\n- Used successfully in production at Chipta\\n- Got GitHub user engagement, PRs and issues\\n- Maintained package","reflection":"- Was very much fun creating an open-source NPM package\\n- I'm still happy about the result\\n- It's sad Lit hasn't gained more popularity\\n- I still think it's good modern technology for today:\\n  - Lit is still much faster than React\\n  - LitState is still a very efficient and useful state management library","category":"high_impact_projects","profile":2}	{"title":"LitState - state management library for Lit","date_updated":"2025-11-04T13:54:27.933Z"}	\N	\N
+5042	5168	project_stories	122	{"id":122,"sort":3,"date_created":"2025-11-04T13:31:18.727Z","date_updated":"2025-11-04T13:54:34.999Z","title":"LitState - State management library for Lit","situation":"- I used the library \\"Lit\\" as a lightweight React replacement\\n- Very satisfied about it, but lacked state management library\\n- State management between multiple components cumbersome","task":"- Wanted to create a dedicated state management library for Lit\\n- Wanted to keep it simple but elegant and easy to use\\n- Wanted to be able to re-use it in any project using Lit","action":"- Created LitState, a state management library for Lit\\n- Open-sourced & distributed as an NPM package\\n- Created complete and clear documentation","result":"- Does exactly what I need\\n- Tiny source code, but very intuitive\\n- Works very efficiently\\n- Used successfully in production at Chipta\\n- Got GitHub user engagement, PRs and issues\\n- Maintained package","reflection":"- Was very much fun creating an open-source NPM package\\n- I'm still happy about the result\\n- It's sad Lit hasn't gained more popularity\\n- I still think it's good modern technology for today:\\n  - Lit is still much faster than React\\n  - LitState is still a very efficient and useful state management library","category":"high_impact_projects","profile":2}	{"title":"LitState - State management library for Lit","date_updated":"2025-11-04T13:54:34.999Z"}	\N	\N
+5043	5169	project_stories	114	{"id":114,"sort":1,"date_created":"2025-10-22T11:32:46.268Z","date_updated":"2025-11-04T13:55:04.285Z","title":"Ticketshop performance scaling for big events","situation":"- Big event clients selling thousands of tickets\\n- Ticketshop having hard times handling large traffic spikes\\n- Performance bottlenecks in processing the orders\\n- Clients needed reliable ticketshop to sell their tickets fast","task":"- Speed up ticketshop order processing\\n- Handle high-traffic ticketshop spikes\\n- Work with DevOps (Michaël) on scaling","action":"- Optimized SQL queries - got 30-60% speed boost\\n- Refactored Python/Django order processing code\\n- Worked with DevOps (Michaël) on flexible scaling setup","result":"- Big event clients successfully kept/onboarded\\n- 30-60% faster ticket order processing\\n- Scalable ticketshop ready for large events","reflection":"- I didn't realize how many queries were being done before optimizing\\n- Optimizing complex SQL queries in Django can be challenging\\n- But tools like Silk make debugging very user friendly","category":"high_impact_projects","profile":2}	{"title":"Ticketshop performance scaling for big events","date_updated":"2025-11-04T13:55:04.285Z"}	\N	\N
 \.
 
 
@@ -7819,8 +7756,9 @@ y6whbp82EsIATqPecnJ-qf_QWamYXHaWuuipzt91yhhjZ6qrOZsri0YlXBrv9vDL	157238bb-6930-4
 xvu8kNst20zp0P1S70SHTij9ct7Mv3P3cg9wFDygm0Nv6yzi0-q32VPeMPRHQUSq	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-09 20:07:49.931+00	172.18.0.2	node	\N	\N	\N
 VRoO6ns6OjSnroBRxszQc4D4_ZN-hNTopfjA8rQEcw8EL0_BICekHQF8kYxHdmP8	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-09 20:10:44.651+00	172.18.0.5	node	\N	\N	\N
 sZe7yh0vBp7Q0rjtS8gUPwFc6JQhHXtiIhMZaV1Nfae3T7hxMuLnEfVvXebVte1q	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-09 20:26:00.882+00	172.18.0.5	node	\N	\N	\N
-G4vHzPWDklhlK643rIAq2uhGIGoSEWbgDdJ_7v2RFFF2NNIINwDn_vlBXdRHLwIE	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 12:05:40.952+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	Q5BCbCh3--kALGW4IWZNYvsFxqTFh8HKMMG4bMllj7PjeJqcH73hZ5cbPi1h4qox
 Q5BCbCh3--kALGW4IWZNYvsFxqTFh8HKMMG4bMllj7PjeJqcH73hZ5cbPi1h4qox	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 12:05:30.952+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
+tXwa1_Hn792MLklhal196euzaBSttUvs20wmUt1rQhDVCM4XM2okrYx8skQQ12XK	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-04 13:40:05.744+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	KNepocagkXCOs3XZ1aHj752ZG7OmFfZAn-aeUK9L527tUPpFlmWB23d8j9gnlXl6
+KNepocagkXCOs3XZ1aHj752ZG7OmFfZAn-aeUK9L527tUPpFlmWB23d8j9gnlXl6	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 13:39:55.744+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
 \.
 
 
@@ -7857,7 +7795,7 @@ c530a32f-84cb-4ab9-8a61-7a12a5bcb7e6	en-US	draft	Draft
 --
 
 COPY public.directus_users (id, first_name, last_name, email, password, location, title, description, tags, avatar, language, tfa_secret, status, role, token, last_access, last_page, provider, external_identifier, auth_data, email_notifications, appearance, theme_dark, theme_light, theme_light_overrides, theme_dark_overrides, text_direction) FROM stdin;
-157238bb-6930-4f26-be9c-8b31a9e11ab8	Rik	Wanders	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-11-04 12:05:30.956+00	/settings/data-model/project_stories	default	\N	\N	t	\N	\N	\N	\N	\N	auto
+157238bb-6930-4f26-be9c-8b31a9e11ab8	Rik	Wanders	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-11-04 13:39:55.749+00	/content/project_stories	default	\N	\N	t	\N	\N	\N	\N	\N	auto
 \.
 
 
@@ -7942,13 +7880,14 @@ COPY public.profiles (id, date_created, date_updated, name, title, location, pho
 --
 
 COPY public.project_stories (id, sort, date_created, date_updated, title, situation, task, action, result, reflection, category, profile) FROM stdin;
-114	1	2025-10-22 11:32:46.268+00	2025-10-22 14:13:15.147+00	Ticketshop performance for big events	- Big event clients selling thousands of tickets\n- Ticketshop having hard times handling large traffic spikes\n- Performance bottlenecks in processing the orders\n- Clients needed reliable ticketshop to sell their tickets fast	- Speed up ticketshop order processing\n- Handle high-traffic ticketshop spikes\n- Work with DevOps (Michaël) on scaling	- Optimized SQL queries - got 30-60% speed boost\n- Refactored Python/Django order processing code\n- Worked with DevOps (Michaël) on flexible scaling setup	- Big event clients successfully kept/onboarded\n- 30-60% faster ticket order processing\n- Scalable ticketshop ready for large events	- I didn't realize how many queries were being done before optimizing\n- Optimizing complex SQL queries in Django can be challenging\n- But tools like Silk make debugging very user friendly	high_impact_projects	2
-115	7	2025-10-22 11:26:01.537+00	2025-10-22 15:58:25.761+00	Onboarding junior developer to Django system	- New junior developer joined comprehensive Django project\n- Developer needed to learn Django framework\n- Complex system with frontend integration\n- Multiple new skills needed simultaneously	- Guide developer through system architecture\n- Teach Django best practices\n- Train on frontend technologies\n- Make developer productive on assigned projects	- Created structured learning plan covering Django and frontend\n- Paired programming sessions to demonstrate system\n- Regular code reviews with detailed explanations\n- Gradually increased project complexity and responsibility	- Developer became productive within first month\n- Successfully delivered assigned project features\n- Developer gained confidence in both Django and frontend\n- Created reusable onboarding process for future hires	- Learned I need to ask more feedback from developers to understand what they actually need\n- Junior developer could be stuck without me knowing it\n- Check in to developers progress and have evaluation sessions\n\n- It's useful when developer creates own docs / notes\n- There are always things to improve about the onboarding process\n- It's a fun process helping a developer getting up and running	learning_experiences	2
-116	2	2025-10-22 13:29:47.901+00	2025-10-22 14:13:23.177+00	Zoom OAuth integration during COVID	- COVID hit and clients needed virtual events\n- No Zoom integration in our platform\n- Event organizers needed seamless online solution	- Learn Zoom API and OAuth quickly\n- Integrate client accounts with dashboard\n- Enable automatic Zoom management for Chipta events	- Mastered Zoom OAuth and API documentation\n- Navigated strict app admittance process\n- Built dashboard integration for client accounts\n- Created automatic Zoom event management system	- Many clients successfully organized online events\n- Helped company survive COVID with less than 40% profit loss\n- Seamless Chipta-Zoom integration in production	- Zoom Marketplace submission requirements were much more than I expected\n- After COVID was over, the online event hype disappeared again\n- COVID was a hard time to be strategical\n- Clients do appreciate quick acting and temporary solutions	high_impact_projects	2
-117	3	2025-10-22 13:57:36.777+00	2025-10-22 14:09:29.042+00	React Native App Technical Challenges	- Leading React Native mobile app development at Chipta\n- React Native framework had significant bugs and limitations\n- Limited documentation and community support available\n- Tight deadline before festival season start	- Navigate technical challenges with immature framework\n- Find solutions to framework bugs and limitations\n- Deliver functional app on schedule\n- Ensure app met performance and reliability requirements	- Helped developer to tackle complex technical issues\n- Researched React Native & plugins source code to understand underlying problems\n- Created custom patches for framework bugs we encountered\n- Made architecture decisions to work around limitations	- Delivered app on time before festival season started\n- App significantly improved event scalability and reach\n- Contributed to 40% revenue increase from mobile ticket sales\n- Developer gained valuable React Native expertise\n- Established foundation for future mobile development projects	- Learned that new hip projects from major companies are not necessarily stable or well documented from the start\n- Was ultimately happy with choosing React Native\n- Because it matured and is still one of the main ways of creating apps	challenging_situations	2
-118	4	2025-10-22 11:06:06.406+00	2025-10-22 11:17:50.677+00	Introduced agile / async team workflow @ Chipta	- Early days at Chipta with minimal team structure\n- 3-5 developers working without established methodologies\n- Changing requirements from management causing confusion with devs\n- Need to scale development processes as team grew	- Introduce structured development methodologies\n- Get all team members aligned on new processes\n- Implement tools and workflows for better collaboration\n- Improve team efficiency and productivity	- Progressively introduced Scrum/Agile methodologies with team buy-in\n- Implemented Zulip for structured async collaboration\n- Established GitLab Merge Request workflow with code reviews\n- Introduced Git flow and commit message conventions\n- Set up and managed comprehensive issue ticket system	- Successfully transitioned team to structured development process\n- Improved team coordination and reduced miscommunication\n- Increased development efficiency and code quality\n- Created scalable processes that supported team growth over 7 years	- An efficient team workflow makes a big difference\n- There are many ways to do Agile and every team is unique	leadership_moments	2
 119	5	2025-10-22 13:45:09.415+00	2025-10-22 14:13:28.577+00	TicketSwap integration deadline for major client	- Major event organizer prospect required TicketSwap integration\n- Hard deadline of 3 weeks to deliver or lose the prospect\n- Complex coordination needed with external development team	- Build secure TicketSwap API integration for second-hand ticket validation\n- Coordinate with TicketSwap developers on protocols and implementation steps\n- Deliver working solution within 3-week deadline to close the deal	- Contacted TicketSwap's technical team to establish communication protocols\n- Coordinated step-by-step implementation process with their developers\n- Built secure integration with comprehensive testing suite\n- Managed coordination between TicketSwap team, prospect, and internal stakeholders	- Delivered integration on time and secured the client\n- Eliminated ticket fraud for integrated events\n- Became competitive advantage leading to 15% increase in sales	- Things can be done very fast when all parties have interests\n- Direct communication between devs of two companies is very efficient	leadership_moments	2
+114	1	2025-10-22 11:32:46.268+00	2025-11-04 13:55:04.285+00	Ticketshop performance scaling for big events	- Big event clients selling thousands of tickets\n- Ticketshop having hard times handling large traffic spikes\n- Performance bottlenecks in processing the orders\n- Clients needed reliable ticketshop to sell their tickets fast	- Speed up ticketshop order processing\n- Handle high-traffic ticketshop spikes\n- Work with DevOps (Michaël) on scaling	- Optimized SQL queries - got 30-60% speed boost\n- Refactored Python/Django order processing code\n- Worked with DevOps (Michaël) on flexible scaling setup	- Big event clients successfully kept/onboarded\n- 30-60% faster ticket order processing\n- Scalable ticketshop ready for large events	- I didn't realize how many queries were being done before optimizing\n- Optimizing complex SQL queries in Django can be challenging\n- But tools like Silk make debugging very user friendly	high_impact_projects	2
+116	3	2025-10-22 13:29:47.901+00	2025-10-22 14:13:23.177+00	Zoom OAuth integration during COVID	- COVID hit and clients needed virtual events\n- No Zoom integration in our platform\n- Event organizers needed seamless online solution	- Learn Zoom API and OAuth quickly\n- Integrate client accounts with dashboard\n- Enable automatic Zoom management for Chipta events	- Mastered Zoom OAuth and API documentation\n- Navigated strict app admittance process\n- Built dashboard integration for client accounts\n- Created automatic Zoom event management system	- Many clients successfully organized online events\n- Helped company survive COVID with less than 40% profit loss\n- Seamless Chipta-Zoom integration in production	- Zoom Marketplace submission requirements were much more than I expected\n- After COVID was over, the online event hype disappeared again\n- COVID was a hard time to be strategical\n- Clients do appreciate quick acting and temporary solutions	high_impact_projects	2
+122	2	2025-11-04 13:31:18.727+00	2025-11-04 13:54:34.999+00	LitState - State management library for Lit	- I used the library "Lit" as a lightweight React replacement\n- Very satisfied about it, but lacked state management library\n- State management between multiple components cumbersome	- Wanted to create a dedicated state management library for Lit\n- Wanted to keep it simple but elegant and easy to use\n- Wanted to be able to re-use it in any project using Lit	- Created LitState, a state management library for Lit\n- Open-sourced & distributed as an NPM package\n- Created complete and clear documentation	- Does exactly what I need\n- Tiny source code, but very intuitive\n- Works very efficiently\n- Used successfully in production at Chipta\n- Got GitHub user engagement, PRs and issues\n- Maintained package	- Was very much fun creating an open-source NPM package\n- I'm still happy about the result\n- It's sad Lit hasn't gained more popularity\n- I still think it's good modern technology for today:\n  - Lit is still much faster than React\n  - LitState is still a very efficient and useful state management library	high_impact_projects	2
 120	6	2025-10-22 14:12:18.013+00	2025-10-22 15:02:44.822+00	Automated integration testing with Selenium	- Manual integration testing required before each production deployment\n- Testing process took up to 1.5 hours per release\n- Process was error prone because of human errors\n- Time-consuming manual process slowed down development cycle	- Eliminate manual testing bottleneck\n- Enable faster, more reliable deployments\n- Reduce time investment required for each release\n- Improve reliability of test results	- Researched automated testing solutions and selected Selenium\n- Built comprehensive Selenium test suite covering the existing manual test procedures\n- Integrated automated tests into deployment pipeline\n- Created documentation for developers on running tests and creating new ones	- Reduced integration testing time from 1.5 hours to 5 minutes\n- Enabled any developer to run complete integration test suite\n- Increased deployment frequency and confidence\n- Eliminated testing bottleneck and improved development velocity	- Learned Selenium is pretty cool and not that hard\n- Learned that creating integration tests is totally worth it if you need to test for every release\n- Now that I know Selenium, would apply it faster to save time earlier	learning_experiences	2
+117	8	2025-10-22 13:57:36.777+00	2025-10-22 14:09:29.042+00	React Native App Technical Challenges	- Leading React Native mobile app development at Chipta\n- React Native framework had significant bugs and limitations\n- Limited documentation and community support available\n- Tight deadline before festival season start	- Navigate technical challenges with immature framework\n- Find solutions to framework bugs and limitations\n- Deliver functional app on schedule\n- Ensure app met performance and reliability requirements	- Helped developer to tackle complex technical issues\n- Researched React Native & plugins source code to understand underlying problems\n- Created custom patches for framework bugs we encountered\n- Made architecture decisions to work around limitations	- Delivered app on time before festival season started\n- App significantly improved event scalability and reach\n- Contributed to 40% revenue increase from mobile ticket sales\n- Developer gained valuable React Native expertise\n- Established foundation for future mobile development projects	- Learned that new hip projects from major companies are not necessarily stable or well documented from the start\n- Was ultimately happy with choosing React Native\n- Because it matured and is still one of the main ways of creating apps	challenging_situations	2
+115	7	2025-10-22 11:26:01.537+00	2025-10-22 15:58:25.761+00	Onboarding junior developer to Django system	- New junior developer joined comprehensive Django project\n- Developer needed to learn Django framework\n- Complex system with frontend integration\n- Multiple new skills needed simultaneously	- Guide developer through system architecture\n- Teach Django best practices\n- Train on frontend technologies\n- Make developer productive on assigned projects	- Created structured learning plan covering Django and frontend\n- Paired programming sessions to demonstrate system\n- Regular code reviews with detailed explanations\n- Gradually increased project complexity and responsibility	- Developer became productive within first month\n- Successfully delivered assigned project features\n- Developer gained confidence in both Django and frontend\n- Created reusable onboarding process for future hires	- Learned I need to ask more feedback from developers to understand what they actually need\n- Junior developer could be stuck without me knowing it\n- Check in to developers progress and have evaluation sessions\n\n- It's useful when developer creates own docs / notes\n- There are always things to improve about the onboarding process\n- It's a fun process helping a developer getting up and running	learning_experiences	2
+118	4	2025-10-22 11:06:06.406+00	2025-10-22 11:17:50.677+00	Introduced agile / async team workflow @ Chipta	- Early days at Chipta with minimal team structure\n- 3-5 developers working without established methodologies\n- Changing requirements from management causing confusion with devs\n- Need to scale development processes as team grew	- Introduce structured development methodologies\n- Get all team members aligned on new processes\n- Implement tools and workflows for better collaboration\n- Improve team efficiency and productivity	- Progressively introduced Scrum/Agile methodologies with team buy-in\n- Implemented Zulip for structured async collaboration\n- Established GitLab Merge Request workflow with code reviews\n- Introduced Git flow and commit message conventions\n- Set up and managed comprehensive issue ticket system	- Successfully transitioned team to structured development process\n- Improved team coordination and reduced miscommunication\n- Increased development efficiency and code quality\n- Created scalable processes that supported team growth over 7 years	- An efficient team workflow makes a big difference\n- There are many ways to do Agile and every team is unique	leadership_moments	2
 \.
 
 
@@ -8127,6 +8066,7 @@ COPY public.vacancies (id, status, date_created, date_updated, source_url, title
 3	published	2025-11-03 13:52:27.441+00	2025-11-03 15:11:13.54+00	https://www.linkedin.com/jobs/view/4333275011/	Fullstack Software Developer	Job Title: Fullstack Engineer\n\n\nJob Type: Full-time\n\n\nLocation: Remote\n\n\nAbout Us:\n\n\nThe AI platform for human intelligence—we build models that rigorously vet PhDs and scale human data training for frontier LLMs.\n\n\nOur agent, Zara, autonomously sources and evaluates world-class researchers and data trainers—powering post-training (RLHF, evals, red-teaming) for top AI labs, modernizing staffing firms, and helping startups hire their core AI teams.\n\n\nAbout the Role:\n\nJoin us as a Fullstack Software Engineer to design, build, and scale high-impact applications from front to back. You’ll architect robust APIs, craft intuitive interfaces, and deploy secure, cloud-native solutions. We value engineers who write clean code, communicate clearly, and thrive in collaborative environments.\n\n\nKey Responsibilities:\n\n    Develop, deploy, and maintain REST APIs and microservices using Python (FastAPI/Flask) or Node.js (TypeScript/Express/Koa).\n    Build performant, maintainable frontend applications using React.js and Next.js (SSR, SSG, dynamic routing, API routes).\n    Implement state management with Redux Toolkit, Zustand, or React Query.\n    Design and optimize PostgreSQL schemas and queries for scalability and reliability.\n    Create responsive, pixel-perfect UIs with TailwindCSS and Styled Components.\n    Integrate with internal/external APIs (e.g., Slack, Google Sheets).\n    Deploy, monitor, and secure apps using AWS (EC2, S3, Lambda, CloudFront, etc.) and Nginx.\n    Maintain clean, well-documented code and participate in code reviews.\n\n\nWhat We're Looking For:\n\n    Deep hands-on experience with React.js, Next.js, and TypeScript.\n    Proven ability to build and scale backend systems in Python or Node.js.\n    Strong understanding of state management, asynchronous programming, and PostgreSQL optimization.\n    Experience with AWS and Nginx in production environments.\n    Exceptional attention to UI detail and cross-browser responsiveness.\n    Excellent communication and collaboration skills.\n\n\nNice to Have:\n\n    Experience with workflow automation, CI/CD, Docker/Kubernetes, or Infrastructure as Code (Terraform, Ansible).\n    Familiarity with Pydantic, advanced TypeScript types, and performance optimization for distributed systems.	micro1	linkedin
 4	published	2025-11-03 16:12:07.459+00	2025-11-03 16:21:27.464+00	https://sveltejobs.com/jobs/full-stack-developer-for-innovative-projects-at-penbrothers-8ab4	Full-Stack Developer for Innovative Projects	    You'll work on everything from sleek, intuitive UIs for our customers to backend services that process and integrate AI-transformed orders.\n    Build and refine web applications using Svelte/React for customer-facing and internal tools.\n    Develop backend services in Go, connecting to Postgres databases.\n    Collaborate with AI engineers to integrate OpenAI and in-house ML models into production workflows.\n    Work with Kubernetes (K8s) to deploy and scale services.\n    Ensure smooth data flow into ERP systems with a focus on reliability and correctness.\n    Contribute to product design, from brainstorming UX flows to shaping technical architecture.\n\nRequirements\n\n    Strong experience in modern frontend frameworks (Svelte and/or React or similar technologies).\n    Solid knowledge of backend languages (Go, Python, etc.)\n    Comfort with Postgres and relational data modeling.\n    Familiarity with Kubernetes, Docker, and cloud-native deployments.\n    Experience integrating APIs (bonus if with AI/LLM APIs like OpenAI).\n    A product-focused mindset: you care about end-users and real-world impact.\n    Ability to thrive in a small, collaborative team with lots of autonomy.\n\nBenefits\n\n    Meaningful work & Growth: We take every opportunity to stretch ourselves and deliver an excellent client experience.\n    Employee as our biggest asset: We are genuinely invested in our people’s career and welfare.\n    Global reach & local impact: Get to work with high-growth startups and dynamic companies from the comfort of your own home.\n    Powering global startups: We’ve created 1,400 Filipino jobs that empower global start-ups to focus on growth.	Penbrothers	svelte_jobs
 5	published	2025-11-03 16:33:34.294+00	\N	https://www.linkedin.com/jobs/view/4332169828/	Python Software Developer (Fully Remote)	Senior Software Engineer \n\n\nKey Responsibilities:\n\n    Design and implement scalable, maintainable, and well-documented systems and APIs.\n    Develop and maintain services in Python with a strong focus on Django, async programming, typing, pydantic, and pytest.\n    Apply SOLID principles, data structures, and algorithms to ensure clean, maintainable code.\n    Build and integrate systems in event-driven architectures.\n    Develop solutions leveraging YANG models, gNMI/gNOI protocols, and industry API specifications (TMF API, OpenAPI).\n    Contribute to cloud-native development workflows, including Docker, Helm, and Ansible.\n    Collaborate with cross-functional teams to ensure system reliability, performance, and security.\n    Write clear documentation and contribute to knowledge-sharing within the team.\n\n\nRequired Skills & Experience:\n\n    High proficiency in Python, with practical experience in Django, Typing, Pydantic, Pytest.\n    Strong background in systems/API/interface design and documentation.\n    Experience with event-driven architecture.\n    Experienced in YANG modeling, gNMI/gNOI protocols, and API standards (TMF, OpenAPI).\n    Hands-on experience with cloud-native technologies: Docker, Helm, Ansible.	Moralis	linkedin
+6	published	2025-11-04 13:17:14.906+00	2025-11-04 13:17:53.078+00	https://www.linkedin.com/jobs/view/4333609605/	Full Stack Software Engineering Position	Join The Team Reinventing How The World Rents.\n\nAt The Flex, we believe renting a home should be as effortless as ordering an Uber.\n\nOur mission is bold: to make renting borderless, instant, and intelligent.\n\nThrough Base360.ai — our proprietary platform — we’re building the digital nervous system of the rental world: connecting property data, automating operations, and creating an intelligent layer that powers every stay, everywhere.\n\nIf you’re an engineer who thrives at the intersection of automation, AI, and real-world impact, this is your chance to help redefine how millions live and move.\n\n💡 What You’ll Build\n\nAs a Full Stack Engineer, you’ll architect and scale the systems behind The Flex — from frictionless guest journeys and automated check-ins to predictive pricing and operational intelligence.\n\nYou’ll work across the stack and across continents, turning complex real estate problems into clean, efficient, and scalable solutions.\n\nYou won’t just ship features — you’ll engineer efficiency, eliminate friction, and build the backbone of the intelligent rental economy.\n\n⚙️ Your Mission\n\n    Build the Core – Develop scalable, high-performance web apps that power bookings, payments, and automation workflows.\n    Automate Everything – Design AI-driven scripts and microservices to eliminate repetitive manual tasks.\n    Integrate Intelligently – Build and optimize APIs linking Base360.ai with key platforms like Airbnb, Stripe, and Twilio.\n    Ship Fast, Scale Smart – Manage and deploy cloud infrastructure (AWS, serverless) for speed, reliability, and growth.\n    Solve Problems That Matter – Tackle challenges like global booking sync, predictive pricing, and live operational insights.\n    Collaborate Deeply – Partner with product, operations, and data teams to bring automation from code to reality.\n\n🧠 You’re a Great Fit If You Have\n\n    Strong experience with Node.js, React, and AWS (serverless stack preferred).\n    Expertise in designing and scaling API-first architectures.\n    Familiarity with FastAPI/Python for automation or data pipelines (bonus points).\n    A passion for building clean, production-grade systems that scale globally.\n    Curiosity about automation, real estate tech, and AI-driven operations.\n    A bias for action — you build fast, learn faster, and love solving hard problems.\n\n🌍 Why You’ll Love It Here\n\n    Real Impact – Your code will power thousands of stays and disrupt a $4T industry.\n    Global Mission, Lean Team – No silos. No bureaucracy. Just top performers building fast.\n    Growth Mindset – We iterate quickly, embrace feedback, and scale what works.\n    Performance-Driven Rewards – Competitive pay + meaningful upside for exceptional contributors.\n    Remote-First Culture – Work from anywhere. We care about results, not hours.\n\n🚫 Do Not Apply If\n\n    You’re looking for a safe, predictable 9–5.\n    You prefer talking over building.\n    You’re comfortable being average.\n    You’re not aiming to be among the top 1% in your craft.\n\n	Flex Living	linkedin
 \.
 
 
@@ -8137,6 +8077,7 @@ COPY public.vacancies (id, status, date_created, date_updated, source_url, title
 COPY public.vacancy_resources (id, sort, date_created, date_updated, name, url, file, vacancy) FROM stdin;
 1	\N	2025-11-03 15:11:13.541+00	\N	Interview Instructions	https://www.micro1.ai/interview-questions	\N	3
 2	\N	2025-11-03 16:12:50.076+00	\N	Application Form	https://penbrothers.recruitee.com/o/senior-full-stack-developer-1	\N	4
+3	\N	2025-11-04 13:17:53.082+00	\N	Application URL	https://jobs.ashbyhq.com/The-Flex/54dd2207-c091-4823-8d9b-20bc59b911c4	\N	6
 \.
 
 
@@ -8294,19 +8235,22 @@ TravelBird	Amsterdam, NL	Online Travel Agent	Senior Full-Stack Developer	Contrib
 -- Name: application_interview_questions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.application_interview_questions_id_seq', 27, true);
+SELECT pg_catalog.setval('public.application_interview_questions_id_seq', 29, true);
+
+
+--
+-- Name: application_questions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.application_questions_id_seq', 5, true);
 
 
 --
 -- Name: applications_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.applications_id_seq', 5, true);
---
--- Name: application_questions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
+SELECT pg_catalog.setval('public.applications_id_seq', 6, true);
 
-SELECT pg_catalog.setval('public.application_questions_id_seq', 5, true);
 
 --
 -- Name: cheat_sheets_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
@@ -8314,75 +8258,26 @@ SELECT pg_catalog.setval('public.application_questions_id_seq', 5, true);
 
 SELECT pg_catalog.setval('public.cheat_sheets_id_seq', 19, true);
 
+
 --
 -- Name: dev_methodologies_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.dev_methodologies_id_seq', 38, true);
 
---
--- Name: highlights_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.highlights_id_seq', 45, true);
-
---
--- Name: languages_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.languages_id_seq', 108, true);
-
---
--- Name: project_stories_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.project_stories_id_seq', 121, true);
-
---
--- Name: side_project_achievements_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.side_project_achievements_id_seq', 1, false);
-
---
--- Name: soft_skills_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.soft_skills_id_seq', 151, true);
-
---
--- Name: tech_skill_categories_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.tech_skill_categories_id_seq', 158, true);
-
---
--- Name: work_experience_achievements_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.work_experience_achievements_id_seq', 220, true);
-
---
--- Name: work_experience_technologies_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.work_experience_technologies_id_seq', 406, true);
-
-
-
 
 --
 -- Name: directus_activity_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_activity_id_seq', 5125, true);
+SELECT pg_catalog.setval('public.directus_activity_id_seq', 5169, true);
 
 
 --
 -- Name: directus_fields_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_fields_id_seq', 341, true);
+SELECT pg_catalog.setval('public.directus_fields_id_seq', 344, true);
 
 
 --
@@ -8403,7 +8298,7 @@ SELECT pg_catalog.setval('public.directus_permissions_id_seq', 1, false);
 -- Name: directus_presets_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_presets_id_seq', 27, true);
+SELECT pg_catalog.setval('public.directus_presets_id_seq', 28, true);
 
 
 --
@@ -8417,7 +8312,7 @@ SELECT pg_catalog.setval('public.directus_relations_id_seq', 37, true);
 -- Name: directus_revisions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_revisions_id_seq', 5002, true);
+SELECT pg_catalog.setval('public.directus_revisions_id_seq', 5043, true);
 
 
 --
@@ -8442,10 +8337,31 @@ SELECT pg_catalog.setval('public.education_id_seq', 16, true);
 
 
 --
+-- Name: highlights_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.highlights_id_seq', 45, true);
+
+
+--
+-- Name: languages_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.languages_id_seq', 108, true);
+
+
+--
 -- Name: profile_versions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.profile_versions_id_seq', 54, true);
+
+
+--
+-- Name: project_stories_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.project_stories_id_seq', 122, true);
 
 
 --
@@ -8463,6 +8379,13 @@ SELECT pg_catalog.setval('public.salary_expectations_id_seq', 12, true);
 
 
 --
+-- Name: side_project_achievements_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.side_project_achievements_id_seq', 1, false);
+
+
+--
 -- Name: side_project_technologies_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
@@ -8474,6 +8397,20 @@ SELECT pg_catalog.setval('public.side_project_technologies_id_seq', 132, true);
 --
 
 SELECT pg_catalog.setval('public.side_projects_id_seq', 28, true);
+
+
+--
+-- Name: soft_skills_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.soft_skills_id_seq', 151, true);
+
+
+--
+-- Name: tech_skill_categories_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.tech_skill_categories_id_seq', 158, true);
 
 
 --
@@ -8494,14 +8431,28 @@ SELECT pg_catalog.setval('public.tech_skills_id_seq', 255, true);
 -- Name: vacancies_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.vacancies_id_seq', 5, true);
+SELECT pg_catalog.setval('public.vacancies_id_seq', 6, true);
 
 
 --
 -- Name: vacancy_resources_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.vacancy_resources_id_seq', 2, true);
+SELECT pg_catalog.setval('public.vacancy_resources_id_seq', 3, true);
+
+
+--
+-- Name: work_experience_achievements_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.work_experience_achievements_id_seq', 220, true);
+
+
+--
+-- Name: work_experience_technologies_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.work_experience_technologies_id_seq', 406, true);
 
 
 --
@@ -9609,5 +9560,5 @@ ALTER TABLE ONLY public.work_experiences
 -- PostgreSQL database dump complete
 --
 
-\unrestrict trymemroIE3KEdbolPXcFidBLmSQ9uXRKg1g5fPJgPWpCmVmLoUprgpQYwftm8v
+\unrestrict p9cGe0zrteWyurqfamlDz8YamiLBI1p7F70x1Pvw4bc9vRI9zd367cCWqPewZGr
 
