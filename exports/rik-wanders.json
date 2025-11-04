@@ -1356,6 +1356,16 @@
       },
       {
         "sort": 4,
+        "title": "Smart Job Seeker - AI-driven job-matching system",
+        "situation": "- Finding appropriate vacancies takes a lot of time\n- It's repetitive work\n- Adjusting resume/CV for every application takes time\n- Writing custom cover letter takes time\n- Answering common interview questions takes time\n- Tracking all running applications takes time",
+        "task": "- Make the process easier, automate repetitive tasks\n- Use AI to find appropriate job matches\n- Make a easily customizable resume/CV generation system\n- Use AI to help write custom cover letters\n- Save re-usable common interview questions\n- Have all running applications in overview",
+        "action": "- Created personal platform for job hunting\n- Used AI tools to match my profile with jobs with OpenAI & Gemini APIs\n- Created custom resume/CV generation system with Svelte + Directus CMS\n- Created module to help generate cover letter with AI\n- Created database for common interview / application questions\n- Created overview for tracking application status",
+        "result": "- Faster results of suitable vacancies\n- Better customization for each application\n- More confident when applying\n- Process becomes more fun and streamlined\n- Learning new skills I can use on my resume/CV",
+        "reflection": "- Happy to have started it\n- Plans to eventually open source it\n- Useful for the rest of my career",
+        "category": "high_impact_projects"
+      },
+      {
+        "sort": 5,
         "title": "Introduced agile / async team workflow @ Chipta",
         "situation": "- Early days at Chipta with minimal team structure\n- 3-5 developers working without established methodologies\n- Changing requirements from management causing confusion with devs\n- Need to scale development processes as team grew",
         "task": "- Introduce structured development methodologies\n- Get all team members aligned on new processes\n- Implement tools and workflows for better collaboration\n- Improve team efficiency and productivity",
@@ -1365,7 +1375,7 @@
         "category": "leadership_moments"
       },
       {
-        "sort": 5,
+        "sort": 6,
         "title": "TicketSwap integration deadline for major client",
         "situation": "- Major event organizer prospect required TicketSwap integration\n- Hard deadline of 3 weeks to deliver or lose the prospect\n- Complex coordination needed with external development team",
         "task": "- Build secure TicketSwap API integration for second-hand ticket validation\n- Coordinate with TicketSwap developers on protocols and implementation steps\n- Deliver working solution within 3-week deadline to close the deal",
@@ -1375,7 +1385,7 @@
         "category": "leadership_moments"
       },
       {
-        "sort": 6,
+        "sort": 7,
         "title": "Automated integration testing with Selenium",
         "situation": "- Manual integration testing required before each production deployment\n- Testing process took up to 1.5 hours per release\n- Process was error prone because of human errors\n- Time-consuming manual process slowed down development cycle",
         "task": "- Eliminate manual testing bottleneck\n- Enable faster, more reliable deployments\n- Reduce time investment required for each release\n- Improve reliability of test results",
@@ -1385,7 +1395,7 @@
         "category": "learning_experiences"
       },
       {
-        "sort": 7,
+        "sort": 8,
         "title": "Onboarding junior developer to Django system",
         "situation": "- New junior developer joined comprehensive Django project\n- Developer needed to learn Django framework\n- Complex system with frontend integration\n- Multiple new skills needed simultaneously",
         "task": "- Guide developer through system architecture\n- Teach Django best practices\n- Train on frontend technologies\n- Make developer productive on assigned projects",
@@ -1395,7 +1405,7 @@
         "category": "learning_experiences"
       },
       {
-        "sort": 8,
+        "sort": 9,
         "title": "React Native App Technical Challenges",
         "situation": "- Leading React Native mobile app development at Chipta\n- React Native framework had significant bugs and limitations\n- Limited documentation and community support available\n- Tight deadline before festival season start",
         "task": "- Navigate technical challenges with immature framework\n- Find solutions to framework bugs and limitations\n- Deliver functional app on schedule\n- Ensure app met performance and reliability requirements",
