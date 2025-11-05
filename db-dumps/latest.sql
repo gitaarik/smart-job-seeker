@@ -10262,7 +10262,7 @@ ALTER TABLE ONLY public.outsourcing_platforms
 -- Name: platform_profiles platform_profiles_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.platform_profile
+ALTER TABLE ONLY public.platform_profiles
     ADD CONSTRAINT platform_profiles_pkey PRIMARY KEY (id);
 
 
@@ -10905,7 +10905,7 @@ ALTER TABLE ONLY public.languages
 -- Name: platform_profiles platform_profiles_outsourcing_platform_foreign; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.platform_profile
+ALTER TABLE ONLY public.platform_profiles
     ADD CONSTRAINT platform_profiles_outsourcing_platform_foreign FOREIGN KEY (outsourcing_platform) REFERENCES public.outsourcing_platforms(id);
 
 
@@ -10913,7 +10913,7 @@ ALTER TABLE ONLY public.platform_profile
 -- Name: platform_profiles platform_profiles_profile_foreign; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
-ALTER TABLE ONLY public.platform_profile
+ALTER TABLE ONLY public.platform_profiles
     ADD CONSTRAINT platform_profiles_profile_foreign FOREIGN KEY (profile) REFERENCES public.profiles(id) ON DELETE CASCADE;
 
 
