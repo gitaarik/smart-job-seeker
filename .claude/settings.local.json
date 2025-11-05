@@ -40,7 +40,8 @@
       "WebFetch(domain:jsonresume.org)",
       "WebFetch(domain:localhost)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(npm run docker:clear-directus-cache:*)"
     ],
     "deny": [],
     "ask": []
