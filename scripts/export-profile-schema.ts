@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { PrismaClient } from "@prisma/client";
+import removeMd from "remove-markdown";
 
 const prisma = new PrismaClient();
 
@@ -176,7 +177,7 @@ async function buildSchemaNode(
   });
 
   const fieldNotesMap = Object.fromEntries(
-    fieldMetas.map((fm) => [fm.field, fm.note])
+    fieldMetas.map((fm) => [fm.field, removeMd(fm.note || "")])
   );
 
   for (const fieldName of fieldNames) {

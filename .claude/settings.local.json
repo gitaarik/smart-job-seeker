@@ -41,7 +41,8 @@
       "WebFetch(domain:localhost)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebSearch",
-      "Bash(npm run docker:clear-directus-cache:*)"
+      "Bash(npm run docker:clear-directus-cache:*)",
+      "WebFetch(domain:www.npmjs.com)"
     ],
     "deny": [],
     "ask": []
