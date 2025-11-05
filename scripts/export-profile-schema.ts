@@ -48,14 +48,12 @@ const PROFILE_SCHEMA_MAPPING = {
           "start_date",
           "end_date",
           "website",
-          "tags",
         ],
         relations: {
           work_experience_achievements: {
             fields: [
               "title",
               "description",
-              "tags",
             ],
           },
           work_experience_technologies: {
@@ -72,7 +70,6 @@ const PROFILE_SCHEMA_MAPPING = {
           "stars",
           "summary",
           "url_label",
-          "tags",
         ],
         relations: {
           side_project_achievements: {
@@ -97,7 +94,6 @@ const PROFILE_SCHEMA_MAPPING = {
           "start_date",
           "end_date",
           "summary",
-          "tags",
         ],
       },
       languages: {
