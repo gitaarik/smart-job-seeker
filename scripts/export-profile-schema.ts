@@ -26,9 +26,6 @@ const PROFILE_SCHEMA_MAPPING = {
       "location_timezone",
     ],
     relations: {
-      profile_versions: {
-        fields: ["status", "sort", "name", "description", "toggles"],
-      },
       highlights: {
         fields: ["status", "sort", "text", "fa_icon"],
       },
