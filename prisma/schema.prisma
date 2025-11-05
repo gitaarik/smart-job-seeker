@@ -8,6 +8,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model application_interview_questions {
+  id           Int          @id @default(autoincrement())
+  sort         Int?
+  date_created DateTime?    @db.Timestamptz(6)
+  date_updated DateTime?    @db.Timestamptz(6)
+  application  Int
+  question     String
+  answer       String?
+  applications applications @relation(fields: [application], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "application_interview_questions_application_foreign")
+}
+
 model application_questions {
   id           Int       @id @default(autoincrement())
   sort         Int?
@@ -49,6 +60,15 @@ model cheat_sheets {
   content      String?
   profile      Int
   profiles     profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "cheat_sheets_profile_foreign")
+}
+
+model collected_data {
+  id           Int       @id @default(autoincrement())
+  date_updated DateTime? @db.Timestamptz(6)
+  schema       String?
+  data         String?
+  profile      Int?
+  profiles     profiles? @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "collected_data_profile_foreign")
 }
 
 model dev_methodologies {
@@ -609,6 +629,30 @@ model languages {
   profiles      profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "languages_profile_foreign")
 }
 
+model outsourcing_platforms {
+  id                Int                 @id @default(autoincrement())
+  status            String              @default("draft") @db.VarChar(255)
+  sort              Int?
+  date_created      DateTime?           @db.Timestamptz(6)
+  date_updated      DateTime?           @db.Timestamptz(6)
+  name              String              @db.VarChar(255)
+  url               String?             @db.VarChar(255)
+  type              String?             @db.VarChar(255)
+  platform_profiles platform_profiles[]
+}
+
+model platform_profiles {
+  id                    Int                    @id @default(autoincrement())
+  status                String                 @default("signup_in_progress") @db.VarChar(255)
+  sort                  Int?
+  date_created          DateTime?              @db.Timestamptz(6)
+  date_updated          DateTime?              @db.Timestamptz(6)
+  profile               Int?
+  outsourcing_platform  Int?
+  outsourcing_platforms outsourcing_platforms? @relation(fields: [outsourcing_platform], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "platform_profiles_outsourcing_platform_foreign")
+  profiles              profiles?              @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "platform_profiles_profile_foreign")
+}
+
 model profile_versions {
   id                     Int                @id @default(autoincrement())
   status                 String             @default("draft") @db.VarChar(255)
@@ -655,6 +699,7 @@ model profiles {
   education             education[]
   highlights            highlights[]
   languages             languages[]
+  platform_profiles     platform_profiles[]
   profile_versions      profile_versions[]
   directus_files        directus_files?         @relation(fields: [profile_picture], references: [id], onUpdate: NoAction, map: "profiles_profile_picture_foreign")
   project_stories       project_stories[]
@@ -851,6 +896,19 @@ model vacancies {
   vacancy_resources vacancy_resources[]
 }
 
+model vacancy_resources {
+  id             Int             @id @default(autoincrement())
+  sort           Int?
+  date_created   DateTime?       @db.Timestamptz(6)
+  date_updated   DateTime?       @db.Timestamptz(6)
+  name           String?         @db.VarChar(255)
+  url            String?         @db.VarChar(255)
+  file           String?         @db.Uuid
+  vacancy        Int
+  directus_files directus_files? @relation(fields: [file], references: [id], onUpdate: NoAction, map: "vacancy_resources_file_foreign")
+  vacancies      vacancies       @relation(fields: [vacancy], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "vacancy_resources_vacancy_foreign")
+}
+
 model work_experience_achievements {
   id               Int              @id @default(autoincrement())
   status           String           @default("draft") @db.VarChar(255)
@@ -897,63 +955,6 @@ model work_experiences {
   work_experience_technologies work_experience_technologies[]
   directus_files               directus_files?                @relation(fields: [logo], references: [id], onUpdate: NoAction, map: "work_experiences_logo_foreign")
   profiles                     profiles                       @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "work_experiences_profile_foreign")
-}
-
-model application_interview_questions {
-  id           Int          @id @default(autoincrement())
-  sort         Int?
-  date_created DateTime?    @db.Timestamptz(6)
-  date_updated DateTime?    @db.Timestamptz(6)
-  application  Int
-  question     String
-  answer       String?
-  applications applications @relation(fields: [application], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "application_interview_questions_application_foreign")
-}
-
-model vacancy_resources {
-  id             Int             @id @default(autoincrement())
-  sort           Int?
-  date_created   DateTime?       @db.Timestamptz(6)
-  date_updated   DateTime?       @db.Timestamptz(6)
-  name           String?         @db.VarChar(255)
-  url            String?         @db.VarChar(255)
-  file           String?         @db.Uuid
-  vacancy        Int
-  directus_files directus_files? @relation(fields: [file], references: [id], onUpdate: NoAction, map: "vacancy_resources_file_foreign")
-  vacancies      vacancies       @relation(fields: [vacancy], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "vacancy_resources_vacancy_foreign")
-}
-
-model collected_data {
-  id           Int       @id @default(autoincrement())
-  date_updated DateTime? @db.Timestamptz(6)
-  schema       String?
-  data         String?
-  profile      Int?
-  profiles     profiles? @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "collected_data_profile_foreign")
-}
-
-model outsourcing_platforms {
-  id           Int       @id @default(autoincrement())
-  status       String    @default("draft") @db.VarChar(255)
-  sort         Int?
-  date_created DateTime? @db.Timestamptz(6)
-  date_updated DateTime? @db.Timestamptz(6)
-  name         String    @db.VarChar(255)
-  url          String?   @db.VarChar(255)
-  type         String?   @db.VarChar(255)
-}
-
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
-model platform_profiles {
-  id                   Int       @default(autoincrement())
-  status               String    @default("signup_in_progress") @db.VarChar(255)
-  sort                 Int?
-  date_created         DateTime? @db.Timestamptz(6)
-  date_updated         DateTime? @db.Timestamptz(6)
-  profile              Int?
-  outsourcing_platform Int?
-
-  @@ignore
 }
 
 enum Role {
