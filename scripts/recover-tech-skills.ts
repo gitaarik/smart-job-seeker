@@ -5,7 +5,7 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 // Map skills to categories based on context from work experiences
-const SKILLS_BY_CATEGORY: Record<string, { name: string; yearsExperience?: number; level?: string }[]> = {
+const SKILLS_BY_CATEGORY: Record<string, { name: string; yearsExperience?: number; level?: string; techType?: number }[]> = {
   Backend: [
     { name: "Python", yearsExperience: 10 },
     { name: "Django", yearsExperience: 10 },
@@ -142,10 +142,11 @@ async function recoverTechSkills(): Promise<void> {
             data: {
               name: skill.name,
               category: category.id,
-              status: "draft",
+              status: "published",
               sort: i,
               years_experience: skill.yearsExperience,
-              level: skill.level,
+              level: skill.level || "expert",
+              tech_type: skill.techType,
             },
           });
           skillsInCategory++;
