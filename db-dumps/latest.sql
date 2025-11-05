@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict jcQAKowHEbblZgzT8d6CGYX7t6DgzJL3Cp2qdlqaSWuWdkSMZW7bl0eWB7lksRK
+\restrict GQT5JZU7fLP7iI0hi9NPhKsSQS1suIhcCANVezcPyBahBC8sBCnlfIHgUXAyyNy
 
 -- Dumped from database version 15.14 (Debian 15.14-1.pgdg13+1)
 -- Dumped by pg_dump version 15.14 (Debian 15.14-1.pgdg13+1)
@@ -7628,6 +7628,11 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 5821	login	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 18:53:02.482+00	172.18.0.5	node	directus_users	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N
 5822	login	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 18:55:02.117+00	172.18.0.5	node	directus_users	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N
 5823	login	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 18:55:06.452+00	172.18.0.5	node	directus_users	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N
+5824	login	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 19:29:47.835+00	172.18.0.5	node	directus_users	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N
+5825	login	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 19:30:53.471+00	172.18.0.5	node	directus_users	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N
+5826	login	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 19:32:13.044+00	172.18.0.5	node	directus_users	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N
+5827	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 19:32:47.511+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	tech_skill_categories	151	http://localhost:8055
+5828	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 19:32:53.902+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	tech_skill_categories	151	http://localhost:8055
 \.
 
 
@@ -9194,6 +9199,8 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 5653	5796	directus_collections	interviewing	{"collection":"interviewing","icon":"folder","note":null,"display_template":null,"hidden":false,"singleton":false,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":null,"accountability":"all","color":null,"item_duplication_fields":null,"sort":3,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"sort":3,"group":"profiles"}	\N	\N
 5663	5816	directus_fields	181	{"id":181,"collection":"project_stories","field":"reflection","special":null,"interface":"input-multiline","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":12,"width":"full","translations":null,"note":"Optional extra R for the  [STAR method](https://www.techinterviewhandbook.org/behavioral-interview/#1-learn-the-star-answer-format); Finish your story with a look back at what you learned and [took away](https://www.techinterviewhandbook.org/behavioral-interview/#result)","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null,"searchable":true}	{"collection":"project_stories","field":"reflection","note":"Optional extra R for the  [STAR method](https://www.techinterviewhandbook.org/behavioral-interview/#1-learn-the-star-answer-format); Finish your story with a look back at what you learned and [took away](https://www.techinterviewhandbook.org/behavioral-interview/#result)"}	\N	\N
 5664	5817	directus_fields	182	{"id":182,"collection":"project_stories","field":"category","special":null,"interface":"select-radio","options":{"choices":[{"text":"High-Impact Projects","value":"high_impact_projects"},{"text":"Challenging Situations","value":"challenging_situations"},{"text":"Leadership Moments","value":"leadership_moments"},{"text":"Learning Experiences","value":"learning_experiences"}]},"display":"labels","display_options":null,"readonly":false,"hidden":false,"sort":7,"width":"full","translations":null,"note":"Which [global category](https://www.techinterviewhandbook.org/behavioral-interview/#2-organize-your-key-stories) of interest this is","conditions":null,"required":true,"group":null,"validation":null,"validation_message":null,"searchable":true}	{"collection":"project_stories","field":"category","note":"Which [global category](https://www.techinterviewhandbook.org/behavioral-interview/#2-organize-your-key-stories) of interest this is"}	\N	\N
+5665	5827	tech_skill_categories	151	{"id":151,"status":"published","sort":1,"date_created":"2025-10-17T15:11:13.878Z","date_updated":"2025-11-05T19:32:47.510Z","name":"Backend","profile":2,"fa_icon":"pythonz","tech_skills":[256,257,258,259,260,261,262,263,264,265,266,267]}	{"fa_icon":"pythonz","date_updated":"2025-11-05T19:32:47.510Z"}	\N	\N
+5666	5828	tech_skill_categories	151	{"id":151,"status":"published","sort":1,"date_created":"2025-10-17T15:11:13.878Z","date_updated":"2025-11-05T19:32:53.901Z","name":"Backend","profile":2,"fa_icon":"python","tech_skills":[256,257,258,259,260,261,262,263,264,265,266,267]}	{"fa_icon":"python","date_updated":"2025-11-05T19:32:53.901Z"}	\N	\N
 \.
 
 
@@ -9216,10 +9223,14 @@ y6whbp82EsIATqPecnJ-qf_QWamYXHaWuuipzt91yhhjZ6qrOZsri0YlXBrv9vDL	157238bb-6930-4
 xvu8kNst20zp0P1S70SHTij9ct7Mv3P3cg9wFDygm0Nv6yzi0-q32VPeMPRHQUSq	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-09 20:07:49.931+00	172.18.0.2	node	\N	\N	\N
 VRoO6ns6OjSnroBRxszQc4D4_ZN-hNTopfjA8rQEcw8EL0_BICekHQF8kYxHdmP8	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-09 20:10:44.651+00	172.18.0.5	node	\N	\N	\N
 sZe7yh0vBp7Q0rjtS8gUPwFc6JQhHXtiIhMZaV1Nfae3T7hxMuLnEfVvXebVte1q	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-09 20:26:00.882+00	172.18.0.5	node	\N	\N	\N
+e6oviUpXMohH99kA76J0QRQZQzYhE12VHnKAHk6m_mHXE03Kg1iEpQh_aS2lYJdg	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-12 19:30:53.468+00	172.18.0.5	node	\N	\N	\N
 3X9tuG52_ciswj-xZ8-TTylLCPReXz-ApEeMa8Uvs6nBmzOubAYQ48vC_5hXZn9x	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 16:18:18.852+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
 -hGYbyrCPxDEhsAYzRxtyvVvs2E_kkqjPPw8RUGn84XGiZ7Wuny4H64FghjYcn3W	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-12 17:41:37.861+00	172.18.0.5	node	\N	\N	\N
 8SOmjMeB6m1E0M8ggCbLxLDmcJPNNkaHNBIQR8MNvDnKCgp5tILE44yTExK1t10n	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-12 17:11:37.983+00	172.18.0.5	node	\N	\N	\N
 J5DgHy1MwbgpAmRqq4CHtRf2E7vF7EzdMffKMf9q5C_R8Rr9iO_L3uWACrdEbrFY	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-12 17:59:11.759+00	172.18.0.5	node	\N	\N	\N
+z3lFgy_Sv9od-Mk0Pm_ogMVngbRAK3itj_ZaB7BOHTjDY8l6fi3ku_50Rb48xAdb	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-12 19:32:13.041+00	172.18.0.5	node	\N	\N	\N
+8S88OuRZI1-TtZpLG-iUkd1erRLvDr9X_bbA9vh5xK7wqL8rCEDoTMsTou3EcEzE	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 19:33:18.565+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	3IPYKmDdSMpUdFZWlTIk1IYKDJysTvDsfbIDk9PKDbtZTIKlrFTT36GDEZCupgs_
+3IPYKmDdSMpUdFZWlTIk1IYKDJysTvDsfbIDk9PKDbtZTIKlrFTT36GDEZCupgs_	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 19:33:08.565+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
 4gh1hHM_0ds0UXAiLCM1WSNtaFBlxCXci8jwbX8BTQkddJohY716H8-myAHA_jG4	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-12 17:35:20.624+00	172.18.0.5	node	\N	\N	\N
 WVDh_Z28-UjVL1V9owuUgnX08QkiBen2D4an4gBEnjeGgxbCxnJuwzLvBLPPqnXi	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-12 17:46:42.483+00	172.18.0.5	node	\N	\N	\N
 tSFU5BCCez2BdFy6RfruJzn6wfdb_aLvy-J7OY2J1xHcm1Tbr_aIW5ySm_LmjLXt	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-12 17:54:24.611+00	172.18.0.5	node	\N	\N	\N
@@ -9228,14 +9239,13 @@ p-XkO8uPY-WQ4u0MYA3XyNY_ePGDWqv1tcHmDkwDxzvDfmSLRz2zyle1mkRaybLr	157238bb-6930-4
 lmqmV2C2h01aeaU5ftni_cEVUyNAUWYzIHDkpKj4Ssb-EKarH91aRAwtNSXW08vg	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-12 17:49:00.043+00	172.18.0.5	node	\N	\N	\N
 B3PFvjufn-UFBnbdQsT6JotvuS5zQN1F97YSr6OGf015vVtk32m5j3R4EKUVqFJY	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-12 17:50:55.056+00	172.18.0.5	node	\N	\N	\N
 azaiyY6hCnZwPxJRLZ7FMnaBT61OjE7AgZajw2NGA4zZGi6BYOEsR-pIY-vNqykV	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-12 17:56:13.399+00	172.18.0.5	node	\N	\N	\N
-suNYl44g42WY-5yt3YzcL4IwJHzoE5Ly13ZKOA6rgrl2PQ0yLLoRM7Q_VLhenyii	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 19:21:52.269+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	vpC7q6x7YD2yrJ3p5HYGfoNXsEPbjxEBPfYoVU1Yn1mw1quRVBIvbC_LG-VfnL4d
 b1Tehi3aJO37yuDO-iVakmv8o6VGDUHE0swUuMmG_YcmT6Krl6B1cTBR54jt1szG	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-12 18:50:35.841+00	172.18.0.5	node	\N	\N	\N
-vpC7q6x7YD2yrJ3p5HYGfoNXsEPbjxEBPfYoVU1Yn1mw1quRVBIvbC_LG-VfnL4d	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 19:21:42.269+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
 PVSYN0JLXVHHPM_nubZ_swgBxwqFVAsanTdePh_pavUIGTtrDcoQ3tzrVaWk0JS0	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-12 18:31:01.488+00	172.18.0.5	node	\N	\N	\N
 7XxG9Bf1O13bQ3el_8-NlOsaFJ_4dxq19Auk4KfIFb6yuf8wX1M4y6-Tv8KrAVBn	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-12 18:35:10.375+00	172.18.0.5	node	\N	\N	\N
 fojJAEJpRHhExGpURJM_ErQIzFbUqaNGN7h6y3oSi3myb3GXQqau3KmKvIjHEb9q	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-12 18:53:02.48+00	172.18.0.5	node	\N	\N	\N
 xv1JspPr8hWjA5YNWWVLNyJRUR8idbB6B9PHJYnLKAIjGgNVeHD9TZYaqtKQpROc	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-12 18:55:02.114+00	172.18.0.5	node	\N	\N	\N
 CI1Qo-fImKhZX-7_G8vW7TEj_99-T9XZyxHhvy3GrZS_ydo_QUcxDA3sQKd8E1yW	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-12 18:55:06.45+00	172.18.0.5	node	\N	\N	\N
+c8sPENMwLUvdLn8SCVayDAfMzIh4Bmtdhoh4bqYZeI0HkRN52DbOSKQ5KuOFW13M	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-12 19:29:47.833+00	172.18.0.5	node	\N	\N	\N
 \.
 
 
@@ -9272,7 +9282,7 @@ c530a32f-84cb-4ab9-8a61-7a12a5bcb7e6	en-US	draft	Draft
 --
 
 COPY public.directus_users (id, first_name, last_name, email, password, location, title, description, tags, avatar, language, tfa_secret, status, role, token, last_access, last_page, provider, external_identifier, auth_data, email_notifications, appearance, theme_dark, theme_light, theme_light_overrides, theme_dark_overrides, text_direction) FROM stdin;
-157238bb-6930-4f26-be9c-8b31a9e11ab8	Rik	Wanders	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-11-05 19:21:42.274+00	/content/tech_skill_categories/151	default	\N	\N	t	\N	\N	\N	\N	\N	auto
+157238bb-6930-4f26-be9c-8b31a9e11ab8	Rik	Wanders	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-11-05 19:33:08.567+00	/content/tech_skill_categories/151	default	\N	\N	t	\N	\N	\N	\N	\N	auto
 \.
 
 
@@ -9520,13 +9530,13 @@ COPY public.soft_skills (id, status, sort, date_created, date_updated, name, pro
 --
 
 COPY public.tech_skill_categories (id, status, sort, date_created, date_updated, name, profile, fa_icon) FROM stdin;
-151	published	1	2025-10-17 15:11:13.878+00	2025-10-22 17:29:08.756+00	Backend	2	python
 152	published	2	2025-10-17 15:11:24.359+00	2025-10-22 17:28:56.145+00	Frontend	2	node-js
 153	published	5	2025-10-17 17:12:02.589+00	2025-10-27 12:50:28.732+00	Development Tools	2	robot
 154	published	7	2025-10-22 17:29:45.619+00	2025-10-27 12:40:19.754+00	Cloud Platforms	2	cloud
 155	published	8	2025-10-29 15:03:06.594+00	2025-10-29 15:12:49.703+00	Dev Methodologies	2	user-gear
 156	published	4	2025-10-17 15:12:51.928+00	2025-10-30 13:47:22.659+00	Databases	2	database
 157	published	6	2025-10-22 17:29:35.678+00	2025-10-30 13:49:16.398+00	DevOps	2	server
+151	published	1	2025-10-17 15:11:13.878+00	2025-11-05 19:32:53.901+00	Backend	2	python
 \.
 
 
@@ -9557,72 +9567,72 @@ COPY public.tech_skill_types (id, status, sort, date_created, date_updated, name
 --
 
 COPY public.tech_skills (id, status, sort, date_created, date_updated, name, category, level, tech_type, years_experience) FROM stdin;
-322	published	0	\N	\N	Python	151	expert	\N	10
-323	published	1	\N	\N	Django	151	expert	\N	10
-324	published	2	\N	\N	Django REST Framework	151	expert	\N	10
-325	published	3	\N	\N	Django Channels	151	expert	\N	8
-326	published	4	\N	\N	Django Silk	151	expert	\N	7
-327	published	5	\N	\N	Jinja2	151	expert	\N	10
-328	published	6	\N	\N	Weasyprint	151	expert	\N	5
-329	published	7	\N	\N	Node.js	151	expert	\N	8
-330	published	8	\N	\N	Express	151	expert	\N	7
-331	published	9	\N	\N	Flask	151	expert	\N	5
-332	published	10	\N	\N	PHP	151	expert	\N	10
-333	published	11	\N	\N	Laravel	151	expert	\N	3
-334	published	0	\N	\N	React	152	expert	\N	8
-335	published	1	\N	\N	MobX	152	expert	\N	7
-336	published	2	\N	\N	Lit	152	expert	\N	4
-337	published	3	\N	\N	Web Components	152	expert	\N	4
-338	published	4	\N	\N	Vue.js	152	expert	\N	6
-339	published	5	\N	\N	JavaScript	152	expert	\N	12
-340	published	6	\N	\N	TypeScript	152	expert	\N	5
-341	published	7	\N	\N	Svelte	152	expert	\N	2
-342	published	8	\N	\N	jQuery	152	expert	\N	8
-343	published	9	\N	\N	Bootstrap	152	expert	\N	8
-344	published	10	\N	\N	Tailwind CSS	152	expert	\N	3
-345	published	11	\N	\N	HTML5	152	expert	\N	12
-346	published	12	\N	\N	CSS3	152	expert	\N	12
-347	published	13	\N	\N	AJAX	152	expert	\N	10
-348	published	14	\N	\N	Responsive design	152	expert	\N	10
-349	published	15	\N	\N	Webpack	152	expert	\N	6
-350	published	16	\N	\N	Sveltekit	152	expert	\N	1
-351	published	0	\N	\N	Git	153	expert	\N	12
-352	published	1	\N	\N	GitHub	153	expert	\N	10
-353	published	2	\N	\N	GitLab	153	expert	\N	5
-354	published	3	\N	\N	Bitbucket	153	expert	\N	5
-355	published	4	\N	\N	Docker	153	expert	\N	7
-356	published	5	\N	\N	Docker Compose	153	expert	\N	7
-357	published	6	\N	\N	Selenium	153	expert	\N	7
-358	published	7	\N	\N	Postman	153	expert	\N	6
-359	published	0	\N	\N	Amazon Web Services (AWS)	154	expert	\N	8
-360	published	1	\N	\N	AWS EC2	154	expert	\N	8
-361	published	2	\N	\N	AWS S3	154	expert	\N	8
-362	published	3	\N	\N	AWS Lambda	154	expert	\N	5
-363	published	4	\N	\N	AWS EKS	154	expert	\N	3
-364	published	5	\N	\N	DigitalOcean	154	expert	\N	5
-365	published	6	\N	\N	Azure	154	expert	\N	3
-366	published	7	\N	\N	GCP	154	expert	\N	3
-367	published	8	\N	\N	Linode	154	expert	\N	8
-368	published	0	\N	\N	Agile	155	expert	\N	10
-369	published	1	\N	\N	Scrum	155	expert	\N	10
-370	published	2	\N	\N	Test Driven Development	155	expert	\N	8
-371	published	3	\N	\N	Git Submodules	155	expert	\N	8
-372	published	0	\N	\N	MySQL	156	expert	\N	10
-373	published	1	\N	\N	PostgreSQL	156	expert	\N	8
-374	published	2	\N	\N	MongoDB	156	expert	\N	6
-375	published	3	\N	\N	Redis	156	expert	\N	8
-376	published	4	\N	\N	Elasticsearch	156	expert	\N	5
-377	published	0	\N	\N	Ansible	157	expert	\N	7
-378	published	1	\N	\N	Nginx	157	expert	\N	8
-379	published	2	\N	\N	Apache	157	expert	\N	8
-380	published	3	\N	\N	HAProxy	157	expert	\N	5
-381	published	4	\N	\N	Kubernetes	157	expert	\N	4
-382	published	5	\N	\N	AWS EC2	157	expert	\N	8
-383	published	6	\N	\N	AWS S3	157	expert	\N	8
-384	published	7	\N	\N	Linode	157	expert	\N	8
-385	published	8	\N	\N	Linux	157	expert	\N	10
-386	published	9	\N	\N	CI/CD	157	expert	\N	8
-387	published	10	\N	\N	Jenkins	157	expert	\N	5
+256	published	0	\N	\N	Python	151	\N	\N	10
+257	published	1	\N	\N	Django	151	\N	\N	10
+258	published	2	\N	\N	Django REST Framework	151	\N	\N	10
+259	published	3	\N	\N	Django Channels	151	\N	\N	8
+260	published	4	\N	\N	Django Silk	151	\N	\N	7
+261	published	5	\N	\N	Jinja2	151	\N	\N	10
+262	published	6	\N	\N	Weasyprint	151	\N	\N	5
+263	published	7	\N	\N	Node.js	151	\N	\N	8
+264	published	8	\N	\N	Express	151	\N	\N	7
+265	published	9	\N	\N	Flask	151	\N	\N	5
+266	published	10	\N	\N	PHP	151	\N	\N	10
+267	published	11	\N	\N	Laravel	151	\N	\N	3
+268	published	0	\N	\N	React	152	\N	\N	8
+269	published	1	\N	\N	MobX	152	\N	\N	7
+270	published	2	\N	\N	Lit	152	\N	\N	4
+271	published	3	\N	\N	Web Components	152	\N	\N	4
+272	published	4	\N	\N	Vue.js	152	\N	\N	6
+273	published	5	\N	\N	JavaScript	152	\N	\N	12
+274	published	6	\N	\N	TypeScript	152	\N	\N	5
+275	published	7	\N	\N	Svelte	152	\N	\N	2
+276	published	8	\N	\N	jQuery	152	\N	\N	8
+277	published	9	\N	\N	Bootstrap	152	\N	\N	8
+278	published	10	\N	\N	Tailwind CSS	152	\N	\N	3
+279	published	11	\N	\N	HTML5	152	\N	\N	12
+280	published	12	\N	\N	CSS3	152	\N	\N	12
+281	published	13	\N	\N	AJAX	152	\N	\N	10
+282	published	14	\N	\N	Responsive design	152	\N	\N	10
+283	published	15	\N	\N	Webpack	152	\N	\N	6
+284	published	16	\N	\N	Sveltekit	152	\N	\N	1
+285	published	0	\N	\N	Git	153	\N	\N	12
+286	published	1	\N	\N	GitHub	153	\N	\N	10
+287	published	2	\N	\N	GitLab	153	\N	\N	5
+288	published	3	\N	\N	Bitbucket	153	\N	\N	5
+289	published	4	\N	\N	Docker	153	\N	\N	7
+290	published	5	\N	\N	Docker Compose	153	\N	\N	7
+291	published	6	\N	\N	Selenium	153	\N	\N	7
+292	published	7	\N	\N	Postman	153	\N	\N	6
+293	published	0	\N	\N	Amazon Web Services (AWS)	154	\N	\N	8
+294	published	1	\N	\N	AWS EC2	154	\N	\N	8
+295	published	2	\N	\N	AWS S3	154	\N	\N	8
+296	published	3	\N	\N	AWS Lambda	154	\N	\N	5
+297	published	4	\N	\N	AWS EKS	154	\N	\N	3
+298	published	5	\N	\N	DigitalOcean	154	\N	\N	5
+299	published	6	\N	\N	Azure	154	\N	\N	3
+300	published	7	\N	\N	GCP	154	\N	\N	3
+301	published	8	\N	\N	Linode	154	\N	\N	8
+302	published	0	\N	\N	Agile	155	\N	\N	10
+303	published	1	\N	\N	Scrum	155	\N	\N	10
+304	published	2	\N	\N	Test Driven Development	155	\N	\N	8
+305	published	3	\N	\N	Git Submodules	155	\N	\N	8
+306	published	0	\N	\N	MySQL	156	\N	\N	10
+307	published	1	\N	\N	PostgreSQL	156	\N	\N	8
+308	published	2	\N	\N	MongoDB	156	\N	\N	6
+309	published	3	\N	\N	Redis	156	\N	\N	8
+310	published	4	\N	\N	Elasticsearch	156	\N	\N	5
+311	published	0	\N	\N	Ansible	157	\N	\N	7
+312	published	1	\N	\N	Nginx	157	\N	\N	8
+313	published	2	\N	\N	Apache	157	\N	\N	8
+314	published	3	\N	\N	HAProxy	157	\N	\N	5
+315	published	4	\N	\N	Kubernetes	157	\N	\N	4
+316	published	5	\N	\N	AWS EC2	157	\N	\N	8
+317	published	6	\N	\N	AWS S3	157	\N	\N	8
+318	published	7	\N	\N	Linode	157	\N	\N	8
+319	published	8	\N	\N	Linux	157	\N	\N	10
+320	published	9	\N	\N	CI/CD	157	\N	\N	8
+321	published	10	\N	\N	Jenkins	157	\N	\N	5
 \.
 
 
@@ -9857,7 +9867,7 @@ SELECT pg_catalog.setval('public.dev_methodologies_id_seq', 38, true);
 -- Name: directus_activity_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_activity_id_seq', 5823, true);
+SELECT pg_catalog.setval('public.directus_activity_id_seq', 5828, true);
 
 
 --
@@ -9899,7 +9909,7 @@ SELECT pg_catalog.setval('public.directus_relations_id_seq', 41, true);
 -- Name: directus_revisions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_revisions_id_seq', 5664, true);
+SELECT pg_catalog.setval('public.directus_revisions_id_seq', 5666, true);
 
 
 --
@@ -10025,7 +10035,7 @@ SELECT pg_catalog.setval('public.tech_skill_types_id_seq', 14, true);
 -- Name: tech_skills_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.tech_skills_id_seq', 387, true);
+SELECT pg_catalog.setval('public.tech_skills_id_seq', 453, true);
 
 
 --
@@ -11223,5 +11233,5 @@ ALTER TABLE ONLY public.work_experiences
 -- PostgreSQL database dump complete
 --
 
-\unrestrict jcQAKowHEbblZgzT8d6CGYX7t6DgzJL3Cp2qdlqaSWuWdkSMZW7bl0eWB7lksRK
+\unrestrict GQT5JZU7fLP7iI0hi9NPhKsSQS1suIhcCANVezcPyBahBC8sBCnlfIHgUXAyyNy
 
