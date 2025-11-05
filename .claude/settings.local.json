@@ -42,7 +42,15 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebSearch",
       "Bash(npm run docker:clear-directus-cache:*)",
-      "WebFetch(domain:www.npmjs.com)"
+      "WebFetch(domain:www.npmjs.com)",
+      "Bash(/tmp/tech_skill_categories_insert.sql)",
+      "Bash(/tmp/tech_skills_data.sql)",
+      "Bash(/tmp/recovery.sql)",
+      "Bash(/tmp/tech_skills_full.sql)",
+      "Bash(find:*)",
+      "Bash(git log:*)",
+      "Bash(jq:*)",
+      "Bash(npm run docker:recover-tech-skills:*)"
     ],
     "deny": [],
     "ask": []
