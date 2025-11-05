@@ -45,8 +45,6 @@ export async function loadProfile(params) {
     },
   });
 
-  console.log(profile)
-
   return {
     profile,
   };
