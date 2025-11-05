@@ -27,13 +27,13 @@ const PROFILE_SCHEMA_MAPPING = {
     ],
     relations: {
       highlights: {
-        fields: ["status", "sort", "text", "fa_icon"],
+        fields: ["status", "text"],
       },
       tech_skill_categories: {
-        fields: ["status", "sort", "name", "fa_icon"],
+        fields: ["status", "name"],
         relations: {
           tech_skills: {
-            fields: ["status", "sort", "name", "years_experience", "level"],
+            fields: ["status", "name", "years_experience", "level"],
           },
         },
       },
@@ -45,7 +45,6 @@ const PROFILE_SCHEMA_MAPPING = {
           "position",
           "summary",
           "status",
-          "sort",
           "start_date",
           "end_date",
           "website",
@@ -55,22 +54,19 @@ const PROFILE_SCHEMA_MAPPING = {
           work_experience_achievements: {
             fields: [
               "status",
-              "sort",
               "title",
               "description",
-              "fa_icon",
               "tags",
             ],
           },
           work_experience_technologies: {
-            fields: ["status", "sort", "name"],
+            fields: ["status", "name"],
           },
         },
       },
       side_projects: {
         fields: [
           "status",
-          "sort",
           "name",
           "start_date",
           "end_date",
@@ -84,21 +80,18 @@ const PROFILE_SCHEMA_MAPPING = {
           side_project_achievements: {
             fields: [
               "title",
-              "fa_icon",
               "description",
               "status",
-              "sort",
             ],
           },
           side_project_technologies: {
-            fields: ["status", "sort", "name"],
+            fields: ["status", "name"],
           },
         },
       },
       education: {
         fields: [
           "status",
-          "sort",
           "institution",
           "location",
           "url",
@@ -112,14 +105,13 @@ const PROFILE_SCHEMA_MAPPING = {
         ],
       },
       languages: {
-        fields: ["status", "sort", "name", "language_code", "proficiency"],
+        fields: ["status", "name", "language_code", "proficiency"],
       },
       references: {
-        fields: ["status", "sort", "author", "author_position", "text"],
+        fields: ["status", "author", "author_position", "text"],
       },
       project_stories: {
         fields: [
-          "sort",
           "title",
           "situation",
           "task",
@@ -130,14 +122,13 @@ const PROFILE_SCHEMA_MAPPING = {
         ],
       },
       application_questions: {
-        fields: ["sort", "question", "answer", "title", "source"],
+        fields: ["question", "answer", "title", "source"],
       },
       cheat_sheets: {
-        fields: ["sort", "title", "content"],
+        fields: ["title", "content"],
       },
       salary_expectations: {
         fields: [
-          "sort",
           "job_title",
           "company_type",
           "employment_type",
