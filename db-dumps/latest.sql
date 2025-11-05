@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict GqLt3aH4DTjogci6CIWWio6RT3JaE7s8RAlucLbpMc1J7U73zZPYew9WgwGEi68
+\restrict nxz85iIUFm4Pm6SJDFDu82kKJZHFICZNiuk0dY8n8giJvmg0gCNLf7429vIaC1g
 
 -- Dumped from database version 15.14 (Debian 15.14-1.pgdg13+1)
 -- Dumped by pg_dump version 15.14 (Debian 15.14-1.pgdg13+1)
@@ -3639,6 +3639,7 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 1760	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-20 15:43:20.143+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	156	http://localhost:8055
 1761	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-20 15:48:54.206+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	147	http://localhost:8055
 1762	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-20 15:48:56.856+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	17	http://localhost:8055
+5806	login	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 17:35:20.626+00	172.18.0.5	node	directus_users	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N
 1763	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-20 15:48:56.861+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	18	http://localhost:8055
 1764	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-20 15:48:56.866+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	19	http://localhost:8055
 1765	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-20 15:48:56.872+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:143.0) Gecko/20100101 Firefox/143.0	directus_fields	20	http://localhost:8055
@@ -4111,6 +4112,7 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 2266	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-23 11:51:34.725+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	tech_skill_categories	http://localhost:8055
 2267	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-23 11:51:34.73+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	soft_skills	http://localhost:8055
 2268	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-23 11:51:34.734+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	dev_methodologies	http://localhost:8055
+5807	login	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 17:39:45.7+00	172.18.0.5	node	directus_users	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N
 2269	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-23 11:51:34.74+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	work_experiences	http://localhost:8055
 2270	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-23 11:51:34.745+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	project_stories	http://localhost:8055
 2271	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-23 11:51:34.75+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	application_questions	http://localhost:8055
@@ -4151,6 +4153,7 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 2306	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-23 12:14:30.464+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	193	http://localhost:8055
 2307	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-23 12:14:30.468+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	38	http://localhost:8055
 2308	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-23 12:14:30.471+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	31	http://localhost:8055
+5808	login	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 17:41:37.865+00	172.18.0.5	node	directus_users	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N
 2309	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-23 12:14:30.476+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	32	http://localhost:8055
 2310	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-23 12:14:30.481+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	33	http://localhost:8055
 2311	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-10-23 12:14:30.485+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	34	http://localhost:8055
@@ -7692,13 +7695,10 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 71	tech_skill_categories	id	integer	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N	t
 32	languages	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	5	half	\N	\N	\N	f	\N	\N	\N	t
 35	languages	language_code	\N	input	\N	\N	\N	f	f	8	half	\N	2-letter ISO 639 language code	\N	f	\N	\N	\N	t
-36	languages	proficiency	\N	select-radio	{"choices":[{"text":"Native","value":"native"},{"text":"Fluent","value":"fluent"},{"text":"Proficient","value":"proficient"},{"text":"Conversational","value":"conversational"},{"text":"Basic","value":"basic"}]}	\N	\N	f	f	9	full	\N	\N	\N	f	\N	\N	\N	t
-9	work_experiences	summary	\N	\N	\N	\N	\N	f	f	12	full	\N	\N	\N	f	\N	\N	\N	t
 2	work_experiences	id	integer	\N	\N	\N	\N	t	f	1	full	\N	\N	\N	f	\N	\N	\N	t
 30	languages	id	integer	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N	t
 38	languages	profile	m2o	select-dropdown-m2o	\N	related-values	{"template":"{{name}}"}	f	f	3	half	\N	\N	\N	f	\N	\N	\N	t
 33	languages	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	6	half	\N	\N	\N	f	\N	\N	\N	t
-34	languages	name	\N	input	\N	\N	\N	f	f	7	half	\N	\N	\N	f	\N	\N	\N	t
 4	work_experiences	description	\N	input	\N	\N	\N	f	f	5	half	\N	Describe what kind of company / organization this was.	\N	f	\N	\N	\N	t
 15	work_experiences	logo	file	file-image	{"crop":false}	image	\N	f	f	7	half	\N	\N	\N	f	\N	\N	\N	t
 3	work_experiences	location	\N	input	\N	\N	\N	f	f	8	half	\N	The location of the company / organization or where you did your work.	\N	f	\N	\N	\N	t
@@ -7715,113 +7715,91 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 174	cheat_sheets	profile	m2o	select-dropdown-m2o	\N	related-values	{"template":"{{name}}"}	f	f	5	full	\N	\N	\N	f	\N	\N	\N	t
 168	cheat_sheets	id	integer	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N	t
 170	cheat_sheets	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	3	half	\N	\N	\N	f	\N	\N	\N	t
-62	highlights	text	\N	input	\N	\N	\N	f	f	4	full	\N	\N	\N	t	\N	\N	\N	t
-57	highlights	sort	\N	input	\N	\N	\N	f	t	5	full	\N	\N	\N	f	\N	\N	\N	t
 58	highlights	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	6	half	\N	\N	\N	f	\N	\N	\N	t
 59	highlights	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	7	half	\N	\N	\N	f	\N	\N	\N	t
 63	tech_skills	id	\N	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N	t
-65	tech_skills	sort	\N	input	\N	\N	\N	f	t	2	full	\N	\N	\N	f	\N	\N	\N	t
-70	tech_skills	name	\N	input	\N	\N	\N	f	f	7	half	\N	\N	\N	f	\N	\N	\N	t
-85	tech_skills	level	\N	select-dropdown	{"choices":[{"text":"Expert","value":"expert"},{"text":"Proficient","value":"proficient"},{"text":"Intermediate","value":"intermediate"},{"text":"Beginner","value":"beginner"}],"allowNone":true}	\N	\N	f	f	9	half	\N	\N	\N	f	\N	\N	\N	t
 95	soft_skills	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	3	half	\N	\N	\N	f	\N	\N	\N	t
-196	education	sort	\N	input	\N	\N	\N	f	t	2	full	\N	\N	\N	f	\N	\N	\N	t
 197	education	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	5	half	\N	\N	\N	f	\N	\N	\N	t
 54	profiles	profile_picture	file	file-image	{"crop":false}	\N	\N	f	f	11	half	\N	\N	\N	f	\N	\N	\N	t
-27	profiles	email_address	\N	input	\N	\N	\N	f	f	12	half	\N	\N	\N	f	\N	\N	\N	t
-26	profiles	phone_number	\N	input	\N	\N	\N	f	f	13	half	\N	\N	\N	f	\N	\N	\N	t
-28	profiles	personal_website	\N	input	\N	\N	\N	f	f	17	full	\N	\N	\N	f	\N	\N	\N	t
-50	profiles	linkedin_profile	\N	input	\N	\N	\N	f	f	18	full	\N	\N	\N	f	\N	\N	\N	t
-51	profiles	github_profile	\N	input	\N	\N	\N	f	f	19	full	\N	\N	\N	f	\N	\N	\N	t
-52	profiles	stackoverflow_profile	\N	input	\N	\N	\N	f	f	20	full	\N	\N	\N	f	\N	\N	\N	t
 39	profiles	languages	o2m	list-o2m	{"enableSelect":false,"sort":"sort"}	related-values	{"template":"{{name}}"}	f	f	21	full	\N	\N	\N	f	\N	\N	\N	t
 61	profiles	highlights	o2m	list-o2m	{"enableSelect":false}	related-values	{"template":"{{text}}"}	f	f	23	full	\N	\N	\N	f	\N	\N	\N	t
 20	profiles	name	\N	input	\N	\N	\N	f	f	5	half	\N	Your first and last name	\N	t	\N	\N	\N	t
 24	profiles	location	\N	input	\N	\N	\N	f	f	14	half	\N	Where you are currently based	\N	f	\N	\N	\N	t
 21	profiles	title	\N	input	\N	\N	\N	f	f	6	half	\N	Your job title, a phrase describing your profession.	\N	t	\N	\N	\N	t
 53	profiles	headline	\N	input	\N	\N	\N	f	f	10	full	\N	Brief professional tagline that summarizes your key qualifications.	\N	f	\N	\N	\N	t
-118	work_experiences	start_date	\N	datetime	{}	datetime	{"format":"short"}	f	f	10	half	\N	\N	\N	f	\N	\N	\N	t
 156	work_experiences	work_experience_technologies	o2m	list-o2m	{"enableSelect":false,"sort":"sort","limit":999}	related-values	{"template":"{{name}}"}	f	f	14	full	\N	What technologies you used at this employer.	\N	f	\N	\N	\N	t
+9	work_experiences	summary	\N	\N	\N	\N	\N	f	f	12	full	\N	Overview of your role and main responsibilities	\N	f	\N	\N	\N	t
+118	work_experiences	start_date	\N	datetime	{}	datetime	{"format":"short"}	f	f	10	half	\N	Start date of employment	\N	f	\N	\N	\N	t
+196	education	sort	\N	input	\N	\N	\N	f	t	2	full	\N	Sort order for displaying education	\N	f	\N	\N	\N	t
+34	languages	name	\N	input	\N	\N	\N	f	f	7	half	\N	Name of the language (e.g., English, German)	\N	f	\N	\N	\N	t
+26	profiles	phone_number	\N	input	\N	\N	\N	f	f	13	half	\N	Your contact phone number	\N	f	\N	\N	\N	t
+27	profiles	email_address	\N	input	\N	\N	\N	f	f	12	half	\N	Your professional email address	\N	f	\N	\N	\N	t
+28	profiles	personal_website	\N	input	\N	\N	\N	f	f	17	full	\N	URL to your personal website or portfolio	\N	f	\N	\N	\N	t
+50	profiles	linkedin_profile	\N	input	\N	\N	\N	f	f	18	full	\N	URL to your LinkedIn profile	\N	f	\N	\N	\N	t
+51	profiles	github_profile	\N	input	\N	\N	\N	f	f	19	full	\N	URL to your GitHub profile	\N	f	\N	\N	\N	t
+52	profiles	stackoverflow_profile	\N	input	\N	\N	\N	f	f	20	full	\N	URL to your Stack Overflow profile	\N	f	\N	\N	\N	t
+65	tech_skills	sort	\N	input	\N	\N	\N	f	t	2	full	\N	Sort order for displaying skills within category	\N	f	\N	\N	\N	t
 103	dev_methodologies	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	3	half	\N	\N	\N	f	\N	\N	\N	t
 124	work_experience_achievements	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	5	half	\N	\N	\N	f	\N	\N	\N	t
 107	dev_methodologies	name	\N	input	\N	\N	\N	f	f	4	full	\N	\N	\N	t	\N	\N	\N	t
-122	work_experience_achievements	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	3	half	\N	\N	\N	f	\N	\N	\N	t
 104	dev_methodologies	sort	\N	input	\N	\N	\N	f	t	5	full	\N	\N	\N	f	\N	\N	\N	t
 106	dev_methodologies	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	6	half	\N	\N	\N	f	\N	\N	\N	t
 105	dev_methodologies	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	7	half	\N	\N	\N	f	\N	\N	\N	t
-73	tech_skill_categories	sort	\N	input	\N	\N	\N	f	t	2	full	\N	\N	\N	f	\N	\N	\N	t
 74	tech_skill_categories	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	3	half	\N	\N	\N	f	\N	\N	\N	t
 75	tech_skill_categories	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	4	half	\N	\N	\N	f	\N	\N	\N	t
-81	tech_skill_categories	name	\N	input	\N	raw	\N	f	f	7	half	\N	\N	\N	t	\N	\N	\N	t
 83	tech_skill_categories	tech_skills	o2m	list-o2m	{"enableSelect":false,"sort":"sort"}	\N	\N	f	f	9	full	\N	\N	\N	f	\N	\N	\N	t
-119	work_experiences	end_date	\N	datetime	\N	datetime	{"format":"short"}	f	f	11	half	\N	\N	\N	f	\N	\N	\N	t
 129	work_experiences	achievements	o2m	list-o2m	{"enableSelect":false,"sort":"sort","limit":999}	related-values	{"template":"{{title}}"}	f	f	13	full	\N	What things you achieved at this employer.	\N	f	\N	\N	\N	t
 114	work_experiences	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	15	half	\N	\N	\N	f	\N	\N	\N	t
-111	work_experiences	sort	\N	input	\N	\N	\N	f	t	17	full	\N	\N	\N	f	\N	\N	\N	t
-123	work_experience_achievements	sort	\N	input	\N	\N	\N	f	t	4	full	\N	\N	\N	f	\N	\N	\N	t
 125	work_experience_achievements	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	6	half	\N	\N	\N	f	\N	\N	\N	t
-126	work_experience_achievements	title	\N	input	\N	\N	\N	f	f	7	half	\N	\N	\N	f	\N	\N	\N	t
 131	work_experience_achievements	fa_icon	\N	input	\N	\N	\N	f	f	8	half	\N	Font Awesome icon name	\N	f	\N	\N	\N	t
 108	dev_methodologies	profile	m2o	select-dropdown-m2o	{"template":null}	related-values	{"template":"{{name}}"}	f	f	2	half	\N	\N	\N	f	\N	\N	\N	t
-127	work_experience_achievements	description	\N	input	\N	\N	\N	f	f	9	full	\N	\N	\N	f	\N	\N	\N	t
-133	work_experience_achievements	tags	cast-json	tags	{"whitespace":"-","capitalization":"lowercase","alphabetize":true}	\N	\N	f	f	10	full	\N	\N	\N	f	\N	\N	\N	t
 121	work_experience_achievements	id	integer	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N	t
 128	work_experience_achievements	work_experience	m2o	select-dropdown-m2o	\N	related-values	{"template":"{{name}}"}	f	f	2	half	\N	\N	\N	f	\N	\N	\N	t
 102	dev_methodologies	id	integer	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N	t
-143	application_questions	question	\N	input-multiline	\N	\N	\N	f	f	8	full	\N	\N	\N	f	\N	\N	\N	t
-140	application_questions	sort	\N	input	\N	\N	\N	f	t	2	full	\N	\N	\N	f	\N	\N	\N	t
 141	application_questions	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	3	half	\N	\N	\N	f	\N	\N	\N	t
 142	application_questions	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	4	half	\N	\N	\N	f	\N	\N	\N	t
 139	application_questions	id	integer	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N	t
-145	application_questions	title	\N	input	\N	\N	\N	f	f	7	full	\N	\N	\N	f	\N	\N	\N	t
-144	application_questions	answer	\N	input-rich-text-md	\N	\N	\N	f	f	9	full	\N	\N	\N	f	\N	\N	\N	t
 146	application_questions	profile	m2o	select-dropdown-m2o	{}	\N	\N	f	f	5	half	\N	\N	\N	f	\N	\N	\N	t
 148	application_questions	source	\N	input	\N	\N	\N	f	f	6	half	\N	Name of the hiring company that asked this question during an application.	\N	f	\N	\N	\N	t
 171	cheat_sheets	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	4	half	\N	\N	\N	f	\N	\N	\N	t
-172	cheat_sheets	title	\N	input	\N	\N	\N	f	f	6	full	\N	\N	\N	t	\N	\N	\N	t
-173	cheat_sheets	content	\N	input-rich-text-md	\N	\N	\N	f	f	7	full	\N	\N	\N	f	\N	\N	\N	t
 66	tech_skills	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	3	half	\N	\N	\N	f	\N	\N	\N	t
 67	tech_skills	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	4	half	\N	\N	\N	f	\N	\N	\N	t
 82	tech_skills	category	m2o	select-dropdown-m2o	\N	related-values	{"template":"{{name}}"}	f	f	5	half	\N	\N	\N	f	\N	\N	\N	t
-84	tech_skills	years_experience	\N	input	\N	\N	\N	f	f	8	half	\N	\N	\N	f	\N	\N	\N	t
 92	tech_skills	tech_type	m2o	select-dropdown-m2o	{}	related-values	{"template":"{{name}}"}	f	f	10	half	\N	\N	\N	f	\N	\N	\N	t
-169	cheat_sheets	sort	\N	input	\N	\N	\N	f	t	2	full	\N	\N	\N	f	\N	\N	\N	t
-165	project_stories	sort	\N	input	\N	\N	\N	f	t	2	full	\N	\N	\N	f	\N	\N	\N	t
 167	project_stories	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	4	half	\N	\N	\N	f	\N	\N	\N	t
 164	project_stories	id	integer	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N	t
-176	project_stories	title	\N	input	\N	\N	\N	f	f	6	full	\N	\N	\N	t	\N	\N	\N	t
 198	education	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	6	half	\N	\N	\N	f	\N	\N	\N	t
-201	education	url	\N	input	\N	\N	\N	f	f	11	half	\N	\N	\N	f	\N	\N	\N	t
 166	project_stories	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	3	half	\N	\N	\N	f	\N	\N	\N	t
 109	profiles	dev_methodologies	o2m	list-o2m	\N	\N	\N	f	f	26	full	\N	\N	\N	f	\N	\N	\N	t
 113	profiles	work_experiences	o2m	list-o2m	\N	related-values	{"template":"{{name}}"}	f	f	27	full	\N	\N	\N	f	\N	\N	\N	t
 147	profiles	application_questions	o2m	list-o2m	\N	\N	\N	f	t	30	full	\N	\N	\N	f	\N	\N	\N	t
 149	work_experience_technologies	id	integer	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N	t
 112	work_experiences	profile	m2o	select-dropdown-m2o	\N	\N	\N	f	f	2	half	\N	\N	\N	f	\N	\N	\N	t
+119	work_experiences	end_date	\N	datetime	\N	datetime	{"format":"short"}	f	f	11	half	\N	End date of employment (leave empty for current position)	\N	f	\N	\N	\N	t
+123	work_experience_achievements	sort	\N	input	\N	\N	\N	f	t	4	full	\N	Sort order for displaying achievements	\N	f	\N	\N	\N	t
+126	work_experience_achievements	title	\N	input	\N	\N	\N	f	f	7	half	\N	Title of the achievement	\N	f	\N	\N	\N	t
+127	work_experience_achievements	description	\N	input	\N	\N	\N	f	f	9	full	\N	Detailed description of what was accomplished	\N	f	\N	\N	\N	t
+133	work_experience_achievements	tags	cast-json	tags	{"whitespace":"-","capitalization":"lowercase","alphabetize":true}	\N	\N	f	f	10	full	\N	Tags for filtering (e.g., profile versions)	\N	f	\N	\N	\N	t
+201	education	url	\N	input	\N	\N	\N	f	f	11	half	\N	URL of the institution's website	\N	f	\N	\N	\N	t
+165	project_stories	sort	\N	input	\N	\N	\N	f	t	2	full	\N	Sort order for displaying stories	\N	f	\N	\N	\N	t
+176	project_stories	title	\N	input	\N	\N	\N	f	f	6	full	\N	Title of the story	\N	t	\N	\N	\N	t
+140	application_questions	sort	\N	input	\N	\N	\N	f	t	2	full	\N	Sort order for displaying questions	\N	f	\N	\N	\N	t
+143	application_questions	question	\N	input-multiline	\N	\N	\N	f	f	8	full	\N	The application question text	\N	f	\N	\N	\N	t
+144	application_questions	answer	\N	input-rich-text-md	\N	\N	\N	f	f	9	full	\N	Your answer to the question	\N	f	\N	\N	\N	t
+145	application_questions	title	\N	input	\N	\N	\N	f	f	7	full	\N	Title or brief identifier for the question	\N	f	\N	\N	\N	t
+169	cheat_sheets	sort	\N	input	\N	\N	\N	f	t	2	full	\N	Sort order for displaying cheat sheets	\N	f	\N	\N	\N	t
+172	cheat_sheets	title	\N	input	\N	\N	\N	f	f	6	full	\N	Title of the cheat sheet	\N	t	\N	\N	\N	t
+173	cheat_sheets	content	\N	input-rich-text-md	\N	\N	\N	f	f	7	full	\N	Content of the cheat sheet with interview tips and information	\N	f	\N	\N	\N	t
+84	tech_skills	years_experience	\N	input	\N	\N	\N	f	f	8	half	\N	Number of years of professional experience with this skill	\N	f	\N	\N	\N	t
 115	work_experiences	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	16	half	\N	\N	\N	f	\N	\N	\N	t
 155	work_experience_technologies	work_experience	m2o	select-dropdown-m2o	\N	related-values	{"template":"{{name}}"}	f	f	2	half	\N	\N	\N	f	\N	\N	\N	t
 120	work_experiences	website	\N	input	\N	\N	\N	f	f	6	half	\N	Website of the company / organization you worked for.	\N	f	\N	\N	\N	t
-150	work_experience_technologies	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	3	half	\N	\N	\N	f	\N	\N	\N	t
-151	work_experience_technologies	sort	\N	input	\N	\N	\N	f	t	5	full	\N	\N	\N	f	\N	\N	\N	t
 152	work_experience_technologies	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	6	half	\N	\N	\N	f	\N	\N	\N	t
 153	work_experience_technologies	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	7	half	\N	\N	\N	f	\N	\N	\N	t
-154	work_experience_technologies	name	\N	input	\N	\N	\N	f	f	4	full	\N	\N	\N	f	\N	\N	\N	t
 182	project_stories	category	\N	select-radio	{"choices":[{"text":"High-Impact Projects","value":"high_impact_projects"},{"text":"Challenging Situations","value":"challenging_situations"},{"text":"Leadership Moments","value":"leadership_moments"},{"text":"Learning Experiences","value":"learning_experiences"}]}	labels	\N	f	f	7	full	\N	Which global category of interest this is. [More info](https://www.techinterviewhandbook.org/behavioral-interview/#2-organize-your-key-stories)	\N	t	\N	\N	\N	t
-193	languages	sort	\N	input	\N	\N	\N	f	t	2	full	\N	\N	\N	f	\N	\N	\N	t
-110	work_experiences	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}],"showAsDot":true}	f	f	3	half	\N	\N	\N	f	\N	\N	\N	t
 186	project_stories	profile	m2o	select-dropdown-m2o	\N	related-values	{"template":"{{name}}"}	f	f	5	full	\N	\N	\N	f	\N	\N	\N	t
 189	tech_skill_categories	profile	m2o	select-dropdown-m2o	\N	related-values	{"template":"{{name}}"}	f	f	5	half	\N	\N	\N	f	\N	\N	\N	t
-229	side_projects	name	\N	input	\N	\N	\N	f	f	7	half	\N	\N	\N	f	\N	\N	\N	t
-235	side_projects	stars	\N	input	\N	\N	\N	f	f	8	half	\N	\N	\N	f	\N	\N	\N	t
-231	side_projects	end_date	\N	datetime	\N	\N	\N	f	f	12	half	\N	\N	\N	f	\N	\N	\N	t
-249	salary_expectations	sort	\N	input	\N	\N	\N	f	t	2	full	\N	\N	\N	f	\N	\N	\N	t
-258	salary_expectations	hourly_rate	\N	input	\N	\N	\N	f	f	11	half	\N	\N	\N	f	\N	\N	\N	t
-259	salary_expectations	month_salary	\N	input	\N	\N	\N	f	f	13	half	\N	\N	\N	f	\N	\N	\N	t
 224	side_projects	id	\N	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N	t
-72	tech_skill_categories	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	6	half	\N	\N	\N	f	\N	\N	\N	t
-191	tech_skill_categories	fa_icon	\N	input	\N	\N	\N	f	f	8	half	\N	\N	\N	f	\N	\N	\N	t
-200	education	location	\N	input	\N	\N	\N	f	f	8	half	\N	\N	\N	f	\N	\N	\N	t
-203	education	study_type	\N	input	\N	\N	\N	f	f	9	half	\N	\N	\N	f	\N	\N	\N	t
-202	education	area	\N	input	\N	\N	\N	f	f	10	half	\N	\N	\N	f	\N	\N	\N	t
 194	education	id	\N	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N	t
 178	project_stories	task	\N	input-multiline	\N	\N	\N	f	f	9	full	\N	The T from the [STAR method](https://www.techinterviewhandbook.org/behavioral-interview/#1-learn-the-star-answer-format)	\N	f	\N	\N	\N	t
 180	project_stories	result	\N	input-multiline	\N	\N	\N	f	f	11	full	\N	The R from the [STAR method](https://www.techinterviewhandbook.org/behavioral-interview/#1-learn-the-star-answer-format)	\N	f	\N	\N	\N	t
@@ -7834,74 +7812,73 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 187	profiles	project_stories	o2m	list-o2m	\N	\N	\N	f	f	32	full	\N	\N	\N	f	\N	\N	\N	t
 18	profiles	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	3	half	\N	\N	\N	f	\N	\N	\N	t
 49	profiles	core_stack	\N	input	\N	\N	\N	f	f	7	half	\N	Short list of your core technology stack that you are most familiar with.	\N	f	\N	\N	\N	t
-188	profiles	summary	\N	input-multiline	\N	\N	\N	f	f	22	full	\N	\N	\N	f	\N	\N	\N	t
-31	languages	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}],"showAsDot":true}	f	f	4	half	\N	\N	\N	f	\N	\N	\N	t
-199	education	institution	\N	input	\N	\N	\N	f	f	7	half	\N	\N	\N	f	\N	\N	\N	t
-238	side_project_achievements	title	\N	input	\N	\N	\N	f	f	4	half	\N	\N	\N	f	\N	\N	\N	t
+150	work_experience_technologies	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	3	half	\N	Publication status of this technology	\N	f	\N	\N	\N	t
+151	work_experience_technologies	sort	\N	input	\N	\N	\N	f	t	5	full	\N	Sort order for displaying technologies	\N	f	\N	\N	\N	t
+229	side_projects	name	\N	input	\N	\N	\N	f	f	7	half	\N	Name of the project	\N	f	\N	\N	\N	t
+231	side_projects	end_date	\N	datetime	\N	\N	\N	f	f	12	half	\N	End date of the project (leave empty if ongoing)	\N	f	\N	\N	\N	t
+235	side_projects	stars	\N	input	\N	\N	\N	f	f	8	half	\N	Number of GitHub stars (if applicable)	\N	f	\N	\N	\N	t
+199	education	institution	\N	input	\N	\N	\N	f	f	7	half	\N	Name of the educational institution	\N	f	\N	\N	\N	t
+200	education	location	\N	input	\N	\N	\N	f	f	8	half	\N	Location of the institution	\N	f	\N	\N	\N	t
+202	education	area	\N	input	\N	\N	\N	f	f	10	half	\N	Field of study or major	\N	f	\N	\N	\N	t
+203	education	study_type	\N	input	\N	\N	\N	f	f	9	half	\N	Type of degree (e.g., Bachelor, Master, PhD)	\N	f	\N	\N	\N	t
+193	languages	sort	\N	input	\N	\N	\N	f	t	2	full	\N	Sort order for displaying languages	\N	f	\N	\N	\N	t
+249	salary_expectations	sort	\N	input	\N	\N	\N	f	t	2	full	\N	Sort order for displaying salary expectations	\N	f	\N	\N	\N	t
+258	salary_expectations	hourly_rate	\N	input	\N	\N	\N	f	f	11	half	\N	Expected hourly rate in local currency	\N	f	\N	\N	\N	t
+188	profiles	summary	\N	input-multiline	\N	\N	\N	f	f	22	full	\N	Extended professional summary describing your background and expertise	\N	f	\N	\N	\N	t
+191	tech_skill_categories	fa_icon	\N	input	\N	\N	\N	f	f	8	half	\N	Font Awesome icon representing this category	\N	f	\N	\N	\N	t
+154	work_experience_technologies	name	\N	input	\N	\N	\N	f	f	4	full	\N	Name of the technology or tool used	\N	f	\N	\N	\N	t
+259	salary_expectations	month_salary	\N	input	\N	\N	\N	f	f	13	half	\N	Expected monthly salary in local currency	\N	f	\N	\N	\N	t
 237	side_project_achievements	id	integer	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N	t
 241	side_project_achievements	side_project	m2o	select-dropdown-m2o	{"template":"{{name}}"}	related-values	\N	f	f	2	half	\N	\N	\N	f	\N	\N	\N	t
-243	side_project_achievements	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	3	half	\N	\N	\N	f	\N	\N	\N	t
-239	side_project_achievements	fa_icon	\N	input	\N	\N	\N	f	f	5	half	\N	\N	\N	f	\N	\N	\N	t
-240	side_project_achievements	description	\N	input	\N	\N	\N	f	f	6	full	\N	\N	\N	f	\N	\N	\N	t
-195	education	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	4	half	\N	\N	\N	f	\N	\N	\N	t
-204	education	graduation_year	\N	input	\N	\N	\N	f	f	12	half	\N	\N	\N	f	\N	\N	\N	t
-205	education	start_date	\N	datetime	{}	\N	\N	f	f	13	half	\N	\N	\N	f	\N	\N	\N	t
-206	education	end_date	\N	datetime	\N	\N	\N	f	f	14	half	\N	\N	\N	f	\N	\N	\N	t
-209	education	summary	\N	input-rich-text-md	\N	\N	\N	f	f	15	full	\N	\N	\N	f	\N	\N	\N	t
 210	education	logo	file	file-image	{"crop":false}	\N	\N	f	f	16	half	\N	\N	\N	f	\N	\N	\N	t
-261	side_projects	url_label	\N	input	\N	\N	\N	f	f	10	half	\N	\N	\N	f	\N	\N	\N	t
-230	side_projects	start_date	\N	datetime	\N	\N	\N	f	f	11	half	\N	\N	\N	f	\N	\N	\N	t
 227	side_projects	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	3	half	\N	\N	\N	f	\N	\N	\N	t
 244	side_project_achievements	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	7	half	\N	\N	\N	f	\N	\N	\N	t
 245	side_project_achievements	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	8	half	\N	\N	\N	f	\N	\N	\N	t
 228	side_projects	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	4	half	\N	\N	\N	f	\N	\N	\N	t
 232	side_projects	profile	m2o	select-dropdown-m2o	{"template":"{{name}}"}	related-values	{"template":"{{name}}"}	f	f	5	half	\N	\N	\N	f	\N	\N	\N	t
 251	salary_expectations	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	4	half	\N	\N	\N	f	\N	\N	\N	t
-253	salary_expectations	job_title	\N	input	\N	\N	\N	f	f	6	half	\N	\N	\N	t	\N	\N	\N	t
-254	salary_expectations	company_type	\N	select-dropdown	{"choices":[{"text":"Startup","value":"startup"},{"text":"Scaleup","value":"scaleup"},{"text":"Agency","value":"agency"},{"text":"Enterprise","value":"enterprise"},{"text":"Big Tech","value":"big_tech"}]}	labels	\N	f	f	7	half	\N	\N	\N	f	\N	\N	\N	t
-256	salary_expectations	work_arrangement	\N	select-dropdown	{"choices":[{"text":"Fully Remote","value":"remote"},{"text":"Hybrid","value":"hybrid"},{"text":"Onsite","value":"onsite"}]}	labels	\N	f	f	9	half	\N	\N	\N	f	\N	\N	\N	t
-246	side_project_achievements	sort	\N	input	\N	\N	\N	f	t	9	full	\N	\N	\N	f	\N	\N	\N	t
-236	side_projects	summary	\N	input-rich-text-md	\N	\N	\N	f	f	13	full	\N	\N	\N	f	\N	\N	\N	t
 242	side_projects	achievements	o2m	list-o2m	{"enableSelect":false}	related-values	\N	f	f	14	full	\N	\N	\N	f	\N	\N	\N	t
 207	education	profile	m2o	select-dropdown-m2o	\N	related-values	{"template":"{{name}}"}	f	f	3	half	\N	\N	\N	f	\N	\N	\N	t
-226	side_projects	sort	\N	input	\N	\N	\N	f	t	2	full	\N	\N	\N	f	\N	\N	\N	t
-234	side_projects	url	\N	input	\N	\N	\N	f	f	9	half	\N	\N	\N	f	\N	\N	\N	t
-225	side_projects	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	6	half	\N	\N	\N	f	\N	\N	\N	t
 280	references	profile	m2o	select-dropdown-m2o	{"template":"{{name}}"}	related-values	{"template":"{{name}}"}	f	f	2	half	\N	\N	\N	f	\N	\N	\N	t
 269	side_projects	technologies	o2m	list-o2m	{"enableSelect":false}	related-values	{"template":"{{name}}"}	f	f	15	full	\N	\N	\N	f	\N	\N	\N	t
 272	references	id	\N	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N	t
-274	references	sort	\N	input	\N	\N	\N	f	t	4	full	\N	\N	\N	f	\N	\N	\N	t
 275	references	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	5	half	\N	\N	\N	f	\N	\N	\N	t
 276	references	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	6	half	\N	\N	\N	f	\N	\N	\N	t
-277	references	author	\N	input	\N	\N	\N	f	f	7	half	\N	\N	\N	f	\N	\N	\N	t
-278	references	author_position	\N	input	\N	\N	\N	f	f	8	half	\N	\N	\N	f	\N	\N	\N	t
-279	references	text	\N	input-rich-text-md	\N	\N	\N	f	f	9	full	\N	\N	\N	f	\N	\N	\N	t
 296	profiles	versions	o2m	list-o2m	\N	\N	\N	f	f	34	full	\N	\N	\N	f	\N	\N	\N	t
-273	references	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	3	half	\N	\N	\N	f	\N	\N	\N	t
-285	work_experiences	tags	cast-json	tags	\N	\N	\N	f	f	18	full	\N	\N	\N	f	\N	\N	\N	t
-286	side_projects	tags	cast-json	tags	\N	\N	\N	f	f	16	full	\N	\N	\N	f	\N	\N	\N	t
-287	education	tags	cast-json	tags	\N	\N	\N	f	f	17	full	\N	\N	\N	f	\N	\N	\N	t
+230	side_projects	start_date	\N	datetime	\N	\N	\N	f	f	11	half	\N	Start date of the project	\N	f	\N	\N	\N	t
+234	side_projects	url	\N	input	\N	\N	\N	f	f	9	half	\N	URL to the project repository or website	\N	f	\N	\N	\N	t
+236	side_projects	summary	\N	input-rich-text-md	\N	\N	\N	f	f	13	full	\N	Brief description of the project and your role	\N	f	\N	\N	\N	t
+261	side_projects	url_label	\N	input	\N	\N	\N	f	f	10	half	\N	Custom label for the project URL	\N	f	\N	\N	\N	t
+286	side_projects	tags	cast-json	tags	\N	\N	\N	f	f	16	full	\N	Tags for filtering (e.g., profile versions)	\N	f	\N	\N	\N	t
+238	side_project_achievements	title	\N	input	\N	\N	\N	f	f	4	half	\N	Title of the achievement	\N	f	\N	\N	\N	t
+239	side_project_achievements	fa_icon	\N	input	\N	\N	\N	f	f	5	half	\N	Font Awesome icon representing this achievement	\N	f	\N	\N	\N	t
+240	side_project_achievements	description	\N	input	\N	\N	\N	f	f	6	full	\N	Detailed description of the achievement	\N	f	\N	\N	\N	t
+246	side_project_achievements	sort	\N	input	\N	\N	\N	f	t	9	full	\N	Sort order for displaying achievements	\N	f	\N	\N	\N	t
+204	education	graduation_year	\N	input	\N	\N	\N	f	f	12	half	\N	Year of graduation	\N	f	\N	\N	\N	t
+205	education	start_date	\N	datetime	{}	\N	\N	f	f	13	half	\N	Start date of study	\N	f	\N	\N	\N	t
+274	references	sort	\N	input	\N	\N	\N	f	t	4	full	\N	Sort order for displaying references	\N	f	\N	\N	\N	t
+277	references	author	\N	input	\N	\N	\N	f	f	7	half	\N	Name of the person providing the reference	\N	f	\N	\N	\N	t
+278	references	author_position	\N	input	\N	\N	\N	f	f	8	half	\N	Job title or position of the person providing the reference	\N	f	\N	\N	\N	t
+279	references	text	\N	input-rich-text-md	\N	\N	\N	f	f	9	full	\N	Content of the reference or testimonial	\N	f	\N	\N	\N	t
+253	salary_expectations	job_title	\N	input	\N	\N	\N	f	f	6	half	\N	Job title this salary expectation applies to	\N	t	\N	\N	\N	t
+254	salary_expectations	company_type	\N	select-dropdown	{"choices":[{"text":"Startup","value":"startup"},{"text":"Scaleup","value":"scaleup"},{"text":"Agency","value":"agency"},{"text":"Enterprise","value":"enterprise"},{"text":"Big Tech","value":"big_tech"}]}	labels	\N	f	f	7	half	\N	Type of company (e.g., Startup, Established, Enterprise)	\N	f	\N	\N	\N	t
+256	salary_expectations	work_arrangement	\N	select-dropdown	{"choices":[{"text":"Fully Remote","value":"remote"},{"text":"Hybrid","value":"hybrid"},{"text":"Onsite","value":"onsite"}]}	labels	\N	f	f	9	half	\N	Work arrangement (e.g., Remote, On-site, Hybrid)	\N	f	\N	\N	\N	t
+226	side_projects	sort	\N	input	\N	\N	\N	f	t	2	full	\N	Sort order for displaying projects	\N	f	\N	\N	\N	t
+206	education	end_date	\N	datetime	\N	\N	\N	f	f	14	half	\N	End date of study or graduation date	\N	f	\N	\N	\N	t
+209	education	summary	\N	input-rich-text-md	\N	\N	\N	f	f	15	full	\N	Description of coursework, honors, or relevant activities	\N	f	\N	\N	\N	t
+287	education	tags	cast-json	tags	\N	\N	\N	f	f	17	full	\N	Tags for filtering (e.g., profile versions)	\N	f	\N	\N	\N	t
+273	references	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	3	half	\N	Publication status of this reference	\N	f	\N	\N	\N	t
 288	profile_versions	id	\N	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N	t
 295	profile_versions	profile	m2o	select-dropdown-m2o	{"enableCreate":false}	related-values	{"template":"{{name}}"}	f	f	2	half	\N	\N	\N	f	\N	\N	\N	t
 298	profile_versions	extends_from	m2o	select-dropdown-m2o	\N	related-values	\N	f	f	9	half	\N	\N	\N	f	\N	\N	\N	t
-290	profile_versions	sort	\N	input	\N	\N	\N	f	t	4	full	\N	\N	\N	f	\N	\N	\N	t
 291	profile_versions	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	5	half	\N	\N	\N	f	\N	\N	\N	t
 292	profile_versions	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	6	half	\N	\N	\N	f	\N	\N	\N	t
-293	profile_versions	name	\N	input	\N	\N	\N	f	f	7	half	\N	\N	\N	f	\N	\N	\N	t
-294	profile_versions	description	\N	input	\N	\N	\N	f	f	8	half	\N	\N	\N	f	\N	\N	\N	t
-297	profile_versions	toggles	cast-json	tags	\N	\N	\N	f	f	10	half	\N	\N	\N	f	\N	\N	\N	t
 306	vacancies	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	4	half	\N	\N	\N	f	\N	\N	\N	t
 268	side_project_technologies	side_project	m2o	\N	\N	\N	\N	f	f	2	half	\N	\N	\N	f	\N	\N	\N	t
 250	salary_expectations	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	3	half	\N	\N	\N	f	\N	\N	\N	t
-257	salary_expectations	region	\N	select-dropdown	{"choices":[{"text":"US Tech Hubs","value":"us_tech_hubs"},{"text":"US Standard","value":"us_standard"},{"text":"EU Tech Centers","value":"eu_tech_centers"},{"text":"EU West/North","value":"eu_west_north"},{"text":"EU East/South","value":"eu_east_south"},{"text":"London","value":"london"},{"text":"UK Other","value":"uk_other"}]}	labels	{"choices":[{"text":"EU West/North","value":"eu_west_north"}]}	f	f	10	half	\N	\N	\N	f	\N	\N	\N	t
 265	side_project_technologies	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	6	half	\N	\N	\N	f	\N	\N	\N	t
 262	side_project_technologies	id	\N	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N	t
-267	side_project_technologies	name	\N	input	\N	\N	\N	f	f	4	full	\N	\N	\N	t	\N	\N	\N	t
 266	side_project_technologies	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	7	half	\N	\N	\N	f	\N	\N	\N	t
-282	salary_expectations	daily_rate	\N	input	\N	\N	\N	f	f	12	half	\N	\N	\N	f	\N	\N	\N	t
-260	salary_expectations	year_salary	\N	input	\N	\N	\N	f	f	14	half	\N	\N	\N	f	\N	\N	\N	t
-264	side_project_technologies	sort	\N	input	\N	\N	\N	f	t	5	full	\N	\N	\N	f	\N	\N	\N	t
-289	profile_versions	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	3	half	\N	\N	\N	f	\N	\N	\N	t
 307	vacancies	source_url	\N	input	\N	\N	\N	f	f	6	half	\N	\N	\N	t	\N	\N	\N	t
 308	vacancies	title	\N	input	\N	\N	\N	f	f	7	half	\N	\N	\N	t	\N	\N	\N	t
 316	vacancies	job_poster	\N	input	\N	\N	\N	f	f	8	half	\N	\N	\N	f	\N	\N	\N	t
@@ -7914,20 +7891,29 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 319	tech_skills	years_experience2	\N	\N	\N	\N	\N	f	f	\N	full	\N	\N	\N	f	\N	\N	\N	t
 55	highlights	id	integer	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N	t
 60	highlights	profile	m2o	select-dropdown-m2o	\N	related-values	{"template":"{{name}}"}	f	f	2	half	\N	\N	\N	f	\N	\N	\N	t
-56	highlights	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	3	half	\N	\N	\N	f	\N	\N	\N	t
 132	highlights	fa_icon	\N	input	\N	\N	\N	f	f	8	full	\N	Font Awesome icon name	\N	f	\N	\N	\N	t
 283	profiles	location_url	\N	input	\N	\N	\N	f	f	15	half	\N	The URL to the location on Google Maps for example	\N	f	\N	\N	\N	t
 281	profiles	references	o2m	list-o2m	\N	\N	\N	f	f	33	full	\N	\N	\N	f	\N	\N	\N	t
-64	tech_skills	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	6	half	\N	\N	\N	f	\N	\N	\N	t
 317	vacancies	import_source	\N	select-dropdown	{"choices":[{"text":"LinkedIn","value":"linkedin"},{"text":"SvelteJobs","value":"svelte_jobs"}],"allowOther":true}	labels	{"choices":[{"text":"LinkedIn","value":"linkedin"}]}	f	f	5	half	\N	\N	\N	f	\N	\N	\N	t
 271	profiles	nationality	\N	input	\N	\N	\N	f	f	8	half	\N	Optional, necessary for certain jobs	\N	f	\N	\N	\N	t
 48	profiles	subtitle	\N	input	\N	\N	\N	f	f	9	full	\N	A short sentence complementing your work title, giving more insight to your expertise.	\N	f	\N	\N	\N	t
-263	side_project_technologies	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	3	half	\N	\N	\N	f	\N	\N	\N	t
+293	profile_versions	name	\N	input	\N	\N	\N	f	f	7	half	\N	Name of this profile version (e.g., Full Stack, Frontend-focused)	\N	f	\N	\N	\N	t
+294	profile_versions	description	\N	input	\N	\N	\N	f	f	8	half	\N	Description of what this profile version emphasizes	\N	f	\N	\N	\N	t
+297	profile_versions	toggles	cast-json	tags	\N	\N	\N	f	f	10	half	\N	Boolean settings to enable/disable features for this version	\N	f	\N	\N	\N	t
+62	highlights	text	\N	input	\N	\N	\N	f	f	4	full	\N	Text content of the highlight	\N	t	\N	\N	\N	t
+267	side_project_technologies	name	\N	input	\N	\N	\N	f	f	4	full	\N	Name of the technology or tool used	\N	t	\N	\N	\N	t
+257	salary_expectations	region	\N	select-dropdown	{"choices":[{"text":"US Tech Hubs","value":"us_tech_hubs"},{"text":"US Standard","value":"us_standard"},{"text":"EU Tech Centers","value":"eu_tech_centers"},{"text":"EU West/North","value":"eu_west_north"},{"text":"EU East/South","value":"eu_east_south"},{"text":"London","value":"london"},{"text":"UK Other","value":"uk_other"}]}	labels	{"choices":[{"text":"EU West/North","value":"eu_west_north"}]}	f	f	10	half	\N	Geographic region for this salary expectation	\N	f	\N	\N	\N	t
+260	salary_expectations	year_salary	\N	input	\N	\N	\N	f	f	14	half	\N	Expected annual salary in local currency	\N	f	\N	\N	\N	t
+282	salary_expectations	daily_rate	\N	input	\N	\N	\N	f	f	12	half	\N	Expected daily rate for contract work	\N	f	\N	\N	\N	t
+290	profile_versions	sort	\N	input	\N	\N	\N	f	t	4	full	\N	Sort order for displaying profile versions	\N	f	\N	\N	\N	t
+72	tech_skill_categories	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	6	half	\N	Publication status of this skill category	\N	f	\N	\N	\N	t
+73	tech_skill_categories	sort	\N	input	\N	\N	\N	f	t	2	full	\N	Sort order for displaying skill categories	\N	f	\N	\N	\N	t
+81	tech_skill_categories	name	\N	input	\N	raw	\N	f	f	7	half	\N	Name of the skill category (e.g., Frontend, Backend, DevOps)	\N	t	\N	\N	\N	t
+264	side_project_technologies	sort	\N	input	\N	\N	\N	f	t	5	full	\N	Sort order for displaying technologies	\N	f	\N	\N	\N	t
 320	application_interview_questions	id	\N	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N	t
 322	application_interview_questions	sort	\N	input	\N	\N	\N	f	t	2	full	\N	\N	\N	f	\N	\N	\N	t
 323	application_interview_questions	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	3	half	\N	\N	\N	f	\N	\N	\N	t
 248	salary_expectations	id	\N	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N	t
-255	salary_expectations	employment_type	\N	select-dropdown	{"choices":[{"text":"Full-time employee (FTE)","value":"fte"},{"text":"Part-time employee (32h)","value":"part_time_32"},{"text":"Part-time employee (20h)","value":"part_time_20"},{"text":"Freelance / Contract","value":"contract"},{"text":"Freelance part-time (32h)","value":"contract_part_time_32"},{"text":"Freelance part-time (20h)","value":"contract_part_time_20"}]}	labels	{"choices":[{"text":"FTE","value":"fte"}]}	f	f	8	half	\N	\N	\N	f	\N	\N	\N	t
 338	salary_expectations	profile	m2o	select-dropdown-m2o	\N	related-values	\N	f	f	5	half	\N	\N	\N	f	\N	\N	\N	t
 340	salary_expectations	save_stay	alias,no-data	quickifyai-save-and-stay-button	{"links":null,"label":"Save & Stay"}	\N	\N	f	f	15	full	\N	\N	\N	f	\N	\N	\N	t
 324	application_interview_questions	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	4	half	\N	\N	\N	f	\N	\N	\N	t
@@ -7959,6 +7945,7 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 17	profiles	id	integer	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N	t
 345	profiles	sort	\N	input	\N	\N	\N	f	t	2	full	\N	\N	\N	f	\N	\N	\N	t
 19	profiles	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	4	half	\N	\N	\N	f	\N	\N	\N	t
+255	salary_expectations	employment_type	\N	select-dropdown	{"choices":[{"text":"Full-time employee (FTE)","value":"fte"},{"text":"Part-time employee (32h)","value":"part_time_32"},{"text":"Part-time employee (20h)","value":"part_time_20"},{"text":"Freelance / Contract","value":"contract"},{"text":"Freelance part-time (32h)","value":"contract_part_time_32"},{"text":"Freelance part-time (20h)","value":"contract_part_time_20"}]}	labels	{"choices":[{"text":"FTE","value":"fte"}]}	f	f	8	half	\N	Employment type (e.g., Full-time, Contract, Part-time)	\N	f	\N	\N	\N	t
 284	profiles	location_timezone	\N	input	{"defaultView":{"center":{"lng":8.762165609257522,"lat":52.54172826198658},"zoom":3.245457944279851,"bearing":0,"pitch":0},"geometryType":"Point"}	\N	\N	f	f	16	half	\N	The timezone of the location, as written text, for example: CET/GMT+1	\N	f	\N	\N	\N	t
 101	profiles	soft_skills	o2m	list-o2m	{"enableSelect":false}	\N	\N	f	f	25	full	\N	\N	\N	f	\N	\N	\N	t
 312	profiles	applications	o2m	list-o2m	{"layout":"table","fields":["vacancy","application_sent_date","status"]}	\N	\N	f	f	35	full	\N	\N	\N	f	\N	\N	\N	t
@@ -7986,6 +7973,22 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 378	platform_profiles	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	4	half	\N	\N	\N	f	\N	\N	\N	t
 379	platform_profiles	profile	m2o	select-dropdown-m2o	\N	related-values	{"template":"{{name}} | {{title}}"}	f	f	5	full	\N	\N	\N	f	\N	\N	\N	t
 381	platform_profiles	outsourcing_platform	m2o	select-dropdown-m2o	\N	related-values	{"template":"{{name}} {{type}}"}	f	f	6	full	\N	\N	\N	f	\N	\N	\N	t
+56	highlights	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	3	half	\N	Publication status of this highlight	\N	f	\N	\N	\N	t
+57	highlights	sort	\N	input	\N	\N	\N	f	t	5	full	\N	Sort order for displaying highlights	\N	f	\N	\N	\N	t
+289	profile_versions	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	3	half	\N	Publication status of this profile version	\N	f	\N	\N	\N	t
+70	tech_skills	name	\N	input	\N	\N	\N	f	f	7	half	\N	Name of the technical skill (e.g., React, Node.js)	\N	f	\N	\N	\N	t
+85	tech_skills	level	\N	select-dropdown	{"choices":[{"text":"Expert","value":"expert"},{"text":"Proficient","value":"proficient"},{"text":"Intermediate","value":"intermediate"},{"text":"Beginner","value":"beginner"}],"allowNone":true}	\N	\N	f	f	9	half	\N	Proficiency level (e.g., Expert, Advanced, Intermediate, Beginner)	\N	f	\N	\N	\N	t
+110	work_experiences	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}],"showAsDot":true}	f	f	3	half	\N	Publication status of this work experience	\N	f	\N	\N	\N	t
+111	work_experiences	sort	\N	input	\N	\N	\N	f	t	17	full	\N	Sort order for displaying work experiences	\N	f	\N	\N	\N	t
+285	work_experiences	tags	cast-json	tags	\N	\N	\N	f	f	18	full	\N	Tags for filtering (e.g., profile versions)	\N	f	\N	\N	\N	t
+122	work_experience_achievements	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	3	half	\N	Publication status of this achievement	\N	f	\N	\N	\N	t
+225	side_projects	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	6	half	\N	Publication status of this project	\N	f	\N	\N	\N	t
+243	side_project_achievements	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	3	half	\N	Publication status of this achievement	\N	f	\N	\N	\N	t
+263	side_project_technologies	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	3	half	\N	Publication status of this technology	\N	f	\N	\N	\N	t
+36	languages	proficiency	\N	select-radio	{"choices":[{"text":"Native","value":"native"},{"text":"Fluent","value":"fluent"},{"text":"Proficient","value":"proficient"},{"text":"Conversational","value":"conversational"},{"text":"Basic","value":"basic"}]}	\N	\N	f	f	9	full	\N	Language proficiency level (e.g., Native, Fluent, Intermediate, Basic)	\N	f	\N	\N	\N	t
+64	tech_skills	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	6	half	\N	Publication status of this skill	\N	f	\N	\N	\N	t
+195	education	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	4	half	\N	Publication status of this education entry	\N	f	\N	\N	\N	t
+31	languages	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}],"showAsDot":true}	f	f	4	half	\N	Publication status of this language skill	\N	f	\N	\N	\N	t
 \.
 
 
@@ -9197,9 +9200,12 @@ xvu8kNst20zp0P1S70SHTij9ct7Mv3P3cg9wFDygm0Nv6yzi0-q32VPeMPRHQUSq	157238bb-6930-4
 VRoO6ns6OjSnroBRxszQc4D4_ZN-hNTopfjA8rQEcw8EL0_BICekHQF8kYxHdmP8	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-09 20:10:44.651+00	172.18.0.5	node	\N	\N	\N
 sZe7yh0vBp7Q0rjtS8gUPwFc6JQhHXtiIhMZaV1Nfae3T7hxMuLnEfVvXebVte1q	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-09 20:26:00.882+00	172.18.0.5	node	\N	\N	\N
 3X9tuG52_ciswj-xZ8-TTylLCPReXz-ApEeMa8Uvs6nBmzOubAYQ48vC_5hXZn9x	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 16:18:18.852+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
+-hGYbyrCPxDEhsAYzRxtyvVvs2E_kkqjPPw8RUGn84XGiZ7Wuny4H64FghjYcn3W	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-12 17:41:37.861+00	172.18.0.5	node	\N	\N	\N
 8SOmjMeB6m1E0M8ggCbLxLDmcJPNNkaHNBIQR8MNvDnKCgp5tILE44yTExK1t10n	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-12 17:11:37.983+00	172.18.0.5	node	\N	\N	\N
-Xcr5rQpYBhB3r0lyInh17fY5q02malm7F5XkO9egcl2uHdO4R7S0c5bBESm8TTDD	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 17:34:45.679+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	JlLGHDI2fDiiV0mUcC_6N4Y7Mvj-P__2ulp9tRW_ShQrvCuaEAS9Hl7LIB3OtgAW
-JlLGHDI2fDiiV0mUcC_6N4Y7Mvj-P__2ulp9tRW_ShQrvCuaEAS9Hl7LIB3OtgAW	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 17:34:35.679+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
+D9DkIY8Rp3Jt61RzLnbEYMBDOYW4g2t6OtmhdUfJZdk248XMkhlgeJ8ZI470G8v6	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 17:41:50.305+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	ALLicUxTat9wGOx_F7kBcOr7FMq9Jhb_tnlS873I5CqFGyXYl7L9UmYHpNRnj_yE
+ALLicUxTat9wGOx_F7kBcOr7FMq9Jhb_tnlS873I5CqFGyXYl7L9UmYHpNRnj_yE	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 17:41:40.305+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
+4gh1hHM_0ds0UXAiLCM1WSNtaFBlxCXci8jwbX8BTQkddJohY716H8-myAHA_jG4	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-12 17:35:20.624+00	172.18.0.5	node	\N	\N	\N
+i3Au8QXzM22oPN9hhq3fuJ3DLVIEoRwr2EQVCkNsKsj3tGPW6ur7wZa8mO3OQxRn	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-12 17:39:45.697+00	172.18.0.5	node	\N	\N	\N
 \.
 
 
@@ -9236,7 +9242,7 @@ c530a32f-84cb-4ab9-8a61-7a12a5bcb7e6	en-US	draft	Draft
 --
 
 COPY public.directus_users (id, first_name, last_name, email, password, location, title, description, tags, avatar, language, tfa_secret, status, role, token, last_access, last_page, provider, external_identifier, auth_data, email_notifications, appearance, theme_dark, theme_light, theme_light_overrides, theme_dark_overrides, text_direction) FROM stdin;
-157238bb-6930-4f26-be9c-8b31a9e11ab8	Rik	Wanders	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-11-05 17:34:35.683+00	/content/collected_data	default	\N	\N	t	\N	\N	\N	\N	\N	auto
+157238bb-6930-4f26-be9c-8b31a9e11ab8	Rik	Wanders	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-11-05 17:41:40.31+00	/settings/data-model/profiles/title	default	\N	\N	t	\N	\N	\N	\N	\N	auto
 \.
 
 
@@ -9755,7 +9761,7 @@ SELECT pg_catalog.setval('public.dev_methodologies_id_seq', 38, true);
 -- Name: directus_activity_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_activity_id_seq', 5805, true);
+SELECT pg_catalog.setval('public.directus_activity_id_seq', 5808, true);
 
 
 --
@@ -11121,5 +11127,5 @@ ALTER TABLE ONLY public.work_experiences
 -- PostgreSQL database dump complete
 --
 
-\unrestrict GqLt3aH4DTjogci6CIWWio6RT3JaE7s8RAlucLbpMc1J7U73zZPYew9WgwGEi68
+\unrestrict nxz85iIUFm4Pm6SJDFDu82kKJZHFICZNiuk0dY8n8giJvmg0gCNLf7429vIaC1g
 
