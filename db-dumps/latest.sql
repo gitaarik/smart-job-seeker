@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict FuXHI8zhL0EajYHqrNSmQUaIilWuhFeUaeccoJvY6mbfdc2fTvFXWgAsTaU6tIf
+\restrict 1Ipf2kH6vrWOSVgVp7PTfRkbEXFZi5mD27omIQKiFUlEljWXLkQzcUK2TPQDF9d
 
 -- Dumped from database version 15.14 (Debian 15.14-1.pgdg13+1)
 -- Dumped by pg_dump version 15.14 (Debian 15.14-1.pgdg13+1)
@@ -1113,45 +1113,6 @@ ALTER SEQUENCE public.education_id_seq OWNED BY public.education.id;
 
 
 --
--- Name: freelance_platforms; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.freelance_platforms (
-    id integer NOT NULL,
-    status character varying(255) DEFAULT 'draft'::character varying NOT NULL,
-    sort integer,
-    date_created timestamp with time zone,
-    date_updated timestamp with time zone,
-    name character varying(255),
-    url character varying(255)
-);
-
-
-ALTER TABLE public.freelance_platforms OWNER TO postgres;
-
---
--- Name: freelance_platforms_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.freelance_platforms_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.freelance_platforms_id_seq OWNER TO postgres;
-
---
--- Name: freelance_platforms_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.freelance_platforms_id_seq OWNED BY public.freelance_platforms.id;
-
-
---
 -- Name: highlights_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
 --
 
@@ -2027,13 +1988,6 @@ ALTER TABLE ONLY public.directus_webhooks ALTER COLUMN id SET DEFAULT nextval('p
 --
 
 ALTER TABLE ONLY public.education ALTER COLUMN id SET DEFAULT nextval('public.education_id_seq'::regclass);
-
-
---
--- Name: freelance_platforms id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.freelance_platforms ALTER COLUMN id SET DEFAULT nextval('public.freelance_platforms_id_seq'::regclass);
 
 
 --
@@ -7420,11 +7374,6 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 5608	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 12:38:20.415+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	freelance_platforms	http://localhost:8055
 5609	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 12:38:29.483+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	364	http://localhost:8055
 5610	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 12:38:37.183+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	365	http://localhost:8055
-5611	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 12:38:57.805+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	freelance_platforms	1	http://localhost:8055
-5612	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 12:40:43.215+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	freelance_platforms	2	http://localhost:8055
-5613	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 12:41:02.198+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	freelance_platforms	3	http://localhost:8055
-5614	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 12:41:23.109+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	freelance_platforms	4	http://localhost:8055
-5615	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 12:42:27.334+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	freelance_platforms	5	http://localhost:8055
 5616	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 12:57:56.565+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	366	http://localhost:8055
 5617	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 12:57:56.569+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	367	http://localhost:8055
 5618	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 12:57:56.572+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	368	http://localhost:8055
@@ -7449,6 +7398,16 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 5637	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:04:51.944+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	outsourcing_platforms	9	http://localhost:8055
 5638	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:05:27.067+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	outsourcing_platforms	10	http://localhost:8055
 5639	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:11:27.989+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	outsourcing_platforms	11	http://localhost:8055
+5640	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:13:29.441+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	outsourcing_platforms	12	http://localhost:8055
+5641	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:16:28.511+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	outsourcing_platforms	12	http://localhost:8055
+5642	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:24:01.711+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	freelance_platforms	http://localhost:8055
+5643	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:24:01.716+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	359	http://localhost:8055
+5644	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:24:01.716+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	360	http://localhost:8055
+5645	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:24:01.717+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	361	http://localhost:8055
+5646	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:24:01.717+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	362	http://localhost:8055
+5647	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:24:01.718+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	363	http://localhost:8055
+5648	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:24:01.718+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	364	http://localhost:8055
+5649	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:24:01.719+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	365	http://localhost:8055
 \.
 
 
@@ -7468,7 +7427,6 @@ work_experience_technologies	\N	The technologies used at this employer. Only app
 education	\N	Education history	{{area}}  | {{institution}} | {{start_date}} - {{end_date}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	6	resume_cv	open	\N	f
 collected_data	\N	Generated data collecting all profile info for AI prompt usage	\N	f	t	\N	\N	t	\N	\N	\N	all	\N	\N	7	profiles	open	\N	f
 side_projects	\N	Notable side-projects or significant open-source contributions	{{name}} | {{start_date}} - {{end_date}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	5	resume_cv	open	\N	f
-freelance_platforms	\N	\N	\N	f	f	\N	status	t	archived	draft	sort	all	\N	\N	\N	\N	open	\N	f
 profile_versions	\N	Version name for filtering on other collections' "tags" fields for custom resume/CVs generation	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	1	resume_cv	open	\N	f
 outsourcing_platforms	\N	\N	\N	f	f	\N	status	t	archived	draft	sort	all	\N	\N	\N	\N	open	\N	f
 highlights	\N	Career / personality highlights. The things that define you most concisely.	{{text}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	2	resume_cv	open	\N	f
@@ -7807,13 +7765,6 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 357	applications	discontinued_note	\N	input-multiline	\N	\N	\N	f	f	6	full	\N	\N	[{"name":"Only shown when status is \\"Discontinued\\"","rule":{"_and":[{"status":{"_neq":"discontinued"}}]},"hidden":true}]	f	\N	\N	\N	t
 300	applications	status	\N	select-dropdown	{"choices":[{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"Applied","value":"applied","color":"var(--theme--primary)"},{"text":"Discontinued","value":"discontinued","color":"#241F31"},{"text":"Rejected","value":"rejected","color":"#ED333B"},{"text":"Screening Call","value":"screening_call","color":"#C061CB"},{"text":"Coding Challenge","value":"coding_challenge","color":"#F5C211"},{"text":"Take-Home Assignment","value":"take_home_assignment","color":"#E5A50A"},{"text":"Tech Interview","value":"tech_interview","color":"#2EC27E"}]}	labels	{"choices":[{"text":"Draft","value":"draft","color":null,"background":"#865E3C","foreground":"#FFFFFF"},{"text":"Applied","value":"applied","color":null,"background":"#C061CB","foreground":"#FFFFFF"},{"text":"Discontinued","value":"discontinued","color":null,"background":"#241F31","foreground":"#FFFFFF"},{"text":"Rejected","value":"rejected","color":null,"background":"#ED333B","foreground":"#FFFFFF"},{"text":"Screening Call","value":"screening_call","color":null,"background":"#C061CB","foreground":"#FFFFFF"},{"text":"Coding Challenge","value":"coding_challenge","color":null,"background":"#F5C211","foreground":"#FFFFFF"},{"text":"Take-Home Assignment","value":"take_home_assignment","color":null,"background":"#E5A50A","foreground":"#FFFFFF"},{"text":"Tech Interview","value":"tech_interview","color":null,"background":"#2EC27E","foreground":"#FFFFFF"}]}	f	f	4	full	\N	\N	\N	f	\N	\N	\N	t
 358	applications	application_note	\N	input-multiline	\N	\N	\N	f	f	8	full	\N	\N	[{"name":"Only shown when status is not \\"Draft\\"","rule":{"_and":[{"status":{"_eq":"draft"}}]},"hidden":true}]	f	\N	\N	\N	t
-359	freelance_platforms	id	\N	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N	t
-360	freelance_platforms	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	2	full	\N	\N	\N	f	\N	\N	\N	t
-361	freelance_platforms	sort	\N	input	\N	\N	\N	f	t	3	full	\N	\N	\N	f	\N	\N	\N	t
-362	freelance_platforms	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	4	half	\N	\N	\N	f	\N	\N	\N	t
-363	freelance_platforms	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	5	half	\N	\N	\N	f	\N	\N	\N	t
-364	freelance_platforms	name	\N	input	\N	\N	\N	f	f	6	full	\N	\N	\N	t	\N	\N	\N	t
-365	freelance_platforms	url	\N	input	\N	\N	\N	f	f	7	full	\N	\N	\N	t	\N	\N	\N	t
 366	outsourcing_platforms	id	\N	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N	t
 367	outsourcing_platforms	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	2	full	\N	\N	\N	f	\N	\N	\N	t
 368	outsourcing_platforms	sort	\N	input	\N	\N	\N	f	t	3	full	\N	\N	\N	f	\N	\N	\N	t
@@ -8038,7 +7989,6 @@ COPY public.directus_presets (id, bookmark, "user", role, collection, search, la
 26	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	work_experience_technologies	\N	\N	{"tabular":{"fields":["name","work_experience","status"],"page":1}}	{"tabular":{"widths":{"name":160,"work_experience":217.33331298828125,"status":127.33331298828125}}}	\N	\N	bookmark	\N
 25	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	applications	\N	\N	{"tabular":{"fields":["vacancy","profile","status"],"page":1,"sort":["-id"]}}	{"tabular":{"widths":{"vacancy":682.3333740234375,"profile":140.33331298828125,"status":149.6666259765625}}}	\N	\N	bookmark	\N
 1	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	work_experiences	\N	\N	{"tabular":{"fields":["name","position","location","description","start_date","end_date","status"],"page":1}}	{"tabular":{"widths":{"name":119.66665649414062,"position":264,"location":136.66668701171875,"description":223.3333740234375,"start_date":119.666748046875,"end_date":120,"status":91}}}	\N	\N	bookmark	\N
-29	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	freelance_platforms	\N	\N	{"tabular":{"page":1,"fields":["name","url","status"]}}	{"tabular":{"widths":{"name":282.66668701171875,"url":324,"status":160}}}	\N	\N	bookmark	\N
 30	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	outsourcing_platforms	\N	\N	{"tabular":{"fields":["name","url","type","status"]}}	{"tabular":{"widths":{"name":204.66668701171875,"url":359.99993896484375,"type":172.666748046875,"status":104}}}	\N	\N	bookmark	\N
 \.
 
@@ -8415,6 +8365,7 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 5052	5178	directus_fields	49	{"id":49,"collection":"profiles","field":"core_stack","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":6,"width":"half","translations":null,"note":"Short list of your core technology stack that you are most familiar with.","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"core_stack","sort":6,"group":null}	\N	\N
 5053	5179	directus_fields	271	{"id":271,"collection":"profiles","field":"nationality","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":7,"width":"half","translations":null,"note":"Optional, necessary for certain jobs","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"nationality","sort":7,"group":null}	\N	\N
 5054	5180	directus_fields	48	{"id":48,"collection":"profiles","field":"subtitle","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":8,"width":"full","translations":null,"note":"A short sentence complementing your work title, giving more insight to your expertise.","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"subtitle","sort":8,"group":null}	\N	\N
+5507	5640	outsourcing_platforms	12	{"status":"published","name":"cord","url":"https://cord.com/","type":"open_marketplaces"}	{"status":"published","name":"cord","url":"https://cord.com/","type":"open_marketplaces"}	\N	\N
 5058	5184	directus_fields	26	{"id":26,"collection":"profiles","field":"phone_number","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":12,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"phone_number","sort":12,"group":null}	\N	\N
 5059	5185	directus_fields	24	{"id":24,"collection":"profiles","field":"location","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":13,"width":"half","translations":null,"note":"Where you are currently based.","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"location","sort":13,"group":null}	\N	\N
 5060	5186	directus_fields	283	{"id":283,"collection":"profiles","field":"location_url","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":14,"width":"half","translations":null,"note":"The URL to the location on Google Maps for example","conditions":null,"required":false,"group":null,"validation":null,"validation_message":null}	{"collection":"profiles","field":"location_url","sort":14,"group":null}	\N	\N
@@ -8563,6 +8514,7 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 5204	5330	applications	6	{"id":6,"status":"draft","date_created":"2025-11-04T13:19:50.161Z","date_updated":"2025-11-04T16:55:15.906Z","vacancy":6,"profile":2,"cv_sent_through":null,"cv_file_sent":null,"application_sent_date":null,"discontinued_reason":null,"interview_questions":[29,28]}	{"date_updated":"2025-11-04T16:55:15.906Z"}	\N	\N
 5203	5329	application_interview_questions	28	{"id":28,"sort":null,"date_created":"2025-11-04T13:29:56.531Z","date_updated":"2025-11-04T16:55:15.910Z","application":6,"question":"Tell us about a time when you \\"hacked the system\\" to your advantage","answer":"I'm currently creating a system for myself to help me find and apply for jobs. I'm incorporating AI to find the best matching jobs that meet my preferences. Various modules in the system help me with different tasks, like customizing my resume / CV, writing a suitable cover letter, answering common application questions. The system also gives an overview of your applications with status and followup actions."}	{"answer":"I'm currently creating a system for myself to help me find and apply for jobs. I'm incorporating AI to find the best matching jobs that meet my preferences. Various modules in the system help me with different tasks, like customizing my resume / CV, writing a suitable cover letter, answering common application questions. The system also gives an overview of your applications with status and followup actions.","date_updated":"2025-11-04T16:55:15.910Z"}	5204	\N
 5237	5363	directus_collections	side_projects	{"collection":"side_projects","icon":null,"note":"Notable side-projects you did, or big open-source contributions","display_template":"{{name}} | {{start_date}} - {{end_date}}","hidden":false,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":5,"group":"resume_cv","collapse":"open","preview_url":null,"versioning":false}	{"note":"Notable side-projects you did, or big open-source contributions"}	\N	\N
+5508	5641	outsourcing_platforms	12	{"id":12,"status":"published","sort":null,"date_created":"2025-11-05T14:13:29.440Z","date_updated":"2025-11-05T14:16:28.509Z","name":"cord","url":"https://cord.com/","type":"vetted_platforms"}	{"type":"vetted_platforms","date_updated":"2025-11-05T14:16:28.509Z"}	\N	\N
 5206	5332	applications	6	{"id":6,"status":"draft","date_created":"2025-11-04T13:19:50.161Z","date_updated":"2025-11-04T16:58:14.855Z","vacancy":6,"profile":2,"cv_sent_through":null,"cv_file_sent":null,"application_sent_date":null,"discontinued_reason":null,"interview_questions":[29,28]}	{"date_updated":"2025-11-04T16:58:14.855Z"}	\N	\N
 5205	5331	application_interview_questions	28	{"id":28,"sort":null,"date_created":"2025-11-04T13:29:56.531Z","date_updated":"2025-11-04T16:58:14.857Z","application":6,"question":"Tell us about a time when you \\"hacked the system\\" to your advantage","answer":"I'm currently creating a system for myself to help me find and apply for jobs. I'm incorporating AI to find the best matching jobs that meet my preferences. Various modules in the system help me with different tasks, like customizing my resume / CV, writing a suitable cover letter, answering common application questions, and preparing for interviews. The system also gives an overview of your applications, where you can see and update the status and details."}	{"answer":"I'm currently creating a system for myself to help me find and apply for jobs. I'm incorporating AI to find the best matching jobs that meet my preferences. Various modules in the system help me with different tasks, like customizing my resume / CV, writing a suitable cover letter, answering common application questions, and preparing for interviews. The system also gives an overview of your applications, where you can see and update the status and details.","date_updated":"2025-11-04T16:58:14.857Z"}	5206	\N
 5208	5334	applications	6	{"id":6,"status":"draft","date_created":"2025-11-04T13:19:50.161Z","date_updated":"2025-11-04T16:58:21.644Z","vacancy":6,"profile":2,"cv_sent_through":null,"cv_file_sent":null,"application_sent_date":null,"discontinued_reason":null,"interview_questions":[29,28]}	{"date_updated":"2025-11-04T16:58:21.644Z"}	\N	\N
@@ -8835,11 +8787,6 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 5475	5608	directus_collections	freelance_platforms	{"sort_field":"sort","archive_field":"status","archive_value":"archived","unarchive_value":"draft","singleton":false,"collection":"freelance_platforms"}	{"sort_field":"sort","archive_field":"status","archive_value":"archived","unarchive_value":"draft","singleton":false,"collection":"freelance_platforms"}	\N	\N
 5476	5609	directus_fields	364	{"sort":6,"interface":"input","special":null,"required":true,"collection":"freelance_platforms","field":"name"}	{"sort":6,"interface":"input","special":null,"required":true,"collection":"freelance_platforms","field":"name"}	\N	\N
 5477	5610	directus_fields	365	{"sort":7,"interface":"input","special":null,"required":true,"collection":"freelance_platforms","field":"url"}	{"sort":7,"interface":"input","special":null,"required":true,"collection":"freelance_platforms","field":"url"}	\N	\N
-5478	5611	freelance_platforms	1	{"status":"published","name":"Turing","url":"https://developers.turing.com/"}	{"status":"published","name":"Turing","url":"https://developers.turing.com/"}	\N	\N
-5479	5612	freelance_platforms	2	{"status":"published","name":"micro1","url":"https://www.micro1.ai/careers"}	{"status":"published","name":"micro1","url":"https://www.micro1.ai/careers"}	\N	\N
-5480	5613	freelance_platforms	3	{"status":"published","name":"Upwork","url":"https://www.upwork.com/"}	{"status":"published","name":"Upwork","url":"https://www.upwork.com/"}	\N	\N
-5481	5614	freelance_platforms	4	{"status":"published","name":"Toptal","url":"https://www.toptal.com/"}	{"status":"published","name":"Toptal","url":"https://www.toptal.com/"}	\N	\N
-5482	5615	freelance_platforms	5	{"status":"published","name":"Lumenalta","url":"https://lumenalta.com/"}	{"status":"published","name":"Lumenalta","url":"https://lumenalta.com/"}	\N	\N
 5483	5616	directus_fields	366	{"sort":1,"hidden":true,"interface":"input","readonly":true,"field":"id","collection":"outsourcing_platforms"}	{"sort":1,"hidden":true,"interface":"input","readonly":true,"field":"id","collection":"outsourcing_platforms"}	\N	\N
 5497	5630	outsourcing_platforms	3	{"status":"published","name":"Lumenalta","url":"https://lumenalta.com/","type":"agencies"}	{"status":"published","name":"Lumenalta","url":"https://lumenalta.com/","type":"agencies"}	\N	\N
 5499	5632	outsourcing_platforms	5	{"status":"published","name":"micro1","url":"https://www.micro1.ai/careers","type":"vetted_platforms"}	{"status":"published","name":"micro1","url":"https://www.micro1.ai/careers","type":"vetted_platforms"}	\N	\N
@@ -8879,8 +8826,8 @@ y6whbp82EsIATqPecnJ-qf_QWamYXHaWuuipzt91yhhjZ6qrOZsri0YlXBrv9vDL	157238bb-6930-4
 xvu8kNst20zp0P1S70SHTij9ct7Mv3P3cg9wFDygm0Nv6yzi0-q32VPeMPRHQUSq	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-09 20:07:49.931+00	172.18.0.2	node	\N	\N	\N
 VRoO6ns6OjSnroBRxszQc4D4_ZN-hNTopfjA8rQEcw8EL0_BICekHQF8kYxHdmP8	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-09 20:10:44.651+00	172.18.0.5	node	\N	\N	\N
 sZe7yh0vBp7Q0rjtS8gUPwFc6JQhHXtiIhMZaV1Nfae3T7hxMuLnEfVvXebVte1q	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-09 20:26:00.882+00	172.18.0.5	node	\N	\N	\N
-TObTsZGJA57Uhh6D_H-2zb7TLA_-xOuxCDpyQGcuSeUqnKhBg5b8kKKQZS6c42I2	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 13:59:50.31+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	yWFxZKieUFYalS4xtobfScLKxIy7VlBxtlKYxi84I0kRrs0IyRfC1U_M0aMzHyBz
-yWFxZKieUFYalS4xtobfScLKxIy7VlBxtlKYxi84I0kRrs0IyRfC1U_M0aMzHyBz	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 13:59:40.31+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
+yN2cGjwhX-2XEFVWCCyVb8t4f6u4vfS96qfhJW9tf3RuFw5NJoPS6KGPM1p4xHhM	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:24:15.688+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	vc5uLooohxdTtgym4SYU6VhODmlYtTCfjS3H-GTIYBSHrO9AtVb-wAzAvpNREbzr
+vc5uLooohxdTtgym4SYU6VhODmlYtTCfjS3H-GTIYBSHrO9AtVb-wAzAvpNREbzr	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 14:24:05.688+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
 \.
 
 
@@ -8917,7 +8864,7 @@ c530a32f-84cb-4ab9-8a61-7a12a5bcb7e6	en-US	draft	Draft
 --
 
 COPY public.directus_users (id, first_name, last_name, email, password, location, title, description, tags, avatar, language, tfa_secret, status, role, token, last_access, last_page, provider, external_identifier, auth_data, email_notifications, appearance, theme_dark, theme_light, theme_light_overrides, theme_dark_overrides, text_direction) FROM stdin;
-157238bb-6930-4f26-be9c-8b31a9e11ab8	Rik	Wanders	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-11-05 13:59:40.314+00	/content/outsourcing_platforms	default	\N	\N	t	\N	\N	\N	\N	\N	auto
+157238bb-6930-4f26-be9c-8b31a9e11ab8	Rik	Wanders	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-11-05 14:24:05.691+00	/content/outsourcing_platforms	default	\N	\N	t	\N	\N	\N	\N	\N	auto
 \.
 
 
@@ -8946,19 +8893,6 @@ COPY public.education (id, status, sort, date_created, date_updated, institution
 1	published	1	2025-10-27 15:28:42.781+00	2025-10-30 11:36:24.852+00	Nova College	Hoofddorp, NL	https://www.novacollege.nl/	Software Development	Dutch Vocational Education (MBO)	2007	2004-08-01	2007-06-15	2	Comprehensive 4-year program including foundational computer science, algorithms, and data structures.	b552c378-ca18-45d8-a473-b653de8d7dee	\N
 2	published	2	2025-10-27 15:35:50.238+00	2025-10-30 11:55:42.881+00	Mediacollege Amsterdam	Amsterdam, NL	https://www.ma-web.nl/	Audio technician	Dutch Vocational Education (MBO)	\N	2003-08-03	2004-06-11	2	I liked many aspects of the field (music & tech), but ultimately decided that it wasn't something I wanted to pursue in.	c3517da2-cebc-49c1-a070-b823d77a9fae	["cv"]
 3	published	3	2025-10-27 15:37:50.475+00	2025-10-30 11:57:10.446+00	Kaj Munk College	Hoofddorp, NL	https://kajmunk.nl/	Pre-vocational education	Dutch VMBO-t education	2003	1999-08-01	2003-06-13	2	Educated in topics like maths, physics, chemistry, biology, geography, economy, history, social studies, Dutch & English.	2de99240-8d94-4fb8-948d-5ac4fc236321	["cv"]
-\.
-
-
---
--- Data for Name: freelance_platforms; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.freelance_platforms (id, status, sort, date_created, date_updated, name, url) FROM stdin;
-1	published	\N	2025-11-05 12:38:57.804+00	\N	Turing	https://developers.turing.com/
-2	published	\N	2025-11-05 12:40:43.214+00	\N	micro1	https://www.micro1.ai/careers
-3	published	\N	2025-11-05 12:41:02.197+00	\N	Upwork	https://www.upwork.com/
-4	published	\N	2025-11-05 12:41:23.108+00	\N	Toptal	https://www.toptal.com/
-5	published	\N	2025-11-05 12:42:27.333+00	\N	Lumenalta	https://lumenalta.com/
 \.
 
 
@@ -8993,16 +8927,17 @@ COPY public.languages (id, status, date_created, date_updated, name, language_co
 
 COPY public.outsourcing_platforms (id, status, sort, date_created, date_updated, name, url, type) FROM stdin;
 1	published	1	2025-11-05 13:57:34.253+00	\N	Turing	https://developers.turing.com/	vetted_platforms
-2	published	2	2025-11-05 14:00:22.861+00	\N	Toptal	https://www.toptal.com/	vetted_platforms
-3	published	11	2025-11-05 14:00:45.365+00	\N	Lumenalta	https://lumenalta.com/	agencies
-5	published	10	2025-11-05 14:01:25.02+00	\N	micro1	https://www.micro1.ai/careers	vetted_platforms
-10	published	3	2025-11-05 14:05:27.066+00	\N	X-Team	https://x-team.com/	midlance_platforms
-4	published	4	2025-11-05 14:01:00.275+00	\N	Upwork	https://www.upwork.com/	open_marketplaces
-11	published	5	2025-11-05 14:11:27.988+00	\N	We Work Remotely	https://weworkremotely.com/	job_boards
-9	published	6	2025-11-05 14:04:51.943+00	\N	Gigster	https://gigster.com/	midlance_platforms
-6	published	7	2025-11-05 14:02:44.443+00	\N	Arc.dev	https://arc.dev/	open_marketplaces
-7	published	8	2025-11-05 14:03:17.286+00	\N	Gun.io	https://gun.io/	open_marketplaces
-8	published	9	2025-11-05 14:04:00.605+00	2025-11-05 14:04:07.967+00	Andela	https://www.andela.com/	vetted_platforms
+12	published	2	2025-11-05 14:13:29.44+00	2025-11-05 14:16:28.509+00	cord	https://cord.com/	vetted_platforms
+2	published	3	2025-11-05 14:00:22.861+00	\N	Toptal	https://www.toptal.com/	vetted_platforms
+3	published	12	2025-11-05 14:00:45.365+00	\N	Lumenalta	https://lumenalta.com/	agencies
+5	published	11	2025-11-05 14:01:25.02+00	\N	micro1	https://www.micro1.ai/careers	vetted_platforms
+10	published	4	2025-11-05 14:05:27.066+00	\N	X-Team	https://x-team.com/	midlance_platforms
+4	published	5	2025-11-05 14:01:00.275+00	\N	Upwork	https://www.upwork.com/	open_marketplaces
+11	published	6	2025-11-05 14:11:27.988+00	\N	We Work Remotely	https://weworkremotely.com/	job_boards
+9	published	7	2025-11-05 14:04:51.943+00	\N	Gigster	https://gigster.com/	midlance_platforms
+6	published	8	2025-11-05 14:02:44.443+00	\N	Arc.dev	https://arc.dev/	open_marketplaces
+7	published	9	2025-11-05 14:03:17.286+00	\N	Gun.io	https://gun.io/	open_marketplaces
+8	published	10	2025-11-05 14:04:00.605+00	2025-11-05 14:04:07.967+00	Andela	https://www.andela.com/	vetted_platforms
 \.
 
 
@@ -9434,7 +9369,7 @@ SELECT pg_catalog.setval('public.dev_methodologies_id_seq', 38, true);
 -- Name: directus_activity_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_activity_id_seq', 5639, true);
+SELECT pg_catalog.setval('public.directus_activity_id_seq', 5649, true);
 
 
 --
@@ -9476,7 +9411,7 @@ SELECT pg_catalog.setval('public.directus_relations_id_seq', 39, true);
 -- Name: directus_revisions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_revisions_id_seq', 5506, true);
+SELECT pg_catalog.setval('public.directus_revisions_id_seq', 5508, true);
 
 
 --
@@ -9501,13 +9436,6 @@ SELECT pg_catalog.setval('public.education_id_seq', 16, true);
 
 
 --
--- Name: freelance_platforms_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.freelance_platforms_id_seq', 5, true);
-
-
---
 -- Name: highlights_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
@@ -9525,7 +9453,7 @@ SELECT pg_catalog.setval('public.languages_id_seq', 108, true);
 -- Name: outsourcing_platforms_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.outsourcing_platforms_id_seq', 11, true);
+SELECT pg_catalog.setval('public.outsourcing_platforms_id_seq', 12, true);
 
 
 --
@@ -9959,14 +9887,6 @@ ALTER TABLE ONLY public.directus_webhooks
 
 ALTER TABLE ONLY public.education
     ADD CONSTRAINT education_pkey PRIMARY KEY (id);
-
-
---
--- Name: freelance_platforms freelance_platforms_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.freelance_platforms
-    ADD CONSTRAINT freelance_platforms_pkey PRIMARY KEY (id);
 
 
 --
@@ -10784,5 +10704,5 @@ ALTER TABLE ONLY public.work_experiences
 -- PostgreSQL database dump complete
 --
 
-\unrestrict FuXHI8zhL0EajYHqrNSmQUaIilWuhFeUaeccoJvY6mbfdc2fTvFXWgAsTaU6tIf
+\unrestrict 1Ipf2kH6vrWOSVgVp7PTfRkbEXFZi5mD27omIQKiFUlEljWXLkQzcUK2TPQDF9d
 
