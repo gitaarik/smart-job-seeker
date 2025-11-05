@@ -38,7 +38,9 @@
       "WebFetch(domain:docs.directus.io)",
       "WebSearch",
       "Bash(docker compose:*)",
-      "Bash(npm run docker:update-schema:*)"
+      "Bash(npm run docker:update-schema:*)",
+      "WebFetch(domain:localhost)",
+      "Bash(/tmp/schema.json)"
     ],
     "deny": [],
     "ask": []
