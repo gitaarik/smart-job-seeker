@@ -28,13 +28,13 @@ const PROFILE_SCHEMA_MAPPING = {
     ],
     relations: {
       highlights: {
-        fields: ["status", "text"],
+        fields: ["text"],
       },
       tech_skill_categories: {
-        fields: ["status", "name"],
+        fields: ["name"],
         relations: {
           tech_skills: {
-            fields: ["status", "name", "years_experience", "level"],
+            fields: ["name", "years_experience", "level"],
           },
         },
       },
@@ -45,7 +45,6 @@ const PROFILE_SCHEMA_MAPPING = {
           "description",
           "position",
           "summary",
-          "status",
           "start_date",
           "end_date",
           "website",
@@ -54,20 +53,18 @@ const PROFILE_SCHEMA_MAPPING = {
         relations: {
           work_experience_achievements: {
             fields: [
-              "status",
               "title",
               "description",
               "tags",
             ],
           },
           work_experience_technologies: {
-            fields: ["status", "name"],
+            fields: ["name"],
           },
         },
       },
       side_projects: {
         fields: [
-          "status",
           "name",
           "start_date",
           "end_date",
@@ -82,17 +79,15 @@ const PROFILE_SCHEMA_MAPPING = {
             fields: [
               "title",
               "description",
-              "status",
             ],
           },
           side_project_technologies: {
-            fields: ["status", "name"],
+            fields: ["name"],
           },
         },
       },
       education: {
         fields: [
-          "status",
           "institution",
           "location",
           "url",
@@ -106,10 +101,10 @@ const PROFILE_SCHEMA_MAPPING = {
         ],
       },
       languages: {
-        fields: ["status", "name", "language_code", "proficiency"],
+        fields: ["name", "language_code", "proficiency"],
       },
       references: {
-        fields: ["status", "author", "author_position", "text"],
+        fields: ["author", "author_position", "text"],
       },
       project_stories: {
         fields: [
