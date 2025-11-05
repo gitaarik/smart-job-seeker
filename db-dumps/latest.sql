@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict jQUt5qzayj2JSzOPYfqThfezbYFTwcmvVrp7iScH4guhPsljm7fQoo7HRDxd55k
+\restrict VvwOgXUw6frI02qtp9B0tgsWeaujMmeHVNika0iQlqNYcVbROG6kbhDTZZE2Lta
 
 -- Dumped from database version 15.14 (Debian 15.14-1.pgdg13+1)
 -- Dumped by pg_dump version 15.14 (Debian 15.14-1.pgdg13+1)
@@ -7591,6 +7591,25 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 5784	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 17:10:42.917+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	references	9	http://localhost:8055
 5785	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 17:11:09.188+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	references	10	http://localhost:8055
 5786	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 17:11:16.803+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	references	9	http://localhost:8055
+5787	login	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 17:11:37.985+00	172.18.0.5	node	directus_users	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N
+5788	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 17:16:45.734+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	resume_cv	http://localhost:8055
+5789	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 17:16:45.744+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	collected_data	http://localhost:8055
+5790	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 17:16:45.759+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	applying	http://localhost:8055
+5791	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 17:16:45.839+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	interviewing	http://localhost:8055
+5792	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 17:16:55.675+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	profile_versions	http://localhost:8055
+5793	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 17:16:55.675+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	resume_cv	http://localhost:8055
+5794	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 17:16:55.681+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	applying	http://localhost:8055
+5795	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 17:16:55.682+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	highlights	http://localhost:8055
+5796	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 17:16:55.688+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	interviewing	http://localhost:8055
+5797	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 17:16:55.689+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	tech_skill_categories	http://localhost:8055
+5798	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 17:16:55.694+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	work_experiences	http://localhost:8055
+5799	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 17:16:55.698+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	side_projects	http://localhost:8055
+5800	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 17:16:55.702+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	education	http://localhost:8055
+5801	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 17:16:55.707+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	languages	http://localhost:8055
+5802	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 17:16:55.711+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	references	http://localhost:8055
+5803	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 17:16:55.714+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	collected_data	http://localhost:8055
+5804	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 17:16:55.719+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	soft_skills	http://localhost:8055
+5805	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 17:16:55.724+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	dev_methodologies	http://localhost:8055
 \.
 
 
@@ -7599,37 +7618,37 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 --
 
 COPY public.directus_collections (collection, icon, note, display_template, hidden, singleton, translations, archive_field, archive_app_filter, archive_value, unarchive_value, sort_field, accountability, color, item_duplication_fields, sort, "group", collapse, preview_url, versioning) FROM stdin;
-soft_skills	\N	\N	{{name}}	t	f	\N	status	t	archived	draft	sort	all	\N	\N	9	resume_cv	open	\N	f
-dev_methodologies	\N	\N	{{name}}	t	f	\N	status	t	archived	draft	sort	all	\N	\N	10	resume_cv	open	\N	f
 vacancy_resources	\N	\N	{{name}}	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	1	vacancies	open	\N	f
-collected_data	\N	Generated data collecting all profile info for AI prompt usage	\N	f	t	\N	\N	t	\N	\N	\N	all	\N	\N	4	profiles	open	\N	f
 tech_skills	\N	A technical skill, with level and years of experience	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	1	tech_skill_categories	open	\N	f
-work_experiences	\N	Professional work experiences	{{name}} | {{location}} | {{position}} | {{start_date}} - {{end_date}}	f	f	\N	\N	t	\N	\N	sort	all	\N	[]	4	resume_cv	open	\N	f
 work_experience_achievements	\N	Notable achievements at this employer. Will appear on resume / CV.	{{title}} | {{description}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	1	work_experiences	open	\N	f
 tech_skill_types	\N	\N	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	2	\N	open	\N	f
 vacancies	\N	\N	{{title}} | {{job_poster}}	f	f	\N	status	t	archived	draft	\N	all	\N	\N	3	\N	open	\N	f
 work_experience_technologies	\N	The technologies used at this employer. Only appears on your CV.	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	2	work_experiences	open	\N	f
 outsourcing_platforms	\N	\N	{{name}} {{type}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	4	\N	open	\N	f
-education	\N	Education history	{{area}}  | {{institution}} | {{start_date}} - {{end_date}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	6	resume_cv	open	\N	f
-side_projects	\N	Notable side-projects or significant open-source contributions	{{name}} | {{start_date}} - {{end_date}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	5	resume_cv	open	\N	f
-profile_versions	\N	Version name for filtering on other collections' "tags" fields for custom resume/CVs generation	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	1	resume_cv	open	\N	f
-highlights	\N	Career / personality highlights. The things that define you most concisely.	{{text}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	2	resume_cv	open	\N	f
-tech_skill_categories	\N	Category in which certain technical skills are collected	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	3	resume_cv	open	\N	f
 application_interview_questions	\N	Interview questions that were asked in this application	{{text}}	f	f	\N	\N	t	archived	draft	sort	all	\N	\N	1	applications	open	\N	f
 side_project_technologies	\N	Notable technologies used in this side-project	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	2	side_projects	open	\N	f
 side_project_achievements	\N	Notable achievements accomplished within this side-project	{{title}} | {{description}}	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	1	side_projects	open	\N	f
-languages	\N	Language skills	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	7	resume_cv	open	\N	f
-references	\N	References from previous employees	{{author}} - {{author_position}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	8	resume_cv	open	\N	f
 applications	\N	Running or expired applications of the job seeker	\N	f	f	\N	status	t	archived	draft	\N	all	\N	\N	1	applying	open	\N	f
 platform_profiles	\N	\N	\N	f	f	\N	status	t	archived	draft	sort	all	\N	\N	2	applying	open	\N	f
 application_questions	\N	Common application questions to save for reuse	\N	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	3	applying	open	\N	f
 salary_expectations	\N	Salary expectations for various work arrangements and situations	\N	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	4	applying	open	\N	f
 project_stories	\N	Cheatsheets for notable project stories you can bring up in interviews	{{title}}	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	1	interviewing	open	\N	f
-resume_cv	folder	Resume / CV	\N	f	f	\N	\N	t	\N	\N	\N	all	\N	\N	1	profiles	open	\N	f
 cheat_sheets	\N	Custom cheet sheets for during interviews	{{title}}	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	2	interviewing	open	\N	f
-applying	folder	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	\N	\N	2	profiles	open	\N	f
 profiles	\N	A profile contains all information and preferences of a certain job-seeker	{{name}}	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	1	\N	open	\N	f
+profile_versions	\N	Version name for filtering on other collections' "tags" fields for custom resume/CVs generation	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	1	resume_cv	open	\N	f
+resume_cv	folder	Resume / CV	\N	f	f	\N	\N	t	\N	\N	\N	all	\N	\N	1	profiles	open	\N	f
+applying	folder	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	\N	\N	2	profiles	open	\N	f
+highlights	\N	Career / personality highlights. The things that define you most concisely.	{{text}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	2	resume_cv	open	\N	f
 interviewing	folder	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	\N	\N	3	profiles	open	\N	f
+tech_skill_categories	\N	Category in which certain technical skills are collected	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	3	resume_cv	open	\N	f
+work_experiences	\N	Professional work experiences	{{name}} | {{location}} | {{position}} | {{start_date}} - {{end_date}}	f	f	\N	\N	t	\N	\N	sort	all	\N	[]	4	resume_cv	open	\N	f
+side_projects	\N	Notable side-projects or significant open-source contributions	{{name}} | {{start_date}} - {{end_date}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	5	resume_cv	open	\N	f
+education	\N	Education history	{{area}}  | {{institution}} | {{start_date}} - {{end_date}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	6	resume_cv	open	\N	f
+languages	\N	Language skills	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	7	resume_cv	open	\N	f
+references	\N	References from previous employees	{{author}} - {{author_position}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	8	resume_cv	open	\N	f
+collected_data	\N	Generated data collecting all profile info for AI prompt usage	\N	f	t	\N	\N	t	\N	\N	\N	all	\N	\N	9	resume_cv	open	\N	f
+soft_skills	\N	\N	{{name}}	t	f	\N	status	t	archived	draft	sort	all	\N	\N	10	resume_cv	open	\N	f
+dev_methodologies	\N	\N	{{name}}	t	f	\N	status	t	archived	draft	sort	all	\N	\N	11	resume_cv	open	\N	f
 \.
 
 
@@ -8171,7 +8190,6 @@ COPY public.directus_presets (id, bookmark, "user", role, collection, search, la
 11	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	work_experience_achievements	\N	\N	{"tabular":{"fields":["title","description","work_experience","status"],"page":1}}	{"tabular":{"widths":{"title":213.5999755859375,"description":388,"work_experience":162.2000732421875,"status":90}}}	\N	\N	bookmark	\N
 19	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	side_project_achievements	\N	\N	{"tabular":{"page":1}}	\N	\N	\N	bookmark	\N
 27	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	side_project_technologies	\N	\N	{"tabular":{"page":1}}	\N	\N	\N	bookmark	\N
-3	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	profiles	\N	\N	{"tabular":{"page":1,"fields":["name","title","core_stack","subtitle"]}}	{"tabular":{"widths":{"name":126.66665649414062,"title":231.66668701171875,"core_stack":278.3333740234375,"subtitle":343.3333740234375}}}	\N	\N	bookmark	\N
 28	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	application_interview_questions	\N	\N	{"tabular":{"fields":["application","question"],"page":2}}	{"tabular":{"widths":{"application":520.3333129882812,"question":815.3333740234375}}}	\N	\N	bookmark	\N
 18	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	side_projects	\N	\N	{"tabular":{"fields":["name","stars","start_date","end_date","status","profile"],"page":1}}	{"tabular":{"widths":{"name":326.33331298828125,"stars":90.66668701171875,"start_date":182.3333740234375,"end_date":169.666748046875,"status":90.6666259765625,"profile":121.3333740234375}}}	\N	\N	bookmark	\N
 14	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	application_questions	\N	\N	{"tabular":{"page":1,"fields":["title","question"]}}	{"tabular":{"widths":{"title":316.4000244140625,"question":500.199951171875}}}	\N	\N	bookmark	\N
@@ -8185,6 +8203,7 @@ COPY public.directus_presets (id, bookmark, "user", role, collection, search, la
 1	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	work_experiences	\N	\N	{"tabular":{"fields":["name","position","location","description","start_date","end_date","status"],"page":1}}	{"tabular":{"widths":{"name":119.66665649414062,"position":264,"location":136.66668701171875,"description":223.3333740234375,"start_date":119.666748046875,"end_date":120,"status":91}}}	\N	\N	bookmark	\N
 30	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	outsourcing_platforms	\N	\N	{"tabular":{"fields":["name","url","type","status"]}}	{"tabular":{"widths":{"name":223,"url":359.99993896484375,"type":218.3333740234375,"status":104}}}	\N	\N	bookmark	\N
 31	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	platform_profiles	\N	\N	{"tabular":{"fields":["outsourcing_platform","profile","status"]}}	{"tabular":{"widths":{"outsourcing_platform":269.3333740234375,"profile":412.33331298828125,"status":160}}}	\N	\N	bookmark	\N
+3	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	profiles	\N	\N	{"tabular":{"page":1,"fields":["name","title","core_stack","subtitle"]}}	{"tabular":{"widths":{"name":126.66665649414062,"title":231.66668701171875,"core_stack":278.3333740234375,"subtitle":343.3333740234375}}}	\N	\N	bookmark	\N
 \.
 
 
@@ -9137,6 +9156,24 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 5642	5784	references	9	{"profile":2,"status":"published","author":"Michaël de Groot","author_position":"Founder of Chipta","text":"Rik modernized our client-facing interfaces and implemented optimizations that delivered substantial performance improvements. His work enabled us to process thousands of tickets rapidly during our busiest periods."}	{"profile":2,"status":"published","author":"Michaël de Groot","author_position":"Founder of Chipta","text":"Rik modernized our client-facing interfaces and implemented optimizations that delivered substantial performance improvements. His work enabled us to process thousands of tickets rapidly during our busiest periods."}	\N	\N
 5643	5785	references	10	{"profile":2,"status":"published","author":"Elmar Krack","author_position":"Co-founder of Tender-it","text":"Rik demonstrated exceptional technical leadership by designing and developing our entire platform from the ground up, handling both backend and frontend development with impressive skill."}	{"profile":2,"status":"published","author":"Elmar Krack","author_position":"Co-founder of Tender-it","text":"Rik demonstrated exceptional technical leadership by designing and developing our entire platform from the ground up, handling both backend and frontend development with impressive skill."}	\N	\N
 5644	5786	references	9	{"id":9,"status":"published","sort":null,"date_created":"2025-11-05T17:10:42.915Z","date_updated":"2025-11-05T17:11:16.802Z","author":"Michaël de Groot","author_position":"Founder of Chipta","text":"Rik modernized our client-facing interfaces and implemented backend optimizations that delivered substantial performance improvements. His work enabled us to process thousands of tickets rapidly during our busiest periods.","profile":2}	{"text":"Rik modernized our client-facing interfaces and implemented backend optimizations that delivered substantial performance improvements. His work enabled us to process thousands of tickets rapidly during our busiest periods.","date_updated":"2025-11-05T17:11:16.802Z"}	\N	\N
+5650	5792	directus_collections	profile_versions	{"collection":"profile_versions","icon":null,"note":"Version name for filtering on other collections' \\"tags\\" fields for custom resume/CVs generation","display_template":"{{name}}","hidden":false,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":1,"group":"resume_cv","collapse":"open","preview_url":null,"versioning":false}	{"sort":1,"group":"resume_cv"}	\N	\N
+5652	5795	directus_collections	highlights	{"collection":"highlights","icon":null,"note":"Career / personality highlights. The things that define you most concisely.","display_template":"{{text}}","hidden":false,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":2,"group":"resume_cv","collapse":"open","preview_url":null,"versioning":false}	{"sort":2,"group":"resume_cv"}	\N	\N
+5654	5797	directus_collections	tech_skill_categories	{"collection":"tech_skill_categories","icon":null,"note":"Category in which certain technical skills are collected","display_template":"{{name}}","hidden":false,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":3,"group":"resume_cv","collapse":"open","preview_url":null,"versioning":false}	{"sort":3,"group":"resume_cv"}	\N	\N
+5655	5798	directus_collections	work_experiences	{"collection":"work_experiences","icon":null,"note":"Professional work experiences","display_template":"{{name}} | {{location}} | {{position}} | {{start_date}} - {{end_date}}","hidden":false,"singleton":false,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":[],"sort":4,"group":"resume_cv","collapse":"open","preview_url":null,"versioning":false}	{"sort":4,"group":"resume_cv"}	\N	\N
+5656	5799	directus_collections	side_projects	{"collection":"side_projects","icon":null,"note":"Notable side-projects or significant open-source contributions","display_template":"{{name}} | {{start_date}} - {{end_date}}","hidden":false,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":5,"group":"resume_cv","collapse":"open","preview_url":null,"versioning":false}	{"sort":5,"group":"resume_cv"}	\N	\N
+5657	5800	directus_collections	education	{"collection":"education","icon":null,"note":"Education history","display_template":"{{area}}  | {{institution}} | {{start_date}} - {{end_date}}","hidden":false,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":6,"group":"resume_cv","collapse":"open","preview_url":null,"versioning":false}	{"sort":6,"group":"resume_cv"}	\N	\N
+5658	5801	directus_collections	languages	{"collection":"languages","icon":null,"note":"Language skills","display_template":"{{name}}","hidden":false,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":7,"group":"resume_cv","collapse":"open","preview_url":null,"versioning":false}	{"sort":7,"group":"resume_cv"}	\N	\N
+5659	5802	directus_collections	references	{"collection":"references","icon":null,"note":"References from previous employees","display_template":"{{author}} - {{author_position}}","hidden":false,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":8,"group":"resume_cv","collapse":"open","preview_url":null,"versioning":false}	{"sort":8,"group":"resume_cv"}	\N	\N
+5660	5803	directus_collections	collected_data	{"collection":"collected_data","icon":null,"note":"Generated data collecting all profile info for AI prompt usage","display_template":null,"hidden":false,"singleton":true,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":null,"accountability":"all","color":null,"item_duplication_fields":null,"sort":9,"group":"resume_cv","collapse":"open","preview_url":null,"versioning":false}	{"sort":9,"group":"resume_cv"}	\N	\N
+5661	5804	directus_collections	soft_skills	{"collection":"soft_skills","icon":null,"note":null,"display_template":"{{name}}","hidden":true,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":10,"group":"resume_cv","collapse":"open","preview_url":null,"versioning":false}	{"sort":10,"group":"resume_cv"}	\N	\N
+5662	5805	directus_collections	dev_methodologies	{"collection":"dev_methodologies","icon":null,"note":null,"display_template":"{{name}}","hidden":true,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":11,"group":"resume_cv","collapse":"open","preview_url":null,"versioning":false}	{"sort":11,"group":"resume_cv"}	\N	\N
+5645	5788	directus_collections	resume_cv	{"collection":"resume_cv","icon":"folder","note":"Resume / CV","display_template":null,"hidden":false,"singleton":false,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":null,"accountability":"all","color":null,"item_duplication_fields":null,"sort":1,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"sort":1,"group":"profiles"}	\N	\N
+5646	5789	directus_collections	collected_data	{"collection":"collected_data","icon":null,"note":"Generated data collecting all profile info for AI prompt usage","display_template":null,"hidden":false,"singleton":true,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":null,"accountability":"all","color":null,"item_duplication_fields":null,"sort":2,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"sort":2,"group":"profiles"}	\N	\N
+5647	5790	directus_collections	applying	{"collection":"applying","icon":"folder","note":null,"display_template":null,"hidden":false,"singleton":false,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":null,"accountability":"all","color":null,"item_duplication_fields":null,"sort":3,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"sort":3,"group":"profiles"}	\N	\N
+5648	5791	directus_collections	interviewing	{"collection":"interviewing","icon":"folder","note":null,"display_template":null,"hidden":false,"singleton":false,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":null,"accountability":"all","color":null,"item_duplication_fields":null,"sort":4,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"sort":4,"group":"profiles"}	\N	\N
+5649	5793	directus_collections	resume_cv	{"collection":"resume_cv","icon":"folder","note":"Resume / CV","display_template":null,"hidden":false,"singleton":false,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":null,"accountability":"all","color":null,"item_duplication_fields":null,"sort":1,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"sort":1,"group":"profiles"}	\N	\N
+5651	5794	directus_collections	applying	{"collection":"applying","icon":"folder","note":null,"display_template":null,"hidden":false,"singleton":false,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":null,"accountability":"all","color":null,"item_duplication_fields":null,"sort":2,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"sort":2,"group":"profiles"}	\N	\N
+5653	5796	directus_collections	interviewing	{"collection":"interviewing","icon":"folder","note":null,"display_template":null,"hidden":false,"singleton":false,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":null,"accountability":"all","color":null,"item_duplication_fields":null,"sort":3,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"sort":3,"group":"profiles"}	\N	\N
 \.
 
 
@@ -9160,8 +9197,9 @@ xvu8kNst20zp0P1S70SHTij9ct7Mv3P3cg9wFDygm0Nv6yzi0-q32VPeMPRHQUSq	157238bb-6930-4
 VRoO6ns6OjSnroBRxszQc4D4_ZN-hNTopfjA8rQEcw8EL0_BICekHQF8kYxHdmP8	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-09 20:10:44.651+00	172.18.0.5	node	\N	\N	\N
 sZe7yh0vBp7Q0rjtS8gUPwFc6JQhHXtiIhMZaV1Nfae3T7hxMuLnEfVvXebVte1q	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-09 20:26:00.882+00	172.18.0.5	node	\N	\N	\N
 3X9tuG52_ciswj-xZ8-TTylLCPReXz-ApEeMa8Uvs6nBmzOubAYQ48vC_5hXZn9x	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 16:18:18.852+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
-omqDf-ogBK5FF0e1WNPspzKIOeGAIojHg0gLSTUWnmvNBvCouUhetUlgc4SL5aOk	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 17:10:19.052+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	WJjD3vznl6M3VFc84ag-FfHCEw-qr0wNy6KhqpONAIMLRJHtUcCX1v9tbMSCyb1B
-WJjD3vznl6M3VFc84ag-FfHCEw-qr0wNy6KhqpONAIMLRJHtUcCX1v9tbMSCyb1B	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 17:10:09.052+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
+8SOmjMeB6m1E0M8ggCbLxLDmcJPNNkaHNBIQR8MNvDnKCgp5tILE44yTExK1t10n	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-12 17:11:37.983+00	172.18.0.5	node	\N	\N	\N
+WJjD3vznl6M3VFc84ag-FfHCEw-qr0wNy6KhqpONAIMLRJHtUcCX1v9tbMSCyb1B	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 17:17:09.417+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	n020QlavIWg3JiFE9VA8SIuAahUQ6UA3TbZZNCaL03gVKbvlKdSvXfCOMBSKL7EJ
+n020QlavIWg3JiFE9VA8SIuAahUQ6UA3TbZZNCaL03gVKbvlKdSvXfCOMBSKL7EJ	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 17:16:59.417+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
 \.
 
 
@@ -9198,7 +9236,7 @@ c530a32f-84cb-4ab9-8a61-7a12a5bcb7e6	en-US	draft	Draft
 --
 
 COPY public.directus_users (id, first_name, last_name, email, password, location, title, description, tags, avatar, language, tfa_secret, status, role, token, last_access, last_page, provider, external_identifier, auth_data, email_notifications, appearance, theme_dark, theme_light, theme_light_overrides, theme_dark_overrides, text_direction) FROM stdin;
-157238bb-6930-4f26-be9c-8b31a9e11ab8	Rik	Wanders	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-11-05 17:10:09.057+00	/content/references	default	\N	\N	t	\N	\N	\N	\N	\N	auto
+157238bb-6930-4f26-be9c-8b31a9e11ab8	Rik	Wanders	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-11-05 17:16:59.42+00	/content/profiles	default	\N	\N	t	\N	\N	\N	\N	\N	auto
 \.
 
 
@@ -9717,7 +9755,7 @@ SELECT pg_catalog.setval('public.dev_methodologies_id_seq', 38, true);
 -- Name: directus_activity_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_activity_id_seq', 5786, true);
+SELECT pg_catalog.setval('public.directus_activity_id_seq', 5805, true);
 
 
 --
@@ -9759,7 +9797,7 @@ SELECT pg_catalog.setval('public.directus_relations_id_seq', 41, true);
 -- Name: directus_revisions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_revisions_id_seq', 5644, true);
+SELECT pg_catalog.setval('public.directus_revisions_id_seq', 5662, true);
 
 
 --
@@ -11083,5 +11121,5 @@ ALTER TABLE ONLY public.work_experiences
 -- PostgreSQL database dump complete
 --
 
-\unrestrict jQUt5qzayj2JSzOPYfqThfezbYFTwcmvVrp7iScH4guhPsljm7fQoo7HRDxd55k
+\unrestrict VvwOgXUw6frI02qtp9B0tgsWeaujMmeHVNika0iQlqNYcVbROG6kbhDTZZE2Lta
 
