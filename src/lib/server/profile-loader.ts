@@ -40,9 +40,12 @@ export async function loadProfile(params) {
       references: { orderBy: { sort: "asc" } },
       profile_versions: {
         orderBy: { sort: "asc" },
+        where: { status: { equals: "published" } }
       },
     },
   });
+
+  console.log(profile)
 
   return {
     profile,
