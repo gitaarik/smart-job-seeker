@@ -1,11 +1,13 @@
 {
   "permissions": {
     "allow": [
+      "Bash(/tmp/schema.json)",
       "Bash(bash:*)",
       "Bash(cat:*)",
       "Bash(chmod:*)",
       "Bash(cp:*)",
       "Bash(curl:*)",
+      "Bash(docker compose:*)",
       "Bash(docker exec:*)",
       "Bash(docker volume:*)",
       "Bash(docker-compose:*)",
@@ -23,6 +25,8 @@
       "Bash(npm run docker:db:cli:*)",
       "Bash(npm run docker:db:restore:*)",
       "Bash(npm run docker:export-profile-json:*)",
+      "Bash(npm run docker:export-profile-schema:*)",
+      "Bash(npm run docker:update-schema:*)",
       "Bash(npm uninstall:*)",
       "Bash(npx prisma:*)",
       "Bash(npx tsc:*)",
@@ -31,16 +35,12 @@
       "Bash(rm:*)",
       "Bash(y)",
       "WebFetch(domain:directus.io)",
+      "WebFetch(domain:docs.directus.io)",
       "WebFetch(domain:dotenvx.com)",
       "WebFetch(domain:jsonresume.org)",
-      "WebFetch(domain:raw.githubusercontent.com)",
-      "Bash(npm run docker:export-profile-schema:*)",
-      "WebFetch(domain:docs.directus.io)",
-      "WebSearch",
-      "Bash(docker compose:*)",
-      "Bash(npm run docker:update-schema:*)",
       "WebFetch(domain:localhost)",
-      "Bash(/tmp/schema.json)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []
