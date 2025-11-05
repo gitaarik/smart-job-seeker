@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 1Ipf2kH6vrWOSVgVp7PTfRkbEXFZi5mD27omIQKiFUlEljWXLkQzcUK2TPQDF9d
+\restrict gGorxRd1IESidkJQFDgMFdcCb0gwxxIfa2rOXwbciOtdHcq3bVBAXKjwGWQ7i9K
 
 -- Dumped from database version 15.14 (Debian 15.14-1.pgdg13+1)
 -- Dumped by pg_dump version 15.14 (Debian 15.14-1.pgdg13+1)
@@ -1220,6 +1220,45 @@ ALTER SEQUENCE public.outsourcing_platforms_id_seq OWNED BY public.outsourcing_p
 
 
 --
+-- Name: platform_profile; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.platform_profile (
+    id integer NOT NULL,
+    status character varying(255) DEFAULT 'signup_in_progress'::character varying NOT NULL,
+    sort integer,
+    date_created timestamp with time zone,
+    date_updated timestamp with time zone,
+    profile integer,
+    outsourcing_platform integer
+);
+
+
+ALTER TABLE public.platform_profile OWNER TO postgres;
+
+--
+-- Name: platform_profile_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.platform_profile_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.platform_profile_id_seq OWNER TO postgres;
+
+--
+-- Name: platform_profile_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.platform_profile_id_seq OWNED BY public.platform_profile.id;
+
+
+--
 -- Name: profile_versions; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -1995,6 +2034,13 @@ ALTER TABLE ONLY public.education ALTER COLUMN id SET DEFAULT nextval('public.ed
 --
 
 ALTER TABLE ONLY public.outsourcing_platforms ALTER COLUMN id SET DEFAULT nextval('public.outsourcing_platforms_id_seq'::regclass);
+
+
+--
+-- Name: platform_profile id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.platform_profile ALTER COLUMN id SET DEFAULT nextval('public.platform_profile_id_seq'::regclass);
 
 
 --
@@ -7408,6 +7454,40 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 5647	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:24:01.718+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	363	http://localhost:8055
 5648	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:24:01.718+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	364	http://localhost:8055
 5649	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:24:01.719+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	365	http://localhost:8055
+5650	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:28:49.466+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	374	http://localhost:8055
+5651	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:28:49.47+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	375	http://localhost:8055
+5652	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:28:49.473+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	376	http://localhost:8055
+5653	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:28:49.475+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	377	http://localhost:8055
+5654	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:28:49.478+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	378	http://localhost:8055
+5655	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:28:49.481+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	platform_profile	http://localhost:8055
+5656	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:29:22.038+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	379	http://localhost:8055
+5657	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:29:22.126+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	380	http://localhost:8055
+5658	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:30:07.527+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	381	http://localhost:8055
+5659	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:30:16.723+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	374	http://localhost:8055
+5660	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:30:16.73+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	376	http://localhost:8055
+5661	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:30:16.736+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	377	http://localhost:8055
+5662	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:30:16.744+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	378	http://localhost:8055
+5663	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:30:16.748+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	379	http://localhost:8055
+5664	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:30:16.752+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	381	http://localhost:8055
+5665	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:30:16.759+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	375	http://localhost:8055
+5666	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:45:40.776+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	375	http://localhost:8055
+5667	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:45:59.401+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	profiles	http://localhost:8055
+5670	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:45:59.408+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	tech_skill_types	http://localhost:8055
+5671	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:45:59.415+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	vacancies	http://localhost:8055
+5673	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:45:59.421+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	outsourcing_platforms	http://localhost:8055
+5668	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:45:59.402+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	resume_cv	http://localhost:8055
+5669	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:45:59.407+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	salary_expectations	http://localhost:8055
+5672	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:45:59.416+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	project_stories	http://localhost:8055
+5674	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:45:59.421+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	application_questions	http://localhost:8055
+5675	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:45:59.427+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	cheat_sheets	http://localhost:8055
+5676	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:45:59.433+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	applications	http://localhost:8055
+5677	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:45:59.437+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	platform_profile	http://localhost:8055
+5678	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:45:59.44+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	collected_data	http://localhost:8055
+5679	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:46:25.011+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	381	http://localhost:8055
+5680	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:46:59.085+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	375	http://localhost:8055
+5681	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:47:56.852+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	375	http://localhost:8055
+5682	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:48:45.164+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	375	http://localhost:8055
+5683	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:49:03.767+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	platform_profile	1	http://localhost:8055
 \.
 
 
@@ -7419,16 +7499,15 @@ COPY public.directus_collections (collection, icon, note, display_template, hidd
 soft_skills	\N	\N	{{name}}	t	f	\N	status	t	archived	draft	sort	all	\N	\N	9	resume_cv	open	\N	f
 dev_methodologies	\N	\N	{{name}}	t	f	\N	status	t	archived	draft	sort	all	\N	\N	10	resume_cv	open	\N	f
 vacancy_resources	\N	\N	{{name}}	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	1	vacancies	open	\N	f
-applications	\N	Running or expired applications of the job seeker	\N	f	f	\N	status	t	archived	draft	\N	all	\N	\N	6	profiles	open	\N	f
 tech_skills	\N	A technical skill, with level and years of experience	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	1	tech_skill_categories	open	\N	f
 work_experiences	\N	Professional work experiences	{{name}} | {{location}} | {{position}} | {{start_date}} - {{end_date}}	f	f	\N	\N	t	\N	\N	sort	all	\N	[]	4	resume_cv	open	\N	f
 work_experience_achievements	\N	Notable achievements at this employer. Will appear on resume / CV.	{{title}} | {{description}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	1	work_experiences	open	\N	f
+platform_profile	\N	\N	\N	f	f	\N	status	t	archived	draft	sort	all	\N	\N	7	profiles	open	\N	f
+collected_data	\N	Generated data collecting all profile info for AI prompt usage	\N	f	t	\N	\N	t	\N	\N	\N	all	\N	\N	8	profiles	open	\N	f
 work_experience_technologies	\N	The technologies used at this employer. Only appears on your CV.	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	2	work_experiences	open	\N	f
 education	\N	Education history	{{area}}  | {{institution}} | {{start_date}} - {{end_date}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	6	resume_cv	open	\N	f
-collected_data	\N	Generated data collecting all profile info for AI prompt usage	\N	f	t	\N	\N	t	\N	\N	\N	all	\N	\N	7	profiles	open	\N	f
 side_projects	\N	Notable side-projects or significant open-source contributions	{{name}} | {{start_date}} - {{end_date}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	5	resume_cv	open	\N	f
 profile_versions	\N	Version name for filtering on other collections' "tags" fields for custom resume/CVs generation	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	1	resume_cv	open	\N	f
-outsourcing_platforms	\N	\N	\N	f	f	\N	status	t	archived	draft	sort	all	\N	\N	\N	\N	open	\N	f
 highlights	\N	Career / personality highlights. The things that define you most concisely.	{{text}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	2	resume_cv	open	\N	f
 tech_skill_categories	\N	Category in which certain technical skills are collected	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	3	resume_cv	open	\N	f
 application_interview_questions	\N	Interview questions that were asked in this application	{{text}}	f	f	\N	\N	t	archived	draft	sort	all	\N	\N	1	applications	open	\N	f
@@ -7436,14 +7515,16 @@ side_project_technologies	\N	Notable technologies used in this side-project	{{na
 side_project_achievements	\N	Notable achievements accomplished within this side-project	{{title}} | {{description}}	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	1	side_projects	open	\N	f
 languages	\N	Language skills	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	7	resume_cv	open	\N	f
 references	\N	References from previous employees	{{author}} - {{author_position}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	8	resume_cv	open	\N	f
-resume_cv	folder	Resume / CV	\N	f	f	\N	\N	t	\N	\N	\N	all	\N	\N	1	profiles	open	\N	f
 profiles	\N	A profile contains all information and preferences of a certain job-seeker	{{name}}	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	1	\N	open	\N	f
-tech_skill_types	\N	\N	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	2	\N	open	\N	f
+resume_cv	folder	Resume / CV	\N	f	f	\N	\N	t	\N	\N	\N	all	\N	\N	1	profiles	open	\N	f
 salary_expectations	\N	Salary expectations for various work arrangements and situations	\N	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	2	profiles	open	\N	f
+tech_skill_types	\N	\N	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	2	\N	open	\N	f
 vacancies	\N	\N	{{title}} | {{job_poster}}	f	f	\N	status	t	archived	draft	\N	all	\N	\N	3	\N	open	\N	f
 project_stories	\N	Cheatsheets for notable project stories you can bring up in interviews	{{title}}	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	3	profiles	open	\N	f
+outsourcing_platforms	\N	\N	\N	f	f	\N	status	t	archived	draft	sort	all	\N	\N	4	\N	open	\N	f
 application_questions	\N	Common application questions to save for reuse	\N	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	4	profiles	open	\N	f
 cheat_sheets	\N	Custom cheet sheets for during interviews	{{title}}	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	5	profiles	open	\N	f
+applications	\N	Running or expired applications of the job seeker	\N	f	f	\N	status	t	archived	draft	\N	all	\N	\N	6	profiles	open	\N	f
 \.
 
 
@@ -7772,7 +7853,15 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 370	outsourcing_platforms	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	5	half	\N	\N	\N	f	\N	\N	\N	t
 371	outsourcing_platforms	name	\N	input	\N	\N	\N	f	f	6	full	\N	\N	\N	t	\N	\N	\N	t
 372	outsourcing_platforms	url	\N	input	\N	\N	\N	f	f	7	full	\N	\N	\N	t	\N	\N	\N	t
+374	platform_profile	id	\N	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N	t
 373	outsourcing_platforms	type	\N	select-radio	{"choices":[{"text":"Open Marketplaces","value":"open_marketplaces"},{"text":"Vetted Platforms","value":"vetted_platforms"},{"text":"Midlance Platforms","value":"midlance_platforms"},{"text":"Agencies","value":"agencies"},{"text":"Job Boards","value":"job_boards"}]}	labels	{"choices":[{"text":"Open Marketplaces","value":"open_marketplaces"},{"text":"Vetted Platforms","value":"vetted_platforms"},{"text":"Midlance Platforms","value":"midlance_platforms"},{"text":"Agencies","value":"agencies"},{"text":"Job Boards","value":"job_boards"}]}	f	f	8	full	\N	\N	\N	f	\N	\N	\N	t
+380	profiles	platform_profiles	o2m	list-o2m	\N	\N	\N	f	f	38	full	\N	\N	\N	f	\N	\N	\N	t
+376	platform_profile	sort	\N	input	\N	\N	\N	f	t	2	full	\N	\N	\N	f	\N	\N	\N	t
+377	platform_profile	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	3	half	\N	\N	\N	f	\N	\N	\N	t
+378	platform_profile	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	4	half	\N	\N	\N	f	\N	\N	\N	t
+379	platform_profile	profile	m2o	select-dropdown-m2o	\N	related-values	\N	f	f	5	full	\N	\N	\N	f	\N	\N	\N	t
+375	platform_profile	status	\N	select-dropdown	{"choices":[{"text":"Signup in progress","value":"signup_in_progress"},{"text":"Pending Verification","value":"pending_verification"},{"text":"Vetting scheduled","value":"vetting_scheduled"},{"text":"Awaiting vetting result","value":"awaiting_vetting_result"},{"text":"Setup required","value":"setup_required"},{"text":"Profile In Progress","value":"profile_in_progress"},{"text":"Active","value":"active"},{"text":"Dormant","value":"dormant"}]}	labels	{"showAsDot":true,"choices":[{"text":"Signup in progress","value":"signup_in_progress"},{"text":"Pending Verification","value":"pending_verification"},{"text":"Vetting scheduled","value":"vetting_scheduled"},{"text":"Awaiting vetting result","value":"awaiting_vetting_result"},{"text":"Setup required","value":"setup_required"},{"text":"Profile In Progress","value":"profile_in_progress"},{"text":"Active","value":"active"},{"text":"Dormant","value":"dormant"}]}	f	f	7	full	\N	\N	\N	f	\N	\N	\N	t
+381	platform_profile	outsourcing_platform	m2o	select-dropdown-m2o	\N	related-values	\N	f	f	6	full	\N	\N	\N	f	\N	\N	\N	t
 \.
 
 
@@ -7989,7 +8078,7 @@ COPY public.directus_presets (id, bookmark, "user", role, collection, search, la
 26	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	work_experience_technologies	\N	\N	{"tabular":{"fields":["name","work_experience","status"],"page":1}}	{"tabular":{"widths":{"name":160,"work_experience":217.33331298828125,"status":127.33331298828125}}}	\N	\N	bookmark	\N
 25	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	applications	\N	\N	{"tabular":{"fields":["vacancy","profile","status"],"page":1,"sort":["-id"]}}	{"tabular":{"widths":{"vacancy":682.3333740234375,"profile":140.33331298828125,"status":149.6666259765625}}}	\N	\N	bookmark	\N
 1	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	work_experiences	\N	\N	{"tabular":{"fields":["name","position","location","description","start_date","end_date","status"],"page":1}}	{"tabular":{"widths":{"name":119.66665649414062,"position":264,"location":136.66668701171875,"description":223.3333740234375,"start_date":119.666748046875,"end_date":120,"status":91}}}	\N	\N	bookmark	\N
-30	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	outsourcing_platforms	\N	\N	{"tabular":{"fields":["name","url","type","status"]}}	{"tabular":{"widths":{"name":204.66668701171875,"url":359.99993896484375,"type":172.666748046875,"status":104}}}	\N	\N	bookmark	\N
+30	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	outsourcing_platforms	\N	\N	{"tabular":{"fields":["name","url","type","status"]}}	{"tabular":{"widths":{"name":223,"url":359.99993896484375,"type":218.3333740234375,"status":104}}}	\N	\N	bookmark	\N
 \.
 
 
@@ -8029,6 +8118,8 @@ COPY public.directus_relations (id, many_collection, many_field, one_collection,
 36	vacancy_resources	vacancy	vacancies	vacancy_resources	\N	\N	\N	\N	nullify
 37	salary_expectations	profile	profiles	salary_expectations	\N	\N	\N	\N	nullify
 39	collected_data	profile	profiles	collected_data	\N	\N	\N	\N	nullify
+40	platform_profile	profile	profiles	platform_profiles	\N	\N	\N	\N	nullify
+41	platform_profile	outsourcing_platform	outsourcing_platforms	\N	\N	\N	\N	\N	nullify
 \.
 
 
@@ -8515,6 +8606,10 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 5203	5329	application_interview_questions	28	{"id":28,"sort":null,"date_created":"2025-11-04T13:29:56.531Z","date_updated":"2025-11-04T16:55:15.910Z","application":6,"question":"Tell us about a time when you \\"hacked the system\\" to your advantage","answer":"I'm currently creating a system for myself to help me find and apply for jobs. I'm incorporating AI to find the best matching jobs that meet my preferences. Various modules in the system help me with different tasks, like customizing my resume / CV, writing a suitable cover letter, answering common application questions. The system also gives an overview of your applications with status and followup actions."}	{"answer":"I'm currently creating a system for myself to help me find and apply for jobs. I'm incorporating AI to find the best matching jobs that meet my preferences. Various modules in the system help me with different tasks, like customizing my resume / CV, writing a suitable cover letter, answering common application questions. The system also gives an overview of your applications with status and followup actions.","date_updated":"2025-11-04T16:55:15.910Z"}	5204	\N
 5237	5363	directus_collections	side_projects	{"collection":"side_projects","icon":null,"note":"Notable side-projects you did, or big open-source contributions","display_template":"{{name}} | {{start_date}} - {{end_date}}","hidden":false,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":5,"group":"resume_cv","collapse":"open","preview_url":null,"versioning":false}	{"note":"Notable side-projects you did, or big open-source contributions"}	\N	\N
 5508	5641	outsourcing_platforms	12	{"id":12,"status":"published","sort":null,"date_created":"2025-11-05T14:13:29.440Z","date_updated":"2025-11-05T14:16:28.509Z","name":"cord","url":"https://cord.com/","type":"vetted_platforms"}	{"type":"vetted_platforms","date_updated":"2025-11-05T14:16:28.509Z"}	\N	\N
+5527	5668	directus_collections	resume_cv	{"collection":"resume_cv","icon":"folder","note":"Resume / CV","display_template":null,"hidden":false,"singleton":false,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":null,"accountability":"all","color":null,"item_duplication_fields":null,"sort":1,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"sort":1,"group":"profiles"}	\N	\N
+5529	5669	directus_collections	salary_expectations	{"collection":"salary_expectations","icon":null,"note":"Salary expectations for various work arrangements and situations","display_template":null,"hidden":false,"singleton":false,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":2,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"sort":2,"group":"profiles"}	\N	\N
+5531	5672	directus_collections	project_stories	{"collection":"project_stories","icon":null,"note":"Cheatsheets for notable project stories you can bring up in interviews","display_template":"{{title}}","hidden":false,"singleton":false,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":3,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"sort":3,"group":"profiles"}	\N	\N
+5533	5674	directus_collections	application_questions	{"collection":"application_questions","icon":null,"note":"Common application questions to save for reuse","display_template":null,"hidden":false,"singleton":false,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":4,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"sort":4,"group":"profiles"}	\N	\N
 5206	5332	applications	6	{"id":6,"status":"draft","date_created":"2025-11-04T13:19:50.161Z","date_updated":"2025-11-04T16:58:14.855Z","vacancy":6,"profile":2,"cv_sent_through":null,"cv_file_sent":null,"application_sent_date":null,"discontinued_reason":null,"interview_questions":[29,28]}	{"date_updated":"2025-11-04T16:58:14.855Z"}	\N	\N
 5205	5331	application_interview_questions	28	{"id":28,"sort":null,"date_created":"2025-11-04T13:29:56.531Z","date_updated":"2025-11-04T16:58:14.857Z","application":6,"question":"Tell us about a time when you \\"hacked the system\\" to your advantage","answer":"I'm currently creating a system for myself to help me find and apply for jobs. I'm incorporating AI to find the best matching jobs that meet my preferences. Various modules in the system help me with different tasks, like customizing my resume / CV, writing a suitable cover letter, answering common application questions, and preparing for interviews. The system also gives an overview of your applications, where you can see and update the status and details."}	{"answer":"I'm currently creating a system for myself to help me find and apply for jobs. I'm incorporating AI to find the best matching jobs that meet my preferences. Various modules in the system help me with different tasks, like customizing my resume / CV, writing a suitable cover letter, answering common application questions, and preparing for interviews. The system also gives an overview of your applications, where you can see and update the status and details.","date_updated":"2025-11-04T16:58:14.857Z"}	5206	\N
 5208	5334	applications	6	{"id":6,"status":"draft","date_created":"2025-11-04T13:19:50.161Z","date_updated":"2025-11-04T16:58:21.644Z","vacancy":6,"profile":2,"cv_sent_through":null,"cv_file_sent":null,"application_sent_date":null,"discontinued_reason":null,"interview_questions":[29,28]}	{"date_updated":"2025-11-04T16:58:21.644Z"}	\N	\N
@@ -8531,6 +8626,7 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 5218	5344	project_stories	123	{"id":123,"sort":null,"date_created":"2025-11-04T16:59:19.893Z","date_updated":"2025-11-04T19:27:54.215Z","title":"Smart Job Seeker - AI-driven job-matching system","situation":"- Finding appropriate vacancies takes a lot of time\\n- It's repetitive work\\n- Adjusting resume/CV for every application takes time\\n- Writing custom cover letter takes time\\n- Answering common interview questions takes time\\n- Tracking all running applications takes time","task":"- Make the process easier, automate repetitive tasks\\n- Use AI to find appropriate job matches\\n- Make a easily customizable resume/CV generation system\\n- Use AI to help write custom cover letters\\n- Save re-usable common interview questions\\n- Have all running applications in overview","action":"- Created personal platform for job hunting\\n- Used AI tools to match my profile with jobs\\n- Created custom resume/CV generation system\\n- Created module to help generate cover letter with AI\\n- ","result":null,"reflection":null,"category":"high_impact_projects","profile":2}	{"action":"- Created personal platform for job hunting\\n- Used AI tools to match my profile with jobs\\n- Created custom resume/CV generation system\\n- Created module to help generate cover letter with AI\\n- ","date_updated":"2025-11-04T19:27:54.215Z"}	\N	\N
 5219	5345	project_stories	123	{"id":123,"sort":null,"date_created":"2025-11-04T16:59:19.893Z","date_updated":"2025-11-04T19:28:22.200Z","title":"Smart Job Seeker - AI-driven job-matching system","situation":"- Finding appropriate vacancies takes a lot of time\\n- It's repetitive work\\n- Adjusting resume/CV for every application takes time\\n- Writing custom cover letter takes time\\n- Answering common interview questions takes time\\n- Tracking all running applications takes time","task":"- Make the process easier, automate repetitive tasks\\n- Use AI to find appropriate job matches\\n- Make a easily customizable resume/CV generation system\\n- Use AI to help write custom cover letters\\n- Save re-usable common interview questions\\n- Have all running applications in overview","action":"- Created personal platform for job hunting\\n- Used AI tools to match my profile with jobs\\n- Created custom resume/CV generation system with Svelte + Directus CMS\\n- Created module to help generate cover letter with AI\\n- ","result":null,"reflection":null,"category":"high_impact_projects","profile":2}	{"action":"- Created personal platform for job hunting\\n- Used AI tools to match my profile with jobs\\n- Created custom resume/CV generation system with Svelte + Directus CMS\\n- Created module to help generate cover letter with AI\\n- ","date_updated":"2025-11-04T19:28:22.200Z"}	\N	\N
 5220	5346	project_stories	123	{"id":123,"sort":null,"date_created":"2025-11-04T16:59:19.893Z","date_updated":"2025-11-04T19:28:38.881Z","title":"Smart Job Seeker - AI-driven job-matching system","situation":"- Finding appropriate vacancies takes a lot of time\\n- It's repetitive work\\n- Adjusting resume/CV for every application takes time\\n- Writing custom cover letter takes time\\n- Answering common interview questions takes time\\n- Tracking all running applications takes time","task":"- Make the process easier, automate repetitive tasks\\n- Use AI to find appropriate job matches\\n- Make a easily customizable resume/CV generation system\\n- Use AI to help write custom cover letters\\n- Save re-usable common interview questions\\n- Have all running applications in overview","action":"- Created personal platform for job hunting\\n- Used AI tools to match my profile with jobs with OpenAI & Gemini APIs\\n- Created custom resume/CV generation system with Svelte + Directus CMS\\n- Created module to help generate cover letter with AI\\n- ","result":null,"reflection":null,"category":"high_impact_projects","profile":2}	{"action":"- Created personal platform for job hunting\\n- Used AI tools to match my profile with jobs with OpenAI & Gemini APIs\\n- Created custom resume/CV generation system with Svelte + Directus CMS\\n- Created module to help generate cover letter with AI\\n- ","date_updated":"2025-11-04T19:28:38.881Z"}	\N	\N
+5509	5650	directus_fields	374	{"sort":1,"hidden":true,"interface":"input","readonly":true,"field":"id","collection":"platform_profile"}	{"sort":1,"hidden":true,"interface":"input","readonly":true,"field":"id","collection":"platform_profile"}	\N	\N
 5221	5347	project_stories	123	{"id":123,"sort":null,"date_created":"2025-11-04T16:59:19.893Z","date_updated":"2025-11-04T19:29:23.053Z","title":"Smart Job Seeker - AI-driven job-matching system","situation":"- Finding appropriate vacancies takes a lot of time\\n- It's repetitive work\\n- Adjusting resume/CV for every application takes time\\n- Writing custom cover letter takes time\\n- Answering common interview questions takes time\\n- Tracking all running applications takes time","task":"- Make the process easier, automate repetitive tasks\\n- Use AI to find appropriate job matches\\n- Make a easily customizable resume/CV generation system\\n- Use AI to help write custom cover letters\\n- Save re-usable common interview questions\\n- Have all running applications in overview","action":"- Created personal platform for job hunting\\n- Used AI tools to match my profile with jobs with OpenAI & Gemini APIs\\n- Created custom resume/CV generation system with Svelte + Directus CMS\\n- Created module to help generate cover letter with AI\\n- Created database for common interview / application questions\\n- Created overview for tracking application status","result":null,"reflection":null,"category":"high_impact_projects","profile":2}	{"action":"- Created personal platform for job hunting\\n- Used AI tools to match my profile with jobs with OpenAI & Gemini APIs\\n- Created custom resume/CV generation system with Svelte + Directus CMS\\n- Created module to help generate cover letter with AI\\n- Created database for common interview / application questions\\n- Created overview for tracking application status","date_updated":"2025-11-04T19:29:23.053Z"}	\N	\N
 5222	5348	project_stories	123	{"id":123,"sort":null,"date_created":"2025-11-04T16:59:19.893Z","date_updated":"2025-11-04T19:30:17.199Z","title":"Smart Job Seeker - AI-driven job-matching system","situation":"- Finding appropriate vacancies takes a lot of time\\n- It's repetitive work\\n- Adjusting resume/CV for every application takes time\\n- Writing custom cover letter takes time\\n- Answering common interview questions takes time\\n- Tracking all running applications takes time","task":"- Make the process easier, automate repetitive tasks\\n- Use AI to find appropriate job matches\\n- Make a easily customizable resume/CV generation system\\n- Use AI to help write custom cover letters\\n- Save re-usable common interview questions\\n- Have all running applications in overview","action":"- Created personal platform for job hunting\\n- Used AI tools to match my profile with jobs with OpenAI & Gemini APIs\\n- Created custom resume/CV generation system with Svelte + Directus CMS\\n- Created module to help generate cover letter with AI\\n- Created database for common interview / application questions\\n- Created overview for tracking application status","result":"- Faster results of suitable vacancies","reflection":null,"category":"high_impact_projects","profile":2}	{"result":"- Faster results of suitable vacancies","date_updated":"2025-11-04T19:30:17.199Z"}	\N	\N
 5223	5349	project_stories	123	{"id":123,"sort":null,"date_created":"2025-11-04T16:59:19.893Z","date_updated":"2025-11-04T19:30:39.571Z","title":"Smart Job Seeker - AI-driven job-matching system","situation":"- Finding appropriate vacancies takes a lot of time\\n- It's repetitive work\\n- Adjusting resume/CV for every application takes time\\n- Writing custom cover letter takes time\\n- Answering common interview questions takes time\\n- Tracking all running applications takes time","task":"- Make the process easier, automate repetitive tasks\\n- Use AI to find appropriate job matches\\n- Make a easily customizable resume/CV generation system\\n- Use AI to help write custom cover letters\\n- Save re-usable common interview questions\\n- Have all running applications in overview","action":"- Created personal platform for job hunting\\n- Used AI tools to match my profile with jobs with OpenAI & Gemini APIs\\n- Created custom resume/CV generation system with Svelte + Directus CMS\\n- Created module to help generate cover letter with AI\\n- Created database for common interview / application questions\\n- Created overview for tracking application status","result":"- Faster results of suitable vacancies\\n- Learning new skills I can use on my resume/CV","reflection":null,"category":"high_impact_projects","profile":2}	{"result":"- Faster results of suitable vacancies\\n- Learning new skills I can use on my resume/CV","date_updated":"2025-11-04T19:30:39.571Z"}	\N	\N
@@ -8638,6 +8734,7 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 5323	5454	application_interview_questions	29	{"id":29,"sort":null,"date_created":"2025-11-04T13:29:56.534Z","date_updated":"2025-11-05T10:28:16.693Z","application":6,"question":"Tell us about something you've done in the past that can be considered as evidence of exceptional ability","answer":"At Chipta I've scaled a event ticketing system to be able to handle thousands of orders per minute, which has processed tens of millions in transactions."}	{"answer":"At Chipta I've scaled a event ticketing system to be able to handle thousands of orders per minute, which has processed tens of millions in transactions.","date_updated":"2025-11-05T10:28:16.693Z"}	5324	\N
 5326	5457	applications	6	{"id":6,"status":"draft","date_created":"2025-11-04T13:19:50.161Z","date_updated":"2025-11-05T10:28:41.395Z","vacancy":6,"profile":2,"cv_sent_through":null,"cv_file_sent":null,"application_sent_date":null,"discontinued_reason":null,"interview_questions":[29,28]}	{"date_updated":"2025-11-05T10:28:41.395Z"}	\N	\N
 5391	5523	directus_fields	310	{"id":310,"collection":"applications","field":"vacancy","special":["m2o"],"interface":"select-dropdown-m2o","options":{"template":null},"display":"related-values","display_options":{"template":"{{title}} | {{job_poster}} {{import_source}}"},"readonly":false,"hidden":false,"sort":3,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null,"searchable":true}	{"collection":"applications","field":"vacancy","sort":3,"group":null}	\N	\N
+5536	5677	directus_collections	platform_profile	{"collection":"platform_profile","icon":null,"note":null,"display_template":null,"hidden":false,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":7,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"sort":7,"group":"profiles"}	\N	\N
 5328	5459	applications	6	{"id":6,"status":"draft","date_created":"2025-11-04T13:19:50.161Z","date_updated":"2025-11-05T10:30:43.248Z","vacancy":6,"profile":2,"cv_sent_through":null,"cv_file_sent":null,"application_sent_date":null,"discontinued_reason":null,"interview_questions":[29,28]}	{"date_updated":"2025-11-05T10:30:43.248Z"}	\N	\N
 5327	5458	application_interview_questions	29	{"id":29,"sort":null,"date_created":"2025-11-04T13:29:56.534Z","date_updated":"2025-11-05T10:30:43.250Z","application":6,"question":"Tell us about something you've done in the past that can be considered as evidence of exceptional ability","answer":"At Chipta, I've led teams of 3-5 developers, working on an innovating ticketing platform for over 7 years, scaling the platform from concept to processing thousands of orders per minute. Optimized platform performance by 30-60%, implemented comprehensive testing suites, and orchestrated CI/CD systems. Built React Native mobile apps that contributed to a 40% revenue increase, modernized frontend interfaces with React, increasing user engagement by 30%. And integrated critical payment systems processing tens of millions in transactions."}	{"answer":"At Chipta, I've led teams of 3-5 developers, working on an innovating ticketing platform for over 7 years, scaling the platform from concept to processing thousands of orders per minute. Optimized platform performance by 30-60%, implemented comprehensive testing suites, and orchestrated CI/CD systems. Built React Native mobile apps that contributed to a 40% revenue increase, modernized frontend interfaces with React, increasing user engagement by 30%. And integrated critical payment systems processing tens of millions in transactions.","date_updated":"2025-11-05T10:30:43.250Z"}	5328	\N
 5330	5461	applications	6	{"id":6,"status":"draft","date_created":"2025-11-04T13:19:50.161Z","date_updated":"2025-11-05T10:35:43.421Z","vacancy":6,"profile":2,"cv_sent_through":null,"cv_file_sent":null,"application_sent_date":null,"discontinued_reason":null,"interview_questions":[28,29]}	{"date_updated":"2025-11-05T10:35:43.421Z"}	\N	\N
@@ -8767,6 +8864,7 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 5455	5588	directus_fields	311	{"id":311,"collection":"applications","field":"profile","special":["m2o"],"interface":"select-dropdown-m2o","options":null,"display":"related-values","display_options":{"template":"{{name}}"},"readonly":false,"hidden":false,"sort":2,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null,"searchable":true}	{"collection":"applications","field":"profile","sort":2,"group":null}	\N	\N
 5456	5589	directus_fields	310	{"id":310,"collection":"applications","field":"vacancy","special":["m2o"],"interface":"select-dropdown-m2o","options":{"template":null},"display":"related-values","display_options":{"template":"{{title}} | {{job_poster}} {{import_source}}"},"readonly":false,"hidden":false,"sort":3,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null,"searchable":true}	{"collection":"applications","field":"vacancy","sort":3,"group":null}	\N	\N
 5468	5601	applications	7	{"id":7,"status":"applied","date_created":"2025-11-05T11:22:14.852Z","date_updated":"2025-11-05T12:06:31.810Z","vacancy":7,"profile":2,"cv_sent_through":"custom_form","cv_file_sent":null,"application_sent_date":"2025-11-05","discontinued_reason":"Application form didn't work","discontinued_note":"Needed to create a password in last step, but got 400 response with \\"an error occured. we are working on this\\"","application_note":"Application form went to cord.com and I signed up there and now I can find jobs over there, but I'm not sure if my application was actually sent to this company.","interview_questions":[30,31]}	{"application_note":"Application form went to cord.com and I signed up there and now I can find jobs over there, but I'm not sure if my application was actually sent to this company.","date_updated":"2025-11-05T12:06:31.810Z"}	\N	\N
+5535	5676	directus_collections	applications	{"collection":"applications","icon":null,"note":"Running or expired applications of the job seeker","display_template":null,"hidden":false,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":null,"accountability":"all","color":null,"item_duplication_fields":null,"sort":6,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"sort":6,"group":"profiles"}	\N	\N
 5457	5590	directus_fields	300	{"id":300,"collection":"applications","field":"status","special":null,"interface":"select-dropdown","options":{"choices":[{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"Applied","value":"applied","color":"var(--theme--primary)"},{"text":"Discontinued","value":"discontinued","color":"#241F31"},{"text":"Rejected","value":"rejected","color":"#ED333B"},{"text":"Screening Call","value":"screening_call","color":"#C061CB"},{"text":"Coding Challenge","value":"coding_challenge","color":"#F5C211"},{"text":"Take-Home Assignment","value":"take_home_assignment","color":"#E5A50A"},{"text":"Tech Interview","value":"tech_interview","color":"#2EC27E"}]},"display":"labels","display_options":{"choices":[{"text":"Draft","value":"draft","color":null,"background":"#865E3C","foreground":"#FFFFFF"},{"text":"Applied","value":"applied","color":null,"background":"#C061CB","foreground":"#FFFFFF"},{"text":"Discontinued","value":"discontinued","color":null,"background":"#241F31","foreground":"#FFFFFF"},{"text":"Rejected","value":"rejected","color":null,"background":"#ED333B","foreground":"#FFFFFF"},{"text":"Screening Call","value":"screening_call","color":null,"background":"#C061CB","foreground":"#FFFFFF"},{"text":"Coding Challenge","value":"coding_challenge","color":null,"background":"#F5C211","foreground":"#FFFFFF"},{"text":"Take-Home Assignment","value":"take_home_assignment","color":null,"background":"#E5A50A","foreground":"#FFFFFF"},{"text":"Tech Interview","value":"tech_interview","color":null,"background":"#2EC27E","foreground":"#FFFFFF"}]},"readonly":false,"hidden":false,"sort":4,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null,"searchable":true}	{"collection":"applications","field":"status","sort":4,"group":null}	\N	\N
 5458	5591	directus_fields	341	{"id":341,"collection":"applications","field":"discontinued_reason","special":null,"interface":"select-dropdown","options":{"choices":[{"text":"Missing required skill(s)","value":"missing_required_skills"},{"text":"Location / timezone mismatch","value":"location_timezone_mismatch"},{"text":"Broken application process","value":"broken_application_process"}]},"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":5,"width":"full","translations":null,"note":null,"conditions":[{"name":"Only visible if status is discontinued","rule":{"_and":[{"status":{"_neq":"discontinued"}}]},"hidden":true}],"required":false,"group":null,"validation":null,"validation_message":null,"searchable":true}	{"collection":"applications","field":"discontinued_reason","sort":5,"group":null}	\N	\N
 5459	5592	directus_fields	357	{"id":357,"collection":"applications","field":"discontinued_note","special":null,"interface":"input-multiline","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":6,"width":"full","translations":null,"note":null,"conditions":[{"name":"Only shown when status is \\"Discontinued\\"","rule":{"_and":[{"status":{"_neq":"discontinued"}}]},"hidden":true}],"required":false,"group":null,"validation":null,"validation_message":null,"searchable":true}	{"collection":"applications","field":"discontinued_note","sort":6,"group":null}	\N	\N
@@ -8791,6 +8889,7 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 5497	5630	outsourcing_platforms	3	{"status":"published","name":"Lumenalta","url":"https://lumenalta.com/","type":"agencies"}	{"status":"published","name":"Lumenalta","url":"https://lumenalta.com/","type":"agencies"}	\N	\N
 5499	5632	outsourcing_platforms	5	{"status":"published","name":"micro1","url":"https://www.micro1.ai/careers","type":"vetted_platforms"}	{"status":"published","name":"micro1","url":"https://www.micro1.ai/careers","type":"vetted_platforms"}	\N	\N
 5500	5633	outsourcing_platforms	6	{"status":"published","name":"Arc.dev","url":"https://arc.dev/","type":"open_marketplaces"}	{"status":"published","name":"Arc.dev","url":"https://arc.dev/","type":"open_marketplaces"}	\N	\N
+5524	5665	directus_fields	375	{"id":375,"collection":"platform_profile","field":"status","special":null,"interface":"select-dropdown","options":{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]},"display":"labels","display_options":{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]},"readonly":false,"hidden":false,"sort":7,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null,"searchable":true}	{"collection":"platform_profile","field":"status","sort":7,"group":null}	\N	\N
 5484	5617	directus_fields	367	{"sort":2,"width":"full","options":{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]},"interface":"select-dropdown","display":"labels","display_options":{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]},"field":"status","collection":"outsourcing_platforms"}	{"sort":2,"width":"full","options":{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]},"interface":"select-dropdown","display":"labels","display_options":{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]},"field":"status","collection":"outsourcing_platforms"}	\N	\N
 5485	5618	directus_fields	368	{"sort":3,"interface":"input","hidden":true,"field":"sort","collection":"outsourcing_platforms"}	{"sort":3,"interface":"input","hidden":true,"field":"sort","collection":"outsourcing_platforms"}	\N	\N
 5486	5619	directus_fields	369	{"sort":4,"special":["date-created"],"interface":"datetime","readonly":true,"hidden":true,"width":"half","display":"datetime","display_options":{"relative":true},"field":"date_created","collection":"outsourcing_platforms"}	{"sort":4,"special":["date-created"],"interface":"datetime","readonly":true,"hidden":true,"width":"half","display":"datetime","display_options":{"relative":true},"field":"date_created","collection":"outsourcing_platforms"}	\N	\N
@@ -8804,6 +8903,32 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 5494	5627	directus_fields	373	{"id":373,"collection":"outsourcing_platforms","field":"type","special":null,"interface":"select-radio","options":{"choices":[{"text":"Open Marketplaces","value":"open_marketplaces"},{"text":"Vetted Platforms","value":"vetted_platforms"},{"text":"Midlance Platforms","value":"midlance_platforms"},{"text":"Agencies","value":"agencies"},{"text":"Job Boards","value":"job_boards"}]},"display":"formatted-value","display_options":null,"readonly":false,"hidden":false,"sort":8,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null,"searchable":true}	{"collection":"outsourcing_platforms","field":"type","display":"formatted-value"}	\N	\N
 5495	5628	directus_fields	373	{"id":373,"collection":"outsourcing_platforms","field":"type","special":null,"interface":"select-radio","options":{"choices":[{"text":"Open Marketplaces","value":"open_marketplaces"},{"text":"Vetted Platforms","value":"vetted_platforms"},{"text":"Midlance Platforms","value":"midlance_platforms"},{"text":"Agencies","value":"agencies"},{"text":"Job Boards","value":"job_boards"}]},"display":"labels","display_options":{"choices":[{"text":"Open Marketplaces","value":"open_marketplaces"},{"text":"Vetted Platforms","value":"vetted_platforms"},{"text":"Midlance Platforms","value":"midlance_platforms"},{"text":"Agencies","value":"agencies"},{"text":"Job Boards","value":"job_boards"}]},"readonly":false,"hidden":false,"sort":8,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null,"searchable":true}	{"collection":"outsourcing_platforms","field":"type","display":"labels","display_options":{"choices":[{"text":"Open Marketplaces","value":"open_marketplaces"},{"text":"Vetted Platforms","value":"vetted_platforms"},{"text":"Midlance Platforms","value":"midlance_platforms"},{"text":"Agencies","value":"agencies"},{"text":"Job Boards","value":"job_boards"}]}}	\N	\N
 5496	5629	outsourcing_platforms	2	{"status":"published","name":"Toptal","url":"https://www.toptal.com/","type":"vetted_platforms"}	{"status":"published","name":"Toptal","url":"https://www.toptal.com/","type":"vetted_platforms"}	\N	\N
+5510	5651	directus_fields	375	{"sort":2,"width":"full","options":{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]},"interface":"select-dropdown","display":"labels","display_options":{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]},"field":"status","collection":"platform_profile"}	{"sort":2,"width":"full","options":{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]},"interface":"select-dropdown","display":"labels","display_options":{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]},"field":"status","collection":"platform_profile"}	\N	\N
+5511	5652	directus_fields	376	{"sort":3,"interface":"input","hidden":true,"field":"sort","collection":"platform_profile"}	{"sort":3,"interface":"input","hidden":true,"field":"sort","collection":"platform_profile"}	\N	\N
+5512	5653	directus_fields	377	{"sort":4,"special":["date-created"],"interface":"datetime","readonly":true,"hidden":true,"width":"half","display":"datetime","display_options":{"relative":true},"field":"date_created","collection":"platform_profile"}	{"sort":4,"special":["date-created"],"interface":"datetime","readonly":true,"hidden":true,"width":"half","display":"datetime","display_options":{"relative":true},"field":"date_created","collection":"platform_profile"}	\N	\N
+5513	5654	directus_fields	378	{"sort":5,"special":["date-updated"],"interface":"datetime","readonly":true,"hidden":true,"width":"half","display":"datetime","display_options":{"relative":true},"field":"date_updated","collection":"platform_profile"}	{"sort":5,"special":["date-updated"],"interface":"datetime","readonly":true,"hidden":true,"width":"half","display":"datetime","display_options":{"relative":true},"field":"date_updated","collection":"platform_profile"}	\N	\N
+5514	5655	directus_collections	platform_profile	{"sort_field":"sort","archive_field":"status","archive_value":"archived","unarchive_value":"draft","singleton":false,"collection":"platform_profile"}	{"sort_field":"sort","archive_field":"status","archive_value":"archived","unarchive_value":"draft","singleton":false,"collection":"platform_profile"}	\N	\N
+5515	5656	directus_fields	379	{"sort":6,"special":["m2o"],"interface":"select-dropdown-m2o","display":"related-values","collection":"platform_profile","field":"profile"}	{"sort":6,"special":["m2o"],"interface":"select-dropdown-m2o","display":"related-values","collection":"platform_profile","field":"profile"}	\N	\N
+5516	5657	directus_fields	380	{"sort":38,"special":["o2m"],"interface":"list-o2m","collection":"profiles","field":"platform_profiles"}	{"sort":38,"special":["o2m"],"interface":"list-o2m","collection":"profiles","field":"platform_profiles"}	\N	\N
+5517	5658	directus_fields	381	{"sort":7,"special":["m2o"],"collection":"platform_profile","field":"outsourcing_platform"}	{"sort":7,"special":["m2o"],"collection":"platform_profile","field":"outsourcing_platform"}	\N	\N
+5518	5659	directus_fields	374	{"id":374,"collection":"platform_profile","field":"id","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":true,"hidden":true,"sort":1,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null,"searchable":true}	{"collection":"platform_profile","field":"id","sort":1,"group":null}	\N	\N
+5519	5660	directus_fields	376	{"id":376,"collection":"platform_profile","field":"sort","special":null,"interface":"input","options":null,"display":null,"display_options":null,"readonly":false,"hidden":true,"sort":2,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null,"searchable":true}	{"collection":"platform_profile","field":"sort","sort":2,"group":null}	\N	\N
+5520	5661	directus_fields	377	{"id":377,"collection":"platform_profile","field":"date_created","special":["date-created"],"interface":"datetime","options":null,"display":"datetime","display_options":{"relative":true},"readonly":true,"hidden":true,"sort":3,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null,"searchable":true}	{"collection":"platform_profile","field":"date_created","sort":3,"group":null}	\N	\N
+5521	5662	directus_fields	378	{"id":378,"collection":"platform_profile","field":"date_updated","special":["date-updated"],"interface":"datetime","options":null,"display":"datetime","display_options":{"relative":true},"readonly":true,"hidden":true,"sort":4,"width":"half","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null,"searchable":true}	{"collection":"platform_profile","field":"date_updated","sort":4,"group":null}	\N	\N
+5522	5663	directus_fields	379	{"id":379,"collection":"platform_profile","field":"profile","special":["m2o"],"interface":"select-dropdown-m2o","options":null,"display":"related-values","display_options":null,"readonly":false,"hidden":false,"sort":5,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null,"searchable":true}	{"collection":"platform_profile","field":"profile","sort":5,"group":null}	\N	\N
+5523	5664	directus_fields	381	{"id":381,"collection":"platform_profile","field":"outsourcing_platform","special":["m2o"],"interface":null,"options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":6,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null,"searchable":true}	{"collection":"platform_profile","field":"outsourcing_platform","sort":6,"group":null}	\N	\N
+5534	5675	directus_collections	cheat_sheets	{"collection":"cheat_sheets","icon":null,"note":"Custom cheet sheets for during interviews","display_template":"{{title}}","hidden":false,"singleton":false,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":5,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"sort":5,"group":"profiles"}	\N	\N
+5525	5666	directus_fields	375	{"id":375,"collection":"platform_profile","field":"status","special":null,"interface":"select-dropdown","options":{"choices":[{"text":"Signup in progress","value":"signup_in_progress"},{"text":"Pending Verification","value":"pending_verification"},{"text":"Vetting scheduled","value":"vetting_scheduled"},{"text":"Awaiting vetting result","value":"awaiting_vetting_result"},{"text":"Profile In Progress","value":"profile_in_progress"},{"text":"Active","value":"active"}]},"display":"labels","display_options":{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]},"readonly":false,"hidden":false,"sort":7,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null,"searchable":true}	{"collection":"platform_profile","field":"status","options":{"choices":[{"text":"Signup in progress","value":"signup_in_progress"},{"text":"Pending Verification","value":"pending_verification"},{"text":"Vetting scheduled","value":"vetting_scheduled"},{"text":"Awaiting vetting result","value":"awaiting_vetting_result"},{"text":"Profile In Progress","value":"profile_in_progress"},{"text":"Active","value":"active"}]}}	\N	\N
+5526	5667	directus_collections	profiles	{"collection":"profiles","icon":null,"note":"A profile contains all information and preferences of a certain job-seeker","display_template":"{{name}}","hidden":false,"singleton":false,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":1,"group":null,"collapse":"open","preview_url":null,"versioning":false}	{"sort":1,"group":null}	\N	\N
+5528	5670	directus_collections	tech_skill_types	{"collection":"tech_skill_types","icon":null,"note":null,"display_template":"{{name}}","hidden":false,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":2,"group":null,"collapse":"open","preview_url":null,"versioning":false}	{"sort":2,"group":null}	\N	\N
+5530	5671	directus_collections	vacancies	{"collection":"vacancies","icon":null,"note":null,"display_template":"{{title}} | {{job_poster}}","hidden":false,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":null,"accountability":"all","color":null,"item_duplication_fields":null,"sort":3,"group":null,"collapse":"open","preview_url":null,"versioning":false}	{"sort":3,"group":null}	\N	\N
+5532	5673	directus_collections	outsourcing_platforms	{"collection":"outsourcing_platforms","icon":null,"note":null,"display_template":null,"hidden":false,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":4,"group":null,"collapse":"open","preview_url":null,"versioning":false}	{"sort":4,"group":null}	\N	\N
+5537	5678	directus_collections	collected_data	{"collection":"collected_data","icon":null,"note":"Generated data collecting all profile info for AI prompt usage","display_template":null,"hidden":false,"singleton":true,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":null,"accountability":"all","color":null,"item_duplication_fields":null,"sort":8,"group":"profiles","collapse":"open","preview_url":null,"versioning":false}	{"sort":8,"group":"profiles"}	\N	\N
+5538	5679	directus_fields	381	{"id":381,"collection":"platform_profile","field":"outsourcing_platform","special":["m2o"],"interface":"select-dropdown-m2o","options":null,"display":"related-values","display_options":null,"readonly":false,"hidden":false,"sort":6,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null,"searchable":true}	{"collection":"platform_profile","field":"outsourcing_platform","interface":"select-dropdown-m2o","display":"related-values"}	\N	\N
+5539	5680	directus_fields	375	{"id":375,"collection":"platform_profile","field":"status","special":null,"interface":"select-dropdown","options":{"choices":[{"text":"Signup in progress","value":"signup_in_progress"},{"text":"Pending Verification","value":"pending_verification"},{"text":"Vetting scheduled","value":"vetting_scheduled"},{"text":"Awaiting vetting result","value":"awaiting_vetting_result"},{"text":"Profile In Progress","value":"profile_in_progress"},{"text":"Active","value":"active"},{"text":"Dormant","value":"dormant"}]},"display":"labels","display_options":{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]},"readonly":false,"hidden":false,"sort":7,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null,"searchable":true}	{"collection":"platform_profile","field":"status","options":{"choices":[{"text":"Signup in progress","value":"signup_in_progress"},{"text":"Pending Verification","value":"pending_verification"},{"text":"Vetting scheduled","value":"vetting_scheduled"},{"text":"Awaiting vetting result","value":"awaiting_vetting_result"},{"text":"Profile In Progress","value":"profile_in_progress"},{"text":"Active","value":"active"},{"text":"Dormant","value":"dormant"}]}}	\N	\N
+5540	5681	directus_fields	375	{"id":375,"collection":"platform_profile","field":"status","special":null,"interface":"select-dropdown","options":{"choices":[{"text":"Signup in progress","value":"signup_in_progress"},{"text":"Pending Verification","value":"pending_verification"},{"text":"Vetting scheduled","value":"vetting_scheduled"},{"text":"Awaiting vetting result","value":"awaiting_vetting_result"},{"text":"Setup required","value":"setup_required"},{"text":"Profile In Progress","value":"profile_in_progress"},{"text":"Active","value":"active"},{"text":"Dormant","value":"dormant"}]},"display":"labels","display_options":{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]},"readonly":false,"hidden":false,"sort":7,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null,"searchable":true}	{"collection":"platform_profile","field":"status","options":{"choices":[{"text":"Signup in progress","value":"signup_in_progress"},{"text":"Pending Verification","value":"pending_verification"},{"text":"Vetting scheduled","value":"vetting_scheduled"},{"text":"Awaiting vetting result","value":"awaiting_vetting_result"},{"text":"Setup required","value":"setup_required"},{"text":"Profile In Progress","value":"profile_in_progress"},{"text":"Active","value":"active"},{"text":"Dormant","value":"dormant"}]}}	\N	\N
+5541	5682	directus_fields	375	{"id":375,"collection":"platform_profile","field":"status","special":null,"interface":"select-dropdown","options":{"choices":[{"text":"Signup in progress","value":"signup_in_progress"},{"text":"Pending Verification","value":"pending_verification"},{"text":"Vetting scheduled","value":"vetting_scheduled"},{"text":"Awaiting vetting result","value":"awaiting_vetting_result"},{"text":"Setup required","value":"setup_required"},{"text":"Profile In Progress","value":"profile_in_progress"},{"text":"Active","value":"active"},{"text":"Dormant","value":"dormant"}]},"display":"labels","display_options":{"showAsDot":true,"choices":[{"text":"Signup in progress","value":"signup_in_progress"},{"text":"Pending Verification","value":"pending_verification"},{"text":"Vetting scheduled","value":"vetting_scheduled"},{"text":"Awaiting vetting result","value":"awaiting_vetting_result"},{"text":"Setup required","value":"setup_required"},{"text":"Profile In Progress","value":"profile_in_progress"},{"text":"Active","value":"active"},{"text":"Dormant","value":"dormant"}]},"readonly":false,"hidden":false,"sort":7,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null,"searchable":true}	{"collection":"platform_profile","field":"status","display_options":{"showAsDot":true,"choices":[{"text":"Signup in progress","value":"signup_in_progress"},{"text":"Pending Verification","value":"pending_verification"},{"text":"Vetting scheduled","value":"vetting_scheduled"},{"text":"Awaiting vetting result","value":"awaiting_vetting_result"},{"text":"Setup required","value":"setup_required"},{"text":"Profile In Progress","value":"profile_in_progress"},{"text":"Active","value":"active"},{"text":"Dormant","value":"dormant"}]}}	\N	\N
+5542	5683	platform_profile	1	{"profile":2,"outsourcing_platform":12,"status":"profile_in_progress"}	{"profile":2,"outsourcing_platform":12,"status":"profile_in_progress"}	\N	\N
 \.
 
 
@@ -8826,8 +8951,8 @@ y6whbp82EsIATqPecnJ-qf_QWamYXHaWuuipzt91yhhjZ6qrOZsri0YlXBrv9vDL	157238bb-6930-4
 xvu8kNst20zp0P1S70SHTij9ct7Mv3P3cg9wFDygm0Nv6yzi0-q32VPeMPRHQUSq	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-09 20:07:49.931+00	172.18.0.2	node	\N	\N	\N
 VRoO6ns6OjSnroBRxszQc4D4_ZN-hNTopfjA8rQEcw8EL0_BICekHQF8kYxHdmP8	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-09 20:10:44.651+00	172.18.0.5	node	\N	\N	\N
 sZe7yh0vBp7Q0rjtS8gUPwFc6JQhHXtiIhMZaV1Nfae3T7hxMuLnEfVvXebVte1q	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-09 20:26:00.882+00	172.18.0.5	node	\N	\N	\N
-yN2cGjwhX-2XEFVWCCyVb8t4f6u4vfS96qfhJW9tf3RuFw5NJoPS6KGPM1p4xHhM	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:24:15.688+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	vc5uLooohxdTtgym4SYU6VhODmlYtTCfjS3H-GTIYBSHrO9AtVb-wAzAvpNREbzr
-vc5uLooohxdTtgym4SYU6VhODmlYtTCfjS3H-GTIYBSHrO9AtVb-wAzAvpNREbzr	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 14:24:05.688+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
+vaSAp0zM96LgT6-bhXAOSR-IyGSdEXk8u55KBdAthmZH-vFdpktWJnODdnTMdDdZ	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-05 14:49:15.825+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	9-AIf16SjHC7NM_tB0JmlGTZO8dlFIvKmQP3LqPzbKTMaQYkRVp1XItDIS7p2ghw
+9-AIf16SjHC7NM_tB0JmlGTZO8dlFIvKmQP3LqPzbKTMaQYkRVp1XItDIS7p2ghw	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 14:49:05.825+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
 \.
 
 
@@ -8864,7 +8989,7 @@ c530a32f-84cb-4ab9-8a61-7a12a5bcb7e6	en-US	draft	Draft
 --
 
 COPY public.directus_users (id, first_name, last_name, email, password, location, title, description, tags, avatar, language, tfa_secret, status, role, token, last_access, last_page, provider, external_identifier, auth_data, email_notifications, appearance, theme_dark, theme_light, theme_light_overrides, theme_dark_overrides, text_direction) FROM stdin;
-157238bb-6930-4f26-be9c-8b31a9e11ab8	Rik	Wanders	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-11-05 14:24:05.691+00	/content/outsourcing_platforms	default	\N	\N	t	\N	\N	\N	\N	\N	auto
+157238bb-6930-4f26-be9c-8b31a9e11ab8	Rik	Wanders	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-11-05 14:49:05.827+00	/content/platform_profile	default	\N	\N	t	\N	\N	\N	\N	\N	auto
 \.
 
 
@@ -8938,6 +9063,15 @@ COPY public.outsourcing_platforms (id, status, sort, date_created, date_updated,
 6	published	8	2025-11-05 14:02:44.443+00	\N	Arc.dev	https://arc.dev/	open_marketplaces
 7	published	9	2025-11-05 14:03:17.286+00	\N	Gun.io	https://gun.io/	open_marketplaces
 8	published	10	2025-11-05 14:04:00.605+00	2025-11-05 14:04:07.967+00	Andela	https://www.andela.com/	vetted_platforms
+\.
+
+
+--
+-- Data for Name: platform_profile; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.platform_profile (id, status, sort, date_created, date_updated, profile, outsourcing_platform) FROM stdin;
+1	profile_in_progress	\N	2025-11-05 14:49:03.765+00	\N	2	12
 \.
 
 
@@ -9369,14 +9503,14 @@ SELECT pg_catalog.setval('public.dev_methodologies_id_seq', 38, true);
 -- Name: directus_activity_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_activity_id_seq', 5649, true);
+SELECT pg_catalog.setval('public.directus_activity_id_seq', 5683, true);
 
 
 --
 -- Name: directus_fields_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_fields_id_seq', 373, true);
+SELECT pg_catalog.setval('public.directus_fields_id_seq', 381, true);
 
 
 --
@@ -9404,14 +9538,14 @@ SELECT pg_catalog.setval('public.directus_presets_id_seq', 30, true);
 -- Name: directus_relations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_relations_id_seq', 39, true);
+SELECT pg_catalog.setval('public.directus_relations_id_seq', 41, true);
 
 
 --
 -- Name: directus_revisions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_revisions_id_seq', 5508, true);
+SELECT pg_catalog.setval('public.directus_revisions_id_seq', 5542, true);
 
 
 --
@@ -9454,6 +9588,13 @@ SELECT pg_catalog.setval('public.languages_id_seq', 108, true);
 --
 
 SELECT pg_catalog.setval('public.outsourcing_platforms_id_seq', 12, true);
+
+
+--
+-- Name: platform_profile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.platform_profile_id_seq', 1, true);
 
 
 --
@@ -9911,6 +10052,14 @@ ALTER TABLE ONLY public.languages
 
 ALTER TABLE ONLY public.outsourcing_platforms
     ADD CONSTRAINT outsourcing_platforms_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: platform_profile platform_profile_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.platform_profile
+    ADD CONSTRAINT platform_profile_pkey PRIMARY KEY (id);
 
 
 --
@@ -10549,6 +10698,22 @@ ALTER TABLE ONLY public.languages
 
 
 --
+-- Name: platform_profile platform_profile_outsourcing_platform_foreign; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.platform_profile
+    ADD CONSTRAINT platform_profile_outsourcing_platform_foreign FOREIGN KEY (outsourcing_platform) REFERENCES public.outsourcing_platforms(id);
+
+
+--
+-- Name: platform_profile platform_profile_profile_foreign; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.platform_profile
+    ADD CONSTRAINT platform_profile_profile_foreign FOREIGN KEY (profile) REFERENCES public.profiles(id) ON DELETE CASCADE;
+
+
+--
 -- Name: profile_versions profile_versions_extends_from_foreign; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -10704,5 +10869,5 @@ ALTER TABLE ONLY public.work_experiences
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 1Ipf2kH6vrWOSVgVp7PTfRkbEXFZi5mD27omIQKiFUlEljWXLkQzcUK2TPQDF9d
+\unrestrict gGorxRd1IESidkJQFDgMFdcCb0gwxxIfa2rOXwbciOtdHcq3bVBAXKjwGWQ7i9K
 
