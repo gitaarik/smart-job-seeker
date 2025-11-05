@@ -36,7 +36,8 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(npm run docker:export-profile-schema:*)",
       "WebFetch(domain:docs.directus.io)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(docker compose:*)"
     ],
     "deny": [],
     "ask": []
