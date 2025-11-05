@@ -50,7 +50,8 @@
       "Bash(find:*)",
       "Bash(git log:*)",
       "Bash(jq:*)",
-      "Bash(npm run docker:recover-tech-skills:*)"
+      "Bash(npm run docker:recover-tech-skills:*)",
+      "Bash(/tmp/old_dump.sql)"
     ],
     "deny": [],
     "ask": []
