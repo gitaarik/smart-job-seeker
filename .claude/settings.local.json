@@ -33,7 +33,8 @@
       "WebFetch(domain:directus.io)",
       "WebFetch(domain:dotenvx.com)",
       "WebFetch(domain:jsonresume.org)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(npm run docker:export-profile-schema:*)"
     ],
     "deny": [],
     "ask": []

@@ -11,6 +11,7 @@
     "docker:export-profiles-pdf": "docker-compose exec app npx tsx scripts/export-profiles-pdf.ts",
     "docker:update-schema": "docker-compose exec app npx prisma db pull && docker-compose exec app npx prisma generate",
     "docker:export-profile-json": "bash scripts/export-profile-docker.sh",
+    "docker:export-profile-schema": "docker-compose exec app npx tsx scripts/export-profile-schema.ts",
     "docker:import-profile-json": "docker-compose exec app npx tsx scripts/import-profile.ts",
     "docker:clear-directus-cache": "docker compose exec app npm run clear-directus-cache",
     "docker:db:cli": "docker-compose exec database psql -U postgres -d smartjobseeker",
