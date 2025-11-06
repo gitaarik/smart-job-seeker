@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict I73cuP6tUEAcczLqSzS5Eua14V7eZrfTzRIlwdwMUGMVbmaVKjg0oyWOUHfagcN
+\restrict cLCkn2ZLsqS9TeIoHypddNTTwGoIlpPFYqO2h8yrXh9QDsxnyx861A1r9FuLNHz
 
 -- Dumped from database version 15.14 (Debian 15.14-1.pgdg13+1)
 -- Dumped by pg_dump version 15.14 (Debian 15.14-1.pgdg13+1)
@@ -52,6 +52,53 @@ CREATE TABLE public._prisma_migrations (
 
 
 ALTER TABLE public._prisma_migrations OWNER TO postgres;
+
+--
+-- Name: ai_chat; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.ai_chat (
+    id integer NOT NULL,
+    date_created timestamp with time zone,
+    date_updated timestamp with time zone,
+    profile integer NOT NULL,
+    system_prompt text DEFAULT 'Youre a helpful assistant for a SWE job seeker & applicant. Youll help answer questions about job descriptions, application questions, cover letters etc. Youll be given information about the applicant. First youll be given the schema in JSON and then the actual data in JSON. You can use the schema as a reference for information about the purpose of the fields.
+
+## The schema:
+
+{schema}
+
+## The data:
+
+{data}'::text NOT NULL,
+    user_prompt text NOT NULL,
+    full_prompt text
+);
+
+
+ALTER TABLE public.ai_chat OWNER TO postgres;
+
+--
+-- Name: ai_chat_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.ai_chat_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.ai_chat_id_seq OWNER TO postgres;
+
+--
+-- Name: ai_chat_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.ai_chat_id_seq OWNED BY public.ai_chat.id;
+
 
 --
 -- Name: application_interview_questions; Type: TABLE; Schema: public; Owner: postgres
@@ -1983,6 +2030,13 @@ ALTER SEQUENCE public.work_experiences_id_seq OWNED BY public.work_experiences.i
 
 
 --
+-- Name: ai_chat id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.ai_chat ALTER COLUMN id SET DEFAULT nextval('public.ai_chat_id_seq'::regclass);
+
+
+--
 -- Name: application_interview_questions id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -2179,6 +2233,15 @@ e6a5bb11-c7bd-4db1-80b4-cde2fc9908f5	2ee414cc36f47eeae71c15127ecddc71fb9a7f9f0db
 ebd497ee-b2a5-4bfd-9f44-c9c8800dff71	29dde4bdd2428977bbdfefe5e8816e7adbfb1e72d0a887fed341cb00957cb0cd	\N	20251102210338_init	A migration failed to apply. New migrations cannot be applied before the error is recovered from. Read more about how to resolve migration issues in a production database: https://pris.ly/d/migrate-resolve\n\nMigration name: 20251102210338_init\n\nDatabase error code: 42710\n\nDatabase error:\nERROR: type "Role" already exists\n\nDbError { severity: "ERROR", parsed_severity: Some(Error), code: SqlState(E42710), message: "type \\"Role\\" already exists", detail: None, hint: None, position: None, where_: None, schema: None, table: None, column: None, datatype: None, constraint: None, file: Some("typecmds.c"), line: Some(1167), routine: Some("DefineEnum") }\n\n   0: sql_schema_connector::apply_migration::apply_script\n           with migration_name="20251102210338_init"\n             at schema-engine/connectors/sql-schema-connector/src/apply_migration.rs:113\n   1: schema_commands::commands::apply_migrations::Applying migration\n           with migration_name="20251102210338_init"\n             at schema-engine/commands/src/commands/apply_migrations.rs:95\n   2: schema_core::state::ApplyMigrations\n             at schema-engine/core/src/state.rs:236	2025-11-06 16:09:16.184332+00	2025-11-06 16:09:09.215463+00	0
 3e6b539c-ece3-4642-93a0-718e7e3f9fee	29dde4bdd2428977bbdfefe5e8816e7adbfb1e72d0a887fed341cb00957cb0cd	\N	20251102210338_init	A migration failed to apply. New migrations cannot be applied before the error is recovered from. Read more about how to resolve migration issues in a production database: https://pris.ly/d/migrate-resolve\n\nMigration name: 20251102210338_init\n\nDatabase error code: 42710\n\nDatabase error:\nERROR: type "Role" already exists\n\nDbError { severity: "ERROR", parsed_severity: Some(Error), code: SqlState(E42710), message: "type \\"Role\\" already exists", detail: None, hint: None, position: None, where_: None, schema: None, table: None, column: None, datatype: None, constraint: None, file: Some("typecmds.c"), line: Some(1167), routine: Some("DefineEnum") }\n\n   0: sql_schema_connector::apply_migration::apply_script\n           with migration_name="20251102210338_init"\n             at schema-engine/connectors/sql-schema-connector/src/apply_migration.rs:113\n   1: schema_commands::commands::apply_migrations::Applying migration\n           with migration_name="20251102210338_init"\n             at schema-engine/commands/src/commands/apply_migrations.rs:95\n   2: schema_core::state::ApplyMigrations\n             at schema-engine/core/src/state.rs:236	2025-11-06 16:09:25.194518+00	2025-11-06 16:09:19.593493+00	0
 bda14c97-d6a0-4e35-9b55-33b66c936fca	29dde4bdd2428977bbdfefe5e8816e7adbfb1e72d0a887fed341cb00957cb0cd	\N	20251102210338_init	A migration failed to apply. New migrations cannot be applied before the error is recovered from. Read more about how to resolve migration issues in a production database: https://pris.ly/d/migrate-resolve\n\nMigration name: 20251102210338_init\n\nDatabase error code: 42710\n\nDatabase error:\nERROR: type "Role" already exists\n\nDbError { severity: "ERROR", parsed_severity: Some(Error), code: SqlState(E42710), message: "type \\"Role\\" already exists", detail: None, hint: None, position: None, where_: None, schema: None, table: None, column: None, datatype: None, constraint: None, file: Some("typecmds.c"), line: Some(1167), routine: Some("DefineEnum") }\n\n   0: sql_schema_connector::apply_migration::apply_script\n           with migration_name="20251102210338_init"\n             at schema-engine/connectors/sql-schema-connector/src/apply_migration.rs:113\n   1: schema_commands::commands::apply_migrations::Applying migration\n           with migration_name="20251102210338_init"\n             at schema-engine/commands/src/commands/apply_migrations.rs:95\n   2: schema_core::state::ApplyMigrations\n             at schema-engine/core/src/state.rs:236	\N	2025-11-06 16:09:26.289339+00	0
+\.
+
+
+--
+-- Data for Name: ai_chat; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.ai_chat (id, date_created, date_updated, profile, system_prompt, user_prompt, full_prompt) FROM stdin;
+1	2025-11-06 20:42:51.96+00	2025-11-06 20:43:44.093+00	1	Youre a helpful assistant for a SWE job seeker & applicant. Youll help answer questions about job descriptions, application questions, cover letters etc. Youll be given information about the applicant. First youll be given the schema in JSON and then the actual data in JSON. You can use the schema as a reference for information about the purpose of the fields.\n\n## The schema:\n\n{schema}\n\n## The data:\n\n{data}	Help me answer the following interview question:\n\nTell us about a time when you "hacked the system" to your advantage	\N
 \.
 
 
@@ -7750,6 +7813,29 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 5890	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 20:17:53.067+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	352	http://localhost:8055
 5891	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 20:17:53.073+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	353	http://localhost:8055
 5892	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 20:18:01.881+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	354	http://localhost:8055
+5893	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 20:25:50.715+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	382	http://localhost:8055
+5894	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 20:25:50.718+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	383	http://localhost:8055
+5895	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 20:25:50.723+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	384	http://localhost:8055
+5896	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 20:25:50.726+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	ai_chat	http://localhost:8055
+5897	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 20:26:26.213+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	385	http://localhost:8055
+5898	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 20:26:26.315+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	386	http://localhost:8055
+5899	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 20:29:42.646+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	387	http://localhost:8055
+5900	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 20:29:55.184+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	388	http://localhost:8055
+5901	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 20:30:11.392+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	applications	http://localhost:8055
+5902	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 20:30:11.393+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	profiles	http://localhost:8055
+5903	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 20:30:11.401+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	tech_skill_types	http://localhost:8055
+5904	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 20:30:11.401+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	platform_profiles	http://localhost:8055
+5905	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 20:30:11.412+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	application_questions	http://localhost:8055
+5906	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 20:30:11.413+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	vacancies	http://localhost:8055
+5907	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 20:30:11.421+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	outsourcing_platforms	http://localhost:8055
+5908	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 20:30:11.421+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	salary_expectations	http://localhost:8055
+5909	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 20:30:11.428+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	ai_chat	http://localhost:8055
+5910	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 20:42:36.039+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	385	http://localhost:8055
+5911	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 20:42:51.962+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	ai_chat	1	http://localhost:8055
+5912	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 20:43:38.018+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	ai_chat	1	http://localhost:8055
+5913	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 20:43:44.094+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	ai_chat	1	http://localhost:8055
+5914	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 20:45:48.27+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	389	http://localhost:8055
+5915	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 20:46:39.704+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_flows	01ab0716-2b4b-455d-b5a6-2f1705b62475	http://localhost:8055
 \.
 
 
@@ -7761,20 +7847,12 @@ COPY public.directus_collections (collection, icon, note, display_template, hidd
 vacancy_resources	\N	\N	{{name}}	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	1	vacancies	open	\N	f
 tech_skills	\N	A technical skill, with level and years of experience	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	1	tech_skill_categories	open	\N	f
 work_experience_achievements	\N	Notable achievements at this employer. Will appear on resume / CV.	{{title}} | {{description}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	1	work_experiences	open	\N	f
-tech_skill_types	\N	\N	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	2	\N	open	\N	f
-vacancies	\N	\N	{{title}} | {{job_poster}}	f	f	\N	status	t	archived	draft	\N	all	\N	\N	3	\N	open	\N	f
 work_experience_technologies	\N	The technologies used at this employer. Only appears on your CV.	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	2	work_experiences	open	\N	f
-outsourcing_platforms	\N	\N	{{name}} {{type}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	4	\N	open	\N	f
 application_interview_questions	\N	Interview questions that were asked in this application	{{text}}	f	f	\N	\N	t	archived	draft	sort	all	\N	\N	1	applications	open	\N	f
 side_project_technologies	\N	Notable technologies used in this side-project	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	2	side_projects	open	\N	f
 side_project_achievements	\N	Notable achievements accomplished within this side-project	{{title}} | {{description}}	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	1	side_projects	open	\N	f
-applications	\N	Running or expired applications of the job seeker	\N	f	f	\N	status	t	archived	draft	\N	all	\N	\N	1	applying	open	\N	f
-platform_profiles	\N	\N	\N	f	f	\N	status	t	archived	draft	sort	all	\N	\N	2	applying	open	\N	f
-application_questions	\N	Common application questions to save for reuse	\N	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	3	applying	open	\N	f
-salary_expectations	\N	Salary expectations for various work arrangements and situations	\N	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	4	applying	open	\N	f
 project_stories	\N	Cheatsheets for notable project stories you can bring up in interviews	{{title}}	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	1	interviewing	open	\N	f
 cheat_sheets	\N	Custom cheet sheets for during interviews	{{title}}	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	2	interviewing	open	\N	f
-profiles	\N	A profile contains all information and preferences of a certain job-seeker	{{name}}	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	1	\N	open	\N	f
 profile_versions	\N	Version name for filtering on other collections' "tags" fields for custom resume/CVs generation	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	1	resume_cv	open	\N	f
 resume_cv	folder	Resume / CV	\N	f	f	\N	\N	t	\N	\N	\N	all	\N	\N	1	profiles	open	\N	f
 applying	folder	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	\N	\N	2	profiles	open	\N	f
@@ -7789,6 +7867,15 @@ references	\N	References from previous employees	{{author}} - {{author_position}
 collected_data	\N	Generated data collecting all profile info for AI prompt usage	\N	f	t	\N	\N	t	\N	\N	\N	all	\N	\N	9	resume_cv	open	\N	f
 soft_skills	\N	\N	{{name}}	t	f	\N	status	t	archived	draft	sort	all	\N	\N	10	resume_cv	open	\N	f
 dev_methodologies	\N	\N	{{name}}	t	f	\N	status	t	archived	draft	sort	all	\N	\N	11	resume_cv	open	\N	f
+applications	\N	Running or expired applications of the job seeker	\N	f	f	\N	status	t	archived	draft	\N	all	\N	\N	1	applying	open	\N	f
+profiles	\N	A profile contains all information and preferences of a certain job-seeker	{{name}}	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	1	\N	open	\N	f
+tech_skill_types	\N	\N	{{name}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	2	\N	open	\N	f
+platform_profiles	\N	\N	\N	f	f	\N	status	t	archived	draft	sort	all	\N	\N	2	applying	open	\N	f
+application_questions	\N	Common application questions to save for reuse	\N	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	3	applying	open	\N	f
+vacancies	\N	\N	{{title}} | {{job_poster}}	f	f	\N	status	t	archived	draft	\N	all	\N	\N	3	\N	open	\N	f
+outsourcing_platforms	\N	\N	{{name}} {{type}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	4	\N	open	\N	f
+salary_expectations	\N	Salary expectations for various work arrangements and situations	\N	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	4	applying	open	\N	f
+ai_chat	\N	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	\N	\N	5	applying	open	\N	f
 \.
 
 
@@ -8126,6 +8213,14 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 56	highlights	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	3	half	\N	Publication status of this highlight	\N	f	\N	\N	\N	t
 72	tech_skill_categories	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	6	half	\N	Publication status of this skill category	\N	f	\N	\N	\N	t
 309	vacancies	job_description	\N	input-rich-text-md	\N	\N	\N	f	f	9	full	\N	\N	\N	t	\N	\N	\N	t
+382	ai_chat	id	\N	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N	t
+383	ai_chat	date_created	date-created	datetime	\N	datetime	{"relative":true}	t	t	2	half	\N	\N	\N	f	\N	\N	\N	t
+384	ai_chat	date_updated	date-updated	datetime	\N	datetime	{"relative":true}	t	t	3	half	\N	\N	\N	f	\N	\N	\N	t
+386	profiles	ai_chats	o2m	list-o2m	\N	\N	\N	f	f	39	full	\N	\N	\N	f	\N	\N	\N	t
+387	ai_chat	system_prompt	\N	input-rich-text-md	\N	\N	\N	f	f	5	full	\N	\N	\N	t	\N	\N	\N	t
+388	ai_chat	user_prompt	\N	input-rich-text-md	\N	\N	\N	f	f	6	full	\N	\N	\N	t	\N	\N	\N	t
+385	ai_chat	profile	m2o	select-dropdown-m2o	\N	related-values	\N	f	f	4	full	\N	\N	\N	t	\N	\N	\N	t
+389	ai_chat	full_prompt	\N	input-rich-text-md	\N	\N	\N	t	f	7	full	\N	\N	\N	f	\N	\N	\N	t
 \.
 
 
@@ -8157,7 +8252,6 @@ ffd0d1eb-8ba5-40c5-a031-5808d64567f3	local	ffd0d1eb-8ba5-40c5-a031-5808d64567f3.
 --
 
 COPY public.directus_flows (id, name, icon, color, description, status, trigger, accountability, options, operation, date_created, user_created) FROM stdin;
-01ab0716-2b4b-455d-b5a6-2f1705b62475	Wojo	bolt	\N	\N	active	manual	all	{"collections":["profiles"],"requireConfirmation":true}	c859cdd0-a56c-45c2-9cb4-923c60d9a8fd	2025-10-30 16:31:33.219+00	157238bb-6930-4f26-be9c-8b31a9e11ab8
 \.
 
 
@@ -8284,8 +8378,6 @@ COPY public.directus_notifications (id, "timestamp", status, recipient, sender, 
 --
 
 COPY public.directus_operations (id, name, key, type, position_x, position_y, options, resolve, reject, flow, date_created, user_created) FROM stdin;
-b7b53321-b126-4c72-a1b1-f98938fb6cf8	Log to Console	log_87jz9	log	6	19	{"message":"whajo"}	\N	\N	01ab0716-2b4b-455d-b5a6-2f1705b62475	2025-10-30 16:35:41.273+00	157238bb-6930-4f26-be9c-8b31a9e11ab8
-c859cdd0-a56c-45c2-9cb4-923c60d9a8fd	Read Data	item_read_8yfhp	log	18	2	{"message":"wajo"}	b7b53321-b126-4c72-a1b1-f98938fb6cf8	\N	01ab0716-2b4b-455d-b5a6-2f1705b62475	2025-10-30 16:35:41.281+00	157238bb-6930-4f26-be9c-8b31a9e11ab8
 \.
 
 
@@ -8389,6 +8481,7 @@ COPY public.directus_relations (id, many_collection, many_field, one_collection,
 39	collected_data	profile	profiles	collected_data	\N	\N	\N	\N	nullify
 40	platform_profiles	profile	profiles	platform_profiles	\N	\N	\N	\N	nullify
 41	platform_profiles	outsourcing_platform	outsourcing_platforms	\N	\N	\N	\N	\N	nullify
+42	ai_chat	profile	profiles	ai_chats	\N	\N	\N	\N	nullify
 \.
 
 
@@ -9345,6 +9438,8 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 5687	5870	applications	3	{"id":3,"status":"discontinued","date_created":"2025-11-03T14:06:02.338Z","date_updated":"2025-11-06T17:14:37.711Z","vacancy":3,"profile":1,"cv_sent_through":"custom_form","cv_file_sent":"05fde889-f95b-4041-8d92-6e43df495fd9","application_sent_date":"2025-11-01","discontinued_reason":"broken_application_process","discontinued_note":"Questions were impossible for this job level. AI job system not properly working.","application_note":null,"interview_questions":[1,4,7,3,2,5,6,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27]}	{"discontinued_reason":"broken_application_process","discontinued_note":"Questions were impossible for this job level. AI job system not properly working.","date_updated":"2025-11-06T17:14:37.711Z"}	\N	\N
 5688	5871	applications	5	{"id":5,"status":"discontinued","date_created":"2025-11-03T16:33:34.298Z","date_updated":"2025-11-06T17:16:25.269Z","vacancy":5,"profile":1,"cv_sent_through":null,"cv_file_sent":null,"application_sent_date":null,"discontinued_reason":"missing_required_skills","discontinued_note":"No experience with YANG modeling","application_note":null,"interview_questions":[]}	{"discontinued_reason":"missing_required_skills","discontinued_note":"No experience with YANG modeling","date_updated":"2025-11-06T17:16:25.269Z"}	\N	\N
 5689	5872	applications	4	{"id":4,"status":"discontinued","date_created":"2025-11-03T16:12:07.464Z","date_updated":"2025-11-06T17:16:47.138Z","vacancy":4,"profile":1,"cv_sent_through":null,"cv_file_sent":null,"application_sent_date":null,"discontinued_reason":"location_timezone_mismatch","discontinued_note":"Company is in Philippines","application_note":null,"interview_questions":[]}	{"discontinued_reason":"location_timezone_mismatch","discontinued_note":"Company is in Philippines","date_updated":"2025-11-06T17:16:47.138Z"}	\N	\N
+5714	5901	directus_collections	applications	{"collection":"applications","icon":null,"note":"Running or expired applications of the job seeker","display_template":null,"hidden":false,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":null,"accountability":"all","color":null,"item_duplication_fields":null,"sort":1,"group":"applying","collapse":"open","preview_url":null,"versioning":false}	{"sort":1,"group":"applying"}	\N	\N
+5715	5904	directus_collections	platform_profiles	{"collection":"platform_profiles","icon":null,"note":null,"display_template":null,"hidden":false,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":2,"group":"applying","collapse":"open","preview_url":null,"versioning":false}	{"sort":2,"group":"applying"}	\N	\N
 5691	5874	applications	9	{"vacancy":{"status":"published","import_source":"linkedin","source_url":"https://www.linkedin.com/jobs/view/4333314821/","title":"(Senior) Python Developer - Freelance - Scheduling Platform project","job_poster":"netguru","job_description":"Senior Python Engineer with AI Knowledge\\n\\nLocation: Remote/ based in European Union (Poland is client's preference)\\n\\nContract: B2B\\n\\nStart date: ASAP, project at least till January 2026\\n\\nRate: up to 145 PLN/h (+ VAT)\\n\\nProject Information (Backend Focus)\\n\\n     Technology Stack: Python backend with PostgreSQL (or other relational databases). The environment includes testing with Pytest and deployment within Google Cloud Platform (GCP). \\n     Integration: Planned integration with an external system for exchanging sales document data (receipts, invoices) in compliance with Spanish legal requirements (Verifactu). Partner for integration currently being selected. \\n     Project Phase: Discovery phase. The team will join a new project, not an existing one. \\n     Project Goal: Build a compliant data exchange solution with an external provider according to financial department and legal regulations. \\n     Non-Functional Requirements: Compliance with financial regulations and internal security and performance standards\\n\\nRequirements\\n\\nTasks & Responsibilities\\n\\n    Develop and maintain backend services in Python. \\n     Implement integrations with external data exchange providers (e.g., Verifactu). \\n     Design and maintain database schemas and queries (PostgreSQL). \\n     Ensure system compliance with financial and legal requirements. \\n     Write automated tests using Pytest. \\n     Deploy, monitor, and optimize backend services in GCP. \\n     Collaborate with frontend and cross-functional teams to ensure system integrity and reliability\\n\\nRequirements\\n\\n    Strong experience in Python development. \\n     Proficiency with PostgreSQL or similar relational databases. \\n     Experience with Pytest for backend testing. \\n     Knowledge of cloud solutions, preferably GCP. \\n     Understanding of integration with external systems (APIs, data exchange protocols). \\n     Ability to design and develop solutions compliant with financial and legal standards. \\n     Senior-level engineers preferred, with proven ability to collaborate within and across teams\\n\\nBenefits\\n\\n    100% remote, flexible work;\\n    work with an experienced team of developers and continuous development of your hard and soft skills;\\n    long-term collaboration on challenging products \\n\\nWhat will happen next?\\n\\n    We will invite you for a meeting with our recruiter\\n    Next, you'll participate in the client interview"},"status":"applied","profile":1,"application_sent_date":"2025-11-06","cv_sent_through":"linkedin_easy_apply"}	{"vacancy":{"status":"published","import_source":"linkedin","source_url":"https://www.linkedin.com/jobs/view/4333314821/","title":"(Senior) Python Developer - Freelance - Scheduling Platform project","job_poster":"netguru","job_description":"Senior Python Engineer with AI Knowledge\\n\\nLocation: Remote/ based in European Union (Poland is client's preference)\\n\\nContract: B2B\\n\\nStart date: ASAP, project at least till January 2026\\n\\nRate: up to 145 PLN/h (+ VAT)\\n\\nProject Information (Backend Focus)\\n\\n     Technology Stack: Python backend with PostgreSQL (or other relational databases). The environment includes testing with Pytest and deployment within Google Cloud Platform (GCP). \\n     Integration: Planned integration with an external system for exchanging sales document data (receipts, invoices) in compliance with Spanish legal requirements (Verifactu). Partner for integration currently being selected. \\n     Project Phase: Discovery phase. The team will join a new project, not an existing one. \\n     Project Goal: Build a compliant data exchange solution with an external provider according to financial department and legal regulations. \\n     Non-Functional Requirements: Compliance with financial regulations and internal security and performance standards\\n\\nRequirements\\n\\nTasks & Responsibilities\\n\\n    Develop and maintain backend services in Python. \\n     Implement integrations with external data exchange providers (e.g., Verifactu). \\n     Design and maintain database schemas and queries (PostgreSQL). \\n     Ensure system compliance with financial and legal requirements. \\n     Write automated tests using Pytest. \\n     Deploy, monitor, and optimize backend services in GCP. \\n     Collaborate with frontend and cross-functional teams to ensure system integrity and reliability\\n\\nRequirements\\n\\n    Strong experience in Python development. \\n     Proficiency with PostgreSQL or similar relational databases. \\n     Experience with Pytest for backend testing. \\n     Knowledge of cloud solutions, preferably GCP. \\n     Understanding of integration with external systems (APIs, data exchange protocols). \\n     Ability to design and develop solutions compliant with financial and legal standards. \\n     Senior-level engineers preferred, with proven ability to collaborate within and across teams\\n\\nBenefits\\n\\n    100% remote, flexible work;\\n    work with an experienced team of developers and continuous development of your hard and soft skills;\\n    long-term collaboration on challenging products \\n\\nWhat will happen next?\\n\\n    We will invite you for a meeting with our recruiter\\n    Next, you'll participate in the client interview"},"status":"applied","profile":1,"application_sent_date":"2025-11-06","cv_sent_through":"linkedin_easy_apply"}	\N	\N
 5690	5873	vacancies	9	{"status":"published","import_source":"linkedin","source_url":"https://www.linkedin.com/jobs/view/4333314821/","title":"(Senior) Python Developer - Freelance - Scheduling Platform project","job_poster":"netguru","job_description":"Senior Python Engineer with AI Knowledge\\n\\nLocation: Remote/ based in European Union (Poland is client's preference)\\n\\nContract: B2B\\n\\nStart date: ASAP, project at least till January 2026\\n\\nRate: up to 145 PLN/h (+ VAT)\\n\\nProject Information (Backend Focus)\\n\\n     Technology Stack: Python backend with PostgreSQL (or other relational databases). The environment includes testing with Pytest and deployment within Google Cloud Platform (GCP). \\n     Integration: Planned integration with an external system for exchanging sales document data (receipts, invoices) in compliance with Spanish legal requirements (Verifactu). Partner for integration currently being selected. \\n     Project Phase: Discovery phase. The team will join a new project, not an existing one. \\n     Project Goal: Build a compliant data exchange solution with an external provider according to financial department and legal regulations. \\n     Non-Functional Requirements: Compliance with financial regulations and internal security and performance standards\\n\\nRequirements\\n\\nTasks & Responsibilities\\n\\n    Develop and maintain backend services in Python. \\n     Implement integrations with external data exchange providers (e.g., Verifactu). \\n     Design and maintain database schemas and queries (PostgreSQL). \\n     Ensure system compliance with financial and legal requirements. \\n     Write automated tests using Pytest. \\n     Deploy, monitor, and optimize backend services in GCP. \\n     Collaborate with frontend and cross-functional teams to ensure system integrity and reliability\\n\\nRequirements\\n\\n    Strong experience in Python development. \\n     Proficiency with PostgreSQL or similar relational databases. \\n     Experience with Pytest for backend testing. \\n     Knowledge of cloud solutions, preferably GCP. \\n     Understanding of integration with external systems (APIs, data exchange protocols). \\n     Ability to design and develop solutions compliant with financial and legal standards. \\n     Senior-level engineers preferred, with proven ability to collaborate within and across teams\\n\\nBenefits\\n\\n    100% remote, flexible work;\\n    work with an experienced team of developers and continuous development of your hard and soft skills;\\n    long-term collaboration on challenging products \\n\\nWhat will happen next?\\n\\n    We will invite you for a meeting with our recruiter\\n    Next, you'll participate in the client interview"}	{"status":"published","import_source":"linkedin","source_url":"https://www.linkedin.com/jobs/view/4333314821/","title":"(Senior) Python Developer - Freelance - Scheduling Platform project","job_poster":"netguru","job_description":"Senior Python Engineer with AI Knowledge\\n\\nLocation: Remote/ based in European Union (Poland is client's preference)\\n\\nContract: B2B\\n\\nStart date: ASAP, project at least till January 2026\\n\\nRate: up to 145 PLN/h (+ VAT)\\n\\nProject Information (Backend Focus)\\n\\n     Technology Stack: Python backend with PostgreSQL (or other relational databases). The environment includes testing with Pytest and deployment within Google Cloud Platform (GCP). \\n     Integration: Planned integration with an external system for exchanging sales document data (receipts, invoices) in compliance with Spanish legal requirements (Verifactu). Partner for integration currently being selected. \\n     Project Phase: Discovery phase. The team will join a new project, not an existing one. \\n     Project Goal: Build a compliant data exchange solution with an external provider according to financial department and legal regulations. \\n     Non-Functional Requirements: Compliance with financial regulations and internal security and performance standards\\n\\nRequirements\\n\\nTasks & Responsibilities\\n\\n    Develop and maintain backend services in Python. \\n     Implement integrations with external data exchange providers (e.g., Verifactu). \\n     Design and maintain database schemas and queries (PostgreSQL). \\n     Ensure system compliance with financial and legal requirements. \\n     Write automated tests using Pytest. \\n     Deploy, monitor, and optimize backend services in GCP. \\n     Collaborate with frontend and cross-functional teams to ensure system integrity and reliability\\n\\nRequirements\\n\\n    Strong experience in Python development. \\n     Proficiency with PostgreSQL or similar relational databases. \\n     Experience with Pytest for backend testing. \\n     Knowledge of cloud solutions, preferably GCP. \\n     Understanding of integration with external systems (APIs, data exchange protocols). \\n     Ability to design and develop solutions compliant with financial and legal standards. \\n     Senior-level engineers preferred, with proven ability to collaborate within and across teams\\n\\nBenefits\\n\\n    100% remote, flexible work;\\n    work with an experienced team of developers and continuous development of your hard and soft skills;\\n    long-term collaboration on challenging products \\n\\nWhat will happen next?\\n\\n    We will invite you for a meeting with our recruiter\\n    Next, you'll participate in the client interview"}	5691	\N
 5692	5875	directus_files	2f2db427-0d86-4fb0-8468-10d825ca0c16	{"title":"Rik Wanders   Senior Full Stack Developer   Resume","filename_download":"Rik Wanders - Senior Full Stack Developer - Resume.pdf","type":"application/pdf","storage":"local"}	{"title":"Rik Wanders   Senior Full Stack Developer   Resume","filename_download":"Rik Wanders - Senior Full Stack Developer - Resume.pdf","type":"application/pdf","storage":"local"}	\N	\N
@@ -9360,6 +9455,26 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 5702	5890	directus_fields	352	{"id":352,"collection":"collected_data","field":"schema","special":null,"interface":"input-multiline","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":4,"width":"full","translations":null,"note":null,"conditions":null,"required":true,"group":null,"validation":null,"validation_message":null,"searchable":true}	{"collection":"collected_data","field":"schema","sort":4,"group":null}	\N	\N
 5703	5891	directus_fields	353	{"id":353,"collection":"collected_data","field":"data","special":null,"interface":"input-multiline","options":null,"display":null,"display_options":null,"readonly":false,"hidden":false,"sort":5,"width":"full","translations":null,"note":null,"conditions":null,"required":true,"group":null,"validation":null,"validation_message":null,"searchable":true}	{"collection":"collected_data","field":"data","sort":5,"group":null}	\N	\N
 5704	5892	directus_fields	354	{"id":354,"collection":"collected_data","field":"profile","special":["m2o"],"interface":"select-dropdown-m2o","options":null,"display":"related-values","display_options":null,"readonly":false,"hidden":false,"sort":3,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null,"searchable":true}	{"collection":"collected_data","field":"profile","interface":"select-dropdown-m2o","display":"related-values"}	\N	\N
+5705	5893	directus_fields	382	{"sort":1,"hidden":true,"interface":"input","readonly":true,"field":"id","collection":"ai_chat"}	{"sort":1,"hidden":true,"interface":"input","readonly":true,"field":"id","collection":"ai_chat"}	\N	\N
+5706	5894	directus_fields	383	{"sort":2,"special":["date-created"],"interface":"datetime","readonly":true,"hidden":true,"width":"half","display":"datetime","display_options":{"relative":true},"field":"date_created","collection":"ai_chat"}	{"sort":2,"special":["date-created"],"interface":"datetime","readonly":true,"hidden":true,"width":"half","display":"datetime","display_options":{"relative":true},"field":"date_created","collection":"ai_chat"}	\N	\N
+5707	5895	directus_fields	384	{"sort":3,"special":["date-updated"],"interface":"datetime","readonly":true,"hidden":true,"width":"half","display":"datetime","display_options":{"relative":true},"field":"date_updated","collection":"ai_chat"}	{"sort":3,"special":["date-updated"],"interface":"datetime","readonly":true,"hidden":true,"width":"half","display":"datetime","display_options":{"relative":true},"field":"date_updated","collection":"ai_chat"}	\N	\N
+5708	5896	directus_collections	ai_chat	{"singleton":false,"collection":"ai_chat"}	{"singleton":false,"collection":"ai_chat"}	\N	\N
+5709	5897	directus_fields	385	{"sort":4,"special":["m2o"],"interface":"select-dropdown-m2o","display":"related-values","collection":"ai_chat","field":"profile"}	{"sort":4,"special":["m2o"],"interface":"select-dropdown-m2o","display":"related-values","collection":"ai_chat","field":"profile"}	\N	\N
+5710	5898	directus_fields	386	{"sort":39,"special":["o2m"],"interface":"list-o2m","collection":"profiles","field":"ai_chats"}	{"sort":39,"special":["o2m"],"interface":"list-o2m","collection":"profiles","field":"ai_chats"}	\N	\N
+5711	5899	directus_fields	387	{"sort":5,"interface":"input-rich-text-md","special":null,"required":true,"collection":"ai_chat","field":"system_prompt"}	{"sort":5,"interface":"input-rich-text-md","special":null,"required":true,"collection":"ai_chat","field":"system_prompt"}	\N	\N
+5712	5900	directus_fields	388	{"sort":6,"interface":"input-rich-text-md","special":null,"required":true,"collection":"ai_chat","field":"user_prompt"}	{"sort":6,"interface":"input-rich-text-md","special":null,"required":true,"collection":"ai_chat","field":"user_prompt"}	\N	\N
+5713	5902	directus_collections	profiles	{"collection":"profiles","icon":null,"note":"A profile contains all information and preferences of a certain job-seeker","display_template":"{{name}}","hidden":false,"singleton":false,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":1,"group":null,"collapse":"open","preview_url":null,"versioning":false}	{"sort":1,"group":null}	\N	\N
+5716	5903	directus_collections	tech_skill_types	{"collection":"tech_skill_types","icon":null,"note":null,"display_template":"{{name}}","hidden":false,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":2,"group":null,"collapse":"open","preview_url":null,"versioning":false}	{"sort":2,"group":null}	\N	\N
+5717	5906	directus_collections	vacancies	{"collection":"vacancies","icon":null,"note":null,"display_template":"{{title}} | {{job_poster}}","hidden":false,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":null,"accountability":"all","color":null,"item_duplication_fields":null,"sort":3,"group":null,"collapse":"open","preview_url":null,"versioning":false}	{"sort":3,"group":null}	\N	\N
+5719	5907	directus_collections	outsourcing_platforms	{"collection":"outsourcing_platforms","icon":null,"note":null,"display_template":"{{name}} {{type}}","hidden":false,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":4,"group":null,"collapse":"open","preview_url":null,"versioning":false}	{"sort":4,"group":null}	\N	\N
+5718	5905	directus_collections	application_questions	{"collection":"application_questions","icon":null,"note":"Common application questions to save for reuse","display_template":null,"hidden":false,"singleton":false,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":3,"group":"applying","collapse":"open","preview_url":null,"versioning":false}	{"sort":3,"group":"applying"}	\N	\N
+5720	5908	directus_collections	salary_expectations	{"collection":"salary_expectations","icon":null,"note":"Salary expectations for various work arrangements and situations","display_template":null,"hidden":false,"singleton":false,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":4,"group":"applying","collapse":"open","preview_url":null,"versioning":false}	{"sort":4,"group":"applying"}	\N	\N
+5721	5909	directus_collections	ai_chat	{"collection":"ai_chat","icon":null,"note":null,"display_template":null,"hidden":false,"singleton":false,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":null,"accountability":"all","color":null,"item_duplication_fields":null,"sort":5,"group":"applying","collapse":"open","preview_url":null,"versioning":false}	{"sort":5,"group":"applying"}	\N	\N
+5722	5910	directus_fields	385	{"id":385,"collection":"ai_chat","field":"profile","special":["m2o"],"interface":"select-dropdown-m2o","options":null,"display":"related-values","display_options":null,"readonly":false,"hidden":false,"sort":4,"width":"full","translations":null,"note":null,"conditions":null,"required":true,"group":null,"validation":null,"validation_message":null,"searchable":true}	{"collection":"ai_chat","field":"profile","required":true}	\N	\N
+5723	5911	ai_chat	1	{"profile":1,"user_prompt":"Help me answer this interview question:"}	{"profile":1,"user_prompt":"Help me answer this interview question:"}	\N	\N
+5724	5912	ai_chat	1	{"id":1,"date_created":"2025-11-06T20:42:51.960Z","date_updated":"2025-11-06T20:43:38.018Z","profile":1,"system_prompt":"Youre a helpful assistant for a SWE job seeker & applicant. Youll help answer questions about job descriptions, application questions, cover letters etc. Youll be given information about the applicant. First youll be given the schema in JSON and then the actual data in JSON. You can use the schema as a reference for information about the purpose of the fields.\\n\\n## The schema:\\n\\n{schema}\\n\\n## The data:\\n\\n{data}","user_prompt":"Help me answer this interview question:\\n\\nTell us about a time when you \\"hacked the system\\" to your advantage"}	{"user_prompt":"Help me answer this interview question:\\n\\nTell us about a time when you \\"hacked the system\\" to your advantage","date_updated":"2025-11-06T20:43:38.018Z"}	\N	\N
+5725	5913	ai_chat	1	{"id":1,"date_created":"2025-11-06T20:42:51.960Z","date_updated":"2025-11-06T20:43:44.093Z","profile":1,"system_prompt":"Youre a helpful assistant for a SWE job seeker & applicant. Youll help answer questions about job descriptions, application questions, cover letters etc. Youll be given information about the applicant. First youll be given the schema in JSON and then the actual data in JSON. You can use the schema as a reference for information about the purpose of the fields.\\n\\n## The schema:\\n\\n{schema}\\n\\n## The data:\\n\\n{data}","user_prompt":"Help me answer the following interview question:\\n\\nTell us about a time when you \\"hacked the system\\" to your advantage"}	{"user_prompt":"Help me answer the following interview question:\\n\\nTell us about a time when you \\"hacked the system\\" to your advantage","date_updated":"2025-11-06T20:43:44.093Z"}	\N	\N
+5726	5914	directus_fields	389	{"sort":7,"interface":"input-rich-text-md","special":null,"readonly":true,"collection":"ai_chat","field":"full_prompt"}	{"sort":7,"interface":"input-rich-text-md","special":null,"readonly":true,"collection":"ai_chat","field":"full_prompt"}	\N	\N
 \.
 
 
@@ -9404,13 +9519,13 @@ CI1Qo-fImKhZX-7_G8vW7TEj_99-T9XZyxHhvy3GrZS_ydo_QUcxDA3sQKd8E1yW	157238bb-6930-4
 c8sPENMwLUvdLn8SCVayDAfMzIh4Bmtdhoh4bqYZeI0HkRN52DbOSKQ5KuOFW13M	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-12 19:29:47.833+00	172.18.0.5	node	\N	\N	\N
 V9mJarTPKZyXEd_0g9mJ6NGLXTC-nFPv8ovrTy8GDVqBshAhz_fwDtKqjIR7sZYG	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-13 16:16:40.273+00	172.18.0.5	node	\N	\N	\N
 e7nVAkeNSZNvtk_cvfACqzG_4VyZ3_1FDU_UQVcBD7Xf90VUlW9-J3cHPz89-WTy	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-07 16:18:38.555+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
+MxSx_-TIoG89WGZJy_D8NqXQriOZnulrBZEcVPjlP0WOPZM2YzJSXxSFubc0VLSW	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 20:46:01.231+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	idoZhiYmxGhvYhAMw7sHyh41FRc32hSKkA4hnbf4wDOalD_tJORDJiO-ueQ1STIX
 mEcoRxtJqD3K9Fac8Q3PEk6G0kEjLlgt5GBRQBhZ_P1NlKnzu-S5AuSM2fCTvFEj	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-13 16:36:12.611+00	172.18.0.5	node	\N	\N	\N
 nFRLiiuiEX_nsgyESPBRb8ki9Nunb1GsgmIFgkfu16gI6ePaczMvLYIqWD9m2hdN	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-13 17:05:37.979+00	172.18.0.5	node	\N	\N	\N
 nQp49eRC5TH_8_n7Wu7QbWb4t_MHwDvURnMFbv8umVVKwxQwHs6h4SsrJD9zzNZJ	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-13 17:28:29.737+00	172.18.0.5	node	\N	\N	\N
 XnqYRkjktzx92mtrnebMMpaG5AGOhW2UYw6-P7iGAKSiou6iV4GFt9v3rxu7nGPV	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-13 20:14:29.605+00	172.18.0.4	node	\N	\N	\N
-n9DvEo7pe0wRMNn1yEcXUrJE5kH-C9_4RKqIbnwph5OpuAzRMc9CLoQ0wf-a07cC	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 20:18:14.429+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	W0tIX5iY7HbyrjiMtC3xfvF5Z50GILVh6B66bWNPHmUumgusai7Pisbt5_lQ8Rji
+idoZhiYmxGhvYhAMw7sHyh41FRc32hSKkA4hnbf4wDOalD_tJORDJiO-ueQ1STIX	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-07 20:45:51.231+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
 mORAo8a0_o4fj1OMUGXFsQHIb0rEVOrSUBP6QYkaFA7TDm5J00h_i3dDW_ZlV8yG	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-13 20:17:22.005+00	172.18.0.4	node	\N	\N	\N
-W0tIX5iY7HbyrjiMtC3xfvF5Z50GILVh6B66bWNPHmUumgusai7Pisbt5_lQ8Rji	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-07 20:18:04.429+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
 \.
 
 
@@ -9447,7 +9562,7 @@ c530a32f-84cb-4ab9-8a61-7a12a5bcb7e6	en-US	draft	Draft
 --
 
 COPY public.directus_users (id, first_name, last_name, email, password, location, title, description, tags, avatar, language, tfa_secret, status, role, token, last_access, last_page, provider, external_identifier, auth_data, email_notifications, appearance, theme_dark, theme_light, theme_light_overrides, theme_dark_overrides, text_direction) FROM stdin;
-157238bb-6930-4f26-be9c-8b31a9e11ab8	Rik	Wanders	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-11-06 20:18:04.432+00	/content/collected_data	default	\N	\N	t	\N	\N	\N	\N	\N	auto
+157238bb-6930-4f26-be9c-8b31a9e11ab8	Rik	Wanders	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-11-06 20:45:51.234+00	/settings/data-model	default	\N	\N	t	\N	\N	\N	\N	\N	auto
 \.
 
 
@@ -9932,6 +10047,13 @@ Festivalinfo	Amsterdam, NL	Festival / event information website	Internship Web D
 
 
 --
+-- Name: ai_chat_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.ai_chat_id_seq', 1, true);
+
+
+--
 -- Name: application_interview_questions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
@@ -9977,14 +10099,14 @@ SELECT pg_catalog.setval('public.dev_methodologies_id_seq', 38, true);
 -- Name: directus_activity_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_activity_id_seq', 5892, true);
+SELECT pg_catalog.setval('public.directus_activity_id_seq', 5915, true);
 
 
 --
 -- Name: directus_fields_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_fields_id_seq', 381, true);
+SELECT pg_catalog.setval('public.directus_fields_id_seq', 389, true);
 
 
 --
@@ -10012,14 +10134,14 @@ SELECT pg_catalog.setval('public.directus_presets_id_seq', 33, true);
 -- Name: directus_relations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_relations_id_seq', 41, true);
+SELECT pg_catalog.setval('public.directus_relations_id_seq', 42, true);
 
 
 --
 -- Name: directus_revisions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_revisions_id_seq', 5704, true);
+SELECT pg_catalog.setval('public.directus_revisions_id_seq', 5726, true);
 
 
 --
@@ -10196,6 +10318,14 @@ SELECT pg_catalog.setval('public.work_experiences_id_seq', 28, true);
 
 ALTER TABLE ONLY public._prisma_migrations
     ADD CONSTRAINT _prisma_migrations_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: ai_chat ai_chat_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.ai_chat
+    ADD CONSTRAINT ai_chat_pkey PRIMARY KEY (id);
 
 
 --
@@ -10743,6 +10873,14 @@ CREATE UNIQUE INDEX tech_skill_types_slug_key ON public.tech_skill_types USING b
 --
 
 CREATE UNIQUE INDEX users_email_key ON public.users USING btree (email);
+
+
+--
+-- Name: ai_chat ai_chat_profile_foreign; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.ai_chat
+    ADD CONSTRAINT ai_chat_profile_foreign FOREIGN KEY (profile) REFERENCES public.profiles(id) ON DELETE CASCADE;
 
 
 --
@@ -11357,5 +11495,5 @@ ALTER TABLE ONLY public.work_experiences
 -- PostgreSQL database dump complete
 --
 
-\unrestrict I73cuP6tUEAcczLqSzS5Eua14V7eZrfTzRIlwdwMUGMVbmaVKjg0oyWOUHfagcN
+\unrestrict cLCkn2ZLsqS9TeIoHypddNTTwGoIlpPFYqO2h8yrXh9QDsxnyx861A1r9FuLNHz
 
