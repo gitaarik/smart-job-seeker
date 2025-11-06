@@ -10,6 +10,7 @@ services:
     volumes:
       - ./directus/uploads:/directus/uploads
       - ./directus/extensions:/directus/extensions
+      - ./scripts/init-directus.sh:/docker-entrypoint.d/init-directus.sh
     depends_on:
       admin-cache:
         condition: service_healthy
