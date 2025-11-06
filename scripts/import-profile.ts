@@ -328,7 +328,6 @@ async function importProfile(
       for (const highlight of data.highlights) {
         await prisma.highlights.create({
           data: {
-            id: uuidv4(),
             status: highlight.status || "draft",
             sort: highlight.sort,
             text: highlight.text,
@@ -347,7 +346,6 @@ async function importProfile(
       for (const category of data.tech_skill_categories) {
         const createdCategory = await prisma.tech_skill_categories.create({
           data: {
-            id: uuidv4(),
             status: category.status || "draft",
             sort: category.sort,
             name: category.name,
@@ -382,7 +380,9 @@ async function importProfile(
                 sort: skill.sort,
                 name: skill.name,
                 category: createdCategory.id,
-                years_experience: skill.years_experience,
+                years_experience: skill.years_experience
+                  ? parseInt(skill.years_experience, 10)
+                  : null,
                 level: skill.level,
                 tech_type: techTypeId,
               },
@@ -400,7 +400,6 @@ async function importProfile(
       for (const work of data.work_experiences) {
         const createdWork = await prisma.work_experiences.create({
           data: {
-            id: uuidv4(),
             name: work.name || "",
             location: work.location || "",
             description: work.description || "",
@@ -421,7 +420,6 @@ async function importProfile(
           for (const achievement of work.achievements) {
             await prisma.work_experience_achievements.create({
               data: {
-                id: uuidv4(),
                 status: achievement.status || "draft",
                 sort: achievement.sort,
                 title: achievement.title,
@@ -439,7 +437,6 @@ async function importProfile(
           for (const tech of work.technologies) {
             await prisma.work_experience_technologies.create({
               data: {
-                id: uuidv4(),
                 status: tech.status || "draft",
                 sort: tech.sort,
                 name: tech.name,
@@ -478,7 +475,6 @@ async function importProfile(
           for (const achievement of project.achievements) {
             await prisma.side_project_achievements.create({
               data: {
-                id: uuidv4(),
                 title: achievement.title,
                 fa_icon: achievement.fa_icon,
                 description: achievement.description,
@@ -536,7 +532,6 @@ async function importProfile(
       for (const lang of data.languages) {
         await prisma.languages.create({
           data: {
-            id: uuidv4(),
             status: lang.status || "draft",
             sort: lang.sort,
             name: lang.name,
@@ -573,7 +568,6 @@ async function importProfile(
       for (const story of data.project_stories) {
         await prisma.project_stories.create({
           data: {
-            id: uuidv4(),
             sort: story.sort,
             title: story.title,
             situation: story.situation,
@@ -596,7 +590,6 @@ async function importProfile(
       for (const question of data.application_questions) {
         await prisma.application_questions.create({
           data: {
-            id: uuidv4(),
             sort: question.sort,
             question: question.question,
             answer: question.answer,
@@ -614,7 +607,6 @@ async function importProfile(
       for (const sheet of data.cheat_sheets) {
         await prisma.cheat_sheets.create({
           data: {
-            id: uuidv4(),
             sort: sheet.sort,
             title: sheet.title,
             content: sheet.content,
@@ -642,6 +634,7 @@ async function importProfile(
             month_salary: salary.month_salary,
             year_salary: salary.year_salary,
             daily_rate: salary.daily_rate,
+            profile: profile.id,
           },
         });
       }

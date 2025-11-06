@@ -670,7 +670,7 @@ model profile_versions {
 }
 
 model profiles {
-  id                    Int                     @id(map: "profile_pkey")
+  id                    Int                     @id(map: "profile_pkey") @default(autoincrement())
   date_created          DateTime?               @db.Timestamptz(6)
   date_updated          DateTime?               @db.Timestamptz(6)
   name                  String?                 @db.VarChar(255)
@@ -940,7 +940,7 @@ model work_experiences {
   description                  String
   position                     String
   summary                      String
-  id                           Int                            @id
+  id                           Int                            @id @default(autoincrement())
   logo                         String?                        @db.Uuid
   status                       String                         @default("draft") @db.VarChar(255)
   sort                         Int?
