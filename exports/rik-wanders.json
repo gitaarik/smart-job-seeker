@@ -112,49 +112,464 @@
         "sort": 1,
         "name": "Backend",
         "fa_icon": "python",
-        "tech_skills": []
+        "tech_skills": [
+          {
+            "status": "published",
+            "sort": 1,
+            "name": "Python",
+            "years_experience": "12",
+            "level": "expert",
+            "tech_type": "programming-language"
+          },
+          {
+            "status": "published",
+            "sort": 2,
+            "name": "Django",
+            "years_experience": "12",
+            "level": "expert",
+            "tech_type": "framework-library"
+          },
+          {
+            "status": "published",
+            "sort": 3,
+            "name": "Django REST Framework (DRF)",
+            "years_experience": "12",
+            "level": "expert",
+            "tech_type": "framework-library"
+          },
+          {
+            "status": "published",
+            "sort": 4,
+            "name": "Flask",
+            "years_experience": "4",
+            "level": "proficient",
+            "tech_type": "framework-library"
+          },
+          {
+            "status": "published",
+            "sort": 5,
+            "name": "FastAPI",
+            "years_experience": "1",
+            "level": "proficient",
+            "tech_type": "framework-library"
+          },
+          {
+            "status": "published",
+            "sort": 6,
+            "name": "RESTful APIs",
+            "years_experience": "12",
+            "level": "expert",
+            "tech_type": null
+          },
+          {
+            "status": "published",
+            "sort": 7,
+            "name": "LLM integrations",
+            "years_experience": "1",
+            "level": "proficient",
+            "tech_type": "apis-integration-technologies"
+          },
+          {
+            "status": "published",
+            "sort": 8,
+            "name": "pytest",
+            "years_experience": "12",
+            "level": "proficient",
+            "tech_type": "framework-library"
+          }
+        ]
       },
       {
         "status": "published",
         "sort": 2,
         "name": "Frontend",
         "fa_icon": "node-js",
-        "tech_skills": []
+        "tech_skills": [
+          {
+            "status": "published",
+            "sort": 16,
+            "name": "JavaScript",
+            "years_experience": "18",
+            "level": "expert",
+            "tech_type": "programming-language"
+          },
+          {
+            "status": "published",
+            "sort": 17,
+            "name": "Node.js",
+            "years_experience": "12",
+            "level": "expert",
+            "tech_type": "programming-language"
+          },
+          {
+            "status": "published",
+            "sort": 18,
+            "name": "TypeScript",
+            "years_experience": "2",
+            "level": "proficient",
+            "tech_type": "programming-language"
+          },
+          {
+            "status": "published",
+            "sort": 19,
+            "name": "React Native",
+            "years_experience": "3",
+            "level": "proficient",
+            "tech_type": "framework-library"
+          },
+          {
+            "status": "published",
+            "sort": 20,
+            "name": "React",
+            "years_experience": "12",
+            "level": "expert",
+            "tech_type": "framework-library"
+          },
+          {
+            "status": "published",
+            "sort": 21,
+            "name": "Svelte",
+            "years_experience": "2",
+            "level": "proficient",
+            "tech_type": "framework-library"
+          },
+          {
+            "status": "published",
+            "sort": 22,
+            "name": "Tailwind CSS",
+            "years_experience": "2",
+            "level": "proficient",
+            "tech_type": "framework-library"
+          },
+          {
+            "status": "published",
+            "sort": 23,
+            "name": "Jest",
+            "years_experience": "2",
+            "level": "proficient",
+            "tech_type": "framework-library"
+          }
+        ]
       },
       {
         "status": "published",
         "sort": 4,
         "name": "Databases",
         "fa_icon": "database",
-        "tech_skills": []
+        "tech_skills": [
+          {
+            "status": "published",
+            "sort": 9,
+            "name": "PostgreSQL",
+            "years_experience": "4",
+            "level": "expert",
+            "tech_type": "relational-database"
+          },
+          {
+            "status": "published",
+            "sort": 10,
+            "name": "MySQL",
+            "years_experience": "10",
+            "level": "expert",
+            "tech_type": "relational-database"
+          },
+          {
+            "status": "published",
+            "sort": 11,
+            "name": "MariaDB",
+            "years_experience": "12",
+            "level": "expert",
+            "tech_type": "relational-database"
+          },
+          {
+            "status": "published",
+            "sort": 12,
+            "name": "SQLite",
+            "years_experience": "5",
+            "level": "proficient",
+            "tech_type": "relational-database"
+          },
+          {
+            "status": "published",
+            "sort": 13,
+            "name": "SQL optimization",
+            "years_experience": "12",
+            "level": "proficient",
+            "tech_type": "relational-database"
+          },
+          {
+            "status": "published",
+            "sort": 14,
+            "name": "Elasticsearch",
+            "years_experience": "3",
+            "level": "proficient",
+            "tech_type": "nosql-database"
+          },
+          {
+            "status": "published",
+            "sort": 15,
+            "name": "MongoDB",
+            "years_experience": "2",
+            "level": "proficient",
+            "tech_type": "nosql-database"
+          },
+          {
+            "status": "published",
+            "sort": 16,
+            "name": "Redis",
+            "years_experience": "6",
+            "level": "proficient",
+            "tech_type": "nosql-database"
+          }
+        ]
       },
       {
         "status": "published",
         "sort": 5,
         "name": "Development Tools",
         "fa_icon": "robot",
-        "tech_skills": []
+        "tech_skills": [
+          {
+            "status": "published",
+            "sort": 1,
+            "name": "Git",
+            "years_experience": "12",
+            "level": "expert",
+            "tech_type": "version-control-collaboration-tool"
+          },
+          {
+            "status": "published",
+            "sort": 2,
+            "name": "GitHub",
+            "years_experience": "12",
+            "level": "expert",
+            "tech_type": "version-control-collaboration-tool"
+          },
+          {
+            "status": "published",
+            "sort": 3,
+            "name": "Git Flow",
+            "years_experience": "8",
+            "level": "expert",
+            "tech_type": "version-control-collaboration-tool"
+          },
+          {
+            "status": "published",
+            "sort": 4,
+            "name": "Claude Code",
+            "years_experience": "1",
+            "level": "expert",
+            "tech_type": "development-tool"
+          },
+          {
+            "status": "published",
+            "sort": 5,
+            "name": "Cursor",
+            "years_experience": "1",
+            "level": "expert",
+            "tech_type": "development-tool"
+          },
+          {
+            "status": "published",
+            "sort": 6,
+            "name": "Neovim",
+            "years_experience": "18",
+            "level": "expert",
+            "tech_type": "code-editor-ide"
+          },
+          {
+            "status": "published",
+            "sort": 7,
+            "name": "tmux",
+            "years_experience": "18",
+            "level": "expert",
+            "tech_type": "development-tool"
+          }
+        ]
       },
       {
         "status": "published",
         "sort": 6,
         "name": "DevOps",
         "fa_icon": "server",
-        "tech_skills": []
+        "tech_skills": [
+          {
+            "status": "published",
+            "sort": 1,
+            "name": "Docker",
+            "years_experience": "7",
+            "level": "expert",
+            "tech_type": "container-orchestration-tool"
+          },
+          {
+            "status": "published",
+            "sort": 2,
+            "name": "Docker Compose",
+            "years_experience": "5",
+            "level": "expert",
+            "tech_type": "container-orchestration-tool"
+          },
+          {
+            "status": "published",
+            "sort": 3,
+            "name": "GitLab CI/CD",
+            "years_experience": "5",
+            "level": "expert",
+            "tech_type": "ci-cd-automation-tool"
+          },
+          {
+            "status": "published",
+            "sort": 4,
+            "name": "GitHub Actions",
+            "years_experience": "4",
+            "level": "expert",
+            "tech_type": "ci-cd-automation-tool"
+          },
+          {
+            "status": "draft",
+            "sort": 5,
+            "name": "Ansible",
+            "years_experience": "4",
+            "level": "proficient",
+            "tech_type": "ci-cd-automation-tool"
+          },
+          {
+            "status": "published",
+            "sort": 6,
+            "name": "Python Fabric",
+            "years_experience": "5",
+            "level": "expert",
+            "tech_type": "ci-cd-automation-tool"
+          },
+          {
+            "status": "published",
+            "sort": 7,
+            "name": "Caching strategies",
+            "years_experience": "6",
+            "level": "proficient",
+            "tech_type": "networking-caching-load-balancing"
+          }
+        ]
       },
       {
         "status": "published",
         "sort": 7,
         "name": "Cloud Platforms",
         "fa_icon": "cloud",
-        "tech_skills": []
+        "tech_skills": [
+          {
+            "status": "published",
+            "sort": 1,
+            "name": "Amazon Web Services",
+            "years_experience": "4",
+            "level": "proficient",
+            "tech_type": "cloud-platform-service"
+          },
+          {
+            "status": "published",
+            "sort": 2,
+            "name": "AWS EC2",
+            "years_experience": "4",
+            "level": "proficient",
+            "tech_type": "cloud-platform-service"
+          },
+          {
+            "status": "published",
+            "sort": 3,
+            "name": "AWS S3",
+            "years_experience": "4",
+            "level": "proficient",
+            "tech_type": "cloud-platform-service"
+          },
+          {
+            "status": "draft",
+            "sort": 4,
+            "name": "AWS Lambda",
+            "years_experience": "2",
+            "level": "proficient",
+            "tech_type": "cloud-platform-service"
+          },
+          {
+            "status": "published",
+            "sort": 5,
+            "name": "Vercel",
+            "years_experience": "2",
+            "level": "proficient",
+            "tech_type": "cloud-platform-service"
+          },
+          {
+            "status": "published",
+            "sort": 6,
+            "name": "Linode",
+            "years_experience": "12",
+            "level": "proficient",
+            "tech_type": "ci-cd-automation-tool"
+          }
+        ]
       },
       {
         "status": "published",
         "sort": 8,
         "name": "Dev Methodologies",
         "fa_icon": "user-gear",
-        "tech_skills": []
+        "tech_skills": [
+          {
+            "status": "published",
+            "sort": 1,
+            "name": "Agile",
+            "years_experience": "14",
+            "level": "proficient",
+            "tech_type": "development-methodology"
+          },
+          {
+            "status": "published",
+            "sort": 2,
+            "name": "Scrum",
+            "years_experience": "5",
+            "level": "proficient",
+            "tech_type": "development-methodology"
+          },
+          {
+            "status": "published",
+            "sort": 3,
+            "name": "XP",
+            "years_experience": "6",
+            "level": "proficient",
+            "tech_type": "development-methodology"
+          },
+          {
+            "status": "published",
+            "sort": 4,
+            "name": "AI-Assisted Development",
+            "years_experience": "1",
+            "level": "proficient",
+            "tech_type": "development-tool"
+          },
+          {
+            "status": "published",
+            "sort": 5,
+            "name": "Secure by design",
+            "years_experience": "18",
+            "level": "proficient",
+            "tech_type": "development-methodology"
+          },
+          {
+            "status": "published",
+            "sort": 6,
+            "name": "TDD",
+            "years_experience": "12",
+            "level": "expert",
+            "tech_type": "development-methodology"
+          },
+          {
+            "status": "published",
+            "sort": 7,
+            "name": "UXD",
+            "years_experience": "12",
+            "level": "proficient",
+            "tech_type": "development-methodology"
+          }
+        ]
       }
     ],
     "work_experiences": [
