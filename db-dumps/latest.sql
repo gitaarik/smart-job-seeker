@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict QN6rvKOtr5L6r7pAZBYdKKj5lxE5O1MdaFHyDkGkhKuvdV1WsbQrQZvpr6uh14A
+\restrict tre674RQMyRoQp6jKbVMEFODNg70i69h1tRTNXICIyhRadsMMYRGa9pLUCb7FJB
 
 -- Dumped from database version 15.14 (Debian 15.14-1.pgdg13+1)
 -- Dumped by pg_dump version 15.14 (Debian 15.14-1.pgdg13+1)
@@ -7714,6 +7714,8 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 5859	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 16:48:17.558+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	cheat_sheets	22	http://localhost:8055
 5860	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 16:48:28.64+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	cheat_sheets	25	http://localhost:8055
 5861	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 16:49:00.659+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	profiles	2	http://localhost:8055
+5862	login	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 17:05:37.982+00	172.18.0.5	node	directus_users	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N
+5863	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 17:06:26.314+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	profiles	3	http://localhost:8055
 \.
 
 
@@ -8285,16 +8287,16 @@ COPY public.directus_presets (id, bookmark, "user", role, collection, search, la
 10	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	soft_skills	\N	\N	{"tabular":{"page":1,"fields":["name","status","profile"]}}	{"tabular":{"widths":{"name":587,"status":98.5999755859375,"profile":125.199951171875}}}	\N	\N	bookmark	\N
 12	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	dev_methodologies	\N	\N	{"tabular":{"page":1,"fields":["name","status","profile"]}}	{"tabular":{"widths":{"name":591,"status":94.5999755859375,"profile":132.60003662109375}}}	\N	\N	bookmark	\N
 6	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	tech_skills	\N	tabular	{"tabular":{"fields":["name","category","years_experience","level","status"],"page":1}}	{"tabular":{"widths":{"name":273,"category":183,"years_experience":165.66668701171875,"level":119.2000732421875,"status":96},"align":{"status":"left"}}}	\N	\N	bookmark	\N
-20	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	salary_expectations	\N	tabular	{"tabular":{"fields":["job_title","employment_type","work_arrangement","company_type","region","hourly_rate","daily_rate","month_salary","year_salary"],"page":1}}	{"tabular":{"widths":{"job_title":189,"employment_type":94,"work_arrangement":90,"company_type":109,"region":140.66668701171875,"hourly_rate":126,"daily_rate":114.6666259765625,"month_salary":137,"year_salary":123.3333740234375},"spacing":"cozy"},"kanban":{"groupOrder":{"groupField":"company_type","sortMap":{"startup":0,"scaleup":1,"agency":2,"enterprise":3,"big_tech":4}}}}	\N	\N	bookmark	\N
 26	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	work_experience_technologies	\N	\N	{"tabular":{"fields":["name","work_experience","status"],"page":1}}	{"tabular":{"widths":{"name":160,"work_experience":217.33331298828125,"status":127.33331298828125}}}	\N	\N	bookmark	\N
 3	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	profiles	\N	\N	{"tabular":{"page":1,"fields":["name","title","core_stack","subtitle"]}}	{"tabular":{"widths":{"name":126.66665649414062,"title":231.66668701171875,"core_stack":278.3333740234375,"subtitle":343.3333740234375}}}	\N	\N	bookmark	\N
 28	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	application_interview_questions	\N	\N	{"tabular":{"fields":["application","question"],"page":1}}	{"tabular":{"widths":{"application":520.3333129882812,"question":815.3333740234375}}}	\N	\N	bookmark	\N
 8	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	highlights	\N	\N	{"tabular":{"fields":["text","fa_icon","status"],"page":1}}	{"tabular":{"widths":{"text":584.800048828125,"fa_icon":99.4000244140625,"status":91,"profile":121.7999267578125}}}	\N	\N	bookmark	\N
+20	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	salary_expectations	\N	tabular	{"tabular":{"fields":["job_title","employment_type","work_arrangement","company_type","region","hourly_rate","daily_rate","month_salary","year_salary"],"page":1}}	{"tabular":{"widths":{"job_title":189,"employment_type":94,"work_arrangement":90,"company_type":109,"region":140.66668701171875,"hourly_rate":126,"daily_rate":114.6666259765625,"month_salary":137,"year_salary":123.3333740234375},"spacing":"cozy"},"kanban":{"groupOrder":{"groupField":"company_type","sortMap":{"startup":0,"scaleup":1,"agency":2,"enterprise":3,"big_tech":4}}}}	\N	\N	bookmark	\N
 32	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	vacancy_resources	\N	\N	{"tabular":{"page":1}}	\N	\N	\N	bookmark	\N
 9	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	tech_skill_types	\N	\N	{"tabular":{"fields":["name","slug","status"],"page":1}}	{"tabular":{"widths":{"name":520.3333129882812,"slug":302,"status":118}}}	\N	\N	bookmark	\N
 24	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	vacancies	\N	\N	{"tabular":{"page":1,"fields":["title","job_poster","import_source","status"],"sort":["-id"]}}	{"tabular":{"widths":{"title":431.33331298828125,"job_poster":234.66668701171875,"import_source":166.6666259765625,"status":91.333251953125}}}	\N	\N	bookmark	\N
 17	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	project_stories	\N	\N	{"tabular":{"page":1,"fields":["title","category"]}}	{"tabular":{"widths":{"title":489.20001220703125,"category":226.00006103515625,"profile":125.199951171875},"spacing":"cozy"}}	\N	\N	bookmark	\N
-31	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	platform_profiles	\N	\N	{"tabular":{"fields":["outsourcing_platform","status"],"page":1}}	{"tabular":{"widths":{"outsourcing_platform":329.5999755859375,"status":160}}}	\N	\N	bookmark	\N
+25	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	applications	\N	\N	{"tabular":{"fields":["vacancy","status"],"page":1,"sort":["-id"]}}	{"tabular":{"widths":{"vacancy":656.9999389648438,"status":149.6666259765625}}}	\N	\N	bookmark	\N
 30	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	outsourcing_platforms	\N	\N	{"tabular":{"fields":["name","url","type","status"],"page":1}}	{"tabular":{"widths":{"name":223,"url":359.99993896484375,"type":218.3333740234375,"status":104}}}	\N	\N	bookmark	\N
 14	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	application_questions	\N	\N	{"tabular":{"page":1,"fields":["title","question"]}}	{"tabular":{"widths":{"title":316.4000244140625,"question":500.199951171875}}}	\N	\N	bookmark	\N
 23	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	profile_versions	\N	\N	{"tabular":{"page":1,"fields":["name","description","status"]}}	{"tabular":{"widths":{"name":274.199951171875,"description":384.4666748046875,"status":107.199951171875,"profile":146.7999267578125}}}	\N	\N	bookmark	\N
@@ -8308,7 +8310,7 @@ COPY public.directus_presets (id, bookmark, "user", role, collection, search, la
 4	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	languages	\N	\N	{"tabular":{"page":1,"fields":["name","language_code","proficiency","status"]}}	{"tabular":{"widths":{"name":287.60003662109375,"language_code":165.20001220703125,"proficiency":176.4000244140625,"status":96.4000244140625,"profile":132.39990234375}}}	\N	\N	bookmark	\N
 21	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	references	\N	\N	{"tabular":{"page":1,"fields":["author","author_position","text","status"]}}	{"tabular":{"widths":{"author":149.6666259765625,"author_position":211,"text":398.6666259765625,"status":98,"profile":124.6666259765625}}}	\N	\N	bookmark	\N
 16	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	cheat_sheets	\N	\N	{"tabular":{"fields":["title"],"page":1}}	{"tabular":{"widths":{"title":549.7999877929688,"profile":277.00006103515625}}}	\N	\N	bookmark	\N
-25	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	applications	\N	\N	{"tabular":{"fields":["vacancy","status"],"page":1,"sort":["-id"]}}	{"tabular":{"widths":{"vacancy":656.9999389648438,"status":149.6666259765625}}}	\N	\N	bookmark	\N
+31	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	platform_profiles	\N	\N	{"tabular":{"fields":["outsourcing_platform","status"],"page":1}}	{"tabular":{"widths":{"outsourcing_platform":329.5999755859375,"status":160}}}	\N	\N	bookmark	\N
 \.
 
 
@@ -9343,8 +9345,9 @@ c8sPENMwLUvdLn8SCVayDAfMzIh4Bmtdhoh4bqYZeI0HkRN52DbOSKQ5KuOFW13M	157238bb-6930-4
 V9mJarTPKZyXEd_0g9mJ6NGLXTC-nFPv8ovrTy8GDVqBshAhz_fwDtKqjIR7sZYG	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-13 16:16:40.273+00	172.18.0.5	node	\N	\N	\N
 e7nVAkeNSZNvtk_cvfACqzG_4VyZ3_1FDU_UQVcBD7Xf90VUlW9-J3cHPz89-WTy	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-07 16:18:38.555+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
 mEcoRxtJqD3K9Fac8Q3PEk6G0kEjLlgt5GBRQBhZ_P1NlKnzu-S5AuSM2fCTvFEj	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-13 16:36:12.611+00	172.18.0.5	node	\N	\N	\N
-lc1dNV3h9p_q-TyfnXErhiwqkXEKMVc76jS3cIEUwQq4ANFIFTGgQJVRM9JkP6x2	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 16:36:24.649+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	tumbIUgXAdFInk0fW_sK4n2yvHP5XBsrrfJ4B6_3yWrVu3PCEzVCUHKdTdhBHRpm
-tumbIUgXAdFInk0fW_sK4n2yvHP5XBsrrfJ4B6_3yWrVu3PCEzVCUHKdTdhBHRpm	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-07 16:36:14.649+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
+nFRLiiuiEX_nsgyESPBRb8ki9Nunb1GsgmIFgkfu16gI6ePaczMvLYIqWD9m2hdN	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-13 17:05:37.979+00	172.18.0.5	node	\N	\N	\N
+3w1P5c_-zyCw5ZiSwQ_NcPYOL9QfFARpEeAu976wPjvtk4RTriqqLRsIyaYl7LBr	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-06 17:06:29.08+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	mhSnTzij4cgNNVkHbhnnj5AWywFc55fmytC73pQe5-P7AgGDwjGGr8rDb0SormgA
+mhSnTzij4cgNNVkHbhnnj5AWywFc55fmytC73pQe5-P7AgGDwjGGr8rDb0SormgA	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-07 17:06:19.08+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
 \.
 
 
@@ -9381,7 +9384,7 @@ c530a32f-84cb-4ab9-8a61-7a12a5bcb7e6	en-US	draft	Draft
 --
 
 COPY public.directus_users (id, first_name, last_name, email, password, location, title, description, tags, avatar, language, tfa_secret, status, role, token, last_access, last_page, provider, external_identifier, auth_data, email_notifications, appearance, theme_dark, theme_light, theme_light_overrides, theme_dark_overrides, text_direction) FROM stdin;
-157238bb-6930-4f26-be9c-8b31a9e11ab8	Rik	Wanders	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-11-06 16:36:14.652+00	/content/applications	default	\N	\N	t	\N	\N	\N	\N	\N	auto
+157238bb-6930-4f26-be9c-8b31a9e11ab8	Rik	Wanders	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-11-06 17:06:19.083+00	/content/profiles	default	\N	\N	t	\N	\N	\N	\N	\N	auto
 \.
 
 
@@ -9873,7 +9876,7 @@ SELECT pg_catalog.setval('public.application_interview_questions_id_seq', 31, tr
 -- Name: application_questions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.application_questions_id_seq', 14, true);
+SELECT pg_catalog.setval('public.application_questions_id_seq', 17, true);
 
 
 --
@@ -9887,7 +9890,7 @@ SELECT pg_catalog.setval('public.applications_id_seq', 7, true);
 -- Name: cheat_sheets_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.cheat_sheets_id_seq', 25, true);
+SELECT pg_catalog.setval('public.cheat_sheets_id_seq', 27, true);
 
 
 --
@@ -9908,7 +9911,7 @@ SELECT pg_catalog.setval('public.dev_methodologies_id_seq', 38, true);
 -- Name: directus_activity_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_activity_id_seq', 5861, true);
+SELECT pg_catalog.setval('public.directus_activity_id_seq', 5863, true);
 
 
 --
@@ -9971,21 +9974,21 @@ SELECT pg_catalog.setval('public.directus_webhooks_id_seq', 1, false);
 -- Name: education_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.education_id_seq', 28, true);
+SELECT pg_catalog.setval('public.education_id_seq', 32, true);
 
 
 --
 -- Name: highlights_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.highlights_id_seq', 87, true);
+SELECT pg_catalog.setval('public.highlights_id_seq', 94, true);
 
 
 --
 -- Name: languages_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.languages_id_seq', 114, true);
+SELECT pg_catalog.setval('public.languages_id_seq', 116, true);
 
 
 --
@@ -10006,35 +10009,35 @@ SELECT pg_catalog.setval('public.platform_profiles_id_seq', 4, true);
 -- Name: profile_versions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.profile_versions_id_seq', 96, true);
+SELECT pg_catalog.setval('public.profile_versions_id_seq', 102, true);
 
 
 --
 -- Name: profiles_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.profiles_id_seq', 2, true);
+SELECT pg_catalog.setval('public.profiles_id_seq', 3, true);
 
 
 --
 -- Name: project_stories_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.project_stories_id_seq', 150, true);
+SELECT pg_catalog.setval('public.project_stories_id_seq', 159, true);
 
 
 --
 -- Name: references_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.references_id_seq', 16, true);
+SELECT pg_catalog.setval('public.references_id_seq', 18, true);
 
 
 --
 -- Name: salary_expectations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.salary_expectations_id_seq', 12, true);
+SELECT pg_catalog.setval('public.salary_expectations_id_seq', 13, true);
 
 
 --
@@ -10055,7 +10058,7 @@ SELECT pg_catalog.setval('public.side_project_technologies_id_seq', 132, true);
 -- Name: side_projects_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.side_projects_id_seq', 49, true);
+SELECT pg_catalog.setval('public.side_projects_id_seq', 56, true);
 
 
 --
@@ -10069,7 +10072,7 @@ SELECT pg_catalog.setval('public.soft_skills_id_seq', 151, true);
 -- Name: tech_skill_categories_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.tech_skill_categories_id_seq', 194, true);
+SELECT pg_catalog.setval('public.tech_skill_categories_id_seq', 201, true);
 
 
 --
@@ -10083,7 +10086,7 @@ SELECT pg_catalog.setval('public.tech_skill_types_id_seq', 14, true);
 -- Name: tech_skills_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.tech_skills_id_seq', 708, true);
+SELECT pg_catalog.setval('public.tech_skills_id_seq', 759, true);
 
 
 --
@@ -10104,21 +10107,21 @@ SELECT pg_catalog.setval('public.vacancy_resources_id_seq', 4, true);
 -- Name: work_experience_achievements_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.work_experience_achievements_id_seq', 295, true);
+SELECT pg_catalog.setval('public.work_experience_achievements_id_seq', 320, true);
 
 
 --
 -- Name: work_experience_technologies_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.work_experience_technologies_id_seq', 688, true);
+SELECT pg_catalog.setval('public.work_experience_technologies_id_seq', 782, true);
 
 
 --
 -- Name: work_experiences_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.work_experiences_id_seq', 21, true);
+SELECT pg_catalog.setval('public.work_experiences_id_seq', 28, true);
 
 
 --
@@ -11288,5 +11291,5 @@ ALTER TABLE ONLY public.work_experiences
 -- PostgreSQL database dump complete
 --
 
-\unrestrict QN6rvKOtr5L6r7pAZBYdKKj5lxE5O1MdaFHyDkGkhKuvdV1WsbQrQZvpr6uh14A
+\unrestrict tre674RQMyRoQp6jKbVMEFODNg70i69h1tRTNXICIyhRadsMMYRGa9pLUCb7FJB
 
