@@ -186,9 +186,6 @@ async function importProfile(
 
     const data = importData.profile;
 
-    // Use provided ID or generate new one
-    const finalProfileId = profileId || uuidv4();
-
     // If updating existing profile
     if (profileId) {
       const existingProfile = await prisma.profiles.findUnique({
@@ -235,55 +232,61 @@ async function importProfile(
 
       console.log(`Updating profile: ${profileId}`);
     } else {
-      console.log(`Creating new profile: ${finalProfileId}`);
+      console.log(`Creating new profile`);
     }
 
-    // Upsert the profile
-    const profile = await prisma.profiles.upsert({
-      where: { id: finalProfileId },
-      update: {
-        name: data.name,
-        title: data.title,
-        location: data.location,
-        phone_number: data.phone_number,
-        email_address: data.email_address,
-        personal_website: data.personal_website,
-        subtitle: data.subtitle,
-        core_stack: data.core_stack,
-        linkedin_profile: data.linkedin_profile,
-        github_profile: data.github_profile,
-        stackoverflow_profile: data.stackoverflow_profile,
-        headline: data.headline,
-        summary: data.summary,
-        nationality: data.nationality,
-        location_url: data.location_url,
-        location_timezone: data.location_timezone,
-        date_updated: new Date(),
-      },
-      create: {
-        id: finalProfileId,
-        name: data.name,
-        title: data.title,
-        location: data.location,
-        phone_number: data.phone_number,
-        email_address: data.email_address,
-        personal_website: data.personal_website,
-        subtitle: data.subtitle,
-        core_stack: data.core_stack,
-        linkedin_profile: data.linkedin_profile,
-        github_profile: data.github_profile,
-        stackoverflow_profile: data.stackoverflow_profile,
-        headline: data.headline,
-        summary: data.summary,
-        nationality: data.nationality,
-        location_url: data.location_url,
-        location_timezone: data.location_timezone,
-        date_created: new Date(),
-        date_updated: new Date(),
-      },
-    });
+    let profile;
 
-    console.log(`✅ Profile created/updated: ${profile.id}`);
+    if (profileId) {
+      // Upsert the profile
+      profile = await prisma.profiles.update({
+        where: { id: profileId },
+        data: {
+          name: data.name,
+          title: data.title,
+          location: data.location,
+          phone_number: data.phone_number,
+          email_address: data.email_address,
+          personal_website: data.personal_website,
+          subtitle: data.subtitle,
+          core_stack: data.core_stack,
+          linkedin_profile: data.linkedin_profile,
+          github_profile: data.github_profile,
+          stackoverflow_profile: data.stackoverflow_profile,
+          headline: data.headline,
+          summary: data.summary,
+          nationality: data.nationality,
+          location_url: data.location_url,
+          location_timezone: data.location_timezone,
+          date_updated: new Date(),
+        },
+      });
+      console.log(`✅ Profile updated: ${profile.id}`);
+    } else {
+      profile = await prisma.profiles.create({
+        data: {
+          name: data.name,
+          title: data.title,
+          location: data.location,
+          phone_number: data.phone_number,
+          email_address: data.email_address,
+          personal_website: data.personal_website,
+          subtitle: data.subtitle,
+          core_stack: data.core_stack,
+          linkedin_profile: data.linkedin_profile,
+          github_profile: data.github_profile,
+          stackoverflow_profile: data.stackoverflow_profile,
+          headline: data.headline,
+          summary: data.summary,
+          nationality: data.nationality,
+          location_url: data.location_url,
+          location_timezone: data.location_timezone,
+          date_created: new Date(),
+          date_updated: new Date(),
+        },
+      });
+      console.log(`✅ Profile created: ${profile.id}`);
+    }
 
     // Import profile versions
     if (data.profile_versions && data.profile_versions.length > 0) {
