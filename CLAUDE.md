@@ -1,26 +1,23 @@
-# CLAUDE.md
+# Docker Compose Setup
 
-This file provides guidance to Claude Code (claude.ai/code) when working with
-code in this repository.
+This project uses Docker Compose with these containers:
 
-## Development Commands
+## `admin`
 
-### Core Commands
+- **Directus CMS** used to build and manage the data in the database
+- Is the source of truth for the database
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production (includes database initialization)
-- `npm run preview` - Preview production build
-- `npm run check` - Run TypeScript and Svelte type checking
-- `npm run check:watch` - Run TypeScript and Svelte type checking in watch mode
-
-## Architecture Overview
-
-### Framework & Deployment
+## `app`
 
 - **SvelteKit** application using Svelte 5 with **TypeScript**
-- **Vercel** deployment with `@sveltejs/adapter-vercel`
-- **Prisma** database, schema in `prisma/schema.prisma`
+- **Prisma** ORM, schema in `prisma/schema.prisma`
 - **Tailwind CSS** for styling
+
+## `database`
+
+- **PostgreSQL** server that is used by `admin` and `app`
+
+Look at the scripts in `package.json` for help executing things in containers.
 
 ### Development Notes
 
