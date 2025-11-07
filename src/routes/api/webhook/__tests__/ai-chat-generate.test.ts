@@ -6,8 +6,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { WebhookPayload } from "$lib/types/webhook";
 
-// Mock the ai-chat-generate module
-vi.mock("$lib/server/ai-chat-generate", () => ({
+// Mock the ai-chat-full-prompt-generate module
+vi.mock("$lib/server/ai-chat-full-prompt-generate", () => ({
   generateAiChatFullPrompt: vi.fn(),
 }));
 
@@ -21,7 +21,7 @@ vi.mock("$lib/tools/get-env", () => ({
   }),
 }));
 
-import { generateAiChatFullPrompt } from "$lib/server/ai-chat-generate";
+import { generateAiChatFullPrompt } from "$lib/server/ai-chat-full-prompt-generate";
 import { POST } from "../+server";
 
 /**

@@ -2,10 +2,8 @@ import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "@sveltejs/kit";
 import { getEnv } from "$lib/tools/get-env";
 import type { WebhookPayload, WebhookResponse } from "$lib/types/webhook";
-import {
-  exportProfile,
-  generateAiChatFullPrompt,
-} from "$lib/server/profile-export";
+import { exportProfile } from "$lib/server/profile-export";
+import { generateAiChatFullPrompt } from "$lib/server/ai-chat-full-prompt-generate";
 
 /**
  * Webhook endpoint for Directus Flow integration
