@@ -42,7 +42,7 @@ export async function generateAiChatFullPrompt(aiChatId: number): Promise<{
       .replace(/{data}/g, dataValue);
 
     // Combine system_prompt and user_prompt with 2 newlines
-    const fullPrompt = `${interpolatedSystemPrompt}\n\n${aiChat.user_prompt}`;
+    const fullPrompt = `${interpolatedSystemPrompt}\n\n## User prompt:\n\n${aiChat.user_prompt}`;
 
     // Update the full_prompt field
     await prisma.ai_chat.update({
