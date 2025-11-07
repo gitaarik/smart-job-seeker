@@ -3,6 +3,7 @@ import type { RequestHandler } from "@sveltejs/kit";
 import { getEnv } from "$lib/tools/get-env";
 import type { WebhookPayload, WebhookResponse } from "$lib/types/webhook";
 import { exportProfile } from "$lib/server/profile-export";
+import { prisma } from "$lib/db";
 
 /**
  * Webhook endpoint for Directus Flow integration
@@ -124,6 +125,8 @@ async function processWebhookEvent(
   switch (eventType) {
     case "profile.export":
       return await handleProfileExport(data);
+    case "ai_chat.generate_full_prompt":
+      return await handleAiChatGenerateFullPrompt(data);
     case "item.create":
       return await handleItemCreate(data);
     case "item.update":
@@ -221,6 +224,120 @@ async function handleProfileExport(
     return {
       processed: false,
       profileCount: profileIds.length,
+      error: errorMessage,
+    };
+  }
+}
+
+/**
+ * Handle ai_chat.generate_full_prompt events
+ * Called to generate and update the full_prompt field by combining system_prompt and user_prompt
+ * Expected data format: { aiChatIds: string[] }
+ */
+async function handleAiChatGenerateFullPrompt(
+  data: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  // Extract and parse aiChatIds (array of strings to be converted to numbers)
+  let aiChatIds: number[] = [];
+
+  if (Array.isArray(data.aiChatIds)) {
+    aiChatIds = (data.aiChatIds as unknown[])
+      .map((id) => {
+        const parsed = parseInt(String(id), 10);
+        return isNaN(parsed) ? null : parsed;
+      })
+      .filter((id): id is number => id !== null);
+  }
+
+  if (aiChatIds.length === 0) {
+    console.warn(
+      `[Webhook] ai_chat.generate_full_prompt: Invalid or missing aiChatIds`,
+      data,
+    );
+    return {
+      processed: false,
+      error:
+        "Missing or invalid aiChatIds in data (expected array of numeric strings)",
+    };
+  }
+
+  try {
+    console.log(
+      `[Webhook] Generating full prompts for ${aiChatIds.length} AI chat(s)...`,
+    );
+
+    const results = await Promise.allSettled(
+      aiChatIds.map(async (aiChatId) => {
+        try {
+          // Fetch the ai_chat record
+          const aiChat = await prisma.ai_chat.findUnique({
+            where: { id: aiChatId },
+            select: { id: true, system_prompt: true, user_prompt: true },
+          });
+
+          if (!aiChat) {
+            return {
+              aiChatId,
+              success: false,
+              message: `AI chat with ID ${aiChatId} not found`,
+            };
+          }
+
+          // Combine system_prompt and user_prompt with 2 newlines
+          const fullPrompt = `${aiChat.system_prompt}\n\n${aiChat.user_prompt}`;
+
+          // Update the full_prompt field
+          await prisma.ai_chat.update({
+            where: { id: aiChatId },
+            data: { full_prompt: fullPrompt },
+          });
+
+          return {
+            aiChatId,
+            success: true,
+            message: `Full prompt generated for AI chat ID ${aiChatId}`,
+          };
+        } catch (error) {
+          return {
+            aiChatId,
+            success: false,
+            message: error instanceof Error
+              ? error.message
+              : "Unknown error generating full prompt",
+          };
+        }
+      }),
+    );
+
+    const successful = results.filter(
+      (r) => r.status === "fulfilled" && (r.value as any).success !== false,
+    );
+    const failed = results.filter(
+      (r) =>
+        r.status === "rejected" ||
+        (r.status === "fulfilled" && (r.value as any).success === false),
+    );
+
+    return {
+      processed: successful.length > 0,
+      aiChatCount: aiChatIds.length,
+      successCount: successful.length,
+      results: results.map((
+        r,
+      ) => (r.status === "fulfilled" ? r.value : r.reason)),
+      ...(failed.length > 0 && { failureCount: failed.length }),
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error
+      ? error.message
+      : "Unknown error";
+    console.error(
+      `[Webhook] ai_chat.generate_full_prompt failed:`,
+      errorMessage,
+    );
+    return {
+      processed: false,
+      aiChatCount: aiChatIds.length,
       error: errorMessage,
     };
   }
