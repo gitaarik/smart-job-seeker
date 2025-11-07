@@ -52,7 +52,8 @@
       "Bash(jq:*)",
       "Bash(npm run docker:recover-tech-skills:*)",
       "Bash(/tmp/old_dump.sql)",
-      "Bash(/home/rik/dev/smart-job-seeker/db-dumps/job_applications.sql)"
+      "Bash(/home/rik/dev/smart-job-seeker/db-dumps/job_applications.sql)",
+      "Bash(tree:*)"
     ],
     "deny": [],
     "ask": []
