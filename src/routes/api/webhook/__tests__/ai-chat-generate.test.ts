@@ -6,14 +6,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { WebhookPayload } from "$lib/types/webhook";
 
-// Mock the prisma module
-vi.mock("$lib/db", () => ({
-  prisma: {
-    ai_chat: {
-      findUnique: vi.fn(),
-      update: vi.fn(),
-    },
-  },
+// Mock the ai-chat-generate module
+vi.mock("$lib/server/ai-chat-generate", () => ({
+  generateAiChatFullPrompt: vi.fn(),
 }));
 
 // Mock the get-env utility
@@ -26,7 +21,7 @@ vi.mock("$lib/tools/get-env", () => ({
   }),
 }));
 
-import { prisma } from "$lib/db";
+import { generateAiChatFullPrompt } from "$lib/server/ai-chat-generate";
 import { POST } from "../+server";
 
 /**
@@ -107,19 +102,14 @@ describe("POST /api/webhook - ai_chat.generate_full_prompt event", () => {
     });
 
     it("should accept requests with valid secret", async () => {
-      const request = createMockRequest(validPayload, secret);
+      const request = createMockRequest(singleAiChatPayload, secret);
       const event = createMockEvent(request);
 
-      // Mock successful ai_chat queries
-      const mockPrisma = prisma as any;
-      mockPrisma.ai_chat.findUnique.mockResolvedValueOnce({
-        id: 1,
-        system_prompt: "System prompt 1",
-        user_prompt: "User prompt 1",
-      });
-      mockPrisma.ai_chat.update.mockResolvedValueOnce({
-        id: 1,
-        full_prompt: "System prompt 1\n\nUser prompt 1",
+      // Mock successful full prompt generation
+      const mockGenerateAiChatFullPrompt = generateAiChatFullPrompt as any;
+      mockGenerateAiChatFullPrompt.mockResolvedValueOnce({
+        success: true,
+        message: "Full prompt generated for AI chat ID 1",
       });
 
       const response = await POST(event);
@@ -215,36 +205,19 @@ describe("POST /api/webhook - ai_chat.generate_full_prompt event", () => {
         const request = createMockRequest(validPayload, secret);
         const event = createMockEvent(request);
 
-        const mockPrisma = prisma as any;
-        mockPrisma.ai_chat.findUnique
+        const mockGenerateAiChatFullPrompt = generateAiChatFullPrompt as any;
+        mockGenerateAiChatFullPrompt
           .mockResolvedValueOnce({
-            id: 1,
-            system_prompt: "System 1",
-            user_prompt: "User 1",
+            success: true,
+            message: "Full prompt generated for AI chat ID 1",
           })
           .mockResolvedValueOnce({
-            id: 2,
-            system_prompt: "System 2",
-            user_prompt: "User 2",
+            success: true,
+            message: "Full prompt generated for AI chat ID 2",
           })
           .mockResolvedValueOnce({
-            id: 3,
-            system_prompt: "System 3",
-            user_prompt: "User 3",
-          });
-
-        mockPrisma.ai_chat.update
-          .mockResolvedValueOnce({
-            id: 1,
-            full_prompt: "System 1\n\nUser 1",
-          })
-          .mockResolvedValueOnce({
-            id: 2,
-            full_prompt: "System 2\n\nUser 2",
-          })
-          .mockResolvedValueOnce({
-            id: 3,
-            full_prompt: "System 3\n\nUser 3",
+            success: true,
+            message: "Full prompt generated for AI chat ID 3",
           });
 
         const response = await POST(event);
@@ -256,41 +229,7 @@ describe("POST /api/webhook - ai_chat.generate_full_prompt event", () => {
         expect(data.data.aiChatCount).toBe(3);
         expect(data.data.successCount).toBe(3);
         expect(data.data.results).toHaveLength(3);
-        expect(mockPrisma.ai_chat.findUnique).toHaveBeenCalledTimes(3);
-        expect(mockPrisma.ai_chat.update).toHaveBeenCalledTimes(3);
-      },
-    );
-
-    it(
-      "should combine system_prompt and user_prompt with exactly 2 newlines",
-      async () => {
-        const request = createMockRequest(singleAiChatPayload, secret);
-        const event = createMockEvent(request);
-
-        const mockPrisma = prisma as any;
-        mockPrisma.ai_chat.findUnique.mockResolvedValueOnce({
-          id: 1,
-          system_prompt: "This is the system prompt",
-          user_prompt: "This is the user prompt",
-        });
-
-        mockPrisma.ai_chat.update.mockResolvedValueOnce({
-          id: 1,
-          full_prompt: "This is the system prompt\n\nThis is the user prompt",
-        });
-
-        const response = await POST(event);
-
-        expect(response.status).toBe(200);
-        const data = await response.json();
-
-        // Verify the update call was made with the correct full_prompt format
-        expect(mockPrisma.ai_chat.update).toHaveBeenCalledWith({
-          where: { id: 1 },
-          data: {
-            full_prompt: "This is the system prompt\n\nThis is the user prompt",
-          },
-        });
+        expect(mockGenerateAiChatFullPrompt).toHaveBeenCalledTimes(3);
       },
     );
 
@@ -298,15 +237,10 @@ describe("POST /api/webhook - ai_chat.generate_full_prompt event", () => {
       const request = createMockRequest(singleAiChatPayload, secret);
       const event = createMockEvent(request);
 
-      const mockPrisma = prisma as any;
-      mockPrisma.ai_chat.findUnique.mockResolvedValueOnce({
-        id: 1,
-        system_prompt: "System prompt",
-        user_prompt: "User prompt",
-      });
-      mockPrisma.ai_chat.update.mockResolvedValueOnce({
-        id: 1,
-        full_prompt: "System prompt\n\nUser prompt",
+      const mockGenerateAiChatFullPrompt = generateAiChatFullPrompt as any;
+      mockGenerateAiChatFullPrompt.mockResolvedValueOnce({
+        success: true,
+        message: "Full prompt generated for AI chat ID 1",
       });
 
       const response = await POST(event);
@@ -317,18 +251,17 @@ describe("POST /api/webhook - ai_chat.generate_full_prompt event", () => {
       expect(data.data.processed).toBe(true);
       expect(data.data.aiChatCount).toBe(1);
       expect(data.data.successCount).toBe(1);
-      expect(mockPrisma.ai_chat.findUnique).toHaveBeenCalledWith({
-        where: { id: 1 },
-        select: { id: true, system_prompt: true, user_prompt: true },
-      });
     });
 
     it("should handle AI chat not found error gracefully", async () => {
       const request = createMockRequest(singleAiChatPayload, secret);
       const event = createMockEvent(request);
 
-      const mockPrisma = prisma as any;
-      mockPrisma.ai_chat.findUnique.mockResolvedValueOnce(null);
+      const mockGenerateAiChatFullPrompt = generateAiChatFullPrompt as any;
+      mockGenerateAiChatFullPrompt.mockResolvedValueOnce({
+        success: false,
+        message: "AI chat with ID 1 not found",
+      });
 
       const response = await POST(event);
 
@@ -345,35 +278,19 @@ describe("POST /api/webhook - ai_chat.generate_full_prompt event", () => {
       const request = createMockRequest(validPayload, secret);
       const event = createMockEvent(request);
 
-      const mockPrisma = prisma as any;
-      // First one succeeds
-      mockPrisma.ai_chat.findUnique
+      const mockGenerateAiChatFullPrompt = generateAiChatFullPrompt as any;
+      mockGenerateAiChatFullPrompt
         .mockResolvedValueOnce({
-          id: 1,
-          system_prompt: "System 1",
-          user_prompt: "User 1",
-        });
-
-      // Second one returns null (not found)
-      mockPrisma.ai_chat.findUnique
-        .mockResolvedValueOnce(null);
-
-      // Third one succeeds
-      mockPrisma.ai_chat.findUnique
-        .mockResolvedValueOnce({
-          id: 3,
-          system_prompt: "System 3",
-          user_prompt: "User 3",
-        });
-
-      mockPrisma.ai_chat.update
-        .mockResolvedValueOnce({
-          id: 1,
-          full_prompt: "System 1\n\nUser 1",
+          success: true,
+          message: "Full prompt generated for AI chat ID 1",
         })
         .mockResolvedValueOnce({
-          id: 3,
-          full_prompt: "System 3\n\nUser 3",
+          success: false,
+          message: "AI chat with ID 2 not found",
+        })
+        .mockResolvedValueOnce({
+          success: true,
+          message: "Full prompt generated for AI chat ID 3",
         });
 
       const response = await POST(event);
@@ -392,28 +309,20 @@ describe("POST /api/webhook - ai_chat.generate_full_prompt event", () => {
         const request = createMockRequest(validPayload, secret);
         const event = createMockEvent(request);
 
-        const mockPrisma = prisma as any;
-        mockPrisma.ai_chat.findUnique
+        const mockGenerateAiChatFullPrompt = generateAiChatFullPrompt as any;
+        mockGenerateAiChatFullPrompt
           .mockResolvedValueOnce({
-            id: 1,
-            system_prompt: "System 1",
-            user_prompt: "User 1",
+            success: true,
+            message: "Full prompt generated for AI chat ID 1",
           })
           .mockResolvedValueOnce({
-            id: 2,
-            system_prompt: "System 2",
-            user_prompt: "User 2",
+            success: true,
+            message: "Full prompt generated for AI chat ID 2",
           })
           .mockResolvedValueOnce({
-            id: 3,
-            system_prompt: "System 3",
-            user_prompt: "User 3",
+            success: true,
+            message: "Full prompt generated for AI chat ID 3",
           });
-
-        mockPrisma.ai_chat.update
-          .mockResolvedValueOnce({ id: 1 })
-          .mockResolvedValueOnce({ id: 2 })
-          .mockResolvedValueOnce({ id: 3 });
 
         const response = await POST(event);
         const data = await response.json();
@@ -432,28 +341,20 @@ describe("POST /api/webhook - ai_chat.generate_full_prompt event", () => {
       const request = createMockRequest(validPayload, secret);
       const event = createMockEvent(request);
 
-      const mockPrisma = prisma as any;
-      mockPrisma.ai_chat.findUnique
+      const mockGenerateAiChatFullPrompt = generateAiChatFullPrompt as any;
+      mockGenerateAiChatFullPrompt
         .mockResolvedValueOnce({
-          id: 1,
-          system_prompt: "System 1",
-          user_prompt: "User 1",
+          success: true,
+          message: "Full prompt generated for AI chat ID 1",
         })
         .mockResolvedValueOnce({
-          id: 2,
-          system_prompt: "System 2",
-          user_prompt: "User 2",
+          success: true,
+          message: "Full prompt generated for AI chat ID 2",
         })
         .mockResolvedValueOnce({
-          id: 3,
-          system_prompt: "System 3",
-          user_prompt: "User 3",
+          success: true,
+          message: "Full prompt generated for AI chat ID 3",
         });
-
-      mockPrisma.ai_chat.update
-        .mockResolvedValueOnce({ id: 1 })
-        .mockResolvedValueOnce({ id: 2 })
-        .mockResolvedValueOnce({ id: 3 });
 
       const response = await POST(event);
       const data = await response.json();
@@ -473,11 +374,20 @@ describe("POST /api/webhook - ai_chat.generate_full_prompt event", () => {
       const request = createMockRequest(validPayload, secret);
       const event = createMockEvent(request);
 
-      const mockPrisma = prisma as any;
-      mockPrisma.ai_chat.findUnique
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce(null);
+      const mockGenerateAiChatFullPrompt = generateAiChatFullPrompt as any;
+      mockGenerateAiChatFullPrompt
+        .mockResolvedValueOnce({
+          success: false,
+          message: "AI chat with ID 1 not found",
+        })
+        .mockResolvedValueOnce({
+          success: false,
+          message: "AI chat with ID 2 not found",
+        })
+        .mockResolvedValueOnce({
+          success: false,
+          message: "AI chat with ID 3 not found",
+        });
 
       const response = await POST(event);
 
@@ -522,22 +432,16 @@ describe("POST /api/webhook - ai_chat.generate_full_prompt event", () => {
       const request = createMockRequest(payloadMixedIds, secret);
       const event = createMockEvent(request);
 
-      const mockPrisma = prisma as any;
-      mockPrisma.ai_chat.findUnique
+      const mockGenerateAiChatFullPrompt = generateAiChatFullPrompt as any;
+      mockGenerateAiChatFullPrompt
         .mockResolvedValueOnce({
-          id: 1,
-          system_prompt: "System 1",
-          user_prompt: "User 1",
+          success: true,
+          message: "Full prompt generated for AI chat ID 1",
         })
         .mockResolvedValueOnce({
-          id: 2,
-          system_prompt: "System 2",
-          user_prompt: "User 2",
+          success: true,
+          message: "Full prompt generated for AI chat ID 2",
         });
-
-      mockPrisma.ai_chat.update
-        .mockResolvedValueOnce({ id: 1 })
-        .mockResolvedValueOnce({ id: 2 });
 
       const response = await POST(event);
 

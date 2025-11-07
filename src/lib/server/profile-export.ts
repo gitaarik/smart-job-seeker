@@ -6,6 +6,37 @@
 import { prisma } from "$lib/db";
 import removeMd from "remove-markdown";
 
+/**
+ * Generate full prompt for a single AI chat using the same prisma instance
+ */
+export async function generateAiChatFullPrompt(aiChatId: number): Promise<{
+  success: boolean;
+  message: string;
+}> {
+  try {
+    // Use raw SQL query since prisma instance doesn't have ai_chat model due to a module initialization issue
+    await prisma.$queryRaw`
+      UPDATE ai_chat
+      SET full_prompt = CONCAT(system_prompt, '\n\n', user_prompt),
+          date_updated = NOW()
+      WHERE id = ${aiChatId}
+    `;
+
+    return {
+      success: true,
+      message: `Full prompt generated for AI chat ID ${aiChatId}`,
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error
+      ? error.message
+      : "Unknown error";
+    return {
+      success: false,
+      message: `Error generating full prompt: ${errorMessage}`,
+    };
+  }
+}
+
 interface SchemaNode {
   note?: string;
   fields?: Record<string, string>;

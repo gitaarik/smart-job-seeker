@@ -2,8 +2,10 @@ import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "@sveltejs/kit";
 import { getEnv } from "$lib/tools/get-env";
 import type { WebhookPayload, WebhookResponse } from "$lib/types/webhook";
-import { exportProfile } from "$lib/server/profile-export";
-import { prisma } from "$lib/db";
+import {
+  exportProfile,
+  generateAiChatFullPrompt,
+} from "$lib/server/profile-export";
 
 /**
  * Webhook endpoint for Directus Flow integration
@@ -267,46 +269,19 @@ async function handleAiChatGenerateFullPrompt(
     );
 
     const results = await Promise.allSettled(
-      aiChatIds.map(async (aiChatId) => {
-        try {
-          // Fetch the ai_chat record
-          const aiChat = await prisma.ai_chat.findUnique({
-            where: { id: aiChatId },
-            select: { id: true, system_prompt: true, user_prompt: true },
-          });
-
-          if (!aiChat) {
-            return {
-              aiChatId,
-              success: false,
-              message: `AI chat with ID ${aiChatId} not found`,
-            };
-          }
-
-          // Combine system_prompt and user_prompt with 2 newlines
-          const fullPrompt = `${aiChat.system_prompt}\n\n${aiChat.user_prompt}`;
-
-          // Update the full_prompt field
-          await prisma.ai_chat.update({
-            where: { id: aiChatId },
-            data: { full_prompt: fullPrompt },
-          });
-
-          return {
+      aiChatIds.map((aiChatId) =>
+        generateAiChatFullPrompt(aiChatId)
+          .then((result) => ({
             aiChatId,
-            success: true,
-            message: `Full prompt generated for AI chat ID ${aiChatId}`,
-          };
-        } catch (error) {
-          return {
+            success: result.success,
+            message: result.message,
+          }))
+          .catch((error) => ({
             aiChatId,
             success: false,
-            message: error instanceof Error
-              ? error.message
-              : "Unknown error generating full prompt",
-          };
-        }
-      }),
+            message: error instanceof Error ? error.message : "Unknown error",
+          }))
+      ),
     );
 
     const successful = results.filter(
