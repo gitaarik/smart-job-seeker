@@ -57,7 +57,9 @@
       "Bash(npm run test:*)",
       "Bash(npx deno fmt:*)",
       "Bash(npm run docker:*)",
-      "Bash(npm run prisma:generate:*)"
+      "Bash(npm run prisma:generate:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
