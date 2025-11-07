@@ -6,7 +6,12 @@ import { defineConfig } from "vite";
 export default defineConfig({
   plugins: [
     enhancedImages(), // must come before the SvelteKit plugin
-    tailwindcss(), 
+    tailwindcss(),
     sveltekit()
   ],
+  test: {
+    globals: true,
+    environment: "node",
+    setupFiles: [],
+  },
 });
