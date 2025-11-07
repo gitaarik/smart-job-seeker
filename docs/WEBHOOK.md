@@ -131,7 +131,7 @@ In the Webhook operation:
 
 ### Step 3: Example Webhook Setup
 
-**For a "profile.export" event:**
+**For a "profile.export" event with multiple profiles:**
 
 1. Create a Flow with your desired trigger
 2. Add a Webhook operation with:
@@ -142,7 +142,16 @@ In the Webhook operation:
      Content-Type: application/json
      x-webhook-secret: your-webhook-secret-key
      ```
-   - **Body:**
+   - **Body (for multiple profiles):**
+     ```json
+     {
+       "eventType": "profile.export",
+       "data": {
+         "profileIds": [1, 2, 3]
+       }
+     }
+     ```
+   - **Body (for single profile):**
      ```json
      {
        "eventType": "profile.export",
@@ -157,9 +166,19 @@ In the Webhook operation:
 The webhook handler processes different event types:
 
 ### profile.export
-Exports both profile schema and data to the `collected_data` collection. This combines the functionality of `export-profile-schema.ts` and `export-profile-data.ts` scripts.
+Exports both profile schema and data to the `collected_data` collection for one or more profiles. This combines the functionality of `export-profile-schema.ts` and `export-profile-data.ts` scripts.
 
-**Request:**
+**Request (Multiple Profiles):**
+```json
+{
+  "eventType": "profile.export",
+  "data": {
+    "profileIds": [1, 2, 3]
+  }
+}
+```
+
+**Request (Single Profile - Backwards Compatible):**
 ```json
 {
   "eventType": "profile.export",
@@ -176,24 +195,59 @@ Exports both profile schema and data to the `collected_data` collection. This co
   "message": "Webhook processed successfully",
   "data": {
     "processed": true,
-    "profileId": 1,
-    "schemaExport": {
-      "success": true,
-      "message": "Profile schema exported for profile ID 1"
-    },
-    "dataExport": {
-      "success": true,
-      "message": "Profile data exported for profile ID 1"
-    }
+    "profileCount": 3,
+    "successCount": 3,
+    "results": [
+      {
+        "profileId": 1,
+        "success": true,
+        "schemaExport": {
+          "success": true,
+          "message": "Profile schema exported for profile ID 1"
+        },
+        "dataExport": {
+          "success": true,
+          "message": "Profile data exported for profile ID 1"
+        }
+      },
+      {
+        "profileId": 2,
+        "success": true,
+        "schemaExport": {
+          "success": true,
+          "message": "Profile schema exported for profile ID 2"
+        },
+        "dataExport": {
+          "success": true,
+          "message": "Profile data exported for profile ID 2"
+        }
+      },
+      {
+        "profileId": 3,
+        "success": true,
+        "schemaExport": {
+          "success": true,
+          "message": "Profile schema exported for profile ID 3"
+        },
+        "dataExport": {
+          "success": true,
+          "message": "Profile data exported for profile ID 3"
+        }
+      }
+    ]
   }
 }
 ```
 
 **What it does:**
-1. Exports the profile schema (field names and notes) from Directus collections
-2. Fetches all profile data including related records (work experiences, education, skills, etc.)
-3. Stores both in the `collected_data` collection for the profile
-4. Updates existing entries or creates new ones
+1. Accepts one or more profile IDs
+2. Processes each profile in parallel (non-blocking)
+3. For each profile:
+   - Exports the profile schema (field names and notes) from Directus collections
+   - Fetches all profile data including related records (work experiences, education, skills, etc.)
+   - Stores both in the `collected_data` collection for the profile
+   - Updates existing entries or creates new ones
+4. Returns detailed results for each profile, including individual success/failure status
 
 **Default Handler Location:** `src/routes/api/webhook/+server.ts` → `handleProfileExport()`
 

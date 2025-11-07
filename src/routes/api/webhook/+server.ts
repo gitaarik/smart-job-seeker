@@ -1,8 +1,8 @@
-import { json } from '@sveltejs/kit';
-import type { RequestHandler } from '@sveltejs/kit';
-import { getEnv } from '$lib/tools/get-env';
-import type { WebhookPayload, WebhookResponse } from '$lib/types/webhook';
-import { exportProfile } from '$lib/server/profile-export';
+import { json } from "@sveltejs/kit";
+import type { RequestHandler } from "@sveltejs/kit";
+import { getEnv } from "$lib/tools/get-env";
+import type { WebhookPayload, WebhookResponse } from "$lib/types/webhook";
+import { exportProfile } from "$lib/server/profile-export";
 
 /**
  * Webhook endpoint for Directus Flow integration
@@ -12,30 +12,30 @@ import { exportProfile } from '$lib/server/profile-export';
 export const POST: RequestHandler = async (event) => {
   try {
     // Get webhook secret from environment
-    const webhookSecret = getEnv('WEBHOOK_SECRET', '');
+    const webhookSecret = getEnv("WEBHOOK_SECRET", "");
 
     if (!webhookSecret) {
       return json<WebhookResponse>(
         {
           success: false,
-          message: 'Webhook not configured',
-          error: 'WEBHOOK_SECRET environment variable is not set',
+          message: "Webhook not configured",
+          error: "WEBHOOK_SECRET environment variable is not set",
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     // Get secret from request header
-    const headerSecret = event.request.headers.get('x-webhook-secret');
+    const headerSecret = event.request.headers.get("x-webhook-secret");
 
     if (!headerSecret) {
       return json<WebhookResponse>(
         {
           success: false,
-          message: 'Unauthorized',
-          error: 'Missing webhook secret header',
+          message: "Unauthorized",
+          error: "Missing webhook secret header",
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -44,10 +44,10 @@ export const POST: RequestHandler = async (event) => {
       return json<WebhookResponse>(
         {
           success: false,
-          message: 'Unauthorized',
-          error: 'Invalid webhook secret',
+          message: "Unauthorized",
+          error: "Invalid webhook secret",
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -60,10 +60,10 @@ export const POST: RequestHandler = async (event) => {
       return json<WebhookResponse>(
         {
           success: false,
-          message: 'Invalid JSON payload',
-          error: 'Failed to parse request body as JSON',
+          message: "Invalid JSON payload",
+          error: "Failed to parse request body as JSON",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -72,10 +72,10 @@ export const POST: RequestHandler = async (event) => {
       return json<WebhookResponse>(
         {
           success: false,
-          message: 'Invalid payload structure',
-          error: 'Missing required fields: eventType, data',
+          message: "Invalid payload structure",
+          error: "Missing required fields: eventType, data",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -85,21 +85,23 @@ export const POST: RequestHandler = async (event) => {
     return json<WebhookResponse>(
       {
         success: true,
-        message: 'Webhook processed successfully',
+        message: "Webhook processed successfully",
         data: result,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage = error instanceof Error
+      ? error.message
+      : "Unknown error";
 
     return json<WebhookResponse>(
       {
         success: false,
-        message: 'Internal server error',
+        message: "Internal server error",
         error: errorMessage,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };
@@ -108,7 +110,9 @@ export const POST: RequestHandler = async (event) => {
  * Process webhook events based on their type
  * Extend this function to handle different event types from Directus
  */
-async function processWebhookEvent(payload: WebhookPayload): Promise<Record<string, unknown>> {
+async function processWebhookEvent(
+  payload: WebhookPayload,
+): Promise<Record<string, unknown>> {
   const { eventType, data } = payload;
 
   // Log incoming webhook (for debugging/auditing)
@@ -118,54 +122,102 @@ async function processWebhookEvent(payload: WebhookPayload): Promise<Record<stri
 
   // Handle different event types
   switch (eventType) {
-    case 'profile.export':
+    case "profile.export":
       return await handleProfileExport(data);
-    case 'item.create':
+    case "item.create":
       return await handleItemCreate(data);
-    case 'item.update':
+    case "item.update":
       return await handleItemUpdate(data);
-    case 'item.delete':
+    case "item.delete":
       return await handleItemDelete(data);
-    case 'custom.event':
+    case "custom.event":
       return await handleCustomEvent(data);
     default:
       console.warn(`[Webhook] Unknown event type: ${eventType}`);
-      return { processed: true, message: 'Event type not specifically handled but received' };
+      return {
+        processed: true,
+        message: "Event type not specifically handled but received",
+      };
   }
 }
 
 /**
  * Handle profile.export events
  * Called to export profile schema and data to collected_data collection
- * Expected data format: { profileId: number }
+ * Expected data format: { profileIds: number[] } or { profileId: number }
  */
-async function handleProfileExport(data: Record<string, unknown>): Promise<Record<string, unknown>> {
-  const profileId = data.profileId as number | undefined;
+async function handleProfileExport(
+  data: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  // Support both profileIds (array) and profileId (single) for backwards compatibility
+  let profileIds: number[] = [];
 
-  if (!profileId || typeof profileId !== 'number') {
-    console.warn(`[Webhook] profile.export: Invalid or missing profileId`, data);
+  if (Array.isArray(data.profileIds)) {
+    profileIds = (data.profileIds as unknown[])
+      .map((id) => parseInt(id))
+      .filter((id) => typeof id === "number");
+  } else if (typeof data.profileId === "number") {
+    profileIds = [data.profileId];
+  }
+
+  if (profileIds.length === 0) {
+    console.warn(
+      `[Webhook] profile.export: Invalid or missing profileIds`,
+      data,
+    );
     return {
       processed: false,
-      error: 'Missing or invalid profileId in data',
+      error:
+        "Missing or invalid profileIds in data (expected array of numbers or single profileId)",
     };
   }
 
   try {
-    console.log(`[Webhook] Exporting profile ${profileId}...`);
-    const result = await exportProfile(profileId);
+    console.log(`[Webhook] Exporting ${profileIds.length} profile(s)...`);
+
+    const results = await Promise.allSettled(
+      profileIds.map((profileId) =>
+        exportProfile(profileId)
+          .then((result) => ({
+            profileId,
+            success: result.success,
+            schemaExport: result.schemaResult,
+            dataExport: result.dataResult,
+          }))
+          .catch((error) => ({
+            profileId,
+            success: false,
+            error: error instanceof Error ? error.message : "Unknown error",
+          }))
+      ),
+    );
+
+    const successful = results.filter(
+      (r) => r.status === "fulfilled" && (r.value as any).success !== false,
+    );
+    const failed = results.filter(
+      (r) =>
+        r.status === "rejected" ||
+        (r.status === "fulfilled" && (r.value as any).success === false),
+    );
 
     return {
-      processed: result.success,
-      profileId,
-      schemaExport: result.schemaResult,
-      dataExport: result.dataResult,
+      processed: successful.length > 0,
+      profileCount: profileIds.length,
+      successCount: successful.length,
+      results: results.map((
+        r,
+      ) => (r.status === "fulfilled" ? r.value : r.reason)),
+      ...(failed.length > 0 && { failureCount: failed.length }),
     };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage = error instanceof Error
+      ? error.message
+      : "Unknown error";
     console.error(`[Webhook] profile.export failed:`, errorMessage);
     return {
       processed: false,
-      profileId,
+      profileCount: profileIds.length,
       error: errorMessage,
     };
   }
@@ -175,7 +227,9 @@ async function handleProfileExport(data: Record<string, unknown>): Promise<Recor
  * Handle item.create events
  * Called when a new item is created in Directus
  */
-async function handleItemCreate(data: Record<string, unknown>): Promise<Record<string, unknown>> {
+async function handleItemCreate(
+  data: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
   // Example: Log the created item
   console.log(`[Webhook] Item created:`, data);
 
@@ -188,7 +242,7 @@ async function handleItemCreate(data: Record<string, unknown>): Promise<Record<s
 
   return {
     processed: true,
-    action: 'item.create',
+    action: "item.create",
     itemId: data.id,
   };
 }
@@ -197,7 +251,9 @@ async function handleItemCreate(data: Record<string, unknown>): Promise<Record<s
  * Handle item.update events
  * Called when an existing item is updated in Directus
  */
-async function handleItemUpdate(data: Record<string, unknown>): Promise<Record<string, unknown>> {
+async function handleItemUpdate(
+  data: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
   // Example: Log the updated item
   console.log(`[Webhook] Item updated:`, data);
 
@@ -205,7 +261,7 @@ async function handleItemUpdate(data: Record<string, unknown>): Promise<Record<s
 
   return {
     processed: true,
-    action: 'item.update',
+    action: "item.update",
     itemId: data.id,
   };
 }
@@ -214,7 +270,9 @@ async function handleItemUpdate(data: Record<string, unknown>): Promise<Record<s
  * Handle item.delete events
  * Called when an item is deleted from Directus
  */
-async function handleItemDelete(data: Record<string, unknown>): Promise<Record<string, unknown>> {
+async function handleItemDelete(
+  data: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
   // Example: Log the deleted item
   console.log(`[Webhook] Item deleted:`, data);
 
@@ -222,7 +280,7 @@ async function handleItemDelete(data: Record<string, unknown>): Promise<Record<s
 
   return {
     processed: true,
-    action: 'item.delete',
+    action: "item.delete",
     itemId: data.id,
   };
 }
@@ -231,7 +289,9 @@ async function handleItemDelete(data: Record<string, unknown>): Promise<Record<s
  * Handle custom events
  * Called for custom events defined in Directus Flow
  */
-async function handleCustomEvent(data: Record<string, unknown>): Promise<Record<string, unknown>> {
+async function handleCustomEvent(
+  data: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
   // Example: Log the custom event
   console.log(`[Webhook] Custom event:`, data);
 
@@ -239,6 +299,6 @@ async function handleCustomEvent(data: Record<string, unknown>): Promise<Record<
 
   return {
     processed: true,
-    action: 'custom.event',
+    action: "custom.event",
   };
 }

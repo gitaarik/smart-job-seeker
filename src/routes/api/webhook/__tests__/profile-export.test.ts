@@ -57,6 +57,12 @@ describe('POST /api/webhook - profile.export event', () => {
   const validPayload: WebhookPayload = {
     eventType: 'profile.export',
     data: {
+      profileIds: [1, 2, 3],
+    },
+  };
+  const singleProfilePayload: WebhookPayload = {
+    eventType: 'profile.export',
+    data: {
       profileId: 1,
     },
   };
@@ -156,8 +162,31 @@ describe('POST /api/webhook - profile.export event', () => {
   });
 
   describe('profile.export event processing', () => {
-    it('should successfully process valid profile.export event', async () => {
+    it('should successfully process valid profile.export event with multiple profiles', async () => {
       const request = createMockRequest(validPayload, secret);
+      const event = createMockEvent(request);
+
+      const mockExportProfile = exportProfile as any;
+      mockExportProfile.mockResolvedValue({
+        success: true,
+        schemaResult: { success: true, message: 'Schema exported' },
+        dataResult: { success: true, message: 'Data exported' },
+      });
+
+      const response = await POST(event);
+
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data.success).toBe(true);
+      expect(data.data.processed).toBe(true);
+      expect(data.data.profileCount).toBe(3);
+      expect(data.data.successCount).toBe(3);
+      expect(data.data.results).toHaveLength(3);
+      expect(mockExportProfile).toHaveBeenCalledTimes(3);
+    });
+
+    it('should handle single profileId for backwards compatibility', async () => {
+      const request = createMockRequest(singleProfilePayload, secret);
       const event = createMockEvent(request);
 
       const mockExportProfile = exportProfile as any;
@@ -173,15 +202,16 @@ describe('POST /api/webhook - profile.export event', () => {
       const data = await response.json();
       expect(data.success).toBe(true);
       expect(data.data.processed).toBe(true);
-      expect(data.data.profileId).toBe(1);
+      expect(data.data.profileCount).toBe(1);
+      expect(data.data.successCount).toBe(1);
       expect(mockExportProfile).toHaveBeenCalledWith(1);
     });
 
-    it('should handle missing profileId in data', async () => {
+    it('should handle missing profileIds in data', async () => {
       const payloadNoProfileId: WebhookPayload = {
         eventType: 'profile.export',
         data: {
-          // missing profileId
+          // missing profileIds
         },
       };
 
@@ -193,18 +223,18 @@ describe('POST /api/webhook - profile.export event', () => {
       expect(response.status).toBe(200);
       const data = await response.json();
       expect(data.data.processed).toBe(false);
-      expect(data.data.error).toContain('Missing or invalid profileId');
+      expect(data.data.error).toContain('Missing or invalid profileIds');
     });
 
-    it('should handle invalid profileId type', async () => {
-      const payloadInvalidProfileId: WebhookPayload = {
+    it('should handle invalid profileIds type', async () => {
+      const payloadInvalidProfileIds: WebhookPayload = {
         eventType: 'profile.export',
         data: {
-          profileId: 'not-a-number',
+          profileIds: 'not-an-array',
         },
       };
 
-      const request = createMockRequest(payloadInvalidProfileId, secret);
+      const request = createMockRequest(payloadInvalidProfileIds, secret);
       const event = createMockEvent(request);
 
       const response = await POST(event);
@@ -212,45 +242,55 @@ describe('POST /api/webhook - profile.export event', () => {
       expect(response.status).toBe(200);
       const data = await response.json();
       expect(data.data.processed).toBe(false);
-      expect(data.data.error).toContain('Missing or invalid profileId');
+      expect(data.data.error).toContain('Missing or invalid profileIds');
     });
 
-    it('should handle export function errors gracefully', async () => {
+    it('should handle partial failures in profile exports', async () => {
       const request = createMockRequest(validPayload, secret);
       const event = createMockEvent(request);
 
       const mockExportProfile = exportProfile as any;
-      mockExportProfile.mockResolvedValueOnce({
-        success: false,
-        schemaResult: { success: false, message: 'Profile not found' },
-        dataResult: { success: false, message: 'Profile not found' },
-      });
+      mockExportProfile
+        .mockResolvedValueOnce({
+          success: true,
+          schemaResult: { success: true, message: 'Schema exported' },
+          dataResult: { success: true, message: 'Data exported' },
+        })
+        .mockRejectedValueOnce(new Error('Profile 2 not found'))
+        .mockResolvedValueOnce({
+          success: true,
+          schemaResult: { success: true, message: 'Schema exported' },
+          dataResult: { success: true, message: 'Data exported' },
+        });
 
       const response = await POST(event);
 
       expect(response.status).toBe(200);
       const data = await response.json();
-      expect(data.data.processed).toBe(false);
+      expect(data.data.processed).toBe(true);
+      expect(data.data.profileCount).toBe(3);
+      expect(data.data.successCount).toBe(2);
+      expect(data.data.failureCount).toBe(1);
     });
 
-    it('should return detailed export results', async () => {
+    it('should return detailed export results for multiple profiles', async () => {
       const request = createMockRequest(validPayload, secret);
       const event = createMockEvent(request);
 
       const mockExportProfile = exportProfile as any;
-      mockExportProfile.mockResolvedValueOnce({
+      mockExportProfile.mockResolvedValue({
         success: true,
-        schemaResult: { success: true, message: 'Schema exported for profile ID 1' },
-        dataResult: { success: true, message: 'Data exported for profile ID 1' },
+        schemaResult: { success: true, message: 'Schema exported' },
+        dataResult: { success: true, message: 'Data exported' },
       });
 
       const response = await POST(event);
       const data = await response.json();
 
-      expect(data.data.schemaExport).toBeDefined();
-      expect(data.data.dataExport).toBeDefined();
-      expect(data.data.schemaExport.success).toBe(true);
-      expect(data.data.dataExport.success).toBe(true);
+      expect(data.data.results).toBeDefined();
+      expect(data.data.results).toHaveLength(3);
+      expect(data.data.results[0]).toHaveProperty('profileId');
+      expect(data.data.results[0]).toHaveProperty('success');
     });
   });
 
@@ -260,7 +300,7 @@ describe('POST /api/webhook - profile.export event', () => {
       const event = createMockEvent(request);
 
       const mockExportProfile = exportProfile as any;
-      mockExportProfile.mockResolvedValueOnce({
+      mockExportProfile.mockResolvedValue({
         success: true,
         schemaResult: { success: true, message: 'Schema exported' },
         dataResult: { success: true, message: 'Data exported' },
@@ -272,24 +312,27 @@ describe('POST /api/webhook - profile.export event', () => {
       expect(data).toHaveProperty('success');
       expect(data).toHaveProperty('message');
       expect(data).toHaveProperty('data');
+      expect(data.data).toHaveProperty('profileCount');
+      expect(data.data).toHaveProperty('successCount');
+      expect(data.data).toHaveProperty('results');
     });
-
   });
 
   describe('error handling', () => {
-    it('should handle unexpected errors gracefully', async () => {
+    it('should handle all profiles failing gracefully', async () => {
       const request = createMockRequest(validPayload, secret);
       const event = createMockEvent(request);
 
       const mockExportProfile = exportProfile as any;
-      mockExportProfile.mockRejectedValueOnce(new Error('Database connection failed'));
+      mockExportProfile.mockRejectedValue(new Error('Database connection failed'));
 
       const response = await POST(event);
 
       expect(response.status).toBe(200);
       const data = await response.json();
       expect(data.data.processed).toBe(false);
-      expect(data.data.error).toContain('Database connection failed');
+      expect(data.data.profileCount).toBe(3);
+      expect(data.data.failureCount).toBe(3);
     });
   });
 });
