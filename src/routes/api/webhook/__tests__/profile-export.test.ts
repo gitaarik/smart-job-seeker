@@ -64,9 +64,7 @@ function createMockEvent(request: Request) {
 describe('POST /api/webhook - profile.export event', () => {
   const secret = 'test-webhook-secret-key-1234567890123456';
   const validPayload: WebhookPayload = {
-    eventId: 'test-export-1',
     eventType: 'profile.export',
-    timestamp: '2024-11-07T10:30:00.000Z',
     data: {
       profileId: 1,
     },
@@ -155,7 +153,6 @@ describe('POST /api/webhook - profile.export event', () => {
 
     it('should reject payload missing required fields', async () => {
       const incompletePayload = {
-        eventId: 'test-1',
         eventType: 'profile.export',
         // missing data field
       };
@@ -198,9 +195,7 @@ describe('POST /api/webhook - profile.export event', () => {
 
     it('should handle missing profileId in data', async () => {
       const payloadNoProfileId: WebhookPayload = {
-        eventId: 'test-2',
         eventType: 'profile.export',
-        timestamp: '2024-11-07T10:30:00.000Z',
         data: {
           // missing profileId
         },
@@ -220,9 +215,7 @@ describe('POST /api/webhook - profile.export event', () => {
 
     it('should handle invalid profileId type', async () => {
       const payloadInvalidProfileId: WebhookPayload = {
-        eventId: 'test-3',
         eventType: 'profile.export',
-        timestamp: '2024-11-07T10:30:00.000Z',
         data: {
           profileId: 'not-a-number',
         },
@@ -300,27 +293,8 @@ describe('POST /api/webhook - profile.export event', () => {
       expect(data).toHaveProperty('success');
       expect(data).toHaveProperty('message');
       expect(data).toHaveProperty('data');
-      expect(data).toHaveProperty('timestamp');
-      expect(typeof data.timestamp).toBe('string');
     });
 
-    it('should include eventId in response', async () => {
-      const signature = generateSignature(validPayload, secret);
-      const request = createMockRequest(validPayload, signature);
-      const event = createMockEvent(request);
-
-      const mockExportProfile = exportProfile as any;
-      mockExportProfile.mockResolvedValueOnce({
-        success: true,
-        schemaResult: { success: true, message: 'Schema exported' },
-        dataResult: { success: true, message: 'Data exported' },
-      });
-
-      const response = await POST(event);
-      const data = await response.json();
-
-      expect(data.data.eventId).toBe('test-export-1');
-    });
   });
 
   describe('error handling', () => {

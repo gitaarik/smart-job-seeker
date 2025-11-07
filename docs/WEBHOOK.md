@@ -58,28 +58,19 @@ The signature is an HMAC-SHA256 hex digest of the raw JSON body using your `WEBH
 
 ```json
 {
-  "eventId": "unique-event-identifier",
-  "eventType": "item.create|item.update|item.delete|custom.event",
-  "timestamp": "2024-11-07T10:30:00.000Z",
+  "eventType": "profile.export|item.create|item.update|item.delete|custom.event",
   "data": {
     "id": "some-id",
     "field1": "value1",
     "field2": "value2"
-  },
-  "metadata": {
-    "collection": "your_collection_name",
-    "userId": "user-id"
   }
 }
 ```
 
 ### Payload Fields
 
-- **eventId** (required): Unique identifier for this event (UUID recommended)
-- **eventType** (required): Type of event (`item.create`, `item.update`, `item.delete`, or custom)
-- **timestamp** (required): ISO 8601 timestamp of when the event occurred
+- **eventType** (required): Type of event (`profile.export`, `item.create`, `item.update`, `item.delete`, or custom)
 - **data** (required): The actual payload data
-- **metadata** (optional): Additional context about the event
 
 ## Response Format
 
@@ -91,11 +82,9 @@ The signature is an HMAC-SHA256 hex digest of the raw JSON body using your `WEBH
   "message": "Webhook processed successfully",
   "data": {
     "processed": true,
-    "eventId": "unique-event-identifier",
     "action": "item.create",
     "itemId": "item-123"
-  },
-  "timestamp": "2024-11-07T10:30:15.000Z"
+  }
 }
 ```
 
@@ -105,8 +94,7 @@ The signature is an HMAC-SHA256 hex digest of the raw JSON body using your `WEBH
 {
   "success": false,
   "message": "Unauthorized",
-  "error": "Invalid webhook signature",
-  "timestamp": "2024-11-07T10:30:15.000Z"
+  "error": "Invalid webhook signature"
 }
 ```
 
@@ -220,28 +208,29 @@ Exports both profile schema and data to the `collected_data` collection. This co
 **Request:**
 ```json
 {
-  "eventId": "export-123",
   "eventType": "profile.export",
-  "timestamp": "2024-11-07T10:30:00.000Z",
   "data": {
     "profileId": 1
   }
 }
 ```
 
-**Response:**
+**Response (HTTP 200):**
 ```json
 {
-  "processed": true,
-  "eventId": "export-123",
-  "profileId": 1,
-  "schemaExport": {
-    "success": true,
-    "message": "Profile schema exported for profile ID 1"
-  },
-  "dataExport": {
-    "success": true,
-    "message": "Profile data exported for profile ID 1"
+  "success": true,
+  "message": "Webhook processed successfully",
+  "data": {
+    "processed": true,
+    "profileId": 1,
+    "schemaExport": {
+      "success": true,
+      "message": "Profile schema exported for profile ID 1"
+    },
+    "dataExport": {
+      "success": true,
+      "message": "Profile data exported for profile ID 1"
+    }
   }
 }
 ```
