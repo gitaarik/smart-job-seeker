@@ -4,7 +4,7 @@ This document explains how to set up and use the secure webhook endpoint for Dir
 
 ## Overview
 
-The webhook endpoint (`POST /api/webhook`) allows Directus Flow scripts to securely send data to your SvelteKit application. The integration uses HMAC-SHA256 signature verification to ensure requests are authentic.
+The webhook endpoint (`POST /api/webhook`) allows Directus Flow scripts to securely send data to your SvelteKit application. The integration uses a shared secret key for authentication.
 
 ## Setup
 
@@ -49,10 +49,10 @@ Send a POST request with the following structure:
 
 ```
 Content-Type: application/json
-x-webhook-signature: <HMAC-SHA256 signature>
+x-webhook-secret: your-webhook-secret-key
 ```
 
-The signature is an HMAC-SHA256 hex digest of the raw JSON body using your `WEBHOOK_SECRET` as the key.
+The `x-webhook-secret` header must match the `WEBHOOK_SECRET` environment variable.
 
 ### Body
 
@@ -100,103 +100,57 @@ The signature is an HMAC-SHA256 hex digest of the raw JSON body using your `WEBH
 
 ## Directus Flow Integration
 
-### Step 1: Create a Flow Script
+### Step 1: Create a Flow
 
 1. Go to Directus Admin Panel → Settings → Flows
 2. Click "Create Flow"
-3. Choose trigger (e.g., "Item Created")
-4. Add an operation of type "Webhook" or "Run Script"
+3. Choose a trigger (e.g., "Item Created", "Item Updated")
+4. Add a "Webhook" operation
 
 ### Step 2: Configure the Webhook Operation
 
-If using a Webhook operation:
+In the Webhook operation:
 
-1. Set the URL: `http://localhost:5173/api/webhook` (or your production URL)
-2. Set method to `POST`
-3. Add headers:
+1. **URL:** `http://localhost:5173/api/webhook` (or your production URL)
+2. **Method:** `POST`
+3. **Headers:**
    ```
    Content-Type: application/json
-   x-webhook-signature: <see Step 3>
+   x-webhook-secret: your-webhook-secret-key
    ```
-
-### Step 3: Generate and Sign the Payload
-
-You need to generate the HMAC-SHA256 signature of the payload.
-
-**Using a Run Script operation in Directus Flow:**
-
-```javascript
-// In Directus Flow Script operation
-const crypto = require('crypto');
-const webhook_secret = 'your-webhook-secret-key';
-
-// Build your payload
-const payload = {
-  eventId: $trigger.key || crypto.randomUUID(),
-  eventType: 'item.create',
-  timestamp: new Date().toISOString(),
-  data: {
-    id: $trigger.body?.id,
-    name: $trigger.body?.name,
-    // ... include relevant fields from the trigger
-  },
-  metadata: {
-    collection: 'your_collection',
-    userId: $trigger.body?.user_created
-  }
-};
-
-// Convert to JSON string
-const payloadString = JSON.stringify(payload);
-
-// Generate HMAC-SHA256 signature
-const signature = crypto
-  .createHmac('sha256', webhook_secret)
-  .update(payloadString)
-  .digest('hex');
-
-// Return for use in webhook operation
-return {
-  payload: payload,
-  signature: signature
-};
-```
-
-**Complete Directus Flow Setup (Using Script):**
-
-1. Create a Flow with an "Item Created" trigger
-2. Add a "Run Script" operation to generate the signature:
-   ```javascript
-   const crypto = require('crypto');
-   const secret = 'your-webhook-secret';
-
-   const payload = {
-     eventId: Math.random().toString(36).substr(2, 9),
-     eventType: 'item.create',
-     timestamp: new Date().toISOString(),
-     data: $trigger.body,
-     metadata: {
-       collection: 'items'
+4. **Body:** (Create the payload JSON)
+   ```json
+   {
+     "eventType": "item.create",
+     "data": {
+       "id": "{{ $trigger.body.id }}",
+       "name": "{{ $trigger.body.name }}"
      }
-   };
-
-   const sig = crypto
-     .createHmac('sha256', secret)
-     .update(JSON.stringify(payload))
-     .digest('hex');
-
-   return { payload, sig };
+   }
    ```
 
-3. Add a "Webhook" operation:
+### Step 3: Example Webhook Setup
+
+**For a "profile.export" event:**
+
+1. Create a Flow with your desired trigger
+2. Add a Webhook operation with:
    - **URL:** `http://your-domain.com/api/webhook`
    - **Method:** POST
    - **Headers:**
      ```
      Content-Type: application/json
-     x-webhook-signature: {{ $last.sig }}
+     x-webhook-secret: your-webhook-secret-key
      ```
-   - **Body:** `{{ $last.payload }}`
+   - **Body:**
+     ```json
+     {
+       "eventType": "profile.export",
+       "data": {
+         "profileId": "{{ $trigger.body.id }}"
+       }
+     }
+     ```
 
 ## Event Type Handlers
 
@@ -342,37 +296,27 @@ async function handleItemCreate(
 ### Using curl
 
 ```bash
-# Generate signature
 SECRET="your-webhook-secret"
-PAYLOAD='{"eventId":"test-1","eventType":"item.create","timestamp":"2024-11-07T10:00:00Z","data":{"id":"123","name":"Test"}}'
-SIGNATURE=$(echo -n "$PAYLOAD" | openssl dgst -sha256 -hmac "$SECRET" | cut -d' ' -f2)
+PAYLOAD='{"eventType":"item.create","data":{"id":"123","name":"Test"}}'
 
-# Send request
 curl -X POST http://localhost:5173/api/webhook \
   -H "Content-Type: application/json" \
-  -H "x-webhook-signature: $SIGNATURE" \
+  -H "x-webhook-secret: $SECRET" \
   -d "$PAYLOAD"
 ```
 
 ### Using Node.js
 
 ```javascript
-const crypto = require('crypto');
 const https = require('https');
 
 const secret = 'your-webhook-secret';
 const payload = {
-  eventId: 'test-1',
   eventType: 'item.create',
-  timestamp: new Date().toISOString(),
   data: { id: '123', name: 'Test' }
 };
 
 const payloadString = JSON.stringify(payload);
-const signature = crypto
-  .createHmac('sha256', secret)
-  .update(payloadString)
-  .digest('hex');
 
 const options = {
   hostname: 'localhost',
@@ -381,7 +325,7 @@ const options = {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'x-webhook-signature': signature,
+    'x-webhook-secret': secret,
     'Content-Length': payloadString.length
   }
 };
@@ -400,28 +344,26 @@ req.end();
 
 1. **Always use HTTPS in production** - Never send webhooks over plain HTTP
 2. **Rotate webhook secrets periodically** - Change `WEBHOOK_SECRET` regularly
-3. **Validate event structure** - The endpoint validates required fields
-4. **Log webhook events** - Monitor webhook activity for debugging
-5. **Implement rate limiting** - Add rate limiting to prevent abuse
-6. **Verify timestamps** - Consider adding timestamp validation to prevent replay attacks
+3. **Keep secret private** - Do not commit the secret to version control
+4. **Validate event structure** - The endpoint validates required fields
+5. **Log webhook events** - Monitor webhook activity for debugging
+6. **Implement rate limiting** - Add rate limiting to prevent abuse
 
 ## Environment Variables
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `WEBHOOK_SECRET` | HMAC secret for signature verification | 64-char hex string |
-| `WEBHOOK_TIMEOUT` | Request timeout (optional, default 30s) | 30000 |
+| `WEBHOOK_SECRET` | Shared secret for authentication | 64-char hex string |
 
 ## Troubleshooting
 
-### "Missing webhook signature header"
-- Ensure you're sending the `x-webhook-signature` header
+### "Missing webhook secret header"
+- Ensure you're sending the `x-webhook-secret` header
 - Check the header name exactly matches (case-sensitive)
 
-### "Invalid webhook signature"
-- Verify the `WEBHOOK_SECRET` matches between Directus and `.env`
-- Ensure you're signing the raw JSON body, not formatted/prettified JSON
-- Check the signature algorithm (must be HMAC-SHA256)
+### "Invalid webhook secret"
+- Verify the secret matches the `WEBHOOK_SECRET` environment variable
+- Ensure there are no extra spaces or trailing characters in the secret
 
 ### "Invalid JSON payload"
 - Validate the JSON payload is properly formatted
@@ -432,25 +374,6 @@ req.end();
 - Check the Flow logs in Directus Admin
 - Ensure the trigger condition is met
 - Test manually with curl first
-
-## Advanced: Webhook Utility Functions
-
-The `src/lib/server/webhook.ts` module provides helper functions:
-
-```typescript
-import {
-  generateWebhookSignature,
-  generateWebhookSignatureFromString,
-  verifyWebhookSignature,
-  verifyWebhookSignatureFromString
-} from '$lib/server/webhook';
-
-// Generate signature for testing
-const signature = generateWebhookSignature(payload, secret);
-
-// Verify signature in custom routes
-const isValid = verifyWebhookSignature(payload, signature, secret);
-```
 
 ## References
 

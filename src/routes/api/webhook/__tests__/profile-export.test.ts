@@ -1,10 +1,9 @@
 /**
  * Unit tests for webhook profile.export event handler
- * Tests signature verification, event routing, and error handling
+ * Tests secret verification, event routing, and error handling
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createHmac } from 'crypto';
 import type { WebhookPayload } from '$lib/types/webhook';
 
 // Mock the profile-export module
@@ -26,19 +25,11 @@ import { exportProfile } from '$lib/server/profile-export';
 import { POST } from '../+server';
 
 /**
- * Helper function to generate HMAC-SHA256 signature
- */
-function generateSignature(payload: Record<string, unknown>, secret: string): string {
-  const payloadString = JSON.stringify(payload);
-  return createHmac('sha256', secret).update(payloadString).digest('hex');
-}
-
-/**
  * Helper function to create a mock Request
  */
 function createMockRequest(
   body: Record<string, unknown>,
-  signature: string,
+  secret: string,
   method = 'POST'
 ): Request {
   const payloadString = JSON.stringify(body);
@@ -46,7 +37,7 @@ function createMockRequest(
     method,
     headers: {
       'Content-Type': 'application/json',
-      'x-webhook-signature': signature,
+      'x-webhook-secret': secret,
     },
     body: payloadString,
   });
@@ -74,8 +65,8 @@ describe('POST /api/webhook - profile.export event', () => {
     vi.clearAllMocks();
   });
 
-  describe('signature verification', () => {
-    it('should reject requests with missing signature header', async () => {
+  describe('secret verification', () => {
+    it('should reject requests with missing secret header', async () => {
       const request = new Request('http://localhost:5173/api/webhook', {
         method: 'POST',
         headers: {
@@ -90,23 +81,22 @@ describe('POST /api/webhook - profile.export event', () => {
       expect(response.status).toBe(401);
       const data = await response.json();
       expect(data.success).toBe(false);
-      expect(data.error).toContain('Missing webhook signature header');
+      expect(data.error).toContain('Missing webhook secret header');
     });
 
-    it('should reject requests with invalid signature', async () => {
-      const request = createMockRequest(validPayload, 'invalid-signature-12345');
+    it('should reject requests with invalid secret', async () => {
+      const request = createMockRequest(validPayload, 'invalid-secret-key');
       const event = createMockEvent(request);
       const response = await POST(event);
 
       expect(response.status).toBe(401);
       const data = await response.json();
       expect(data.success).toBe(false);
-      expect(data.error).toContain('Invalid webhook signature');
+      expect(data.error).toContain('Invalid webhook secret');
     });
 
-    it('should accept requests with valid signature', async () => {
-      const signature = generateSignature(validPayload, secret);
-      const request = createMockRequest(validPayload, signature);
+    it('should accept requests with valid secret', async () => {
+      const request = createMockRequest(validPayload, secret);
       const event = createMockEvent(request);
 
       // Mock successful export
@@ -126,17 +116,14 @@ describe('POST /api/webhook - profile.export event', () => {
   });
 
   describe('payload validation', () => {
-    it('should reject invalid JSON payload even with valid signature', async () => {
-      // The signature verification happens after body read, so we generate a signature
-      // from the raw invalid body that matches
+    it('should reject invalid JSON payload', async () => {
       const invalidBody = 'invalid json {';
-      const signature = generateSignature({ test: 'data' }, secret);
 
       const request = new Request('http://localhost:5173/api/webhook', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-webhook-signature': signature,
+          'x-webhook-secret': secret,
         },
         body: invalidBody,
       });
@@ -144,11 +131,10 @@ describe('POST /api/webhook - profile.export event', () => {
       const event = createMockEvent(request);
       const response = await POST(event);
 
-      // Since the raw body doesn't match our signature, it will be rejected as invalid signature
-      // which is correct behavior - signature should match the exact body bytes
-      expect(response.status).toBe(401);
+      expect(response.status).toBe(400);
       const data = await response.json();
       expect(data.success).toBe(false);
+      expect(data.error).toContain('Failed to parse request body as JSON');
     });
 
     it('should reject payload missing required fields', async () => {
@@ -157,8 +143,7 @@ describe('POST /api/webhook - profile.export event', () => {
         // missing data field
       };
 
-      const signature = generateSignature(incompletePayload, secret);
-      const request = createMockRequest(incompletePayload, signature);
+      const request = createMockRequest(incompletePayload, secret);
       const event = createMockEvent(request);
 
       const response = await POST(event);
@@ -172,8 +157,7 @@ describe('POST /api/webhook - profile.export event', () => {
 
   describe('profile.export event processing', () => {
     it('should successfully process valid profile.export event', async () => {
-      const signature = generateSignature(validPayload, secret);
-      const request = createMockRequest(validPayload, signature);
+      const request = createMockRequest(validPayload, secret);
       const event = createMockEvent(request);
 
       const mockExportProfile = exportProfile as any;
@@ -201,8 +185,7 @@ describe('POST /api/webhook - profile.export event', () => {
         },
       };
 
-      const signature = generateSignature(payloadNoProfileId, secret);
-      const request = createMockRequest(payloadNoProfileId, signature);
+      const request = createMockRequest(payloadNoProfileId, secret);
       const event = createMockEvent(request);
 
       const response = await POST(event);
@@ -221,8 +204,7 @@ describe('POST /api/webhook - profile.export event', () => {
         },
       };
 
-      const signature = generateSignature(payloadInvalidProfileId, secret);
-      const request = createMockRequest(payloadInvalidProfileId, signature);
+      const request = createMockRequest(payloadInvalidProfileId, secret);
       const event = createMockEvent(request);
 
       const response = await POST(event);
@@ -234,8 +216,7 @@ describe('POST /api/webhook - profile.export event', () => {
     });
 
     it('should handle export function errors gracefully', async () => {
-      const signature = generateSignature(validPayload, secret);
-      const request = createMockRequest(validPayload, signature);
+      const request = createMockRequest(validPayload, secret);
       const event = createMockEvent(request);
 
       const mockExportProfile = exportProfile as any;
@@ -253,8 +234,7 @@ describe('POST /api/webhook - profile.export event', () => {
     });
 
     it('should return detailed export results', async () => {
-      const signature = generateSignature(validPayload, secret);
-      const request = createMockRequest(validPayload, signature);
+      const request = createMockRequest(validPayload, secret);
       const event = createMockEvent(request);
 
       const mockExportProfile = exportProfile as any;
@@ -276,8 +256,7 @@ describe('POST /api/webhook - profile.export event', () => {
 
   describe('response format', () => {
     it('should return proper response structure on success', async () => {
-      const signature = generateSignature(validPayload, secret);
-      const request = createMockRequest(validPayload, signature);
+      const request = createMockRequest(validPayload, secret);
       const event = createMockEvent(request);
 
       const mockExportProfile = exportProfile as any;
@@ -299,8 +278,7 @@ describe('POST /api/webhook - profile.export event', () => {
 
   describe('error handling', () => {
     it('should handle unexpected errors gracefully', async () => {
-      const signature = generateSignature(validPayload, secret);
-      const request = createMockRequest(validPayload, signature);
+      const request = createMockRequest(validPayload, secret);
       const event = createMockEvent(request);
 
       const mockExportProfile = exportProfile as any;

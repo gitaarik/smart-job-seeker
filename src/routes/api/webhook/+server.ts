@@ -1,13 +1,12 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from '@sveltejs/kit';
-import { createHmac } from 'crypto';
 import { getEnv } from '$lib/tools/get-env';
 import type { WebhookPayload, WebhookResponse } from '$lib/types/webhook';
 import { exportProfile } from '$lib/server/profile-export';
 
 /**
  * Webhook endpoint for Directus Flow integration
- * Receives POST requests from Directus Flow scripts with secure HMAC-SHA256 authentication
+ * Receives POST requests from Directus Flow scripts with header-based secret verification
  */
 
 export const POST: RequestHandler = async (event) => {
@@ -21,40 +20,32 @@ export const POST: RequestHandler = async (event) => {
           success: false,
           message: 'Webhook not configured',
           error: 'WEBHOOK_SECRET environment variable is not set',
-          timestamp: new Date().toISOString(),
         },
         { status: 500 }
       );
     }
 
-    // Get signature from request headers
-    const signature = event.request.headers.get('x-webhook-signature');
+    // Get secret from request header
+    const headerSecret = event.request.headers.get('x-webhook-secret');
 
-    if (!signature) {
+    if (!headerSecret) {
       return json<WebhookResponse>(
         {
           success: false,
           message: 'Unauthorized',
-          error: 'Missing webhook signature header',
-          timestamp: new Date().toISOString(),
+          error: 'Missing webhook secret header',
         },
         { status: 401 }
       );
     }
 
-    // Get raw request body for signature verification
-    const rawBody = await event.request.text();
-
-    // Verify HMAC signature
-    const expectedSignature = createHmac('sha256', webhookSecret).update(rawBody).digest('hex');
-
-    if (signature !== expectedSignature) {
+    // Verify secret matches
+    if (headerSecret !== webhookSecret) {
       return json<WebhookResponse>(
         {
           success: false,
           message: 'Unauthorized',
-          error: 'Invalid webhook signature',
-          timestamp: new Date().toISOString(),
+          error: 'Invalid webhook secret',
         },
         { status: 401 }
       );
@@ -63,14 +54,14 @@ export const POST: RequestHandler = async (event) => {
     // Parse the payload
     let payload: WebhookPayload;
     try {
-      payload = JSON.parse(rawBody) as WebhookPayload;
+      const body = await event.request.text();
+      payload = JSON.parse(body) as WebhookPayload;
     } catch (parseError) {
       return json<WebhookResponse>(
         {
           success: false,
           message: 'Invalid JSON payload',
           error: 'Failed to parse request body as JSON',
-          timestamp: new Date().toISOString(),
         },
         { status: 400 }
       );

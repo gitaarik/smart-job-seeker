@@ -9,6 +9,13 @@ export default defineConfig({
     tailwindcss(),
     sveltekit()
   ],
+  server: {
+    allowedHosts: [
+      'app' // This allows Directus CMS to do HTTP requests from it's
+            // Docker container to this one. In Docker compose, this is the
+            // `app` service and runs on the host `app`.
+    ]
+  },
   test: {
     globals: true,
     environment: "node",
