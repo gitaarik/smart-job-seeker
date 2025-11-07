@@ -3,8 +3,8 @@
  * Handles exporting profile schema and data to collected_data collection
  */
 
-import { db } from '$lib/db';
-import removeMd from 'remove-markdown';
+import { prisma } from "$lib/db";
+import removeMd from "remove-markdown";
 
 interface SchemaNode {
   note?: string;
@@ -18,113 +18,121 @@ interface SchemaNode {
 const PROFILE_SCHEMA_MAPPING = {
   profiles: {
     fields: [
-      'name',
-      'title',
-      'location',
-      'phone_number',
-      'email_address',
-      'personal_website',
-      'subtitle',
-      'core_stack',
-      'linkedin_profile',
-      'github_profile',
-      'stackoverflow_profile',
-      'headline',
-      'summary',
-      'nationality',
-      'location_url',
-      'location_timezone',
+      "name",
+      "title",
+      "location",
+      "phone_number",
+      "email_address",
+      "personal_website",
+      "subtitle",
+      "core_stack",
+      "linkedin_profile",
+      "github_profile",
+      "stackoverflow_profile",
+      "headline",
+      "summary",
+      "nationality",
+      "location_url",
+      "location_timezone",
     ],
     relations: {
       highlights: {
-        fields: ['text'],
+        fields: ["text"],
       },
       tech_skill_categories: {
-        fields: ['name'],
+        fields: ["name"],
         relations: {
           tech_skills: {
-            fields: ['name', 'years_experience', 'level'],
+            fields: ["name", "years_experience", "level"],
           },
         },
       },
       work_experiences: {
         fields: [
-          'name',
-          'location',
-          'description',
-          'position',
-          'summary',
-          'start_date',
-          'end_date',
-          'website',
+          "name",
+          "location",
+          "description",
+          "position",
+          "summary",
+          "start_date",
+          "end_date",
+          "website",
         ],
         relations: {
           work_experience_achievements: {
-            fields: ['title', 'description'],
+            fields: ["title", "description"],
           },
           work_experience_technologies: {
-            fields: ['name'],
+            fields: ["name"],
           },
         },
       },
       side_projects: {
         fields: [
-          'name',
-          'start_date',
-          'end_date',
-          'url',
-          'stars',
-          'summary',
-          'url_label',
+          "name",
+          "start_date",
+          "end_date",
+          "url",
+          "stars",
+          "summary",
+          "url_label",
         ],
         relations: {
           side_project_achievements: {
-            fields: ['title', 'description'],
+            fields: ["title", "description"],
           },
           side_project_technologies: {
-            fields: ['name'],
+            fields: ["name"],
           },
         },
       },
       education: {
         fields: [
-          'institution',
-          'location',
-          'url',
-          'area',
-          'study_type',
-          'graduation_year',
-          'start_date',
-          'end_date',
-          'summary',
+          "institution",
+          "location",
+          "url",
+          "area",
+          "study_type",
+          "graduation_year",
+          "start_date",
+          "end_date",
+          "summary",
         ],
       },
       languages: {
-        fields: ['name', 'language_code', 'proficiency'],
+        fields: ["name", "language_code", "proficiency"],
       },
       references: {
-        fields: ['author', 'author_position', 'text'],
+        fields: ["author", "author_position", "text"],
       },
       project_stories: {
-        fields: ['title', 'situation', 'task', 'action', 'result', 'reflection', 'category'],
+        fields: [
+          "title",
+          "situation",
+          "task",
+          "action",
+          "result",
+          "reflection",
+          "category",
+        ],
       },
       application_questions: {
-        fields: ['question', 'answer', 'title', 'source'],
+        fields: ["question", "answer", "title", "source"],
       },
       cheat_sheets: {
-        fields: ['title', 'content'],
+        fields: ["title", "content"],
       },
       salary_expectations: {
         fields: [
-          'job_title',
-          'company_type',
-          'employment_type',
-          'work_arrangement',
-          'region',
-          'hourly_rate',
-          'month_salary',
-          'year_salary',
-          'daily_rate',
+          "job_title",
+          "company_type",
+          "employment_type",
+          "work_arrangement",
+          "region",
+          "hourly_rate",
+          "month_salary",
+          "year_salary",
+          "daily_rate",
         ],
       },
     },
@@ -137,10 +145,13 @@ const PROFILE_SCHEMA_MAPPING = {
 async function buildSchemaNode(
   collection: string,
   fieldNames: string[],
-  relations?: Record<string, { fields: string[]; relations?: Record<string, unknown> }>
+  relations?: Record<
+    string,
+    { fields: string[]; relations?: Record<string, unknown> }
+  >,
 ): Promise<SchemaNode> {
   // Fetch collection note
-  const collectionMeta = await db.directus_collections.findUnique({
+  const collectionMeta = await prisma.directus_collections.findUnique({
     where: { collection },
     select: { note: true },
   });
@@ -151,7 +162,7 @@ async function buildSchemaNode(
   };
 
   // Fetch field notes
-  const fieldMetas = await db.directus_fields.findMany({
+  const fieldMetas = await prisma.directus_fields.findMany({
     where: {
       collection,
       field: { in: fieldNames },
@@ -160,11 +171,11 @@ async function buildSchemaNode(
   });
 
   const fieldNotesMap = Object.fromEntries(
-    fieldMetas.map((fm) => [fm.field, removeMd(fm.note || '')])
+    fieldMetas.map((fm) => [fm.field, removeMd(fm.note || "")]),
   );
 
   for (const fieldName of fieldNames) {
-    node.fields![fieldName] = fieldNotesMap[fieldName] || '';
+    node.fields![fieldName] = fieldNotesMap[fieldName] || "";
   }
 
   // Build relations recursively
@@ -174,7 +185,7 @@ async function buildSchemaNode(
       node.relations[relationName] = await buildSchemaNode(
         relationName,
         relationConfig.fields,
-        relationConfig.relations as Record<string, { fields: string[] }>
+        relationConfig.relations as Record<string, { fields: string[] }>,
       );
     }
   }
@@ -192,7 +203,7 @@ export async function exportProfileSchema(profileId: number): Promise<{
 }> {
   try {
     // Verify profile exists
-    const profile = await db.profiles.findUnique({
+    const profile = await prisma.profiles.findUnique({
       where: { id: profileId },
       select: { id: true },
     });
@@ -207,18 +218,18 @@ export async function exportProfileSchema(profileId: number): Promise<{
     // Build the schema
     const profilesConfig = PROFILE_SCHEMA_MAPPING.profiles;
     const schema = await buildSchemaNode(
-      'profiles',
+      "profiles",
       profilesConfig.fields,
-      profilesConfig.relations as Record<string, { fields: string[] }>
+      profilesConfig.relations as Record<string, { fields: string[] }>,
     );
 
     // Store in collected_data
-    const existingCollectedData = await db.collected_data.findFirst({
+    const existingCollectedData = await prisma.collected_data.findFirst({
       where: { profile: profileId },
     });
 
     if (existingCollectedData) {
-      await db.collected_data.update({
+      await prisma.collected_data.update({
         where: { id: existingCollectedData.id },
         data: {
           schema: JSON.stringify(schema, null, 2),
@@ -226,7 +237,7 @@ export async function exportProfileSchema(profileId: number): Promise<{
         },
       });
     } else {
-      await db.collected_data.create({
+      await prisma.collected_data.create({
         data: {
           profile: profileId,
           schema: JSON.stringify(schema, null, 2),
@@ -240,7 +251,9 @@ export async function exportProfileSchema(profileId: number): Promise<{
       message: `Profile schema exported for profile ID ${profileId}`,
     };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage = error instanceof Error
+      ? error.message
+      : "Unknown error";
     return {
       success: false,
       message: `Error exporting profile schema: ${errorMessage}`,
@@ -258,7 +271,7 @@ export async function exportProfileData(profileId: number): Promise<{
 }> {
   try {
     // Verify profile exists
-    const profile = await db.profiles.findUnique({
+    const profile = await prisma.profiles.findUnique({
       where: { id: profileId },
       select: { id: true },
     });
@@ -271,7 +284,7 @@ export async function exportProfileData(profileId: number): Promise<{
     }
 
     // Single efficient query to fetch all profile data
-    const data = await db.profiles.findUnique({
+    const data = await prisma.profiles.findUnique({
       where: { id: profileId },
       select: {
         name: true,
@@ -292,7 +305,7 @@ export async function exportProfileData(profileId: number): Promise<{
         location_timezone: true,
         highlights: {
           select: { text: true },
-          orderBy: { sort: 'asc' },
+          orderBy: { sort: "asc" },
         },
         tech_skill_categories: {
           select: {
@@ -303,10 +316,10 @@ export async function exportProfileData(profileId: number): Promise<{
                 years_experience: true,
                 level: true,
               },
-              orderBy: { sort: 'desc' },
+              orderBy: { sort: "desc" },
             },
           },
-          orderBy: { sort: 'asc' },
+          orderBy: { sort: "asc" },
         },
         work_experiences: {
           select: {
@@ -323,16 +336,16 @@ export async function exportProfileData(profileId: number): Promise<{
                 title: true,
                 description: true,
               },
-              orderBy: { sort: 'asc' },
+              orderBy: { sort: "asc" },
             },
             work_experience_technologies: {
               select: {
                 name: true,
               },
-              orderBy: { sort: 'asc' },
+              orderBy: { sort: "asc" },
             },
           },
-          orderBy: { sort: 'asc' },
+          orderBy: { sort: "asc" },
         },
         side_projects: {
           select: {
@@ -348,16 +361,16 @@ export async function exportProfileData(profileId: number): Promise<{
                 title: true,
                 description: true,
               },
-              orderBy: { sort: 'asc' },
+              orderBy: { sort: "asc" },
             },
             side_project_technologies: {
               select: {
                 name: true,
               },
-              orderBy: { sort: 'asc' },
+              orderBy: { sort: "asc" },
             },
           },
-          orderBy: { sort: 'asc' },
+          orderBy: { sort: "asc" },
         },
         education: {
           select: {
@@ -371,7 +384,7 @@ export async function exportProfileData(profileId: number): Promise<{
             end_date: true,
             summary: true,
           },
-          orderBy: { sort: 'asc' },
+          orderBy: { sort: "asc" },
         },
         languages: {
           select: {
@@ -379,7 +392,7 @@ export async function exportProfileData(profileId: number): Promise<{
             language_code: true,
             proficiency: true,
           },
-          orderBy: { sort: 'asc' },
+          orderBy: { sort: "asc" },
         },
         references: {
           select: {
@@ -387,7 +400,7 @@ export async function exportProfileData(profileId: number): Promise<{
             author_position: true,
             text: true,
           },
-          orderBy: { sort: 'asc' },
+          orderBy: { sort: "asc" },
         },
         project_stories: {
           select: {
@@ -399,7 +412,7 @@ export async function exportProfileData(profileId: number): Promise<{
             reflection: true,
             category: true,
           },
-          orderBy: { sort: 'asc' },
+          orderBy: { sort: "asc" },
         },
         application_questions: {
           select: {
@@ -408,14 +421,14 @@ export async function exportProfileData(profileId: number): Promise<{
             title: true,
             source: true,
           },
-          orderBy: { sort: 'asc' },
+          orderBy: { sort: "asc" },
         },
         cheat_sheets: {
           select: {
             title: true,
             content: true,
           },
-          orderBy: { sort: 'asc' },
+          orderBy: { sort: "asc" },
         },
         salary_expectations: {
           select: {
@@ -429,18 +442,18 @@ export async function exportProfileData(profileId: number): Promise<{
             year_salary: true,
             daily_rate: true,
           },
-          orderBy: { sort: 'asc' },
+          orderBy: { sort: "asc" },
         },
       },
     });
 
     // Store in collected_data
-    const existingCollectedData = await db.collected_data.findFirst({
+    const existingCollectedData = await prisma.collected_data.findFirst({
       where: { profile: profileId },
     });
 
     if (existingCollectedData) {
-      await db.collected_data.update({
+      await prisma.collected_data.update({
         where: { id: existingCollectedData.id },
         data: {
           data: JSON.stringify(data, null, 2),
@@ -448,7 +461,7 @@ export async function exportProfileData(profileId: number): Promise<{
         },
       });
     } else {
-      await db.collected_data.create({
+      await prisma.collected_data.create({
         data: {
           profile: profileId,
           data: JSON.stringify(data, null, 2),
@@ -462,7 +475,9 @@ export async function exportProfileData(profileId: number): Promise<{
       message: `Profile data exported for profile ID ${profileId}`,
     };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage = error instanceof Error
+      ? error.message
+      : "Unknown error";
     return {
       success: false,
       message: `Error exporting profile data: ${errorMessage}`,

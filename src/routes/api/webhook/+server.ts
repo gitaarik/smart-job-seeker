@@ -154,8 +154,11 @@ async function handleProfileExport(
 
   if (Array.isArray(data.profileIds)) {
     profileIds = (data.profileIds as unknown[])
-      .map((id) => parseInt(id))
-      .filter((id) => typeof id === "number");
+      .map((id) => {
+        const parsed = parseInt(String(id), 10);
+        return isNaN(parsed) ? null : parsed;
+      })
+      .filter((id): id is number => id !== null);
   } else if (typeof data.profileId === "number") {
     profileIds = [data.profileId];
   }

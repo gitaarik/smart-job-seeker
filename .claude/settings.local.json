@@ -54,7 +54,9 @@
       "Bash(/tmp/old_dump.sql)",
       "Bash(/home/rik/dev/smart-job-seeker/db-dumps/job_applications.sql)",
       "Bash(tree:*)",
-      "Bash(npm run test:*)"
+      "Bash(npm run test:*)",
+      "Bash(npx deno fmt:*)",
+      "Bash(npm run docker:*)"
     ],
     "deny": [],
     "ask": []
