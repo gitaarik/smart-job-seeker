@@ -60,7 +60,14 @@
       "Bash(npm run prisma:generate:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(src/lib/server/ai-chat-utils.ts )",
+      "Bash(src/lib/server/ai-chat-response-generate.ts )",
+      "Bash(src/lib/server/ai-chat-full-prompt-generate.ts )",
+      "Bash(src/lib/server/__tests__/ai-chat-utils.test.ts )",
+      "Bash(src/lib/server/__tests__/ai-chat-response-generate.test.ts )",
+      "Bash(src/routes/api/webhook/+server.ts )",
+      "Bash(src/routes/api/webhook/__tests__/ai-chat-generate.test.ts )"
     ],
     "deny": [],
     "ask": []

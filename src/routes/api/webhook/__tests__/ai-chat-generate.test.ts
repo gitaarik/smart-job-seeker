@@ -11,6 +11,11 @@ vi.mock("$lib/server/ai-chat-full-prompt-generate", () => ({
   generateAiChatFullPrompt: vi.fn(),
 }));
 
+// Mock the ai-chat-response-generate module
+vi.mock("$lib/server/ai-chat-response-generate", () => ({
+  generateAiChatResponse: vi.fn(),
+}));
+
 // Mock the get-env utility
 vi.mock("$lib/tools/get-env", () => ({
   getEnv: vi.fn((key: string, defaultValue = "") => {
@@ -22,6 +27,7 @@ vi.mock("$lib/tools/get-env", () => ({
 }));
 
 import { generateAiChatFullPrompt } from "$lib/server/ai-chat-full-prompt-generate";
+import { generateAiChatResponse } from "$lib/server/ai-chat-response-generate";
 import { POST } from "../+server";
 
 /**
@@ -450,6 +456,179 @@ describe("POST /api/webhook - ai_chat.generate_full_prompt event", () => {
       // Should only process valid IDs (1 and 2)
       expect(data.data.aiChatCount).toBe(2);
       expect(data.data.successCount).toBe(2);
+    });
+  });
+});
+
+describe("POST /api/webhook - ai_chat.generate_response event", () => {
+  const secret = "test-webhook-secret-key-1234567890123456";
+  const validPayload: WebhookPayload = {
+    eventType: "ai_chat.generate_response",
+    data: {
+      aiChatIds: ["1", "2", "3"],
+    },
+  };
+  const singleAiChatPayload: WebhookPayload = {
+    eventType: "ai_chat.generate_response",
+    data: {
+      aiChatIds: ["1"],
+    },
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe("ai_chat.generate_response event processing", () => {
+    it(
+      "should successfully process valid ai_chat.generate_response event with multiple AI chats",
+      async () => {
+        const request = createMockRequest(validPayload, secret);
+        const event = createMockEvent(request);
+
+        const mockGenerateAiChatResponse = generateAiChatResponse as any;
+        mockGenerateAiChatResponse
+          .mockResolvedValueOnce({
+            success: true,
+            message: "Response generated for AI chat ID 1",
+          })
+          .mockResolvedValueOnce({
+            success: true,
+            message: "Response generated for AI chat ID 2",
+          })
+          .mockResolvedValueOnce({
+            success: true,
+            message: "Response generated for AI chat ID 3",
+          });
+
+        const response = await POST(event);
+
+        expect(response.status).toBe(200);
+        const data = await response.json();
+        expect(data.success).toBe(true);
+        expect(data.data.processed).toBe(true);
+        expect(data.data.aiChatCount).toBe(3);
+        expect(data.data.successCount).toBe(3);
+        expect(data.data.results).toHaveLength(3);
+        expect(mockGenerateAiChatResponse).toHaveBeenCalledTimes(3);
+      },
+    );
+
+    it("should handle single aiChatId for response generation", async () => {
+      const request = createMockRequest(singleAiChatPayload, secret);
+      const event = createMockEvent(request);
+
+      const mockGenerateAiChatResponse = generateAiChatResponse as any;
+      mockGenerateAiChatResponse.mockResolvedValueOnce({
+        success: true,
+        message: "Response generated for AI chat ID 1",
+      });
+
+      const response = await POST(event);
+
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data.success).toBe(true);
+      expect(data.data.processed).toBe(true);
+      expect(data.data.aiChatCount).toBe(1);
+      expect(data.data.successCount).toBe(1);
+    });
+
+    it("should handle AI chat not found error for response generation", async () => {
+      const request = createMockRequest(singleAiChatPayload, secret);
+      const event = createMockEvent(request);
+
+      const mockGenerateAiChatResponse = generateAiChatResponse as any;
+      mockGenerateAiChatResponse.mockResolvedValueOnce({
+        success: false,
+        message: "AI chat with ID 1 not found",
+      });
+
+      const response = await POST(event);
+
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data.data.processed).toBe(false);
+      expect(data.data.successCount).toBe(0);
+      expect(data.data.failureCount).toBe(1);
+      expect(data.data.results[0].success).toBe(false);
+    });
+
+    it("should handle partial failures in response generation", async () => {
+      const request = createMockRequest(validPayload, secret);
+      const event = createMockEvent(request);
+
+      const mockGenerateAiChatResponse = generateAiChatResponse as any;
+      mockGenerateAiChatResponse
+        .mockResolvedValueOnce({
+          success: true,
+          message: "Response generated for AI chat ID 1",
+        })
+        .mockResolvedValueOnce({
+          success: false,
+          message: "Groq API error: Rate limit exceeded",
+        })
+        .mockResolvedValueOnce({
+          success: true,
+          message: "Response generated for AI chat ID 3",
+        });
+
+      const response = await POST(event);
+
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data.data.processed).toBe(true);
+      expect(data.data.aiChatCount).toBe(3);
+      expect(data.data.successCount).toBe(2);
+      expect(data.data.failureCount).toBe(1);
+    });
+
+    it("should handle all response generations failing", async () => {
+      const request = createMockRequest(validPayload, secret);
+      const event = createMockEvent(request);
+
+      const mockGenerateAiChatResponse = generateAiChatResponse as any;
+      mockGenerateAiChatResponse
+        .mockResolvedValueOnce({
+          success: false,
+          message: "Groq API error",
+        })
+        .mockResolvedValueOnce({
+          success: false,
+          message: "Groq API error",
+        })
+        .mockResolvedValueOnce({
+          success: false,
+          message: "Groq API error",
+        });
+
+      const response = await POST(event);
+
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data.data.processed).toBe(false);
+      expect(data.data.aiChatCount).toBe(3);
+      expect(data.data.failureCount).toBe(3);
+      expect(data.data.successCount).toBe(0);
+    });
+
+    it("should reject invalid payload for response generation", async () => {
+      const payloadNoAiChatIds: WebhookPayload = {
+        eventType: "ai_chat.generate_response",
+        data: {
+          // missing aiChatIds
+        },
+      };
+
+      const request = createMockRequest(payloadNoAiChatIds, secret);
+      const event = createMockEvent(request);
+
+      const response = await POST(event);
+
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data.data.processed).toBe(false);
+      expect(data.data.error).toContain("Missing or invalid aiChatIds");
     });
   });
 });

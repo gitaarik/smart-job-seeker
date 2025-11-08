@@ -4,6 +4,7 @@ import { getEnv } from "$lib/tools/get-env";
 import type { WebhookPayload, WebhookResponse } from "$lib/types/webhook";
 import { exportProfile } from "$lib/server/profile-export";
 import { generateAiChatFullPrompt } from "$lib/server/ai-chat-full-prompt-generate";
+import { generateAiChatResponse } from "$lib/server/ai-chat-response-generate";
 
 /**
  * Webhook endpoint for Directus Flow integration
@@ -127,6 +128,8 @@ async function processWebhookEvent(
       return await handleProfileExport(data);
     case "ai_chat.generate_full_prompt":
       return await handleAiChatGenerateFullPrompt(data);
+    case "ai_chat.generate_response":
+      return await handleAiChatGenerateResponse(data);
     case "item.create":
       return await handleItemCreate(data);
     case "item.update":
@@ -306,6 +309,93 @@ async function handleAiChatGenerateFullPrompt(
       : "Unknown error";
     console.error(
       `[Webhook] ai_chat.generate_full_prompt failed:`,
+      errorMessage,
+    );
+    return {
+      processed: false,
+      aiChatCount: aiChatIds.length,
+      error: errorMessage,
+    };
+  }
+}
+
+/**
+ * Handle ai_chat.generate_response events
+ * Called to generate AI responses using Groq API
+ * Expected data format: { aiChatIds: string[] }
+ */
+async function handleAiChatGenerateResponse(
+  data: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  // Extract and parse aiChatIds (array of strings to be converted to numbers)
+  let aiChatIds: number[] = [];
+
+  if (Array.isArray(data.aiChatIds)) {
+    aiChatIds = (data.aiChatIds as unknown[])
+      .map((id) => {
+        const parsed = parseInt(String(id), 10);
+        return isNaN(parsed) ? null : parsed;
+      })
+      .filter((id): id is number => id !== null);
+  }
+
+  if (aiChatIds.length === 0) {
+    console.warn(
+      `[Webhook] ai_chat.generate_response: Invalid or missing aiChatIds`,
+      data,
+    );
+    return {
+      processed: false,
+      error:
+        "Missing or invalid aiChatIds in data (expected array of numeric strings)",
+    };
+  }
+
+  try {
+    console.log(
+      `[Webhook] Generating responses for ${aiChatIds.length} AI chat(s)...`,
+    );
+
+    const results = await Promise.allSettled(
+      aiChatIds.map((aiChatId) =>
+        generateAiChatResponse(aiChatId)
+          .then((result) => ({
+            aiChatId,
+            success: result.success,
+            message: result.message,
+          }))
+          .catch((error) => ({
+            aiChatId,
+            success: false,
+            message: error instanceof Error ? error.message : "Unknown error",
+          }))
+      ),
+    );
+
+    const successful = results.filter(
+      (r) => r.status === "fulfilled" && (r.value as any).success !== false,
+    );
+    const failed = results.filter(
+      (r) =>
+        r.status === "rejected" ||
+        (r.status === "fulfilled" && (r.value as any).success === false),
+    );
+
+    return {
+      processed: successful.length > 0,
+      aiChatCount: aiChatIds.length,
+      successCount: successful.length,
+      results: results.map((
+        r,
+      ) => (r.status === "fulfilled" ? r.value : r.reason)),
+      ...(failed.length > 0 && { failureCount: failed.length }),
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error
+      ? error.message
+      : "Unknown error";
+    console.error(
+      `[Webhook] ai_chat.generate_response failed:`,
       errorMessage,
     );
     return {

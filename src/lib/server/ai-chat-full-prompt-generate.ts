@@ -4,6 +4,7 @@
  */
 
 import { prisma } from "$lib/db";
+import { getInterpolatedPrompts } from "./ai-chat-utils";
 
 /**
  * Generate full prompt for a single AI chat using the same prisma instance
@@ -13,36 +14,19 @@ export async function generateAiChatFullPrompt(aiChatId: number): Promise<{
   message: string;
 }> {
   try {
-    // Fetch the ai_chat record to get system_prompt, user_prompt, and profile ID
-    const aiChat = await prisma.ai_chat.findUnique({
-      where: { id: aiChatId },
-      select: { system_prompt: true, user_prompt: true, profile: true },
-    });
+    // Get interpolated prompts with variables replaced
+    const prompts = await getInterpolatedPrompts(aiChatId);
 
-    if (!aiChat) {
+    if (!prompts) {
       return {
         success: false,
         message: `AI chat with ID ${aiChatId} not found`,
       };
     }
 
-    // Fetch the collected_data for this profile to get schema and data
-    const collectedData = await prisma.collected_data.findFirst({
-      where: { profile: aiChat.profile },
-      select: { schema: true, data: true },
-    });
-
-    // Prepare replacements (use empty objects as defaults)
-    const schemaValue = collectedData?.schema || "{}";
-    const dataValue = collectedData?.data || "{}";
-
-    // Replace handlebar tags in system_prompt
-    let interpolatedSystemPrompt = aiChat.system_prompt
-      .replace(/{schema}/g, schemaValue)
-      .replace(/{data}/g, dataValue);
-
     // Combine system_prompt and user_prompt with 2 newlines
-    const fullPrompt = `${interpolatedSystemPrompt}\n\n## User prompt:\n\n${aiChat.user_prompt}`;
+    const fullPrompt =
+      `${prompts.systemPrompt}\n\n## User prompt:\n\n${prompts.userPrompt}`;
 
     // Update the full_prompt field
     await prisma.ai_chat.update({
