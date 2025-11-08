@@ -34,7 +34,7 @@ export async function generateAiChatResponse(aiChatId: number): Promise<{
 
     // Call Groq API with separate system and user messages
     const completion = await groq.chat.completions.create({
-      model: "mixtral-8x7b-32768", // Cost-effective model with good performance
+      model: "meta-llama/llama-4-scout-17b-16e-instruct", // 30,000 TPM free tier limit
       messages: [
         {
           role: "system",

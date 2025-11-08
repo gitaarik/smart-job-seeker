@@ -67,7 +67,8 @@
       "Bash(src/lib/server/__tests__/ai-chat-utils.test.ts )",
       "Bash(src/lib/server/__tests__/ai-chat-response-generate.test.ts )",
       "Bash(src/routes/api/webhook/+server.ts )",
-      "Bash(src/routes/api/webhook/__tests__/ai-chat-generate.test.ts )"
+      "Bash(src/routes/api/webhook/__tests__/ai-chat-generate.test.ts )",
+      "WebFetch(domain:console.groq.com)"
     ],
     "deny": [],
     "ask": []
