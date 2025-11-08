@@ -963,9 +963,10 @@ model ai_chat {
   date_created  DateTime? @db.Timestamptz(6)
   date_updated  DateTime? @db.Timestamptz(6)
   profile       Int
-  system_prompt String    @default("Act as a helpful assistant for a SWE job seeker & applicant. Help answer questions about job descriptions, answer application questions, write cover letters etc. Below is the information about the applicant. First the schema in JSON, after that actual data in JSON. You can use the schema to find the descriptions of certain objects / fields in the data.\n\n## The schema:\n\n{schema}\n\n## The data:\n\n{data}")
+  system_prompt String    @default("Act as a helpful assistant for a SWE job seeker & applicant. Help answer questions about job descriptions, answer application questions, write cover letters etc. Below is the information about the applicant. First the schema in JSON, after that actual data in JSON. You can use the schema to find the descriptions of certain objects / fields in the data. Be brief and concise in your answer. Max 3 short paragraphs. Hiring managers usually don't have a lot of time extensively reviewing every answer so be to the point. Do not add or list any skills or knowledge which is not in the data of the applicant. You can maybe add some skills the job requires that are closely connected to skills the applicant has.\n\n## The schema:\n\n{schema}\n\n## The data:\n\n{data}")
   user_prompt   String
   full_prompt   String?
+  response      String?
   profiles      profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "ai_chat_profile_foreign")
 }
 
