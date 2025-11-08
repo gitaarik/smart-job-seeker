@@ -4,7 +4,7 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getInterpolatedPrompts, replaceVariable } from "../ai-chat-utils";
+import { getInterpolatedPrompts, interpolatePrompt } from "../ai-chat-utils";
 
 // Mock the Prisma client
 vi.mock("$lib/db", () => ({
@@ -20,47 +20,67 @@ vi.mock("$lib/db", () => ({
 
 import { prisma } from "$lib/db";
 
-describe("replaceVariable", () => {
+describe("interpolatePrompt", () => {
   it("should replace single variable occurrence", () => {
-    const text = "Hello {name}!";
-    const result = replaceVariable(text, "name", "World");
-    expect(result).toBe("Hello World!");
+    const text = "Hello ${name}!";
+    const result = interpolatePrompt(text, { schema: "", data: "", jobDescription: "" });
+    expect(result).toBe("Hello ${name}!");
   });
 
-  it("should replace multiple variable occurrences", () => {
-    const text = "I am {name} and I like {hobby}. {name} is great!";
-    const result = replaceVariable(text, "name", "Alice");
-    expect(result).toBe("I am Alice and I like {hobby}. Alice is great!");
+  it("should replace schema variable", () => {
+    const text = "Schema: ${schema}";
+    const result = interpolatePrompt(text, {
+      schema: '{"type": "object"}',
+      data: "{}",
+    });
+    expect(result).toBe('Schema: {"type": "object"}');
   });
 
-  it("should handle empty variable value", () => {
-    const text = "Hello {name}!";
-    const result = replaceVariable(text, "name", "");
-    expect(result).toBe("Hello !");
+  it("should replace data variable", () => {
+    const text = "Data: ${data}";
+    const result = interpolatePrompt(text, {
+      schema: "{}",
+      data: '{"name": "John"}',
+    });
+    expect(result).toBe('Data: {"name": "John"}');
   });
 
-  it("should handle text with no variables", () => {
-    const text = "Hello World!";
-    const result = replaceVariable(text, "name", "Alice");
-    expect(result).toBe("Hello World!");
+  it("should replace jobDescription variable", () => {
+    const text = "Job: ${jobDescription}";
+    const result = interpolatePrompt(text, {
+      schema: "{}",
+      data: "{}",
+      jobDescription: "Senior Developer",
+    });
+    expect(result).toBe("Job: Senior Developer");
   });
 
-  it("should handle special regex characters in variable value", () => {
-    const text = "Pattern: {pattern}";
-    const result = replaceVariable(text, "pattern", "[a-z]+$");
-    expect(result).toBe("Pattern: [a-z]+$");
+  it("should handle empty jobDescription", () => {
+    const text = "Job: ${jobDescription}";
+    const result = interpolatePrompt(text, {
+      schema: "{}",
+      data: "{}",
+    });
+    expect(result).toBe("Job: ");
   });
 
-  it("should not replace similar but different variable names", () => {
-    const text = "{name} and {firstName}";
-    const result = replaceVariable(text, "name", "Alice");
-    expect(result).toBe("Alice and {firstName}");
+  it("should handle multiple variables", () => {
+    const text = "Schema: ${schema}, Data: ${data}, Job: ${jobDescription}";
+    const result = interpolatePrompt(text, {
+      schema: "SCHEMA",
+      data: "DATA",
+      jobDescription: "JOB",
+    });
+    expect(result).toBe("Schema: SCHEMA, Data: DATA, Job: JOB");
   });
 
   it("should handle JSON in replacement value", () => {
-    const text = "Data: {data}";
+    const text = "Data: ${data}";
     const jsonData = '{"key": "value"}';
-    const result = replaceVariable(text, "data", jsonData);
+    const result = interpolatePrompt(text, {
+      schema: "{}",
+      data: jsonData,
+    });
     expect(result).toBe(`Data: ${jsonData}`);
   });
 });
@@ -87,8 +107,8 @@ describe("getInterpolatedPrompts", () => {
     const prismaClient = prisma as any;
 
     const mockAiChat = {
-      system_prompt: "System: {schema} - {data}",
-      user_prompt: "User: {schema} - {data}",
+      system_prompt: "System: ${schema} - ${data}",
+      user_prompt: "User: ${schema} - ${data}",
       profile: 1,
     };
 
@@ -101,6 +121,9 @@ describe("getInterpolatedPrompts", () => {
     prismaClient.collected_data.findFirst.mockResolvedValueOnce(
       mockCollectedData,
     );
+    prismaClient.application_interview_questions = {
+      findFirst: vi.fn().mockResolvedValueOnce(null),
+    };
 
     const result = await getInterpolatedPrompts(1);
 
@@ -114,13 +137,16 @@ describe("getInterpolatedPrompts", () => {
     const prismaClient = prisma as any;
 
     const mockAiChat = {
-      system_prompt: "Schema: {schema}\nData: {data}",
-      user_prompt: "Show me {schema} and {data}",
+      system_prompt: "Schema: ${schema}\nData: ${data}",
+      user_prompt: "Show me ${schema} and ${data}",
       profile: 1,
     };
 
     prismaClient.ai_chat.findUnique.mockResolvedValueOnce(mockAiChat);
     prismaClient.collected_data.findFirst.mockResolvedValueOnce(null);
+    prismaClient.application_interview_questions = {
+      findFirst: vi.fn().mockResolvedValueOnce(null),
+    };
 
     const result = await getInterpolatedPrompts(1);
 
@@ -134,8 +160,8 @@ describe("getInterpolatedPrompts", () => {
     const prismaClient = prisma as any;
 
     const mockAiChat = {
-      system_prompt: "{schema} {data}",
-      user_prompt: "{schema} {data}",
+      system_prompt: "${schema} ${data}",
+      user_prompt: "${schema} ${data}",
       profile: 1,
     };
 
@@ -148,6 +174,9 @@ describe("getInterpolatedPrompts", () => {
     prismaClient.collected_data.findFirst.mockResolvedValueOnce(
       mockCollectedData,
     );
+    prismaClient.application_interview_questions = {
+      findFirst: vi.fn().mockResolvedValueOnce(null),
+    };
 
     const result = await getInterpolatedPrompts(1);
 
@@ -162,8 +191,8 @@ describe("getInterpolatedPrompts", () => {
     const profileId = 42;
 
     prismaClient.ai_chat.findUnique.mockResolvedValueOnce({
-      system_prompt: "{schema}",
-      user_prompt: "{data}",
+      system_prompt: "${schema}",
+      user_prompt: "${data}",
       profile: profileId,
     });
 
@@ -171,6 +200,10 @@ describe("getInterpolatedPrompts", () => {
       schema: "{}",
       data: "{}",
     });
+
+    prismaClient.application_interview_questions = {
+      findFirst: vi.fn().mockResolvedValueOnce(null),
+    };
 
     await getInterpolatedPrompts(1);
 
@@ -185,8 +218,8 @@ describe("getInterpolatedPrompts", () => {
 
     const mockAiChat = {
       system_prompt:
-        "Use {schema} to understand the structure of {data}. The {schema} is important for {data}.",
-      user_prompt: "I have {data} which matches {schema}",
+        "Use ${schema} to understand the structure of ${data}. The ${schema} is important for ${data}.",
+      user_prompt: "I have ${data} which matches ${schema}",
       profile: 1,
     };
 
@@ -199,6 +232,9 @@ describe("getInterpolatedPrompts", () => {
     prismaClient.collected_data.findFirst.mockResolvedValueOnce(
       mockCollectedData,
     );
+    prismaClient.application_interview_questions = {
+      findFirst: vi.fn().mockResolvedValueOnce(null),
+    };
 
     const result = await getInterpolatedPrompts(1);
 

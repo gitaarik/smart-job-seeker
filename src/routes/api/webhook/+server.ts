@@ -5,6 +5,7 @@ import type { WebhookPayload, WebhookResponse } from "$lib/types/webhook";
 import { exportProfile } from "$lib/server/profile-export";
 import { generateAiChatFullPrompt } from "$lib/server/ai-chat-full-prompt-generate";
 import { generateAiChatResponse } from "$lib/server/ai-chat-response-generate";
+import { generateInterviewQuestionAnswer } from "$lib/server/ai-chat-interview-question";
 
 /**
  * Webhook endpoint for Directus Flow integration
@@ -130,6 +131,8 @@ async function processWebhookEvent(
       return await handleAiChatGenerateFullPrompt(data);
     case "ai_chat.generate_response":
       return await handleAiChatGenerateResponse(data);
+    case "application_interview_question.generate_ai_answer":
+      return await handleApplicationInterviewQuestionGenerateAiAnswer(data);
     case "item.create":
       return await handleItemCreate(data);
     case "item.update":
@@ -401,6 +404,92 @@ async function handleAiChatGenerateResponse(
     return {
       processed: false,
       aiChatCount: aiChatIds.length,
+      error: errorMessage,
+    };
+  }
+}
+
+/**
+ * Handle application_interview_question.generate_ai_answer events
+ * Called to generate AI-assisted answers for application interview questions
+ * Expected data format: { ids: number[] }
+ */
+async function handleApplicationInterviewQuestionGenerateAiAnswer(
+  data: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  // Extract and parse question IDs (array of numbers)
+  let questionIds: number[] = [];
+
+  if (Array.isArray(data.ids)) {
+    questionIds = (data.ids as unknown[])
+      .map((id) => {
+        const parsed = parseInt(String(id), 10);
+        return isNaN(parsed) ? null : parsed;
+      })
+      .filter((id): id is number => id !== null);
+  }
+
+  if (questionIds.length === 0) {
+    console.warn(
+      `[Webhook] application_interview_question.generate_ai_answer: Invalid or missing ids`,
+      data,
+    );
+    return {
+      processed: false,
+      error: "Missing or invalid ids in data (expected array of numbers)",
+    };
+  }
+
+  try {
+    console.log(
+      `[Webhook] Generating AI answers for ${questionIds.length} interview question(s)...`,
+    );
+
+    const results = await Promise.allSettled(
+      questionIds.map((questionId) =>
+        generateInterviewQuestionAnswer(questionId)
+          .then((result) => ({
+            questionId,
+            success: result.success,
+            message: result.message,
+          }))
+          .catch((error) => ({
+            questionId,
+            success: false,
+            message: error instanceof Error ? error.message : "Unknown error",
+          }))
+      ),
+    );
+
+    const successful = results.filter(
+      (r) => r.status === "fulfilled" && (r.value as any).success !== false,
+    );
+    const failed = results.filter(
+      (r) =>
+        r.status === "rejected" ||
+        (r.status === "fulfilled" && (r.value as any).success === false),
+    );
+
+    return {
+      processed: successful.length > 0,
+      questionCount: questionIds.length,
+      successCount: successful.length,
+      results: results.map((
+        r,
+      ) => (r.status === "fulfilled" ? r.value : r.reason)),
+      ...(failed.length > 0 && { failureCount: failed.length }),
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error
+      ? error.message
+      : "Unknown error";
+    console.error(
+      `[Webhook] application_interview_question.generate_ai_answer failed:`,
+      errorMessage,
+    );
+    return {
+      processed: false,
+      questionCount: questionIds.length,
       error: errorMessage,
     };
   }

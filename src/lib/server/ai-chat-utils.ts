@@ -5,20 +5,23 @@
 import { prisma } from "$lib/db";
 
 /**
- * Replace a variable placeholder in text
- * Replaces all occurrences of {variableName} with variableValue
+ * Interpolate variables in a prompt string
+ * Replaces ${schema}, ${data}, and ${jobDescription} with provided values
  */
-export function replaceVariable(
+export function interpolatePrompt(
   text: string,
-  variableName: string,
-  variableValue: string,
+  variables: { schema: string; data: string; jobDescription?: string },
 ): string {
-  return text.replace(new RegExp(`\\{${variableName}\\}`, "g"), variableValue);
+  return text
+    .replace(/\$\{schema\}/g, variables.schema)
+    .replace(/\$\{data\}/g, variables.data)
+    .replace(/\$\{jobDescription\}/g, variables.jobDescription || "");
 }
 
 /**
  * Fetch and interpolate prompts for an AI chat
- * Returns system_prompt and user_prompt with {schema} and {data} replaced
+ * Returns system_prompt and user_prompt with ${schema}, ${data}, and ${jobDescription} replaced
+ * Attempts to fetch job description from ai_chat -> application_interview_questions -> applications -> vacancies
  */
 export async function getInterpolatedPrompts(aiChatId: number): Promise<
   {
@@ -42,22 +45,37 @@ export async function getInterpolatedPrompts(aiChatId: number): Promise<
     select: { schema: true, data: true },
   });
 
-  // Prepare replacements (use empty objects as defaults)
-  const schemaValue = collectedData?.schema || "{}";
-  const dataValue = collectedData?.data || "{}";
+  // Try to fetch job description from the relation chain:
+  // ai_chat -> application_interview_questions -> applications -> vacancies
+  let jobDescription = "";
+  const interviewQuestion = await prisma.application_interview_questions
+    .findFirst({
+      where: {
+        ai_chat: aiChatId,
+      },
+      include: {
+        applications: {
+          include: {
+            vacancies: true,
+          },
+        },
+      },
+    });
 
-  // Replace variables in both prompts
-  const systemPrompt = replaceVariable(
-    replaceVariable(aiChat.system_prompt, "schema", schemaValue),
-    "data",
-    dataValue,
-  );
+  if (interviewQuestion?.applications.vacancies?.job_description) {
+    jobDescription = interviewQuestion.applications.vacancies.job_description;
+  }
 
-  const userPrompt = replaceVariable(
-    replaceVariable(aiChat.user_prompt, "schema", schemaValue),
-    "data",
-    dataValue,
-  );
+  // Prepare replacements (use empty objects/strings as defaults)
+  const variables = {
+    schema: collectedData?.schema || "{}",
+    data: collectedData?.data || "{}",
+    jobDescription,
+  };
+
+  // Interpolate variables in both prompts
+  const systemPrompt = interpolatePrompt(aiChat.system_prompt, variables);
+  const userPrompt = interpolatePrompt(aiChat.user_prompt, variables);
 
   return {
     systemPrompt,
