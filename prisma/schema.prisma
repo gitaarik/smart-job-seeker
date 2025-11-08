@@ -9,14 +9,16 @@ datasource db {
 }
 
 model application_interview_questions {
-  id           Int          @id @default(autoincrement())
-  sort         Int?
-  date_created DateTime?    @db.Timestamptz(6)
-  date_updated DateTime?    @db.Timestamptz(6)
-  application  Int
-  question     String
-  answer       String?
-  applications applications @relation(fields: [application], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "application_interview_questions_application_foreign")
+  id                                                       Int          @id @default(autoincrement())
+  sort                                                     Int?
+  date_created                                             DateTime?    @db.Timestamptz(6)
+  date_updated                                             DateTime?    @db.Timestamptz(6)
+  application                                              Int
+  question                                                 String
+  answer                                                   String?
+  ai_chat                                                  Int?
+  ai_chat_application_interview_questions_ai_chatToai_chat ai_chat?     @relation("application_interview_questions_ai_chatToai_chat", fields: [ai_chat], references: [id], onUpdate: NoAction, map: "application_interview_questions_ai_chat_foreign")
+  applications                                             applications @relation(fields: [application], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "application_interview_questions_application_foreign")
 }
 
 model application_questions {
@@ -959,15 +961,16 @@ model work_experiences {
 }
 
 model ai_chat {
-  id            Int       @id @default(autoincrement())
-  date_created  DateTime? @db.Timestamptz(6)
-  date_updated  DateTime? @db.Timestamptz(6)
-  profile       Int
-  system_prompt String    @default("Act as a helpful assistant for a SWE job seeker & applicant. Help answer questions about job descriptions, answer application questions, write cover letters etc. Below is the information about the applicant. First the schema in JSON, after that actual data in JSON. You can use the schema to find the descriptions of certain objects / fields in the data. Be brief and concise in your answer. Max 3 short paragraphs. Hiring managers usually don't have a lot of time extensively reviewing every answer so be to the point. Do not add or list any skills or knowledge which is not in the data of the applicant. You can maybe add some skills the job requires that are closely connected to skills the applicant has.\n\n## The schema:\n\n{schema}\n\n## The data:\n\n{data}")
-  user_prompt   String
-  full_prompt   String?
-  response      String?
-  profiles      profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "ai_chat_profile_foreign")
+  id                                                                               Int                               @id @default(autoincrement())
+  date_created                                                                     DateTime?                         @db.Timestamptz(6)
+  date_updated                                                                     DateTime?                         @db.Timestamptz(6)
+  profile                                                                          Int
+  system_prompt                                                                    String                            @default("Act as a helpful assistant for a SWE job seeker & applicant. Help answer questions about job descriptions, answer application questions, write cover letters etc. Below is the information about the applicant. First the schema in JSON, after that actual data in JSON. You can use the schema to find the descriptions of certain objects / fields in the data. Be brief and concise in your answer. Max 3 short paragraphs. Hiring managers usually do not have a lot of time to extensively review every text. Do not add or list any skills or knowledge which is not in the data of the applicant. You can maybe add some skills the job requires that are closely connected to skills the applicant has. Keep the story close to the real work/project experience of the applicant. Do not make up anything that is not obvious from the original info of the applicant. Don't necessarily generate complete copy-and-paste answers, but rather give suggestions for what kind of things the applicant could write. If there are multiple suitable answers, give them all, so the applicant can choose and customize to their choice.\n\n## The schema:\n\n{schema}\n\n## The data:\n\n{data}")
+  user_prompt                                                                      String
+  full_prompt                                                                      String?
+  response                                                                         String?
+  profiles                                                                         profiles                          @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "ai_chat_profile_foreign")
+  application_interview_questions_application_interview_questions_ai_chatToai_chat application_interview_questions[] @relation("application_interview_questions_ai_chatToai_chat")
 }
 
 enum Role {
