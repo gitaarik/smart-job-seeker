@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict Uq0IwDmA9pUsIXKaCoObZ5dunErICq69jpPAC6DsTGvUUdNDnvCz9t4hkhZsAfc
+\restrict APOCBq6UvoykgYZOzcbGzlHVt6HRKLcAN2cQCBm5zsKYMCg2WvQVQbLpWrJsplu
 
 -- Dumped from database version 15.14 (Debian 15.14-1.pgdg13+1)
 -- Dumped by pg_dump version 15.14 (Debian 15.14-1.pgdg13+1)
@@ -1234,7 +1234,6 @@ ALTER TABLE public.languages OWNER TO postgres;
 CREATE TABLE public.os_contributions (
     id integer NOT NULL,
     status character varying(255) DEFAULT 'draft'::character varying NOT NULL,
-    sort integer,
     date_created timestamp with time zone,
     date_updated timestamp with time zone,
     title character varying(255),
@@ -8191,6 +8190,17 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 6215	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 15:45:50.899+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	8	http://localhost:8055
 6216	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 15:53:15.395+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	9	http://localhost:8055
 6217	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 15:53:57.694+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	9	http://localhost:8055
+6218	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 16:06:03.219+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	10	http://localhost:8055
+6219	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 16:11:27.023+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	11	http://localhost:8055
+6220	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 16:12:10.561+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	11	http://localhost:8055
+6221	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 16:12:47.948+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	11	http://localhost:8055
+6222	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 16:13:16.893+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	393	http://localhost:8055
+6223	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 16:20:40.654+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	12	http://localhost:8055
+6224	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 16:21:12.743+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	12	http://localhost:8055
+6225	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 16:21:32.208+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	12	http://localhost:8055
+6226	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 16:21:56.762+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	12	http://localhost:8055
+6227	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 16:22:36.61+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	9	http://localhost:8055
+6228	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 16:23:12.782+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	9	http://localhost:8055
 \.
 
 
@@ -8231,7 +8241,7 @@ outsourcing_platforms	\N	\N	{{name}} {{type}}	f	f	\N	status	t	archived	draft	sor
 salary_expectations	\N	Salary expectations for various work arrangements and situations	{{job_title}} {{employment_type}} {{work_arrangement}} {{company_type}} {{region}} {{hourly_rate}}/h - {{daily_rate}}/d - {{month_salary}}/m - {{year_salary}}/y	f	f	\N	\N	t	\N	\N	sort	all	\N	\N	4	applying	open	\N	f
 platform_profiles	\N	\N	{{outsourcing_platform}}{{status}}	f	f	\N	status	t	archived	draft	sort	all	\N	\N	2	applying	open	\N	f
 ai_chat	\N	\N	{{system_prompt}} | {{user_prompt}} | {{response}}	f	f	\N	\N	t	\N	\N	\N	all	\N	\N	5	applying	open	\N	f
-os_contributions	\N	\N	\N	f	f	\N	status	t	archived	draft	sort	all	\N	\N	\N	\N	open	\N	f
+os_contributions	\N	\N	\N	f	f	\N	status	t	archived	draft	\N	all	\N	\N	\N	\N	open	\N	f
 \.
 
 
@@ -8586,7 +8596,6 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 397	os_contributions	description	\N	input-multiline	\N	\N	\N	f	f	10	full	\N	\N	\N	f	\N	\N	\N	t
 401	profiles	os_contributions	o2m	list-o2m	\N	\N	\N	f	f	40	full	\N	\N	\N	f	\N	\N	\N	t
 391	os_contributions	id	\N	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N	t
-393	os_contributions	sort	\N	input	\N	\N	\N	f	t	2	full	\N	\N	\N	f	\N	\N	\N	t
 406	os_contributions	contribution_type	\N	select-dropdown	{"choices":[{"text":"Feature","value":"feature"},{"text":"Bugfix","value":"bugfix"},{"text":"Enhancement","value":"enhancement"},{"text":"Documentation","value":"documentation"},{"text":"Maintenance","value":"maintenance"}]}	labels	{"choices":[{"text":"Feature","value":"feature","background":"#26A269","foreground":"#FFFFFF"},{"text":"Bugfix","value":"bugfix","background":"#C01C28","foreground":"#FFFFFF"},{"text":"Enhancement","value":"enhancement","background":"#E5A50A","foreground":"#FFFFFF"},{"text":"Documentation","value":"documentation","background":"#1A5FB4","foreground":"#FFFFFF"},{"text":"Maintenance","value":"maintenance","background":"#813D9C","foreground":"#FFFFFF"}]}	f	f	9	full	\N	\N	\N	f	\N	\N	\N	t
 392	os_contributions	status	\N	select-dropdown	{"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)"}]}	labels	{"showAsDot":true,"choices":[{"text":"$t:published","value":"published","color":"var(--theme--primary)","foreground":"var(--theme--primary)","background":"var(--theme--primary-background)"},{"text":"$t:draft","value":"draft","color":"var(--theme--foreground)","foreground":"var(--theme--foreground)","background":"var(--theme--background-normal)"},{"text":"$t:archived","value":"archived","color":"var(--theme--warning)","foreground":"var(--theme--warning)","background":"var(--theme--warning-background)"}]}	f	f	6	half	\N	\N	\N	f	\N	\N	\N	t
 403	os_contributions	issue_url	\N	input	\N	\N	\N	f	f	11	full	\N	\N	\N	f	\N	\N	\N	t
@@ -8829,7 +8838,7 @@ COPY public.directus_presets (id, bookmark, "user", role, collection, search, la
 25	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	applications	\N	\N	{"tabular":{"fields":["vacancy","application_sent_date","status"],"page":1,"sort":["-id"]}}	{"tabular":{"widths":{"vacancy":637,"application_sent_date":197.3333740234375,"status":149.6666259765625}}}	\N	\N	bookmark	\N
 34	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	ai_chat	\N	\N	{"tabular":{"page":1,"fields":["user_prompt"]}}	{"tabular":{"widths":{"user_prompt":944.3333129882812}}}	\N	\N	bookmark	\N
 3	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	profiles	\N	\N	{"tabular":{"page":1,"fields":["name","title","core_stack","subtitle"]}}	{"tabular":{"widths":{"name":126.66665649414062,"title":231.66668701171875,"core_stack":278.3333740234375,"subtitle":343.3333740234375}}}	\N	\N	bookmark	\N
-35	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	os_contributions	\N	\N	{"tabular":{"page":1,"fields":["title","contribution_type","project_name","merged_date","status"]}}	{"tabular":{"widths":{"title":399.66668701171875,"contribution_type":170,"project_name":178,"merged_date":166.6666259765625,"status":90}}}	\N	\N	bookmark	\N
+35	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	os_contributions	\N	\N	{"tabular":{"page":1,"fields":["title","contribution_type","project_name","merged_date","status"],"sort":["-merged_date"]}}	{"tabular":{"widths":{"title":399.66668701171875,"contribution_type":170,"project_name":178,"merged_date":189,"status":90}}}	\N	\N	bookmark	\N
 \.
 
 
@@ -10137,6 +10146,16 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 5995	6215	os_contributions	8	{"id":8,"status":"published","sort":null,"date_created":"2025-11-17T15:42:01.367Z","date_updated":"2025-11-17T15:45:50.898Z","title":"Fixed issue in example code in documentation","description":"Fixed example code in the documentation, where the placement of the `close_old_connections()` function was incorrect, resulting in old database connections trying to be reused.","project_name":"Django Channels","profile":1,"merged_date":"2019-01-24","issue_url":"https://github.com/django/channels/issues/1227","pull_request_url":"https://github.com/django/channels/pull/1228","contribution_type":"documentation"}	{"merged_date":"2019-01-24","date_updated":"2025-11-17T15:45:50.898Z"}	\N	\N
 5996	6216	os_contributions	9	{"profile":1,"status":"published","title":"Django 1.11 compatibility","contribution_type":"maintenance","project_name":"django-jsonfield","description":"Before Django had a native JSONField, this project provided a custom JSON field. I Fixed an `AttributeError` that would occur from Django 1.11 on, making the field usable for those versions again."}	{"profile":1,"status":"published","title":"Django 1.11 compatibility","contribution_type":"maintenance","project_name":"django-jsonfield","description":"Before Django had a native JSONField, this project provided a custom JSON field. I Fixed an `AttributeError` that would occur from Django 1.11 on, making the field usable for those versions again."}	\N	\N
 5997	6217	os_contributions	9	{"id":9,"status":"published","sort":null,"date_created":"2025-11-17T15:53:15.394Z","date_updated":"2025-11-17T15:53:57.693Z","title":"Django 1.11 compatibility","description":"Before Django had a native JSONField, this project provided a custom JSON field. I Fixed an `AttributeError` that would occur from Django 1.11 on, making the field usable for those versions again.","project_name":"django-jsonfield","profile":1,"merged_date":"2017-06-01","issue_url":"https://github.com/rpkilby/jsonfield/issues/189","pull_request_url":"https://github.com/rpkilby/jsonfield/pull/192","contribution_type":"maintenance"}	{"merged_date":"2017-06-01","issue_url":"https://github.com/rpkilby/jsonfield/issues/189","pull_request_url":"https://github.com/rpkilby/jsonfield/pull/192","date_updated":"2025-11-17T15:53:57.693Z"}	\N	\N
+5998	6218	os_contributions	10	{"profile":1,"status":"published","project_name":"Celery","title":"Improved Tasks documentation","contribution_type":"documentation","description":"Cleared up documentation about the `group` parameter of the `Task.request` object.","pull_request_url":"https://github.com/celery/celery/pull/3167","merged_date":"2016-04-15"}	{"profile":1,"status":"published","project_name":"Celery","title":"Improved Tasks documentation","contribution_type":"documentation","description":"Cleared up documentation about the `group` parameter of the `Task.request` object.","pull_request_url":"https://github.com/celery/celery/pull/3167","merged_date":"2016-04-15"}	\N	\N
+5999	6219	os_contributions	11	{"title":"Updated docs on migrating Celery in Django","profile":1,"status":"published","project_name":"Celery","contribution_type":"documentation"}	{"title":"Updated docs on migrating Celery in Django","profile":1,"status":"published","project_name":"Celery","contribution_type":"documentation"}	\N	\N
+6000	6220	os_contributions	11	{"id":11,"status":"published","sort":null,"date_created":"2025-11-17T16:11:27.022Z","date_updated":"2025-11-17T16:12:10.560Z","title":"Updated docs on migrating Celery in Django","description":"Since Django incorporated the South migrations framework natively, the documentation regarding migrating Celery in a Django project needed to be updated.","project_name":"Celery","profile":1,"merged_date":null,"issue_url":null,"pull_request_url":null,"contribution_type":"documentation"}	{"description":"Since Django incorporated the South migrations framework natively, the documentation regarding migrating Celery in a Django project needed to be updated.","date_updated":"2025-11-17T16:12:10.560Z"}	\N	\N
+6001	6221	os_contributions	11	{"id":11,"status":"published","sort":null,"date_created":"2025-11-17T16:11:27.022Z","date_updated":"2025-11-17T16:12:47.947Z","title":"Updated docs on migrating Celery in Django","description":"Since Django incorporated the South migrations framework natively, the documentation regarding migrating Celery in a Django project needed to be updated.","project_name":"Celery","profile":1,"merged_date":"2016-03-18","issue_url":null,"pull_request_url":"https://github.com/celery/celery/pull/3122","contribution_type":"documentation"}	{"merged_date":"2016-03-18","pull_request_url":"https://github.com/celery/celery/pull/3122","date_updated":"2025-11-17T16:12:47.947Z"}	\N	\N
+6002	6223	os_contributions	12	{"profile":1,"status":"published","pull_request_url":"https://github.com/shanx/django-extensions-shell/pull/1","project_name":"Django Extensions Shell","contribution_type":"documentation","description":"Added a link to the Django Extensions GitHub page, that this project is based on.","title":"Improved introduction documentation"}	{"profile":1,"status":"published","pull_request_url":"https://github.com/shanx/django-extensions-shell/pull/1","project_name":"Django Extensions Shell","contribution_type":"documentation","description":"Added a link to the Django Extensions GitHub page, that this project is based on.","title":"Improved introduction documentation"}	\N	\N
+6003	6224	os_contributions	12	{"id":12,"status":"published","date_created":"2025-11-17T16:20:40.653Z","date_updated":"2025-11-17T16:21:12.741Z","title":"Improved introduction documentation","description":"Added a link to the Django Extensions GitHub page, that this project is based on.","project_name":"Django Extensions Shell","profile":1,"merged_date":"2016-09-19","issue_url":null,"pull_request_url":"https://github.com/shanx/django-extensions-shell/pull/1","contribution_type":"documentation"}	{"merged_date":"2016-09-19","date_updated":"2025-11-17T16:21:12.741Z"}	\N	\N
+6004	6225	os_contributions	12	{"id":12,"status":"published","date_created":"2025-11-17T16:20:40.653Z","date_updated":"2025-11-17T16:21:32.207Z","title":"Improved project introduction documentation","description":"Added a link to the Django Extensions GitHub page, that this project is based on.","project_name":"Django Extensions Shell","profile":1,"merged_date":"2016-09-19","issue_url":null,"pull_request_url":"https://github.com/shanx/django-extensions-shell/pull/1","contribution_type":"documentation"}	{"title":"Improved project introduction documentation","date_updated":"2025-11-17T16:21:32.207Z"}	\N	\N
+6005	6226	os_contributions	12	{"id":12,"status":"published","date_created":"2025-11-17T16:20:40.653Z","date_updated":"2025-11-17T16:21:56.761Z","title":"Improved project intro documentation","description":"Added a link to the Django Extensions GitHub page, that this project is based on.","project_name":"Django Extensions Shell","profile":1,"merged_date":"2016-09-19","issue_url":null,"pull_request_url":"https://github.com/shanx/django-extensions-shell/pull/1","contribution_type":"documentation"}	{"title":"Improved project intro documentation","date_updated":"2025-11-17T16:21:56.761Z"}	\N	\N
+6006	6227	os_contributions	9	{"id":9,"status":"published","date_created":"2025-11-17T15:53:15.394Z","date_updated":"2025-11-17T16:22:36.609Z","title":"Fixed Django 1.11 compatibility","description":"Before Django had a native JSONField, this project provided a custom JSON field. I Fixed an `AttributeError` that would occur from Django 1.11 on, making the field usable for those versions again.","project_name":"django-jsonfield","profile":1,"merged_date":"2017-06-01","issue_url":"https://github.com/rpkilby/jsonfield/issues/189","pull_request_url":"https://github.com/rpkilby/jsonfield/pull/192","contribution_type":"bugfix"}	{"title":"Fixed Django 1.11 compatibility","contribution_type":"bugfix","date_updated":"2025-11-17T16:22:36.609Z"}	\N	\N
+6007	6228	os_contributions	9	{"id":9,"status":"published","date_created":"2025-11-17T15:53:15.394Z","date_updated":"2025-11-17T16:23:12.780Z","title":"Fixed Django 1.11 compatibility","description":"Before Django had a native JSONField, this project provided a custom JSON field. I Fixed an `AttributeError` that would occur from Django 1.11 on, making the field usable for those versions again.","project_name":"django-jsonfield","profile":1,"merged_date":"2017-06-01","issue_url":"https://github.com/rpkilby/jsonfield/issues/189","pull_request_url":"https://github.com/rpkilby/jsonfield/pull/192","contribution_type":"maintenance"}	{"contribution_type":"maintenance","date_updated":"2025-11-17T16:23:12.780Z"}	\N	\N
 \.
 
 
@@ -10154,8 +10173,9 @@ COPY public.directus_roles (id, name, icon, description, parent) FROM stdin;
 --
 
 COPY public.directus_sessions (token, "user", expires, ip, user_agent, share, origin, next_token) FROM stdin;
-vfYa-eQiTNjDA5I_pQQWPYaQZFhbjHhXyALlUfHqfBR-B8RBUyZsnbnM1zm7N27T	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 15:46:12.268+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	0rUY0cEDAsrssEF2lypaF3gxDN1xa_Pt3jUV-5WvXPyBdjBamb_-yZMxsi2rkRTl
-0rUY0cEDAsrssEF2lypaF3gxDN1xa_Pt3jUV-5WvXPyBdjBamb_-yZMxsi2rkRTl	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:46:02.268+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
+HDAvDjhqWNsrd-adA0vh7M_Ag-bzC4H0p1wak6CGtMjBpXuUR15cTHby9CuJJ-BA	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 16:13:39.501+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	SxPgOjdBke0kq1o4KsGPIepl6VStz8iA6FaWpXQzY12UOTbEaSOAsMn17veb3MI-
+Wbec7r_E3g6rD7dDeS9yY2qgZ-_pzgxwzJmrKsXJp6u7wmCGtwgriQihAzkvcHDX	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:13:38.08+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
+SxPgOjdBke0kq1o4KsGPIepl6VStz8iA6FaWpXQzY12UOTbEaSOAsMn17veb3MI-	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 16:13:48.08+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	Wbec7r_E3g6rD7dDeS9yY2qgZ-_pzgxwzJmrKsXJp6u7wmCGtwgriQihAzkvcHDX
 \.
 
 
@@ -10192,7 +10212,7 @@ c530a32f-84cb-4ab9-8a61-7a12a5bcb7e6	en-US	draft	Draft
 --
 
 COPY public.directus_users (id, first_name, last_name, email, password, location, title, description, tags, avatar, language, tfa_secret, status, role, token, last_access, last_page, provider, external_identifier, auth_data, email_notifications, appearance, theme_dark, theme_light, theme_light_overrides, theme_dark_overrides, text_direction) FROM stdin;
-157238bb-6930-4f26-be9c-8b31a9e11ab8	Rik	Wanders	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-11-17 15:46:02.272+00	/content/os_contributions	default	\N	\N	t	\N	\N	\N	\N	\N	auto
+157238bb-6930-4f26-be9c-8b31a9e11ab8	Rik	Wanders	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-11-17 16:13:38.083+00	/content/os_contributions	default	\N	\N	t	\N	\N	\N	\N	\N	auto
 \.
 
 
@@ -10253,16 +10273,19 @@ COPY public.languages (id, status, date_created, date_updated, name, language_co
 -- Data for Name: os_contributions; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.os_contributions (id, status, sort, date_created, date_updated, title, description, project_name, profile, merged_date, issue_url, pull_request_url, contribution_type) FROM stdin;
-1	published	3	2025-11-17 13:49:19.967+00	2025-11-17 14:42:08.293+00	Django File Uploads documentation improvement	Django's setting `FILE_UPLOAD_PERMISSIONS` is not used for `TemporaryUploadedFile` objects. This was not clear in the documentation, and I thought it should actually use it, and wanted to fix that. But instead I cleared up the documentation.	Django	1	2020-04-07	https://code.djangoproject.com/ticket/12670	https://github.com/django/django/pull/2341	documentation
-9	published	5	2025-11-17 15:53:15.394+00	2025-11-17 15:53:57.693+00	Django 1.11 compatibility	Before Django had a native JSONField, this project provided a custom JSON field. I Fixed an `AttributeError` that would occur from Django 1.11 on, making the field usable for those versions again.	django-jsonfield	1	2017-06-01	https://github.com/rpkilby/jsonfield/issues/189	https://github.com/rpkilby/jsonfield/pull/192	maintenance
-5	published	6	2025-11-17 14:59:05.846+00	2025-11-17 14:59:50.1+00	Removed old functionality from HttpRequest	Removed functionality related to old `mod_python` usage, not required anymore since WSGI. Simplified code to prevent future confusion about old unnecessary functionality.	Django	1	2015-03-11	https://code.djangoproject.com/ticket/24463	https://github.com/django/django/pull/4290/files	maintenance
-2	published	7	2025-11-17 13:58:03.092+00	2025-11-17 14:41:59.626+00	Fixed issue with Django's LazyObject	Added the `__iter__` method to the `LazyObject` object in Django, which is used to make any object into a lazy-loaded object. But the `__iter__` method was missing, so it couldn't be used to make objects using the `__iter__` method lazy. This fixed the issue.	Django	1	2015-03-08	https://code.djangoproject.com/ticket/23838	https://github.com/django/django/pull/3541	enhancement
-4	published	9	2025-11-17 14:49:10.51+00	2025-11-17 14:49:56.382+00	Improved Authentication Views documentation	Explained how to use Django's useful built-in authentication views.	Django	1	2015-03-08	https://code.djangoproject.com/ticket/21661	https://github.com/django/django/pull/4280	documentation
-3	published	8	2025-11-17 14:23:03.542+00	2025-11-17 14:40:59.292+00	Django HttpRequest documentation improvement	Cleared up that the `HttpRequest.build_absolute_uri()` method uses HTTPS if the current request is also HTTPS. And if you want to redirect to HTTPS, it's best to do it on webserver level.	Django	1	2015-03-08	https://code.djangoproject.com/ticket/24460	https://github.com/django/django/pull/4278	documentation
-7	published	2	2025-11-17 15:33:24.371+00	2025-11-17 15:34:02.141+00	Improved documentation about colorscheme usage	Explained that ptpython uses Pygments for code styling and added URLs to docs for colorscheme names and previews.	ptpython	1	2022-01-24	https://github.com/prompt-toolkit/ptpython/issues/482	https://github.com/prompt-toolkit/ptpython/pull/483	documentation
-6	published	1	2025-11-17 15:27:02.032+00	\N	Updated code to support new Django version	Resolved a warning `RemovedInDjango30Warning` that you would get when using this project with Django 3.0+.	django-bitmask-field	1	2022-05-06	\N	https://github.com/renskiy/django-bitmask-field/pull/9	enhancement
-8	published	4	2025-11-17 15:42:01.367+00	2025-11-17 15:45:50.898+00	Fixed issue in example code in documentation	Fixed example code in the documentation, where the placement of the `close_old_connections()` function was incorrect, resulting in old database connections trying to be reused.	Django Channels	1	2019-01-24	https://github.com/django/channels/issues/1227	https://github.com/django/channels/pull/1228	documentation
+COPY public.os_contributions (id, status, date_created, date_updated, title, description, project_name, profile, merged_date, issue_url, pull_request_url, contribution_type) FROM stdin;
+1	published	2025-11-17 13:49:19.967+00	2025-11-17 14:42:08.293+00	Django File Uploads documentation improvement	Django's setting `FILE_UPLOAD_PERMISSIONS` is not used for `TemporaryUploadedFile` objects. This was not clear in the documentation, and I thought it should actually use it, and wanted to fix that. But instead I cleared up the documentation.	Django	1	2020-04-07	https://code.djangoproject.com/ticket/12670	https://github.com/django/django/pull/2341	documentation
+10	published	2025-11-17 16:06:03.217+00	\N	Improved Tasks documentation	Cleared up documentation about the `group` parameter of the `Task.request` object.	Celery	1	2016-04-15	\N	https://github.com/celery/celery/pull/3167	documentation
+12	published	2025-11-17 16:20:40.653+00	2025-11-17 16:21:56.761+00	Improved project intro documentation	Added a link to the Django Extensions GitHub page, that this project is based on.	Django Extensions Shell	1	2016-09-19	\N	https://github.com/shanx/django-extensions-shell/pull/1	documentation
+5	published	2025-11-17 14:59:05.846+00	2025-11-17 14:59:50.1+00	Removed old functionality from HttpRequest	Removed functionality related to old `mod_python` usage, not required anymore since WSGI. Simplified code to prevent future confusion about old unnecessary functionality.	Django	1	2015-03-11	https://code.djangoproject.com/ticket/24463	https://github.com/django/django/pull/4290/files	maintenance
+2	published	2025-11-17 13:58:03.092+00	2025-11-17 14:41:59.626+00	Fixed issue with Django's LazyObject	Added the `__iter__` method to the `LazyObject` object in Django, which is used to make any object into a lazy-loaded object. But the `__iter__` method was missing, so it couldn't be used to make objects using the `__iter__` method lazy. This fixed the issue.	Django	1	2015-03-08	https://code.djangoproject.com/ticket/23838	https://github.com/django/django/pull/3541	enhancement
+7	published	2025-11-17 15:33:24.371+00	2025-11-17 15:34:02.141+00	Improved documentation about colorscheme usage	Explained that ptpython uses Pygments for code styling and added URLs to docs for colorscheme names and previews.	ptpython	1	2022-01-24	https://github.com/prompt-toolkit/ptpython/issues/482	https://github.com/prompt-toolkit/ptpython/pull/483	documentation
+4	published	2025-11-17 14:49:10.51+00	2025-11-17 14:49:56.382+00	Improved Authentication Views documentation	Explained how to use Django's useful built-in authentication views.	Django	1	2015-03-08	https://code.djangoproject.com/ticket/21661	https://github.com/django/django/pull/4280	documentation
+6	published	2025-11-17 15:27:02.032+00	\N	Updated code to support new Django version	Resolved a warning `RemovedInDjango30Warning` that you would get when using this project with Django 3.0+.	django-bitmask-field	1	2022-05-06	\N	https://github.com/renskiy/django-bitmask-field/pull/9	enhancement
+3	published	2025-11-17 14:23:03.542+00	2025-11-17 14:40:59.292+00	Django HttpRequest documentation improvement	Cleared up that the `HttpRequest.build_absolute_uri()` method uses HTTPS if the current request is also HTTPS. And if you want to redirect to HTTPS, it's best to do it on webserver level.	Django	1	2015-03-08	https://code.djangoproject.com/ticket/24460	https://github.com/django/django/pull/4278	documentation
+8	published	2025-11-17 15:42:01.367+00	2025-11-17 15:45:50.898+00	Fixed issue in example code in documentation	Fixed example code in the documentation, where the placement of the `close_old_connections()` function was incorrect, resulting in old database connections trying to be reused.	Django Channels	1	2019-01-24	https://github.com/django/channels/issues/1227	https://github.com/django/channels/pull/1228	documentation
+9	published	2025-11-17 15:53:15.394+00	2025-11-17 16:23:12.78+00	Fixed Django 1.11 compatibility	Before Django had a native JSONField, this project provided a custom JSON field. I Fixed an `AttributeError` that would occur from Django 1.11 on, making the field usable for those versions again.	django-jsonfield	1	2017-06-01	https://github.com/rpkilby/jsonfield/issues/189	https://github.com/rpkilby/jsonfield/pull/192	maintenance
+11	published	2025-11-17 16:11:27.022+00	2025-11-17 16:12:47.947+00	Updated docs on migrating Celery in Django	Since Django incorporated the South migrations framework natively, the documentation regarding migrating Celery in a Django project needed to be updated.	Celery	1	2016-03-18	\N	https://github.com/celery/celery/pull/3122	documentation
 \.
 
 
@@ -10748,7 +10771,7 @@ SELECT pg_catalog.setval('public.dev_methodologies_id_seq', 38, true);
 -- Name: directus_activity_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_activity_id_seq', 6217, true);
+SELECT pg_catalog.setval('public.directus_activity_id_seq', 6228, true);
 
 
 --
@@ -10790,7 +10813,7 @@ SELECT pg_catalog.setval('public.directus_relations_id_seq', 43, true);
 -- Name: directus_revisions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_revisions_id_seq', 5997, true);
+SELECT pg_catalog.setval('public.directus_revisions_id_seq', 6007, true);
 
 
 --
@@ -10832,7 +10855,7 @@ SELECT pg_catalog.setval('public.languages_id_seq', 116, true);
 -- Name: os_contributions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.os_contributions_id_seq', 9, true);
+SELECT pg_catalog.setval('public.os_contributions_id_seq', 12, true);
 
 
 --
@@ -12167,5 +12190,5 @@ ALTER TABLE ONLY public.work_experiences
 -- PostgreSQL database dump complete
 --
 
-\unrestrict Uq0IwDmA9pUsIXKaCoObZ5dunErICq69jpPAC6DsTGvUUdNDnvCz9t4hkhZsAfc
+\unrestrict APOCBq6UvoykgYZOzcbGzlHVt6HRKLcAN2cQCBm5zsKYMCg2WvQVQbLpWrJsplu
 
