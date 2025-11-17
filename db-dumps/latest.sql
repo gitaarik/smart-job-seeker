@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict NmJzuo6bsG9VrtTY6XHVnZG7mX5FkiTVmdnOEwSMqPJKn8cbVRFNe8zpvyaqTCH
+\restrict LIAQ4gSCwanehz9H6GlQEJDA1epifX4SqYNrvhj3YGqzrgrisnHQl9GtbCeqD14
 
 -- Dumped from database version 15.14 (Debian 15.14-1.pgdg13+1)
 -- Dumped by pg_dump version 15.14 (Debian 15.14-1.pgdg13+1)
@@ -8261,6 +8261,10 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 6286	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 17:28:59.748+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	collected_data	http://localhost:8055
 6287	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 17:28:59.751+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	soft_skills	http://localhost:8055
 6288	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 17:28:59.755+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	dev_methodologies	http://localhost:8055
+6289	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 17:32:29.817+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	18	http://localhost:8055
+6290	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 17:33:56.092+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	18	http://localhost:8055
+6291	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 17:34:22.868+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	18	http://localhost:8055
+6292	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 17:40:15.935+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	19	http://localhost:8055
 \.
 
 
@@ -10276,6 +10280,10 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 6065	6286	directus_collections	collected_data	{"collection":"collected_data","icon":null,"note":"Generated data collecting all profile info for AI prompt usage","display_template":null,"hidden":false,"singleton":true,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":null,"accountability":"all","color":null,"item_duplication_fields":null,"sort":10,"group":"resume_cv","collapse":"open","preview_url":null,"versioning":false}	{"sort":10,"group":"resume_cv"}	\N	\N
 6066	6287	directus_collections	soft_skills	{"collection":"soft_skills","icon":null,"note":null,"display_template":"{{name}}","hidden":true,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":11,"group":"resume_cv","collapse":"open","preview_url":null,"versioning":false}	{"sort":11,"group":"resume_cv"}	\N	\N
 6067	6288	directus_collections	dev_methodologies	{"collection":"dev_methodologies","icon":null,"note":null,"display_template":"{{name}}","hidden":true,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":12,"group":"resume_cv","collapse":"open","preview_url":null,"versioning":false}	{"sort":12,"group":"resume_cv"}	\N	\N
+6068	6289	os_contributions	18	{"title":"Added examples to the command module","project_name":"Ansible","profile":1,"status":"published","contribution_type":"documentation","description":"Added code examples, clearly explaining how to use the command module in Ansible Playbooks."}	{"title":"Added examples to the command module","project_name":"Ansible","profile":1,"status":"published","contribution_type":"documentation","description":"Added code examples, clearly explaining how to use the command module in Ansible Playbooks."}	\N	\N
+6069	6290	os_contributions	18	{"id":18,"status":"published","date_created":"2025-11-17T17:32:29.816Z","date_updated":"2025-11-17T17:33:56.091Z","title":"Added example code to Ansible Playbook docs","description":"Added code examples, clearly explaining how to use the `shell` and `command` modules in Ansible Playbooks.","project_name":"Ansible","profile":1,"merged_date":null,"issue_url":null,"pull_request_url":"https://github.com/ansible/ansible/pull/7915","contribution_type":"documentation"}	{"title":"Added example code to Ansible Playbook docs","description":"Added code examples, clearly explaining how to use the `shell` and `command` modules in Ansible Playbooks.","pull_request_url":"https://github.com/ansible/ansible/pull/7915","date_updated":"2025-11-17T17:33:56.091Z"}	\N	\N
+6070	6291	os_contributions	18	{"id":18,"status":"published","date_created":"2025-11-17T17:32:29.816Z","date_updated":"2025-11-17T17:34:22.867Z","title":"Added example code to Ansible Playbook docs","description":"Added code examples, clearly explaining how to use the `shell` and `command` modules in Ansible Playbooks.","project_name":"Ansible","profile":1,"merged_date":"2014-06-24","issue_url":null,"pull_request_url":"https://github.com/ansible/ansible/pull/7915","contribution_type":"documentation"}	{"merged_date":"2014-06-24","date_updated":"2025-11-17T17:34:22.867Z"}	\N	\N
+6071	6292	os_contributions	19	{"pull_request_url":"https://github.com/MongoEngine/mongoengine/pull/457","merged_date":"2015-04-11","status":"published","profile":1,"project_name":"MongoEngine","contribution_type":"enhancement","title":"Made code more defensive for incorrect usage","description":"Enhanced the library to raise an exception when the user does something incorrect."}	{"pull_request_url":"https://github.com/MongoEngine/mongoengine/pull/457","merged_date":"2015-04-11","status":"published","profile":1,"project_name":"MongoEngine","contribution_type":"enhancement","title":"Made code more defensive for incorrect usage","description":"Enhanced the library to raise an exception when the user does something incorrect."}	\N	\N
 \.
 
 
@@ -10409,7 +10417,9 @@ COPY public.os_contributions (id, status, date_created, date_updated, title, des
 11	published	2025-11-17 16:11:27.022+00	2025-11-17 16:12:47.947+00	Updated docs on migrating Celery in Django	Since Django incorporated the South migrations framework natively, the documentation regarding migrating Celery in a Django project needed to be updated.	Celery	1	2016-03-18	\N	https://github.com/celery/celery/pull/3122	documentation
 14	published	2025-11-17 16:43:06.793+00	2025-11-17 16:43:29.372+00	Modernized installation documentation	The installation documentation was still instructing to install the app manually, while installation with `pip` was already available.	Django Filter	1	2016-03-04	\N	https://github.com/carltongibson/django-filter/pull/384	maintenance
 16	published	2025-11-17 17:15:37.842+00	2025-11-17 17:16:09.584+00	Improved testing documentation	There were some missing steps / minor issues in the steps instructing how to setup the testing environment. I made things clearer, removed unnecessary steps, corrected incorrect commands/paths.	 django-websocket-redis 	1	2015-12-02	\N	https://github.com/jrief/django-websocket-redis/pull/127	documentation
+18	published	2025-11-17 17:32:29.816+00	2025-11-17 17:34:22.867+00	Added example code to Ansible Playbook docs	Added code examples, clearly explaining how to use the `shell` and `command` modules in Ansible Playbooks.	Ansible	1	2014-06-24	\N	https://github.com/ansible/ansible/pull/7915	documentation
 17	published	2025-11-17 17:18:14.097+00	2025-11-17 17:19:15.834+00	Simplified project setup	Simplified the project setup by using a single requirements.txt file instead of using a separate one for the testing environment.	django-websocket-redis	1	2015-12-03	\N	https://github.com/jrief/django-websocket-redis/pull/128	maintenance
+19	published	2025-11-17 17:40:15.934+00	\N	Made code more defensive for incorrect usage	Enhanced the library to raise an exception when the user does something incorrect.	MongoEngine	1	2015-04-11	\N	https://github.com/MongoEngine/mongoengine/pull/457	enhancement
 \.
 
 
@@ -10895,7 +10905,7 @@ SELECT pg_catalog.setval('public.dev_methodologies_id_seq', 38, true);
 -- Name: directus_activity_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_activity_id_seq', 6288, true);
+SELECT pg_catalog.setval('public.directus_activity_id_seq', 6292, true);
 
 
 --
@@ -10937,7 +10947,7 @@ SELECT pg_catalog.setval('public.directus_relations_id_seq', 43, true);
 -- Name: directus_revisions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_revisions_id_seq', 6067, true);
+SELECT pg_catalog.setval('public.directus_revisions_id_seq', 6071, true);
 
 
 --
@@ -10979,7 +10989,7 @@ SELECT pg_catalog.setval('public.languages_id_seq', 116, true);
 -- Name: os_contributions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.os_contributions_id_seq', 17, true);
+SELECT pg_catalog.setval('public.os_contributions_id_seq', 19, true);
 
 
 --
@@ -12314,5 +12324,5 @@ ALTER TABLE ONLY public.work_experiences
 -- PostgreSQL database dump complete
 --
 
-\unrestrict NmJzuo6bsG9VrtTY6XHVnZG7mX5FkiTVmdnOEwSMqPJKn8cbVRFNe8zpvyaqTCH
+\unrestrict LIAQ4gSCwanehz9H6GlQEJDA1epifX4SqYNrvhj3YGqzrgrisnHQl9GtbCeqD14
 
