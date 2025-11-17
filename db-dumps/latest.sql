@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict LIAQ4gSCwanehz9H6GlQEJDA1epifX4SqYNrvhj3YGqzrgrisnHQl9GtbCeqD14
+\restrict A1iuW1TigpfGv5b4Sq3Rk6yIA5pUBmIUK6JVfBJacI50OjzXzzTcdVtHopabaJz
 
 -- Dumped from database version 15.14 (Debian 15.14-1.pgdg13+1)
 -- Dumped by pg_dump version 15.14 (Debian 15.14-1.pgdg13+1)
@@ -8265,6 +8265,8 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 6290	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 17:33:56.092+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	18	http://localhost:8055
 6291	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 17:34:22.868+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	18	http://localhost:8055
 6292	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 17:40:15.935+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	19	http://localhost:8055
+6293	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 17:41:38.016+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	5	http://localhost:8055
+6294	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 17:45:53.429+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	1	http://localhost:8055
 \.
 
 
@@ -8893,7 +8895,6 @@ COPY public.directus_presets (id, bookmark, "user", role, collection, search, la
 1	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	work_experiences	\N	\N	{"tabular":{"fields":["name","position","location","description","start_date","end_date","status"],"page":1}}	{"tabular":{"widths":{"name":119.66665649414062,"position":264,"location":136.66668701171875,"description":223.3333740234375,"start_date":119.666748046875,"end_date":120,"status":91}}}	\N	\N	bookmark	\N
 18	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	side_projects	\N	\N	{"tabular":{"fields":["name","stars","start_date","end_date","status"],"page":1}}	{"tabular":{"widths":{"name":326.33331298828125,"stars":90.66668701171875,"start_date":182.3333740234375,"end_date":169.666748046875,"status":90.6666259765625,"profile":121.3333740234375}}}	\N	\N	bookmark	\N
 27	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	side_project_technologies	\N	\N	{"tabular":{"page":1}}	\N	\N	\N	bookmark	\N
-22	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	education	\N	\N	{"tabular":{"page":1,"fields":["institution","study_type","area","location","graduation_year","status"]}}	{"tabular":{"widths":{"institution":229.20001220703125,"study_type":211.73333740234375,"area":214.2667236328125,"location":144.5999755859375,"graduation_year":160,"status":91.4666748046875,"profile":123.13330078125}}}	\N	\N	bookmark	\N
 4	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	languages	\N	\N	{"tabular":{"page":1,"fields":["name","language_code","proficiency","status"]}}	{"tabular":{"widths":{"name":287.60003662109375,"language_code":165.20001220703125,"proficiency":176.4000244140625,"status":96.4000244140625,"profile":132.39990234375}}}	\N	\N	bookmark	\N
 21	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	references	\N	\N	{"tabular":{"page":1,"fields":["author","author_position","text","status"]}}	{"tabular":{"widths":{"author":149.6666259765625,"author_position":211,"text":398.6666259765625,"status":98,"profile":124.6666259765625}}}	\N	\N	bookmark	\N
 16	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	cheat_sheets	\N	\N	{"tabular":{"fields":["title"],"page":1}}	{"tabular":{"widths":{"title":549.7999877929688,"profile":277.00006103515625}}}	\N	\N	bookmark	\N
@@ -8901,6 +8902,7 @@ COPY public.directus_presets (id, bookmark, "user", role, collection, search, la
 33	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	directus_files	\N	cards	{"cards":{"sort":["-uploaded_on"],"page":1}}	{"cards":{"icon":"insert_drive_file","title":"{{ title }}","subtitle":"{{ type }} • {{ filesize }}","size":4,"imageFit":"crop"}}	\N	\N	bookmark	\N
 25	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	applications	\N	\N	{"tabular":{"fields":["vacancy","application_sent_date","status"],"page":1,"sort":["-id"]}}	{"tabular":{"widths":{"vacancy":637,"application_sent_date":197.3333740234375,"status":149.6666259765625}}}	\N	\N	bookmark	\N
 34	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	ai_chat	\N	\N	{"tabular":{"page":1,"fields":["user_prompt"]}}	{"tabular":{"widths":{"user_prompt":944.3333129882812}}}	\N	\N	bookmark	\N
+22	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	education	\N	\N	{"tabular":{"page":1,"fields":["institution","study_type","area","location","graduation_year","status"]}}	{"tabular":{"widths":{"institution":212.33331298828125,"study_type":273.33331298828125,"area":214.2667236328125,"location":144.5999755859375,"graduation_year":160,"status":91.4666748046875}}}	\N	\N	bookmark	\N
 3	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	profiles	\N	\N	{"tabular":{"page":1,"fields":["name","title","core_stack","subtitle"]}}	{"tabular":{"widths":{"name":126.66665649414062,"title":231.66668701171875,"core_stack":278.3333740234375,"subtitle":343.3333740234375}}}	\N	\N	bookmark	\N
 35	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	os_contributions	\N	\N	{"tabular":{"page":1,"fields":["title","contribution_type","project_name","merged_date","status"],"sort":["-merged_date"]}}	{"tabular":{"widths":{"title":399.66668701171875,"contribution_type":170,"project_name":203.3333740234375,"merged_date":189,"status":90}}}	\N	\N	bookmark	\N
 \.
@@ -10284,6 +10286,8 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 6069	6290	os_contributions	18	{"id":18,"status":"published","date_created":"2025-11-17T17:32:29.816Z","date_updated":"2025-11-17T17:33:56.091Z","title":"Added example code to Ansible Playbook docs","description":"Added code examples, clearly explaining how to use the `shell` and `command` modules in Ansible Playbooks.","project_name":"Ansible","profile":1,"merged_date":null,"issue_url":null,"pull_request_url":"https://github.com/ansible/ansible/pull/7915","contribution_type":"documentation"}	{"title":"Added example code to Ansible Playbook docs","description":"Added code examples, clearly explaining how to use the `shell` and `command` modules in Ansible Playbooks.","pull_request_url":"https://github.com/ansible/ansible/pull/7915","date_updated":"2025-11-17T17:33:56.091Z"}	\N	\N
 6070	6291	os_contributions	18	{"id":18,"status":"published","date_created":"2025-11-17T17:32:29.816Z","date_updated":"2025-11-17T17:34:22.867Z","title":"Added example code to Ansible Playbook docs","description":"Added code examples, clearly explaining how to use the `shell` and `command` modules in Ansible Playbooks.","project_name":"Ansible","profile":1,"merged_date":"2014-06-24","issue_url":null,"pull_request_url":"https://github.com/ansible/ansible/pull/7915","contribution_type":"documentation"}	{"merged_date":"2014-06-24","date_updated":"2025-11-17T17:34:22.867Z"}	\N	\N
 6071	6292	os_contributions	19	{"pull_request_url":"https://github.com/MongoEngine/mongoengine/pull/457","merged_date":"2015-04-11","status":"published","profile":1,"project_name":"MongoEngine","contribution_type":"enhancement","title":"Made code more defensive for incorrect usage","description":"Enhanced the library to raise an exception when the user does something incorrect."}	{"pull_request_url":"https://github.com/MongoEngine/mongoengine/pull/457","merged_date":"2015-04-11","status":"published","profile":1,"project_name":"MongoEngine","contribution_type":"enhancement","title":"Made code more defensive for incorrect usage","description":"Enhanced the library to raise an exception when the user does something incorrect."}	\N	\N
+6072	6293	os_contributions	5	{"id":5,"status":"published","date_created":"2025-11-17T14:59:05.846Z","date_updated":"2025-11-17T17:41:38.015Z","title":"Removed old functionality from HttpRequest","description":"Removed functionality related to old `mod_python` usage, not required anymore since WSGI. Simplified code to prevent future confusion about old unnecessary functionality.","project_name":"Django","profile":1,"merged_date":"2015-03-11","issue_url":"https://code.djangoproject.com/ticket/24463","pull_request_url":"https://github.com/django/django/pull/4290","contribution_type":"maintenance"}	{"pull_request_url":"https://github.com/django/django/pull/4290","date_updated":"2025-11-17T17:41:38.015Z"}	\N	\N
+6073	6294	os_contributions	1	{"id":1,"status":"published","date_created":"2025-11-17T13:49:19.967Z","date_updated":"2025-11-17T17:45:53.428Z","title":"Django File Uploads documentation improvement","description":"Django's setting `FILE_UPLOAD_PERMISSIONS` is not used for `TemporaryUploadedFile` objects. This was not clear in the documentation, and I thought it should actually use it, and wanted to fix that. But instead I cleared up the documentation.","project_name":"Django","profile":1,"merged_date":"2014-02-25","issue_url":"https://code.djangoproject.com/ticket/12670","pull_request_url":"https://github.com/django/django/pull/2341","contribution_type":"documentation"}	{"merged_date":"2014-02-25","date_updated":"2025-11-17T17:45:53.428Z"}	\N	\N
 \.
 
 
@@ -10301,8 +10305,8 @@ COPY public.directus_roles (id, name, icon, description, parent) FROM stdin;
 --
 
 COPY public.directus_sessions (token, "user", expires, ip, user_agent, share, origin, next_token) FROM stdin;
-NVQzIvVoXJERpR3kHyaMHly2SvVfrrw-b3QbOoCo00l6N2k3-TuhWc3jaaiyHWP5	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 17:29:30.873+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
-tsovQyo-M4nJKtKjhJIP7kJBiFgBsEnnVftrxUAunnxXl3m40sNCgtHdWLT5x7UE	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 17:29:40.874+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	NVQzIvVoXJERpR3kHyaMHly2SvVfrrw-b3QbOoCo00l6N2k3-TuhWc3jaaiyHWP5
+IJDAw-6M5gKZyHT6ZwRj1GKH_ZbXUQV87qRTSz1r8wBQ1yEhoKicmMyYYvVBTE7y	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 17:48:40.721+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	TWprUYkLAgzcu9eRa6tH8QLJ2k_bIuiu53fw_3Y3HUTqzSe_SwMvwh7y43ZIBHur
+TWprUYkLAgzcu9eRa6tH8QLJ2k_bIuiu53fw_3Y3HUTqzSe_SwMvwh7y43ZIBHur	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 17:48:30.721+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
 \.
 
 
@@ -10339,7 +10343,7 @@ c530a32f-84cb-4ab9-8a61-7a12a5bcb7e6	en-US	draft	Draft
 --
 
 COPY public.directus_users (id, first_name, last_name, email, password, location, title, description, tags, avatar, language, tfa_secret, status, role, token, last_access, last_page, provider, external_identifier, auth_data, email_notifications, appearance, theme_dark, theme_light, theme_light_overrides, theme_dark_overrides, text_direction) FROM stdin;
-157238bb-6930-4f26-be9c-8b31a9e11ab8	Rik	Wanders	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-11-17 17:29:30.878+00	/content/os_contributions	default	\N	\N	t	\N	\N	\N	\N	\N	auto
+157238bb-6930-4f26-be9c-8b31a9e11ab8	Rik	Wanders	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-11-17 17:48:30.725+00	/content/salary_expectations	default	\N	\N	t	\N	\N	\N	\N	\N	auto
 \.
 
 
@@ -10401,11 +10405,10 @@ COPY public.languages (id, status, date_created, date_updated, name, language_co
 --
 
 COPY public.os_contributions (id, status, date_created, date_updated, title, description, project_name, profile, merged_date, issue_url, pull_request_url, contribution_type) FROM stdin;
-1	published	2025-11-17 13:49:19.967+00	2025-11-17 14:42:08.293+00	Django File Uploads documentation improvement	Django's setting `FILE_UPLOAD_PERMISSIONS` is not used for `TemporaryUploadedFile` objects. This was not clear in the documentation, and I thought it should actually use it, and wanted to fix that. But instead I cleared up the documentation.	Django	1	2020-04-07	https://code.djangoproject.com/ticket/12670	https://github.com/django/django/pull/2341	documentation
 10	published	2025-11-17 16:06:03.217+00	\N	Improved Tasks documentation	Cleared up documentation about the `group` parameter of the `Task.request` object.	Celery	1	2016-04-15	\N	https://github.com/celery/celery/pull/3167	documentation
 15	published	2025-11-17 17:08:55.97+00	2025-11-17 17:09:33.974+00	Updated library for Django 1.9 compatibility	Django 1.9 removed some deprecated code, which django-websocket-redis still used. I updated the code to make it compatible with Django 1.9.	django-websocket-redis	1	2015-12-02	https://github.com/jrief/django-websocket-redis/issues/125	https://github.com/jrief/django-websocket-redis/pull/126	maintenance
 12	published	2025-11-17 16:20:40.653+00	2025-11-17 16:21:56.761+00	Improved project intro documentation	Added a link to the Django Extensions GitHub page, that this project is based on.	Django Extensions Shell	1	2016-09-19	\N	https://github.com/shanx/django-extensions-shell/pull/1	documentation
-5	published	2025-11-17 14:59:05.846+00	2025-11-17 14:59:50.1+00	Removed old functionality from HttpRequest	Removed functionality related to old `mod_python` usage, not required anymore since WSGI. Simplified code to prevent future confusion about old unnecessary functionality.	Django	1	2015-03-11	https://code.djangoproject.com/ticket/24463	https://github.com/django/django/pull/4290/files	maintenance
+1	published	2025-11-17 13:49:19.967+00	2025-11-17 17:45:53.428+00	Django File Uploads documentation improvement	Django's setting `FILE_UPLOAD_PERMISSIONS` is not used for `TemporaryUploadedFile` objects. This was not clear in the documentation, and I thought it should actually use it, and wanted to fix that. But instead I cleared up the documentation.	Django	1	2014-02-25	https://code.djangoproject.com/ticket/12670	https://github.com/django/django/pull/2341	documentation
 2	published	2025-11-17 13:58:03.092+00	2025-11-17 14:41:59.626+00	Fixed issue with Django's LazyObject	Added the `__iter__` method to the `LazyObject` object in Django, which is used to make any object into a lazy-loaded object. But the `__iter__` method was missing, so it couldn't be used to make objects using the `__iter__` method lazy. This fixed the issue.	Django	1	2015-03-08	https://code.djangoproject.com/ticket/23838	https://github.com/django/django/pull/3541	enhancement
 7	published	2025-11-17 15:33:24.371+00	2025-11-17 15:34:02.141+00	Improved documentation about colorscheme usage	Explained that ptpython uses Pygments for code styling and added URLs to docs for colorscheme names and previews.	ptpython	1	2022-01-24	https://github.com/prompt-toolkit/ptpython/issues/482	https://github.com/prompt-toolkit/ptpython/pull/483	documentation
 4	published	2025-11-17 14:49:10.51+00	2025-11-17 14:49:56.382+00	Improved Authentication Views documentation	Explained how to use Django's useful built-in authentication views.	Django	1	2015-03-08	https://code.djangoproject.com/ticket/21661	https://github.com/django/django/pull/4280	documentation
@@ -10419,6 +10422,7 @@ COPY public.os_contributions (id, status, date_created, date_updated, title, des
 16	published	2025-11-17 17:15:37.842+00	2025-11-17 17:16:09.584+00	Improved testing documentation	There were some missing steps / minor issues in the steps instructing how to setup the testing environment. I made things clearer, removed unnecessary steps, corrected incorrect commands/paths.	 django-websocket-redis 	1	2015-12-02	\N	https://github.com/jrief/django-websocket-redis/pull/127	documentation
 18	published	2025-11-17 17:32:29.816+00	2025-11-17 17:34:22.867+00	Added example code to Ansible Playbook docs	Added code examples, clearly explaining how to use the `shell` and `command` modules in Ansible Playbooks.	Ansible	1	2014-06-24	\N	https://github.com/ansible/ansible/pull/7915	documentation
 17	published	2025-11-17 17:18:14.097+00	2025-11-17 17:19:15.834+00	Simplified project setup	Simplified the project setup by using a single requirements.txt file instead of using a separate one for the testing environment.	django-websocket-redis	1	2015-12-03	\N	https://github.com/jrief/django-websocket-redis/pull/128	maintenance
+5	published	2025-11-17 14:59:05.846+00	2025-11-17 17:41:38.015+00	Removed old functionality from HttpRequest	Removed functionality related to old `mod_python` usage, not required anymore since WSGI. Simplified code to prevent future confusion about old unnecessary functionality.	Django	1	2015-03-11	https://code.djangoproject.com/ticket/24463	https://github.com/django/django/pull/4290	maintenance
 19	published	2025-11-17 17:40:15.934+00	\N	Made code more defensive for incorrect usage	Enhanced the library to raise an exception when the user does something incorrect.	MongoEngine	1	2015-04-11	\N	https://github.com/MongoEngine/mongoengine/pull/457	enhancement
 \.
 
@@ -10905,7 +10909,7 @@ SELECT pg_catalog.setval('public.dev_methodologies_id_seq', 38, true);
 -- Name: directus_activity_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_activity_id_seq', 6292, true);
+SELECT pg_catalog.setval('public.directus_activity_id_seq', 6294, true);
 
 
 --
@@ -10947,7 +10951,7 @@ SELECT pg_catalog.setval('public.directus_relations_id_seq', 43, true);
 -- Name: directus_revisions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_revisions_id_seq', 6071, true);
+SELECT pg_catalog.setval('public.directus_revisions_id_seq', 6073, true);
 
 
 --
@@ -12324,5 +12328,5 @@ ALTER TABLE ONLY public.work_experiences
 -- PostgreSQL database dump complete
 --
 
-\unrestrict LIAQ4gSCwanehz9H6GlQEJDA1epifX4SqYNrvhj3YGqzrgrisnHQl9GtbCeqD14
+\unrestrict A1iuW1TigpfGv5b4Sq3Rk6yIA5pUBmIUK6JVfBJacI50OjzXzzTcdVtHopabaJz
 
