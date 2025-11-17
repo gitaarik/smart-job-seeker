@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict APOCBq6UvoykgYZOzcbGzlHVt6HRKLcAN2cQCBm5zsKYMCg2WvQVQbLpWrJsplu
+\restrict 9ONDtKCyGtwNk9Qzc7kx0zfHs6IPDeWCs86THOX4x3xneIhgQ6n1aippo3eSiDx
 
 -- Dumped from database version 15.14 (Debian 15.14-1.pgdg13+1)
 -- Dumped by pg_dump version 15.14 (Debian 15.14-1.pgdg13+1)
@@ -8201,6 +8201,9 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 6226	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 16:21:56.762+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	12	http://localhost:8055
 6227	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 16:22:36.61+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	9	http://localhost:8055
 6228	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 16:23:12.782+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	9	http://localhost:8055
+6229	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 16:31:23.975+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	13	http://localhost:8055
+6230	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 16:43:06.794+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	14	http://localhost:8055
+6231	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 16:43:29.374+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	14	http://localhost:8055
 \.
 
 
@@ -8838,7 +8841,7 @@ COPY public.directus_presets (id, bookmark, "user", role, collection, search, la
 25	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	applications	\N	\N	{"tabular":{"fields":["vacancy","application_sent_date","status"],"page":1,"sort":["-id"]}}	{"tabular":{"widths":{"vacancy":637,"application_sent_date":197.3333740234375,"status":149.6666259765625}}}	\N	\N	bookmark	\N
 34	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	ai_chat	\N	\N	{"tabular":{"page":1,"fields":["user_prompt"]}}	{"tabular":{"widths":{"user_prompt":944.3333129882812}}}	\N	\N	bookmark	\N
 3	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	profiles	\N	\N	{"tabular":{"page":1,"fields":["name","title","core_stack","subtitle"]}}	{"tabular":{"widths":{"name":126.66665649414062,"title":231.66668701171875,"core_stack":278.3333740234375,"subtitle":343.3333740234375}}}	\N	\N	bookmark	\N
-35	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	os_contributions	\N	\N	{"tabular":{"page":1,"fields":["title","contribution_type","project_name","merged_date","status"],"sort":["-merged_date"]}}	{"tabular":{"widths":{"title":399.66668701171875,"contribution_type":170,"project_name":178,"merged_date":189,"status":90}}}	\N	\N	bookmark	\N
+35	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	os_contributions	\N	\N	{"tabular":{"page":1,"fields":["title","contribution_type","project_name","merged_date","status"],"sort":["-merged_date"]}}	{"tabular":{"widths":{"title":399.66668701171875,"contribution_type":170,"project_name":203.3333740234375,"merged_date":189,"status":90}}}	\N	\N	bookmark	\N
 \.
 
 
@@ -10156,6 +10159,9 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 6005	6226	os_contributions	12	{"id":12,"status":"published","date_created":"2025-11-17T16:20:40.653Z","date_updated":"2025-11-17T16:21:56.761Z","title":"Improved project intro documentation","description":"Added a link to the Django Extensions GitHub page, that this project is based on.","project_name":"Django Extensions Shell","profile":1,"merged_date":"2016-09-19","issue_url":null,"pull_request_url":"https://github.com/shanx/django-extensions-shell/pull/1","contribution_type":"documentation"}	{"title":"Improved project intro documentation","date_updated":"2025-11-17T16:21:56.761Z"}	\N	\N
 6006	6227	os_contributions	9	{"id":9,"status":"published","date_created":"2025-11-17T15:53:15.394Z","date_updated":"2025-11-17T16:22:36.609Z","title":"Fixed Django 1.11 compatibility","description":"Before Django had a native JSONField, this project provided a custom JSON field. I Fixed an `AttributeError` that would occur from Django 1.11 on, making the field usable for those versions again.","project_name":"django-jsonfield","profile":1,"merged_date":"2017-06-01","issue_url":"https://github.com/rpkilby/jsonfield/issues/189","pull_request_url":"https://github.com/rpkilby/jsonfield/pull/192","contribution_type":"bugfix"}	{"title":"Fixed Django 1.11 compatibility","contribution_type":"bugfix","date_updated":"2025-11-17T16:22:36.609Z"}	\N	\N
 6007	6228	os_contributions	9	{"id":9,"status":"published","date_created":"2025-11-17T15:53:15.394Z","date_updated":"2025-11-17T16:23:12.780Z","title":"Fixed Django 1.11 compatibility","description":"Before Django had a native JSONField, this project provided a custom JSON field. I Fixed an `AttributeError` that would occur from Django 1.11 on, making the field usable for those versions again.","project_name":"django-jsonfield","profile":1,"merged_date":"2017-06-01","issue_url":"https://github.com/rpkilby/jsonfield/issues/189","pull_request_url":"https://github.com/rpkilby/jsonfield/pull/192","contribution_type":"maintenance"}	{"contribution_type":"maintenance","date_updated":"2025-11-17T16:23:12.780Z"}	\N	\N
+6008	6229	os_contributions	13	{"profile":1,"status":"published","contribution_type":"documentation","project_name":"django-celery","title":"Updated docs about migrating celery in Django","description":"Since Django incorporated the South migrations framework natively, the documentation regarding migrating Celery in a Django project needed to be updated.","pull_request_url":"https://github.com/celery/django-celery/pull/417","merged_date":"2016-05-26"}	{"profile":1,"status":"published","contribution_type":"documentation","project_name":"django-celery","title":"Updated docs about migrating celery in Django","description":"Since Django incorporated the South migrations framework natively, the documentation regarding migrating Celery in a Django project needed to be updated.","pull_request_url":"https://github.com/celery/django-celery/pull/417","merged_date":"2016-05-26"}	\N	\N
+6009	6230	os_contributions	14	{"profile":1,"status":"published","project_name":"Django Filter","pull_request_url":"https://github.com/carltongibson/django-filter/pull/384","title":"Modernized installation documentation","contribution_type":"maintenance","description":"The installation documentation was still instructing to install the app manually, while installation with `pip` was already available."}	{"profile":1,"status":"published","project_name":"Django Filter","pull_request_url":"https://github.com/carltongibson/django-filter/pull/384","title":"Modernized installation documentation","contribution_type":"maintenance","description":"The installation documentation was still instructing to install the app manually, while installation with `pip` was already available."}	\N	\N
+6010	6231	os_contributions	14	{"id":14,"status":"published","date_created":"2025-11-17T16:43:06.793Z","date_updated":"2025-11-17T16:43:29.372Z","title":"Modernized installation documentation","description":"The installation documentation was still instructing to install the app manually, while installation with `pip` was already available.","project_name":"Django Filter","profile":1,"merged_date":"2016-03-04","issue_url":null,"pull_request_url":"https://github.com/carltongibson/django-filter/pull/384","contribution_type":"maintenance"}	{"merged_date":"2016-03-04","date_updated":"2025-11-17T16:43:29.372Z"}	\N	\N
 \.
 
 
@@ -10173,9 +10179,8 @@ COPY public.directus_roles (id, name, icon, description, parent) FROM stdin;
 --
 
 COPY public.directus_sessions (token, "user", expires, ip, user_agent, share, origin, next_token) FROM stdin;
-HDAvDjhqWNsrd-adA0vh7M_Ag-bzC4H0p1wak6CGtMjBpXuUR15cTHby9CuJJ-BA	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 16:13:39.501+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	SxPgOjdBke0kq1o4KsGPIepl6VStz8iA6FaWpXQzY12UOTbEaSOAsMn17veb3MI-
-Wbec7r_E3g6rD7dDeS9yY2qgZ-_pzgxwzJmrKsXJp6u7wmCGtwgriQihAzkvcHDX	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:13:38.08+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
-SxPgOjdBke0kq1o4KsGPIepl6VStz8iA6FaWpXQzY12UOTbEaSOAsMn17veb3MI-	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 16:13:48.08+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	Wbec7r_E3g6rD7dDeS9yY2qgZ-_pzgxwzJmrKsXJp6u7wmCGtwgriQihAzkvcHDX
+v4kqeHMYpZJOGf77WNmzQno7aXZHnMYQPPIkPRFmU6qtZvIFVd3qNrf5Pltkd085	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 16:28:45.728+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	tsovQyo-M4nJKtKjhJIP7kJBiFgBsEnnVftrxUAunnxXl3m40sNCgtHdWLT5x7UE
+tsovQyo-M4nJKtKjhJIP7kJBiFgBsEnnVftrxUAunnxXl3m40sNCgtHdWLT5x7UE	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:28:35.728+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
 \.
 
 
@@ -10212,7 +10217,7 @@ c530a32f-84cb-4ab9-8a61-7a12a5bcb7e6	en-US	draft	Draft
 --
 
 COPY public.directus_users (id, first_name, last_name, email, password, location, title, description, tags, avatar, language, tfa_secret, status, role, token, last_access, last_page, provider, external_identifier, auth_data, email_notifications, appearance, theme_dark, theme_light, theme_light_overrides, theme_dark_overrides, text_direction) FROM stdin;
-157238bb-6930-4f26-be9c-8b31a9e11ab8	Rik	Wanders	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-11-17 16:13:38.083+00	/content/os_contributions	default	\N	\N	t	\N	\N	\N	\N	\N	auto
+157238bb-6930-4f26-be9c-8b31a9e11ab8	Rik	Wanders	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-11-17 16:28:35.73+00	/content/os_contributions/+	default	\N	\N	t	\N	\N	\N	\N	\N	auto
 \.
 
 
@@ -10285,7 +10290,9 @@ COPY public.os_contributions (id, status, date_created, date_updated, title, des
 3	published	2025-11-17 14:23:03.542+00	2025-11-17 14:40:59.292+00	Django HttpRequest documentation improvement	Cleared up that the `HttpRequest.build_absolute_uri()` method uses HTTPS if the current request is also HTTPS. And if you want to redirect to HTTPS, it's best to do it on webserver level.	Django	1	2015-03-08	https://code.djangoproject.com/ticket/24460	https://github.com/django/django/pull/4278	documentation
 8	published	2025-11-17 15:42:01.367+00	2025-11-17 15:45:50.898+00	Fixed issue in example code in documentation	Fixed example code in the documentation, where the placement of the `close_old_connections()` function was incorrect, resulting in old database connections trying to be reused.	Django Channels	1	2019-01-24	https://github.com/django/channels/issues/1227	https://github.com/django/channels/pull/1228	documentation
 9	published	2025-11-17 15:53:15.394+00	2025-11-17 16:23:12.78+00	Fixed Django 1.11 compatibility	Before Django had a native JSONField, this project provided a custom JSON field. I Fixed an `AttributeError` that would occur from Django 1.11 on, making the field usable for those versions again.	django-jsonfield	1	2017-06-01	https://github.com/rpkilby/jsonfield/issues/189	https://github.com/rpkilby/jsonfield/pull/192	maintenance
+13	published	2025-11-17 16:31:23.972+00	\N	Updated docs about migrating celery in Django	Since Django incorporated the South migrations framework natively, the documentation regarding migrating Celery in a Django project needed to be updated.	django-celery	1	2016-05-26	\N	https://github.com/celery/django-celery/pull/417	documentation
 11	published	2025-11-17 16:11:27.022+00	2025-11-17 16:12:47.947+00	Updated docs on migrating Celery in Django	Since Django incorporated the South migrations framework natively, the documentation regarding migrating Celery in a Django project needed to be updated.	Celery	1	2016-03-18	\N	https://github.com/celery/celery/pull/3122	documentation
+14	published	2025-11-17 16:43:06.793+00	2025-11-17 16:43:29.372+00	Modernized installation documentation	The installation documentation was still instructing to install the app manually, while installation with `pip` was already available.	Django Filter	1	2016-03-04	\N	https://github.com/carltongibson/django-filter/pull/384	maintenance
 \.
 
 
@@ -10771,7 +10778,7 @@ SELECT pg_catalog.setval('public.dev_methodologies_id_seq', 38, true);
 -- Name: directus_activity_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_activity_id_seq', 6228, true);
+SELECT pg_catalog.setval('public.directus_activity_id_seq', 6231, true);
 
 
 --
@@ -10813,7 +10820,7 @@ SELECT pg_catalog.setval('public.directus_relations_id_seq', 43, true);
 -- Name: directus_revisions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_revisions_id_seq', 6007, true);
+SELECT pg_catalog.setval('public.directus_revisions_id_seq', 6010, true);
 
 
 --
@@ -10855,7 +10862,7 @@ SELECT pg_catalog.setval('public.languages_id_seq', 116, true);
 -- Name: os_contributions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.os_contributions_id_seq', 12, true);
+SELECT pg_catalog.setval('public.os_contributions_id_seq', 14, true);
 
 
 --
@@ -12190,5 +12197,5 @@ ALTER TABLE ONLY public.work_experiences
 -- PostgreSQL database dump complete
 --
 
-\unrestrict APOCBq6UvoykgYZOzcbGzlHVt6HRKLcAN2cQCBm5zsKYMCg2WvQVQbLpWrJsplu
+\unrestrict 9ONDtKCyGtwNk9Qzc7kx0zfHs6IPDeWCs86THOX4x3xneIhgQ6n1aippo3eSiDx
 
