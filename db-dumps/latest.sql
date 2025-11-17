@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict EUXyyKgqMGevJ3pp6Rl8nTvxollwb7mRuTWyu4fbl2YlTFKstAqK1BgmPPOgW0e
+\restrict lbevaEqzpbfJCTsfGuT5kpooWqYBurxXFkiRHfN7P5SFahXfal4c8hQTUU4y4ZQ
 
 -- Dumped from database version 15.14 (Debian 15.14-1.pgdg13+1)
 -- Dumped by pg_dump version 15.14 (Debian 15.14-1.pgdg13+1)
@@ -8007,6 +8007,8 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 6083	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 12:39:37.536+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	platform_profiles	http://localhost:8055
 6084	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 12:40:39.563+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_collections	ai_chat	http://localhost:8055
 6085	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 12:40:51.179+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	directus_fields	386	http://localhost:8055
+6086	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 12:59:14.539+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	outsourcing_platforms	13	http://localhost:8055
+6087	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 12:59:36.768+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	platform_profiles	5	http://localhost:8055
 \.
 
 
@@ -9806,6 +9808,8 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 5865	6083	directus_collections	platform_profiles	{"collection":"platform_profiles","icon":null,"note":null,"display_template":"{{outsourcing_platform}}{{status}}","hidden":false,"singleton":false,"translations":null,"archive_field":"status","archive_app_filter":true,"archive_value":"archived","unarchive_value":"draft","sort_field":"sort","accountability":"all","color":null,"item_duplication_fields":null,"sort":2,"group":"applying","collapse":"open","preview_url":null,"versioning":false}	{"display_template":"{{outsourcing_platform}}{{status}}"}	\N	\N
 5866	6084	directus_collections	ai_chat	{"collection":"ai_chat","icon":null,"note":null,"display_template":"{{system_prompt}} | {{user_prompt}} | {{response}}","hidden":false,"singleton":false,"translations":null,"archive_field":null,"archive_app_filter":true,"archive_value":null,"unarchive_value":null,"sort_field":null,"accountability":"all","color":null,"item_duplication_fields":null,"sort":5,"group":"applying","collapse":"open","preview_url":null,"versioning":false}	{"display_template":"{{system_prompt}} | {{user_prompt}} | {{response}}"}	\N	\N
 5867	6085	directus_fields	386	{"id":386,"collection":"profiles","field":"ai_chats","special":["o2m"],"interface":"list-o2m","options":null,"display":null,"display_options":null,"readonly":true,"hidden":true,"sort":39,"width":"full","translations":null,"note":null,"conditions":null,"required":false,"group":null,"validation":null,"validation_message":null,"searchable":true}	{"collection":"profiles","field":"ai_chats","readonly":true,"hidden":true}	\N	\N
+5868	6086	outsourcing_platforms	13	{"status":"published","name":"Mercor","url":"https://work.mercor.com/","type":"vetted_platforms"}	{"status":"published","name":"Mercor","url":"https://work.mercor.com/","type":"vetted_platforms"}	\N	\N
+5869	6087	platform_profiles	5	{"profile":1,"outsourcing_platform":13,"status":"profile_in_progress"}	{"profile":1,"outsourcing_platform":13,"status":"profile_in_progress"}	\N	\N
 \.
 
 
@@ -9823,8 +9827,8 @@ COPY public.directus_roles (id, name, icon, description, parent) FROM stdin;
 --
 
 COPY public.directus_sessions (token, "user", expires, ip, user_agent, share, origin, next_token) FROM stdin;
-GK7CsclLUoQ_EExlorI-98V6okZg89nmav66wRdTF4brmjKxRZ0_mML_n1YRlXFp	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 12:41:03.724+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	ttTDKwxLFm2mxUvhgvGcrc-11w9DZKmQo84QEOuM9uCejGwOtkSvQmUCpjroaQhJ
-ttTDKwxLFm2mxUvhgvGcrc-11w9DZKmQo84QEOuM9uCejGwOtkSvQmUCpjroaQhJ	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 12:40:53.724+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
+0_Ac4B1cz3IssPGsRvp_hqsAwvdOWK5WpHFtZVD8H_gLwM4obPRFycftjO2t6E8o	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 12:59:35.018+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	ScjjmFGhNVZj_O1N588Ob5WxCZ0kD6NwdEnErcl8CDEkvXclCJErN9wqS6NiSRht
+ScjjmFGhNVZj_O1N588Ob5WxCZ0kD6NwdEnErcl8CDEkvXclCJErN9wqS6NiSRht	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 12:59:25.018+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
 \.
 
 
@@ -9861,7 +9865,7 @@ c530a32f-84cb-4ab9-8a61-7a12a5bcb7e6	en-US	draft	Draft
 --
 
 COPY public.directus_users (id, first_name, last_name, email, password, location, title, description, tags, avatar, language, tfa_secret, status, role, token, last_access, last_page, provider, external_identifier, auth_data, email_notifications, appearance, theme_dark, theme_light, theme_light_overrides, theme_dark_overrides, text_direction) FROM stdin;
-157238bb-6930-4f26-be9c-8b31a9e11ab8	Rik	Wanders	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-11-17 12:40:53.727+00	/content/profiles/1	default	\N	\N	t	\N	\N	\N	\N	\N	auto
+157238bb-6930-4f26-be9c-8b31a9e11ab8	Rik	Wanders	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-11-17 12:59:25.021+00	/content/platform_profiles	default	\N	\N	t	\N	\N	\N	\N	\N	auto
 \.
 
 
@@ -9935,6 +9939,7 @@ COPY public.outsourcing_platforms (id, status, sort, date_created, date_updated,
 6	published	8	2025-11-05 14:02:44.443+00	\N	Arc.dev	https://arc.dev/	open_marketplaces
 7	published	9	2025-11-05 14:03:17.286+00	\N	Gun.io	https://gun.io/	open_marketplaces
 8	published	10	2025-11-05 14:04:00.605+00	2025-11-05 14:04:07.967+00	Andela	https://www.andela.com/	vetted_platforms
+13	published	\N	2025-11-17 12:59:14.538+00	\N	Mercor	https://work.mercor.com/	vetted_platforms
 \.
 
 
@@ -9945,8 +9950,9 @@ COPY public.outsourcing_platforms (id, status, sort, date_created, date_updated,
 COPY public.platform_profiles (id, status, sort, date_created, date_updated, profile, outsourcing_platform) FROM stdin;
 2	profile_in_progress	1	2025-11-05 16:08:53.722+00	2025-11-06 16:45:47.518+00	1	1
 3	profile_in_progress	2	2025-11-05 16:09:26.783+00	2025-11-06 16:45:30.349+00	1	4
-1	profile_in_progress	4	2025-11-05 14:49:03.765+00	2025-11-06 16:45:26.085+00	1	12
-4	vetting_declined	3	2025-11-05 16:09:46.763+00	2025-11-06 16:46:11.453+00	1	5
+4	vetting_declined	5	2025-11-05 16:09:46.763+00	2025-11-06 16:46:11.453+00	1	5
+1	profile_in_progress	3	2025-11-05 14:49:03.765+00	2025-11-06 16:45:26.085+00	1	12
+5	profile_in_progress	4	2025-11-17 12:59:36.766+00	\N	1	13
 \.
 
 
@@ -10398,7 +10404,7 @@ SELECT pg_catalog.setval('public.dev_methodologies_id_seq', 38, true);
 -- Name: directus_activity_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_activity_id_seq', 6085, true);
+SELECT pg_catalog.setval('public.directus_activity_id_seq', 6087, true);
 
 
 --
@@ -10440,7 +10446,7 @@ SELECT pg_catalog.setval('public.directus_relations_id_seq', 42, true);
 -- Name: directus_revisions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_revisions_id_seq', 5867, true);
+SELECT pg_catalog.setval('public.directus_revisions_id_seq', 5869, true);
 
 
 --
@@ -10482,14 +10488,14 @@ SELECT pg_catalog.setval('public.languages_id_seq', 116, true);
 -- Name: outsourcing_platforms_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.outsourcing_platforms_id_seq', 12, true);
+SELECT pg_catalog.setval('public.outsourcing_platforms_id_seq', 13, true);
 
 
 --
 -- Name: platform_profiles_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.platform_profiles_id_seq', 4, true);
+SELECT pg_catalog.setval('public.platform_profiles_id_seq', 5, true);
 
 
 --
@@ -11794,5 +11800,5 @@ ALTER TABLE ONLY public.work_experiences
 -- PostgreSQL database dump complete
 --
 
-\unrestrict EUXyyKgqMGevJ3pp6Rl8nTvxollwb7mRuTWyu4fbl2YlTFKstAqK1BgmPPOgW0e
+\unrestrict lbevaEqzpbfJCTsfGuT5kpooWqYBurxXFkiRHfN7P5SFahXfal4c8hQTUU4y4ZQ
 
