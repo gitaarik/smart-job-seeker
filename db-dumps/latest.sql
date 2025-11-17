@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict HVWhoorhLjeDy6VNeOTnyIsJeRdzToWYvrf4S9TxJXcki6LOKf7mfTR4Yhyx5QP
+\restrict 9COWVO0n2PZnIUmhA2VfUUAcY3YeuOYCsQk14bj0aO2gCgz9CGm7oAzeeXsVkrR
 
 -- Dumped from database version 15.14 (Debian 15.14-1.pgdg13+1)
 -- Dumped by pg_dump version 15.14 (Debian 15.14-1.pgdg13+1)
@@ -8821,7 +8821,7 @@ COPY public.directus_presets (id, bookmark, "user", role, collection, search, la
 25	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	applications	\N	\N	{"tabular":{"fields":["vacancy","application_sent_date","status"],"page":1,"sort":["-id"]}}	{"tabular":{"widths":{"vacancy":637,"application_sent_date":197.3333740234375,"status":149.6666259765625}}}	\N	\N	bookmark	\N
 34	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	ai_chat	\N	\N	{"tabular":{"page":1,"fields":["user_prompt"]}}	{"tabular":{"widths":{"user_prompt":944.3333129882812}}}	\N	\N	bookmark	\N
 3	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	profiles	\N	\N	{"tabular":{"page":1,"fields":["name","title","core_stack","subtitle"]}}	{"tabular":{"widths":{"name":126.66665649414062,"title":231.66668701171875,"core_stack":278.3333740234375,"subtitle":343.3333740234375}}}	\N	\N	bookmark	\N
-35	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	os_contributions	\N	\N	{"tabular":{"page":1,"fields":["title","contribution_type","project_name","merged_date","status"]}}	{"tabular":{"widths":{"title":418.66668701171875,"contribution_type":170,"project_name":142,"merged_date":148,"status":90}}}	\N	\N	bookmark	\N
+35	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	os_contributions	\N	\N	{"tabular":{"page":1,"fields":["title","contribution_type","project_name","merged_date","status"]}}	{"tabular":{"widths":{"title":409.6666259765625,"contribution_type":170,"project_name":142,"merged_date":148,"status":90}}}	\N	\N	bookmark	\N
 \.
 
 
@@ -12147,5 +12147,5 @@ ALTER TABLE ONLY public.work_experiences
 -- PostgreSQL database dump complete
 --
 
-\unrestrict HVWhoorhLjeDy6VNeOTnyIsJeRdzToWYvrf4S9TxJXcki6LOKf7mfTR4Yhyx5QP
+\unrestrict 9COWVO0n2PZnIUmhA2VfUUAcY3YeuOYCsQk14bj0aO2gCgz9CGm7oAzeeXsVkrR
 
