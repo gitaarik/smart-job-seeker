@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 9ONDtKCyGtwNk9Qzc7kx0zfHs6IPDeWCs86THOX4x3xneIhgQ6n1aippo3eSiDx
+\restrict 4dg6HuhWGFeJVmgLE8seMUHH6CpfIaubva5gdhorlN1fo2zdjUL6RbRfiO0bsht
 
 -- Dumped from database version 15.14 (Debian 15.14-1.pgdg13+1)
 -- Dumped by pg_dump version 15.14 (Debian 15.14-1.pgdg13+1)
@@ -8204,6 +8204,15 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 6229	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 16:31:23.975+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	13	http://localhost:8055
 6230	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 16:43:06.794+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	14	http://localhost:8055
 6231	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 16:43:29.374+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	14	http://localhost:8055
+6232	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 17:08:55.971+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	15	http://localhost:8055
+6233	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 17:09:06.87+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	15	http://localhost:8055
+6234	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 17:09:33.978+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	15	http://localhost:8055
+6235	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 17:15:37.844+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	16	http://localhost:8055
+6236	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 17:16:09.586+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	16	http://localhost:8055
+6237	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 17:18:14.098+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	17	http://localhost:8055
+6238	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 17:18:51.656+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	17	http://localhost:8055
+6239	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 17:18:59.036+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	17	http://localhost:8055
+6240	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-17 17:19:15.835+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	os_contributions	17	http://localhost:8055
 \.
 
 
@@ -10162,6 +10171,15 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 6008	6229	os_contributions	13	{"profile":1,"status":"published","contribution_type":"documentation","project_name":"django-celery","title":"Updated docs about migrating celery in Django","description":"Since Django incorporated the South migrations framework natively, the documentation regarding migrating Celery in a Django project needed to be updated.","pull_request_url":"https://github.com/celery/django-celery/pull/417","merged_date":"2016-05-26"}	{"profile":1,"status":"published","contribution_type":"documentation","project_name":"django-celery","title":"Updated docs about migrating celery in Django","description":"Since Django incorporated the South migrations framework natively, the documentation regarding migrating Celery in a Django project needed to be updated.","pull_request_url":"https://github.com/celery/django-celery/pull/417","merged_date":"2016-05-26"}	\N	\N
 6009	6230	os_contributions	14	{"profile":1,"status":"published","project_name":"Django Filter","pull_request_url":"https://github.com/carltongibson/django-filter/pull/384","title":"Modernized installation documentation","contribution_type":"maintenance","description":"The installation documentation was still instructing to install the app manually, while installation with `pip` was already available."}	{"profile":1,"status":"published","project_name":"Django Filter","pull_request_url":"https://github.com/carltongibson/django-filter/pull/384","title":"Modernized installation documentation","contribution_type":"maintenance","description":"The installation documentation was still instructing to install the app manually, while installation with `pip` was already available."}	\N	\N
 6010	6231	os_contributions	14	{"id":14,"status":"published","date_created":"2025-11-17T16:43:06.793Z","date_updated":"2025-11-17T16:43:29.372Z","title":"Modernized installation documentation","description":"The installation documentation was still instructing to install the app manually, while installation with `pip` was already available.","project_name":"Django Filter","profile":1,"merged_date":"2016-03-04","issue_url":null,"pull_request_url":"https://github.com/carltongibson/django-filter/pull/384","contribution_type":"maintenance"}	{"merged_date":"2016-03-04","date_updated":"2025-11-17T16:43:29.372Z"}	\N	\N
+6011	6232	os_contributions	15	{"status":"published","project_name":"django-websocket-redis","profile":1,"contribution_type":"maintenance","title":"Updated library for Django 1.9 compatibility","description":"Django 1.9 removed some deprecated code, which django-websocket-redis still used. I updated the code to make it compatible with Django 1.9."}	{"status":"published","project_name":"django-websocket-redis","profile":1,"contribution_type":"maintenance","title":"Updated library for Django 1.9 compatibility","description":"Django 1.9 removed some deprecated code, which django-websocket-redis still used. I updated the code to make it compatible with Django 1.9."}	\N	\N
+6012	6233	os_contributions	15	{"id":15,"status":"published","date_created":"2025-11-17T17:08:55.970Z","date_updated":"2025-11-17T17:09:06.869Z","title":"Updated library for Django 1.9 compatibility","description":"Django 1.9 removed some deprecated code, which django-websocket-redis still used. I updated the code to make it compatible with Django 1.9.","project_name":"django-websocket-redis","profile":1,"merged_date":null,"issue_url":"https://github.com/jrief/django-websocket-redis/issues/125","pull_request_url":"https://github.com/jrief/django-websocket-redis/pull/126","contribution_type":"maintenance"}	{"issue_url":"https://github.com/jrief/django-websocket-redis/issues/125","pull_request_url":"https://github.com/jrief/django-websocket-redis/pull/126","date_updated":"2025-11-17T17:09:06.869Z"}	\N	\N
+6013	6234	os_contributions	15	{"id":15,"status":"published","date_created":"2025-11-17T17:08:55.970Z","date_updated":"2025-11-17T17:09:33.974Z","title":"Updated library for Django 1.9 compatibility","description":"Django 1.9 removed some deprecated code, which django-websocket-redis still used. I updated the code to make it compatible with Django 1.9.","project_name":"django-websocket-redis","profile":1,"merged_date":"2015-12-02","issue_url":"https://github.com/jrief/django-websocket-redis/issues/125","pull_request_url":"https://github.com/jrief/django-websocket-redis/pull/126","contribution_type":"maintenance"}	{"merged_date":"2015-12-02","date_updated":"2025-11-17T17:09:33.974Z"}	\N	\N
+6016	6237	os_contributions	17	{"profile":1,"status":"published","project_name":"django-websocket-redis","title":"Simplified project setup","contribution_type":"maintenance"}	{"profile":1,"status":"published","project_name":"django-websocket-redis","title":"Simplified project setup","contribution_type":"maintenance"}	\N	\N
+6014	6235	os_contributions	16	{"status":"published","profile":1,"project_name":" django-websocket-redis ","title":"Improved testing documentation","contribution_type":"documentation","description":"There were some missing steps / minor issues in the steps instructing how to setup the testing environment. I made things clearer, removed unnecessary steps, corrected incorrect commands/paths.","pull_request_url":"https://github.com/jrief/django-websocket-redis/pull/127"}	{"status":"published","profile":1,"project_name":" django-websocket-redis ","title":"Improved testing documentation","contribution_type":"documentation","description":"There were some missing steps / minor issues in the steps instructing how to setup the testing environment. I made things clearer, removed unnecessary steps, corrected incorrect commands/paths.","pull_request_url":"https://github.com/jrief/django-websocket-redis/pull/127"}	\N	\N
+6015	6236	os_contributions	16	{"id":16,"status":"published","date_created":"2025-11-17T17:15:37.842Z","date_updated":"2025-11-17T17:16:09.584Z","title":"Improved testing documentation","description":"There were some missing steps / minor issues in the steps instructing how to setup the testing environment. I made things clearer, removed unnecessary steps, corrected incorrect commands/paths.","project_name":" django-websocket-redis ","profile":1,"merged_date":"2015-12-02","issue_url":null,"pull_request_url":"https://github.com/jrief/django-websocket-redis/pull/127","contribution_type":"documentation"}	{"merged_date":"2015-12-02","date_updated":"2025-11-17T17:16:09.584Z"}	\N	\N
+6017	6238	os_contributions	17	{"id":17,"status":"published","date_created":"2025-11-17T17:18:14.097Z","date_updated":"2025-11-17T17:18:51.655Z","title":"Simplified project setup","description":"Simplified the project setup by using a single requirements.txt file instead of using a separate one for the testing environment.","project_name":"django-websocket-redis","profile":1,"merged_date":null,"issue_url":null,"pull_request_url":null,"contribution_type":"maintenance"}	{"description":"Simplified the project setup by using a single requirements.txt file instead of using a separate one for the testing environment.","date_updated":"2025-11-17T17:18:51.655Z"}	\N	\N
+6018	6239	os_contributions	17	{"id":17,"status":"published","date_created":"2025-11-17T17:18:14.097Z","date_updated":"2025-11-17T17:18:59.035Z","title":"Simplified project setup","description":"Simplified the project setup by using a single requirements.txt file instead of using a separate one for the testing environment.","project_name":"django-websocket-redis","profile":1,"merged_date":null,"issue_url":null,"pull_request_url":"https://github.com/jrief/django-websocket-redis/pull/128","contribution_type":"maintenance"}	{"pull_request_url":"https://github.com/jrief/django-websocket-redis/pull/128","date_updated":"2025-11-17T17:18:59.035Z"}	\N	\N
+6019	6240	os_contributions	17	{"id":17,"status":"published","date_created":"2025-11-17T17:18:14.097Z","date_updated":"2025-11-17T17:19:15.834Z","title":"Simplified project setup","description":"Simplified the project setup by using a single requirements.txt file instead of using a separate one for the testing environment.","project_name":"django-websocket-redis","profile":1,"merged_date":"2015-12-03","issue_url":null,"pull_request_url":"https://github.com/jrief/django-websocket-redis/pull/128","contribution_type":"maintenance"}	{"merged_date":"2015-12-03","date_updated":"2025-11-17T17:19:15.834Z"}	\N	\N
 \.
 
 
@@ -10217,7 +10235,7 @@ c530a32f-84cb-4ab9-8a61-7a12a5bcb7e6	en-US	draft	Draft
 --
 
 COPY public.directus_users (id, first_name, last_name, email, password, location, title, description, tags, avatar, language, tfa_secret, status, role, token, last_access, last_page, provider, external_identifier, auth_data, email_notifications, appearance, theme_dark, theme_light, theme_light_overrides, theme_dark_overrides, text_direction) FROM stdin;
-157238bb-6930-4f26-be9c-8b31a9e11ab8	Rik	Wanders	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-11-17 16:28:35.73+00	/content/os_contributions/+	default	\N	\N	t	\N	\N	\N	\N	\N	auto
+157238bb-6930-4f26-be9c-8b31a9e11ab8	Rik	Wanders	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-11-17 16:28:35.73+00	/content/os_contributions	default	\N	\N	t	\N	\N	\N	\N	\N	auto
 \.
 
 
@@ -10281,6 +10299,7 @@ COPY public.languages (id, status, date_created, date_updated, name, language_co
 COPY public.os_contributions (id, status, date_created, date_updated, title, description, project_name, profile, merged_date, issue_url, pull_request_url, contribution_type) FROM stdin;
 1	published	2025-11-17 13:49:19.967+00	2025-11-17 14:42:08.293+00	Django File Uploads documentation improvement	Django's setting `FILE_UPLOAD_PERMISSIONS` is not used for `TemporaryUploadedFile` objects. This was not clear in the documentation, and I thought it should actually use it, and wanted to fix that. But instead I cleared up the documentation.	Django	1	2020-04-07	https://code.djangoproject.com/ticket/12670	https://github.com/django/django/pull/2341	documentation
 10	published	2025-11-17 16:06:03.217+00	\N	Improved Tasks documentation	Cleared up documentation about the `group` parameter of the `Task.request` object.	Celery	1	2016-04-15	\N	https://github.com/celery/celery/pull/3167	documentation
+15	published	2025-11-17 17:08:55.97+00	2025-11-17 17:09:33.974+00	Updated library for Django 1.9 compatibility	Django 1.9 removed some deprecated code, which django-websocket-redis still used. I updated the code to make it compatible with Django 1.9.	django-websocket-redis	1	2015-12-02	https://github.com/jrief/django-websocket-redis/issues/125	https://github.com/jrief/django-websocket-redis/pull/126	maintenance
 12	published	2025-11-17 16:20:40.653+00	2025-11-17 16:21:56.761+00	Improved project intro documentation	Added a link to the Django Extensions GitHub page, that this project is based on.	Django Extensions Shell	1	2016-09-19	\N	https://github.com/shanx/django-extensions-shell/pull/1	documentation
 5	published	2025-11-17 14:59:05.846+00	2025-11-17 14:59:50.1+00	Removed old functionality from HttpRequest	Removed functionality related to old `mod_python` usage, not required anymore since WSGI. Simplified code to prevent future confusion about old unnecessary functionality.	Django	1	2015-03-11	https://code.djangoproject.com/ticket/24463	https://github.com/django/django/pull/4290/files	maintenance
 2	published	2025-11-17 13:58:03.092+00	2025-11-17 14:41:59.626+00	Fixed issue with Django's LazyObject	Added the `__iter__` method to the `LazyObject` object in Django, which is used to make any object into a lazy-loaded object. But the `__iter__` method was missing, so it couldn't be used to make objects using the `__iter__` method lazy. This fixed the issue.	Django	1	2015-03-08	https://code.djangoproject.com/ticket/23838	https://github.com/django/django/pull/3541	enhancement
@@ -10293,6 +10312,8 @@ COPY public.os_contributions (id, status, date_created, date_updated, title, des
 13	published	2025-11-17 16:31:23.972+00	\N	Updated docs about migrating celery in Django	Since Django incorporated the South migrations framework natively, the documentation regarding migrating Celery in a Django project needed to be updated.	django-celery	1	2016-05-26	\N	https://github.com/celery/django-celery/pull/417	documentation
 11	published	2025-11-17 16:11:27.022+00	2025-11-17 16:12:47.947+00	Updated docs on migrating Celery in Django	Since Django incorporated the South migrations framework natively, the documentation regarding migrating Celery in a Django project needed to be updated.	Celery	1	2016-03-18	\N	https://github.com/celery/celery/pull/3122	documentation
 14	published	2025-11-17 16:43:06.793+00	2025-11-17 16:43:29.372+00	Modernized installation documentation	The installation documentation was still instructing to install the app manually, while installation with `pip` was already available.	Django Filter	1	2016-03-04	\N	https://github.com/carltongibson/django-filter/pull/384	maintenance
+16	published	2025-11-17 17:15:37.842+00	2025-11-17 17:16:09.584+00	Improved testing documentation	There were some missing steps / minor issues in the steps instructing how to setup the testing environment. I made things clearer, removed unnecessary steps, corrected incorrect commands/paths.	 django-websocket-redis 	1	2015-12-02	\N	https://github.com/jrief/django-websocket-redis/pull/127	documentation
+17	published	2025-11-17 17:18:14.097+00	2025-11-17 17:19:15.834+00	Simplified project setup	Simplified the project setup by using a single requirements.txt file instead of using a separate one for the testing environment.	django-websocket-redis	1	2015-12-03	\N	https://github.com/jrief/django-websocket-redis/pull/128	maintenance
 \.
 
 
@@ -10778,7 +10799,7 @@ SELECT pg_catalog.setval('public.dev_methodologies_id_seq', 38, true);
 -- Name: directus_activity_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_activity_id_seq', 6231, true);
+SELECT pg_catalog.setval('public.directus_activity_id_seq', 6240, true);
 
 
 --
@@ -10820,7 +10841,7 @@ SELECT pg_catalog.setval('public.directus_relations_id_seq', 43, true);
 -- Name: directus_revisions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_revisions_id_seq', 6010, true);
+SELECT pg_catalog.setval('public.directus_revisions_id_seq', 6019, true);
 
 
 --
@@ -10862,7 +10883,7 @@ SELECT pg_catalog.setval('public.languages_id_seq', 116, true);
 -- Name: os_contributions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.os_contributions_id_seq', 14, true);
+SELECT pg_catalog.setval('public.os_contributions_id_seq', 17, true);
 
 
 --
@@ -12197,5 +12218,5 @@ ALTER TABLE ONLY public.work_experiences
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 9ONDtKCyGtwNk9Qzc7kx0zfHs6IPDeWCs86THOX4x3xneIhgQ6n1aippo3eSiDx
+\unrestrict 4dg6HuhWGFeJVmgLE8seMUHH6CpfIaubva5gdhorlN1fo2zdjUL6RbRfiO0bsht
 
