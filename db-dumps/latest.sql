@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 9kyfSqQ8lFRTemtlVQikjBVKycnlXScHtP1oamg1eChEPp45EVCpltFmnza6cTH
+\restrict XLrOuCSD5m8I3HKVecbCmFRvYvlm1oNzncQWGuWuAipo0jEmtULb3uG5A6c70bt
 
 -- Dumped from database version 15.14 (Debian 15.14-1.pgdg13+1)
 -- Dumped by pg_dump version 15.14 (Debian 15.14-1.pgdg13+1)
@@ -8292,6 +8292,84 @@ COPY public.directus_activity (id, action, "user", "timestamp", ip, user_agent, 
 6316	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:29:09.206+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	136	http://localhost:8055
 6317	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:29:09.209+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_projects	42	http://localhost:8055
 6318	login	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:29:59.647+00	172.18.0.3	node	directus_users	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N
+6319	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:36:30.7+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	137	http://localhost:8055
+6320	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:36:30.703+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	138	http://localhost:8055
+6321	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:36:30.706+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_projects	41	http://localhost:8055
+6322	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:38:48.156+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	139	http://localhost:8055
+6323	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:38:48.159+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	140	http://localhost:8055
+6324	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:38:48.161+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	141	http://localhost:8055
+6325	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:38:48.164+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	142	http://localhost:8055
+6326	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:38:48.167+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_projects	40	http://localhost:8055
+6327	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:39:16.484+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	143	http://localhost:8055
+6328	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:39:16.487+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	139	http://localhost:8055
+6329	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:39:16.491+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	140	http://localhost:8055
+6330	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:39:16.495+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	141	http://localhost:8055
+6331	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:39:16.499+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	142	http://localhost:8055
+6332	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:39:16.501+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_projects	40	http://localhost:8055
+6333	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:42:42.845+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	144	http://localhost:8055
+6334	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:42:42.848+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	145	http://localhost:8055
+6335	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:42:42.85+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	146	http://localhost:8055
+6336	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:42:42.854+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	139	http://localhost:8055
+6337	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:42:42.856+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	143	http://localhost:8055
+6338	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:42:42.859+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	141	http://localhost:8055
+6339	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:42:42.862+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	140	http://localhost:8055
+6340	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:42:42.865+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	142	http://localhost:8055
+6341	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:42:42.867+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_projects	40	http://localhost:8055
+6342	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:42:56.592+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	147	http://localhost:8055
+6343	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:42:56.595+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_projects	40	http://localhost:8055
+6344	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:44:24.248+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	148	http://localhost:8055
+6345	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:44:24.25+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	149	http://localhost:8055
+6346	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:44:24.251+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	150	http://localhost:8055
+6347	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:44:24.255+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_projects	39	http://localhost:8055
+6348	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:44:52.231+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	150	http://localhost:8055
+6349	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:44:52.234+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_projects	39	http://localhost:8055
+6350	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:46:28.204+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_projects	38	http://localhost:8055
+6351	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:46:52.907+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	151	http://localhost:8055
+6352	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:46:52.911+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	152	http://localhost:8055
+6353	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:46:52.912+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_projects	38	http://localhost:8055
+6354	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:52:19.451+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	153	http://localhost:8055
+6355	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:52:19.454+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	154	http://localhost:8055
+6356	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:52:19.456+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	155	http://localhost:8055
+6357	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:52:19.458+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	156	http://localhost:8055
+6358	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:52:19.459+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_projects	37	http://localhost:8055
+6359	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:55:26.923+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	157	http://localhost:8055
+6360	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:55:26.925+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	158	http://localhost:8055
+6361	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:55:26.929+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	159	http://localhost:8055
+6362	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:55:26.93+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	160	http://localhost:8055
+6363	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:55:26.932+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_technologies	161	http://localhost:8055
+6364	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 15:55:26.934+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_projects	36	http://localhost:8055
+6365	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:55:05.632+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_achievements	1	http://localhost:8055
+6366	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:55:05.634+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_projects	36	http://localhost:8055
+6367	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:55:25.407+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_achievements	2	http://localhost:8055
+6368	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:55:25.41+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_achievements	3	http://localhost:8055
+6369	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:55:25.412+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_achievements	4	http://localhost:8055
+6370	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:55:25.414+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_projects	36	http://localhost:8055
+6371	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:55:54.188+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_achievements	1	http://localhost:8055
+6372	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:55:54.189+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_achievements	2	http://localhost:8055
+6373	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:55:54.19+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_achievements	3	http://localhost:8055
+6374	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:55:54.191+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_achievements	4	http://localhost:8055
+6375	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:56:29.349+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_achievements	5	http://localhost:8055
+6376	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:56:29.352+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_achievements	6	http://localhost:8055
+6377	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:56:29.353+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_achievements	7	http://localhost:8055
+6378	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:56:29.355+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_achievements	8	http://localhost:8055
+6379	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:56:29.357+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_projects	37	http://localhost:8055
+6380	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:56:45.719+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_achievements	9	http://localhost:8055
+6381	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:56:45.722+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_projects	38	http://localhost:8055
+6382	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:56:57.342+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_achievements	10	http://localhost:8055
+6383	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:56:57.346+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_achievements	9	http://localhost:8055
+6384	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:56:57.352+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_projects	38	http://localhost:8055
+6385	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:57:07.906+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_achievements	11	http://localhost:8055
+6386	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:57:07.909+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_achievements	12	http://localhost:8055
+6387	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:57:07.912+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_projects	38	http://localhost:8055
+6388	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:57:19.995+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_achievements	12	http://localhost:8055
+6389	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:57:20+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_projects	38	http://localhost:8055
+6390	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:57:41.433+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_achievements	13	http://localhost:8055
+6391	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:57:41.436+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_projects	39	http://localhost:8055
+6392	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:58:39.208+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_achievements	14	http://localhost:8055
+6393	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:58:39.21+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_projects	40	http://localhost:8055
+6394	delete	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:58:58.403+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_achievements	13	http://localhost:8055
+6395	create	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:59:31.532+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_project_achievements	15	http://localhost:8055
+6396	update	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:59:31.536+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	side_projects	41	http://localhost:8055
 \.
 
 
@@ -8915,10 +8993,7 @@ COPY public.directus_presets (id, bookmark, "user", role, collection, search, la
 14	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	application_questions	\N	\N	{"tabular":{"page":1,"fields":["title","question"]}}	{"tabular":{"widths":{"title":316.4000244140625,"question":500.199951171875}}}	\N	\N	bookmark	\N
 23	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	profile_versions	\N	\N	{"tabular":{"page":1,"fields":["name","description","status"]}}	{"tabular":{"widths":{"name":274.199951171875,"description":384.4666748046875,"status":107.199951171875,"profile":146.7999267578125}}}	\N	\N	bookmark	\N
 7	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	tech_skill_categories	\N	\N	{"tabular":{"fields":["name","status"],"page":1}}	{"tabular":{"widths":{"name":623.2000122070312,"status":98.6666259765625,"profile":128.800048828125}}}	\N	\N	bookmark	\N
-19	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	side_project_achievements	\N	\N	{"tabular":{"page":1}}	\N	\N	\N	bookmark	\N
 11	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	work_experience_achievements	\N	\N	{"tabular":{"fields":["title","description","work_experience","status"],"page":1}}	{"tabular":{"widths":{"title":213.5999755859375,"description":388,"work_experience":162.2000732421875,"status":90}}}	\N	\N	bookmark	\N
-1	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	work_experiences	\N	\N	{"tabular":{"fields":["name","position","location","description","start_date","end_date","status"],"page":1}}	{"tabular":{"widths":{"name":119.66665649414062,"position":264,"location":136.66668701171875,"description":223.3333740234375,"start_date":119.666748046875,"end_date":120,"status":91}}}	\N	\N	bookmark	\N
-18	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	side_projects	\N	\N	{"tabular":{"fields":["name","stars","start_date","end_date","status"],"page":1}}	{"tabular":{"widths":{"name":326.33331298828125,"stars":90.66668701171875,"start_date":182.3333740234375,"end_date":169.666748046875,"status":90.6666259765625,"profile":121.3333740234375}}}	\N	\N	bookmark	\N
 27	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	side_project_technologies	\N	\N	{"tabular":{"page":1}}	\N	\N	\N	bookmark	\N
 4	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	languages	\N	\N	{"tabular":{"page":1,"fields":["name","language_code","proficiency","status"]}}	{"tabular":{"widths":{"name":287.60003662109375,"language_code":165.20001220703125,"proficiency":176.4000244140625,"status":96.4000244140625,"profile":132.39990234375}}}	\N	\N	bookmark	\N
 21	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	references	\N	\N	{"tabular":{"page":1,"fields":["author","author_position","text","status"]}}	{"tabular":{"widths":{"author":149.6666259765625,"author_position":211,"text":398.6666259765625,"status":98,"profile":124.6666259765625}}}	\N	\N	bookmark	\N
@@ -8928,6 +9003,9 @@ COPY public.directus_presets (id, bookmark, "user", role, collection, search, la
 25	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	applications	\N	\N	{"tabular":{"fields":["vacancy","application_sent_date","status"],"page":1,"sort":["-id"]}}	{"tabular":{"widths":{"vacancy":637,"application_sent_date":197.3333740234375,"status":149.6666259765625}}}	\N	\N	bookmark	\N
 34	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	ai_chat	\N	\N	{"tabular":{"page":1,"fields":["user_prompt"]}}	{"tabular":{"widths":{"user_prompt":944.3333129882812}}}	\N	\N	bookmark	\N
 22	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	education	\N	\N	{"tabular":{"page":1,"fields":["institution","study_type","area","location","graduation_year","status"]}}	{"tabular":{"widths":{"institution":212.33331298828125,"study_type":273.33331298828125,"area":214.2667236328125,"location":144.5999755859375,"graduation_year":160,"status":91.4666748046875}}}	\N	\N	bookmark	\N
+1	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	work_experiences	\N	\N	{"tabular":{"fields":["name","position","location","description","start_date","end_date","status"],"page":1}}	{"tabular":{"widths":{"name":119.66665649414062,"position":264,"location":136.66668701171875,"description":223.3333740234375,"start_date":119.666748046875,"end_date":120,"status":91}}}	\N	\N	bookmark	\N
+19	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	side_project_achievements	\N	\N	{"tabular":{"page":1}}	\N	\N	\N	bookmark	\N
+18	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	side_projects	\N	\N	{"tabular":{"fields":["name","stars","start_date","end_date","status"],"page":1}}	{"tabular":{"widths":{"name":326.33331298828125,"stars":90.66668701171875,"start_date":182.3333740234375,"end_date":169.666748046875,"status":90.6666259765625,"profile":121.3333740234375}}}	\N	\N	bookmark	\N
 3	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	profiles	\N	\N	{"tabular":{"page":1,"fields":["name","title","core_stack","subtitle"]}}	{"tabular":{"widths":{"name":126.66665649414062,"title":231.66668701171875,"core_stack":278.3333740234375,"subtitle":343.3333740234375}}}	\N	\N	bookmark	\N
 35	\N	157238bb-6930-4f26-be9c-8b31a9e11ab8	\N	os_contributions	\N	\N	{"tabular":{"page":1,"fields":["title","contribution_type","project_name","merged_date","status"],"sort":["-merged_date"]}}	{"tabular":{"widths":{"title":399.66668701171875,"contribution_type":170,"project_name":203.3333740234375,"merged_date":189,"status":90}}}	\N	\N	bookmark	\N
 \.
@@ -10329,6 +10407,79 @@ COPY public.directus_revisions (id, activity, collection, item, data, delta, par
 6086	6314	side_project_technologies	135	{"status":"published","name":"MongoEngine","sort":3,"side_project":"42"}	{"status":"published","name":"MongoEngine","sort":3,"side_project":"42"}	6087	\N
 6089	6317	side_projects	42	{"id":42,"status":"published","sort":7,"date_created":null,"date_updated":"2025-11-18T15:29:09.203Z","name":"Monkful","start_date":"2013-09-03","end_date":"2014-10-04","profile":1,"url":"https://github.com/gitaarik/monkful","stars":10,"summary":"Python package to easily create RESTful API's for MongoEngine documents used for MongoDB database. Inspired by Django REST framework. Used in production at Travelbird.","url_label":null,"tags":["fullstack-python","fullstack-django","fullstack-django-svelte"],"achievements":[],"technologies":[133,134,135,136]}	{"date_updated":"2025-11-18T15:29:09.203Z"}	\N	\N
 6088	6316	side_project_technologies	136	{"status":"published","name":"Flask","sort":4,"side_project":"42"}	{"status":"published","name":"Flask","sort":4,"side_project":"42"}	6089	\N
+6092	6321	side_projects	41	{"id":41,"status":"published","sort":6,"date_created":null,"date_updated":"2025-11-18T15:36:30.695Z","name":"Adyengo","start_date":"2013-08-06","end_date":"2020-05-07","profile":1,"url":"https://github.com/gitaarik/adyengo","stars":10,"summary":"Open-source Django package for Adyen payment integration with recurring payment support. Used in production at Tender-it.","url_label":null,"tags":["fullstack-django","fullstack-django-svelte"],"achievements":[],"technologies":[137,138]}	{"date_updated":"2025-11-18T15:36:30.695Z"}	\N	\N
+6090	6319	side_project_technologies	137	{"status":"published","name":"Python","sort":1,"side_project":"41"}	{"status":"published","name":"Python","sort":1,"side_project":"41"}	6092	\N
+6091	6320	side_project_technologies	138	{"name":"HTML","status":"published","sort":2,"side_project":"41"}	{"name":"HTML","status":"published","sort":2,"side_project":"41"}	6092	\N
+6097	6326	side_projects	40	{"id":40,"status":"published","sort":5,"date_created":null,"date_updated":"2025-11-18T15:38:48.152Z","name":"Jazzchords","start_date":"2013-06-24","end_date":"2017-12-08","profile":1,"url":"https://github.com/gitaarik/jazzchords","stars":12,"summary":"Web application for creating and printing professional chord charts using Python/Django and modern frontend technologies.","url_label":null,"tags":["fullstack-django"],"achievements":[],"technologies":[139,140,141,142]}	{"date_updated":"2025-11-18T15:38:48.152Z"}	\N	\N
+6093	6322	side_project_technologies	139	{"name":"Python","status":"published","sort":1,"side_project":"40"}	{"name":"Python","status":"published","sort":1,"side_project":"40"}	6097	\N
+6094	6323	side_project_technologies	140	{"status":"published","name":"Ember.js","sort":2,"side_project":"40"}	{"status":"published","name":"Ember.js","sort":2,"side_project":"40"}	6097	\N
+6095	6324	side_project_technologies	141	{"status":"published","name":"JavaScript","sort":3,"side_project":"40"}	{"status":"published","name":"JavaScript","sort":3,"side_project":"40"}	6097	\N
+6096	6325	side_project_technologies	142	{"status":"published","name":"HTML/CSS","sort":4,"side_project":"40"}	{"status":"published","name":"HTML/CSS","sort":4,"side_project":"40"}	6097	\N
+6112	6341	side_projects	40	{"id":40,"status":"published","sort":5,"date_created":null,"date_updated":"2025-11-18T15:42:42.843Z","name":"Jazzchords","start_date":"2013-06-24","end_date":"2017-12-08","profile":1,"url":"https://github.com/gitaarik/jazzchords","stars":12,"summary":"Web application for creating and printing professional chord charts using Python/Django and modern frontend technologies.","url_label":null,"tags":["fullstack-django"],"achievements":[],"technologies":[139,143,144,145,140,142,141,146]}	{"date_updated":"2025-11-18T15:42:42.843Z"}	\N	\N
+6104	6333	side_project_technologies	144	{"status":"published","name":"Django Rest Framework (DRF)","sort":3,"side_project":"40"}	{"status":"published","name":"Django Rest Framework (DRF)","sort":3,"side_project":"40"}	6112	\N
+6105	6334	side_project_technologies	145	{"status":"published","name":"Node.js","sort":4,"side_project":"40"}	{"status":"published","name":"Node.js","sort":4,"side_project":"40"}	6112	\N
+6106	6335	side_project_technologies	146	{"status":"published","name":"PostgreSQL","sort":8,"side_project":"40"}	{"status":"published","name":"PostgreSQL","sort":8,"side_project":"40"}	6112	\N
+6107	6336	side_project_technologies	139	{"id":139,"status":"published","sort":1,"date_created":"2025-11-18T15:38:48.155Z","date_updated":"2025-11-18T15:42:42.853Z","name":"Python","side_project":40}	{"sort":1,"date_updated":"2025-11-18T15:42:42.853Z"}	6112	\N
+6108	6337	side_project_technologies	143	{"id":143,"status":"published","sort":2,"date_created":"2025-11-18T15:39:16.484Z","date_updated":"2025-11-18T15:42:42.856Z","name":"Django","side_project":40}	{"sort":2,"date_updated":"2025-11-18T15:42:42.856Z"}	6112	\N
+6109	6338	side_project_technologies	141	{"id":141,"status":"published","sort":7,"date_created":"2025-11-18T15:38:48.161Z","date_updated":"2025-11-18T15:42:42.859Z","name":"JavaScript","side_project":40}	{"sort":7,"date_updated":"2025-11-18T15:42:42.859Z"}	6112	\N
+6110	6339	side_project_technologies	140	{"id":140,"status":"published","sort":5,"date_created":"2025-11-18T15:38:48.159Z","date_updated":"2025-11-18T15:42:42.861Z","name":"Ember.js","side_project":40}	{"sort":5,"date_updated":"2025-11-18T15:42:42.861Z"}	6112	\N
+6111	6340	side_project_technologies	142	{"id":142,"status":"published","sort":6,"date_created":"2025-11-18T15:38:48.164Z","date_updated":"2025-11-18T15:42:42.864Z","name":"HTML/CSS","side_project":40}	{"sort":6,"date_updated":"2025-11-18T15:42:42.864Z"}	6112	\N
+6120	6349	side_projects	39	{"id":39,"status":"published","sort":4,"date_created":null,"date_updated":"2025-11-18T15:44:52.229Z","name":"Git Submodules Guide","start_date":"2014-01-15","end_date":"2014-01-15","profile":1,"url":"https://gist.github.com/gitaarik/8735255","stars":1028,"summary":"Popular GitHub Gist explaining Git submodules fundamentals. Helped many developers understand submodules effectively.","url_label":"gist.github.com/gitaarik/8735255","tags":["fullstack-python","fullstack-django","fullstack-react","fullstack-svelte"],"achievements":[],"technologies":[148,149,150]}	{"date_updated":"2025-11-18T15:44:52.229Z"}	\N	\N
+6119	6348	side_project_technologies	150	{"id":150,"status":"published","sort":3,"date_created":"2025-11-18T15:44:24.251Z","date_updated":"2025-11-18T15:44:52.231Z","name":"Bash / Shell scripting","side_project":39}	{"name":"Bash / Shell scripting","date_updated":"2025-11-18T15:44:52.231Z"}	6120	\N
+6103	6332	side_projects	40	{"id":40,"status":"published","sort":5,"date_created":null,"date_updated":"2025-11-18T15:39:16.482Z","name":"Jazzchords","start_date":"2013-06-24","end_date":"2017-12-08","profile":1,"url":"https://github.com/gitaarik/jazzchords","stars":12,"summary":"Web application for creating and printing professional chord charts using Python/Django and modern frontend technologies.","url_label":null,"tags":["fullstack-django"],"achievements":[],"technologies":[139,143,141,140,142]}	{"date_updated":"2025-11-18T15:39:16.482Z"}	\N	\N
+6098	6327	side_project_technologies	143	{"status":"published","name":"Django","sort":2,"side_project":"40"}	{"status":"published","name":"Django","sort":2,"side_project":"40"}	6103	\N
+6099	6328	side_project_technologies	139	{"id":139,"status":"published","sort":1,"date_created":"2025-11-18T15:38:48.155Z","date_updated":"2025-11-18T15:39:16.487Z","name":"Python","side_project":40}	{"sort":1,"date_updated":"2025-11-18T15:39:16.487Z"}	6103	\N
+6100	6329	side_project_technologies	140	{"id":140,"status":"published","sort":4,"date_created":"2025-11-18T15:38:48.159Z","date_updated":"2025-11-18T15:39:16.491Z","name":"Ember.js","side_project":40}	{"sort":4,"date_updated":"2025-11-18T15:39:16.491Z"}	6103	\N
+6101	6330	side_project_technologies	141	{"id":141,"status":"published","sort":3,"date_created":"2025-11-18T15:38:48.161Z","date_updated":"2025-11-18T15:39:16.494Z","name":"JavaScript","side_project":40}	{"sort":3,"date_updated":"2025-11-18T15:39:16.494Z"}	6103	\N
+6102	6331	side_project_technologies	142	{"id":142,"status":"published","sort":5,"date_created":"2025-11-18T15:38:48.164Z","date_updated":"2025-11-18T15:39:16.498Z","name":"HTML/CSS","side_project":40}	{"sort":5,"date_updated":"2025-11-18T15:39:16.498Z"}	6103	\N
+6114	6343	side_projects	40	{"id":40,"status":"published","sort":5,"date_created":null,"date_updated":"2025-11-18T15:42:56.589Z","name":"Jazzchords","start_date":"2013-06-24","end_date":"2017-12-08","profile":1,"url":"https://github.com/gitaarik/jazzchords","stars":12,"summary":"Web application for creating and printing professional chord charts using Python/Django and modern frontend technologies.","url_label":null,"tags":["fullstack-django"],"achievements":[],"technologies":[139,143,144,145,140,142,141,146,147]}	{"date_updated":"2025-11-18T15:42:56.589Z"}	\N	\N
+6113	6342	side_project_technologies	147	{"status":"published","name":"Elasticsearch","sort":9,"side_project":"40"}	{"status":"published","name":"Elasticsearch","sort":9,"side_project":"40"}	6114	\N
+6118	6347	side_projects	39	{"id":39,"status":"published","sort":4,"date_created":null,"date_updated":"2025-11-18T15:44:24.244Z","name":"Git Submodules Guide","start_date":"2014-01-15","end_date":"2014-01-15","profile":1,"url":"https://gist.github.com/gitaarik/8735255","stars":1028,"summary":"Popular GitHub Gist explaining Git submodules fundamentals. Helped many developers understand submodules effectively.","url_label":"gist.github.com/gitaarik/8735255","tags":["fullstack-python","fullstack-django","fullstack-react","fullstack-svelte"],"achievements":[],"technologies":[148,149,150]}	{"date_updated":"2025-11-18T15:44:24.244Z"}	\N	\N
+6115	6344	side_project_technologies	148	{"status":"published","name":"Git","sort":1,"side_project":"39"}	{"status":"published","name":"Git","sort":1,"side_project":"39"}	6118	\N
+6116	6345	side_project_technologies	149	{"status":"published","name":"Git Submodules","sort":2,"side_project":"39"}	{"status":"published","name":"Git Submodules","sort":2,"side_project":"39"}	6118	\N
+6117	6346	side_project_technologies	150	{"status":"published","name":"Bash / Shell","sort":3,"side_project":"39"}	{"status":"published","name":"Bash / Shell","sort":3,"side_project":"39"}	6118	\N
+6121	6350	side_projects	38	{"id":38,"status":"published","sort":3,"date_created":null,"date_updated":"2025-11-18T15:46:28.203Z","name":"Django Admin Relation Links","start_date":"2014-01-15","end_date":"2020-12-03","profile":1,"url":"https://github.com/gitaarik/django-admin-relation-links","stars":108,"summary":"Django Admin navigation enhancement, simplifying navigation between related database objects. Open-sourced on GitHub and PyPi. Used in production at Chipta & Tender-it.","url_label":null,"tags":["fullstack-django","fullstack-python","fullstack-react"],"achievements":[],"technologies":[]}	{"end_date":"2020-12-03","date_updated":"2025-11-18T15:46:28.203Z"}	\N	\N
+6124	6353	side_projects	38	{"id":38,"status":"published","sort":3,"date_created":null,"date_updated":"2025-11-18T15:46:52.904Z","name":"Django Admin Relation Links","start_date":"2014-01-15","end_date":"2020-12-03","profile":1,"url":"https://github.com/gitaarik/django-admin-relation-links","stars":108,"summary":"Django Admin navigation enhancement, simplifying navigation between related database objects. Open-sourced on GitHub and PyPi. Used in production at Chipta & Tender-it.","url_label":null,"tags":["fullstack-django","fullstack-python","fullstack-react"],"achievements":[],"technologies":[151,152]}	{"date_updated":"2025-11-18T15:46:52.904Z"}	\N	\N
+6122	6351	side_project_technologies	151	{"status":"published","name":"Python","sort":1,"side_project":"38"}	{"status":"published","name":"Python","sort":1,"side_project":"38"}	6124	\N
+6123	6352	side_project_technologies	152	{"status":"published","name":"Django","sort":2,"side_project":"38"}	{"status":"published","name":"Django","sort":2,"side_project":"38"}	6124	\N
+6129	6358	side_projects	37	{"id":37,"status":"published","sort":2,"date_created":null,"date_updated":"2025-11-18T15:52:19.446Z","name":"LitState","start_date":"2020-11-15","end_date":"2023-01-18","profile":1,"url":"https://github.com/gitaarik/lit-state","stars":155,"summary":"Reactive state management library for Lit Web Components, Open-sourced on GitHub & NPM. Used in production at Chipta (ticket shop). Lit + LitState is a simpler, lightweight and browser-native alternative to React + Redux.","url_label":null,"tags":["fullstack-svelte","fullstack-react"],"achievements":[],"technologies":[153,154,155,156]}	{"date_updated":"2025-11-18T15:52:19.446Z"}	\N	\N
+6125	6354	side_project_technologies	153	{"status":"published","name":"Node.js","sort":1,"side_project":"37"}	{"status":"published","name":"Node.js","sort":1,"side_project":"37"}	6129	\N
+6126	6355	side_project_technologies	154	{"status":"published","name":"JavaScript","sort":2,"side_project":"37"}	{"status":"published","name":"JavaScript","sort":2,"side_project":"37"}	6129	\N
+6127	6356	side_project_technologies	155	{"status":"published","name":"Lit","sort":3,"side_project":"37"}	{"status":"published","name":"Lit","sort":3,"side_project":"37"}	6129	\N
+6128	6357	side_project_technologies	156	{"status":"published","name":"Web Components","sort":4,"side_project":"37"}	{"status":"published","name":"Web Components","sort":4,"side_project":"37"}	6129	\N
+6135	6364	side_projects	36	{"id":36,"status":"published","sort":1,"date_created":null,"date_updated":"2025-11-18T15:55:26.920Z","name":"Portfolio website","start_date":"2025-08-01","end_date":null,"profile":1,"url":"https://www.rikwanders.tech/","stars":null,"summary":"Personal portfolio website showcasing my professional experience, skills, and services as a freelance/independent developer. Including personal dashboard with AI features for efficient job matching. Using Svelte & Directus CMS.","url_label":null,"tags":["fullstack-svelte","fullstack-react"],"achievements":[],"technologies":[157,158,159,160,161]}	{"date_updated":"2025-11-18T15:55:26.920Z"}	\N	\N
+6130	6359	side_project_technologies	157	{"status":"published","name":"Node.js","sort":1,"side_project":"36"}	{"status":"published","name":"Node.js","sort":1,"side_project":"36"}	6135	\N
+6131	6360	side_project_technologies	158	{"status":"published","name":"JavaScript","sort":2,"side_project":"36"}	{"status":"published","name":"JavaScript","sort":2,"side_project":"36"}	6135	\N
+6132	6361	side_project_technologies	159	{"status":"published","name":"SvelteKit","sort":3,"side_project":"36"}	{"status":"published","name":"SvelteKit","sort":3,"side_project":"36"}	6135	\N
+6133	6362	side_project_technologies	160	{"status":"published","name":"LLM integrations","sort":4,"side_project":"36"}	{"status":"published","name":"LLM integrations","sort":4,"side_project":"36"}	6135	\N
+6134	6363	side_project_technologies	161	{"status":"published","name":"REST APIs","sort":5,"side_project":"36"}	{"status":"published","name":"REST APIs","sort":5,"side_project":"36"}	6135	\N
+6137	6366	side_projects	36	{"id":36,"status":"published","sort":1,"date_created":null,"date_updated":"2025-11-18T16:55:05.629Z","name":"Portfolio website","start_date":"2025-08-01","end_date":null,"profile":1,"url":"https://www.rikwanders.tech/","stars":null,"summary":"Personal portfolio website showcasing my professional experience, skills, and services as a freelance/independent developer. Including personal dashboard with AI features for efficient job matching. Using Svelte & Directus CMS.","url_label":null,"tags":["fullstack-svelte","fullstack-react"],"achievements":[1],"technologies":[157,158,159,160,161]}	{"date_updated":"2025-11-18T16:55:05.629Z"}	\N	\N
+6136	6365	side_project_achievements	1	{"status":"published","description":"Created Open-Source NPM package providing reactive state management for Lit Web Components library","sort":1,"side_project":"36"}	{"status":"published","description":"Created Open-Source NPM package providing reactive state management for Lit Web Components library","sort":1,"side_project":"36"}	6137	\N
+6141	6370	side_projects	36	{"id":36,"status":"published","sort":1,"date_created":null,"date_updated":"2025-11-18T16:55:25.404Z","name":"Portfolio website","start_date":"2025-08-01","end_date":null,"profile":1,"url":"https://www.rikwanders.tech/","stars":null,"summary":"Personal portfolio website showcasing my professional experience, skills, and services as a freelance/independent developer. Including personal dashboard with AI features for efficient job matching. Using Svelte & Directus CMS.","url_label":null,"tags":["fullstack-svelte","fullstack-react"],"achievements":[1,2,3,4],"technologies":[157,158,159,160,161]}	{"date_updated":"2025-11-18T16:55:25.404Z"}	\N	\N
+6138	6367	side_project_achievements	2	{"description":"Received appreciation in community with 152 GitHub stars during time of Lit & Web Components popularity","sort":2,"side_project":"36"}	{"description":"Received appreciation in community with 152 GitHub stars during time of Lit & Web Components popularity","sort":2,"side_project":"36"}	6141	\N
+6139	6368	side_project_achievements	3	{"description":"Engaged with users handling GitHub Issues and Pull Requests","sort":3,"side_project":"36"}	{"description":"Engaged with users handling GitHub Issues and Pull Requests","sort":3,"side_project":"36"}	6141	\N
+6140	6369	side_project_achievements	4	{"description":"Employed library succesfully in projects at Chipta","sort":4,"side_project":"36"}	{"description":"Employed library succesfully in projects at Chipta","sort":4,"side_project":"36"}	6141	\N
+6146	6379	side_projects	37	{"id":37,"status":"published","sort":2,"date_created":null,"date_updated":"2025-11-18T16:56:29.347Z","name":"LitState","start_date":"2020-11-15","end_date":"2023-01-18","profile":1,"url":"https://github.com/gitaarik/lit-state","stars":155,"summary":"Reactive state management library for Lit Web Components, Open-sourced on GitHub & NPM. Used in production at Chipta (ticket shop). Lit + LitState is a simpler, lightweight and browser-native alternative to React + Redux.","url_label":null,"tags":["fullstack-svelte","fullstack-react"],"achievements":[5,6,7,8],"technologies":[153,154,155,156]}	{"date_updated":"2025-11-18T16:56:29.347Z"}	\N	\N
+6142	6375	side_project_achievements	5	{"description":"Created Open-Source NPM package providing reactive state management for Lit Web Components library","sort":1,"side_project":"37"}	{"description":"Created Open-Source NPM package providing reactive state management for Lit Web Components library","sort":1,"side_project":"37"}	6146	\N
+6143	6376	side_project_achievements	6	{"description":"Received appreciation in community with 152 GitHub stars during time of Lit & Web Components popularity","sort":2,"side_project":"37"}	{"description":"Received appreciation in community with 152 GitHub stars during time of Lit & Web Components popularity","sort":2,"side_project":"37"}	6146	\N
+6144	6377	side_project_achievements	7	{"description":"Engaged with users handling GitHub Issues and Pull Requests","sort":3,"side_project":"37"}	{"description":"Engaged with users handling GitHub Issues and Pull Requests","sort":3,"side_project":"37"}	6146	\N
+6145	6378	side_project_achievements	8	{"description":"Employed library succesfully in projects at Chipta","sort":4,"side_project":"37"}	{"description":"Employed library succesfully in projects at Chipta","sort":4,"side_project":"37"}	6146	\N
+6148	6381	side_projects	38	{"id":38,"status":"published","sort":3,"date_created":null,"date_updated":"2025-11-18T16:56:45.717Z","name":"Django Admin Relation Links","start_date":"2014-01-15","end_date":"2020-12-03","profile":1,"url":"https://github.com/gitaarik/django-admin-relation-links","stars":108,"summary":"Django Admin navigation enhancement, simplifying navigation between related database objects. Open-sourced on GitHub and PyPi. Used in production at Chipta & Tender-it.","url_label":null,"tags":["fullstack-django","fullstack-python","fullstack-react"],"achievements":[9],"technologies":[151,152]}	{"date_updated":"2025-11-18T16:56:45.717Z"}	\N	\N
+6147	6380	side_project_achievements	9	{"status":"published","description":"Conceived Open-Source Python package providing navigation enhancements in Django Admin","sort":1,"side_project":"38"}	{"status":"published","description":"Conceived Open-Source Python package providing navigation enhancements in Django Admin","sort":1,"side_project":"38"}	6148	\N
+6151	6384	side_projects	38	{"id":38,"status":"published","sort":3,"date_created":null,"date_updated":"2025-11-18T16:56:57.340Z","name":"Django Admin Relation Links","start_date":"2014-01-15","end_date":"2020-12-03","profile":1,"url":"https://github.com/gitaarik/django-admin-relation-links","stars":108,"summary":"Django Admin navigation enhancement, simplifying navigation between related database objects. Open-sourced on GitHub and PyPi. Used in production at Chipta & Tender-it.","url_label":null,"tags":["fullstack-django","fullstack-python","fullstack-react"],"achievements":[9,10],"technologies":[151,152]}	{"date_updated":"2025-11-18T16:56:57.340Z"}	\N	\N
+6149	6382	side_project_achievements	10	{"description":"Received appreciation in community with 108 GitHub stars","sort":2,"side_project":"38"}	{"description":"Received appreciation in community with 108 GitHub stars","sort":2,"side_project":"38"}	6151	\N
+6150	6383	side_project_achievements	9	{"id":9,"title":null,"fa_icon":null,"description":"Conceived Open-Source Python package providing navigation enhancements in Django Admin","side_project":38,"status":"draft","date_created":"2025-11-18T16:56:45.719Z","date_updated":"2025-11-18T16:56:57.345Z","sort":1}	{"status":"draft","date_updated":"2025-11-18T16:56:57.345Z"}	6151	\N
+6154	6387	side_projects	38	{"id":38,"status":"published","sort":3,"date_created":null,"date_updated":"2025-11-18T16:57:07.903Z","name":"Django Admin Relation Links","start_date":"2014-01-15","end_date":"2020-12-03","profile":1,"url":"https://github.com/gitaarik/django-admin-relation-links","stars":108,"summary":"Django Admin navigation enhancement, simplifying navigation between related database objects. Open-sourced on GitHub and PyPi. Used in production at Chipta & Tender-it.","url_label":null,"tags":["fullstack-django","fullstack-python","fullstack-react"],"achievements":[9,10,11,12],"technologies":[151,152]}	{"date_updated":"2025-11-18T16:57:07.903Z"}	\N	\N
+6152	6385	side_project_achievements	11	{"description":"Engaged with users handling GitHub Issues and Pull Requests","sort":3,"side_project":"38"}	{"description":"Engaged with users handling GitHub Issues and Pull Requests","sort":3,"side_project":"38"}	6154	\N
+6153	6386	side_project_achievements	12	{"description":"Employed library succesfully in projects at Chipta","sort":4,"side_project":"38"}	{"description":"Employed library succesfully in projects at Chipta","sort":4,"side_project":"38"}	6154	\N
+6156	6389	side_projects	38	{"id":38,"status":"published","sort":3,"date_created":null,"date_updated":"2025-11-18T16:57:19.992Z","name":"Django Admin Relation Links","start_date":"2014-01-15","end_date":"2020-12-03","profile":1,"url":"https://github.com/gitaarik/django-admin-relation-links","stars":108,"summary":"Django Admin navigation enhancement, simplifying navigation between related database objects. Open-sourced on GitHub and PyPi. Used in production at Chipta & Tender-it.","url_label":null,"tags":["fullstack-django","fullstack-python","fullstack-react"],"achievements":[9,10,11,12],"technologies":[151,152]}	{"date_updated":"2025-11-18T16:57:19.992Z"}	\N	\N
+6155	6388	side_project_achievements	12	{"id":12,"title":null,"fa_icon":null,"description":"Employed library succesfully in projects at Chipta and Tender-it","side_project":38,"status":"draft","date_created":"2025-11-18T16:57:07.909Z","date_updated":"2025-11-18T16:57:19.994Z","sort":4}	{"description":"Employed library succesfully in projects at Chipta and Tender-it","date_updated":"2025-11-18T16:57:19.994Z"}	6156	\N
+6158	6391	side_projects	39	{"id":39,"status":"published","sort":4,"date_created":null,"date_updated":"2025-11-18T16:57:41.430Z","name":"Git Submodules Guide","start_date":"2014-01-15","end_date":"2014-01-15","profile":1,"url":"https://gist.github.com/gitaarik/8735255","stars":1028,"summary":"Popular GitHub Gist explaining Git submodules fundamentals. Helped many developers understand submodules effectively.","url_label":"gist.github.com/gitaarik/8735255","tags":["fullstack-python","fullstack-django","fullstack-react","fullstack-svelte"],"achievements":[13],"technologies":[148,149,150]}	{"date_updated":"2025-11-18T16:57:41.430Z"}	\N	\N
+6157	6390	side_project_achievements	13	{"description":"Succesfully employed self-created tool to create chord charts and print them for musical projects","sort":1,"side_project":"39"}	{"description":"Succesfully employed self-created tool to create chord charts and print them for musical projects","sort":1,"side_project":"39"}	6158	\N
+6160	6393	side_projects	40	{"id":40,"status":"published","sort":5,"date_created":null,"date_updated":"2025-11-18T16:58:39.206Z","name":"Jazzchords","start_date":"2013-06-24","end_date":"2017-12-08","profile":1,"url":"https://github.com/gitaarik/jazzchords","stars":12,"summary":"Web application for creating and printing professional chord charts using Python/Django and modern frontend technologies.","url_label":null,"tags":["fullstack-django"],"achievements":[14],"technologies":[139,143,144,145,140,142,141,146,147]}	{"date_updated":"2025-11-18T16:58:39.206Z"}	\N	\N
+6159	6392	side_project_achievements	14	{"description":"Succesfully employed self-created tool to create chord charts and print them for musical projects","sort":1,"side_project":"40"}	{"description":"Succesfully employed self-created tool to create chord charts and print them for musical projects","sort":1,"side_project":"40"}	6160	\N
+6162	6396	side_projects	41	{"id":41,"status":"published","sort":6,"date_created":null,"date_updated":"2025-11-18T16:59:31.528Z","name":"Adyengo","start_date":"2013-08-06","end_date":"2020-05-07","profile":1,"url":"https://github.com/gitaarik/adyengo","stars":10,"summary":"Open-source Django package for Adyen payment integration with recurring payment support. Used in production at Tender-it.","url_label":null,"tags":["fullstack-django","fullstack-django-svelte"],"achievements":[15],"technologies":[137,138]}	{"date_updated":"2025-11-18T16:59:31.528Z"}	\N	\N
+6161	6395	side_project_achievements	15	{"description":"Conceived Open-Source Python package providing Adyen payment integrations for Django","sort":1,"side_project":"41"}	{"description":"Conceived Open-Source Python package providing Adyen payment integrations for Django","sort":1,"side_project":"41"}	6162	\N
 \.
 
 
@@ -10350,11 +10501,13 @@ tJ9uZ3QbiacMvkLo1WytmWrOOQy35S8ImyaXDKaT_63fymAYk6aBHG_J8fnhtX1I	157238bb-6930-4
 ntquXMHh_c4poAEZMm4PKlvvt9cEMCRv5Li2Wuv6RxGHP0QzC86k3VK7Rg5yZJSl	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-25 14:44:59.233+00	172.18.0.3	node	\N	\N	\N
 y4wbHV4DgafD_mQT-56tCzSe9hNplINKMHjTOZ4CniVtVgAlUnvt5wybYgp9qEUM	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-25 14:49:43.064+00	172.18.0.3	node	\N	\N	\N
 -Osdn6elM-jX4RczoJNPsOD9QFedM3uV-_1yr9rz6yxNA34VLw3Ji83qp6RwMfzu	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-25 14:49:45.382+00	172.18.0.3	node	\N	\N	\N
-fvpFZghe08tBRVkhwwb6LsOWAEP_VKD82Dhx2j8pxfKdu-RLrqbTLKj0mwTCcxs3	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-19 14:49:47.554+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
+cZfFc5pFcB_C_N5t29CwkL_dWlN7AJ4UprGC9a8I1nbULTqZlfuMGV1wyHycHppI	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:55:57.759+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	erdRGIY9RlhvUWX6YJ6k1Hd8cZM9J0MTXfZgHUdaVwCxwz6n2omkLn1WtZ8IWqZ0
 CSJDLC6MAZtkRxS6LQ19ZLAXSjgeJYm5d7MqztVDXVvS6vDjHRQx2CJBR0lhBfae	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-25 14:44:06.658+00	172.18.0.3	node	\N	\N	\N
 pK6bjrSIebBq16RFjBJRg5B1hFaJdFNHCKAGwZ6DrDTtCUutNQi3G6v0WhkA27Wf	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-25 14:44:33.435+00	172.18.0.3	node	\N	\N	\N
 1jGB6v0_73ywvqrBLzBGfrv3k4bOlwn3Rs5B6pNNTrspG-rOeP6JLdnJrqJK1U1W	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-25 14:45:10.613+00	172.18.0.3	node	\N	\N	\N
 iLmyrVoNeDlckrOlBTQBy-NGz4kq2E7n0KnsKdOwwvYqjNbkUguPik0vmohzAiFS	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-25 15:29:59.644+00	172.18.0.3	node	\N	\N	\N
+erdRGIY9RlhvUWX6YJ6k1Hd8cZM9J0MTXfZgHUdaVwCxwz6n2omkLn1WtZ8IWqZ0	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-18 16:56:07.434+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	oiPsFiFKMtghvtOHNtai0A3TVIyUwJZlx7hoZxaEPllp6enMFiPy3Daa1kXQyJVL
+oiPsFiFKMtghvtOHNtai0A3TVIyUwJZlx7hoZxaEPllp6enMFiPy3Daa1kXQyJVL	157238bb-6930-4f26-be9c-8b31a9e11ab8	2025-11-19 16:55:57.434+00	172.18.0.1	Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0	\N	http://localhost:8055	\N
 \.
 
 
@@ -10391,7 +10544,7 @@ c530a32f-84cb-4ab9-8a61-7a12a5bcb7e6	en-US	draft	Draft
 --
 
 COPY public.directus_users (id, first_name, last_name, email, password, location, title, description, tags, avatar, language, tfa_secret, status, role, token, last_access, last_page, provider, external_identifier, auth_data, email_notifications, appearance, theme_dark, theme_light, theme_light_overrides, theme_dark_overrides, text_direction) FROM stdin;
-157238bb-6930-4f26-be9c-8b31a9e11ab8	Rik	Wanders	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-11-18 15:29:59.648+00	/content/side_projects	default	\N	\N	t	\N	\N	\N	\N	\N	auto
+157238bb-6930-4f26-be9c-8b31a9e11ab8	Rik	Wanders	rik@rikwanders.tech	$argon2id$v=19$m=65536,t=3,p=4$MF3ELPmT2vdFmjd2LhqYZA$HmKet+cTxhqHbyL5VQcR2+TrMbCYSiz7REFnd6c6FXY	\N	\N	\N	\N	\N	\N	\N	active	17756a67-2cbc-42b5-bb7c-906f79444fb3	\N	2025-11-18 16:55:57.436+00	/content/work_experiences	default	\N	\N	t	\N	\N	\N	\N	\N	auto
 \.
 
 
@@ -10586,6 +10739,16 @@ COPY public.salary_expectations (id, sort, date_created, date_updated, job_title
 --
 
 COPY public.side_project_achievements (id, title, fa_icon, description, side_project, status, date_created, date_updated, sort) FROM stdin;
+5	\N	\N	Created Open-Source NPM package providing reactive state management for Lit Web Components library	37	draft	2025-11-18 16:56:29.349+00	\N	1
+6	\N	\N	Received appreciation in community with 152 GitHub stars during time of Lit & Web Components popularity	37	draft	2025-11-18 16:56:29.351+00	\N	2
+7	\N	\N	Engaged with users handling GitHub Issues and Pull Requests	37	draft	2025-11-18 16:56:29.353+00	\N	3
+8	\N	\N	Employed library succesfully in projects at Chipta	37	draft	2025-11-18 16:56:29.355+00	\N	4
+10	\N	\N	Received appreciation in community with 108 GitHub stars	38	draft	2025-11-18 16:56:57.341+00	\N	2
+9	\N	\N	Conceived Open-Source Python package providing navigation enhancements in Django Admin	38	draft	2025-11-18 16:56:45.719+00	2025-11-18 16:56:57.345+00	1
+11	\N	\N	Engaged with users handling GitHub Issues and Pull Requests	38	draft	2025-11-18 16:57:07.905+00	\N	3
+12	\N	\N	Employed library succesfully in projects at Chipta and Tender-it	38	draft	2025-11-18 16:57:07.909+00	2025-11-18 16:57:19.994+00	4
+14	\N	\N	Succesfully employed self-created tool to create chord charts and print them for musical projects	40	draft	2025-11-18 16:58:39.207+00	\N	1
+15	\N	\N	Conceived Open-Source Python package providing Adyen payment integrations for Django	41	draft	2025-11-18 16:59:31.53+00	\N	1
 \.
 
 
@@ -10598,6 +10761,31 @@ COPY public.side_project_technologies (id, status, sort, date_created, date_upda
 134	published	2	2025-11-18 15:28:31.06+00	\N	MongoDB	42
 135	published	3	2025-11-18 15:28:41.71+00	\N	MongoEngine	42
 136	published	4	2025-11-18 15:29:09.205+00	\N	Flask	42
+137	published	1	2025-11-18 15:36:30.699+00	\N	Python	41
+138	published	2	2025-11-18 15:36:30.702+00	\N	HTML	41
+144	published	3	2025-11-18 15:42:42.844+00	\N	Django Rest Framework (DRF)	40
+145	published	4	2025-11-18 15:42:42.847+00	\N	Node.js	40
+146	published	8	2025-11-18 15:42:42.849+00	\N	PostgreSQL	40
+139	published	1	2025-11-18 15:38:48.155+00	2025-11-18 15:42:42.853+00	Python	40
+143	published	2	2025-11-18 15:39:16.484+00	2025-11-18 15:42:42.856+00	Django	40
+141	published	7	2025-11-18 15:38:48.161+00	2025-11-18 15:42:42.859+00	JavaScript	40
+140	published	5	2025-11-18 15:38:48.159+00	2025-11-18 15:42:42.861+00	Ember.js	40
+142	published	6	2025-11-18 15:38:48.164+00	2025-11-18 15:42:42.864+00	HTML/CSS	40
+147	published	9	2025-11-18 15:42:56.591+00	\N	Elasticsearch	40
+148	published	1	2025-11-18 15:44:24.247+00	\N	Git	39
+149	published	2	2025-11-18 15:44:24.249+00	\N	Git Submodules	39
+150	published	3	2025-11-18 15:44:24.251+00	2025-11-18 15:44:52.231+00	Bash / Shell scripting	39
+151	published	1	2025-11-18 15:46:52.906+00	\N	Python	38
+152	published	2	2025-11-18 15:46:52.909+00	\N	Django	38
+153	published	1	2025-11-18 15:52:19.45+00	\N	Node.js	37
+154	published	2	2025-11-18 15:52:19.453+00	\N	JavaScript	37
+155	published	3	2025-11-18 15:52:19.455+00	\N	Lit	37
+156	published	4	2025-11-18 15:52:19.457+00	\N	Web Components	37
+157	published	1	2025-11-18 15:55:26.922+00	\N	Node.js	36
+158	published	2	2025-11-18 15:55:26.925+00	\N	JavaScript	36
+159	published	3	2025-11-18 15:55:26.928+00	\N	SvelteKit	36
+160	published	4	2025-11-18 15:55:26.93+00	\N	LLM integrations	36
+161	published	5	2025-11-18 15:55:26.931+00	\N	REST APIs	36
 \.
 
 
@@ -10606,13 +10794,13 @@ COPY public.side_project_technologies (id, status, sort, date_created, date_upda
 --
 
 COPY public.side_projects (id, status, sort, date_created, date_updated, name, start_date, end_date, profile, url, stars, summary, url_label, tags) FROM stdin;
-36	published	1	\N	\N	Portfolio website	2025-08-01	\N	1	https://www.rikwanders.tech/	\N	Personal portfolio website showcasing my professional experience, skills, and services as a freelance/independent developer. Including personal dashboard with AI features for efficient job matching. Using Svelte & Directus CMS.	\N	["fullstack-svelte","fullstack-react"]
-37	published	2	\N	\N	LitState	2020-11-15	2023-01-18	1	https://github.com/gitaarik/lit-state	155	Reactive state management library for Lit Web Components, Open-sourced on GitHub & NPM. Used in production at Chipta (ticket shop). Lit + LitState is a simpler, lightweight and browser-native alternative to React + Redux.	\N	["fullstack-svelte","fullstack-react"]
-38	published	3	\N	\N	Django Admin Relation Links	2014-01-15	2014-01-15	1	https://github.com/gitaarik/django-admin-relation-links	108	Django Admin navigation enhancement, simplifying navigation between related database objects. Open-sourced on GitHub and PyPi. Used in production at Chipta & Tender-it.	\N	["fullstack-django","fullstack-python","fullstack-react"]
-39	published	4	\N	\N	Git Submodules Guide	2014-01-15	2014-01-15	1	https://gist.github.com/gitaarik/8735255	1028	Popular GitHub Gist explaining Git submodules fundamentals. Helped many developers understand submodules effectively.	gist.github.com/gitaarik/8735255	["fullstack-python","fullstack-django","fullstack-react","fullstack-svelte"]
-40	published	5	\N	\N	Jazzchords	2013-06-24	2017-12-08	1	https://github.com/gitaarik/jazzchords	12	Web application for creating and printing professional chord charts using Python/Django and modern frontend technologies.	\N	["fullstack-django"]
-41	published	6	\N	\N	Adyengo	2013-08-06	2020-05-07	1	https://github.com/gitaarik/adyengo	10	Open-source Django package for Adyen payment integration with recurring payment support. Used in production at Tender-it.	\N	["fullstack-django","fullstack-django-svelte"]
+41	published	6	\N	2025-11-18 16:59:31.528+00	Adyengo	2013-08-06	2020-05-07	1	https://github.com/gitaarik/adyengo	10	Open-source Django package for Adyen payment integration with recurring payment support. Used in production at Tender-it.	\N	["fullstack-django","fullstack-django-svelte"]
+36	published	1	\N	2025-11-18 16:55:25.404+00	Portfolio website	2025-08-01	\N	1	https://www.rikwanders.tech/	\N	Personal portfolio website showcasing my professional experience, skills, and services as a freelance/independent developer. Including personal dashboard with AI features for efficient job matching. Using Svelte & Directus CMS.	\N	["fullstack-svelte","fullstack-react"]
 42	published	7	\N	2025-11-18 15:29:09.203+00	Monkful	2013-09-03	2014-10-04	1	https://github.com/gitaarik/monkful	10	Python package to easily create RESTful API's for MongoEngine documents used for MongoDB database. Inspired by Django REST framework. Used in production at Travelbird.	\N	["fullstack-python","fullstack-django","fullstack-django-svelte"]
+37	published	2	\N	2025-11-18 16:56:29.347+00	LitState	2020-11-15	2023-01-18	1	https://github.com/gitaarik/lit-state	155	Reactive state management library for Lit Web Components, Open-sourced on GitHub & NPM. Used in production at Chipta (ticket shop). Lit + LitState is a simpler, lightweight and browser-native alternative to React + Redux.	\N	["fullstack-svelte","fullstack-react"]
+38	published	3	\N	2025-11-18 16:57:19.992+00	Django Admin Relation Links	2014-01-15	2020-12-03	1	https://github.com/gitaarik/django-admin-relation-links	108	Django Admin navigation enhancement, simplifying navigation between related database objects. Open-sourced on GitHub and PyPi. Used in production at Chipta & Tender-it.	\N	["fullstack-django","fullstack-python","fullstack-react"]
+39	published	4	\N	2025-11-18 16:57:41.43+00	Git Submodules Guide	2014-01-15	2014-01-15	1	https://gist.github.com/gitaarik/8735255	1028	Popular GitHub Gist explaining Git submodules fundamentals. Helped many developers understand submodules effectively.	gist.github.com/gitaarik/8735255	["fullstack-python","fullstack-django","fullstack-react","fullstack-svelte"]
+40	published	5	\N	2025-11-18 16:58:39.206+00	Jazzchords	2013-06-24	2017-12-08	1	https://github.com/gitaarik/jazzchords	12	Web application for creating and printing professional chord charts using Python/Django and modern frontend technologies.	\N	["fullstack-django"]
 \.
 
 
@@ -10961,7 +11149,7 @@ SELECT pg_catalog.setval('public.dev_methodologies_id_seq', 38, true);
 -- Name: directus_activity_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_activity_id_seq', 6318, true);
+SELECT pg_catalog.setval('public.directus_activity_id_seq', 6396, true);
 
 
 --
@@ -11003,7 +11191,7 @@ SELECT pg_catalog.setval('public.directus_relations_id_seq', 43, true);
 -- Name: directus_revisions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.directus_revisions_id_seq', 6089, true);
+SELECT pg_catalog.setval('public.directus_revisions_id_seq', 6162, true);
 
 
 --
@@ -11101,14 +11289,14 @@ SELECT pg_catalog.setval('public.salary_expectations_id_seq', 13, true);
 -- Name: side_project_achievements_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.side_project_achievements_id_seq', 1, false);
+SELECT pg_catalog.setval('public.side_project_achievements_id_seq', 15, true);
 
 
 --
 -- Name: side_project_technologies_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.side_project_technologies_id_seq', 136, true);
+SELECT pg_catalog.setval('public.side_project_technologies_id_seq', 161, true);
 
 
 --
@@ -12380,5 +12568,5 @@ ALTER TABLE ONLY public.work_experiences
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 9kyfSqQ8lFRTemtlVQikjBVKycnlXScHtP1oamg1eChEPp45EVCpltFmnza6cTH
+\unrestrict XLrOuCSD5m8I3HKVecbCmFRvYvlm1oNzncQWGuWuAipo0jEmtULb3uG5A6c70bt
 
