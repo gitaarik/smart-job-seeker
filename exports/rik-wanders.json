@@ -1577,7 +1577,7 @@
         "sort": 3,
         "name": "Django Admin Relation Links",
         "start_date": "2014-01-15T00:00:00.000Z",
-        "end_date": "2014-01-15T00:00:00.000Z",
+        "end_date": "2020-12-03T00:00:00.000Z",
         "url": "https://github.com/gitaarik/django-admin-relation-links",
         "stars": 108,
         "summary": "Django Admin navigation enhancement, simplifying navigation between related database objects. Open-sourced on GitHub and PyPi. Used in production at Chipta & Tender-it.",
