@@ -1551,7 +1551,8 @@
         "summary": "Personal portfolio website showcasing my professional experience, skills, and services as a freelance/independent developer. Including personal dashboard with AI features for efficient job matching. Using Svelte & Directus CMS.",
         "tags": [
           "fullstack-svelte",
-          "fullstack-react"
+          "fullstack-react",
+          "fullstack-django-svelte"
         ],
         "achievements": [],
         "technologies": []
