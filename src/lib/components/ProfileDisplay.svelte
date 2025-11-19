@@ -35,7 +35,7 @@
       start_date: Date;
       end_date?: Date;
       note?: string;
-      achievements?: Array<{
+      work_experience_achievements?: Array<{
         description: string;
         tags: string[];
       }>;
@@ -292,8 +292,11 @@
           <p class="text-sm italic"><strong>Note:</strong> {job.note}</p>
         {/if}
 
-        {#if job.achievements && job.achievements.length > 0}
-          {@const filteredHighlights = filterOnTags(job.achievements)}
+        {#if         job.work_experience_achievements &&
+          job.work_experience_achievements.length > 0}
+          {@const         filteredHighlights = filterOnTags(
+          job.work_experience_achievements,
+        )}
           {#if filteredHighlights.length > 0}
             <ul class="list-disc ml-3 print:ml-4">
               {#each filteredHighlights as highlight, index (index)}
