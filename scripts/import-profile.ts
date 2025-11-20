@@ -77,6 +77,20 @@ interface ImportedProfile {
         sort?: number | null;
         name?: string;
       }>;
+      projects: Array<{
+        status?: string;
+        sort?: number | null;
+        name: string;
+        url?: string;
+        start_date?: string;
+        end_date?: string;
+        description?: string;
+        outcome?: string;
+        work_experience_project_technologies: Array<{
+          sort?: number | null;
+          name?: string;
+        }>;
+      }>;
     }>;
     side_projects: Array<{
       status?: string;
@@ -202,6 +216,12 @@ async function importProfile(
         await Promise.all([
           prisma.profile_versions.deleteMany({ where: { profile: profileId } }),
           prisma.highlights.deleteMany({ where: { profile: profileId } }),
+          prisma.work_experience_project_technologies.deleteMany({
+            where: { work_experience_projects: { work_experiences: { profile: profileId } } },
+          }),
+          prisma.work_experience_projects.deleteMany({
+            where: { work_experiences: { profile: profileId } },
+          }),
           prisma.work_experience_achievements.deleteMany({
             where: { work_experiences: { profile: profileId } },
           }),
@@ -443,6 +463,38 @@ async function importProfile(
                 work_experience: createdWork.id,
               },
             });
+          }
+        }
+
+        // Import projects
+        if (work.projects && work.projects.length > 0) {
+          for (const project of work.projects) {
+            const createdProject = await prisma.work_experience_projects.create({
+              data: {
+                status: project.status || "draft",
+                sort: project.sort,
+                name: project.name,
+                url: project.url,
+                start_date: project.start_date ? new Date(project.start_date) : null,
+                end_date: project.end_date ? new Date(project.end_date) : null,
+                description: project.description,
+                outcome: project.outcome,
+                work_experience: createdWork.id,
+              },
+            });
+
+            // Import project technologies
+            if (project.work_experience_project_technologies && project.work_experience_project_technologies.length > 0) {
+              for (const tech of project.work_experience_project_technologies) {
+                await prisma.work_experience_project_technologies.create({
+                  data: {
+                    sort: tech.sort,
+                    name: tech.name,
+                    work_experience_project: createdProject.id,
+                  },
+                });
+              }
+            }
           }
         }
       }
