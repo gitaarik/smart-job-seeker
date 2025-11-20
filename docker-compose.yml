@@ -61,19 +61,22 @@ services:
       file: docker-compose.directus.yml
       service: admin-cache
 
-  prisma-studio:
-    image: node:20
-    working_dir: /app
-    ports:
-      - "5555:5555"
-    volumes:
-      - .:/app
-      - /app/node_modules
-    command: sh -c "npx prisma studio --port 5555 --browser none"
-    depends_on:
-      - database
-    environment:
-      DATABASE_URL: 'postgres://postgres:postgres@database:5432/smartjobseeker'
+  # Disabled Prisma Studio, because not really using it, because we already
+  # have Directus CMS.
+  #
+  # prisma-studio:
+  #   image: node:20
+  #   working_dir: /app
+  #   ports:
+  #     - "5555:5555"
+  #   volumes:
+  #     - .:/app
+  #     - /app/node_modules
+  #   command: sh -c "npx prisma studio --port 5555 --browser none"
+  #   depends_on:
+  #     - database
+  #   environment:
+  #     DATABASE_URL: 'postgres://postgres:postgres@database:5432/smartjobseeker'
 
 volumes:
   postgres_data:
