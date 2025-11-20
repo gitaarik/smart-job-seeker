@@ -59,6 +59,14 @@ const PROFILE_SCHEMA_MAPPING = {
           work_experience_technologies: {
             fields: ["name"],
           },
+          work_experience_projects: {
+            fields: ["name", "url", "start_date", "end_date", "description", "outcome"],
+            relations: {
+              work_experience_project_technologies: {
+                fields: ["name"]
+              }
+            }
+          },
         },
       },
       side_projects: {
