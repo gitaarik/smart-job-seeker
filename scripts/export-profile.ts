@@ -470,15 +470,9 @@ async function exportProfile(profileId: string): Promise<void> {
           end_date: work.end_date,
           website: work.website || undefined,
           tags: work.tags,
-          achievements: work_experience_achievements_all.filter((a) =>
-            a.work_experience === work.id
-          ),
-          technologies: work_experience_technologies_all.filter((t) =>
-            t.work_experience === work.id
-          ),
-          projects: work_experience_projects_all.filter((p) =>
-            p.work_experience === work.id
-          ),
+          achievements: work_experience_achievements_all,
+          technologies: work_experience_technologies_all,
+          projects: work_experience_projects_all,
         })),
         side_projects: baseProfile.side_projects.map((proj) => ({
           status: proj.status || undefined,

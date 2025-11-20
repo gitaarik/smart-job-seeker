@@ -9,16 +9,14 @@ datasource db {
 }
 
 model application_interview_questions {
-  id                                                       Int          @id @default(autoincrement())
-  sort                                                     Int?
-  date_created                                             DateTime?    @db.Timestamptz(6)
-  date_updated                                             DateTime?    @db.Timestamptz(6)
-  application                                              Int
-  question                                                 String
-  answer                                                   String?
-  ai_chat                                                  Int?
-  ai_chat_application_interview_questions_ai_chatToai_chat ai_chat?     @relation("application_interview_questions_ai_chatToai_chat", fields: [ai_chat], references: [id], onUpdate: NoAction, map: "application_interview_questions_ai_chat_foreign")
-  applications                                             applications @relation(fields: [application], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "application_interview_questions_application_foreign")
+  id           Int          @id @default(autoincrement())
+  sort         Int?
+  date_created DateTime?    @db.Timestamptz(6)
+  date_updated DateTime?    @db.Timestamptz(6)
+  application  Int
+  question     String
+  answer       String?
+  applications applications @relation(fields: [application], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "application_interview_questions_application_foreign")
 }
 
 model application_questions {
@@ -47,6 +45,7 @@ model applications {
   discontinued_reason             String?                           @db.VarChar(255)
   discontinued_note               String?
   application_note                String?
+  application_seen_date           DateTime?                         @db.Date
   application_interview_questions application_interview_questions[]
   directus_files                  directus_files?                   @relation(fields: [cv_file_sent], references: [id], onUpdate: NoAction, map: "applications_cv_file_sent_foreign")
   profiles                        profiles                          @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "applications_profile_foreign")
@@ -702,6 +701,7 @@ model profiles {
   education             education[]
   highlights            highlights[]
   languages             languages[]
+  os_contributions      os_contributions[]
   platform_profiles     platform_profiles[]
   profile_versions      profile_versions[]
   directus_files        directus_files?         @relation(fields: [profile_picture], references: [id], onUpdate: NoAction, map: "profiles_profile_picture_foreign")
@@ -955,22 +955,65 @@ model work_experiences {
   website                      String?                        @db.VarChar(255)
   tags                         Json?                          @db.Json
   work_experience_achievements work_experience_achievements[]
+  work_experience_projects     work_experience_projects[]
   work_experience_technologies work_experience_technologies[]
   directus_files               directus_files?                @relation(fields: [logo], references: [id], onUpdate: NoAction, map: "work_experiences_logo_foreign")
   profiles                     profiles                       @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "work_experiences_profile_foreign")
 }
 
 model ai_chat {
-  id                                                                               Int                               @id @default(autoincrement())
-  date_created                                                                     DateTime?                         @db.Timestamptz(6)
-  date_updated                                                                     DateTime?                         @db.Timestamptz(6)
-  profile                                                                          Int
-  system_prompt                                                                    String                            @default("Act as a helpful assistant for a SWE job seeker & applicant. Help answer questions about job descriptions, answer application questions, write cover letters etc. Below is the information about the applicant. First the schema in JSON, after that actual data in JSON. You can use the schema to find the descriptions of certain objects / fields in the data. Be brief and concise in your answer. Max 3 short paragraphs. Hiring managers usually do not have a lot of time to extensively review every text. Do not add or list any skills or knowledge which is not in the data of the applicant. You can maybe add some skills the job requires that are closely connected to skills the applicant has. Keep the story close to the real work/project experience of the applicant. Do not make up anything that is not obvious from the original info of the applicant. Don't necessarily generate complete copy-and-paste answers, but rather give suggestions for what kind of things the applicant could write. If there are multiple suitable answers, give them all, so the applicant can choose and customize to their choice.\n\n## The schema:\n\n{schema}\n\n## The data:\n\n{data}")
-  user_prompt                                                                      String
-  full_prompt                                                                      String?
-  response                                                                         String?
-  profiles                                                                         profiles                          @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "ai_chat_profile_foreign")
-  application_interview_questions_application_interview_questions_ai_chatToai_chat application_interview_questions[] @relation("application_interview_questions_ai_chatToai_chat")
+  id            Int       @id @default(autoincrement())
+  date_created  DateTime? @db.Timestamptz(6)
+  date_updated  DateTime? @db.Timestamptz(6)
+  profile       Int
+  system_prompt String    @default("Act as a helpful assistant for a SWE job seeker & applicant. Help answer questions about job descriptions, answer application questions, write cover letters etc. Below is the information about the applicant. First the schema in JSON, after that actual data in JSON. You can use the schema to find the descriptions of certain objects / fields in the data. Be brief and concise in your answer. Max 3 short paragraphs. Hiring managers usually do not have a lot of time to extensively review every text. Do not add or list any skills or knowledge which is not in the data of the applicant. You can maybe add some skills the job requires that are closely connected to skills the applicant has. Keep the story close to the real work/project experience of the applicant. Do not make up anything that is not obvious from the original info of the applicant. Don't necessarily generate complete copy-and-paste answers, but rather give suggestions for what kind of things the applicant could write. If there are multiple suitable answers, give them all, so the applicant can choose and customize to their choice.\n\n## The schema:\n\n{schema}\n\n## The data:\n\n{data}")
+  user_prompt   String
+  full_prompt   String?
+  response      String?
+  profiles      profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "ai_chat_profile_foreign")
+}
+
+model os_contributions {
+  id                Int       @id @default(autoincrement())
+  status            String    @default("draft") @db.VarChar(255)
+  date_created      DateTime? @db.Timestamptz(6)
+  date_updated      DateTime? @db.Timestamptz(6)
+  title             String?   @db.VarChar(255)
+  description       String?
+  project_name      String?   @db.VarChar(255)
+  profile           Int?
+  merged_date       DateTime? @db.Date
+  issue_url         String?   @db.VarChar(255)
+  pull_request_url  String?   @db.VarChar(255)
+  contribution_type String?   @db.VarChar(255)
+  profiles          profiles? @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "os_contributions_profile_foreign")
+}
+
+model work_experience_project_technologies {
+  id                       Int                       @id @default(autoincrement())
+  sort                     Int?
+  date_created             DateTime?                 @db.Timestamptz(6)
+  date_updated             DateTime?                 @db.Timestamptz(6)
+  work_experience_project  Int?
+  name                     String?                   @db.VarChar(255)
+  work_experience_projects work_experience_projects? @relation(fields: [work_experience_project], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "work_experience_project_technologies_work___27d59b1f_foreign")
+}
+
+model work_experience_projects {
+  id                                   Int                                    @id @default(autoincrement())
+  status                               String                                 @default("draft") @db.VarChar(255)
+  sort                                 Int?
+  date_created                         DateTime?                              @db.Timestamptz(6)
+  date_updated                         DateTime?                              @db.Timestamptz(6)
+  work_experience                      Int?
+  name                                 String?                                @db.VarChar(255)
+  url                                  String?                                @db.VarChar(255)
+  start_date                           DateTime?                              @db.Date
+  end_date                             DateTime?                              @db.Date
+  description                          String?
+  outcome                              String?
+  work_experience_project_technologies work_experience_project_technologies[]
+  work_experiences                     work_experiences?                      @relation(fields: [work_experience], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "work_experience_projects_work_experience_foreign")
 }
 
 enum Role {
