@@ -63,7 +63,7 @@ interface ExportedProfile {
       end_date?: Date | null;
       website?: string;
       tags?: any;
-      achievements: Array<{
+      work_experience_achievements: Array<{
         status?: string;
         sort?: number | null;
         title?: string;
@@ -71,10 +71,24 @@ interface ExportedProfile {
         fa_icon?: string;
         tags?: any;
       }>;
-      technologies: Array<{
+      work_experience_technologies: Array<{
         status?: string;
         sort?: number | null;
         name?: string;
+      }>;
+      work_experience_projects: Array<{
+        status?: string;
+        sort?: number | null;
+        name: string;
+        url?: string;
+        start_date?: Date | null;
+        end_date?: Date | null;
+        description?: string;
+        outcome?: string;
+        work_experience_project_technologies: Array<{
+          sort?: number | null;
+          name?: string;
+        }>;
       }>;
     }>;
     side_projects: Array<{
@@ -88,14 +102,14 @@ interface ExportedProfile {
       summary?: string;
       url_label?: string;
       tags?: any;
-      achievements: Array<{
+      side_project_achievements: Array<{
         title?: string;
         fa_icon?: string;
         description?: string;
         status?: string;
         sort?: number | null;
       }>;
-      technologies: Array<{
+      side_project_technologies: Array<{
         status?: string;
         sort?: number | null;
         name?: string;
