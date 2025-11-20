@@ -587,7 +587,6 @@
         "tags": null,
         "achievements": [
           {
-            "work_experience": 8,
             "status": "published",
             "sort": 1,
             "title": "Team Leadership",
@@ -596,7 +595,6 @@
             "tags": []
           },
           {
-            "work_experience": 8,
             "status": "published",
             "sort": 2,
             "title": "Platform Scalability",
@@ -610,7 +608,6 @@
             ]
           },
           {
-            "work_experience": 8,
             "status": "published",
             "sort": 3,
             "title": "Frontend Modernization",
@@ -622,7 +619,6 @@
             ]
           },
           {
-            "work_experience": 8,
             "status": "published",
             "sort": 4,
             "title": "Mobile App Development",
@@ -634,7 +630,6 @@
             ]
           },
           {
-            "work_experience": 8,
             "status": "published",
             "sort": 5,
             "title": "Test Driven Development",
@@ -648,7 +643,6 @@
             ]
           },
           {
-            "work_experience": 8,
             "status": "published",
             "sort": 6,
             "title": "CI/CD Systems",
@@ -662,7 +656,6 @@
             ]
           },
           {
-            "work_experience": 8,
             "status": "published",
             "sort": 7,
             "title": "Docker Compose Setup",
@@ -676,7 +669,6 @@
             ]
           },
           {
-            "work_experience": 8,
             "status": "published",
             "sort": 8,
             "title": "Backwards Compatibility",
@@ -688,7 +680,6 @@
             ]
           },
           {
-            "work_experience": 8,
             "status": "published",
             "sort": 9,
             "title": "OAuth Zoom Integration",
@@ -701,7 +692,6 @@
             ]
           },
           {
-            "work_experience": 8,
             "status": "published",
             "sort": 10,
             "title": "REST API implementations",
@@ -714,7 +704,6 @@
             ]
           },
           {
-            "work_experience": 8,
             "status": "published",
             "sort": 11,
             "title": "Payment Integrations",
@@ -727,7 +716,6 @@
             ]
           },
           {
-            "work_experience": 8,
             "status": "published",
             "sort": 12,
             "title": "Internationalization",
@@ -740,139 +728,116 @@
         ],
         "technologies": [
           {
-            "work_experience": 8,
             "status": "published",
             "sort": 1,
             "name": "Python"
           },
           {
-            "work_experience": 8,
             "status": "published",
             "sort": 2,
             "name": "Django"
           },
           {
-            "work_experience": 8,
             "status": "published",
             "sort": 3,
             "name": "Django REST Framework"
           },
           {
-            "work_experience": 8,
             "status": "published",
             "sort": 4,
             "name": "Django Channels"
           },
           {
-            "work_experience": 8,
             "status": "published",
             "sort": 5,
             "name": "Django Silk"
           },
           {
-            "work_experience": 8,
             "status": "published",
             "sort": 6,
             "name": "Jinja2"
           },
           {
-            "work_experience": 8,
             "status": "published",
             "sort": 7,
             "name": "Weasyprint"
           },
           {
-            "work_experience": 8,
             "status": "published",
             "sort": 8,
             "name": "MySQL"
           },
           {
-            "work_experience": 8,
             "status": "published",
             "sort": 9,
             "name": "Ansible"
           },
           {
-            "work_experience": 8,
             "status": "published",
             "sort": 10,
             "name": "Python Fabric"
           },
           {
-            "work_experience": 8,
             "status": "published",
             "sort": 11,
             "name": "Linode"
           },
           {
-            "work_experience": 8,
             "status": "published",
             "sort": 12,
             "name": "Nginx"
           },
           {
-            "work_experience": 8,
             "status": "published",
             "sort": 13,
             "name": "Redis"
           },
           {
-            "work_experience": 8,
             "status": "published",
             "sort": 14,
             "name": "HAProxy"
           },
           {
-            "work_experience": 8,
             "status": "published",
             "sort": 15,
             "name": "Selenium"
           },
           {
-            "work_experience": 8,
             "status": "published",
             "sort": 16,
             "name": "OAuth"
           },
           {
-            "work_experience": 8,
             "status": "published",
             "sort": 17,
             "name": "Node.js"
           },
           {
-            "work_experience": 8,
             "status": "published",
             "sort": 18,
             "name": "React"
           },
           {
-            "work_experience": 8,
             "status": "published",
             "sort": 19,
             "name": "MobX"
           },
           {
-            "work_experience": 8,
             "status": "published",
             "sort": 20,
             "name": "Lit"
           },
           {
-            "work_experience": 8,
             "status": "published",
             "sort": 21,
             "name": "Web Components"
           },
           {
-            "work_experience": 8,
             "status": "published",
             "sort": 22,
             "name": "Web Sockets"
           },
           {
-            "work_experience": 8,
             "status": "published",
             "sort": 23,
             "name": "React Native"
@@ -1142,7 +1107,6 @@
         "tags": null,
         "achievements": [
           {
-            "work_experience": 9,
             "status": "published",
             "sort": 1,
             "title": "Product Development",
@@ -1151,7 +1115,6 @@
             "tags": null
           },
           {
-            "work_experience": 9,
             "status": "published",
             "sort": 2,
             "title": "Data Automation",
@@ -1160,7 +1123,6 @@
             "tags": null
           },
           {
-            "work_experience": 9,
             "status": "published",
             "sort": 3,
             "title": "Search Innovation",
@@ -1169,7 +1131,6 @@
             "tags": null
           },
           {
-            "work_experience": 9,
             "status": "published",
             "sort": 4,
             "title": "Revenue Model",
@@ -1181,7 +1142,6 @@
             ]
           },
           {
-            "work_experience": 9,
             "status": "published",
             "sort": 5,
             "title": "Notification Mailing System",
@@ -1194,7 +1154,6 @@
             ]
           },
           {
-            "work_experience": 9,
             "status": "published",
             "sort": 6,
             "title": "Frontend modernization",
@@ -1207,340 +1166,77 @@
         ],
         "technologies": [
           {
-            "work_experience": 9,
             "status": "published",
             "sort": 1,
             "name": "Python"
           },
           {
-            "work_experience": 9,
             "status": "published",
             "sort": 2,
             "name": "Django"
           },
           {
-            "work_experience": 9,
             "status": "published",
             "sort": 3,
             "name": "Django REST Framework"
           },
           {
-            "work_experience": 9,
             "status": "published",
             "sort": 4,
             "name": "Django Celery"
           },
           {
-            "work_experience": 9,
             "status": "published",
             "sort": 5,
             "name": "Python Requests"
           },
           {
-            "work_experience": 9,
             "status": "published",
             "sort": 6,
             "name": "Beautifulsoup"
           },
           {
-            "work_experience": 9,
             "status": "published",
             "sort": 7,
             "name": "Node.js"
           },
           {
-            "work_experience": 9,
             "status": "published",
             "sort": 8,
             "name": "React"
           },
           {
-            "work_experience": 9,
             "status": "published",
             "sort": 9,
             "name": "Vue.js"
           },
           {
-            "work_experience": 9,
             "status": "published",
             "sort": 10,
             "name": "Webpack"
           },
           {
-            "work_experience": 9,
             "status": "published",
             "sort": 11,
             "name": "MySQL"
           },
           {
-            "work_experience": 9,
             "status": "published",
             "sort": 12,
             "name": "Elasticsearch"
           },
           {
-            "work_experience": 9,
             "status": "published",
             "sort": 13,
             "name": "Linode"
           },
           {
-            "work_experience": 9,
             "status": "published",
             "sort": 14,
             "name": "Nginx"
           }
         ],
-        "projects": [
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Developer Onboarding Documentation",
-            "url": null,
-            "start_date": "2018-11-11T00:00:00.000Z",
-            "end_date": "2019-02-09T00:00:00.000Z",
-            "description": "There was not sufficient technical documentation of our systems to easily onboard new developers. I needed to make it easy for new developers to understand the system and get started with developing. So I built complete documentation system including onboarding guides, technical references, Docker setup instructions, and testing framework documentation with examples.",
-            "outcome": "This made it very easy for new developers to get the project up and running on their systems, run unit tests, and get a basic understanding of the system. For more specialized parts of the system, there were specialized guides that developers could consult if they're working on that part of the system.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Writing Documentation"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Full System Migration to Django",
-            "url": "https://chipta.com/",
-            "start_date": "2017-09-13T00:00:00.000Z",
-            "end_date": "2018-03-14T00:00:00.000Z",
-            "description": "Chipta's PHP codebase had become difficult to maintain and it was lacking modern features & best practices that modern frameworks like Django offer. I led the migration to Django, configured Django to connect to the existing MySQL database and created models for the existing tables. I need to create some custom Django model fields for this. I modified Django's authentication system to adjust to the existing users table. I migrated the core business logic.",
-            "outcome": "The result was a modern, maintainable codebase that became the foundation for all future development. Because of Django's ORM it became much easier to create new tables and relationships. And the views, forms and Django REST Framework helped us to create modern interfaces easily. This reduced bug rates and accelerating feature development by approximately 40%.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Python"
-              },
-              {
-                "sort": 2,
-                "name": "Django"
-              },
-              {
-                "sort": 3,
-                "name": "MySQL"
-              },
-              {
-                "sort": 4,
-                "name": "Redis"
-              },
-              {
-                "sort": 5,
-                "name": "PHP"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Deployment System",
-            "url": null,
-            "start_date": "2015-11-15T00:00:00.000Z",
-            "end_date": "2016-06-18T00:00:00.000Z",
-            "description": "Our simple deployment script became more and more complex over time, and deploying more often and on more servers made it more manual work, which was also prone to human error. This meant that a proper deployment system became necessary. I used Python Fabric to create a custom deploy system, that locally builds the project, then sends it to the other servers over SSH and completes the deployment over there. The system supported test, staging, and production environments, multi-server deployment (configurable per environment), quick switching between previously deployed versions, and build caching for efficiency.",
-            "outcome": "The new deployment system reduced the deployment time from averagely 40 minutes to averagely 10 minutes. It also saved much manual interventions and human errors. And switching to a previously deployed version was easy and fast. This resulted in a much faster development release cycle. All team members could see when a deployment started / finished through updates on the Slack channel.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Python"
-              },
-              {
-                "sort": 2,
-                "name": "Python Fabric"
-              },
-              {
-                "sort": 3,
-                "name": "SSH"
-              },
-              {
-                "sort": 4,
-                "name": "Bash / Shell scripting"
-              },
-              {
-                "sort": 5,
-                "name": "Linux Server Management"
-              },
-              {
-                "sort": 6,
-                "name": "Git"
-              },
-              {
-                "sort": 7,
-                "name": "rsync"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Chipta Dashboard Modernization",
-            "url": "https://chipta.com/dashboard/",
-            "start_date": "2018-03-11T00:00:00.000Z",
-            "end_date": "2018-09-22T00:00:00.000Z",
-            "description": "Event organizers struggled with Chipta's outdated dashboard interface, which had become confusing to use with feature expansions. I rebuilt the dashboard from scratch using Django and React. I created REST APIs with Django REST Framework, used MobX for state management in React, and implementing a Webpack-based bundle system for easy development and deployment. I used a strategy of gradual transferring pages to the new dashboard, by using a smart iframe implementation to old pages. In this way we could release the new interface before transferring all pages. I also created a page to easily setup a new event.",
-            "outcome": "The new interface was more user friendly, easier to understand and use. The various features were better organized in the menus, and became easier for people to find and understand. The new event setup page made it very easy for new customers to get started. This modernization contributed to a 40% revenue growth over 2 years in the startup phase.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "UXD"
-              },
-              {
-                "sort": null,
-                "name": "Python"
-              },
-              {
-                "sort": null,
-                "name": "Webpack"
-              },
-              {
-                "sort": null,
-                "name": "React"
-              },
-              {
-                "sort": null,
-                "name": "Django REST Framework"
-              },
-              {
-                "sort": null,
-                "name": "Django"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Chipta Ticket Shop Modernization",
-            "url": "https://chipta.com/en/tickets/event/5447/dance-avond-n-27/event-info/",
-            "start_date": "2018-02-04T00:00:00.000Z",
-            "end_date": "2019-12-28T00:00:00.000Z",
-            "description": "Chipta's ticket shop was not optimized for conversion rate, had an unnecessary sign-up process, and had an outdated design which was not mobile responsive. I had to make the checkout process as simple and easy as possible to maximize sales and minimize dropouts. Existing features like theming and multiple payment options needed to be retained. I rebuilt the entire ticket shop as single-page application using Lit and Web Components. I built REST APIs with Django REST Framework, enabled guest checkout, integrated multiple payment options, and created a theming system.",
-            "outcome": "The new ticket shop was received well by both event organizers and visitors. The process became very easy also on mobile, and contributed to a 40% revenue growth over a period of 2 years during the company's startup phase. The web components setup proves to be very stable and fast, and easy to develop in. I even created a state management library, LitState, which became a open source project used by various other people using Web Components.",
-            "work_experience_project_technologies": [
-              {
-                "sort": null,
-                "name": "JavaScript"
-              },
-              {
-                "sort": null,
-                "name": "Lit"
-              },
-              {
-                "sort": null,
-                "name": "Web Components"
-              },
-              {
-                "sort": null,
-                "name": "Node.js"
-              },
-              {
-                "sort": null,
-                "name": "Webpack"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Test Suite in Python / Django",
-            "url": null,
-            "start_date": "2015-09-06T00:00:00.000Z",
-            "end_date": "2015-12-31T00:00:00.000Z",
-            "description": "The system became more complex over time, and (regression) bugs started to show up more frequently in sometimes seemingly unrelated places. I decided it was important to have a solid test suite in order to efficiently and securely keep delivering new features. I established a comprehensive testing infrastructure with custom helper functions that made writing tests straightforward for the team. I also guided the implementation of Selenium-based integration tests for critical user flows.",
-            "outcome": "This testing foundation reduced regression bugs by 90% and gave the team confidence to deploy more frequently, moving from monthly to weekly deployments. And I introduced the team to Test Driven Development (TDD) and required sufficient unit tests to be added with every merge request.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Python"
-              },
-              {
-                "sort": 2,
-                "name": "Django"
-              },
-              {
-                "sort": 3,
-                "name": "Test Driven Development (TDD)"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Internationalization & Localization system",
-            "url": "https://chipta.com/",
-            "start_date": "2019-03-17T00:00:00.000Z",
-            "end_date": "2019-07-20T00:00:00.000Z",
-            "description": "For Chipta's Europe expansion, our platform needed to be translated and support different time zones. The translations should also be updated easily without developer intervention. I modified Django's translation system to generate the translation files from a translations table we created that could easily be edited by administrators in the Django Admin. For translations in JavaScript, I cleverly generated separate translation files for each frontend SPA, to keep the pages lightweight.\n\nAs Chipta expanded internationally, managing translations across multiple languages became a bottleneck. The hard-coded translation system made updates time-consuming and required developer involvement for simple text changes. I customized Django's translation framework to store translations in the database via the ORM, then built developer tools for creating and synchronizing translations efficiently. This empowered the marketing team to update translations independently, reducing translation update time from days to minutes and enabling faster market expansion.\n\nCustomized Django's translation system to store translations in database using ORM models. Created admin interface for easy translation editing and developer tools for environment syncing.",
-            "outcome": "This resulted in a very convenient to use translation system, that non-technical administrators could easily update. There was a separate deploy script to only update the translations, which took just a few seconds. This gave our administrators the ability to quickly iterate and experiment with new (marketing) texts or correct small issues or irregularities in texts, without needing developer intervention. This saved much time for both the developers and the administrators and easily increased work efficiency by 15%.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Python"
-              },
-              {
-                "sort": 2,
-                "name": "Django"
-              },
-              {
-                "sort": 3,
-                "name": "Django Admin"
-              },
-              {
-                "sort": 4,
-                "name": "Python Babel"
-              },
-              {
-                "sort": 5,
-                "name": "GNU gettext"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Visitor Management Tool",
-            "url": null,
-            "start_date": "2016-05-15T00:00:00.000Z",
-            "end_date": "2016-09-16T00:00:00.000Z",
-            "description": "It became difficult to manage the visitors of big events. Administrative tools to apply actions on large groups of users became a necessity. I created a powerful visitor management tool, with comprehensive filtering capabilities and various actions you were able to execute on the filtered visitors. I used React to make the interface dynamic and fast and user friendly. I created RESTful APIs with Django REST Framework. ",
-            "outcome": "The visitor management tool enabled organizers to quickly find visitors, update details, manage tickets and payments, and email tickets on the spot. It also allowed organizers to export the visitors to various formats for external usage. This tool became a central tool for event management. It enabled the company to scale to larger events and attract more interesting customers.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Python"
-              },
-              {
-                "sort": 2,
-                "name": "Django"
-              },
-              {
-                "sort": 3,
-                "name": "Django REST Framework (DRF)"
-              },
-              {
-                "sort": 4,
-                "name": "React"
-              },
-              {
-                "sort": 5,
-                "name": "JavaScript"
-              },
-              {
-                "sort": 6,
-                "name": "Node.js"
-              }
-            ]
-          }
-        ]
+        "projects": []
       },
       {
         "name": "TravelBird",
@@ -1556,7 +1252,6 @@
         "tags": null,
         "achievements": [
           {
-            "work_experience": 10,
             "status": "published",
             "sort": 1,
             "title": "Mobile App Development",
@@ -1565,7 +1260,6 @@
             "tags": null
           },
           {
-            "work_experience": 10,
             "status": "published",
             "sort": 2,
             "title": "REST API development",
@@ -1574,7 +1268,6 @@
             "tags": null
           },
           {
-            "work_experience": 10,
             "status": "published",
             "sort": 3,
             "title": "Email Marketing Platform",
@@ -1585,370 +1278,102 @@
         ],
         "technologies": [
           {
-            "work_experience": 10,
             "status": "published",
             "sort": 1,
             "name": "Python"
           },
           {
-            "work_experience": 10,
             "status": "published",
             "sort": 2,
             "name": "Django"
           },
           {
-            "work_experience": 10,
             "status": "published",
             "sort": 3,
             "name": "Django REST Framework"
           },
           {
-            "work_experience": 10,
             "status": "published",
             "sort": 4,
             "name": "Django Celery"
           },
           {
-            "work_experience": 10,
             "status": "published",
             "sort": 5,
             "name": "Django South"
           },
           {
-            "work_experience": 10,
             "status": "published",
             "sort": 6,
             "name": "Django Compressor"
           },
           {
-            "work_experience": 10,
             "status": "published",
             "sort": 7,
             "name": "Objective-C"
           },
           {
-            "work_experience": 10,
             "status": "published",
             "sort": 8,
             "name": "Xcode"
           },
           {
-            "work_experience": 10,
             "status": "published",
             "sort": 9,
             "name": "AWS EC2"
           },
           {
-            "work_experience": 10,
             "status": "published",
             "sort": 10,
             "name": "AWS S3"
           },
           {
-            "work_experience": 10,
             "status": "published",
             "sort": 11,
             "name": "Sendgrid"
           },
           {
-            "work_experience": 10,
             "status": "published",
             "sort": 12,
             "name": "PostgreSQL"
           },
           {
-            "work_experience": 10,
             "status": "published",
             "sort": 13,
             "name": "MongoDB"
           },
           {
-            "work_experience": 10,
             "status": "published",
             "sort": 14,
             "name": "JavaScript"
           },
           {
-            "work_experience": 10,
             "status": "published",
             "sort": 15,
             "name": "gulp.js"
           },
           {
-            "work_experience": 10,
             "status": "published",
             "sort": 16,
             "name": "Sass"
           },
           {
-            "work_experience": 10,
             "status": "published",
             "sort": 17,
             "name": "Linode"
           },
           {
-            "work_experience": 10,
             "status": "published",
             "sort": 18,
             "name": "Nginx"
           },
           {
-            "work_experience": 10,
             "status": "published",
             "sort": 19,
             "name": "Varnish"
           }
         ],
-        "projects": [
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Developer Onboarding Documentation",
-            "url": null,
-            "start_date": "2018-11-11T00:00:00.000Z",
-            "end_date": "2019-02-09T00:00:00.000Z",
-            "description": "There was not sufficient technical documentation of our systems to easily onboard new developers. I needed to make it easy for new developers to understand the system and get started with developing. So I built complete documentation system including onboarding guides, technical references, Docker setup instructions, and testing framework documentation with examples.",
-            "outcome": "This made it very easy for new developers to get the project up and running on their systems, run unit tests, and get a basic understanding of the system. For more specialized parts of the system, there were specialized guides that developers could consult if they're working on that part of the system.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Writing Documentation"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Full System Migration to Django",
-            "url": "https://chipta.com/",
-            "start_date": "2017-09-13T00:00:00.000Z",
-            "end_date": "2018-03-14T00:00:00.000Z",
-            "description": "Chipta's PHP codebase had become difficult to maintain and it was lacking modern features & best practices that modern frameworks like Django offer. I led the migration to Django, configured Django to connect to the existing MySQL database and created models for the existing tables. I need to create some custom Django model fields for this. I modified Django's authentication system to adjust to the existing users table. I migrated the core business logic.",
-            "outcome": "The result was a modern, maintainable codebase that became the foundation for all future development. Because of Django's ORM it became much easier to create new tables and relationships. And the views, forms and Django REST Framework helped us to create modern interfaces easily. This reduced bug rates and accelerating feature development by approximately 40%.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Python"
-              },
-              {
-                "sort": 2,
-                "name": "Django"
-              },
-              {
-                "sort": 3,
-                "name": "MySQL"
-              },
-              {
-                "sort": 4,
-                "name": "Redis"
-              },
-              {
-                "sort": 5,
-                "name": "PHP"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Deployment System",
-            "url": null,
-            "start_date": "2015-11-15T00:00:00.000Z",
-            "end_date": "2016-06-18T00:00:00.000Z",
-            "description": "Our simple deployment script became more and more complex over time, and deploying more often and on more servers made it more manual work, which was also prone to human error. This meant that a proper deployment system became necessary. I used Python Fabric to create a custom deploy system, that locally builds the project, then sends it to the other servers over SSH and completes the deployment over there. The system supported test, staging, and production environments, multi-server deployment (configurable per environment), quick switching between previously deployed versions, and build caching for efficiency.",
-            "outcome": "The new deployment system reduced the deployment time from averagely 40 minutes to averagely 10 minutes. It also saved much manual interventions and human errors. And switching to a previously deployed version was easy and fast. This resulted in a much faster development release cycle. All team members could see when a deployment started / finished through updates on the Slack channel.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Python"
-              },
-              {
-                "sort": 2,
-                "name": "Python Fabric"
-              },
-              {
-                "sort": 3,
-                "name": "SSH"
-              },
-              {
-                "sort": 4,
-                "name": "Bash / Shell scripting"
-              },
-              {
-                "sort": 5,
-                "name": "Linux Server Management"
-              },
-              {
-                "sort": 6,
-                "name": "Git"
-              },
-              {
-                "sort": 7,
-                "name": "rsync"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Chipta Dashboard Modernization",
-            "url": "https://chipta.com/dashboard/",
-            "start_date": "2018-03-11T00:00:00.000Z",
-            "end_date": "2018-09-22T00:00:00.000Z",
-            "description": "Event organizers struggled with Chipta's outdated dashboard interface, which had become confusing to use with feature expansions. I rebuilt the dashboard from scratch using Django and React. I created REST APIs with Django REST Framework, used MobX for state management in React, and implementing a Webpack-based bundle system for easy development and deployment. I used a strategy of gradual transferring pages to the new dashboard, by using a smart iframe implementation to old pages. In this way we could release the new interface before transferring all pages. I also created a page to easily setup a new event.",
-            "outcome": "The new interface was more user friendly, easier to understand and use. The various features were better organized in the menus, and became easier for people to find and understand. The new event setup page made it very easy for new customers to get started. This modernization contributed to a 40% revenue growth over 2 years in the startup phase.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "UXD"
-              },
-              {
-                "sort": null,
-                "name": "Python"
-              },
-              {
-                "sort": null,
-                "name": "Webpack"
-              },
-              {
-                "sort": null,
-                "name": "React"
-              },
-              {
-                "sort": null,
-                "name": "Django REST Framework"
-              },
-              {
-                "sort": null,
-                "name": "Django"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Chipta Ticket Shop Modernization",
-            "url": "https://chipta.com/en/tickets/event/5447/dance-avond-n-27/event-info/",
-            "start_date": "2018-02-04T00:00:00.000Z",
-            "end_date": "2019-12-28T00:00:00.000Z",
-            "description": "Chipta's ticket shop was not optimized for conversion rate, had an unnecessary sign-up process, and had an outdated design which was not mobile responsive. I had to make the checkout process as simple and easy as possible to maximize sales and minimize dropouts. Existing features like theming and multiple payment options needed to be retained. I rebuilt the entire ticket shop as single-page application using Lit and Web Components. I built REST APIs with Django REST Framework, enabled guest checkout, integrated multiple payment options, and created a theming system.",
-            "outcome": "The new ticket shop was received well by both event organizers and visitors. The process became very easy also on mobile, and contributed to a 40% revenue growth over a period of 2 years during the company's startup phase. The web components setup proves to be very stable and fast, and easy to develop in. I even created a state management library, LitState, which became a open source project used by various other people using Web Components.",
-            "work_experience_project_technologies": [
-              {
-                "sort": null,
-                "name": "JavaScript"
-              },
-              {
-                "sort": null,
-                "name": "Lit"
-              },
-              {
-                "sort": null,
-                "name": "Web Components"
-              },
-              {
-                "sort": null,
-                "name": "Node.js"
-              },
-              {
-                "sort": null,
-                "name": "Webpack"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Test Suite in Python / Django",
-            "url": null,
-            "start_date": "2015-09-06T00:00:00.000Z",
-            "end_date": "2015-12-31T00:00:00.000Z",
-            "description": "The system became more complex over time, and (regression) bugs started to show up more frequently in sometimes seemingly unrelated places. I decided it was important to have a solid test suite in order to efficiently and securely keep delivering new features. I established a comprehensive testing infrastructure with custom helper functions that made writing tests straightforward for the team. I also guided the implementation of Selenium-based integration tests for critical user flows.",
-            "outcome": "This testing foundation reduced regression bugs by 90% and gave the team confidence to deploy more frequently, moving from monthly to weekly deployments. And I introduced the team to Test Driven Development (TDD) and required sufficient unit tests to be added with every merge request.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Python"
-              },
-              {
-                "sort": 2,
-                "name": "Django"
-              },
-              {
-                "sort": 3,
-                "name": "Test Driven Development (TDD)"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Internationalization & Localization system",
-            "url": "https://chipta.com/",
-            "start_date": "2019-03-17T00:00:00.000Z",
-            "end_date": "2019-07-20T00:00:00.000Z",
-            "description": "For Chipta's Europe expansion, our platform needed to be translated and support different time zones. The translations should also be updated easily without developer intervention. I modified Django's translation system to generate the translation files from a translations table we created that could easily be edited by administrators in the Django Admin. For translations in JavaScript, I cleverly generated separate translation files for each frontend SPA, to keep the pages lightweight.\n\nAs Chipta expanded internationally, managing translations across multiple languages became a bottleneck. The hard-coded translation system made updates time-consuming and required developer involvement for simple text changes. I customized Django's translation framework to store translations in the database via the ORM, then built developer tools for creating and synchronizing translations efficiently. This empowered the marketing team to update translations independently, reducing translation update time from days to minutes and enabling faster market expansion.\n\nCustomized Django's translation system to store translations in database using ORM models. Created admin interface for easy translation editing and developer tools for environment syncing.",
-            "outcome": "This resulted in a very convenient to use translation system, that non-technical administrators could easily update. There was a separate deploy script to only update the translations, which took just a few seconds. This gave our administrators the ability to quickly iterate and experiment with new (marketing) texts or correct small issues or irregularities in texts, without needing developer intervention. This saved much time for both the developers and the administrators and easily increased work efficiency by 15%.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Python"
-              },
-              {
-                "sort": 2,
-                "name": "Django"
-              },
-              {
-                "sort": 3,
-                "name": "Django Admin"
-              },
-              {
-                "sort": 4,
-                "name": "Python Babel"
-              },
-              {
-                "sort": 5,
-                "name": "GNU gettext"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Visitor Management Tool",
-            "url": null,
-            "start_date": "2016-05-15T00:00:00.000Z",
-            "end_date": "2016-09-16T00:00:00.000Z",
-            "description": "It became difficult to manage the visitors of big events. Administrative tools to apply actions on large groups of users became a necessity. I created a powerful visitor management tool, with comprehensive filtering capabilities and various actions you were able to execute on the filtered visitors. I used React to make the interface dynamic and fast and user friendly. I created RESTful APIs with Django REST Framework. ",
-            "outcome": "The visitor management tool enabled organizers to quickly find visitors, update details, manage tickets and payments, and email tickets on the spot. It also allowed organizers to export the visitors to various formats for external usage. This tool became a central tool for event management. It enabled the company to scale to larger events and attract more interesting customers.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Python"
-              },
-              {
-                "sort": 2,
-                "name": "Django"
-              },
-              {
-                "sort": 3,
-                "name": "Django REST Framework (DRF)"
-              },
-              {
-                "sort": 4,
-                "name": "React"
-              },
-              {
-                "sort": 5,
-                "name": "JavaScript"
-              },
-              {
-                "sort": 6,
-                "name": "Node.js"
-              }
-            ]
-          }
-        ]
+        "projects": []
       },
       {
         "name": "SWIS",
@@ -1966,7 +1391,6 @@
         ],
         "achievements": [
           {
-            "work_experience": 11,
             "status": "published",
             "sort": 1,
             "title": "Client Delivery",
@@ -1975,7 +1399,6 @@
             "tags": null
           },
           {
-            "work_experience": 11,
             "status": "published",
             "sort": 2,
             "title": "Frontend & CMS Development",
@@ -1986,346 +1409,82 @@
         ],
         "technologies": [
           {
-            "work_experience": 11,
             "status": "published",
             "sort": 1,
             "name": "PHP"
           },
           {
-            "work_experience": 11,
             "status": "published",
             "sort": 2,
             "name": "MySQL"
           },
           {
-            "work_experience": 11,
             "status": "published",
             "sort": 3,
             "name": "Apache"
           },
           {
-            "work_experience": 11,
             "status": "published",
             "sort": 4,
             "name": "Linux"
           },
           {
-            "work_experience": 11,
             "status": "published",
             "sort": 5,
             "name": "XAMPP"
           },
           {
-            "work_experience": 11,
             "status": "published",
             "sort": 6,
             "name": "HTML5"
           },
           {
-            "work_experience": 11,
             "status": "published",
             "sort": 7,
             "name": "CSS3"
           },
           {
-            "work_experience": 11,
             "status": "published",
             "sort": 8,
             "name": "JavaScript"
           },
           {
-            "work_experience": 11,
             "status": "published",
             "sort": 9,
             "name": "AJAX"
           },
           {
-            "work_experience": 11,
             "status": "published",
             "sort": 10,
             "name": "jQuery"
           },
           {
-            "work_experience": 11,
             "status": "published",
             "sort": 11,
             "name": "jQuery UI"
           },
           {
-            "work_experience": 11,
             "status": "published",
             "sort": 12,
             "name": "Underscore.js"
           },
           {
-            "work_experience": 11,
             "status": "published",
             "sort": 13,
             "name": "Bootstrap"
           },
           {
-            "work_experience": 11,
             "status": "published",
             "sort": 14,
             "name": "Responsive design"
           },
           {
-            "work_experience": 11,
             "status": "published",
             "sort": 15,
             "name": "Firebug"
           }
         ],
-        "projects": [
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Developer Onboarding Documentation",
-            "url": null,
-            "start_date": "2018-11-11T00:00:00.000Z",
-            "end_date": "2019-02-09T00:00:00.000Z",
-            "description": "There was not sufficient technical documentation of our systems to easily onboard new developers. I needed to make it easy for new developers to understand the system and get started with developing. So I built complete documentation system including onboarding guides, technical references, Docker setup instructions, and testing framework documentation with examples.",
-            "outcome": "This made it very easy for new developers to get the project up and running on their systems, run unit tests, and get a basic understanding of the system. For more specialized parts of the system, there were specialized guides that developers could consult if they're working on that part of the system.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Writing Documentation"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Full System Migration to Django",
-            "url": "https://chipta.com/",
-            "start_date": "2017-09-13T00:00:00.000Z",
-            "end_date": "2018-03-14T00:00:00.000Z",
-            "description": "Chipta's PHP codebase had become difficult to maintain and it was lacking modern features & best practices that modern frameworks like Django offer. I led the migration to Django, configured Django to connect to the existing MySQL database and created models for the existing tables. I need to create some custom Django model fields for this. I modified Django's authentication system to adjust to the existing users table. I migrated the core business logic.",
-            "outcome": "The result was a modern, maintainable codebase that became the foundation for all future development. Because of Django's ORM it became much easier to create new tables and relationships. And the views, forms and Django REST Framework helped us to create modern interfaces easily. This reduced bug rates and accelerating feature development by approximately 40%.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Python"
-              },
-              {
-                "sort": 2,
-                "name": "Django"
-              },
-              {
-                "sort": 3,
-                "name": "MySQL"
-              },
-              {
-                "sort": 4,
-                "name": "Redis"
-              },
-              {
-                "sort": 5,
-                "name": "PHP"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Deployment System",
-            "url": null,
-            "start_date": "2015-11-15T00:00:00.000Z",
-            "end_date": "2016-06-18T00:00:00.000Z",
-            "description": "Our simple deployment script became more and more complex over time, and deploying more often and on more servers made it more manual work, which was also prone to human error. This meant that a proper deployment system became necessary. I used Python Fabric to create a custom deploy system, that locally builds the project, then sends it to the other servers over SSH and completes the deployment over there. The system supported test, staging, and production environments, multi-server deployment (configurable per environment), quick switching between previously deployed versions, and build caching for efficiency.",
-            "outcome": "The new deployment system reduced the deployment time from averagely 40 minutes to averagely 10 minutes. It also saved much manual interventions and human errors. And switching to a previously deployed version was easy and fast. This resulted in a much faster development release cycle. All team members could see when a deployment started / finished through updates on the Slack channel.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Python"
-              },
-              {
-                "sort": 2,
-                "name": "Python Fabric"
-              },
-              {
-                "sort": 3,
-                "name": "SSH"
-              },
-              {
-                "sort": 4,
-                "name": "Bash / Shell scripting"
-              },
-              {
-                "sort": 5,
-                "name": "Linux Server Management"
-              },
-              {
-                "sort": 6,
-                "name": "Git"
-              },
-              {
-                "sort": 7,
-                "name": "rsync"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Chipta Dashboard Modernization",
-            "url": "https://chipta.com/dashboard/",
-            "start_date": "2018-03-11T00:00:00.000Z",
-            "end_date": "2018-09-22T00:00:00.000Z",
-            "description": "Event organizers struggled with Chipta's outdated dashboard interface, which had become confusing to use with feature expansions. I rebuilt the dashboard from scratch using Django and React. I created REST APIs with Django REST Framework, used MobX for state management in React, and implementing a Webpack-based bundle system for easy development and deployment. I used a strategy of gradual transferring pages to the new dashboard, by using a smart iframe implementation to old pages. In this way we could release the new interface before transferring all pages. I also created a page to easily setup a new event.",
-            "outcome": "The new interface was more user friendly, easier to understand and use. The various features were better organized in the menus, and became easier for people to find and understand. The new event setup page made it very easy for new customers to get started. This modernization contributed to a 40% revenue growth over 2 years in the startup phase.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "UXD"
-              },
-              {
-                "sort": null,
-                "name": "Python"
-              },
-              {
-                "sort": null,
-                "name": "Webpack"
-              },
-              {
-                "sort": null,
-                "name": "React"
-              },
-              {
-                "sort": null,
-                "name": "Django REST Framework"
-              },
-              {
-                "sort": null,
-                "name": "Django"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Chipta Ticket Shop Modernization",
-            "url": "https://chipta.com/en/tickets/event/5447/dance-avond-n-27/event-info/",
-            "start_date": "2018-02-04T00:00:00.000Z",
-            "end_date": "2019-12-28T00:00:00.000Z",
-            "description": "Chipta's ticket shop was not optimized for conversion rate, had an unnecessary sign-up process, and had an outdated design which was not mobile responsive. I had to make the checkout process as simple and easy as possible to maximize sales and minimize dropouts. Existing features like theming and multiple payment options needed to be retained. I rebuilt the entire ticket shop as single-page application using Lit and Web Components. I built REST APIs with Django REST Framework, enabled guest checkout, integrated multiple payment options, and created a theming system.",
-            "outcome": "The new ticket shop was received well by both event organizers and visitors. The process became very easy also on mobile, and contributed to a 40% revenue growth over a period of 2 years during the company's startup phase. The web components setup proves to be very stable and fast, and easy to develop in. I even created a state management library, LitState, which became a open source project used by various other people using Web Components.",
-            "work_experience_project_technologies": [
-              {
-                "sort": null,
-                "name": "JavaScript"
-              },
-              {
-                "sort": null,
-                "name": "Lit"
-              },
-              {
-                "sort": null,
-                "name": "Web Components"
-              },
-              {
-                "sort": null,
-                "name": "Node.js"
-              },
-              {
-                "sort": null,
-                "name": "Webpack"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Test Suite in Python / Django",
-            "url": null,
-            "start_date": "2015-09-06T00:00:00.000Z",
-            "end_date": "2015-12-31T00:00:00.000Z",
-            "description": "The system became more complex over time, and (regression) bugs started to show up more frequently in sometimes seemingly unrelated places. I decided it was important to have a solid test suite in order to efficiently and securely keep delivering new features. I established a comprehensive testing infrastructure with custom helper functions that made writing tests straightforward for the team. I also guided the implementation of Selenium-based integration tests for critical user flows.",
-            "outcome": "This testing foundation reduced regression bugs by 90% and gave the team confidence to deploy more frequently, moving from monthly to weekly deployments. And I introduced the team to Test Driven Development (TDD) and required sufficient unit tests to be added with every merge request.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Python"
-              },
-              {
-                "sort": 2,
-                "name": "Django"
-              },
-              {
-                "sort": 3,
-                "name": "Test Driven Development (TDD)"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Internationalization & Localization system",
-            "url": "https://chipta.com/",
-            "start_date": "2019-03-17T00:00:00.000Z",
-            "end_date": "2019-07-20T00:00:00.000Z",
-            "description": "For Chipta's Europe expansion, our platform needed to be translated and support different time zones. The translations should also be updated easily without developer intervention. I modified Django's translation system to generate the translation files from a translations table we created that could easily be edited by administrators in the Django Admin. For translations in JavaScript, I cleverly generated separate translation files for each frontend SPA, to keep the pages lightweight.\n\nAs Chipta expanded internationally, managing translations across multiple languages became a bottleneck. The hard-coded translation system made updates time-consuming and required developer involvement for simple text changes. I customized Django's translation framework to store translations in the database via the ORM, then built developer tools for creating and synchronizing translations efficiently. This empowered the marketing team to update translations independently, reducing translation update time from days to minutes and enabling faster market expansion.\n\nCustomized Django's translation system to store translations in database using ORM models. Created admin interface for easy translation editing and developer tools for environment syncing.",
-            "outcome": "This resulted in a very convenient to use translation system, that non-technical administrators could easily update. There was a separate deploy script to only update the translations, which took just a few seconds. This gave our administrators the ability to quickly iterate and experiment with new (marketing) texts or correct small issues or irregularities in texts, without needing developer intervention. This saved much time for both the developers and the administrators and easily increased work efficiency by 15%.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Python"
-              },
-              {
-                "sort": 2,
-                "name": "Django"
-              },
-              {
-                "sort": 3,
-                "name": "Django Admin"
-              },
-              {
-                "sort": 4,
-                "name": "Python Babel"
-              },
-              {
-                "sort": 5,
-                "name": "GNU gettext"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Visitor Management Tool",
-            "url": null,
-            "start_date": "2016-05-15T00:00:00.000Z",
-            "end_date": "2016-09-16T00:00:00.000Z",
-            "description": "It became difficult to manage the visitors of big events. Administrative tools to apply actions on large groups of users became a necessity. I created a powerful visitor management tool, with comprehensive filtering capabilities and various actions you were able to execute on the filtered visitors. I used React to make the interface dynamic and fast and user friendly. I created RESTful APIs with Django REST Framework. ",
-            "outcome": "The visitor management tool enabled organizers to quickly find visitors, update details, manage tickets and payments, and email tickets on the spot. It also allowed organizers to export the visitors to various formats for external usage. This tool became a central tool for event management. It enabled the company to scale to larger events and attract more interesting customers.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Python"
-              },
-              {
-                "sort": 2,
-                "name": "Django"
-              },
-              {
-                "sort": 3,
-                "name": "Django REST Framework (DRF)"
-              },
-              {
-                "sort": 4,
-                "name": "React"
-              },
-              {
-                "sort": 5,
-                "name": "JavaScript"
-              },
-              {
-                "sort": 6,
-                "name": "Node.js"
-              }
-            ]
-          }
-        ]
+        "projects": []
       },
       {
         "name": "Gamepoint",
@@ -2343,7 +1502,6 @@
         ],
         "achievements": [
           {
-            "work_experience": 12,
             "status": "published",
             "sort": 1,
             "title": "Platform Development",
@@ -2352,7 +1510,6 @@
             "tags": null
           },
           {
-            "work_experience": 12,
             "status": "published",
             "sort": 2,
             "title": "Team Collaboration & Growth",
@@ -2363,322 +1520,62 @@
         ],
         "technologies": [
           {
-            "work_experience": 12,
             "status": "published",
             "sort": 1,
             "name": "PHP"
           },
           {
-            "work_experience": 12,
             "status": "published",
             "sort": 2,
             "name": "MySQL"
           },
           {
-            "work_experience": 12,
             "status": "published",
             "sort": 3,
             "name": "Linux"
           },
           {
-            "work_experience": 12,
             "status": "published",
             "sort": 4,
             "name": "nginx"
           },
           {
-            "work_experience": 12,
             "status": "published",
             "sort": 5,
             "name": "Memcached"
           },
           {
-            "work_experience": 12,
             "status": "published",
             "sort": 6,
             "name": "HTML"
           },
           {
-            "work_experience": 12,
             "status": "published",
             "sort": 7,
             "name": "CSS"
           },
           {
-            "work_experience": 12,
             "status": "published",
             "sort": 8,
             "name": "JavaScript"
           },
           {
-            "work_experience": 12,
             "status": "published",
             "sort": 9,
             "name": "jQuery"
           },
           {
-            "work_experience": 12,
             "status": "published",
             "sort": 10,
             "name": "AJAX"
           },
           {
-            "work_experience": 12,
             "status": "published",
             "sort": 11,
             "name": "YUI Library"
           }
         ],
-        "projects": [
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Developer Onboarding Documentation",
-            "url": null,
-            "start_date": "2018-11-11T00:00:00.000Z",
-            "end_date": "2019-02-09T00:00:00.000Z",
-            "description": "There was not sufficient technical documentation of our systems to easily onboard new developers. I needed to make it easy for new developers to understand the system and get started with developing. So I built complete documentation system including onboarding guides, technical references, Docker setup instructions, and testing framework documentation with examples.",
-            "outcome": "This made it very easy for new developers to get the project up and running on their systems, run unit tests, and get a basic understanding of the system. For more specialized parts of the system, there were specialized guides that developers could consult if they're working on that part of the system.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Writing Documentation"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Full System Migration to Django",
-            "url": "https://chipta.com/",
-            "start_date": "2017-09-13T00:00:00.000Z",
-            "end_date": "2018-03-14T00:00:00.000Z",
-            "description": "Chipta's PHP codebase had become difficult to maintain and it was lacking modern features & best practices that modern frameworks like Django offer. I led the migration to Django, configured Django to connect to the existing MySQL database and created models for the existing tables. I need to create some custom Django model fields for this. I modified Django's authentication system to adjust to the existing users table. I migrated the core business logic.",
-            "outcome": "The result was a modern, maintainable codebase that became the foundation for all future development. Because of Django's ORM it became much easier to create new tables and relationships. And the views, forms and Django REST Framework helped us to create modern interfaces easily. This reduced bug rates and accelerating feature development by approximately 40%.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Python"
-              },
-              {
-                "sort": 2,
-                "name": "Django"
-              },
-              {
-                "sort": 3,
-                "name": "MySQL"
-              },
-              {
-                "sort": 4,
-                "name": "Redis"
-              },
-              {
-                "sort": 5,
-                "name": "PHP"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Deployment System",
-            "url": null,
-            "start_date": "2015-11-15T00:00:00.000Z",
-            "end_date": "2016-06-18T00:00:00.000Z",
-            "description": "Our simple deployment script became more and more complex over time, and deploying more often and on more servers made it more manual work, which was also prone to human error. This meant that a proper deployment system became necessary. I used Python Fabric to create a custom deploy system, that locally builds the project, then sends it to the other servers over SSH and completes the deployment over there. The system supported test, staging, and production environments, multi-server deployment (configurable per environment), quick switching between previously deployed versions, and build caching for efficiency.",
-            "outcome": "The new deployment system reduced the deployment time from averagely 40 minutes to averagely 10 minutes. It also saved much manual interventions and human errors. And switching to a previously deployed version was easy and fast. This resulted in a much faster development release cycle. All team members could see when a deployment started / finished through updates on the Slack channel.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Python"
-              },
-              {
-                "sort": 2,
-                "name": "Python Fabric"
-              },
-              {
-                "sort": 3,
-                "name": "SSH"
-              },
-              {
-                "sort": 4,
-                "name": "Bash / Shell scripting"
-              },
-              {
-                "sort": 5,
-                "name": "Linux Server Management"
-              },
-              {
-                "sort": 6,
-                "name": "Git"
-              },
-              {
-                "sort": 7,
-                "name": "rsync"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Chipta Dashboard Modernization",
-            "url": "https://chipta.com/dashboard/",
-            "start_date": "2018-03-11T00:00:00.000Z",
-            "end_date": "2018-09-22T00:00:00.000Z",
-            "description": "Event organizers struggled with Chipta's outdated dashboard interface, which had become confusing to use with feature expansions. I rebuilt the dashboard from scratch using Django and React. I created REST APIs with Django REST Framework, used MobX for state management in React, and implementing a Webpack-based bundle system for easy development and deployment. I used a strategy of gradual transferring pages to the new dashboard, by using a smart iframe implementation to old pages. In this way we could release the new interface before transferring all pages. I also created a page to easily setup a new event.",
-            "outcome": "The new interface was more user friendly, easier to understand and use. The various features were better organized in the menus, and became easier for people to find and understand. The new event setup page made it very easy for new customers to get started. This modernization contributed to a 40% revenue growth over 2 years in the startup phase.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "UXD"
-              },
-              {
-                "sort": null,
-                "name": "Python"
-              },
-              {
-                "sort": null,
-                "name": "Webpack"
-              },
-              {
-                "sort": null,
-                "name": "React"
-              },
-              {
-                "sort": null,
-                "name": "Django REST Framework"
-              },
-              {
-                "sort": null,
-                "name": "Django"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Chipta Ticket Shop Modernization",
-            "url": "https://chipta.com/en/tickets/event/5447/dance-avond-n-27/event-info/",
-            "start_date": "2018-02-04T00:00:00.000Z",
-            "end_date": "2019-12-28T00:00:00.000Z",
-            "description": "Chipta's ticket shop was not optimized for conversion rate, had an unnecessary sign-up process, and had an outdated design which was not mobile responsive. I had to make the checkout process as simple and easy as possible to maximize sales and minimize dropouts. Existing features like theming and multiple payment options needed to be retained. I rebuilt the entire ticket shop as single-page application using Lit and Web Components. I built REST APIs with Django REST Framework, enabled guest checkout, integrated multiple payment options, and created a theming system.",
-            "outcome": "The new ticket shop was received well by both event organizers and visitors. The process became very easy also on mobile, and contributed to a 40% revenue growth over a period of 2 years during the company's startup phase. The web components setup proves to be very stable and fast, and easy to develop in. I even created a state management library, LitState, which became a open source project used by various other people using Web Components.",
-            "work_experience_project_technologies": [
-              {
-                "sort": null,
-                "name": "JavaScript"
-              },
-              {
-                "sort": null,
-                "name": "Lit"
-              },
-              {
-                "sort": null,
-                "name": "Web Components"
-              },
-              {
-                "sort": null,
-                "name": "Node.js"
-              },
-              {
-                "sort": null,
-                "name": "Webpack"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Test Suite in Python / Django",
-            "url": null,
-            "start_date": "2015-09-06T00:00:00.000Z",
-            "end_date": "2015-12-31T00:00:00.000Z",
-            "description": "The system became more complex over time, and (regression) bugs started to show up more frequently in sometimes seemingly unrelated places. I decided it was important to have a solid test suite in order to efficiently and securely keep delivering new features. I established a comprehensive testing infrastructure with custom helper functions that made writing tests straightforward for the team. I also guided the implementation of Selenium-based integration tests for critical user flows.",
-            "outcome": "This testing foundation reduced regression bugs by 90% and gave the team confidence to deploy more frequently, moving from monthly to weekly deployments. And I introduced the team to Test Driven Development (TDD) and required sufficient unit tests to be added with every merge request.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Python"
-              },
-              {
-                "sort": 2,
-                "name": "Django"
-              },
-              {
-                "sort": 3,
-                "name": "Test Driven Development (TDD)"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Internationalization & Localization system",
-            "url": "https://chipta.com/",
-            "start_date": "2019-03-17T00:00:00.000Z",
-            "end_date": "2019-07-20T00:00:00.000Z",
-            "description": "For Chipta's Europe expansion, our platform needed to be translated and support different time zones. The translations should also be updated easily without developer intervention. I modified Django's translation system to generate the translation files from a translations table we created that could easily be edited by administrators in the Django Admin. For translations in JavaScript, I cleverly generated separate translation files for each frontend SPA, to keep the pages lightweight.\n\nAs Chipta expanded internationally, managing translations across multiple languages became a bottleneck. The hard-coded translation system made updates time-consuming and required developer involvement for simple text changes. I customized Django's translation framework to store translations in the database via the ORM, then built developer tools for creating and synchronizing translations efficiently. This empowered the marketing team to update translations independently, reducing translation update time from days to minutes and enabling faster market expansion.\n\nCustomized Django's translation system to store translations in database using ORM models. Created admin interface for easy translation editing and developer tools for environment syncing.",
-            "outcome": "This resulted in a very convenient to use translation system, that non-technical administrators could easily update. There was a separate deploy script to only update the translations, which took just a few seconds. This gave our administrators the ability to quickly iterate and experiment with new (marketing) texts or correct small issues or irregularities in texts, without needing developer intervention. This saved much time for both the developers and the administrators and easily increased work efficiency by 15%.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Python"
-              },
-              {
-                "sort": 2,
-                "name": "Django"
-              },
-              {
-                "sort": 3,
-                "name": "Django Admin"
-              },
-              {
-                "sort": 4,
-                "name": "Python Babel"
-              },
-              {
-                "sort": 5,
-                "name": "GNU gettext"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Visitor Management Tool",
-            "url": null,
-            "start_date": "2016-05-15T00:00:00.000Z",
-            "end_date": "2016-09-16T00:00:00.000Z",
-            "description": "It became difficult to manage the visitors of big events. Administrative tools to apply actions on large groups of users became a necessity. I created a powerful visitor management tool, with comprehensive filtering capabilities and various actions you were able to execute on the filtered visitors. I used React to make the interface dynamic and fast and user friendly. I created RESTful APIs with Django REST Framework. ",
-            "outcome": "The visitor management tool enabled organizers to quickly find visitors, update details, manage tickets and payments, and email tickets on the spot. It also allowed organizers to export the visitors to various formats for external usage. This tool became a central tool for event management. It enabled the company to scale to larger events and attract more interesting customers.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Python"
-              },
-              {
-                "sort": 2,
-                "name": "Django"
-              },
-              {
-                "sort": 3,
-                "name": "Django REST Framework (DRF)"
-              },
-              {
-                "sort": 4,
-                "name": "React"
-              },
-              {
-                "sort": 5,
-                "name": "JavaScript"
-              },
-              {
-                "sort": 6,
-                "name": "Node.js"
-              }
-            ]
-          }
-        ]
+        "projects": []
       },
       {
         "name": "Budget Advies Groep",
@@ -2697,298 +1594,42 @@
         "achievements": [],
         "technologies": [
           {
-            "work_experience": 13,
             "status": "published",
             "sort": 1,
             "name": "PHP"
           },
           {
-            "work_experience": 13,
             "status": "published",
             "sort": 2,
             "name": "JavaScript"
           },
           {
-            "work_experience": 13,
             "status": "published",
             "sort": 3,
             "name": "jQuery"
           },
           {
-            "work_experience": 13,
             "status": "published",
             "sort": 4,
             "name": "HTML"
           },
           {
-            "work_experience": 13,
             "status": "published",
             "sort": 5,
             "name": "CSS"
           },
           {
-            "work_experience": 13,
             "status": "published",
             "sort": 6,
             "name": "Apache"
           },
           {
-            "work_experience": 13,
             "status": "published",
             "sort": 7,
             "name": "Photoshop"
           }
         ],
-        "projects": [
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Developer Onboarding Documentation",
-            "url": null,
-            "start_date": "2018-11-11T00:00:00.000Z",
-            "end_date": "2019-02-09T00:00:00.000Z",
-            "description": "There was not sufficient technical documentation of our systems to easily onboard new developers. I needed to make it easy for new developers to understand the system and get started with developing. So I built complete documentation system including onboarding guides, technical references, Docker setup instructions, and testing framework documentation with examples.",
-            "outcome": "This made it very easy for new developers to get the project up and running on their systems, run unit tests, and get a basic understanding of the system. For more specialized parts of the system, there were specialized guides that developers could consult if they're working on that part of the system.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Writing Documentation"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Full System Migration to Django",
-            "url": "https://chipta.com/",
-            "start_date": "2017-09-13T00:00:00.000Z",
-            "end_date": "2018-03-14T00:00:00.000Z",
-            "description": "Chipta's PHP codebase had become difficult to maintain and it was lacking modern features & best practices that modern frameworks like Django offer. I led the migration to Django, configured Django to connect to the existing MySQL database and created models for the existing tables. I need to create some custom Django model fields for this. I modified Django's authentication system to adjust to the existing users table. I migrated the core business logic.",
-            "outcome": "The result was a modern, maintainable codebase that became the foundation for all future development. Because of Django's ORM it became much easier to create new tables and relationships. And the views, forms and Django REST Framework helped us to create modern interfaces easily. This reduced bug rates and accelerating feature development by approximately 40%.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Python"
-              },
-              {
-                "sort": 2,
-                "name": "Django"
-              },
-              {
-                "sort": 3,
-                "name": "MySQL"
-              },
-              {
-                "sort": 4,
-                "name": "Redis"
-              },
-              {
-                "sort": 5,
-                "name": "PHP"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Deployment System",
-            "url": null,
-            "start_date": "2015-11-15T00:00:00.000Z",
-            "end_date": "2016-06-18T00:00:00.000Z",
-            "description": "Our simple deployment script became more and more complex over time, and deploying more often and on more servers made it more manual work, which was also prone to human error. This meant that a proper deployment system became necessary. I used Python Fabric to create a custom deploy system, that locally builds the project, then sends it to the other servers over SSH and completes the deployment over there. The system supported test, staging, and production environments, multi-server deployment (configurable per environment), quick switching between previously deployed versions, and build caching for efficiency.",
-            "outcome": "The new deployment system reduced the deployment time from averagely 40 minutes to averagely 10 minutes. It also saved much manual interventions and human errors. And switching to a previously deployed version was easy and fast. This resulted in a much faster development release cycle. All team members could see when a deployment started / finished through updates on the Slack channel.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Python"
-              },
-              {
-                "sort": 2,
-                "name": "Python Fabric"
-              },
-              {
-                "sort": 3,
-                "name": "SSH"
-              },
-              {
-                "sort": 4,
-                "name": "Bash / Shell scripting"
-              },
-              {
-                "sort": 5,
-                "name": "Linux Server Management"
-              },
-              {
-                "sort": 6,
-                "name": "Git"
-              },
-              {
-                "sort": 7,
-                "name": "rsync"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Chipta Dashboard Modernization",
-            "url": "https://chipta.com/dashboard/",
-            "start_date": "2018-03-11T00:00:00.000Z",
-            "end_date": "2018-09-22T00:00:00.000Z",
-            "description": "Event organizers struggled with Chipta's outdated dashboard interface, which had become confusing to use with feature expansions. I rebuilt the dashboard from scratch using Django and React. I created REST APIs with Django REST Framework, used MobX for state management in React, and implementing a Webpack-based bundle system for easy development and deployment. I used a strategy of gradual transferring pages to the new dashboard, by using a smart iframe implementation to old pages. In this way we could release the new interface before transferring all pages. I also created a page to easily setup a new event.",
-            "outcome": "The new interface was more user friendly, easier to understand and use. The various features were better organized in the menus, and became easier for people to find and understand. The new event setup page made it very easy for new customers to get started. This modernization contributed to a 40% revenue growth over 2 years in the startup phase.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "UXD"
-              },
-              {
-                "sort": null,
-                "name": "Python"
-              },
-              {
-                "sort": null,
-                "name": "Webpack"
-              },
-              {
-                "sort": null,
-                "name": "React"
-              },
-              {
-                "sort": null,
-                "name": "Django REST Framework"
-              },
-              {
-                "sort": null,
-                "name": "Django"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Chipta Ticket Shop Modernization",
-            "url": "https://chipta.com/en/tickets/event/5447/dance-avond-n-27/event-info/",
-            "start_date": "2018-02-04T00:00:00.000Z",
-            "end_date": "2019-12-28T00:00:00.000Z",
-            "description": "Chipta's ticket shop was not optimized for conversion rate, had an unnecessary sign-up process, and had an outdated design which was not mobile responsive. I had to make the checkout process as simple and easy as possible to maximize sales and minimize dropouts. Existing features like theming and multiple payment options needed to be retained. I rebuilt the entire ticket shop as single-page application using Lit and Web Components. I built REST APIs with Django REST Framework, enabled guest checkout, integrated multiple payment options, and created a theming system.",
-            "outcome": "The new ticket shop was received well by both event organizers and visitors. The process became very easy also on mobile, and contributed to a 40% revenue growth over a period of 2 years during the company's startup phase. The web components setup proves to be very stable and fast, and easy to develop in. I even created a state management library, LitState, which became a open source project used by various other people using Web Components.",
-            "work_experience_project_technologies": [
-              {
-                "sort": null,
-                "name": "JavaScript"
-              },
-              {
-                "sort": null,
-                "name": "Lit"
-              },
-              {
-                "sort": null,
-                "name": "Web Components"
-              },
-              {
-                "sort": null,
-                "name": "Node.js"
-              },
-              {
-                "sort": null,
-                "name": "Webpack"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Test Suite in Python / Django",
-            "url": null,
-            "start_date": "2015-09-06T00:00:00.000Z",
-            "end_date": "2015-12-31T00:00:00.000Z",
-            "description": "The system became more complex over time, and (regression) bugs started to show up more frequently in sometimes seemingly unrelated places. I decided it was important to have a solid test suite in order to efficiently and securely keep delivering new features. I established a comprehensive testing infrastructure with custom helper functions that made writing tests straightforward for the team. I also guided the implementation of Selenium-based integration tests for critical user flows.",
-            "outcome": "This testing foundation reduced regression bugs by 90% and gave the team confidence to deploy more frequently, moving from monthly to weekly deployments. And I introduced the team to Test Driven Development (TDD) and required sufficient unit tests to be added with every merge request.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Python"
-              },
-              {
-                "sort": 2,
-                "name": "Django"
-              },
-              {
-                "sort": 3,
-                "name": "Test Driven Development (TDD)"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Internationalization & Localization system",
-            "url": "https://chipta.com/",
-            "start_date": "2019-03-17T00:00:00.000Z",
-            "end_date": "2019-07-20T00:00:00.000Z",
-            "description": "For Chipta's Europe expansion, our platform needed to be translated and support different time zones. The translations should also be updated easily without developer intervention. I modified Django's translation system to generate the translation files from a translations table we created that could easily be edited by administrators in the Django Admin. For translations in JavaScript, I cleverly generated separate translation files for each frontend SPA, to keep the pages lightweight.\n\nAs Chipta expanded internationally, managing translations across multiple languages became a bottleneck. The hard-coded translation system made updates time-consuming and required developer involvement for simple text changes. I customized Django's translation framework to store translations in the database via the ORM, then built developer tools for creating and synchronizing translations efficiently. This empowered the marketing team to update translations independently, reducing translation update time from days to minutes and enabling faster market expansion.\n\nCustomized Django's translation system to store translations in database using ORM models. Created admin interface for easy translation editing and developer tools for environment syncing.",
-            "outcome": "This resulted in a very convenient to use translation system, that non-technical administrators could easily update. There was a separate deploy script to only update the translations, which took just a few seconds. This gave our administrators the ability to quickly iterate and experiment with new (marketing) texts or correct small issues or irregularities in texts, without needing developer intervention. This saved much time for both the developers and the administrators and easily increased work efficiency by 15%.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Python"
-              },
-              {
-                "sort": 2,
-                "name": "Django"
-              },
-              {
-                "sort": 3,
-                "name": "Django Admin"
-              },
-              {
-                "sort": 4,
-                "name": "Python Babel"
-              },
-              {
-                "sort": 5,
-                "name": "GNU gettext"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Visitor Management Tool",
-            "url": null,
-            "start_date": "2016-05-15T00:00:00.000Z",
-            "end_date": "2016-09-16T00:00:00.000Z",
-            "description": "It became difficult to manage the visitors of big events. Administrative tools to apply actions on large groups of users became a necessity. I created a powerful visitor management tool, with comprehensive filtering capabilities and various actions you were able to execute on the filtered visitors. I used React to make the interface dynamic and fast and user friendly. I created RESTful APIs with Django REST Framework. ",
-            "outcome": "The visitor management tool enabled organizers to quickly find visitors, update details, manage tickets and payments, and email tickets on the spot. It also allowed organizers to export the visitors to various formats for external usage. This tool became a central tool for event management. It enabled the company to scale to larger events and attract more interesting customers.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Python"
-              },
-              {
-                "sort": 2,
-                "name": "Django"
-              },
-              {
-                "sort": 3,
-                "name": "Django REST Framework (DRF)"
-              },
-              {
-                "sort": 4,
-                "name": "React"
-              },
-              {
-                "sort": 5,
-                "name": "JavaScript"
-              },
-              {
-                "sort": 6,
-                "name": "Node.js"
-              }
-            ]
-          }
-        ]
+        "projects": []
       },
       {
         "name": "Festivalinfo",
@@ -3007,286 +1648,32 @@
         "achievements": [],
         "technologies": [
           {
-            "work_experience": 14,
             "status": "published",
             "sort": 1,
             "name": "PHP"
           },
           {
-            "work_experience": 14,
             "status": "published",
             "sort": 2,
             "name": "JavaScript"
           },
           {
-            "work_experience": 14,
             "status": "published",
             "sort": 3,
             "name": "jQuery"
           },
           {
-            "work_experience": 14,
             "status": "published",
             "sort": 4,
             "name": "HTML"
           },
           {
-            "work_experience": 14,
             "status": "published",
             "sort": 5,
             "name": "CSS"
           }
         ],
-        "projects": [
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Developer Onboarding Documentation",
-            "url": null,
-            "start_date": "2018-11-11T00:00:00.000Z",
-            "end_date": "2019-02-09T00:00:00.000Z",
-            "description": "There was not sufficient technical documentation of our systems to easily onboard new developers. I needed to make it easy for new developers to understand the system and get started with developing. So I built complete documentation system including onboarding guides, technical references, Docker setup instructions, and testing framework documentation with examples.",
-            "outcome": "This made it very easy for new developers to get the project up and running on their systems, run unit tests, and get a basic understanding of the system. For more specialized parts of the system, there were specialized guides that developers could consult if they're working on that part of the system.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Writing Documentation"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Full System Migration to Django",
-            "url": "https://chipta.com/",
-            "start_date": "2017-09-13T00:00:00.000Z",
-            "end_date": "2018-03-14T00:00:00.000Z",
-            "description": "Chipta's PHP codebase had become difficult to maintain and it was lacking modern features & best practices that modern frameworks like Django offer. I led the migration to Django, configured Django to connect to the existing MySQL database and created models for the existing tables. I need to create some custom Django model fields for this. I modified Django's authentication system to adjust to the existing users table. I migrated the core business logic.",
-            "outcome": "The result was a modern, maintainable codebase that became the foundation for all future development. Because of Django's ORM it became much easier to create new tables and relationships. And the views, forms and Django REST Framework helped us to create modern interfaces easily. This reduced bug rates and accelerating feature development by approximately 40%.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Python"
-              },
-              {
-                "sort": 2,
-                "name": "Django"
-              },
-              {
-                "sort": 3,
-                "name": "MySQL"
-              },
-              {
-                "sort": 4,
-                "name": "Redis"
-              },
-              {
-                "sort": 5,
-                "name": "PHP"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Deployment System",
-            "url": null,
-            "start_date": "2015-11-15T00:00:00.000Z",
-            "end_date": "2016-06-18T00:00:00.000Z",
-            "description": "Our simple deployment script became more and more complex over time, and deploying more often and on more servers made it more manual work, which was also prone to human error. This meant that a proper deployment system became necessary. I used Python Fabric to create a custom deploy system, that locally builds the project, then sends it to the other servers over SSH and completes the deployment over there. The system supported test, staging, and production environments, multi-server deployment (configurable per environment), quick switching between previously deployed versions, and build caching for efficiency.",
-            "outcome": "The new deployment system reduced the deployment time from averagely 40 minutes to averagely 10 minutes. It also saved much manual interventions and human errors. And switching to a previously deployed version was easy and fast. This resulted in a much faster development release cycle. All team members could see when a deployment started / finished through updates on the Slack channel.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Python"
-              },
-              {
-                "sort": 2,
-                "name": "Python Fabric"
-              },
-              {
-                "sort": 3,
-                "name": "SSH"
-              },
-              {
-                "sort": 4,
-                "name": "Bash / Shell scripting"
-              },
-              {
-                "sort": 5,
-                "name": "Linux Server Management"
-              },
-              {
-                "sort": 6,
-                "name": "Git"
-              },
-              {
-                "sort": 7,
-                "name": "rsync"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Chipta Dashboard Modernization",
-            "url": "https://chipta.com/dashboard/",
-            "start_date": "2018-03-11T00:00:00.000Z",
-            "end_date": "2018-09-22T00:00:00.000Z",
-            "description": "Event organizers struggled with Chipta's outdated dashboard interface, which had become confusing to use with feature expansions. I rebuilt the dashboard from scratch using Django and React. I created REST APIs with Django REST Framework, used MobX for state management in React, and implementing a Webpack-based bundle system for easy development and deployment. I used a strategy of gradual transferring pages to the new dashboard, by using a smart iframe implementation to old pages. In this way we could release the new interface before transferring all pages. I also created a page to easily setup a new event.",
-            "outcome": "The new interface was more user friendly, easier to understand and use. The various features were better organized in the menus, and became easier for people to find and understand. The new event setup page made it very easy for new customers to get started. This modernization contributed to a 40% revenue growth over 2 years in the startup phase.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "UXD"
-              },
-              {
-                "sort": null,
-                "name": "Python"
-              },
-              {
-                "sort": null,
-                "name": "Webpack"
-              },
-              {
-                "sort": null,
-                "name": "React"
-              },
-              {
-                "sort": null,
-                "name": "Django REST Framework"
-              },
-              {
-                "sort": null,
-                "name": "Django"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Chipta Ticket Shop Modernization",
-            "url": "https://chipta.com/en/tickets/event/5447/dance-avond-n-27/event-info/",
-            "start_date": "2018-02-04T00:00:00.000Z",
-            "end_date": "2019-12-28T00:00:00.000Z",
-            "description": "Chipta's ticket shop was not optimized for conversion rate, had an unnecessary sign-up process, and had an outdated design which was not mobile responsive. I had to make the checkout process as simple and easy as possible to maximize sales and minimize dropouts. Existing features like theming and multiple payment options needed to be retained. I rebuilt the entire ticket shop as single-page application using Lit and Web Components. I built REST APIs with Django REST Framework, enabled guest checkout, integrated multiple payment options, and created a theming system.",
-            "outcome": "The new ticket shop was received well by both event organizers and visitors. The process became very easy also on mobile, and contributed to a 40% revenue growth over a period of 2 years during the company's startup phase. The web components setup proves to be very stable and fast, and easy to develop in. I even created a state management library, LitState, which became a open source project used by various other people using Web Components.",
-            "work_experience_project_technologies": [
-              {
-                "sort": null,
-                "name": "JavaScript"
-              },
-              {
-                "sort": null,
-                "name": "Lit"
-              },
-              {
-                "sort": null,
-                "name": "Web Components"
-              },
-              {
-                "sort": null,
-                "name": "Node.js"
-              },
-              {
-                "sort": null,
-                "name": "Webpack"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Test Suite in Python / Django",
-            "url": null,
-            "start_date": "2015-09-06T00:00:00.000Z",
-            "end_date": "2015-12-31T00:00:00.000Z",
-            "description": "The system became more complex over time, and (regression) bugs started to show up more frequently in sometimes seemingly unrelated places. I decided it was important to have a solid test suite in order to efficiently and securely keep delivering new features. I established a comprehensive testing infrastructure with custom helper functions that made writing tests straightforward for the team. I also guided the implementation of Selenium-based integration tests for critical user flows.",
-            "outcome": "This testing foundation reduced regression bugs by 90% and gave the team confidence to deploy more frequently, moving from monthly to weekly deployments. And I introduced the team to Test Driven Development (TDD) and required sufficient unit tests to be added with every merge request.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Python"
-              },
-              {
-                "sort": 2,
-                "name": "Django"
-              },
-              {
-                "sort": 3,
-                "name": "Test Driven Development (TDD)"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Internationalization & Localization system",
-            "url": "https://chipta.com/",
-            "start_date": "2019-03-17T00:00:00.000Z",
-            "end_date": "2019-07-20T00:00:00.000Z",
-            "description": "For Chipta's Europe expansion, our platform needed to be translated and support different time zones. The translations should also be updated easily without developer intervention. I modified Django's translation system to generate the translation files from a translations table we created that could easily be edited by administrators in the Django Admin. For translations in JavaScript, I cleverly generated separate translation files for each frontend SPA, to keep the pages lightweight.\n\nAs Chipta expanded internationally, managing translations across multiple languages became a bottleneck. The hard-coded translation system made updates time-consuming and required developer involvement for simple text changes. I customized Django's translation framework to store translations in the database via the ORM, then built developer tools for creating and synchronizing translations efficiently. This empowered the marketing team to update translations independently, reducing translation update time from days to minutes and enabling faster market expansion.\n\nCustomized Django's translation system to store translations in database using ORM models. Created admin interface for easy translation editing and developer tools for environment syncing.",
-            "outcome": "This resulted in a very convenient to use translation system, that non-technical administrators could easily update. There was a separate deploy script to only update the translations, which took just a few seconds. This gave our administrators the ability to quickly iterate and experiment with new (marketing) texts or correct small issues or irregularities in texts, without needing developer intervention. This saved much time for both the developers and the administrators and easily increased work efficiency by 15%.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Python"
-              },
-              {
-                "sort": 2,
-                "name": "Django"
-              },
-              {
-                "sort": 3,
-                "name": "Django Admin"
-              },
-              {
-                "sort": 4,
-                "name": "Python Babel"
-              },
-              {
-                "sort": 5,
-                "name": "GNU gettext"
-              }
-            ]
-          },
-          {
-            "status": "published",
-            "sort": null,
-            "name": "Visitor Management Tool",
-            "url": null,
-            "start_date": "2016-05-15T00:00:00.000Z",
-            "end_date": "2016-09-16T00:00:00.000Z",
-            "description": "It became difficult to manage the visitors of big events. Administrative tools to apply actions on large groups of users became a necessity. I created a powerful visitor management tool, with comprehensive filtering capabilities and various actions you were able to execute on the filtered visitors. I used React to make the interface dynamic and fast and user friendly. I created RESTful APIs with Django REST Framework. ",
-            "outcome": "The visitor management tool enabled organizers to quickly find visitors, update details, manage tickets and payments, and email tickets on the spot. It also allowed organizers to export the visitors to various formats for external usage. This tool became a central tool for event management. It enabled the company to scale to larger events and attract more interesting customers.",
-            "work_experience_project_technologies": [
-              {
-                "sort": 1,
-                "name": "Python"
-              },
-              {
-                "sort": 2,
-                "name": "Django"
-              },
-              {
-                "sort": 3,
-                "name": "Django REST Framework (DRF)"
-              },
-              {
-                "sort": 4,
-                "name": "React"
-              },
-              {
-                "sort": 5,
-                "name": "JavaScript"
-              },
-              {
-                "sort": 6,
-                "name": "Node.js"
-              }
-            ]
-          }
-        ]
+        "projects": []
       }
     ],
     "side_projects": [
