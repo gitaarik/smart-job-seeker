@@ -56,7 +56,6 @@
                 >
                   <FontAwesomeIcon
                     icon={faStar}
-                    size="md"
                     class="text-yellow-500"
                   />
                   <span>{project.stars}</span>

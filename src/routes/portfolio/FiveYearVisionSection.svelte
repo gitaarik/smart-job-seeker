@@ -66,7 +66,7 @@
             class="flex items-center px-3 py-2 rounded-md text-sm transition-colors duration-200 {activeVariation === variation.id
               ? 'bg-ocean text-white'
               : 'text-slate hover:bg-ocean/10 hover:text-teal'}"
-            on:click={() => handleVariationClick(variation.id)}
+            onclick={() => handleVariationClick(variation.id)}
           >
             <FontAwesomeIcon icon={variation.icon} class="w-3 h-3 mr-2" />
             <span class="whitespace-nowrap">{variation.label}</span>
@@ -79,10 +79,10 @@
   <!-- Active Variation Content -->
   <div class="prose prose-slate max-w-none">
     <h3 class="text-xl font-semibold text-slate mb-4">
-      {resume.fiveYearVision.variations[activeVariation].title}
+      {resume.fiveYearVision.variations[activeVariation as keyof typeof resume.fiveYearVision.variations].title}
     </h3>
     <div class="text-slate leading-relaxed space-y-4">
-      {#each resume.fiveYearVision.variations[activeVariation].content.split('\n\n') as paragraph}
+      {#each resume.fiveYearVision.variations[activeVariation as keyof typeof resume.fiveYearVision.variations].content.split('\n\n') as paragraph}
         {#if paragraph.trim()}
           <p class="mb-4">{@html formatContent(paragraph.trim())}</p>
         {/if}

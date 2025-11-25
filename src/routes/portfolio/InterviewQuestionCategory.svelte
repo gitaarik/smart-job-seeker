@@ -24,7 +24,7 @@
         <div class="mb-4">
           <button
             class="w-full text-left flex items-start justify-between group hover:bg-slate-50/50 p-3 -ml-3 rounded-lg transition-colors duration-200"
-            on:click={() => toggleQuestion(categoryIndex, questionIndex)}
+            onclick={() => toggleQuestion(categoryIndex, questionIndex)}
           >
             <h4
               class="font-semibold text-slate text-lg pr-4 group-hover:text-ocean transition-colors duration-200"
