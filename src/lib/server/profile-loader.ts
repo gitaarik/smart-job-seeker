@@ -2,7 +2,7 @@ import { dev } from "$app/environment";
 import { db } from "$lib/db";
 import { redirect } from "@sveltejs/kit";
 
-export async function loadProfile(params) {
+export async function loadProfile() {
   if (!dev) {
     throw redirect(302, "/");
   }
