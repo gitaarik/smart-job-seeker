@@ -19,7 +19,7 @@ export function formatDateRangeVerbose(
       "Nov",
       "Dec",
     ];
-    return `${monthNames[parseInt(month)]} ${year}`;
+    return `${monthNames[month]} ${year}`;
   };
 
   const start = formatDate(startDate);
@@ -50,7 +50,7 @@ export function formatDateRangeYear(
   const endYear = endDate ? endDate.getFullYear() : "Present";
 
   if (endYear === "Present" || startYear === endYear) {
-    return endYear === "Present" ? startYear : startYear;
+    return String(startYear);
   }
 
   return `${startYear} - ${endYear}`;

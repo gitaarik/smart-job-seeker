@@ -8,6 +8,7 @@ export interface WebhookPayload {
   eventType: string;
   /** The actual data payload from Directus Flow */
   data: Record<string, unknown>;
+  [key: string]: unknown;
 }
 
 export interface WebhookResponse<T = unknown> {

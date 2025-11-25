@@ -62,7 +62,7 @@ export async function getInterpolatedPrompts(aiChatId: number): Promise<
       },
     });
 
-  if (interviewQuestion?.applications.vacancies?.job_description) {
+  if (interviewQuestion?.applications?.vacancies?.job_description) {
     jobDescription = interviewQuestion.applications.vacancies.job_description;
   }
 

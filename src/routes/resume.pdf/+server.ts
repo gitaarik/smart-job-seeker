@@ -28,7 +28,7 @@ export const GET: RequestHandler = async ({ url }) => {
     }
 
     // Find and validate the token
-    const resumeToken = await db.resumeToken.findUnique({
+    const resumeToken = await db.resume_tokens.findUnique({
       where: { token },
       include: { creator: true },
     });
@@ -54,7 +54,7 @@ export const GET: RequestHandler = async ({ url }) => {
     version = resumeToken.resumeType;
 
     // Increment view count
-    await db.resumeToken.update({
+    await db.resume_tokens.update({
       where: { id: resumeToken.id },
       data: { viewCount: { increment: 1 } },
     });

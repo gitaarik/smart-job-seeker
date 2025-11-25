@@ -62,7 +62,7 @@ function initializeClientTheme() {
   if (document && document.cookie) {
     const themeCookie = document.cookie
       .split(';')
-      .find(cookie => cookie.trim().startsWith('theme='));
+      .find((cookie: string) => cookie.trim().startsWith('theme='));
     
     if (themeCookie) {
       const theme = themeCookie.split('=')[1]?.trim();

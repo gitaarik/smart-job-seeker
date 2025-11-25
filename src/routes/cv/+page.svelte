@@ -5,4 +5,6 @@
   export let data: PageData;
 </script>
 
-<ProfileDisplay profile={data.profile} type="cv" />
+{#if data.profile}
+  <ProfileDisplay profile={data.profile} type="cv" />
+{/if}

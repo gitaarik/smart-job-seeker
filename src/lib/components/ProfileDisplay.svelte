@@ -41,6 +41,27 @@
       }>;
       tags: string[];
     }>;
+    education: Array<{
+      area: string;
+      study_type: string;
+      institution: string;
+      location: string;
+      summary: string;
+      start_date: Date;
+      end_date?: Date;
+      graduation_year?: string;
+      tags?: string[];
+    }>;
+    languages: Array<{
+      name: string;
+      language_code: string;
+      proficiency: string;
+    }>;
+    nationality?: string;
+    references: Array<{
+      author: string;
+      text: string;
+    }>;
     tech_skill_categories: Array<{
       name: string;
       tech_skills: Array<{ name: string }>;
@@ -53,6 +74,18 @@
       end_date?: Date;
       summary: string;
       tags: string[];
+    }>;
+    soft_skills: Array<{
+      name: string;
+      tags?: string[];
+    }>;
+    highlights: Array<{
+      title: string;
+      description: string;
+      tags?: string[];
+    }>;
+    dev_methodologies: Array<{
+      name: string;
     }>;
     profile_versions: Array<{
       id: number;

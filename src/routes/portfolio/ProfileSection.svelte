@@ -15,7 +15,7 @@
   let props = $props();
   const profile = props.profile;
 
-  const languageText = profile.languages.map((lang) =>
+  const languageText = profile.languages.map((lang: typeof profile.languages[number]) =>
     `${lang.name}: ${lang.proficiency[0].toUpperCase() + lang.proficiency.slice(1)}`
   ).join(", ");
 

@@ -15,8 +15,8 @@ export async function load({ locals }) {
       dev_methodologies: { orderBy: { sort: "asc" } },
       work_experiences: {
         include: {
-          achievements: { orderBy: { sort: "asc" } },
-          technologies: { orderBy: { sort: "asc" } },
+          work_experience_achievements: { orderBy: { sort: "asc" } },
+          work_experience_technologies: { orderBy: { sort: "asc" } },
         },
         orderBy: { sort: "asc" },
       },
