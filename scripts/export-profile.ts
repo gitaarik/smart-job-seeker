@@ -1,9 +1,7 @@
 #!/usr/bin/env node
 
-import { PrismaClient } from "@prisma/client";
+import { dbDirect } from "$lib/db";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
-
-const prisma = new PrismaClient();
 
 interface ExportedProfile {
   profile: {
@@ -187,7 +185,7 @@ async function exportProfile(profileId: string): Promise<void> {
     const id = parseInt(profileId, 10);
 
     // Fetch profile with all relations using reference fields
-    const baseProfile = await prisma.profiles.findUnique({
+    const baseProfile = await dbDirect.profiles.findUnique({
       where: { id },
       include: {
         profile_versions: {
@@ -394,7 +392,7 @@ async function exportProfile(profileId: string): Promise<void> {
     // Fetch nested work experience relations using reference fields
     const work_experience_achievements_all = await Promise.all(
       baseProfile.work_experiences.map((work) =>
-        prisma.work_experience_achievements.findMany({
+        dbDirect.work_experience_achievements.findMany({
           where: { work_experience: work.id },
           select: {
             work_experience: true,
@@ -412,7 +410,7 @@ async function exportProfile(profileId: string): Promise<void> {
 
     const work_experience_technologies_all = await Promise.all(
       baseProfile.work_experiences.map((work) =>
-        prisma.work_experience_technologies.findMany({
+        dbDirect.work_experience_technologies.findMany({
           where: { work_experience: work.id },
           select: {
             work_experience: true,
@@ -427,7 +425,7 @@ async function exportProfile(profileId: string): Promise<void> {
 
     const work_experience_projects_all = await Promise.all(
       baseProfile.work_experiences.map((work) =>
-        prisma.work_experience_projects.findMany({
+        dbDirect.work_experience_projects.findMany({
           where: { work_experience: work.id },
           select: {
             status: true,
@@ -585,11 +583,7 @@ if (!profileId) {
   process.exit(1);
 }
 
-exportProfile(profileId)
-  .catch((error) => {
-    console.error("Export failed:", error);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+exportProfile(profileId).catch((error) => {
+  console.error("Export failed:", error);
+  process.exit(1);
+});

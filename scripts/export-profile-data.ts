@@ -1,8 +1,6 @@
 #!/usr/bin/env node
 
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { dbDirect } from "$lib/db";
 
 async function exportProfileData(profileId: string): Promise<void> {
   try {
@@ -11,7 +9,7 @@ async function exportProfileData(profileId: string): Promise<void> {
     const id = parseInt(profileId, 10);
 
     // Verify profile exists
-    const profile = await prisma.profiles.findUnique({
+    const profile = await dbDirect.profiles.findUnique({
       where: { id },
       select: { id: true },
     });
@@ -22,7 +20,7 @@ async function exportProfileData(profileId: string): Promise<void> {
     }
 
     // Single efficient query to fetch all profile data
-    const data = await prisma.profiles.findUnique({
+    const data = await dbDirect.profiles.findUnique({
       where: { id },
       select: {
         name: true,
@@ -186,12 +184,12 @@ async function exportProfileData(profileId: string): Promise<void> {
     });
 
     // Store in collected_data
-    const existingCollectedData = await prisma.collected_data.findFirst({
+    const existingCollectedData = await dbDirect.collected_data.findFirst({
       where: { profile: id },
     });
 
     if (existingCollectedData) {
-      await prisma.collected_data.update({
+      await dbDirect.collected_data.update({
         where: { id: existingCollectedData.id },
         data: {
           data: JSON.stringify(data, null, 2),
@@ -200,7 +198,7 @@ async function exportProfileData(profileId: string): Promise<void> {
       });
       console.log(`✅ Profile data updated for profile ID ${id}`);
     } else {
-      await prisma.collected_data.create({
+      await dbDirect.collected_data.create({
         data: {
           profile: id,
           data: JSON.stringify(data, null, 2),
@@ -224,11 +222,7 @@ if (!profileId) {
   process.exit(1);
 }
 
-exportProfileData(profileId)
-  .catch((error) => {
-    console.error("Export failed:", error);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+exportProfileData(profileId).catch((error) => {
+  console.error("Export failed:", error);
+  process.exit(1);
+});

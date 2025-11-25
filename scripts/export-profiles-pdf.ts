@@ -9,20 +9,7 @@
 import puppeteer from "puppeteer";
 import path from "path";
 import fs from "fs";
-
-// Dynamically import Prisma to avoid issues with client generation
-let prisma: any;
-
-async function initPrisma() {
-  try {
-    const { PrismaClient } = await import("@prisma/client");
-    prisma = new PrismaClient();
-    console.log("✓ Prisma client initialized");
-  } catch (error) {
-    console.error("❌ Failed to initialize Prisma client:", error);
-    throw error;
-  }
-}
+import { dbDirect } from "$lib/db";
 
 async function exportProfilesToPDF() {
   console.log("🚀 Starting profile PDF export (Resume & CV)...");
@@ -33,7 +20,7 @@ async function exportProfilesToPDF() {
   });
 
   // Fetch the first profile with its versions
-  const profile = await prisma.profiles.findFirst({
+  const profile = await dbDirect.profiles.findFirst({
     include: {
       profile_versions: {
         orderBy: {
@@ -147,7 +134,6 @@ async function exportProfilesToPDF() {
     process.exit(1);
   } finally {
     await browser.close();
-    await prisma.$disconnect();
   }
 }
 
@@ -163,8 +149,6 @@ async function checkDevServer() {
 
 async function main() {
   try {
-    await initPrisma();
-
     const serverRunning = await checkDevServer();
 
     if (!serverRunning) {

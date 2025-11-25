@@ -1,10 +1,8 @@
 #!/usr/bin/env node
 
-import { PrismaClient } from "@prisma/client";
+import { dbDirect } from "$lib/db";
 import { readFileSync } from "fs";
 import { v4 as uuidv4 } from "uuid";
-
-const prisma = new PrismaClient();
 
 interface ImportedProfile {
   profile: {
@@ -202,7 +200,7 @@ async function importProfile(
 
     // If updating existing profile
     if (profileId) {
-      const existingProfile = await prisma.profiles.findUnique({
+      const existingProfile = await dbDirect.profiles.findUnique({
         where: { id: profileId },
       });
 
@@ -214,37 +212,37 @@ async function importProfile(
         console.log("Deleting existing related data...");
         // Delete all related data for this profile
         await Promise.all([
-          prisma.profile_versions.deleteMany({ where: { profile: profileId } }),
-          prisma.highlights.deleteMany({ where: { profile: profileId } }),
-          prisma.work_experience_project_technologies.deleteMany({
+          dbDirect.profile_versions.deleteMany({ where: { profile: profileId } }),
+          dbDirect.highlights.deleteMany({ where: { profile: profileId } }),
+          dbDirect.work_experience_project_technologies.deleteMany({
             where: { work_experience_projects: { work_experiences: { profile: profileId } } },
           }),
-          prisma.work_experience_projects.deleteMany({
+          dbDirect.work_experience_projects.deleteMany({
             where: { work_experiences: { profile: profileId } },
           }),
-          prisma.work_experience_achievements.deleteMany({
+          dbDirect.work_experience_achievements.deleteMany({
             where: { work_experiences: { profile: profileId } },
           }),
-          prisma.work_experience_technologies.deleteMany({
+          dbDirect.work_experience_technologies.deleteMany({
             where: { work_experiences: { profile: profileId } },
           }),
-          prisma.work_experiences.deleteMany({ where: { profile: profileId } }),
-          prisma.side_project_achievements.deleteMany({
+          dbDirect.work_experiences.deleteMany({ where: { profile: profileId } }),
+          dbDirect.side_project_achievements.deleteMany({
             where: { side_projects: { profile: profileId } },
           }),
-          prisma.side_project_technologies.deleteMany({
+          dbDirect.side_project_technologies.deleteMany({
             where: { side_projects: { profile: profileId } },
           }),
-          prisma.side_projects.deleteMany({ where: { profile: profileId } }),
-          prisma.education.deleteMany({ where: { profile: profileId } }),
-          prisma.languages.deleteMany({ where: { profile: profileId } }),
-          prisma.references.deleteMany({ where: { profile: profileId } }),
-          prisma.project_stories.deleteMany({ where: { profile: profileId } }),
-          prisma.application_questions.deleteMany({
+          dbDirect.side_projects.deleteMany({ where: { profile: profileId } }),
+          dbDirect.education.deleteMany({ where: { profile: profileId } }),
+          dbDirect.languages.deleteMany({ where: { profile: profileId } }),
+          dbDirect.references.deleteMany({ where: { profile: profileId } }),
+          dbDirect.project_stories.deleteMany({ where: { profile: profileId } }),
+          dbDirect.application_questions.deleteMany({
             where: { profile: profileId },
           }),
-          prisma.cheat_sheets.deleteMany({ where: { profile: profileId } }),
-          prisma.tech_skill_categories.deleteMany({
+          dbDirect.cheat_sheets.deleteMany({ where: { profile: profileId } }),
+          dbDirect.tech_skill_categories.deleteMany({
             where: { profile: profileId },
           }),
         ]);
@@ -259,7 +257,7 @@ async function importProfile(
 
     if (profileId) {
       // Upsert the profile
-      profile = await prisma.profiles.update({
+      profile = await dbDirect.profiles.update({
         where: { id: profileId },
         data: {
           name: data.name,
@@ -283,7 +281,7 @@ async function importProfile(
       });
       console.log(`✅ Profile updated: ${profile.id}`);
     } else {
-      profile = await prisma.profiles.create({
+      profile = await dbDirect.profiles.create({
         data: {
           name: data.name,
           title: data.title,
@@ -318,7 +316,7 @@ async function importProfile(
 
         // If extends_from is specified, look up the ID by name
         if (version.extends_from) {
-          const extendsFromVersion = await prisma.profile_versions.findFirst({
+          const extendsFromVersion = await dbDirect.profile_versions.findFirst({
             where: {
               name: version.extends_from,
               profile: profile.id,
@@ -328,7 +326,7 @@ async function importProfile(
           extendsFromId = extendsFromVersion?.id ?? null;
         }
 
-        await prisma.profile_versions.create({
+        await dbDirect.profile_versions.create({
           data: {
             status: version.status || "draft",
             sort: version.sort,
@@ -346,7 +344,7 @@ async function importProfile(
     if (data.highlights && data.highlights.length > 0) {
       console.log(`Importing ${data.highlights.length} highlights...`);
       for (const highlight of data.highlights) {
-        await prisma.highlights.create({
+        await dbDirect.highlights.create({
           data: {
             status: highlight.status || "draft",
             sort: highlight.sort,
@@ -364,7 +362,7 @@ async function importProfile(
         `Importing ${data.tech_skill_categories.length} tech skill categories...`,
       );
       for (const category of data.tech_skill_categories) {
-        const createdCategory = await prisma.tech_skill_categories.create({
+        const createdCategory = await dbDirect.tech_skill_categories.create({
           data: {
             status: category.status || "draft",
             sort: category.sort,
@@ -381,7 +379,7 @@ async function importProfile(
 
             // If tech_type slug is provided, look up the ID
             if (skill.tech_type) {
-              const techType = await prisma.tech_skill_types.findUnique({
+              const techType = await dbDirect.tech_skill_types.findUnique({
                 where: { slug: skill.tech_type },
                 select: { id: true },
               });
@@ -394,7 +392,7 @@ async function importProfile(
               }
             }
 
-            await prisma.tech_skills.create({
+            await dbDirect.tech_skills.create({
               data: {
                 status: skill.status || "draft",
                 sort: skill.sort,
@@ -418,7 +416,7 @@ async function importProfile(
         `Importing ${data.work_experiences.length} work experiences...`,
       );
       for (const work of data.work_experiences) {
-        const createdWork = await prisma.work_experiences.create({
+        const createdWork = await dbDirect.work_experiences.create({
           data: {
             name: work.name || "",
             location: work.location || "",
@@ -438,7 +436,7 @@ async function importProfile(
         // Import achievements
         if (work.achievements && work.achievements.length > 0) {
           for (const achievement of work.achievements) {
-            await prisma.work_experience_achievements.create({
+            await dbDirect.work_experience_achievements.create({
               data: {
                 status: achievement.status || "draft",
                 sort: achievement.sort,
@@ -455,7 +453,7 @@ async function importProfile(
         // Import technologies
         if (work.technologies && work.technologies.length > 0) {
           for (const tech of work.technologies) {
-            await prisma.work_experience_technologies.create({
+            await dbDirect.work_experience_technologies.create({
               data: {
                 status: tech.status || "draft",
                 sort: tech.sort,
@@ -469,7 +467,7 @@ async function importProfile(
         // Import projects
         if (work.projects && work.projects.length > 0) {
           for (const project of work.projects) {
-            const createdProject = await prisma.work_experience_projects.create({
+            const createdProject = await dbDirect.work_experience_projects.create({
               data: {
                 status: project.status || "draft",
                 sort: project.sort,
@@ -486,7 +484,7 @@ async function importProfile(
             // Import project technologies
             if (project.work_experience_project_technologies && project.work_experience_project_technologies.length > 0) {
               for (const tech of project.work_experience_project_technologies) {
-                await prisma.work_experience_project_technologies.create({
+                await dbDirect.work_experience_project_technologies.create({
                   data: {
                     sort: tech.sort,
                     name: tech.name,
@@ -504,7 +502,7 @@ async function importProfile(
     if (data.side_projects && data.side_projects.length > 0) {
       console.log(`Importing ${data.side_projects.length} side projects...`);
       for (const project of data.side_projects) {
-        const createdProject = await prisma.side_projects.create({
+        const createdProject = await dbDirect.side_projects.create({
           data: {
             status: project.status || "draft",
             sort: project.sort,
@@ -525,7 +523,7 @@ async function importProfile(
         // Import achievements
         if (project.achievements && project.achievements.length > 0) {
           for (const achievement of project.achievements) {
-            await prisma.side_project_achievements.create({
+            await dbDirect.side_project_achievements.create({
               data: {
                 title: achievement.title,
                 fa_icon: achievement.fa_icon,
@@ -541,7 +539,7 @@ async function importProfile(
         // Import technologies
         if (project.technologies && project.technologies.length > 0) {
           for (const tech of project.technologies) {
-            await prisma.side_project_technologies.create({
+            await dbDirect.side_project_technologies.create({
               data: {
                 status: tech.status || "draft",
                 sort: tech.sort,
@@ -558,7 +556,7 @@ async function importProfile(
     if (data.education && data.education.length > 0) {
       console.log(`Importing ${data.education.length} education entries...`);
       for (const edu of data.education) {
-        await prisma.education.create({
+        await dbDirect.education.create({
           data: {
             status: edu.status || "draft",
             sort: edu.sort,
@@ -582,7 +580,7 @@ async function importProfile(
     if (data.languages && data.languages.length > 0) {
       console.log(`Importing ${data.languages.length} languages...`);
       for (const lang of data.languages) {
-        await prisma.languages.create({
+        await dbDirect.languages.create({
           data: {
             status: lang.status || "draft",
             sort: lang.sort,
@@ -599,7 +597,7 @@ async function importProfile(
     if (data.references && data.references.length > 0) {
       console.log(`Importing ${data.references.length} references...`);
       for (const ref of data.references) {
-        await prisma.references.create({
+        await dbDirect.references.create({
           data: {
             status: ref.status || "draft",
             sort: ref.sort,
@@ -618,7 +616,7 @@ async function importProfile(
         `Importing ${data.project_stories.length} project stories...`,
       );
       for (const story of data.project_stories) {
-        await prisma.project_stories.create({
+        await dbDirect.project_stories.create({
           data: {
             sort: story.sort,
             title: story.title,
@@ -640,7 +638,7 @@ async function importProfile(
         `Importing ${data.application_questions.length} application questions...`,
       );
       for (const question of data.application_questions) {
-        await prisma.application_questions.create({
+        await dbDirect.application_questions.create({
           data: {
             sort: question.sort,
             question: question.question,
@@ -657,7 +655,7 @@ async function importProfile(
     if (data.cheat_sheets && data.cheat_sheets.length > 0) {
       console.log(`Importing ${data.cheat_sheets.length} cheat sheets...`);
       for (const sheet of data.cheat_sheets) {
-        await prisma.cheat_sheets.create({
+        await dbDirect.cheat_sheets.create({
           data: {
             sort: sheet.sort,
             title: sheet.title,
@@ -674,7 +672,7 @@ async function importProfile(
         `Importing ${data.salary_expectations.length} salary expectations...`,
       );
       for (const salary of data.salary_expectations) {
-        await prisma.salary_expectations.create({
+        await dbDirect.salary_expectations.create({
           data: {
             sort: salary.sort,
             job_title: salary.job_title,
@@ -716,8 +714,6 @@ async function importProfile(
   } catch (error) {
     console.error("Error importing profile:", error);
     throw error;
-  } finally {
-    await prisma.$disconnect();
   }
 }
 

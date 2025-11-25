@@ -1,9 +1,7 @@
 #!/usr/bin/env node
 
-import { PrismaClient } from "@prisma/client";
+import { dbDirect } from "$lib/db";
 import removeMd from "remove-markdown";
-
-const prisma = new PrismaClient();
 
 // Mapping of ExportedProfile structure to Directus collections and fields
 const PROFILE_SCHEMA_MAPPING = {
@@ -156,7 +154,7 @@ async function buildSchemaNode(
   relations?: Record<string, { fields: string[]; relations?: any }>
 ): Promise<SchemaNode> {
   // Fetch collection note
-  const collectionMeta = await prisma.directus_collections.findUnique({
+  const collectionMeta = await dbDirect.directus_collections.findUnique({
     where: { collection },
     select: { note: true },
   });
@@ -167,7 +165,7 @@ async function buildSchemaNode(
   };
 
   // Fetch field notes
-  const fieldMetas = await prisma.directus_fields.findMany({
+  const fieldMetas = await dbDirect.directus_fields.findMany({
     where: {
       collection,
       field: { in: fieldNames },
@@ -205,7 +203,7 @@ async function exportProfileSchema(profileId: string): Promise<void> {
     const id = parseInt(profileId, 10);
 
     // Verify profile exists
-    const profile = await prisma.profiles.findUnique({
+    const profile = await dbDirect.profiles.findUnique({
       where: { id },
       select: { id: true },
     });
@@ -224,12 +222,12 @@ async function exportProfileSchema(profileId: string): Promise<void> {
     );
 
     // Store in collected_data
-    const existingCollectedData = await prisma.collected_data.findFirst({
+    const existingCollectedData = await dbDirect.collected_data.findFirst({
       where: { profile: id },
     });
 
     if (existingCollectedData) {
-      await prisma.collected_data.update({
+      await dbDirect.collected_data.update({
         where: { id: existingCollectedData.id },
         data: {
           schema: JSON.stringify(schema, null, 2),
@@ -238,7 +236,7 @@ async function exportProfileSchema(profileId: string): Promise<void> {
       });
       console.log(`✅ Profile schema updated for profile ID ${id}`);
     } else {
-      await prisma.collected_data.create({
+      await dbDirect.collected_data.create({
         data: {
           profile: id,
           schema: JSON.stringify(schema, null, 2),
@@ -262,11 +260,7 @@ if (!profileId) {
   process.exit(1);
 }
 
-exportProfileSchema(profileId)
-  .catch((error) => {
-    console.error("Export failed:", error);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+exportProfileSchema(profileId).catch((error) => {
+  console.error("Export failed:", error);
+  process.exit(1);
+});
