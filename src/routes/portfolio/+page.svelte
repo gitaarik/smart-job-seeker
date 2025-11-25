@@ -16,9 +16,9 @@
 
 <svelte:head>
   {#if data.profile}
-    <title>
-      {data.profile.name} - {data.profile.title}
-    </title>
+    <title>{data.profile.name} - {data.profile.title}</title>
+  {:else}
+    <title>Portfolio page</title>
   {/if}
   <meta
     name="viewport"

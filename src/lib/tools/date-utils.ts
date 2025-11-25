@@ -49,9 +49,5 @@ export function formatDateRangeYear(
   const startYear = startDate.getFullYear();
   const endYear = endDate ? endDate.getFullYear() : "Present";
 
-  if (endYear === "Present" || startYear === endYear) {
-    return String(startYear);
-  }
-
   return `${startYear} - ${endYear}`;
 }
