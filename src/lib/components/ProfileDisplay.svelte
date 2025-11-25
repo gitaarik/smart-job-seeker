@@ -16,40 +16,40 @@
   import { faGithub, faLinkedin } from "@fortawesome/free-brands-svg-icons";
 
   interface Profile {
-    name: string;
-    title: string;
-    subtitle: string;
-    email_address: string;
-    phone_number: string;
-    location: string;
-    location_url: string;
-    location_timezone?: string;
-    personal_website: string;
-    linkedin_profile: string;
-    github_profile: string;
-    summary: string;
+    name: string | null;
+    title: string | null;
+    subtitle: string | null;
+    email_address: string | null;
+    phone_number: string | null;
+    location: string | null;
+    location_url: string | null;
+    location_timezone?: string | null;
+    personal_website: string | null;
+    linkedin_profile: string | null;
+    github_profile: string | null;
+    summary: string | null;
     work_experiences: Array<{
-      name: string;
-      location: string;
-      position: string;
-      start_date: Date;
-      end_date?: Date;
-      note?: string;
+      name: string | null;
+      location: string | null;
+      position: string | null;
+      start_date: Date | null;
+      end_date?: Date | null;
+      note?: string | null;
       work_experience_achievements?: Array<{
-        description: string;
-        tags: string[];
+        description: string | null;
+        tags: string[] | unknown;
       }>;
       tags: string[];
     }>;
     education: Array<{
-      area: string;
-      study_type: string;
-      institution: string;
-      location: string;
-      summary: string;
-      start_date: Date;
-      end_date?: Date;
-      graduation_year?: string;
+      area: string | null;
+      study_type: string | null;
+      institution: string | null;
+      location: string | null;
+      summary: string | null;
+      start_date: Date | null;
+      end_date?: Date | null;
+      graduation_year?: string | null;
       tags?: string[];
     }>;
     languages: Array<{
@@ -115,7 +115,7 @@
     versionObjs.push(versionObj);
   }
 
-  const versionNames = versionObjs.map((v) => v?.name).filter(Boolean);
+  const versionNames = versionObjs.map((v) => v?.name).filter(Boolean) as string[];
 
   function filterOnTags<T extends { tags?: string[] }>(objList: T[]): T[] {
     return objList.filter((obj) => {
@@ -233,16 +233,18 @@
           Website:
         </span>
 
-        <a
-          href={profile.personal_website}
-          target="_blank"
-          class="underline hover:text-slate-600"
-        >{
-          profile.personal_website.replace(
-            /^https?:\/\/(www.)?/,
-            "",
-          ).replace(/\/$/, "")
-        }</a>
+        {#if profile.personal_website}
+          <a
+            href={profile.personal_website}
+            target="_blank"
+            class="underline hover:text-slate-600"
+          >{
+            profile.personal_website.replace(
+              /^https?:\/\/(www.)?/,
+              "",
+            ).replace(/\/$/, "")
+          }</a>
+        {/if}
       </li>
 
       <li>
@@ -256,16 +258,18 @@
           LinkedIn:
         </span>
 
-        <a
-          href={profile.linkedin_profile}
-          target="_blank"
-          class="underline hover:text-slate-600"
-        >{
-          profile.linkedin_profile.replace(
-            /^https?:\/\/(www.)?linkedin.com\/in\//,
-            "",
-          )
-        }</a>
+        {#if profile.linkedin_profile}
+          <a
+            href={profile.linkedin_profile}
+            target="_blank"
+            class="underline hover:text-slate-600"
+          >{
+            profile.linkedin_profile.replace(
+              /^https?:\/\/(www.)?linkedin.com\/in\//,
+              "",
+            )
+          }</a>
+        {/if}
       </li>
 
       <li>
@@ -279,16 +283,18 @@
           GitHub:
         </span>
 
-        <a
-          href={profile.github_profile}
-          target="_blank"
-          class="underline hover:text-slate-600"
-        >{
-          profile.github_profile.replace(
-            /^https?:\/\/(www.)?github.com\//,
-            "",
-          )
-        }</a>
+        {#if profile.github_profile}
+          <a
+            href={profile.github_profile}
+            target="_blank"
+            class="underline hover:text-slate-600"
+          >{
+            profile.github_profile.replace(
+              /^https?:\/\/(www.)?github.com\//,
+              "",
+            )
+          }</a>
+        {/if}
       </li>
     </ul>
   </header>

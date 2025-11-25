@@ -16,12 +16,4 @@ export default defineConfig({
             // `app` service and runs on the host `app`.
     ]
   },
-  test: {
-    globals: true,
-    environment: "node",
-    setupFiles: [],
-    env: {
-      PRISMA_DISABLE_WARNINGS: "true",
-    },
-  },
 });

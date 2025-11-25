@@ -1,9 +1,10 @@
 <script lang="ts">
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+  import type { IconProp } from "@fortawesome/fontawesome-svg-core";
 
   let elLink: HTMLElement;
 
-  export let icon: object;
+  export let icon: IconProp;
   export let href: string = "";
   export let title: string = "";
 
@@ -22,7 +23,7 @@
 >
   <FontAwesomeIcon
     {icon}
-    alt={`${title} icon`}
+    {title}
     class="w-3 hover:text-white focus:text-white transition"
   />
 
