@@ -18,7 +18,7 @@ export const POST: RequestHandler = async (event) => {
     const webhookSecret = getEnv("WEBHOOK_SECRET", "");
 
     if (!webhookSecret) {
-      return json<WebhookResponse>(
+      return json(
         {
           success: false,
           message: "Webhook not configured",
@@ -32,7 +32,7 @@ export const POST: RequestHandler = async (event) => {
     const headerSecret = event.request.headers.get("x-webhook-secret");
 
     if (!headerSecret) {
-      return json<WebhookResponse>(
+      return json(
         {
           success: false,
           message: "Unauthorized",
@@ -44,7 +44,7 @@ export const POST: RequestHandler = async (event) => {
 
     // Verify secret matches
     if (headerSecret !== webhookSecret) {
-      return json<WebhookResponse>(
+      return json(
         {
           success: false,
           message: "Unauthorized",
@@ -60,7 +60,7 @@ export const POST: RequestHandler = async (event) => {
       const body = await event.request.text();
       payload = JSON.parse(body) as WebhookPayload;
     } catch (parseError) {
-      return json<WebhookResponse>(
+      return json(
         {
           success: false,
           message: "Invalid JSON payload",
@@ -72,7 +72,7 @@ export const POST: RequestHandler = async (event) => {
 
     // Validate required fields
     if (!payload.eventType || !payload.data) {
-      return json<WebhookResponse>(
+      return json(
         {
           success: false,
           message: "Invalid payload structure",
@@ -85,7 +85,7 @@ export const POST: RequestHandler = async (event) => {
     // Process webhook based on event type
     const result = await processWebhookEvent(payload);
 
-    return json<WebhookResponse>(
+    return json(
       {
         success: true,
         message: "Webhook processed successfully",
@@ -98,7 +98,7 @@ export const POST: RequestHandler = async (event) => {
       ? error.message
       : "Unknown error";
 
-    return json<WebhookResponse>(
+    return json(
       {
         success: false,
         message: "Internal server error",
