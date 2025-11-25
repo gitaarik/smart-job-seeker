@@ -1,36 +1,56 @@
 # Smart Job Seeker
 
-An intelligent job search and application management platform that helps you create a detailed profile, discover matching opportunities, and optimize your job application process with AI assistance.
+An intelligent job search and application management platform that helps you
+create a detailed profile, discover matching opportunities, and optimize your
+job application process with AI assistance.
 
-**Vision:** Create your profile once, automatically match it against scraped job listings from various platforms, and intelligently manage your entire job search journey with AI-powered insights and context-aware assistance.
+**Vision:** Create your profile once, automatically match it against scraped job
+listings from various platforms, and intelligently manage your entire job search
+journey with AI-powered insights and context-aware assistance.
 
 ## Core Features
 
 ### Profile Management
-- **Comprehensive User Profiles** - Create detailed profiles with work experience, education, skills, methodologies, and technical expertise
-- **Personal Portfolio Website** - Modern, responsive portfolio showcasing professional background, skills, and experience
-- **Profile Data Export** - Export profile data and schema in multiple formats for portability
+
+- **Comprehensive User Profiles** - Create detailed profiles with work
+  experience, education, skills, methodologies, and technical expertise
+- **Personal Portfolio Website** - Modern, responsive portfolio showcasing
+  professional background, skills, and experience
+- **Profile Data Export** - Export profile data and schema in multiple formats
+  for portability
 
 ### Job Search & Matching (Coming Soon 🚀)
-- **Job Scraping** - Automatically scrape job listings from multiple platforms (feature in development)
-- **Intelligent Matching** - Match your profile against scraped jobs using AI-powered analysis
-- **Smart Discovery** - Discover relevant opportunities based on your skills and preferences
+
+- **Job Scraping** - Automatically scrape job listings from multiple platforms
+  (feature in development)
+- **Intelligent Matching** - Match your profile against scraped jobs using
+  AI-powered analysis
+- **Smart Discovery** - Discover relevant opportunities based on your skills and
+  preferences
 
 ### Application Management & AI Assistance
-- **Job Application Tracking** - Organize and track all job applications, interviews, and follow-ups
-- **AI-Powered Assistance** - Context-aware AI helps improve application quality and strategy
-- **Interview Preparation** - Store and manage interview questions with AI-generated answers
-- **Application Analytics** - Insights and metrics to optimize your job search process
+
+- **Job Application Tracking** - Organize and track all job applications,
+  interviews, and follow-ups
+- **AI-Powered Assistance** - Context-aware AI helps improve application quality
+  and strategy
+- **Interview Preparation** - Store and manage interview questions with
+  AI-generated answers
+- **Application Analytics** - Insights and metrics to optimize your job search
+  process
 
 ### Technical Features
+
 - **AI Integration** - Powered by Groq for intelligent, context-aware features
-- **Directus CMS Integration** - Headless CMS for managing portfolio content and data
+- **Directus CMS Integration** - Headless CMS for managing portfolio content and
+  data
 - **Webhook System** - Secure webhook endpoints for Directus Flow integration
 - **Resume Management** - JSON Resume support with PDF export capabilities
 
 ## Roadmap
 
 ### Current Status ✅
+
 - User authentication and profile system
 - Comprehensive job application tracking
 - AI-powered interview preparation and application assistance
@@ -38,16 +58,24 @@ An intelligent job search and application management platform that helps you cre
 - All infrastructure in place for job matching
 
 ### Upcoming (Next Big Feature) 🚀
-- **Job Scraping Module** - Automated job listing scraper from multiple job platforms (LinkedIn, Indeed, etc.)
-- **Profile Matching Engine** - Intelligent matching between user profiles and scraped job listings
-- **Smart Job Recommendations** - AI-powered job suggestions based on profile fit
-- **Automated Application Workflow** - Semi-automated job application process with AI assistance
 
-The job scraping functionality will be the cornerstone feature that ties everything together, allowing users to passively discover matching opportunities while the system intelligently manages their application process.
+- **Job Scraping Module** - Automated job listing scraper from multiple job
+  platforms (LinkedIn, Indeed, etc.)
+- **Profile Matching Engine** - Intelligent matching between user profiles and
+  scraped job listings
+- **Smart Job Recommendations** - AI-powered job suggestions based on profile
+  fit
+- **Automated Application Workflow** - Semi-automated job application process
+  with AI assistance
+
+The job scraping functionality will be the cornerstone feature that ties
+everything together, allowing users to passively discover matching opportunities
+while the system intelligently manages their application process.
 
 ## Tech Stack
 
 ### Frontend
+
 - **SvelteKit 5** - Modern web framework with TypeScript
 - **Svelte** - Reactive UI framework
 - **TypeScript** - Type-safe development
@@ -55,6 +83,7 @@ The job scraping functionality will be the cornerstone feature that ties everyth
 - **FontAwesome** - Icon library
 
 ### Backend
+
 - **Node.js** - JavaScript runtime
 - **TypeScript** - Type safety for backend code
 - **SvelteKit Server Routes** - API endpoints and server logic
@@ -62,15 +91,18 @@ The job scraping functionality will be the cornerstone feature that ties everyth
 - **JWT** - JSON Web Token authentication
 
 ### Database & CMS
+
 - **PostgreSQL** - Relational database
 - **Directus** - Headless CMS
 - **Prisma Schema** - Database schema management
 
 ### External Services
+
 - **Groq API** - High-performance LLM inference for AI-powered features
 - **SMTP2GO** - Email delivery service
 
 ### DevOps & Tools
+
 - **Docker & Docker Compose** - Containerization and orchestration
 - **Vite** - Build tool and dev server
 - **Vitest** - Unit and integration testing
@@ -153,16 +185,21 @@ smart-job-seeker/
 ### Development
 
 **Start all services with Docker Compose:**
+
 ```bash
 npm run dev
 ```
 
+**Note:** The first startup can take some time
+
 This starts:
+
 - **Directus CMS** on `http://localhost:8055`
 - **SvelteKit app** on `http://localhost:5173`
 - **PostgreSQL database** on port 5432
 
 **Useful development commands:**
+
 ```bash
 npm run docker:cli               # Access app container shell
 npm run docker:db:cli            # Access PostgreSQL CLI
@@ -174,12 +211,15 @@ npm run docker:export-profile-*  # Export profile data/schema
 ## API Endpoints
 
 ### Webhook
+
 - `POST /api/webhook` - Secure webhook endpoint for Directus integration
-  - Supports: `profile.export`, `item.create`, `item.update`, `item.delete`, `custom.event`
+  - Supports: `profile.export`, `item.create`, `item.update`, `item.delete`,
+    `custom.event`
 
 ## Database Schema
 
 The Prisma schema includes models for:
+
 - **Users** - Authentication and profiles
 - **Profiles** - User portfolios
 - **Applications** - Job application tracking
@@ -198,12 +238,14 @@ See `prisma/schema.prisma` for complete schema details.
 Secure webhook endpoint for Directus Flow integration at `POST /api/webhook`.
 
 **Features:**
+
 - HMAC-SHA256 signature verification
 - Multiple event type support
 - Batch profile export
 - Profile schema and data collection
 
 **Event Types:**
+
 - `profile.export` - Export profile data and schema
 - `item.create` - Item creation handler
 - `item.update` - Item update handler
@@ -223,6 +265,7 @@ npm run test:ui          # Open test UI dashboard
 ```
 
 **Test Structure:**
+
 - Webhook handler tests: `src/routes/api/webhook/__tests__/`
 - Utility function tests: `src/lib/server/__tests__/`
 - Mocked database calls for isolation
@@ -242,6 +285,7 @@ npx deno fmt --unstable-component  # Format Svelte files
 ```
 
 **Requirements:**
+
 - TypeScript strict mode enabled
 - ESLint with Svelte support
 - Prettier for consistent formatting
@@ -250,12 +294,14 @@ npx deno fmt --unstable-component  # Format Svelte files
 ## Scripts
 
 ### Installation
+
 ```bash
 npm run install                        # Install dependencies and generate Prisma
 npm run reinstall                      # Clean install dependencies
 ```
 
 ### Database Management
+
 ```bash
 npm run docker:db:migrate              # Run migrations
 npm run docker:db:migrate:new          # Create new migration
@@ -265,6 +311,7 @@ npm run docker:update-schema           # Sync Prisma schema
 ```
 
 ### Profile Management
+
 ```bash
 npm run docker:export-profiles-pdf     # Export profiles as PDF
 npm run docker:export-profile-json     # Export profile as JSON
@@ -275,6 +322,7 @@ npm run docker:clear-directus-cache    # Clear Directus cache
 ```
 
 ### Development
+
 ```bash
 npm run dev                            # Start all services with Docker Compose
 npm run docker:dev                     # Start SvelteKit dev server in container
@@ -290,15 +338,18 @@ npm run test:ui                        # Open test UI dashboard
 
 ## Deployment
 
-The application is configured for deployment on **Vercel** with adapter already configured.
+The application is configured for deployment on **Vercel** with adapter already
+configured.
 
 **Build process:**
+
 ```bash
 npm install
 npm run build
 ```
 
 **Environment variables** must be set in production:
+
 - `JWT_SECRET` - Secure random token
 - `DATABASE_URL` - Production PostgreSQL URL
 - `GROQ_API_KEY` - Groq API credentials for AI features
@@ -309,18 +360,21 @@ npm run build
 ## Docker Services
 
 ### Admin (Directus CMS)
+
 ```bash
 docker compose up admin
 # Access at http://localhost:8055
 ```
 
 ### App (SvelteKit)
+
 ```bash
 docker compose up app
 # Access at http://localhost:5173
 ```
 
 ### Database (PostgreSQL)
+
 ```bash
 docker compose up database
 # Port: 5432
@@ -329,16 +383,19 @@ docker compose up database
 ```
 
 **Run all services:**
+
 ```bash
 npm run dev
 ```
 
 **Stop services:**
+
 ```bash
 docker compose down
 ```
 
 **Access container shell:**
+
 ```bash
 npm run docker:cli
 ```
@@ -349,14 +406,14 @@ npm run docker:cli
 
 Key environment variables (see `.env.example` for complete list):
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `APP_URL` | Application URL | `http://localhost:5173` |
-| `JWT_SECRET` | JWT signing secret | 64-character hex string |
-| `DATABASE_URL` | PostgreSQL connection | `postgresql://...` |
-| `GROQ_API_KEY` | Groq API key for LLM features | `gsk_...` |
-| `SMTP2GO_API_KEY` | Email service API key | `api_...` |
-| `WEBHOOK_SECRET` | Webhook authentication secret | 64-character hex string |
+| Variable          | Description                   | Example                 |
+| ----------------- | ----------------------------- | ----------------------- |
+| `APP_URL`         | Application URL               | `http://localhost:5173` |
+| `JWT_SECRET`      | JWT signing secret            | 64-character hex string |
+| `DATABASE_URL`    | PostgreSQL connection         | `postgresql://...`      |
+| `GROQ_API_KEY`    | Groq API key for LLM features | `gsk_...`               |
+| `SMTP2GO_API_KEY` | Email service API key         | `api_...`               |
+| `WEBHOOK_SECRET`  | Webhook authentication secret | 64-character hex string |
 
 ### Prisma
 
@@ -373,6 +430,7 @@ See `prisma/schema.prisma` for the complete schema.
 ## Performance
 
 ### Optimization Features
+
 - **Image Optimization** - Enhanced images with `@sveltejs/enhanced-img`
 - **Code Splitting** - Automatic code splitting via SvelteKit
 - **Lazy Loading** - AOS (Animate on Scroll) for performance
@@ -380,6 +438,7 @@ See `prisma/schema.prisma` for the complete schema.
 - **Build Optimization** - Vite for fast builds
 
 ### Monitoring
+
 - Vercel Analytics integration
 - Error tracking capability
 - Performance monitoring ready
@@ -387,7 +446,9 @@ See `prisma/schema.prisma` for the complete schema.
 ## Security
 
 ### Features
-- **HMAC-SHA256** - Webhook signature verification for secure Directus integration
+
+- **HMAC-SHA256** - Webhook signature verification for secure Directus
+  integration
 - **Secure Headers** - Automatic in production
 - **Environment Variable Protection** - Sensitive credentials stored securely
 
@@ -422,6 +483,7 @@ When contributing to this project:
 ## Support
 
 For issues or questions:
+
 - Check existing documentation in `/docs`
 - Review test files for usage examples
 - Check the CLAUDE.md development notes
@@ -429,11 +491,14 @@ For issues or questions:
 
 ## License
 
-This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the GNU General Public License v3.0 - see the
+[LICENSE](LICENSE) file for details.
 
 ## About
 
-**Smart Job Seeker** is a personal project by Rik Wanders, a Senior Full Stack Developer with 12+ years of experience in Python, Node.js, and modern web technologies.
+**Smart Job Seeker** is a personal project by Rik Wanders, a Senior Full Stack
+Developer with 12+ years of experience in Python, Node.js, and modern web
+technologies.
 
 - **Website:** https://www.rikwanders.tech/
 - **GitHub:** https://github.com/gitaarik
