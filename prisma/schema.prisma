@@ -21,19 +21,6 @@ model application_interview_questions {
   applications                                             applications @relation(fields: [application], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "application_interview_questions_application_foreign")
 }
 
-model application_questions {
-  id           Int       @id @default(autoincrement())
-  sort         Int?
-  date_created DateTime? @db.Timestamptz(6)
-  date_updated DateTime? @db.Timestamptz(6)
-  question     String?
-  answer       String?
-  title        String?   @db.VarChar(255)
-  profile      Int
-  source       String?   @db.VarChar(255)
-  profiles     profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "application_questions_profile_foreign")
-}
-
 model applications {
   id                              Int                               @id @default(autoincrement())
   status                          String                            @default("draft") @db.VarChar(255)
@@ -72,17 +59,6 @@ model collected_data {
   data         String?
   profile      Int?
   profiles     profiles? @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "collected_data_profile_foreign")
-}
-
-model dev_methodologies {
-  id           Int       @id @default(autoincrement())
-  status       String    @default("draft") @db.VarChar(255)
-  sort         Int?
-  date_created DateTime? @db.Timestamptz(6)
-  date_updated DateTime? @db.Timestamptz(6)
-  name         String?   @db.VarChar(255)
-  profile      Int
-  profiles     profiles  @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "dev_methodologies_profile_foreign")
 }
 
 model directus_access {
@@ -695,11 +671,9 @@ model profiles {
   location_timezone     String?                 @db.VarChar(255)
   sort                  Int?
   ai_chat               ai_chat[]
-  application_questions application_questions[]
   applications          applications[]
   cheat_sheets          cheat_sheets[]
   collected_data        collected_data[]
-  dev_methodologies     dev_methodologies[]
   education             education[]
   highlights            highlights[]
   languages             languages[]
@@ -711,7 +685,6 @@ model profiles {
   references            references[]
   salary_expectations   salary_expectations[]
   side_projects         side_projects[]
-  soft_skills           soft_skills[]
   tech_skill_categories tech_skill_categories[]
   work_experiences      work_experiences[]
 }
@@ -743,21 +716,6 @@ model references {
   text            String?
   profile         Int
   profiles        profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "references_profile_foreign")
-}
-
-model resume_tokens {
-  token       String    @unique
-  name        String
-  description String?
-  resumeType  String
-  expiresAt   DateTime?
-  viewCount   Int       @default(0)
-  maxViews    Int?
-  isActive    Boolean   @default(true)
-  createdBy   String    @db.Uuid
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
 }
 
 model salary_expectations {
@@ -822,17 +780,6 @@ model side_projects {
   profiles                  profiles                    @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "side_projects_profile_foreign")
 }
 
-model soft_skills {
-  id           Int       @id @default(autoincrement())
-  status       String    @default("draft") @db.VarChar(255)
-  sort         Int?
-  date_created DateTime? @db.Timestamptz(6)
-  date_updated DateTime? @db.Timestamptz(6)
-  name         String?   @db.VarChar(255)
-  profile      Int?
-  profiles     profiles? @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "soft_skills_profile_foreign")
-}
-
 model tech_skill_categories {
   id           Int           @id @default(autoincrement())
   status       String        @default("draft") @db.VarChar(255)
@@ -872,33 +819,20 @@ model tech_skills {
   tech_skill_types      tech_skill_types?     @relation(fields: [tech_type], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tech_skills_tech_type_foreign")
 }
 
-model users {
-  email               String    @unique
-  password            String
-  firstName           String?
-  lastName            String?
-  isEmailVerified     Boolean   @default(false)
-  emailVerifyToken    String?
-  passwordResetToken  String?
-  passwordResetExpiry DateTime?
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime
-  role                Role      @default(USER)
-  id                  Int       @id
-}
-
 model vacancies {
-  id                Int                 @id @default(autoincrement())
-  status            String              @default("draft") @db.VarChar(255)
-  date_created      DateTime?           @db.Timestamptz(6)
-  date_updated      DateTime?           @db.Timestamptz(6)
-  source_url        String?             @db.VarChar(255)
-  title             String?             @db.VarChar(255)
-  job_description   String?
-  job_poster        String?             @db.VarChar(255)
-  import_source     String?             @db.VarChar(255)
-  applications      applications[]
-  vacancy_resources vacancy_resources[]
+  id                  Int                 @id @default(autoincrement())
+  status              String              @default("draft") @db.VarChar(255)
+  date_created        DateTime?           @db.Timestamptz(6)
+  date_updated        DateTime?           @db.Timestamptz(6)
+  source_url          String?             @db.VarChar(255)
+  title               String?             @db.VarChar(255)
+  job_description     String?
+  job_poster          String?             @db.VarChar(255)
+  import_source       String?             @db.VarChar(255)
+  company_description String?
+  date_posted         DateTime?           @db.Date
+  applications        applications[]
+  vacancy_resources   vacancy_resources[]
 }
 
 model vacancy_resources {
