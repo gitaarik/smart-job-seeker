@@ -60,105 +60,105 @@ function getThemeFromRequest(request: Request): string {
 export const handle: Handle = async ({ event, resolve }) => {
   const theme = getThemeFromRequest(event.request);
 
-  // Handle authentication with Directus
-  const accessToken = event.cookies.get("directus_access_token");
-  const refreshToken = event.cookies.get("directus_refresh_token");
-
-  if (accessToken) {
-    try {
-      const client = createDirectusServerClient();
-
-      // Set the access token for this request
-      client.setToken(accessToken);
-
-      // Get current user info
-      const user = await client.request(
-        readMe({
-          fields: ["id", "email", "first_name", "last_name", "role"],
-        }),
-      );
-
-      if (user) {
-        event.locals.user = {
-          id: user.id,
-          email: user.email || "",
-          firstName: user.first_name || null,
-          lastName: user.last_name || null,
-          role: typeof user.role === "string"
-            ? (user.role as "USER" | "ADMIN" | "SUPER_ADMIN")
-            : "USER",
-        };
-      }
-    } catch (error: any) {
-      console.error("Authentication error:", error);
-
-      // If access token is expired and we have a refresh token, try to refresh
-      if (
-        refreshToken && error?.errors?.[0]?.extensions?.code === "TOKEN_EXPIRED"
-      ) {
-        try {
-          const client = createDirectusServerClient();
-          const authResult = await client.refresh();
-
-          if (authResult.access_token && authResult.refresh_token) {
-            // Update cookies with new tokens
-            event.cookies.set(
-              "directus_access_token",
-              authResult.access_token,
-              {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === "production",
-                sameSite: "strict",
-                maxAge: authResult.expires || 60 * 15,
-                path: "/",
-              },
-            );
-
-            event.cookies.set(
-              "directus_refresh_token",
-              authResult.refresh_token,
-              {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === "production",
-                sameSite: "strict",
-                maxAge: 60 * 60 * 24 * 7,
-                path: "/",
-              },
-            );
-
-            // Try to get user info with new token
-            client.setToken(authResult.access_token);
-            const user = await client.request(
-              readMe({
-                fields: ["id", "email", "first_name", "last_name", "role"],
-              }),
-            );
-
-            if (user) {
-              event.locals.user = {
-                id: user.id,
-                email: user.email || "",
-                firstName: user.first_name || null,
-                lastName: user.last_name || null,
-                role: typeof user.role === "string"
-                  ? (user.role as "USER" | "ADMIN" | "SUPER_ADMIN")
-                  : "USER",
-              };
-            }
-          }
-        } catch (refreshError) {
-          console.error("Token refresh error:", refreshError);
-          // Clear invalid tokens
-          event.cookies.delete("directus_access_token", { path: "/" });
-          event.cookies.delete("directus_refresh_token", { path: "/" });
-        }
-      } else {
-        // Clear invalid tokens
-        event.cookies.delete("directus_access_token", { path: "/" });
-        event.cookies.delete("directus_refresh_token", { path: "/" });
-      }
-    }
-  }
+  // // Handle authentication with Directus
+  // const accessToken = event.cookies.get("directus_access_token");
+  // const refreshToken = event.cookies.get("directus_refresh_token");
+  //
+  // if (accessToken) {
+  //   try {
+  //     const client = createDirectusServerClient();
+  //
+  //     // Set the access token for this request
+  //     client.setToken(accessToken);
+  //
+  //     // Get current user info
+  //     const user = await client.request(
+  //       readMe({
+  //         fields: ["id", "email", "first_name", "last_name", "role"],
+  //       }),
+  //     );
+  //
+  //     if (user) {
+  //       event.locals.user = {
+  //         id: user.id,
+  //         email: user.email || "",
+  //         firstName: user.first_name || null,
+  //         lastName: user.last_name || null,
+  //         role: typeof user.role === "string"
+  //           ? (user.role as "USER" | "ADMIN" | "SUPER_ADMIN")
+  //           : "USER",
+  //       };
+  //     }
+  //   } catch (error: any) {
+  //     console.error("Authentication error:", error);
+  //
+  //     // If access token is expired and we have a refresh token, try to refresh
+  //     if (
+  //       refreshToken && error?.errors?.[0]?.extensions?.code === "TOKEN_EXPIRED"
+  //     ) {
+  //       try {
+  //         const client = createDirectusServerClient();
+  //         const authResult = await client.refresh();
+  //
+  //         if (authResult.access_token && authResult.refresh_token) {
+  //           // Update cookies with new tokens
+  //           event.cookies.set(
+  //             "directus_access_token",
+  //             authResult.access_token,
+  //             {
+  //               httpOnly: true,
+  //               secure: process.env.NODE_ENV === "production",
+  //               sameSite: "strict",
+  //               maxAge: authResult.expires || 60 * 15,
+  //               path: "/",
+  //             },
+  //           );
+  //
+  //           event.cookies.set(
+  //             "directus_refresh_token",
+  //             authResult.refresh_token,
+  //             {
+  //               httpOnly: true,
+  //               secure: process.env.NODE_ENV === "production",
+  //               sameSite: "strict",
+  //               maxAge: 60 * 60 * 24 * 7,
+  //               path: "/",
+  //             },
+  //           );
+  //
+  //           // Try to get user info with new token
+  //           client.setToken(authResult.access_token);
+  //           const user = await client.request(
+  //             readMe({
+  //               fields: ["id", "email", "first_name", "last_name", "role"],
+  //             }),
+  //           );
+  //
+  //           if (user) {
+  //             event.locals.user = {
+  //               id: user.id,
+  //               email: user.email || "",
+  //               firstName: user.first_name || null,
+  //               lastName: user.last_name || null,
+  //               role: typeof user.role === "string"
+  //                 ? (user.role as "USER" | "ADMIN" | "SUPER_ADMIN")
+  //                 : "USER",
+  //             };
+  //           }
+  //         }
+  //       } catch (refreshError) {
+  //         console.error("Token refresh error:", refreshError);
+  //         // Clear invalid tokens
+  //         event.cookies.delete("directus_access_token", { path: "/" });
+  //         event.cookies.delete("directus_refresh_token", { path: "/" });
+  //       }
+  //     } else {
+  //       // Clear invalid tokens
+  //       event.cookies.delete("directus_access_token", { path: "/" });
+  //       event.cookies.delete("directus_refresh_token", { path: "/" });
+  //     }
+  //   }
+  // }
 
   return await resolve(event, {
     transformPageChunk: ({ html }) => {
