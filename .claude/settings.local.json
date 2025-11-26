@@ -69,8 +69,7 @@
       "Bash(src/routes/api/webhook/+server.ts )",
       "Bash(src/routes/api/webhook/__tests__/ai-chat-generate.test.ts )",
       "WebFetch(domain:console.groq.com)",
-      "WebFetch(domain:www.prisma.io)",
-      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjE1NzIzOGJiLTY5MzAtNGYyNi1iZTljLThiMzFhOWUxMWFiOCIsInJvbGUiOiIxNzc1NmE2Ny0yY2JjLTQyYjUtYmI3Yy05MDZmNzk0NDRmYjMiLCJhcHBfYWNjZXNzIjp0cnVlLCJhZG1pbl9hY2Nlc3MiOnRydWUsImlhdCI6MTc2NDE3MDA1OCwiZXhwIjoxNzY0MTcwOTU4LCJpc3MiOiJkaXJlY3R1cyJ9.yt4jJfPggvL973zqepvzRYzg0zQFfEL-FG8euE_K_zo\")"
+      "WebFetch(domain:www.prisma.io)"
     ],
     "deny": [],
     "ask": []
