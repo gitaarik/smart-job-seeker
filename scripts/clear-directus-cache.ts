@@ -1,4 +1,4 @@
-import { createDirectusClient, getDirectusInternalUrl } from "../src/lib/directus";
+import { getDirectusInternalUrl } from "../src/lib/directus";
 import { getEnv } from "../src/lib/tools/get-env";
 
 async function clearDirectusCache() {
@@ -9,7 +9,7 @@ async function clearDirectusCache() {
 
     if (!email || !password) {
       throw new Error(
-        "ADMIN_EMAIL and ADMIN_PASSWORD environment variables are required"
+        "ADMIN_EMAIL and ADMIN_PASSWORD environment variables are required",
       );
     }
 
@@ -26,7 +26,7 @@ async function clearDirectusCache() {
 
     if (!authResponse.ok) {
       throw new Error(
-        `Authentication failed: HTTP ${authResponse.status}: ${authResponse.statusText}`
+        `Authentication failed: HTTP ${authResponse.status}: ${authResponse.statusText}`,
       );
     }
 
@@ -47,7 +47,7 @@ async function clearDirectusCache() {
 
     if (!cacheResponse.ok) {
       throw new Error(
-        `HTTP ${cacheResponse.status}: ${cacheResponse.statusText}`
+        `HTTP ${cacheResponse.status}: ${cacheResponse.statusText}`,
       );
     }
 

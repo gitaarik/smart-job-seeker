@@ -30,8 +30,8 @@ export function getDirectusInternalUrl(): string {
   return url;
 }
 
-// Create a server-side Directus client
-export function createDirectusClient() {
+// Create a Directus client with cookie authentication (for Docker/server-side)
+export function createDirectusServerClient() {
   const directusUrl = getDirectusInternalUrl();
 
   return createDirectus<DirectusSchema>(directusUrl)
@@ -39,8 +39,8 @@ export function createDirectusClient() {
     .with(authentication('cookie', { credentials: 'include' }));
 }
 
-// Create a client-side Directus client (for browser)
-export function createDirectusClientBrowser() {
+// Create a Directus REST client with JSON authentication (for browser and scripts)
+export function createDirectusRestClient() {
   const directusUrl = getEnv('ADMIN_PUBLIC_URL') || 'http://localhost:8055';
 
   return createDirectus<DirectusSchema>(directusUrl)
