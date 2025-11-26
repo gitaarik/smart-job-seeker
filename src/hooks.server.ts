@@ -1,5 +1,5 @@
 import type { Handle } from "@sveltejs/kit";
-import { createDirectusServerClient } from "$lib/directus";
+import { createDirectusServerClient } from "$lib/server/directus";
 import { readMe } from "@directus/sdk";
 
 function getSystemTheme(request: Request): "light" | "dark" {

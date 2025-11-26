@@ -1,4 +1,4 @@
-import { getDirectusInternalUrl } from "../src/lib/directus";
+import { getDirectusInternalUrl } from "../src/lib/server/directus";
 import { getEnv } from "../src/lib/tools/get-env";
 
 async function clearDirectusCache() {

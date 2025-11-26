@@ -1,6 +1,5 @@
 import { rest } from "@directus/sdk";
-import { createDirectusRestClient } from "../src/lib/directus";
-import { getEnv } from "../src/lib/tools/get-env";
+import { createDirectusRestClientWithToken } from "../src/lib/server/directus";
 
 const sourceCollection = process.argv[2];
 const targetCollection = process.argv[3];
@@ -22,14 +21,7 @@ if (sourceCollection === targetCollection) {
 
 async function main() {
   try {
-    const adminToken = getEnv("DIRECTUS_ADMIN_TOKEN");
-
-    if (!adminToken) {
-      throw new Error("DIRECTUS_ADMIN_TOKEN environment variable is not set");
-    }
-
-    const directus = createDirectusRestClient();
-    await directus.request(rest.auth.login({ access_token: adminToken }));
+    const directus = createDirectusRestClientWithToken();
 
     console.log(
       `Copying collection "${sourceCollection}" to "${targetCollection}"...`,
