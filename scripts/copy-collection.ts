@@ -31,12 +31,11 @@ async function main() {
       `/collections/${sourceCollection}`,
     );
     const sourceCollectionMeta = sourceCollectionResponse.data?.meta;
+    const sourceCollectionSchema = sourceCollectionResponse.data?.schema;
 
     if (!sourceCollectionMeta) {
       throw new Error(`Collection "${sourceCollection}" not found`);
     }
-
-    const collectionData = sourceCollectionMeta;
 
     // Create target collection if it doesn't exist
     console.log(
@@ -52,7 +51,8 @@ async function main() {
       try {
         await makeDirectusRequest("POST", "/collections", {
           collection: targetCollection,
-          meta: collectionData,
+          schema: sourceCollectionSchema,
+          meta: sourceCollectionMeta,
         });
         console.log(
           `Successfully created target collection "${targetCollection}"`,
