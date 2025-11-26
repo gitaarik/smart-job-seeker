@@ -41,3 +41,29 @@ export function createDirectusClient() {
     .with(authentication("json"))
     .setToken(token);
 }
+
+export async function makeDirectusRequest(
+  method: string,
+  endpoint: string,
+  body?: unknown,
+): Promise<unknown> {
+  const baseUrl = getDirectusUrl();
+  const token = getDirectusToken();
+
+  const response = await fetch(`${baseUrl}${endpoint}`, {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `Request failed: ${response.status} ${response.statusText}`,
+    );
+  }
+
+  return response.json();
+}

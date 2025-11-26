@@ -1,4 +1,4 @@
-import { getEnv } from "../src/lib/tools/get-env";
+import { makeDirectusRequest } from "../src/lib/server/directus";
 
 const sourceCollection = process.argv[2];
 const targetCollection = process.argv[3];
@@ -16,32 +16,6 @@ if (sourceCollection === targetCollection) {
     "Error: Source and target collection names cannot be the same",
   );
   process.exit(1);
-}
-
-async function makeDirectusRequest(
-  method: string,
-  endpoint: string,
-  body?: unknown,
-) {
-  const baseUrl = getEnv("ADMIN_URL");
-  const token = getEnv("ADMIN_TOKEN");
-
-  const response = await fetch(`${baseUrl}${endpoint}`, {
-    method,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-
-  if (!response.ok) {
-    throw new Error(
-      `Request failed: ${response.status} ${response.statusText}`,
-    );
-  }
-
-  return response.json();
 }
 
 async function main() {
