@@ -68,3 +68,7 @@ export async function directusRequest(
   const text = await response.text();
   return text ? JSON.parse(text) : null;
 }
+
+export async function clearDirectusCache(): Promise<void> {
+  await directusRequest("POST", "/utils/cache/clear");
+}

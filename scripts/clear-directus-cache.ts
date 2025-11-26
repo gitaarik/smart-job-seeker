@@ -1,10 +1,10 @@
-import { directusRequest } from "../src/lib/server/directus";
+import { clearDirectusCache } from "../src/lib/server/directus";
 
-async function clearDirectusCache() {
+async function main() {
   try {
     console.log("Clearing Directus cache...");
 
-    await directusRequest("POST", "/utils/cache/clear");
+    await clearDirectusCache();
 
     console.log("Directus cache cleared successfully");
   } catch (error) {
@@ -13,4 +13,4 @@ async function clearDirectusCache() {
   }
 }
 
-clearDirectusCache();
+main();
