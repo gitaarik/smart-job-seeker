@@ -1,5 +1,4 @@
-import { rest } from "@directus/sdk";
-import { createDirectusClient } from "../src/lib/server/directus";
+import { getEnv } from "../src/lib/tools/get-env";
 
 const sourceCollection = process.argv[2];
 const targetCollection = process.argv[3];
@@ -19,110 +18,128 @@ if (sourceCollection === targetCollection) {
   process.exit(1);
 }
 
+async function makeDirectusRequest(
+  method: string,
+  endpoint: string,
+  body?: unknown,
+) {
+  const baseUrl = getEnv("ADMIN_URL");
+  const token = getEnv("ADMIN_TOKEN");
+
+  const response = await fetch(`${baseUrl}${endpoint}`, {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `Request failed: ${response.status} ${response.statusText}`,
+    );
+  }
+
+  return response.json();
+}
+
 async function main() {
   try {
-    const directus = createDirectusClient();
-
     console.log(
       `Copying collection "${sourceCollection}" to "${targetCollection}"...`,
     );
 
     // Get source collection metadata
     console.log(`Fetching collection metadata for ${sourceCollection}...`);
-    const sourceCollectionMeta = await directus.request(
-      rest.read("directus_collections", {
-        filter: { collection: { _eq: sourceCollection } },
-      }),
+    const sourceCollectionResponse = await makeDirectusRequest(
+      "GET",
+      `/collections/${sourceCollection}`,
     );
+    const sourceCollectionMeta = sourceCollectionResponse.data?.meta;
 
-    if (!sourceCollectionMeta || sourceCollectionMeta.length === 0) {
+    if (!sourceCollectionMeta) {
       throw new Error(`Collection "${sourceCollection}" not found`);
     }
 
-    const collectionData = sourceCollectionMeta[0];
+    const collectionData = sourceCollectionMeta;
 
-    // Get source field metadata
-    console.log(`Fetching field metadata for ${sourceCollection}...`);
-    const sourceFields = await directus.request(
-      rest.read("directus_fields", {
-        filter: { collection: { _eq: sourceCollection } },
-        sort: ["sort"],
-      }),
-    );
-
-    console.log(`Found ${sourceFields.length} fields in ${sourceCollection}`);
-
-    // Create the new collection
-    console.log(`Creating collection ${targetCollection}...`);
-    await directus.request(
-      rest.create("directus_collections", {
-        collection: targetCollection,
-        icon: collectionData.icon,
-        note: collectionData.note,
-        display_template: collectionData.display_template,
-        hidden: collectionData.hidden,
-        singleton: collectionData.singleton,
-        translations: collectionData.translations,
-        archive_field: collectionData.archive_field,
-        archive_app_filter: collectionData.archive_app_filter,
-        archive_value: collectionData.archive_value,
-        unarchive_value: collectionData.unarchive_value,
-        sort_field: collectionData.sort_field,
-        accountability: collectionData.accountability,
-        color: collectionData.color,
-        item_duplication_fields: collectionData.item_duplication_fields,
-        sort: collectionData.sort,
-        group: collectionData.group,
-        collapse: collectionData.collapse,
-        preview_url: collectionData.preview_url,
-        versioning: collectionData.versioning,
-      }),
-    );
-
-    console.log(`Collection ${targetCollection} created`);
-
-    // Create fields
-    console.log(`Creating fields for ${targetCollection}...`);
-    for (const field of sourceFields) {
-      await directus.request(
-        rest.create("directus_fields", {
-          collection: targetCollection,
-          field: field.field,
-          special: field.special,
-          interface: field.interface,
-          options: field.options,
-          display: field.display,
-          display_options: field.display_options,
-          readonly: field.readonly,
-          hidden: field.hidden,
-          sort: field.sort,
-          width: field.width,
-          translations: field.translations,
-          note: field.note,
-          conditions: field.conditions,
-          required: field.required,
-          group: field.group,
-          validation: field.validation,
-          validation_message: field.validation_message,
-          searchable: field.searchable,
-        }),
+    // Verify target collection exists
+    console.log(`Verifying target collection "${targetCollection}" exists...`);
+    try {
+      await makeDirectusRequest("GET", `/collections/${targetCollection}`);
+    } catch (error) {
+      throw new Error(
+        `Target collection "${targetCollection}" does not exist. Please create it in the Directus UI first.`,
       );
     }
 
-    console.log(`Created ${sourceFields.length} fields`);
+    // Get source field metadata
+    console.log(`Fetching field metadata for ${sourceCollection}...`);
+    const fieldsResponse = await makeDirectusRequest(
+      "GET",
+      `/fields/${sourceCollection}`,
+    );
+    const sourceFields = fieldsResponse.data
+      .filter(
+        (field: { field: string }) =>
+          !["id", "sort", "date_created", "date_updated"].includes(
+            field.field,
+          ),
+      )
+      .map((field: { meta: unknown }) => field.meta);
+
+    console.log(`Found ${sourceFields.length} fields to copy`);
+
+    // Create fields in target collection
+    console.log(`Creating fields for ${targetCollection}...`);
+    for (const field of sourceFields) {
+      try {
+        await makeDirectusRequest("POST", `/fields/${targetCollection}`, {
+          field: (field as Record<string, unknown>).field,
+          special: (field as Record<string, unknown>).special,
+          interface: (field as Record<string, unknown>).interface,
+          options: (field as Record<string, unknown>).options,
+          display: (field as Record<string, unknown>).display,
+          display_options: (field as Record<string, unknown>)
+            .display_options,
+          readonly: (field as Record<string, unknown>).readonly,
+          hidden: (field as Record<string, unknown>).hidden,
+          sort: (field as Record<string, unknown>).sort,
+          width: (field as Record<string, unknown>).width,
+          translations: (field as Record<string, unknown>).translations,
+          note: (field as Record<string, unknown>).note,
+          conditions: (field as Record<string, unknown>).conditions,
+          required: (field as Record<string, unknown>).required,
+          group: (field as Record<string, unknown>).group,
+          validation: (field as Record<string, unknown>).validation,
+          validation_message: (field as Record<string, unknown>)
+            .validation_message,
+          searchable: (field as Record<string, unknown>).searchable,
+        });
+      } catch (error) {
+        console.warn(
+          `Warning: Could not create field ${
+            (field as Record<string, unknown>).field
+          }: ${error}`,
+        );
+      }
+    }
+
+    console.log(`Created/updated ${sourceFields.length} fields`);
 
     // Copy data
     console.log(
       `Copying data from ${sourceCollection} to ${targetCollection}...`,
     );
-    const items = await directus.request(
-      rest.read(sourceCollection, {
-        limit: -1,
-      }),
+    const itemsResponse = await makeDirectusRequest(
+      "GET",
+      `/items/${sourceCollection}?limit=-1`,
     );
+    const items = itemsResponse.data;
 
     if (items && items.length > 0) {
-      await directus.request(rest.create(targetCollection, items));
+      await makeDirectusRequest("POST", `/items/${targetCollection}`, items);
       console.log(`Copied ${items.length} rows`);
     } else {
       console.log("No data to copy");
