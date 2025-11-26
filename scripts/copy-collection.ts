@@ -38,14 +38,30 @@ async function main() {
 
     const collectionData = sourceCollectionMeta;
 
-    // Verify target collection exists
-    console.log(`Verifying target collection "${targetCollection}" exists...`);
+    // Create target collection if it doesn't exist
+    console.log(
+      `Checking if target collection "${targetCollection}" exists...`,
+    );
     try {
       await makeDirectusRequest("GET", `/collections/${targetCollection}`);
+      console.log(`Target collection "${targetCollection}" already exists`);
     } catch (error) {
-      throw new Error(
-        `Target collection "${targetCollection}" does not exist. Please create it in the Directus UI first.`,
+      console.log(
+        `Target collection "${targetCollection}" does not exist. Creating it...`,
       );
+      try {
+        await makeDirectusRequest("POST", "/collections", {
+          collection: targetCollection,
+          meta: collectionData,
+        });
+        console.log(
+          `Successfully created target collection "${targetCollection}"`,
+        );
+      } catch (createError) {
+        throw new Error(
+          `Failed to create target collection "${targetCollection}": ${createError}`,
+        );
+      }
     }
 
     // Get source field metadata
