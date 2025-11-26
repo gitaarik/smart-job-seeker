@@ -9,7 +9,7 @@ export interface DirectusSchema {
 }
 
 function getDirectusUrl(): string {
-  const url = getEnv("DIRECTUS_URL");
+  const url = getEnv("ADMIN_URL");
 
   if (!url) {
     throw new Error(
@@ -21,18 +21,18 @@ function getDirectusUrl(): string {
 }
 
 function getDirectusToken(): string {
-  const token = getEnv("DIRECTUS_ADMIN_TOKEN");
+  const token = getEnv("ADMIN_TOKEN");
 
   if (!token) {
     throw new Error(
-      "DIRECTUS_ADMIN_TOKEN environment variable is not set",
+      "ADMIN_TOKEN environment variable is not set",
     );
   }
 
   return token;
 }
 
-export function createDirectusRestClient() {
+export function createDirectusClient() {
   const directusUrl = getDirectusUrl();
   const token = getDirectusToken();
 

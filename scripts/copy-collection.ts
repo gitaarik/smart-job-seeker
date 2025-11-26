@@ -1,5 +1,5 @@
 import { rest } from "@directus/sdk";
-import { createDirectusRestClientWithToken } from "../src/lib/server/directus";
+import { createDirectusClient } from "../src/lib/server/directus";
 
 const sourceCollection = process.argv[2];
 const targetCollection = process.argv[3];
@@ -21,7 +21,7 @@ if (sourceCollection === targetCollection) {
 
 async function main() {
   try {
-    const directus = createDirectusRestClientWithToken();
+    const directus = createDirectusClient();
 
     console.log(
       `Copying collection "${sourceCollection}" to "${targetCollection}"...`,
