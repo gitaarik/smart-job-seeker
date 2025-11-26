@@ -73,49 +73,55 @@ async function main() {
       "GET",
       `/fields/${sourceCollection}`,
     );
-    const sourceFields = fieldsResponse.data
-      .filter(
-        (field: { field: string }) =>
-          !["id", "sort", "date_created", "date_updated"].includes(
-            field.field,
-          ),
-      )
-      .map((field: { meta: unknown }) => field.meta);
+    const sourceFields = fieldsResponse.data.filter(
+      (field: { field: string }) =>
+        !["id", "sort", "date_created", "date_updated"].includes(field.field),
+    );
 
     console.log(`Found ${sourceFields.length} fields to copy`);
 
     // Create fields in target collection
     console.log(`Creating fields for ${targetCollection}...`);
-    for (const field of sourceFields) {
+    for (const sourceField of sourceFields) {
+      const fieldData = sourceField as Record<string, unknown>;
       try {
-        await directusRequest("POST", `/fields/${targetCollection}`, {
-          field: (field as Record<string, unknown>).field,
-          special: (field as Record<string, unknown>).special,
-          interface: (field as Record<string, unknown>).interface,
-          options: (field as Record<string, unknown>).options,
-          display: (field as Record<string, unknown>).display,
-          display_options: (field as Record<string, unknown>)
-            .display_options,
-          readonly: (field as Record<string, unknown>).readonly,
-          hidden: (field as Record<string, unknown>).hidden,
-          sort: (field as Record<string, unknown>).sort,
-          width: (field as Record<string, unknown>).width,
-          translations: (field as Record<string, unknown>).translations,
-          note: (field as Record<string, unknown>).note,
-          conditions: (field as Record<string, unknown>).conditions,
-          required: (field as Record<string, unknown>).required,
-          group: (field as Record<string, unknown>).group,
-          validation: (field as Record<string, unknown>).validation,
-          validation_message: (field as Record<string, unknown>)
-            .validation_message,
-          searchable: (field as Record<string, unknown>).searchable,
-        });
+        const payload = {
+          field: fieldData.field,
+          type: fieldData.type,
+          special: fieldData.special,
+          interface: fieldData.interface,
+          options: fieldData.options,
+          display: fieldData.display,
+          display_options: fieldData.display_options,
+          readonly: fieldData.readonly,
+          hidden: fieldData.hidden,
+          sort: fieldData.sort,
+          width: fieldData.width,
+          translations: fieldData.translations,
+          note: fieldData.note,
+          conditions: fieldData.conditions,
+          required: fieldData.required,
+          group: fieldData.group,
+          validation: fieldData.validation,
+          validation_message: fieldData.validation_message,
+          searchable: fieldData.searchable,
+        };
+
+        await directusRequest("POST", `/fields/${targetCollection}`, payload);
       } catch (error) {
-        console.warn(
-          `Warning: Could not create field ${
-            (field as Record<string, unknown>).field
-          }: ${error}`,
-        );
+        const fieldName = fieldData.field || "unknown";
+        const errorMessage = error instanceof Error
+          ? error.message
+          : String(error);
+
+        // Silently ignore 400 errors (field might already exist)
+        if (errorMessage.includes("400")) {
+          console.log(`Field "${fieldName}" already exists, skipping`);
+        } else {
+          console.warn(
+            `Warning: Could not create field "${fieldName}": ${errorMessage}`,
+          );
+        }
       }
     }
 
