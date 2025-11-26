@@ -1,10 +1,10 @@
-import { makeDirectusRequest } from "../src/lib/server/directus";
+import { directusRequest } from "../src/lib/server/directus";
 
 async function clearDirectusCache() {
   try {
     console.log("Clearing Directus cache...");
 
-    await makeDirectusRequest("POST", "/utils/cache/clear");
+    await directusRequest("POST", "/utils/cache/clear");
 
     console.log("Directus cache cleared successfully");
   } catch (error) {

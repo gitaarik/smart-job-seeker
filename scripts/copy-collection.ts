@@ -1,4 +1,4 @@
-import { makeDirectusRequest } from "../src/lib/server/directus";
+import { directusRequest } from "../src/lib/server/directus";
 
 const sourceCollection = process.argv[2];
 const targetCollection = process.argv[3];
@@ -26,7 +26,7 @@ async function main() {
 
     // Get source collection metadata
     console.log(`Fetching collection metadata for ${sourceCollection}...`);
-    const sourceCollectionResponse = await makeDirectusRequest(
+    const sourceCollectionResponse = await directusRequest(
       "GET",
       `/collections/${sourceCollection}`,
     );
@@ -42,14 +42,14 @@ async function main() {
       `Checking if target collection "${targetCollection}" exists...`,
     );
     try {
-      await makeDirectusRequest("GET", `/collections/${targetCollection}`);
+      await directusRequest("GET", `/collections/${targetCollection}`);
       console.log(`Target collection "${targetCollection}" already exists`);
     } catch (error) {
       console.log(
         `Target collection "${targetCollection}" does not exist. Creating it...`,
       );
       try {
-        await makeDirectusRequest("POST", "/collections", {
+        await directusRequest("POST", "/collections", {
           collection: targetCollection,
           schema: sourceCollectionSchema,
           meta: sourceCollectionMeta,
@@ -66,7 +66,7 @@ async function main() {
 
     // Get source field metadata
     console.log(`Fetching field metadata for ${sourceCollection}...`);
-    const fieldsResponse = await makeDirectusRequest(
+    const fieldsResponse = await directusRequest(
       "GET",
       `/fields/${sourceCollection}`,
     );
@@ -85,7 +85,7 @@ async function main() {
     console.log(`Creating fields for ${targetCollection}...`);
     for (const field of sourceFields) {
       try {
-        await makeDirectusRequest("POST", `/fields/${targetCollection}`, {
+        await directusRequest("POST", `/fields/${targetCollection}`, {
           field: (field as Record<string, unknown>).field,
           special: (field as Record<string, unknown>).special,
           interface: (field as Record<string, unknown>).interface,
@@ -122,14 +122,14 @@ async function main() {
     console.log(
       `Copying data from ${sourceCollection} to ${targetCollection}...`,
     );
-    const itemsResponse = await makeDirectusRequest(
+    const itemsResponse = await directusRequest(
       "GET",
       `/items/${sourceCollection}?limit=-1`,
     );
     const items = itemsResponse.data;
 
     if (items && items.length > 0) {
-      await makeDirectusRequest("POST", `/items/${targetCollection}`, items);
+      await directusRequest("POST", `/items/${targetCollection}`, items);
       console.log(`Copied ${items.length} rows`);
     } else {
       console.log("No data to copy");

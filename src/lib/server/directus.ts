@@ -42,7 +42,7 @@ export function createDirectusClient() {
     .setToken(token);
 }
 
-export async function makeDirectusRequest(
+export async function directusRequest(
   method: string,
   endpoint: string,
   body?: unknown,
