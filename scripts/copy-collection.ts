@@ -1,4 +1,7 @@
-import { directusRequest } from "../src/lib/server/directus";
+import {
+  clearDirectusCache,
+  directusRequest,
+} from "../src/lib/server/directus";
 
 const sourceCollection = process.argv[2];
 const targetCollection = process.argv[3];
@@ -138,6 +141,10 @@ async function main() {
     console.log(
       `\n✓ Successfully copied collection "${sourceCollection}" to "${targetCollection}"`,
     );
+
+    console.log("Clearing Directus cache...");
+    await clearDirectusCache();
+    console.log("Directus cache cleared");
   } catch (error) {
     console.error("Error copying collection:", error);
     process.exit(1);
