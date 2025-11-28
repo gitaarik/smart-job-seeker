@@ -6,6 +6,7 @@ import { exportProfile } from "$lib/server/profile-export";
 import { generateAiChatFullPrompt } from "$lib/server/ai-chat-full-prompt-generate";
 import { generateAiChatResponse } from "$lib/server/ai-chat-response-generate";
 import { generateInterviewQuestionAnswer } from "$lib/server/ai-chat-interview-question";
+import { clearDirectusCache } from "$lib/server/directus";
 
 /**
  * Webhook endpoint for Directus Flow integration
@@ -84,6 +85,21 @@ export const POST: RequestHandler = async (event) => {
 
     // Process webhook based on event type
     const result = await processWebhookEvent(payload);
+
+    // Clear Directus cache after successful webhook processing
+    try {
+      console.log("[Webhook] Clearing Directus cache...");
+      await clearDirectusCache();
+      console.log("[Webhook] Directus cache cleared successfully");
+    } catch (cacheError) {
+      const cacheErrorMessage = cacheError instanceof Error
+        ? cacheError.message
+        : "Unknown error";
+      console.warn(
+        `[Webhook] Failed to clear Directus cache: ${cacheErrorMessage}`,
+      );
+      // Don't fail the webhook response due to cache clearing failure
+    }
 
     return json(
       {
@@ -167,7 +183,6 @@ async function handleProfileExport(
   }
 
   try {
-
     const results = await Promise.allSettled(
       profileIds.map((profileId) =>
         exportProfile(profileId)
@@ -245,7 +260,6 @@ async function handleAiChatGenerateFullPrompt(
   }
 
   try {
-
     const results = await Promise.allSettled(
       aiChatIds.map((aiChatId) =>
         generateAiChatFullPrompt(aiChatId)
@@ -325,7 +339,6 @@ async function handleAiChatGenerateResponse(
   }
 
   try {
-
     const results = await Promise.allSettled(
       aiChatIds.map((aiChatId) =>
         generateAiChatResponse(aiChatId)
@@ -404,7 +417,6 @@ async function handleApplicationInterviewQuestionGenerateAiAnswer(
   }
 
   try {
-
     const results = await Promise.allSettled(
       questionIds.map((questionId) =>
         generateInterviewQuestionAnswer(questionId)
