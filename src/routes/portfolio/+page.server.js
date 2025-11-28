@@ -24,7 +24,6 @@ export async function load({ locals }) {
           side_project_achievements: { orderBy: { sort: "asc" } },
           side_project_technologies: {
             orderBy: { sort: "asc" },
-            where: { status: { equals: "published" } },
           },
         },
         orderBy: { sort: "asc" },

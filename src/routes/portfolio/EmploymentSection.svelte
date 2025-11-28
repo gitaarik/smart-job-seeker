@@ -115,22 +115,22 @@
       <p class="text-sm italic"><strong>Note:</strong> {data.note}</p>
     {/if}
 
-    {#if data.achievements.length > 0}
+    {#if data.work_experience_achievements.length > 0}
       <div>
         <h4 class="text-lg print:text-base font-semibold mb-3 print:mb-2">
           Key Achievements:
         </h4>
-        <InfoBoxes items={data.achievements} />
+        <InfoBoxes items={data.work_experience_achievements} />
       </div>
     {/if}
 
-    {#if data.technologies.length > 0}
+    {#if data.work_experience_technologies.length > 0}
       <div>
         <h4 class="text-lg print:text-base font-semibold mb-3 print:mb-2">
           Technologies Used:
         </h4>
         <ul class="flex flex-wrap gap-2 print:gap-[5px]">
-          {#each data.technologies as tech (tech.name)}
+          {#each data.work_experience_technologies as tech (tech.name)}
             <TechTag tech={tech.name} />
           {/each}
         </ul>
