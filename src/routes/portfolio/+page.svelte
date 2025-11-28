@@ -8,7 +8,6 @@
   import EducationSection from "./EducationSection.svelte";
   import ProjectsSection from "./ProjectsSection.svelte";
   import HobbiesInterestsSection from "./HobbiesInterestsSection.svelte";
-  import PersonalityAndMethodologies from "./PersonalityAndMethodologies.svelte";
   import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
 
   export let data: PageData;
@@ -39,7 +38,6 @@
     <HeaderSection profile={data.profile} />
     <OverviewSection profile={data.profile} />
     <TechnicalExpertiseSection profile={data.profile} />
-    <PersonalityAndMethodologies profile={data.profile} />
     <ProfessionalExperience profile={data.profile} />
     <EducationSection profile={data.profile} />
     <ProjectsSection profile={data.profile} />

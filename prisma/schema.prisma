@@ -1,43 +1,31 @@
 generator client {
-  provider  =  "prisma-client"
-  output    =  "../generated/prisma" 
+  provider = "prisma-client"
+  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
 }
 
-model application_interview_questions {
-  id                                                       Int          @id @default(autoincrement())
-  sort                                                     Int?
-  date_created                                             DateTime?    @db.Timestamptz(6)
-  date_updated                                             DateTime?    @db.Timestamptz(6)
-  application                                              Int
-  question                                                 String
-  answer                                                   String?
-  ai_chat                                                  Int?
-  ai_chat_application_interview_questions_ai_chatToai_chat ai_chat?     @relation("application_interview_questions_ai_chatToai_chat", fields: [ai_chat], references: [id], onUpdate: NoAction, map: "application_interview_questions_ai_chat_foreign")
-  applications                                             applications @relation(fields: [application], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "application_interview_questions_application_foreign")
-}
-
 model applications {
-  id                              Int                               @id @default(autoincrement())
-  status                          String                            @default("draft") @db.VarChar(255)
-  date_created                    DateTime?                         @db.Timestamptz(6)
-  date_updated                    DateTime?                         @db.Timestamptz(6)
-  vacancy                         Int?
-  profile                         Int
-  cv_sent_through                 String?                           @db.VarChar(255)
-  cv_file_sent                    String?                           @db.Uuid
-  application_sent_date           DateTime?                         @db.Date
-  discontinued_reason             String?                           @db.VarChar(255)
-  discontinued_note               String?
-  application_note                String?
-  application_seen_date           DateTime?                         @db.Date
-  application_interview_questions application_interview_questions[]
-  directus_files                  directus_files?                   @relation(fields: [cv_file_sent], references: [id], onUpdate: NoAction, map: "applications_cv_file_sent_foreign")
-  profiles                        profiles                          @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "applications_profile_foreign")
-  vacancies                       vacancies?                        @relation(fields: [vacancy], references: [id], onUpdate: NoAction, map: "applications_vacancy_foreign")
+  id                    Int                     @id @default(autoincrement())
+  status                String                  @default("draft") @db.VarChar(255)
+  date_created          DateTime?               @db.Timestamptz(6)
+  date_updated          DateTime?               @db.Timestamptz(6)
+  vacancy               Int?
+  profile               Int
+  cv_sent_through       String?                 @db.VarChar(255)
+  cv_file_sent          String?                 @db.Uuid
+  application_sent_date DateTime?               @db.Date
+  discontinued_reason   String?                 @db.VarChar(255)
+  discontinued_note     String?
+  application_note      String?
+  application_seen_date DateTime?               @db.Date
+  cover_letter          String?
+  application_questions application_questions[]
+  directus_files        directus_files?         @relation(fields: [cv_file_sent], references: [id], onUpdate: NoAction, map: "applications_cv_file_sent_foreign")
+  profiles              profiles                @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "applications_profile_foreign")
+  vacancies             vacancies?              @relation(fields: [vacancy], references: [id], onUpdate: NoAction, map: "applications_vacancy_foreign")
 }
 
 model cheat_sheets {
@@ -508,6 +496,8 @@ model directus_users {
   theme_light_overrides                                                   Json?                    @db.Json
   theme_dark_overrides                                                    Json?                    @db.Json
   text_direction                                                          String                   @default("auto") @db.VarChar(255)
+  ai_prompts_ai_prompts_user_createdTodirectus_users                      ai_prompts[]             @relation("ai_prompts_user_createdTodirectus_users")
+  ai_prompts_ai_prompts_user_updatedTodirectus_users                      ai_prompts[]             @relation("ai_prompts_user_updatedTodirectus_users")
   directus_access                                                         directus_access[]
   directus_comments_directus_comments_user_createdTodirectus_users        directus_comments[]      @relation("directus_comments_user_createdTodirectus_users")
   directus_comments_directus_comments_user_updatedTodirectus_users        directus_comments[]      @relation("directus_comments_user_updatedTodirectus_users")
@@ -737,11 +727,8 @@ model salary_expectations {
 
 model side_project_achievements {
   id            Int           @id @default(autoincrement())
-  title         String?       @db.VarChar(255)
-  fa_icon       String?       @db.VarChar(255)
   description   String?       @db.VarChar(255)
   side_project  Int
-  status        String        @default("draft") @db.VarChar(255)
   date_created  DateTime?     @db.Timestamptz(6)
   date_updated  DateTime?     @db.Timestamptz(6)
   sort          Int?
@@ -750,7 +737,6 @@ model side_project_achievements {
 
 model side_project_technologies {
   id            Int           @id @default(autoincrement())
-  status        String        @default("draft") @db.VarChar(255)
   sort          Int?
   date_created  DateTime?     @db.Timestamptz(6)
   date_updated  DateTime?     @db.Timestamptz(6)
@@ -897,16 +883,16 @@ model work_experiences {
 }
 
 model ai_chat {
-  id                                                                               Int                               @id @default(autoincrement())
-  date_created                                                                     DateTime?                         @db.Timestamptz(6)
-  date_updated                                                                     DateTime?                         @db.Timestamptz(6)
-  profile                                                                          Int
-  system_prompt                                                                    String                            @default("Act as a helpful assistant for a SWE job seeker & applicant. Help answer questions about job descriptions, answer application questions, write cover letters etc. Below is the information about the applicant. First the schema in JSON, after that actual data in JSON. You can use the schema to find the descriptions of certain objects / fields in the data. Be brief and concise in your answer. Max 3 short paragraphs. Hiring managers usually do not have a lot of time to extensively review every text. Do not add or list any skills or knowledge which is not in the data of the applicant. You can maybe add some skills the job requires that are closely connected to skills the applicant has. Keep the story close to the real work/project experience of the applicant. Do not make up anything that is not obvious from the original info of the applicant. Don't necessarily generate complete copy-and-paste answers, but rather give suggestions for what kind of things the applicant could write. If there are multiple suitable answers, give them all, so the applicant can choose and customize to their choice.\n\n## The schema:\n\n{schema}\n\n## The data:\n\n{data}")
-  user_prompt                                                                      String
-  full_prompt                                                                      String?
-  response                                                                         String?
-  profiles                                                                         profiles                          @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "ai_chat_profile_foreign")
-  application_interview_questions_application_interview_questions_ai_chatToai_chat application_interview_questions[] @relation("application_interview_questions_ai_chatToai_chat")
+  id                                                           Int                     @id @default(autoincrement())
+  date_created                                                 DateTime?               @db.Timestamptz(6)
+  date_updated                                                 DateTime?               @db.Timestamptz(6)
+  profile                                                      Int
+  system_prompt                                                String                  @default("Act as a helpful assistant for a SWE job seeker & applicant. Help answer questions about job descriptions, answer application questions, write cover letters etc. Below is the information about the applicant. First the schema in JSON, after that actual data in JSON. You can use the schema to find the descriptions of certain objects / fields in the data. Be brief and concise in your answer. Max 3 short paragraphs. Hiring managers usually do not have a lot of time to extensively review every text. Do not add or list any skills or knowledge which is not in the data of the applicant. You can maybe add some skills the job requires that are closely connected to skills the applicant has. Keep the story close to the real work/project experience of the applicant. Do not make up anything that is not obvious from the original info of the applicant. Don''t necessarily generate complete copy-and-paste answers, but rather give suggestions for what kind of things the applicant could write. If there are multiple suitable answers, give them all, so the applicant can choose and customize to their choice.\n\n## The schema:\n\n${schema}\n\n## The data:\n\n${data}")
+  user_prompt                                                  String
+  full_prompt                                                  String?
+  response                                                     String?
+  profiles                                                     profiles                @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "ai_chat_profile_foreign")
+  application_questions_application_questions_ai_chatToai_chat application_questions[] @relation("application_questions_ai_chatToai_chat")
 }
 
 model os_contributions {
@@ -950,6 +936,37 @@ model work_experience_projects {
   outcome                              String?
   work_experience_project_technologies work_experience_project_technologies[]
   work_experiences                     work_experiences?                      @relation(fields: [work_experience], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "work_experience_projects_work_experience_foreign")
+}
+
+model ai_prompts {
+  id                                                     String          @id @db.Uuid
+  sort                                                   Int?
+  date_created                                           DateTime?       @default(now()) @db.Timestamptz(6)
+  user_created                                           String?         @db.Uuid
+  date_updated                                           DateTime?       @db.Timestamptz(6)
+  user_updated                                           String?         @db.Uuid
+  name                                                   String?         @unique(map: "ai_prompts_name_unique") @db.VarChar(255)
+  status                                                 String?         @default("draft") @db.VarChar(255)
+  description                                            String?
+  system_prompt                                          String?
+  messages                                               Json?           @db.Json
+  directus_users_ai_prompts_user_createdTodirectus_users directus_users? @relation("ai_prompts_user_createdTodirectus_users", fields: [user_created], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ai_prompts_user_created_foreign")
+  directus_users_ai_prompts_user_updatedTodirectus_users directus_users? @relation("ai_prompts_user_updatedTodirectus_users", fields: [user_updated], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ai_prompts_user_updated_foreign")
+
+  @@index([name], map: "ai_prompts_name_index")
+}
+
+model application_questions {
+  id                                             Int          @id @default(autoincrement())
+  sort                                           Int?
+  date_created                                   DateTime?    @db.Timestamptz(6)
+  date_updated                                   DateTime?    @db.Timestamptz(6)
+  application                                    Int
+  question                                       String
+  answer                                         String?
+  ai_chat                                        Int?
+  ai_chat_application_questions_ai_chatToai_chat ai_chat?     @relation("application_questions_ai_chatToai_chat", fields: [ai_chat], references: [id], onUpdate: NoAction, map: "application_questions_ai_chat_foreign")
+  applications                                   applications @relation(fields: [application], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "application_questions_application_foreign")
 }
 
 enum Role {

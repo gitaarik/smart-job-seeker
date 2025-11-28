@@ -8,7 +8,6 @@
  *
  * 🟢 You can import this file directly.
  */
-export type * from './models/application_interview_questions'
 export type * from './models/applications'
 export type * from './models/cheat_sheets'
 export type * from './models/collected_data'
@@ -64,4 +63,6 @@ export type * from './models/ai_chat'
 export type * from './models/os_contributions'
 export type * from './models/work_experience_project_technologies'
 export type * from './models/work_experience_projects'
+export type * from './models/ai_prompts'
+export type * from './models/application_questions'
 export type * from './commonInputTypes'

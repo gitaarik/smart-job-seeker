@@ -75,17 +75,10 @@
       summary: string;
       tags: string[];
     }>;
-    soft_skills: Array<{
-      name: string;
-      tags?: string[];
-    }>;
     highlights: Array<{
       title: string;
       description: string;
       tags?: string[];
-    }>;
-    dev_methodologies: Array<{
-      name: string;
     }>;
     profile_versions: Array<{
       id: number;

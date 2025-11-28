@@ -245,7 +245,7 @@ export type ai_chatWhereInput = {
   full_prompt?: Prisma.StringNullableFilter<"ai_chat"> | string | null
   response?: Prisma.StringNullableFilter<"ai_chat"> | string | null
   profiles?: Prisma.XOR<Prisma.ProfilesScalarRelationFilter, Prisma.profilesWhereInput>
-  application_interview_questions_application_interview_questions_ai_chatToai_chat?: Prisma.Application_interview_questionsListRelationFilter
+  application_questions_application_questions_ai_chatToai_chat?: Prisma.Application_questionsListRelationFilter
 }
 
 export type ai_chatOrderByWithRelationInput = {
@@ -258,7 +258,7 @@ export type ai_chatOrderByWithRelationInput = {
   full_prompt?: Prisma.SortOrderInput | Prisma.SortOrder
   response?: Prisma.SortOrderInput | Prisma.SortOrder
   profiles?: Prisma.profilesOrderByWithRelationInput
-  application_interview_questions_application_interview_questions_ai_chatToai_chat?: Prisma.application_interview_questionsOrderByRelationAggregateInput
+  application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsOrderByRelationAggregateInput
 }
 
 export type ai_chatWhereUniqueInput = Prisma.AtLeast<{
@@ -274,7 +274,7 @@ export type ai_chatWhereUniqueInput = Prisma.AtLeast<{
   full_prompt?: Prisma.StringNullableFilter<"ai_chat"> | string | null
   response?: Prisma.StringNullableFilter<"ai_chat"> | string | null
   profiles?: Prisma.XOR<Prisma.ProfilesScalarRelationFilter, Prisma.profilesWhereInput>
-  application_interview_questions_application_interview_questions_ai_chatToai_chat?: Prisma.Application_interview_questionsListRelationFilter
+  application_questions_application_questions_ai_chatToai_chat?: Prisma.Application_questionsListRelationFilter
 }, "id">
 
 export type ai_chatOrderByWithAggregationInput = {
@@ -315,7 +315,7 @@ export type ai_chatCreateInput = {
   full_prompt?: string | null
   response?: string | null
   profiles: Prisma.profilesCreateNestedOneWithoutAi_chatInput
-  application_interview_questions_application_interview_questions_ai_chatToai_chat?: Prisma.application_interview_questionsCreateNestedManyWithoutAi_chat_application_interview_questions_ai_chatToai_chatInput
+  application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsCreateNestedManyWithoutAi_chat_application_questions_ai_chatToai_chatInput
 }
 
 export type ai_chatUncheckedCreateInput = {
@@ -327,7 +327,7 @@ export type ai_chatUncheckedCreateInput = {
   user_prompt: string
   full_prompt?: string | null
   response?: string | null
-  application_interview_questions_application_interview_questions_ai_chatToai_chat?: Prisma.application_interview_questionsUncheckedCreateNestedManyWithoutAi_chat_application_interview_questions_ai_chatToai_chatInput
+  application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsUncheckedCreateNestedManyWithoutAi_chat_application_questions_ai_chatToai_chatInput
 }
 
 export type ai_chatUpdateInput = {
@@ -338,7 +338,7 @@ export type ai_chatUpdateInput = {
   full_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   response?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profiles?: Prisma.profilesUpdateOneRequiredWithoutAi_chatNestedInput
-  application_interview_questions_application_interview_questions_ai_chatToai_chat?: Prisma.application_interview_questionsUpdateManyWithoutAi_chat_application_interview_questions_ai_chatToai_chatNestedInput
+  application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsUpdateManyWithoutAi_chat_application_questions_ai_chatToai_chatNestedInput
 }
 
 export type ai_chatUncheckedUpdateInput = {
@@ -350,7 +350,7 @@ export type ai_chatUncheckedUpdateInput = {
   user_prompt?: Prisma.StringFieldUpdateOperationsInput | string
   full_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   response?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  application_interview_questions_application_interview_questions_ai_chatToai_chat?: Prisma.application_interview_questionsUncheckedUpdateManyWithoutAi_chat_application_interview_questions_ai_chatToai_chatNestedInput
+  application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsUncheckedUpdateManyWithoutAi_chat_application_questions_ai_chatToai_chatNestedInput
 }
 
 export type ai_chatCreateManyInput = {
@@ -382,11 +382,6 @@ export type ai_chatUncheckedUpdateManyInput = {
   user_prompt?: Prisma.StringFieldUpdateOperationsInput | string
   full_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   response?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-}
-
-export type Ai_chatNullableScalarRelationFilter = {
-  is?: Prisma.ai_chatWhereInput | null
-  isNot?: Prisma.ai_chatWhereInput | null
 }
 
 export type Ai_chatListRelationFilter = {
@@ -442,20 +437,9 @@ export type ai_chatSumOrderByAggregateInput = {
   profile?: Prisma.SortOrder
 }
 
-export type ai_chatCreateNestedOneWithoutApplication_interview_questions_application_interview_questions_ai_chatToai_chatInput = {
-  create?: Prisma.XOR<Prisma.ai_chatCreateWithoutApplication_interview_questions_application_interview_questions_ai_chatToai_chatInput, Prisma.ai_chatUncheckedCreateWithoutApplication_interview_questions_application_interview_questions_ai_chatToai_chatInput>
-  connectOrCreate?: Prisma.ai_chatCreateOrConnectWithoutApplication_interview_questions_application_interview_questions_ai_chatToai_chatInput
-  connect?: Prisma.ai_chatWhereUniqueInput
-}
-
-export type ai_chatUpdateOneWithoutApplication_interview_questions_application_interview_questions_ai_chatToai_chatNestedInput = {
-  create?: Prisma.XOR<Prisma.ai_chatCreateWithoutApplication_interview_questions_application_interview_questions_ai_chatToai_chatInput, Prisma.ai_chatUncheckedCreateWithoutApplication_interview_questions_application_interview_questions_ai_chatToai_chatInput>
-  connectOrCreate?: Prisma.ai_chatCreateOrConnectWithoutApplication_interview_questions_application_interview_questions_ai_chatToai_chatInput
-  upsert?: Prisma.ai_chatUpsertWithoutApplication_interview_questions_application_interview_questions_ai_chatToai_chatInput
-  disconnect?: Prisma.ai_chatWhereInput | boolean
-  delete?: Prisma.ai_chatWhereInput | boolean
-  connect?: Prisma.ai_chatWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.ai_chatUpdateToOneWithWhereWithoutApplication_interview_questions_application_interview_questions_ai_chatToai_chatInput, Prisma.ai_chatUpdateWithoutApplication_interview_questions_application_interview_questions_ai_chatToai_chatInput>, Prisma.ai_chatUncheckedUpdateWithoutApplication_interview_questions_application_interview_questions_ai_chatToai_chatInput>
+export type Ai_chatNullableScalarRelationFilter = {
+  is?: Prisma.ai_chatWhereInput | null
+  isNot?: Prisma.ai_chatWhereInput | null
 }
 
 export type ai_chatCreateNestedManyWithoutProfilesInput = {
@@ -500,62 +484,20 @@ export type ai_chatUncheckedUpdateManyWithoutProfilesNestedInput = {
   deleteMany?: Prisma.ai_chatScalarWhereInput | Prisma.ai_chatScalarWhereInput[]
 }
 
-export type ai_chatCreateWithoutApplication_interview_questions_application_interview_questions_ai_chatToai_chatInput = {
-  date_created?: Date | string | null
-  date_updated?: Date | string | null
-  system_prompt?: string
-  user_prompt: string
-  full_prompt?: string | null
-  response?: string | null
-  profiles: Prisma.profilesCreateNestedOneWithoutAi_chatInput
+export type ai_chatCreateNestedOneWithoutApplication_questions_application_questions_ai_chatToai_chatInput = {
+  create?: Prisma.XOR<Prisma.ai_chatCreateWithoutApplication_questions_application_questions_ai_chatToai_chatInput, Prisma.ai_chatUncheckedCreateWithoutApplication_questions_application_questions_ai_chatToai_chatInput>
+  connectOrCreate?: Prisma.ai_chatCreateOrConnectWithoutApplication_questions_application_questions_ai_chatToai_chatInput
+  connect?: Prisma.ai_chatWhereUniqueInput
 }
 
-export type ai_chatUncheckedCreateWithoutApplication_interview_questions_application_interview_questions_ai_chatToai_chatInput = {
-  id?: number
-  date_created?: Date | string | null
-  date_updated?: Date | string | null
-  profile: number
-  system_prompt?: string
-  user_prompt: string
-  full_prompt?: string | null
-  response?: string | null
-}
-
-export type ai_chatCreateOrConnectWithoutApplication_interview_questions_application_interview_questions_ai_chatToai_chatInput = {
-  where: Prisma.ai_chatWhereUniqueInput
-  create: Prisma.XOR<Prisma.ai_chatCreateWithoutApplication_interview_questions_application_interview_questions_ai_chatToai_chatInput, Prisma.ai_chatUncheckedCreateWithoutApplication_interview_questions_application_interview_questions_ai_chatToai_chatInput>
-}
-
-export type ai_chatUpsertWithoutApplication_interview_questions_application_interview_questions_ai_chatToai_chatInput = {
-  update: Prisma.XOR<Prisma.ai_chatUpdateWithoutApplication_interview_questions_application_interview_questions_ai_chatToai_chatInput, Prisma.ai_chatUncheckedUpdateWithoutApplication_interview_questions_application_interview_questions_ai_chatToai_chatInput>
-  create: Prisma.XOR<Prisma.ai_chatCreateWithoutApplication_interview_questions_application_interview_questions_ai_chatToai_chatInput, Prisma.ai_chatUncheckedCreateWithoutApplication_interview_questions_application_interview_questions_ai_chatToai_chatInput>
-  where?: Prisma.ai_chatWhereInput
-}
-
-export type ai_chatUpdateToOneWithWhereWithoutApplication_interview_questions_application_interview_questions_ai_chatToai_chatInput = {
-  where?: Prisma.ai_chatWhereInput
-  data: Prisma.XOR<Prisma.ai_chatUpdateWithoutApplication_interview_questions_application_interview_questions_ai_chatToai_chatInput, Prisma.ai_chatUncheckedUpdateWithoutApplication_interview_questions_application_interview_questions_ai_chatToai_chatInput>
-}
-
-export type ai_chatUpdateWithoutApplication_interview_questions_application_interview_questions_ai_chatToai_chatInput = {
-  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  system_prompt?: Prisma.StringFieldUpdateOperationsInput | string
-  user_prompt?: Prisma.StringFieldUpdateOperationsInput | string
-  full_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  response?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profiles?: Prisma.profilesUpdateOneRequiredWithoutAi_chatNestedInput
-}
-
-export type ai_chatUncheckedUpdateWithoutApplication_interview_questions_application_interview_questions_ai_chatToai_chatInput = {
-  id?: Prisma.IntFieldUpdateOperationsInput | number
-  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  profile?: Prisma.IntFieldUpdateOperationsInput | number
-  system_prompt?: Prisma.StringFieldUpdateOperationsInput | string
-  user_prompt?: Prisma.StringFieldUpdateOperationsInput | string
-  full_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  response?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+export type ai_chatUpdateOneWithoutApplication_questions_application_questions_ai_chatToai_chatNestedInput = {
+  create?: Prisma.XOR<Prisma.ai_chatCreateWithoutApplication_questions_application_questions_ai_chatToai_chatInput, Prisma.ai_chatUncheckedCreateWithoutApplication_questions_application_questions_ai_chatToai_chatInput>
+  connectOrCreate?: Prisma.ai_chatCreateOrConnectWithoutApplication_questions_application_questions_ai_chatToai_chatInput
+  upsert?: Prisma.ai_chatUpsertWithoutApplication_questions_application_questions_ai_chatToai_chatInput
+  disconnect?: Prisma.ai_chatWhereInput | boolean
+  delete?: Prisma.ai_chatWhereInput | boolean
+  connect?: Prisma.ai_chatWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ai_chatUpdateToOneWithWhereWithoutApplication_questions_application_questions_ai_chatToai_chatInput, Prisma.ai_chatUpdateWithoutApplication_questions_application_questions_ai_chatToai_chatInput>, Prisma.ai_chatUncheckedUpdateWithoutApplication_questions_application_questions_ai_chatToai_chatInput>
 }
 
 export type ai_chatCreateWithoutProfilesInput = {
@@ -565,7 +507,7 @@ export type ai_chatCreateWithoutProfilesInput = {
   user_prompt: string
   full_prompt?: string | null
   response?: string | null
-  application_interview_questions_application_interview_questions_ai_chatToai_chat?: Prisma.application_interview_questionsCreateNestedManyWithoutAi_chat_application_interview_questions_ai_chatToai_chatInput
+  application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsCreateNestedManyWithoutAi_chat_application_questions_ai_chatToai_chatInput
 }
 
 export type ai_chatUncheckedCreateWithoutProfilesInput = {
@@ -576,7 +518,7 @@ export type ai_chatUncheckedCreateWithoutProfilesInput = {
   user_prompt: string
   full_prompt?: string | null
   response?: string | null
-  application_interview_questions_application_interview_questions_ai_chatToai_chat?: Prisma.application_interview_questionsUncheckedCreateNestedManyWithoutAi_chat_application_interview_questions_ai_chatToai_chatInput
+  application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsUncheckedCreateNestedManyWithoutAi_chat_application_questions_ai_chatToai_chatInput
 }
 
 export type ai_chatCreateOrConnectWithoutProfilesInput = {
@@ -619,6 +561,64 @@ export type ai_chatScalarWhereInput = {
   response?: Prisma.StringNullableFilter<"ai_chat"> | string | null
 }
 
+export type ai_chatCreateWithoutApplication_questions_application_questions_ai_chatToai_chatInput = {
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  system_prompt?: string
+  user_prompt: string
+  full_prompt?: string | null
+  response?: string | null
+  profiles: Prisma.profilesCreateNestedOneWithoutAi_chatInput
+}
+
+export type ai_chatUncheckedCreateWithoutApplication_questions_application_questions_ai_chatToai_chatInput = {
+  id?: number
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  profile: number
+  system_prompt?: string
+  user_prompt: string
+  full_prompt?: string | null
+  response?: string | null
+}
+
+export type ai_chatCreateOrConnectWithoutApplication_questions_application_questions_ai_chatToai_chatInput = {
+  where: Prisma.ai_chatWhereUniqueInput
+  create: Prisma.XOR<Prisma.ai_chatCreateWithoutApplication_questions_application_questions_ai_chatToai_chatInput, Prisma.ai_chatUncheckedCreateWithoutApplication_questions_application_questions_ai_chatToai_chatInput>
+}
+
+export type ai_chatUpsertWithoutApplication_questions_application_questions_ai_chatToai_chatInput = {
+  update: Prisma.XOR<Prisma.ai_chatUpdateWithoutApplication_questions_application_questions_ai_chatToai_chatInput, Prisma.ai_chatUncheckedUpdateWithoutApplication_questions_application_questions_ai_chatToai_chatInput>
+  create: Prisma.XOR<Prisma.ai_chatCreateWithoutApplication_questions_application_questions_ai_chatToai_chatInput, Prisma.ai_chatUncheckedCreateWithoutApplication_questions_application_questions_ai_chatToai_chatInput>
+  where?: Prisma.ai_chatWhereInput
+}
+
+export type ai_chatUpdateToOneWithWhereWithoutApplication_questions_application_questions_ai_chatToai_chatInput = {
+  where?: Prisma.ai_chatWhereInput
+  data: Prisma.XOR<Prisma.ai_chatUpdateWithoutApplication_questions_application_questions_ai_chatToai_chatInput, Prisma.ai_chatUncheckedUpdateWithoutApplication_questions_application_questions_ai_chatToai_chatInput>
+}
+
+export type ai_chatUpdateWithoutApplication_questions_application_questions_ai_chatToai_chatInput = {
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  system_prompt?: Prisma.StringFieldUpdateOperationsInput | string
+  user_prompt?: Prisma.StringFieldUpdateOperationsInput | string
+  full_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  response?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profiles?: Prisma.profilesUpdateOneRequiredWithoutAi_chatNestedInput
+}
+
+export type ai_chatUncheckedUpdateWithoutApplication_questions_application_questions_ai_chatToai_chatInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profile?: Prisma.IntFieldUpdateOperationsInput | number
+  system_prompt?: Prisma.StringFieldUpdateOperationsInput | string
+  user_prompt?: Prisma.StringFieldUpdateOperationsInput | string
+  full_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  response?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+}
+
 export type ai_chatCreateManyProfilesInput = {
   id?: number
   date_created?: Date | string | null
@@ -636,7 +636,7 @@ export type ai_chatUpdateWithoutProfilesInput = {
   user_prompt?: Prisma.StringFieldUpdateOperationsInput | string
   full_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   response?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  application_interview_questions_application_interview_questions_ai_chatToai_chat?: Prisma.application_interview_questionsUpdateManyWithoutAi_chat_application_interview_questions_ai_chatToai_chatNestedInput
+  application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsUpdateManyWithoutAi_chat_application_questions_ai_chatToai_chatNestedInput
 }
 
 export type ai_chatUncheckedUpdateWithoutProfilesInput = {
@@ -647,7 +647,7 @@ export type ai_chatUncheckedUpdateWithoutProfilesInput = {
   user_prompt?: Prisma.StringFieldUpdateOperationsInput | string
   full_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   response?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  application_interview_questions_application_interview_questions_ai_chatToai_chat?: Prisma.application_interview_questionsUncheckedUpdateManyWithoutAi_chat_application_interview_questions_ai_chatToai_chatNestedInput
+  application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsUncheckedUpdateManyWithoutAi_chat_application_questions_ai_chatToai_chatNestedInput
 }
 
 export type ai_chatUncheckedUpdateManyWithoutProfilesInput = {
@@ -666,11 +666,11 @@ export type ai_chatUncheckedUpdateManyWithoutProfilesInput = {
  */
 
 export type Ai_chatCountOutputType = {
-  application_interview_questions_application_interview_questions_ai_chatToai_chat: number
+  application_questions_application_questions_ai_chatToai_chat: number
 }
 
 export type Ai_chatCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  application_interview_questions_application_interview_questions_ai_chatToai_chat?: boolean | Ai_chatCountOutputTypeCountApplication_interview_questions_application_interview_questions_ai_chatToai_chatArgs
+  application_questions_application_questions_ai_chatToai_chat?: boolean | Ai_chatCountOutputTypeCountApplication_questions_application_questions_ai_chatToai_chatArgs
 }
 
 /**
@@ -686,8 +686,8 @@ export type Ai_chatCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Exte
 /**
  * Ai_chatCountOutputType without action
  */
-export type Ai_chatCountOutputTypeCountApplication_interview_questions_application_interview_questions_ai_chatToai_chatArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.application_interview_questionsWhereInput
+export type Ai_chatCountOutputTypeCountApplication_questions_application_questions_ai_chatToai_chatArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.application_questionsWhereInput
 }
 
 
@@ -701,7 +701,7 @@ export type ai_chatSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   full_prompt?: boolean
   response?: boolean
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
-  application_interview_questions_application_interview_questions_ai_chatToai_chat?: boolean | Prisma.ai_chat$application_interview_questions_application_interview_questions_ai_chatToai_chatArgs<ExtArgs>
+  application_questions_application_questions_ai_chatToai_chat?: boolean | Prisma.ai_chat$application_questions_application_questions_ai_chatToai_chatArgs<ExtArgs>
   _count?: boolean | Prisma.Ai_chatCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["ai_chat"]>
 
@@ -743,7 +743,7 @@ export type ai_chatSelectScalar = {
 export type ai_chatOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "date_created" | "date_updated" | "profile" | "system_prompt" | "user_prompt" | "full_prompt" | "response", ExtArgs["result"]["ai_chat"]>
 export type ai_chatInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
-  application_interview_questions_application_interview_questions_ai_chatToai_chat?: boolean | Prisma.ai_chat$application_interview_questions_application_interview_questions_ai_chatToai_chatArgs<ExtArgs>
+  application_questions_application_questions_ai_chatToai_chat?: boolean | Prisma.ai_chat$application_questions_application_questions_ai_chatToai_chatArgs<ExtArgs>
   _count?: boolean | Prisma.Ai_chatCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type ai_chatIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -757,7 +757,7 @@ export type $ai_chatPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
   name: "ai_chat"
   objects: {
     profiles: Prisma.$profilesPayload<ExtArgs>
-    application_interview_questions_application_interview_questions_ai_chatToai_chat: Prisma.$application_interview_questionsPayload<ExtArgs>[]
+    application_questions_application_questions_ai_chatToai_chat: Prisma.$application_questionsPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
@@ -1163,7 +1163,7 @@ readonly fields: ai_chatFieldRefs;
 export interface Prisma__ai_chatClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   profiles<T extends Prisma.profilesDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.profilesDefaultArgs<ExtArgs>>): Prisma.Prisma__profilesClient<runtime.Types.Result.GetResult<Prisma.$profilesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-  application_interview_questions_application_interview_questions_ai_chatToai_chat<T extends Prisma.ai_chat$application_interview_questions_application_interview_questions_ai_chatToai_chatArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ai_chat$application_interview_questions_application_interview_questions_ai_chatToai_chatArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$application_interview_questionsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  application_questions_application_questions_ai_chatToai_chat<T extends Prisma.ai_chat$application_questions_application_questions_ai_chatToai_chatArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ai_chat$application_questions_application_questions_ai_chatToai_chatArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$application_questionsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1597,27 +1597,27 @@ export type ai_chatDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Inter
 }
 
 /**
- * ai_chat.application_interview_questions_application_interview_questions_ai_chatToai_chat
+ * ai_chat.application_questions_application_questions_ai_chatToai_chat
  */
-export type ai_chat$application_interview_questions_application_interview_questions_ai_chatToai_chatArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+export type ai_chat$application_questions_application_questions_ai_chatToai_chatArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
-   * Select specific fields to fetch from the application_interview_questions
+   * Select specific fields to fetch from the application_questions
    */
-  select?: Prisma.application_interview_questionsSelect<ExtArgs> | null
+  select?: Prisma.application_questionsSelect<ExtArgs> | null
   /**
-   * Omit specific fields from the application_interview_questions
+   * Omit specific fields from the application_questions
    */
-  omit?: Prisma.application_interview_questionsOmit<ExtArgs> | null
+  omit?: Prisma.application_questionsOmit<ExtArgs> | null
   /**
    * Choose, which related nodes to fetch as well
    */
-  include?: Prisma.application_interview_questionsInclude<ExtArgs> | null
-  where?: Prisma.application_interview_questionsWhereInput
-  orderBy?: Prisma.application_interview_questionsOrderByWithRelationInput | Prisma.application_interview_questionsOrderByWithRelationInput[]
-  cursor?: Prisma.application_interview_questionsWhereUniqueInput
+  include?: Prisma.application_questionsInclude<ExtArgs> | null
+  where?: Prisma.application_questionsWhereInput
+  orderBy?: Prisma.application_questionsOrderByWithRelationInput | Prisma.application_questionsOrderByWithRelationInput[]
+  cursor?: Prisma.application_questionsWhereUniqueInput
   take?: number
   skip?: number
-  distinct?: Prisma.Application_interview_questionsScalarFieldEnum | Prisma.Application_interview_questionsScalarFieldEnum[]
+  distinct?: Prisma.Application_questionsScalarFieldEnum | Prisma.Application_questionsScalarFieldEnum[]
 }
 
 /**

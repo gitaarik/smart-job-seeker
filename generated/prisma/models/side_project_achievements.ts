@@ -40,11 +40,8 @@ export type Side_project_achievementsSumAggregateOutputType = {
 
 export type Side_project_achievementsMinAggregateOutputType = {
   id: number | null
-  title: string | null
-  fa_icon: string | null
   description: string | null
   side_project: number | null
-  status: string | null
   date_created: Date | null
   date_updated: Date | null
   sort: number | null
@@ -52,11 +49,8 @@ export type Side_project_achievementsMinAggregateOutputType = {
 
 export type Side_project_achievementsMaxAggregateOutputType = {
   id: number | null
-  title: string | null
-  fa_icon: string | null
   description: string | null
   side_project: number | null
-  status: string | null
   date_created: Date | null
   date_updated: Date | null
   sort: number | null
@@ -64,11 +58,8 @@ export type Side_project_achievementsMaxAggregateOutputType = {
 
 export type Side_project_achievementsCountAggregateOutputType = {
   id: number
-  title: number
-  fa_icon: number
   description: number
   side_project: number
-  status: number
   date_created: number
   date_updated: number
   sort: number
@@ -90,11 +81,8 @@ export type Side_project_achievementsSumAggregateInputType = {
 
 export type Side_project_achievementsMinAggregateInputType = {
   id?: true
-  title?: true
-  fa_icon?: true
   description?: true
   side_project?: true
-  status?: true
   date_created?: true
   date_updated?: true
   sort?: true
@@ -102,11 +90,8 @@ export type Side_project_achievementsMinAggregateInputType = {
 
 export type Side_project_achievementsMaxAggregateInputType = {
   id?: true
-  title?: true
-  fa_icon?: true
   description?: true
   side_project?: true
-  status?: true
   date_created?: true
   date_updated?: true
   sort?: true
@@ -114,11 +99,8 @@ export type Side_project_achievementsMaxAggregateInputType = {
 
 export type Side_project_achievementsCountAggregateInputType = {
   id?: true
-  title?: true
-  fa_icon?: true
   description?: true
   side_project?: true
-  status?: true
   date_created?: true
   date_updated?: true
   sort?: true
@@ -213,11 +195,8 @@ export type side_project_achievementsGroupByArgs<ExtArgs extends runtime.Types.E
 
 export type Side_project_achievementsGroupByOutputType = {
   id: number
-  title: string | null
-  fa_icon: string | null
   description: string | null
   side_project: number
-  status: string
   date_created: Date | null
   date_updated: Date | null
   sort: number | null
@@ -248,11 +227,8 @@ export type side_project_achievementsWhereInput = {
   OR?: Prisma.side_project_achievementsWhereInput[]
   NOT?: Prisma.side_project_achievementsWhereInput | Prisma.side_project_achievementsWhereInput[]
   id?: Prisma.IntFilter<"side_project_achievements"> | number
-  title?: Prisma.StringNullableFilter<"side_project_achievements"> | string | null
-  fa_icon?: Prisma.StringNullableFilter<"side_project_achievements"> | string | null
   description?: Prisma.StringNullableFilter<"side_project_achievements"> | string | null
   side_project?: Prisma.IntFilter<"side_project_achievements"> | number
-  status?: Prisma.StringFilter<"side_project_achievements"> | string
   date_created?: Prisma.DateTimeNullableFilter<"side_project_achievements"> | Date | string | null
   date_updated?: Prisma.DateTimeNullableFilter<"side_project_achievements"> | Date | string | null
   sort?: Prisma.IntNullableFilter<"side_project_achievements"> | number | null
@@ -261,11 +237,8 @@ export type side_project_achievementsWhereInput = {
 
 export type side_project_achievementsOrderByWithRelationInput = {
   id?: Prisma.SortOrder
-  title?: Prisma.SortOrderInput | Prisma.SortOrder
-  fa_icon?: Prisma.SortOrderInput | Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   side_project?: Prisma.SortOrder
-  status?: Prisma.SortOrder
   date_created?: Prisma.SortOrderInput | Prisma.SortOrder
   date_updated?: Prisma.SortOrderInput | Prisma.SortOrder
   sort?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -277,11 +250,8 @@ export type side_project_achievementsWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.side_project_achievementsWhereInput | Prisma.side_project_achievementsWhereInput[]
   OR?: Prisma.side_project_achievementsWhereInput[]
   NOT?: Prisma.side_project_achievementsWhereInput | Prisma.side_project_achievementsWhereInput[]
-  title?: Prisma.StringNullableFilter<"side_project_achievements"> | string | null
-  fa_icon?: Prisma.StringNullableFilter<"side_project_achievements"> | string | null
   description?: Prisma.StringNullableFilter<"side_project_achievements"> | string | null
   side_project?: Prisma.IntFilter<"side_project_achievements"> | number
-  status?: Prisma.StringFilter<"side_project_achievements"> | string
   date_created?: Prisma.DateTimeNullableFilter<"side_project_achievements"> | Date | string | null
   date_updated?: Prisma.DateTimeNullableFilter<"side_project_achievements"> | Date | string | null
   sort?: Prisma.IntNullableFilter<"side_project_achievements"> | number | null
@@ -290,11 +260,8 @@ export type side_project_achievementsWhereUniqueInput = Prisma.AtLeast<{
 
 export type side_project_achievementsOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
-  title?: Prisma.SortOrderInput | Prisma.SortOrder
-  fa_icon?: Prisma.SortOrderInput | Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
   side_project?: Prisma.SortOrder
-  status?: Prisma.SortOrder
   date_created?: Prisma.SortOrderInput | Prisma.SortOrder
   date_updated?: Prisma.SortOrderInput | Prisma.SortOrder
   sort?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -310,21 +277,15 @@ export type side_project_achievementsScalarWhereWithAggregatesInput = {
   OR?: Prisma.side_project_achievementsScalarWhereWithAggregatesInput[]
   NOT?: Prisma.side_project_achievementsScalarWhereWithAggregatesInput | Prisma.side_project_achievementsScalarWhereWithAggregatesInput[]
   id?: Prisma.IntWithAggregatesFilter<"side_project_achievements"> | number
-  title?: Prisma.StringNullableWithAggregatesFilter<"side_project_achievements"> | string | null
-  fa_icon?: Prisma.StringNullableWithAggregatesFilter<"side_project_achievements"> | string | null
   description?: Prisma.StringNullableWithAggregatesFilter<"side_project_achievements"> | string | null
   side_project?: Prisma.IntWithAggregatesFilter<"side_project_achievements"> | number
-  status?: Prisma.StringWithAggregatesFilter<"side_project_achievements"> | string
   date_created?: Prisma.DateTimeNullableWithAggregatesFilter<"side_project_achievements"> | Date | string | null
   date_updated?: Prisma.DateTimeNullableWithAggregatesFilter<"side_project_achievements"> | Date | string | null
   sort?: Prisma.IntNullableWithAggregatesFilter<"side_project_achievements"> | number | null
 }
 
 export type side_project_achievementsCreateInput = {
-  title?: string | null
-  fa_icon?: string | null
   description?: string | null
-  status?: string
   date_created?: Date | string | null
   date_updated?: Date | string | null
   sort?: number | null
@@ -333,21 +294,15 @@ export type side_project_achievementsCreateInput = {
 
 export type side_project_achievementsUncheckedCreateInput = {
   id?: number
-  title?: string | null
-  fa_icon?: string | null
   description?: string | null
   side_project: number
-  status?: string
   date_created?: Date | string | null
   date_updated?: Date | string | null
   sort?: number | null
 }
 
 export type side_project_achievementsUpdateInput = {
-  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fa_icon?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -356,11 +311,8 @@ export type side_project_achievementsUpdateInput = {
 
 export type side_project_achievementsUncheckedUpdateInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
-  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fa_icon?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   side_project?: Prisma.IntFieldUpdateOperationsInput | number
-  status?: Prisma.StringFieldUpdateOperationsInput | string
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -368,21 +320,15 @@ export type side_project_achievementsUncheckedUpdateInput = {
 
 export type side_project_achievementsCreateManyInput = {
   id?: number
-  title?: string | null
-  fa_icon?: string | null
   description?: string | null
   side_project: number
-  status?: string
   date_created?: Date | string | null
   date_updated?: Date | string | null
   sort?: number | null
 }
 
 export type side_project_achievementsUpdateManyMutationInput = {
-  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fa_icon?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -390,11 +336,8 @@ export type side_project_achievementsUpdateManyMutationInput = {
 
 export type side_project_achievementsUncheckedUpdateManyInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
-  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fa_icon?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   side_project?: Prisma.IntFieldUpdateOperationsInput | number
-  status?: Prisma.StringFieldUpdateOperationsInput | string
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -402,11 +345,8 @@ export type side_project_achievementsUncheckedUpdateManyInput = {
 
 export type side_project_achievementsCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  title?: Prisma.SortOrder
-  fa_icon?: Prisma.SortOrder
   description?: Prisma.SortOrder
   side_project?: Prisma.SortOrder
-  status?: Prisma.SortOrder
   date_created?: Prisma.SortOrder
   date_updated?: Prisma.SortOrder
   sort?: Prisma.SortOrder
@@ -420,11 +360,8 @@ export type side_project_achievementsAvgOrderByAggregateInput = {
 
 export type side_project_achievementsMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  title?: Prisma.SortOrder
-  fa_icon?: Prisma.SortOrder
   description?: Prisma.SortOrder
   side_project?: Prisma.SortOrder
-  status?: Prisma.SortOrder
   date_created?: Prisma.SortOrder
   date_updated?: Prisma.SortOrder
   sort?: Prisma.SortOrder
@@ -432,11 +369,8 @@ export type side_project_achievementsMaxOrderByAggregateInput = {
 
 export type side_project_achievementsMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  title?: Prisma.SortOrder
-  fa_icon?: Prisma.SortOrder
   description?: Prisma.SortOrder
   side_project?: Prisma.SortOrder
-  status?: Prisma.SortOrder
   date_created?: Prisma.SortOrder
   date_updated?: Prisma.SortOrder
   sort?: Prisma.SortOrder
@@ -501,10 +435,7 @@ export type side_project_achievementsUncheckedUpdateManyWithoutSide_projectsNest
 }
 
 export type side_project_achievementsCreateWithoutSide_projectsInput = {
-  title?: string | null
-  fa_icon?: string | null
   description?: string | null
-  status?: string
   date_created?: Date | string | null
   date_updated?: Date | string | null
   sort?: number | null
@@ -512,10 +443,7 @@ export type side_project_achievementsCreateWithoutSide_projectsInput = {
 
 export type side_project_achievementsUncheckedCreateWithoutSide_projectsInput = {
   id?: number
-  title?: string | null
-  fa_icon?: string | null
   description?: string | null
-  status?: string
   date_created?: Date | string | null
   date_updated?: Date | string | null
   sort?: number | null
@@ -552,11 +480,8 @@ export type side_project_achievementsScalarWhereInput = {
   OR?: Prisma.side_project_achievementsScalarWhereInput[]
   NOT?: Prisma.side_project_achievementsScalarWhereInput | Prisma.side_project_achievementsScalarWhereInput[]
   id?: Prisma.IntFilter<"side_project_achievements"> | number
-  title?: Prisma.StringNullableFilter<"side_project_achievements"> | string | null
-  fa_icon?: Prisma.StringNullableFilter<"side_project_achievements"> | string | null
   description?: Prisma.StringNullableFilter<"side_project_achievements"> | string | null
   side_project?: Prisma.IntFilter<"side_project_achievements"> | number
-  status?: Prisma.StringFilter<"side_project_achievements"> | string
   date_created?: Prisma.DateTimeNullableFilter<"side_project_achievements"> | Date | string | null
   date_updated?: Prisma.DateTimeNullableFilter<"side_project_achievements"> | Date | string | null
   sort?: Prisma.IntNullableFilter<"side_project_achievements"> | number | null
@@ -564,20 +489,14 @@ export type side_project_achievementsScalarWhereInput = {
 
 export type side_project_achievementsCreateManySide_projectsInput = {
   id?: number
-  title?: string | null
-  fa_icon?: string | null
   description?: string | null
-  status?: string
   date_created?: Date | string | null
   date_updated?: Date | string | null
   sort?: number | null
 }
 
 export type side_project_achievementsUpdateWithoutSide_projectsInput = {
-  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fa_icon?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -585,10 +504,7 @@ export type side_project_achievementsUpdateWithoutSide_projectsInput = {
 
 export type side_project_achievementsUncheckedUpdateWithoutSide_projectsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
-  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fa_icon?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -596,10 +512,7 @@ export type side_project_achievementsUncheckedUpdateWithoutSide_projectsInput = 
 
 export type side_project_achievementsUncheckedUpdateManyWithoutSide_projectsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
-  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fa_icon?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -609,11 +522,8 @@ export type side_project_achievementsUncheckedUpdateManyWithoutSide_projectsInpu
 
 export type side_project_achievementsSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  title?: boolean
-  fa_icon?: boolean
   description?: boolean
   side_project?: boolean
-  status?: boolean
   date_created?: boolean
   date_updated?: boolean
   sort?: boolean
@@ -622,11 +532,8 @@ export type side_project_achievementsSelect<ExtArgs extends runtime.Types.Extens
 
 export type side_project_achievementsSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  title?: boolean
-  fa_icon?: boolean
   description?: boolean
   side_project?: boolean
-  status?: boolean
   date_created?: boolean
   date_updated?: boolean
   sort?: boolean
@@ -635,11 +542,8 @@ export type side_project_achievementsSelectCreateManyAndReturn<ExtArgs extends r
 
 export type side_project_achievementsSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  title?: boolean
-  fa_icon?: boolean
   description?: boolean
   side_project?: boolean
-  status?: boolean
   date_created?: boolean
   date_updated?: boolean
   sort?: boolean
@@ -648,17 +552,14 @@ export type side_project_achievementsSelectUpdateManyAndReturn<ExtArgs extends r
 
 export type side_project_achievementsSelectScalar = {
   id?: boolean
-  title?: boolean
-  fa_icon?: boolean
   description?: boolean
   side_project?: boolean
-  status?: boolean
   date_created?: boolean
   date_updated?: boolean
   sort?: boolean
 }
 
-export type side_project_achievementsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "title" | "fa_icon" | "description" | "side_project" | "status" | "date_created" | "date_updated" | "sort", ExtArgs["result"]["side_project_achievements"]>
+export type side_project_achievementsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "description" | "side_project" | "date_created" | "date_updated" | "sort", ExtArgs["result"]["side_project_achievements"]>
 export type side_project_achievementsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   side_projects?: boolean | Prisma.side_projectsDefaultArgs<ExtArgs>
 }
@@ -676,11 +577,8 @@ export type $side_project_achievementsPayload<ExtArgs extends runtime.Types.Exte
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
-    title: string | null
-    fa_icon: string | null
     description: string | null
     side_project: number
-    status: string
     date_created: Date | null
     date_updated: Date | null
     sort: number | null
@@ -1109,11 +1007,8 @@ export interface Prisma__side_project_achievementsClient<T, Null = never, ExtArg
  */
 export interface side_project_achievementsFieldRefs {
   readonly id: Prisma.FieldRef<"side_project_achievements", 'Int'>
-  readonly title: Prisma.FieldRef<"side_project_achievements", 'String'>
-  readonly fa_icon: Prisma.FieldRef<"side_project_achievements", 'String'>
   readonly description: Prisma.FieldRef<"side_project_achievements", 'String'>
   readonly side_project: Prisma.FieldRef<"side_project_achievements", 'Int'>
-  readonly status: Prisma.FieldRef<"side_project_achievements", 'String'>
   readonly date_created: Prisma.FieldRef<"side_project_achievements", 'DateTime'>
   readonly date_updated: Prisma.FieldRef<"side_project_achievements", 'DateTime'>
   readonly sort: Prisma.FieldRef<"side_project_achievements", 'Int'>

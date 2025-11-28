@@ -14,11 +14,9 @@ import path from "path";
  *
  * Tables synced:
  * - application_questions
- * - dev_methodologies
  * - highlights
  * - languages
  * - profiles
- * - soft_skills
  * - tech_skill_categories
  * - tech_skill_types
  * - tech_skills
@@ -33,7 +31,6 @@ import path from "path";
 
 const TABLES_TO_SYNC = [
   "application_questions",
-  "dev_methodologies",
   "directus_access",
   "directus_activity",
   "directus_collections",
@@ -64,7 +61,6 @@ const TABLES_TO_SYNC = [
   "highlights",
   "languages",
   "profiles",
-  "soft_skills",
   "tech_skill_categories",
   "tech_skill_types",
   "tech_skills",

@@ -23,4 +23,4 @@ if (!postgresUrl) {
 const adapterDirect = new PrismaPg({
   connectionString: postgresUrl,
 });
-export const dbDirect = new PrismaClient({ adapterDirect });
+export const dbDirect = new PrismaClient({ adapter: adapterDirect });

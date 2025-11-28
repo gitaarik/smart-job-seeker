@@ -40,7 +40,6 @@ export type Side_project_technologiesSumAggregateOutputType = {
 
 export type Side_project_technologiesMinAggregateOutputType = {
   id: number | null
-  status: string | null
   sort: number | null
   date_created: Date | null
   date_updated: Date | null
@@ -50,7 +49,6 @@ export type Side_project_technologiesMinAggregateOutputType = {
 
 export type Side_project_technologiesMaxAggregateOutputType = {
   id: number | null
-  status: string | null
   sort: number | null
   date_created: Date | null
   date_updated: Date | null
@@ -60,7 +58,6 @@ export type Side_project_technologiesMaxAggregateOutputType = {
 
 export type Side_project_technologiesCountAggregateOutputType = {
   id: number
-  status: number
   sort: number
   date_created: number
   date_updated: number
@@ -84,7 +81,6 @@ export type Side_project_technologiesSumAggregateInputType = {
 
 export type Side_project_technologiesMinAggregateInputType = {
   id?: true
-  status?: true
   sort?: true
   date_created?: true
   date_updated?: true
@@ -94,7 +90,6 @@ export type Side_project_technologiesMinAggregateInputType = {
 
 export type Side_project_technologiesMaxAggregateInputType = {
   id?: true
-  status?: true
   sort?: true
   date_created?: true
   date_updated?: true
@@ -104,7 +99,6 @@ export type Side_project_technologiesMaxAggregateInputType = {
 
 export type Side_project_technologiesCountAggregateInputType = {
   id?: true
-  status?: true
   sort?: true
   date_created?: true
   date_updated?: true
@@ -201,7 +195,6 @@ export type side_project_technologiesGroupByArgs<ExtArgs extends runtime.Types.E
 
 export type Side_project_technologiesGroupByOutputType = {
   id: number
-  status: string
   sort: number | null
   date_created: Date | null
   date_updated: Date | null
@@ -234,7 +227,6 @@ export type side_project_technologiesWhereInput = {
   OR?: Prisma.side_project_technologiesWhereInput[]
   NOT?: Prisma.side_project_technologiesWhereInput | Prisma.side_project_technologiesWhereInput[]
   id?: Prisma.IntFilter<"side_project_technologies"> | number
-  status?: Prisma.StringFilter<"side_project_technologies"> | string
   sort?: Prisma.IntNullableFilter<"side_project_technologies"> | number | null
   date_created?: Prisma.DateTimeNullableFilter<"side_project_technologies"> | Date | string | null
   date_updated?: Prisma.DateTimeNullableFilter<"side_project_technologies"> | Date | string | null
@@ -245,7 +237,6 @@ export type side_project_technologiesWhereInput = {
 
 export type side_project_technologiesOrderByWithRelationInput = {
   id?: Prisma.SortOrder
-  status?: Prisma.SortOrder
   sort?: Prisma.SortOrderInput | Prisma.SortOrder
   date_created?: Prisma.SortOrderInput | Prisma.SortOrder
   date_updated?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -259,7 +250,6 @@ export type side_project_technologiesWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.side_project_technologiesWhereInput | Prisma.side_project_technologiesWhereInput[]
   OR?: Prisma.side_project_technologiesWhereInput[]
   NOT?: Prisma.side_project_technologiesWhereInput | Prisma.side_project_technologiesWhereInput[]
-  status?: Prisma.StringFilter<"side_project_technologies"> | string
   sort?: Prisma.IntNullableFilter<"side_project_technologies"> | number | null
   date_created?: Prisma.DateTimeNullableFilter<"side_project_technologies"> | Date | string | null
   date_updated?: Prisma.DateTimeNullableFilter<"side_project_technologies"> | Date | string | null
@@ -270,7 +260,6 @@ export type side_project_technologiesWhereUniqueInput = Prisma.AtLeast<{
 
 export type side_project_technologiesOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
-  status?: Prisma.SortOrder
   sort?: Prisma.SortOrderInput | Prisma.SortOrder
   date_created?: Prisma.SortOrderInput | Prisma.SortOrder
   date_updated?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -288,7 +277,6 @@ export type side_project_technologiesScalarWhereWithAggregatesInput = {
   OR?: Prisma.side_project_technologiesScalarWhereWithAggregatesInput[]
   NOT?: Prisma.side_project_technologiesScalarWhereWithAggregatesInput | Prisma.side_project_technologiesScalarWhereWithAggregatesInput[]
   id?: Prisma.IntWithAggregatesFilter<"side_project_technologies"> | number
-  status?: Prisma.StringWithAggregatesFilter<"side_project_technologies"> | string
   sort?: Prisma.IntNullableWithAggregatesFilter<"side_project_technologies"> | number | null
   date_created?: Prisma.DateTimeNullableWithAggregatesFilter<"side_project_technologies"> | Date | string | null
   date_updated?: Prisma.DateTimeNullableWithAggregatesFilter<"side_project_technologies"> | Date | string | null
@@ -297,7 +285,6 @@ export type side_project_technologiesScalarWhereWithAggregatesInput = {
 }
 
 export type side_project_technologiesCreateInput = {
-  status?: string
   sort?: number | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
@@ -307,7 +294,6 @@ export type side_project_technologiesCreateInput = {
 
 export type side_project_technologiesUncheckedCreateInput = {
   id?: number
-  status?: string
   sort?: number | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
@@ -316,7 +302,6 @@ export type side_project_technologiesUncheckedCreateInput = {
 }
 
 export type side_project_technologiesUpdateInput = {
-  status?: Prisma.StringFieldUpdateOperationsInput | string
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -326,7 +311,6 @@ export type side_project_technologiesUpdateInput = {
 
 export type side_project_technologiesUncheckedUpdateInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
-  status?: Prisma.StringFieldUpdateOperationsInput | string
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -336,7 +320,6 @@ export type side_project_technologiesUncheckedUpdateInput = {
 
 export type side_project_technologiesCreateManyInput = {
   id?: number
-  status?: string
   sort?: number | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
@@ -345,7 +328,6 @@ export type side_project_technologiesCreateManyInput = {
 }
 
 export type side_project_technologiesUpdateManyMutationInput = {
-  status?: Prisma.StringFieldUpdateOperationsInput | string
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -354,7 +336,6 @@ export type side_project_technologiesUpdateManyMutationInput = {
 
 export type side_project_technologiesUncheckedUpdateManyInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
-  status?: Prisma.StringFieldUpdateOperationsInput | string
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -364,7 +345,6 @@ export type side_project_technologiesUncheckedUpdateManyInput = {
 
 export type side_project_technologiesCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  status?: Prisma.SortOrder
   sort?: Prisma.SortOrder
   date_created?: Prisma.SortOrder
   date_updated?: Prisma.SortOrder
@@ -380,7 +360,6 @@ export type side_project_technologiesAvgOrderByAggregateInput = {
 
 export type side_project_technologiesMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  status?: Prisma.SortOrder
   sort?: Prisma.SortOrder
   date_created?: Prisma.SortOrder
   date_updated?: Prisma.SortOrder
@@ -390,7 +369,6 @@ export type side_project_technologiesMaxOrderByAggregateInput = {
 
 export type side_project_technologiesMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  status?: Prisma.SortOrder
   sort?: Prisma.SortOrder
   date_created?: Prisma.SortOrder
   date_updated?: Prisma.SortOrder
@@ -457,7 +435,6 @@ export type side_project_technologiesUncheckedUpdateManyWithoutSide_projectsNest
 }
 
 export type side_project_technologiesCreateWithoutSide_projectsInput = {
-  status?: string
   sort?: number | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
@@ -466,7 +443,6 @@ export type side_project_technologiesCreateWithoutSide_projectsInput = {
 
 export type side_project_technologiesUncheckedCreateWithoutSide_projectsInput = {
   id?: number
-  status?: string
   sort?: number | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
@@ -504,7 +480,6 @@ export type side_project_technologiesScalarWhereInput = {
   OR?: Prisma.side_project_technologiesScalarWhereInput[]
   NOT?: Prisma.side_project_technologiesScalarWhereInput | Prisma.side_project_technologiesScalarWhereInput[]
   id?: Prisma.IntFilter<"side_project_technologies"> | number
-  status?: Prisma.StringFilter<"side_project_technologies"> | string
   sort?: Prisma.IntNullableFilter<"side_project_technologies"> | number | null
   date_created?: Prisma.DateTimeNullableFilter<"side_project_technologies"> | Date | string | null
   date_updated?: Prisma.DateTimeNullableFilter<"side_project_technologies"> | Date | string | null
@@ -514,7 +489,6 @@ export type side_project_technologiesScalarWhereInput = {
 
 export type side_project_technologiesCreateManySide_projectsInput = {
   id?: number
-  status?: string
   sort?: number | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
@@ -522,7 +496,6 @@ export type side_project_technologiesCreateManySide_projectsInput = {
 }
 
 export type side_project_technologiesUpdateWithoutSide_projectsInput = {
-  status?: Prisma.StringFieldUpdateOperationsInput | string
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -531,7 +504,6 @@ export type side_project_technologiesUpdateWithoutSide_projectsInput = {
 
 export type side_project_technologiesUncheckedUpdateWithoutSide_projectsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
-  status?: Prisma.StringFieldUpdateOperationsInput | string
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -540,7 +512,6 @@ export type side_project_technologiesUncheckedUpdateWithoutSide_projectsInput = 
 
 export type side_project_technologiesUncheckedUpdateManyWithoutSide_projectsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
-  status?: Prisma.StringFieldUpdateOperationsInput | string
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -551,7 +522,6 @@ export type side_project_technologiesUncheckedUpdateManyWithoutSide_projectsInpu
 
 export type side_project_technologiesSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  status?: boolean
   sort?: boolean
   date_created?: boolean
   date_updated?: boolean
@@ -562,7 +532,6 @@ export type side_project_technologiesSelect<ExtArgs extends runtime.Types.Extens
 
 export type side_project_technologiesSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  status?: boolean
   sort?: boolean
   date_created?: boolean
   date_updated?: boolean
@@ -573,7 +542,6 @@ export type side_project_technologiesSelectCreateManyAndReturn<ExtArgs extends r
 
 export type side_project_technologiesSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  status?: boolean
   sort?: boolean
   date_created?: boolean
   date_updated?: boolean
@@ -584,7 +552,6 @@ export type side_project_technologiesSelectUpdateManyAndReturn<ExtArgs extends r
 
 export type side_project_technologiesSelectScalar = {
   id?: boolean
-  status?: boolean
   sort?: boolean
   date_created?: boolean
   date_updated?: boolean
@@ -592,7 +559,7 @@ export type side_project_technologiesSelectScalar = {
   side_project?: boolean
 }
 
-export type side_project_technologiesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "sort" | "date_created" | "date_updated" | "name" | "side_project", ExtArgs["result"]["side_project_technologies"]>
+export type side_project_technologiesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "sort" | "date_created" | "date_updated" | "name" | "side_project", ExtArgs["result"]["side_project_technologies"]>
 export type side_project_technologiesInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   side_projects?: boolean | Prisma.side_projectsDefaultArgs<ExtArgs>
 }
@@ -610,7 +577,6 @@ export type $side_project_technologiesPayload<ExtArgs extends runtime.Types.Exte
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
-    status: string
     sort: number | null
     date_created: Date | null
     date_updated: Date | null
@@ -1041,7 +1007,6 @@ export interface Prisma__side_project_technologiesClient<T, Null = never, ExtArg
  */
 export interface side_project_technologiesFieldRefs {
   readonly id: Prisma.FieldRef<"side_project_technologies", 'Int'>
-  readonly status: Prisma.FieldRef<"side_project_technologies", 'String'>
   readonly sort: Prisma.FieldRef<"side_project_technologies", 'Int'>
   readonly date_created: Prisma.FieldRef<"side_project_technologies", 'DateTime'>
   readonly date_updated: Prisma.FieldRef<"side_project_technologies", 'DateTime'>

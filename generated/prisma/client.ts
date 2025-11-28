@@ -29,8 +29,8 @@ export * from "./enums"
  * @example
  * ```
  * const prisma = new PrismaClient()
- * // Fetch zero or more Application_interview_questions
- * const application_interview_questions = await prisma.application_interview_questions.findMany()
+ * // Fetch zero or more Applications
+ * const applications = await prisma.applications.findMany()
  * ```
  * 
  * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client).
@@ -39,11 +39,6 @@ export const PrismaClient = $Class.getPrismaClientClass()
 export type PrismaClient<LogOpts extends Prisma.LogLevel = never, OmitOpts extends Prisma.PrismaClientOptions["omit"] = Prisma.PrismaClientOptions["omit"], ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = $Class.PrismaClient<LogOpts, OmitOpts, ExtArgs>
 export { Prisma }
 
-/**
- * Model application_interview_questions
- * 
- */
-export type application_interview_questions = Prisma.application_interview_questionsModel
 /**
  * Model applications
  * 
@@ -319,3 +314,13 @@ export type work_experience_project_technologies = Prisma.work_experience_projec
  * 
  */
 export type work_experience_projects = Prisma.work_experience_projectsModel
+/**
+ * Model ai_prompts
+ * 
+ */
+export type ai_prompts = Prisma.ai_promptsModel
+/**
+ * Model application_questions
+ * 
+ */
+export type application_questions = Prisma.application_questionsModel

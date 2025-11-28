@@ -384,7 +384,6 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 
 export const ModelName = {
-  application_interview_questions: 'application_interview_questions',
   applications: 'applications',
   cheat_sheets: 'cheat_sheets',
   collected_data: 'collected_data',
@@ -439,7 +438,9 @@ export const ModelName = {
   ai_chat: 'ai_chat',
   os_contributions: 'os_contributions',
   work_experience_project_technologies: 'work_experience_project_technologies',
-  work_experience_projects: 'work_experience_projects'
+  work_experience_projects: 'work_experience_projects',
+  ai_prompts: 'ai_prompts',
+  application_questions: 'application_questions'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -455,84 +456,10 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "application_interview_questions" | "applications" | "cheat_sheets" | "collected_data" | "directus_access" | "directus_activity" | "directus_collections" | "directus_comments" | "directus_dashboards" | "directus_extensions" | "directus_fields" | "directus_files" | "directus_flows" | "directus_folders" | "directus_migrations" | "directus_notifications" | "directus_operations" | "directus_panels" | "directus_permissions" | "directus_policies" | "directus_presets" | "directus_relations" | "directus_revisions" | "directus_roles" | "directus_sessions" | "directus_settings" | "directus_shares" | "directus_translations" | "directus_users" | "directus_versions" | "directus_webhooks" | "education" | "highlights" | "languages" | "outsourcing_platforms" | "platform_profiles" | "profile_versions" | "profiles" | "project_stories" | "references" | "salary_expectations" | "side_project_achievements" | "side_project_technologies" | "side_projects" | "tech_skill_categories" | "tech_skill_types" | "tech_skills" | "vacancies" | "vacancy_resources" | "work_experience_achievements" | "work_experience_technologies" | "work_experiences" | "ai_chat" | "os_contributions" | "work_experience_project_technologies" | "work_experience_projects"
+    modelProps: "applications" | "cheat_sheets" | "collected_data" | "directus_access" | "directus_activity" | "directus_collections" | "directus_comments" | "directus_dashboards" | "directus_extensions" | "directus_fields" | "directus_files" | "directus_flows" | "directus_folders" | "directus_migrations" | "directus_notifications" | "directus_operations" | "directus_panels" | "directus_permissions" | "directus_policies" | "directus_presets" | "directus_relations" | "directus_revisions" | "directus_roles" | "directus_sessions" | "directus_settings" | "directus_shares" | "directus_translations" | "directus_users" | "directus_versions" | "directus_webhooks" | "education" | "highlights" | "languages" | "outsourcing_platforms" | "platform_profiles" | "profile_versions" | "profiles" | "project_stories" | "references" | "salary_expectations" | "side_project_achievements" | "side_project_technologies" | "side_projects" | "tech_skill_categories" | "tech_skill_types" | "tech_skills" | "vacancies" | "vacancy_resources" | "work_experience_achievements" | "work_experience_technologies" | "work_experiences" | "ai_chat" | "os_contributions" | "work_experience_project_technologies" | "work_experience_projects" | "ai_prompts" | "application_questions"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
-    application_interview_questions: {
-      payload: Prisma.$application_interview_questionsPayload<ExtArgs>
-      fields: Prisma.application_interview_questionsFieldRefs
-      operations: {
-        findUnique: {
-          args: Prisma.application_interview_questionsFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$application_interview_questionsPayload> | null
-        }
-        findUniqueOrThrow: {
-          args: Prisma.application_interview_questionsFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$application_interview_questionsPayload>
-        }
-        findFirst: {
-          args: Prisma.application_interview_questionsFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$application_interview_questionsPayload> | null
-        }
-        findFirstOrThrow: {
-          args: Prisma.application_interview_questionsFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$application_interview_questionsPayload>
-        }
-        findMany: {
-          args: Prisma.application_interview_questionsFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$application_interview_questionsPayload>[]
-        }
-        create: {
-          args: Prisma.application_interview_questionsCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$application_interview_questionsPayload>
-        }
-        createMany: {
-          args: Prisma.application_interview_questionsCreateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        createManyAndReturn: {
-          args: Prisma.application_interview_questionsCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$application_interview_questionsPayload>[]
-        }
-        delete: {
-          args: Prisma.application_interview_questionsDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$application_interview_questionsPayload>
-        }
-        update: {
-          args: Prisma.application_interview_questionsUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$application_interview_questionsPayload>
-        }
-        deleteMany: {
-          args: Prisma.application_interview_questionsDeleteManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateMany: {
-          args: Prisma.application_interview_questionsUpdateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateManyAndReturn: {
-          args: Prisma.application_interview_questionsUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$application_interview_questionsPayload>[]
-        }
-        upsert: {
-          args: Prisma.application_interview_questionsUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$application_interview_questionsPayload>
-        }
-        aggregate: {
-          args: Prisma.Application_interview_questionsAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateApplication_interview_questions>
-        }
-        groupBy: {
-          args: Prisma.application_interview_questionsGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.Application_interview_questionsGroupByOutputType>[]
-        }
-        count: {
-          args: Prisma.application_interview_questionsCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.Application_interview_questionsCountAggregateOutputType> | number
-        }
-      }
-    }
     applications: {
       payload: Prisma.$applicationsPayload<ExtArgs>
       fields: Prisma.applicationsFieldRefs
@@ -4603,6 +4530,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    ai_prompts: {
+      payload: Prisma.$ai_promptsPayload<ExtArgs>
+      fields: Prisma.ai_promptsFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ai_promptsFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ai_promptsPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ai_promptsFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ai_promptsPayload>
+        }
+        findFirst: {
+          args: Prisma.ai_promptsFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ai_promptsPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ai_promptsFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ai_promptsPayload>
+        }
+        findMany: {
+          args: Prisma.ai_promptsFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ai_promptsPayload>[]
+        }
+        create: {
+          args: Prisma.ai_promptsCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ai_promptsPayload>
+        }
+        createMany: {
+          args: Prisma.ai_promptsCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ai_promptsCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ai_promptsPayload>[]
+        }
+        delete: {
+          args: Prisma.ai_promptsDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ai_promptsPayload>
+        }
+        update: {
+          args: Prisma.ai_promptsUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ai_promptsPayload>
+        }
+        deleteMany: {
+          args: Prisma.ai_promptsDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ai_promptsUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ai_promptsUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ai_promptsPayload>[]
+        }
+        upsert: {
+          args: Prisma.ai_promptsUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ai_promptsPayload>
+        }
+        aggregate: {
+          args: Prisma.Ai_promptsAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAi_prompts>
+        }
+        groupBy: {
+          args: Prisma.ai_promptsGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Ai_promptsGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ai_promptsCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Ai_promptsCountAggregateOutputType> | number
+        }
+      }
+    }
+    application_questions: {
+      payload: Prisma.$application_questionsPayload<ExtArgs>
+      fields: Prisma.application_questionsFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.application_questionsFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$application_questionsPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.application_questionsFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$application_questionsPayload>
+        }
+        findFirst: {
+          args: Prisma.application_questionsFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$application_questionsPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.application_questionsFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$application_questionsPayload>
+        }
+        findMany: {
+          args: Prisma.application_questionsFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$application_questionsPayload>[]
+        }
+        create: {
+          args: Prisma.application_questionsCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$application_questionsPayload>
+        }
+        createMany: {
+          args: Prisma.application_questionsCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.application_questionsCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$application_questionsPayload>[]
+        }
+        delete: {
+          args: Prisma.application_questionsDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$application_questionsPayload>
+        }
+        update: {
+          args: Prisma.application_questionsUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$application_questionsPayload>
+        }
+        deleteMany: {
+          args: Prisma.application_questionsDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.application_questionsUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.application_questionsUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$application_questionsPayload>[]
+        }
+        upsert: {
+          args: Prisma.application_questionsUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$application_questionsPayload>
+        }
+        aggregate: {
+          args: Prisma.Application_questionsAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateApplication_questions>
+        }
+        groupBy: {
+          args: Prisma.application_questionsGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Application_questionsGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.application_questionsCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Application_questionsCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -4642,20 +4717,6 @@ export const TransactionIsolationLevel = runtime.makeStrictEnum({
 export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
 
 
-export const Application_interview_questionsScalarFieldEnum = {
-  id: 'id',
-  sort: 'sort',
-  date_created: 'date_created',
-  date_updated: 'date_updated',
-  application: 'application',
-  question: 'question',
-  answer: 'answer',
-  ai_chat: 'ai_chat'
-} as const
-
-export type Application_interview_questionsScalarFieldEnum = (typeof Application_interview_questionsScalarFieldEnum)[keyof typeof Application_interview_questionsScalarFieldEnum]
-
-
 export const ApplicationsScalarFieldEnum = {
   id: 'id',
   status: 'status',
@@ -4669,7 +4730,8 @@ export const ApplicationsScalarFieldEnum = {
   discontinued_reason: 'discontinued_reason',
   discontinued_note: 'discontinued_note',
   application_note: 'application_note',
-  application_seen_date: 'application_seen_date'
+  application_seen_date: 'application_seen_date',
+  cover_letter: 'cover_letter'
 } as const
 
 export type ApplicationsScalarFieldEnum = (typeof ApplicationsScalarFieldEnum)[keyof typeof ApplicationsScalarFieldEnum]
@@ -5362,11 +5424,8 @@ export type Salary_expectationsScalarFieldEnum = (typeof Salary_expectationsScal
 
 export const Side_project_achievementsScalarFieldEnum = {
   id: 'id',
-  title: 'title',
-  fa_icon: 'fa_icon',
   description: 'description',
   side_project: 'side_project',
-  status: 'status',
   date_created: 'date_created',
   date_updated: 'date_updated',
   sort: 'sort'
@@ -5377,7 +5436,6 @@ export type Side_project_achievementsScalarFieldEnum = (typeof Side_project_achi
 
 export const Side_project_technologiesScalarFieldEnum = {
   id: 'id',
-  status: 'status',
   sort: 'sort',
   date_created: 'date_created',
   date_updated: 'date_updated',
@@ -5595,6 +5653,37 @@ export const Work_experience_projectsScalarFieldEnum = {
 export type Work_experience_projectsScalarFieldEnum = (typeof Work_experience_projectsScalarFieldEnum)[keyof typeof Work_experience_projectsScalarFieldEnum]
 
 
+export const Ai_promptsScalarFieldEnum = {
+  id: 'id',
+  sort: 'sort',
+  date_created: 'date_created',
+  user_created: 'user_created',
+  date_updated: 'date_updated',
+  user_updated: 'user_updated',
+  name: 'name',
+  status: 'status',
+  description: 'description',
+  system_prompt: 'system_prompt',
+  messages: 'messages'
+} as const
+
+export type Ai_promptsScalarFieldEnum = (typeof Ai_promptsScalarFieldEnum)[keyof typeof Ai_promptsScalarFieldEnum]
+
+
+export const Application_questionsScalarFieldEnum = {
+  id: 'id',
+  sort: 'sort',
+  date_created: 'date_created',
+  date_updated: 'date_updated',
+  application: 'application',
+  question: 'question',
+  answer: 'answer',
+  ai_chat: 'ai_chat'
+} as const
+
+export type Application_questionsScalarFieldEnum = (typeof Application_questionsScalarFieldEnum)[keyof typeof Application_questionsScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -5657,20 +5746,6 @@ export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel,
 
 
 /**
- * Reference to a field of type 'DateTime'
- */
-export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
-    
-
-
-/**
- * Reference to a field of type 'DateTime[]'
- */
-export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
-    
-
-
-/**
  * Reference to a field of type 'String'
  */
 export type StringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'String'>
@@ -5681,6 +5756,20 @@ export type StringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 
  * Reference to a field of type 'String[]'
  */
 export type ListStringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'String[]'>
+    
+
+
+/**
+ * Reference to a field of type 'DateTime'
+ */
+export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
+    
+
+
+/**
+ * Reference to a field of type 'DateTime[]'
+ */
+export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
     
 
 
@@ -5811,7 +5900,6 @@ export type PrismaClientOptions = ({
   omit?: GlobalOmitConfig
 }
 export type GlobalOmitConfig = {
-  application_interview_questions?: Prisma.application_interview_questionsOmit
   applications?: Prisma.applicationsOmit
   cheat_sheets?: Prisma.cheat_sheetsOmit
   collected_data?: Prisma.collected_dataOmit
@@ -5867,6 +5955,8 @@ export type GlobalOmitConfig = {
   os_contributions?: Prisma.os_contributionsOmit
   work_experience_project_technologies?: Prisma.work_experience_project_technologiesOmit
   work_experience_projects?: Prisma.work_experience_projectsOmit
+  ai_prompts?: Prisma.ai_promptsOmit
+  application_questions?: Prisma.application_questionsOmit
 }
 
 /* Types for Logging */
