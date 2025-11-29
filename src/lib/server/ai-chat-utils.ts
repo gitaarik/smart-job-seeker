@@ -21,7 +21,7 @@ export function interpolatePrompt(
 /**
  * Fetch and interpolate prompts for an AI chat
  * Returns system_prompt and user_prompt with ${schema}, ${data}, and ${jobDescription} replaced
- * Attempts to fetch job description from ai_chat -> application_interview_questions -> applications -> vacancies
+ * Attempts to fetch job description from ai_chat -> application_questions -> applications -> vacancies
  */
 export async function getInterpolatedPrompts(aiChatId: number): Promise<
   {
@@ -46,9 +46,9 @@ export async function getInterpolatedPrompts(aiChatId: number): Promise<
   });
 
   // Try to fetch job description from the relation chain:
-  // ai_chat -> application_interview_questions -> applications -> vacancies
+  // ai_chat -> application_questions -> applications -> vacancies
   let jobDescription = "";
-  const interviewQuestion = await db.application_interview_questions
+  const applicationQuestion = await db.application_questions
     .findFirst({
       where: {
         ai_chat: aiChatId,
@@ -62,8 +62,8 @@ export async function getInterpolatedPrompts(aiChatId: number): Promise<
       },
     });
 
-  if (interviewQuestion?.applications?.vacancies?.job_description) {
-    jobDescription = interviewQuestion.applications.vacancies.job_description;
+  if (applicationQuestion?.applications?.vacancies?.job_description) {
+    jobDescription = applicationQuestion.applications.vacancies.job_description;
   }
 
   // Prepare replacements (use empty objects/strings as defaults)
