@@ -175,7 +175,12 @@
       class="text-xs mt-3 grid grid-cols-2 grid-cols-[220px_150px] gap-x-2 auto-rows-[22px]"
     >
       <li>
-        <span class="inline-block w-14 text-right font-bold">Email:</span>
+        <span
+          class="inline-block w-14 text-right font-bold whitespace-nowrap mr-[1px]"
+        >
+          <span class="inline-block w-0 opacity-0">- </span>
+          Email:
+        </span>
 
         <a
           href="mailto:{profile.email_address}"
@@ -186,7 +191,10 @@
       <li>
         <!-- <FontAwesomeIcon icon={faPhone} class="w-3 mr-1" title="Phone" /> -->
 
-        <span class="inline-block w-13 text-right font-bold">Phone:</span>
+        <span class="inline-block w-13 text-right font-bold">
+          <span class="inline-block w-0 opacity-0">- </span>
+          Phone:
+        </span>
 
         <a
           href="tel:{profile.phone_number}"
@@ -201,7 +209,12 @@
         <!--   title="Location" -->
         <!-- /> -->
 
-        <span class="inline-block w-14 text-right font-bold">Location:</span>
+        <span
+          class="inline-block w-14 text-right font-bold whitespace-nowrap mr-[1px]"
+        >
+          <span class="inline-block w-0 opacity-0">- </span>
+          Location:
+        </span>
 
         {#if profile.location_url}
           <a
@@ -242,7 +255,10 @@
         <!--   title="LinkedIn" -->
         <!-- /> -->
 
-        <span class="inline-block w-14 text-right font-bold">LinkedIn:</span>
+        <span class="inline-block w-14 text-right font-bold whitespace-nowrap">
+          <span class="inline-block w-0 opacity-0">- </span>
+          LinkedIn:
+        </span>
 
         {#if profile.linkedin_profile}
           <a
