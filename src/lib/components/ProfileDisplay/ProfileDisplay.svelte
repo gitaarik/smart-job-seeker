@@ -332,7 +332,7 @@
             {#if isGithub}
               <FontAwesomeIcon
                 icon={faGithub}
-                class="w-3 select-none"
+                class="w-3"
                 title="GitHub"
               />
             {/if}
