@@ -166,20 +166,16 @@
   <!-- Header Section -->
   <header class="flex justify-between">
     <div>
-      <h1 class="text-2xl font-bold">{profile.name}</h1>
-      <h2 class="text-sm">{profile.title}</h2>
-      <h2 class="text-xs mt-1">{profile.subtitle}</h2>
+      <h1 class="text-2xl font-bold h-9">{profile.name}<br><br></h1>
+      <h2 class="text-sm h-5">{profile.title}<br><br></h2>
+      <h2 class="text-xs mt-1 h-5">{profile.subtitle}<br><br></h2>
     </div>
 
     <ul
       class="text-xs mt-3 grid grid-cols-2 grid-cols-[220px_150px] gap-x-2 auto-rows-[22px]"
     >
       <li>
-        <!-- <FontAwesomeIcon icon={faEnvelope} class="w-3 mr-1" title="Email" /> -->
-
-        <span class="inline-block w-14 text-right font-bold">
-          Email:
-        </span>
+        <span class="inline-block w-14 text-right font-bold">Email:</span>
 
         <a
           href="mailto:{profile.email_address}"
@@ -190,9 +186,7 @@
       <li>
         <!-- <FontAwesomeIcon icon={faPhone} class="w-3 mr-1" title="Phone" /> -->
 
-        <span class="inline-block w-13 text-right font-bold">
-          Phone:
-        </span>
+        <span class="inline-block w-13 text-right font-bold">Phone:</span>
 
         <a
           href="tel:{profile.phone_number}"
@@ -207,18 +201,14 @@
         <!--   title="Location" -->
         <!-- /> -->
 
-        <span class="inline-block w-14 text-right font-bold">
-          Location:
-        </span>
+        <span class="inline-block w-14 text-right font-bold">Location:</span>
 
         {#if profile.location_url}
           <a
             href={profile.location_url}
             class="underline hover:text-slate-600"
             target="_blank"
-          >
-            {profile.location}
-          </a>
+          >{profile.location}</a>
         {/if}
 
         {#if profile.location_timezone}
@@ -229,9 +219,7 @@
       <li>
         <!-- <FontAwesomeIcon icon={faGlobe} class="w-3 mr-1" title="Website" /> -->
 
-        <span class="inline-block w-13 text-right font-bold">
-          Website:
-        </span>
+        <span class="inline-block w-13 text-right font-bold">Website:</span>
 
         {#if profile.personal_website}
           <a
@@ -254,9 +242,7 @@
         <!--   title="LinkedIn" -->
         <!-- /> -->
 
-        <span class="inline-block w-14 text-right font-bold">
-          LinkedIn:
-        </span>
+        <span class="inline-block w-14 text-right font-bold">LinkedIn:</span>
 
         {#if profile.linkedin_profile}
           <a
@@ -279,9 +265,7 @@
         <!--   title="GitHub" -->
         <!-- /> -->
 
-        <span class="inline-block w-13 text-right font-bold">
-          GitHub:
-        </span>
+        <span class="inline-block w-13 text-right font-bold">GitHub:</span>
 
         {#if profile.github_profile}
           <a
@@ -297,29 +281,26 @@
         {/if}
       </li>
     </ul>
+    <br>
   </header>
 
   <!-- Summary -->
   <div class="my-4">
-    <h2 class="text-sm font-bold">
-      SUMMARY
-    </h2>
+    <h2 class="text-sm font-bold">SUMMARY</h2>
 
     <hr class="mt-1 mb-2" />
 
-    <p class="mt-1 text-xs">{profile.summary}</p>
+    <p class="mt-1 text-xs mb-[-30px]">{profile.summary}<br><br><br></p>
   </div>
 
   <!-- Work Experience -->
-  <div class="my-4">
-    <h2 class="text-sm font-bold">
-      WORK EXPERIENCE
-    </h2>
+  <div class="my-4 mb-[-20px]">
+    <h2 class="text-sm font-bold h-5">WORK EXPERIENCE<br><br></h2>
 
     <hr class="mt-1 mb-2" />
 
     {#each work_experiences as job, index (index)}
-      <div class="mb-2">
+      <div class="mb-[-10px]">
         <div class="text-xs font-bold mb-1">
           {job.name} |
           {job.location} |
@@ -346,15 +327,14 @@
             </ul>
           {/if}
         {/if}
+        <br>
       </div>
     {/each}
   </div>
 
   <!-- Skills -->
-  <div class="my-4 break-inside-avoid">
-    <h2 class="text-sm font-bold">
-      SKILLS
-    </h2>
+  <div class="my-4 break-inside-avoid mb-[-20px]">
+    <h2 class="text-sm font-bold">SKILLS</h2>
 
     <hr class="mt-1 mb-2" />
 
@@ -362,32 +342,33 @@
       {#each profile.tech_skill_categories as skillGroup, index (index)}
         <li class="print:indent-[-6px]">
           <div class="flex items-center">
-            <h3 class="font-bold mr-1 print:mr-[10px]">{skillGroup.name}:</h3>
-            <p class="text-xs">
+            <span class="font-bold mr-1 print:mr-[10px]">{
+                skillGroup.name
+              }:</span>
+            <span class="text-xs">
               {
                 skillGroup.tech_skills.map(
                   (s: { name: string }) => s.name,
                 ).join(" | ")
               }
-            </p>
+            </span>
           </div>
         </li>
       {/each}
     </ul>
+    <br>
   </div>
 
   <!-- Side Projects -->
   <div class="my-4 break-inside-avoid">
-    <h2 class="text-sm font-bold">
-      SIDE PROJECTS
-    </h2>
+    <h2 class="text-sm font-bold h-5">SIDE PROJECTS<br><br></h2>
 
     <hr class="mt-1 mb-2" />
 
     {#each filterOnTags(profile.side_projects) as project (project.name)}
       {@const { isGithub, displayLabel } = formatProjectUrl(project.url)}
       <div class="mb-2">
-        <div class="text-xs font-bold mb-1">
+        <div class="text-xs font-bold mb-1 h-4">
           {project.name} |
           <a
             href={project.url}
@@ -395,7 +376,11 @@
             class="hover:text-slate-600"
           >
             {#if isGithub}
-              <FontAwesomeIcon icon={faGithub} class="w-3" title="GitHub" />
+              <FontAwesomeIcon
+                icon={faGithub}
+                class="w-3 select-none"
+                title="GitHub"
+              />
             {/if}
 
             <span class="underline">
@@ -407,20 +392,17 @@
               {project.stars}
             {/if}
           </a>
+          <br><br>
         </div>
 
-        <div class="text-xs">
-          {project.summary}
-        </div>
+        <div class="text-xs mb-[-31px]">{project.summary}<br><br><br></div>
       </div>
     {/each}
   </div>
 
   <!-- Education -->
-  <div class="my-3 break-inside-avoid">
-    <h2 class="text-sm font-bold">
-      EDUCATION
-    </h2>
+  <div class="my-3 break-inside-avoid mb-[-45px]">
+    <h2 class="text-sm font-bold h-5">EDUCATION<br><br></h2>
 
     <hr class="mt-1 mb-2" />
 
@@ -439,25 +421,21 @@
                 )
               }
             {/if}
-          {/if}
-        </div>
-
-        <div>
+          {/if} |
           {education.institution}, {education.location}
         </div>
 
         <div>
-          - {education.summary}
+          {education.summary}
         </div>
       </div>
     {/each}
+    <br><br>
   </div>
 
   <!-- Languages -->
   <div class="my-3 break-inside-avoid">
-    <h2 class="text-sm font-bold">
-      LANGUAGES
-    </h2>
+    <h2 class="text-sm font-bold h-5">LANGUAGES<br><br></h2>
 
     <hr class="mt-1 mb-2" />
 
