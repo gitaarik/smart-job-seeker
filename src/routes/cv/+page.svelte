@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { PageData } from "./$types";
-  import ProfileDisplay from "$lib/components/ProfileDisplay.svelte";
+  import { ProfileDisplay } from "$lib/components/ProfileDisplay";
 
   export let data: PageData;
 </script>
