@@ -165,14 +165,14 @@
 >
   <!-- Header Section -->
   <header class="flex justify-between">
-    <div class="w-120">
+    <div>
       <h1 class="text-2xl font-bold">{profile.name}</h1>
       <h2 class="text-sm">{profile.title}</h2>
       <h2 class="text-xs mt-1">{profile.subtitle}</h2>
     </div>
 
     <ul
-      class="text-xs mt-3 grid grid-cols-2 grid-cols-[210px_150px] gap-x-2 auto-rows-[22px]"
+      class="text-xs mt-3 grid grid-cols-2 grid-cols-[220px_150px] gap-x-2 auto-rows-[22px]"
     >
       <li>
         <!-- <FontAwesomeIcon icon={faEnvelope} class="w-3 mr-1" title="Email" /> -->
