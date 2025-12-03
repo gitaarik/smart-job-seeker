@@ -9,7 +9,7 @@
   <span
     class="inline-block w-14 text-right font-bold whitespace-nowrap mr-[1px]"
   >
-    <span class="inline-block w-0 opacity-0">- </span>{label}:
+    <span class="inline-block w-0 opacity-0">-&nbsp;</span>{label}:
   </span>
 
   {#if href || content}

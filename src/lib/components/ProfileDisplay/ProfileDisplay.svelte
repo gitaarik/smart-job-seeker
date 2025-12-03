@@ -270,8 +270,10 @@
           {#if filteredHighlights.length > 0}
             <ul class="list-disc ml-3 print:ml-4">
               {#each filteredHighlights as highlight, index (index)}
-                <li class="print:indent-[-6px]">
-                  {highlight.description}
+                <li class="print:indent-[-6px] whitespace-nowrap">
+                  <span class="inline-block w-0 opacity-0">-&nbsp;</span>{
+                    highlight.description
+                  }
                 </li>
               {/each}
             </ul>
@@ -291,7 +293,8 @@
     <ul class="list-disc ml-3 print:ml-4">
       {#each profile.tech_skill_categories as skillGroup, index (index)}
         <li class="print:indent-[-6px]">
-          <div class="flex items-center">
+          <span class="inline-flex items-center h-2 whitespace-nowrap">
+            <span class="w-0 opacity-0">-&nbsp;</span>
             <span class="font-bold mr-1 print:mr-[10px]">{
                 skillGroup.name
               }:</span>
@@ -302,7 +305,8 @@
                 ).join(" | ")
               }
             </span>
-          </div>
+            <br>
+          </span>
         </li>
       {/each}
     </ul>
