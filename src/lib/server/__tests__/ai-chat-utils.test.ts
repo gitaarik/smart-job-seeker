@@ -121,7 +121,7 @@ describe("getInterpolatedPrompts", () => {
     dbClient.collected_data.findFirst.mockResolvedValueOnce(
       mockCollectedData,
     );
-    dbClient.application_interview_questions = {
+    dbClient.application_questions = {
       findFirst: vi.fn().mockResolvedValueOnce(null),
     };
 
@@ -144,7 +144,7 @@ describe("getInterpolatedPrompts", () => {
 
     dbClient.ai_chat.findUnique.mockResolvedValueOnce(mockAiChat);
     dbClient.collected_data.findFirst.mockResolvedValueOnce(null);
-    dbClient.application_interview_questions = {
+    dbClient.application_questions = {
       findFirst: vi.fn().mockResolvedValueOnce(null),
     };
 
@@ -174,7 +174,7 @@ describe("getInterpolatedPrompts", () => {
     dbClient.collected_data.findFirst.mockResolvedValueOnce(
       mockCollectedData,
     );
-    dbClient.application_interview_questions = {
+    dbClient.application_questions = {
       findFirst: vi.fn().mockResolvedValueOnce(null),
     };
 
@@ -201,7 +201,7 @@ describe("getInterpolatedPrompts", () => {
       data: "{}",
     });
 
-    dbClient.application_interview_questions = {
+    dbClient.application_questions = {
       findFirst: vi.fn().mockResolvedValueOnce(null),
     };
 
@@ -232,7 +232,7 @@ describe("getInterpolatedPrompts", () => {
     dbClient.collected_data.findFirst.mockResolvedValueOnce(
       mockCollectedData,
     );
-    dbClient.application_interview_questions = {
+    dbClient.application_questions = {
       findFirst: vi.fn().mockResolvedValueOnce(null),
     };
 
