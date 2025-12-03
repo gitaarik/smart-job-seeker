@@ -322,7 +322,7 @@
     {#each filterOnTags(profile.side_projects) as project (project.name)}
       {@const { isGithub, displayLabel } = formatProjectUrl(project.url)}
       <div class="mb-2">
-        <div class="text-xs font-bold mb-1 flex items-center gap-1">
+        <div class="flex items-center gap-1 text-xs font-bold mb-1">
           <span class="order-1 after:content-['|'] after:ml-1">
             {project.name}
           </span>
@@ -339,7 +339,7 @@
           <a
             href={project.url}
             target="_blank"
-            class="order-2 hover:text-slate-600"
+            class="order-2 whitespace-nowrap hover:text-slate-600"
           >
             {#if isGithub}
               <FontAwesomeIcon
@@ -356,6 +356,7 @@
             {#if isGithub && parseInt(project.stars) >= 50}
               <FontAwesomeIcon icon={faStar} title="Stars" class="w-3" />
               {project.stars}
+              <span class="inline-block w-0 opacity-0">GitHub stars</span>
             {/if}
           </a>
         </div>
