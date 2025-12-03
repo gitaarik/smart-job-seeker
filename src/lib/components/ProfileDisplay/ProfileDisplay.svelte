@@ -355,11 +355,14 @@
               </span>
             {/if}
 
-            <span class="inline-flex underline">
+            <span
+              class="inline-flex underline"
+              style="--display-label: '{displayLabel}'"
+            >
               <span class="inline-block w-0 opacity-0">{project.url}</span>
 
               <span
-                class="inline-block after:content-['hodan'] after:underline"
+                class="inline-block after:content-[var(--display-label)] after:underline"
               >
               </span>
 
