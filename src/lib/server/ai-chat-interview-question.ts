@@ -14,7 +14,7 @@ import { generateAiChatResponse } from "./ai-chat-response-generate";
  * 2. Create an ai_chat record with system_prompt including ${jobDescription} placeholder
  * 3. Generate the full prompt (variables will be replaced including job description)
  * 4. Generate the AI response
- * 5. Update the application_interview_questions record with the ai_chat reference
+ * 5. Update the application_questions record with the ai_chat reference
  */
 export async function generateInterviewQuestionAnswer(
   questionId: number,
@@ -24,7 +24,7 @@ export async function generateInterviewQuestionAnswer(
 }> {
   try {
     // Fetch the interview question with application and vacancy details
-    const question = await db.application_interview_questions.findUnique({
+    const question = await db.application_questions.findUnique({
       where: { id: questionId },
       include: {
         applications: {
@@ -94,8 +94,8 @@ export async function generateInterviewQuestionAnswer(
       };
     }
 
-    // Update the application_interview_questions record with the ai_chat reference
-    await db.application_interview_questions.update({
+    // Update the application_questions record with the ai_chat reference
+    await db.application_questions.update({
       where: { id: questionId },
       data: { ai_chat: aiChat.id },
     });
