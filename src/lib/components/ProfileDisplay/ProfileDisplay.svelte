@@ -162,7 +162,7 @@
   <meta name="description" content={profile.name} />
 </svelte:head>
 
-<div
+<article
   class="w-[699px] print:w-[initial] mx-auto py-8 print:py-0 bg-white text-black text-xs leading-relaxed"
 >
   <!-- Header Section -->
@@ -236,16 +236,16 @@
   </header>
 
   <!-- Summary -->
-  <div class="my-4">
+  <section class="my-4">
     <h2 class="text-sm font-bold">SUMMARY</h2>
 
     <hr class="mt-1 mb-2" />
 
     <p class="mt-1 text-xs mb-[-30px]">{profile.summary}<br><br><br></p>
-  </div>
+  </section>
 
   <!-- Work Experience -->
-  <div class="my-4 mb-[-20px]">
+  <section class="my-4 mb-[-20px]">
     <h2 class="text-sm font-bold h-5">WORK EXPERIENCE<br><br></h2>
 
     <hr class="mt-1 mb-2" />
@@ -283,10 +283,10 @@
         <br>
       </div>
     {/each}
-  </div>
+  </section>
 
   <!-- Skills -->
-  <div class="my-4 break-inside-avoid mb-[-20px]">
+  <section class="my-4 break-inside-avoid mb-[-20px]">
     <h2 class="text-sm font-bold">SKILLS</h2>
 
     <hr class="mt-1 mb-2" />
@@ -312,10 +312,10 @@
       {/each}
     </ul>
     <br>
-  </div>
+  </section>
 
   <!-- Side Projects -->
-  <div class="my-4 break-inside-avoid">
+  <section class="my-4 break-inside-avoid">
     <h2 class="text-sm font-bold h-5">SIDE PROJECTS<br><br></h2>
 
     <hr class="mt-1 mb-2" />
@@ -380,10 +380,10 @@
         <div class="text-xs mb-[-31px]">{project.summary}<br><br><br></div>
       </div>
     {/each}
-  </div>
+  </section>
 
   <!-- Education -->
-  <div class="my-3 break-inside-avoid mb-[-45px]">
+  <section class="my-3 break-inside-avoid mb-[-45px]">
     <h2 class="text-sm font-bold h-5">EDUCATION<br><br></h2>
 
     <hr class="mt-1 mb-2" />
@@ -413,10 +413,10 @@
       </div>
     {/each}
     <br><br>
-  </div>
+  </section>
 
   <!-- Languages -->
-  <div class="my-3 break-inside-avoid">
+  <section class="my-3 break-inside-avoid">
     <h2 class="text-sm font-bold h-5">LANGUAGES<br><br></h2>
 
     <hr class="mt-1 mb-2" />
@@ -429,11 +429,11 @@
         }
       </div>
     {/each}
-  </div>
+  </section>
 
   {#if toggles.includes("nationality")}
     <!-- Nationality -->
-    <div class="my-3 break-inside-avoid">
+    <section class="my-3 break-inside-avoid">
       <h2 class="text-sm font-bold">
         NATIONALITY
       </h2>
@@ -443,11 +443,11 @@
       <div>
         {profile.nationality}
       </div>
-    </div>
+    </section>
   {/if}
 
   {#if type === "cv"}
-    <div class="mb-6">
+    <section class="mb-6">
       <h2 class="text-sm font-bold">
         REFERENCES
       </h2>
@@ -461,6 +461,6 @@
         </div>
       {/each}
       <p class="mt-2 font-semibold">Contact details available upon request</p>
-    </div>
+    </section>
   {/if}
-</div>
+</article>
