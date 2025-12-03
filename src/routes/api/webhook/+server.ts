@@ -86,19 +86,21 @@ export const POST: RequestHandler = async (event) => {
     // Process webhook based on event type
     const result = await processWebhookEvent(payload);
 
-    // Clear Directus cache after successful webhook processing
-    try {
-      console.log("[Webhook] Clearing Directus cache...");
-      await clearDirectusCache();
-      console.log("[Webhook] Directus cache cleared successfully");
-    } catch (cacheError) {
-      const cacheErrorMessage = cacheError instanceof Error
-        ? cacheError.message
-        : "Unknown error";
-      console.warn(
-        `[Webhook] Failed to clear Directus cache: ${cacheErrorMessage}`,
-      );
-      // Don't fail the webhook response due to cache clearing failure
+    // Clear Directus cache after successful webhook processing (skip in tests)
+    if (!process.env.VITEST) {
+      try {
+        console.log("[Webhook] Clearing Directus cache...");
+        await clearDirectusCache();
+        console.log("[Webhook] Directus cache cleared successfully");
+      } catch (cacheError) {
+        const cacheErrorMessage = cacheError instanceof Error
+          ? cacheError.message
+          : "Unknown error";
+        console.warn(
+          `[Webhook] Failed to clear Directus cache: ${cacheErrorMessage}`,
+        );
+        // Don't fail the webhook response due to cache clearing failure
+      }
     }
 
     return json(
