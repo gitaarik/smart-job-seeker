@@ -322,12 +322,24 @@
     {#each filterOnTags(profile.side_projects) as project (project.name)}
       {@const { isGithub, displayLabel } = formatProjectUrl(project.url)}
       <div class="mb-2">
-        <div class="text-xs font-bold mb-1 h-4">
-          {project.name} |
+        <div class="text-xs font-bold mb-1 flex items-center gap-1">
+          <span class="order-1 after:content-['|'] after:ml-1">
+            {project.name}
+          </span>
+
+          <span class="order-3">
+            | {
+              formatDateRangeCompact(
+                project.start_date,
+                project.end_date,
+              )
+            }
+          </span>
+
           <a
             href={project.url}
             target="_blank"
-            class="hover:text-slate-600"
+            class="order-2 hover:text-slate-600"
           >
             {#if isGithub}
               <FontAwesomeIcon
@@ -346,14 +358,6 @@
               {project.stars}
             {/if}
           </a>
-          |
-          {
-            formatDateRangeCompact(
-              project.start_date,
-              project.end_date,
-            )
-          }
-          <br><br>
         </div>
 
         <div class="text-xs mb-[-31px]">{project.summary}<br><br><br></div>
