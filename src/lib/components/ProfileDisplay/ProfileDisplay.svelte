@@ -346,6 +346,13 @@
               {project.stars}
             {/if}
           </a>
+          |
+          {
+            formatDateRangeCompact(
+              project.start_date,
+              project.end_date,
+            )
+          }
           <br><br>
         </div>
 
