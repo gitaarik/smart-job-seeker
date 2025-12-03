@@ -14,6 +14,7 @@
     faStar,
   } from "@fortawesome/free-solid-svg-icons";
   import { faGithub, faLinkedin } from "@fortawesome/free-brands-svg-icons";
+  import ContactItem from "./ContactItem.svelte";
 
   interface Profile {
     name: string | null;
@@ -174,128 +175,61 @@
     <ul
       class="text-xs mt-3 grid grid-cols-2 grid-cols-[220px_150px] gap-x-2 auto-rows-[22px]"
     >
-      <li>
-        <span
-          class="inline-block w-14 text-right font-bold whitespace-nowrap mr-[1px]"
-        >
-          <span class="inline-block w-0 opacity-0">- </span>
-          Email:
-        </span>
+      <ContactItem
+        label="Email"
+        href={profile.email_address}
+        content={profile.email_address}
+        type="email"
+      />
 
-        <a
-          href="mailto:{profile.email_address}"
-          class="underline hover:text-slate-600"
-        >{profile.email_address}</a>
-      </li>
+      <ContactItem
+        label="Phone"
+        href={profile.phone_number}
+        content={profile.phone_number}
+        type="phone"
+      />
 
-      <li>
-        <!-- <FontAwesomeIcon icon={faPhone} class="w-3 mr-1" title="Phone" /> -->
-
-        <span class="inline-block w-13 text-right font-bold">
-          <span class="inline-block w-0 opacity-0">- </span>
-          Phone:
-        </span>
-
-        <a
-          href="tel:{profile.phone_number}"
-          class="underline hover:text-slate-600"
-        >{profile.phone_number}</a>
-      </li>
-
-      <li>
-        <!-- <FontAwesomeIcon -->
-        <!--   icon={faLocationDot} -->
-        <!--   class="w-3 mr-1" -->
-        <!--   title="Location" -->
-        <!-- /> -->
-
-        <span
-          class="inline-block w-14 text-right font-bold whitespace-nowrap mr-[1px]"
-        >
-          <span class="inline-block w-0 opacity-0">- </span>
-          Location:
-        </span>
-
-        {#if profile.location_url}
-          <a
-            href={profile.location_url}
-            class="underline hover:text-slate-600"
-            target="_blank"
-          >{profile.location}</a>
-        {/if}
-
+      <ContactItem
+        label="Location"
+        href={profile.location_url}
+        content={profile.location}
+      >
         {#if profile.location_timezone}
           ({profile.location_timezone})
         {/if}
-      </li>
+      </ContactItem>
 
-      <li>
-        <!-- <FontAwesomeIcon icon={faGlobe} class="w-3 mr-1" title="Website" /> -->
+      <ContactItem
+        label="Website"
+        href={profile.personal_website}
+        content={profile.personal_website
+          ? profile.personal_website
+            .replace(/^https?:\/\/(www.)?/, "")
+            .replace(/\/$/, "")
+          : null}
+      />
 
-        <span class="inline-block w-13 text-right font-bold">Website:</span>
+      <ContactItem
+        label="LinkedIn"
+        href={profile.linkedin_profile}
+        content={profile.linkedin_profile
+          ? profile.linkedin_profile.replace(
+            /^https?:\/\/(www.)?linkedin.com\/in\//,
+            "",
+          )
+          : null}
+      />
 
-        {#if profile.personal_website}
-          <a
-            href={profile.personal_website}
-            target="_blank"
-            class="underline hover:text-slate-600"
-          >{
-            profile.personal_website.replace(
-              /^https?:\/\/(www.)?/,
-              "",
-            ).replace(/\/$/, "")
-          }</a>
-        {/if}
-      </li>
-
-      <li>
-        <!-- <FontAwesomeIcon -->
-        <!--   icon={faLinkedin} -->
-        <!--   class="w-3 mr-1" -->
-        <!--   title="LinkedIn" -->
-        <!-- /> -->
-
-        <span class="inline-block w-14 text-right font-bold whitespace-nowrap">
-          <span class="inline-block w-0 opacity-0">- </span>
-          LinkedIn:
-        </span>
-
-        {#if profile.linkedin_profile}
-          <a
-            href={profile.linkedin_profile}
-            target="_blank"
-            class="underline hover:text-slate-600"
-          >{
-            profile.linkedin_profile.replace(
-              /^https?:\/\/(www.)?linkedin.com\/in\//,
-              "",
-            )
-          }</a>
-        {/if}
-      </li>
-
-      <li>
-        <!-- <FontAwesomeIcon -->
-        <!--   icon={faGithub} -->
-        <!--   class="w-3 mr-1" -->
-        <!--   title="GitHub" -->
-        <!-- /> -->
-
-        <span class="inline-block w-13 text-right font-bold">GitHub:</span>
-
-        {#if profile.github_profile}
-          <a
-            href={profile.github_profile}
-            target="_blank"
-            class="underline hover:text-slate-600"
-          >{
-            profile.github_profile.replace(
-              /^https?:\/\/(www.)?github.com\//,
-              "",
-            )
-          }</a>
-        {/if}
-      </li>
+      <ContactItem
+        label="GitHub"
+        href={profile.github_profile}
+        content={profile.github_profile
+          ? profile.github_profile.replace(
+            /^https?:\/\/(www.)?github.com\//,
+            "",
+          )
+          : null}
+      />
     </ul>
     <br>
   </header>
