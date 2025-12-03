@@ -70,6 +70,7 @@
     side_projects: Array<{
       name: string;
       url: string;
+      url_label: string;
       stars: string;
       start_date: Date;
       end_date?: Date;
@@ -320,7 +321,10 @@
     <hr class="mt-1 mb-2" />
 
     {#each filterOnTags(profile.side_projects) as project (project.name)}
-      {@const { isGithub, displayLabel } = formatProjectUrl(project.url)}
+      {@const       { isGithub, displayLabel } = formatProjectUrl(
+        project.url,
+        project.url_label,
+      )}
       <div class="mb-2">
         <div class="flex items-center gap-1 text-xs font-bold mb-1">
           <span class="order-1 after:content-['|'] after:ml-1">
@@ -339,18 +343,27 @@
           <a
             href={project.url}
             target="_blank"
-            class="order-2 whitespace-nowrap hover:text-slate-600"
+            class="inline-flex gap-1 order-2 whitespace-nowrap hover:text-slate-600"
           >
             {#if isGithub}
-              <FontAwesomeIcon
-                icon={faGithub}
-                class="w-3"
-                title="GitHub"
-              />
+              <span>
+                <FontAwesomeIcon
+                  icon={faGithub}
+                  class="w-3"
+                  title="GitHub"
+                />
+              </span>
             {/if}
 
-            <span class="underline">
-              {displayLabel}
+            <span class="inline-flex underline">
+              <span class="inline-block w-0 opacity-0">{project.url}</span>
+
+              <span
+                class="inline-block after:content-['hodan'] after:underline"
+              >
+              </span>
+
+              <!-- {displayLabel} -->
             </span>
 
             {#if isGithub && parseInt(project.stars) >= 50}
