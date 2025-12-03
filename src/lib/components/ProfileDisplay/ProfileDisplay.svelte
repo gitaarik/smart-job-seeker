@@ -166,74 +166,71 @@
   class="w-[699px] print:w-[initial] mx-auto py-8 print:py-0 bg-white text-black text-xs leading-relaxed"
 >
   <!-- Header Section -->
-  <header class="flex justify-between">
-    <div>
-      <h1 class="text-2xl font-bold h-9">{profile.name}<br><br></h1>
-      <h2 class="text-sm h-5">{profile.title}<br><br></h2>
-      <h2 class="text-xs mt-1 h-5">{profile.subtitle}<br><br></h2>
-    </div>
+  <header>
+    <h1 class="text-2xl font-bold h-9">{profile.name}<br><br></h1>
+    <h2 class="text-sm h-5">{profile.title}<br><br></h2>
+    <h2 class="text-xs mt-1 h-5">{profile.subtitle}<br><br></h2>
+  </header>
 
-    <ul
-      class="text-xs mt-3 grid grid-cols-2 grid-cols-[220px_150px] gap-x-2 auto-rows-[22px]"
-    >
-      <ContactItem
-        label="Email"
-        href={profile.email_address}
-        content={profile.email_address}
-        type="email"
-      />
+  <!-- Contact Details -->
+  <section class="mt-1 mb-[-15px]">
+    <ul class="list-disc ml-3 print:ml-4">
+      <li class="print:indent-[-3px]">
+        <ContactItem
+          label="Email"
+          href={profile.email_address}
+          content={profile.email_address}
+          type="email"
+        />
+      </li>
 
-      <ContactItem
-        label="Phone"
-        href={profile.phone_number}
-        content={profile.phone_number}
-        type="phone"
-      />
+      <li class="print:indent-[-3px]">
+        <ContactItem
+          label="Phone"
+          href={profile.phone_number}
+          content={profile.phone_number}
+          type="phone"
+        />
+      </li>
 
-      <ContactItem
-        label="Location"
-        href={profile.location_url}
-        content={profile.location}
-      >
-        {#if profile.location_timezone}
-          ({profile.location_timezone})
-        {/if}
-      </ContactItem>
+      <li class="print:indent-[-3px]">
+        <ContactItem
+          label="Location"
+          href={profile.location_url}
+          content={profile.location}
+        >
+          {#if profile.location_timezone}
+            ({profile.location_timezone})
+          {/if}
+        </ContactItem>
+      </li>
 
-      <ContactItem
-        label="Website"
-        href={profile.personal_website}
-        content={profile.personal_website
-          ? profile.personal_website
-            .replace(/^https?:\/\/(www.)?/, "")
-            .replace(/\/$/, "")
-          : null}
-      />
+      <li class="print:indent-[-3px]">
+        <ContactItem
+          label="Website"
+          href={profile.personal_website}
+          content={profile.personal_website}
+        />
+      </li>
 
-      <ContactItem
-        label="LinkedIn"
-        href={profile.linkedin_profile}
-        content={profile.linkedin_profile
-          ? profile.linkedin_profile.replace(
-            /^https?:\/\/(www.)?linkedin.com\/in\//,
-            "",
-          )
-          : null}
-      />
+      <li class="print:indent-[-3px]">
+        <ContactItem
+          label="LinkedIn"
+          href={profile.linkedin_profile}
+          content={profile.linkedin_profile}
+        />
+      </li>
 
-      <ContactItem
-        label="GitHub"
-        href={profile.github_profile}
-        content={profile.github_profile
-          ? profile.github_profile.replace(
-            /^https?:\/\/(www.)?github.com\//,
-            "",
-          )
-          : null}
-      />
+      <li class="print:indent-[-3px]">
+        <ContactItem
+          label="GitHub"
+          href={profile.github_profile}
+          content={profile.github_profile}
+        />
+      </li>
     </ul>
     <br>
-  </header>
+  </section>
 
   <!-- Summary -->
   <section class="my-4">
@@ -293,10 +290,10 @@
 
     <ul class="list-disc ml-3 print:ml-4">
       {#each profile.tech_skill_categories as skillGroup, index (index)}
-        <li class="print:indent-[-6px]">
+        <li class="print:indent-[-2px]">
           <span class="inline-flex items-center h-2 whitespace-nowrap">
             <span class="w-0 opacity-0">-&nbsp;</span>
-            <span class="font-bold mr-1 print:mr-[10px]">{
+            <span class="font-bold mr-1 print:mr-[6px]">{
                 skillGroup.name
               }:</span>
             <span class="text-xs">
@@ -325,55 +322,23 @@
         project.url,
         project.url_label,
       )}
-      <div class="mb-2">
-        <div class="flex items-center gap-1 text-xs font-bold mb-1">
-          <span class="order-1 after:content-['|'] after:ml-1">
-            {project.name}
-          </span>
+      <div class="mb-3">
+        <div class="text-xs font-bold mb-0">
+          {project.name} | {
+            formatDateRangeCompact(
+              project.start_date,
+              project.end_date,
+            )
+          }
+        </div>
 
-          <span class="order-3">
-            | {
-              formatDateRangeCompact(
-                project.start_date,
-                project.end_date,
-              )
-            }
-          </span>
-
+        <div>
           <a
             href={project.url}
             target="_blank"
-            class="inline-flex gap-1 order-2 whitespace-nowrap hover:text-slate-600"
+            class="underline whitespace-nowrap hover:text-slate-600"
           >
-            {#if isGithub}
-              <span>
-                <FontAwesomeIcon
-                  icon={faGithub}
-                  class="w-3"
-                  title="GitHub"
-                />
-              </span>
-            {/if}
-
-            <span
-              class="inline-flex underline"
-              style="--display-label: '{displayLabel}'"
-            >
-              <span class="inline-block w-0 opacity-0">{project.url}</span>
-
-              <span
-                class="inline-block after:content-[var(--display-label)] after:underline"
-              >
-              </span>
-
-              <!-- {displayLabel} -->
-            </span>
-
-            {#if isGithub && parseInt(project.stars) >= 50}
-              <FontAwesomeIcon icon={faStar} title="Stars" class="w-3" />
-              {project.stars}
-              <span class="inline-block w-0 opacity-0">GitHub stars</span>
-            {/if}
+            {project.url}
           </a>
         </div>
 
