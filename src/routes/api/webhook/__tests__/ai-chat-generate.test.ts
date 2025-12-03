@@ -6,6 +6,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { WebhookPayload } from "$lib/types/webhook";
 
+// Global mocks are configured in vitest.setup.ts (getEnv and db)
+// Only mock the specific functions under test here
+
 // Mock the ai-chat-full-prompt-generate module
 vi.mock("$lib/server/ai-chat-full-prompt-generate", () => ({
   generateAiChatFullPrompt: vi.fn(),
@@ -14,16 +17,6 @@ vi.mock("$lib/server/ai-chat-full-prompt-generate", () => ({
 // Mock the ai-chat-response-generate module
 vi.mock("$lib/server/ai-chat-response-generate", () => ({
   generateAiChatResponse: vi.fn(),
-}));
-
-// Mock the get-env utility
-vi.mock("$lib/tools/get-env", () => ({
-  getEnv: vi.fn((key: string, defaultValue = "") => {
-    const envVars: Record<string, string> = {
-      WEBHOOK_SECRET: "test-webhook-secret-key-1234567890123456",
-    };
-    return envVars[key] ?? defaultValue;
-  }),
 }));
 
 import { generateAiChatFullPrompt } from "$lib/server/ai-chat-full-prompt-generate";
