@@ -37,6 +37,7 @@
       "Bash(npm run prisma:generate:*)",
       "Bash(npm run test:*)",
       "Bash(npm run:*)",
+      "Bash(npm test:*)",
       "Bash(npm uninstall:*)",
       "Bash(npx deno fmt:*)",
       "Bash(npx prisma:*)",
