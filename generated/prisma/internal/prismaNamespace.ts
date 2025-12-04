@@ -442,7 +442,8 @@ export const ModelName = {
   ai_prompts: 'ai_prompts',
   application_questions: 'application_questions',
   application_activity_log: 'application_activity_log',
-  applications_files: 'applications_files'
+  applications_files: 'applications_files',
+  ai_chat_prompts: 'ai_chat_prompts'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -458,7 +459,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "applications" | "cheat_sheets" | "collected_data" | "directus_access" | "directus_activity" | "directus_collections" | "directus_comments" | "directus_dashboards" | "directus_extensions" | "directus_fields" | "directus_files" | "directus_flows" | "directus_folders" | "directus_migrations" | "directus_notifications" | "directus_operations" | "directus_panels" | "directus_permissions" | "directus_policies" | "directus_presets" | "directus_relations" | "directus_revisions" | "directus_roles" | "directus_sessions" | "directus_settings" | "directus_shares" | "directus_translations" | "directus_users" | "directus_versions" | "directus_webhooks" | "education" | "highlights" | "languages" | "outsourcing_platforms" | "platform_profiles" | "profile_versions" | "profiles" | "project_stories" | "references" | "salary_expectations" | "side_project_achievements" | "side_project_technologies" | "side_projects" | "tech_skill_categories" | "tech_skill_types" | "tech_skills" | "vacancies" | "vacancy_resources" | "work_experience_achievements" | "work_experience_technologies" | "work_experiences" | "ai_chat" | "os_contributions" | "work_experience_project_technologies" | "work_experience_projects" | "ai_prompts" | "application_questions" | "application_activity_log" | "applications_files"
+    modelProps: "applications" | "cheat_sheets" | "collected_data" | "directus_access" | "directus_activity" | "directus_collections" | "directus_comments" | "directus_dashboards" | "directus_extensions" | "directus_fields" | "directus_files" | "directus_flows" | "directus_folders" | "directus_migrations" | "directus_notifications" | "directus_operations" | "directus_panels" | "directus_permissions" | "directus_policies" | "directus_presets" | "directus_relations" | "directus_revisions" | "directus_roles" | "directus_sessions" | "directus_settings" | "directus_shares" | "directus_translations" | "directus_users" | "directus_versions" | "directus_webhooks" | "education" | "highlights" | "languages" | "outsourcing_platforms" | "platform_profiles" | "profile_versions" | "profiles" | "project_stories" | "references" | "salary_expectations" | "side_project_achievements" | "side_project_technologies" | "side_projects" | "tech_skill_categories" | "tech_skill_types" | "tech_skills" | "vacancies" | "vacancy_resources" | "work_experience_achievements" | "work_experience_technologies" | "work_experiences" | "ai_chat" | "os_contributions" | "work_experience_project_technologies" | "work_experience_projects" | "ai_prompts" | "application_questions" | "application_activity_log" | "applications_files" | "ai_chat_prompts"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -4828,6 +4829,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    ai_chat_prompts: {
+      payload: Prisma.$ai_chat_promptsPayload<ExtArgs>
+      fields: Prisma.ai_chat_promptsFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ai_chat_promptsFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ai_chat_promptsPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ai_chat_promptsFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ai_chat_promptsPayload>
+        }
+        findFirst: {
+          args: Prisma.ai_chat_promptsFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ai_chat_promptsPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ai_chat_promptsFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ai_chat_promptsPayload>
+        }
+        findMany: {
+          args: Prisma.ai_chat_promptsFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ai_chat_promptsPayload>[]
+        }
+        create: {
+          args: Prisma.ai_chat_promptsCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ai_chat_promptsPayload>
+        }
+        createMany: {
+          args: Prisma.ai_chat_promptsCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ai_chat_promptsCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ai_chat_promptsPayload>[]
+        }
+        delete: {
+          args: Prisma.ai_chat_promptsDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ai_chat_promptsPayload>
+        }
+        update: {
+          args: Prisma.ai_chat_promptsUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ai_chat_promptsPayload>
+        }
+        deleteMany: {
+          args: Prisma.ai_chat_promptsDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ai_chat_promptsUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ai_chat_promptsUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ai_chat_promptsPayload>[]
+        }
+        upsert: {
+          args: Prisma.ai_chat_promptsUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ai_chat_promptsPayload>
+        }
+        aggregate: {
+          args: Prisma.Ai_chat_promptsAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAi_chat_prompts>
+        }
+        groupBy: {
+          args: Prisma.ai_chat_promptsGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Ai_chat_promptsGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ai_chat_promptsCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Ai_chat_promptsCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -5857,6 +5932,18 @@ export const Applications_filesScalarFieldEnum = {
 export type Applications_filesScalarFieldEnum = (typeof Applications_filesScalarFieldEnum)[keyof typeof Applications_filesScalarFieldEnum]
 
 
+export const Ai_chat_promptsScalarFieldEnum = {
+  id: 'id',
+  date_created: 'date_created',
+  date_updated: 'date_updated',
+  request: 'request',
+  system_prompt: 'system_prompt',
+  user_prompt: 'user_prompt'
+} as const
+
+export type Ai_chat_promptsScalarFieldEnum = (typeof Ai_chat_promptsScalarFieldEnum)[keyof typeof Ai_chat_promptsScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -6132,6 +6219,7 @@ export type GlobalOmitConfig = {
   application_questions?: Prisma.application_questionsOmit
   application_activity_log?: Prisma.application_activity_logOmit
   applications_files?: Prisma.applications_filesOmit
+  ai_chat_prompts?: Prisma.ai_chat_promptsOmit
 }
 
 /* Types for Logging */

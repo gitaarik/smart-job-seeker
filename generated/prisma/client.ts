@@ -334,3 +334,8 @@ export type application_activity_log = Prisma.application_activity_logModel
  * 
  */
 export type applications_files = Prisma.applications_filesModel
+/**
+ * Model ai_chat_prompts
+ * 
+ */
+export type ai_chat_prompts = Prisma.ai_chat_promptsModel

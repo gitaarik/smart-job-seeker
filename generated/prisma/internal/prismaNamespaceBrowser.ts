@@ -109,7 +109,8 @@ export const ModelName = {
   ai_prompts: 'ai_prompts',
   application_questions: 'application_questions',
   application_activity_log: 'application_activity_log',
-  applications_files: 'applications_files'
+  applications_files: 'applications_files',
+  ai_chat_prompts: 'ai_chat_prompts'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1116,6 +1117,18 @@ export const Applications_filesScalarFieldEnum = {
 } as const
 
 export type Applications_filesScalarFieldEnum = (typeof Applications_filesScalarFieldEnum)[keyof typeof Applications_filesScalarFieldEnum]
+
+
+export const Ai_chat_promptsScalarFieldEnum = {
+  id: 'id',
+  date_created: 'date_created',
+  date_updated: 'date_updated',
+  request: 'request',
+  system_prompt: 'system_prompt',
+  user_prompt: 'user_prompt'
+} as const
+
+export type Ai_chat_promptsScalarFieldEnum = (typeof Ai_chat_promptsScalarFieldEnum)[keyof typeof Ai_chat_promptsScalarFieldEnum]
 
 
 export const SortOrder = {

@@ -994,6 +994,15 @@ model applications_files {
   directus_files    directus_files? @relation(fields: [directus_files_id], references: [id], onUpdate: NoAction, map: "applications_files_directus_files_id_foreign")
 }
 
+model ai_chat_prompts {
+  id            Int       @id @default(autoincrement())
+  date_created  DateTime? @db.Timestamptz(6)
+  date_updated  DateTime? @db.Timestamptz(6)
+  request       String    @unique(map: "ai_chat_prompts_request_unique") @db.VarChar(255)
+  system_prompt String?
+  user_prompt   String?
+}
+
 enum Role {
   USER
   ADMIN
