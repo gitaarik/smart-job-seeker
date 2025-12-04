@@ -123,6 +123,7 @@ export async function createAndGenerateAiChat(
         profile: profileId,
         system_prompt: systemPrompt,
         user_prompt: userPrompt,
+        date_created: new Date(),
       },
     });
 
