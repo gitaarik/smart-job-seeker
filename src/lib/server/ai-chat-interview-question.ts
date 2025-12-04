@@ -16,7 +16,7 @@ import { generateAiChatResponse } from "./ai-chat-response-generate";
  * 4. Generate the AI response
  * 5. Update the application_questions record with the ai_chat reference
  */
-export async function generateInterviewQuestionAnswer(
+export async function generateApplicationQuestionAnswer(
   questionId: number,
 ): Promise<{
   success: boolean;
