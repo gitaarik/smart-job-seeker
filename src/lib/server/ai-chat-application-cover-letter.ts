@@ -4,8 +4,7 @@
  */
 
 import { db } from "$lib/db";
-import { generateAiChatFullPrompt } from "./ai-chat-full-prompt-generate";
-import { generateAiChatResponse } from "./ai-chat-response-generate";
+import { createAndGenerateAiChat } from "./ai-chat-utils";
 
 /**
  * Generate cover letter for a single application
@@ -97,47 +96,21 @@ Job Description:
 
 Write a professional cover letter the applicant can customize and submit directly.`;
 
-    // Create the ai_chat record
-    const aiChat = await db.ai_chat.create({
-      data: {
-        profile: profileId,
-        system_prompt: systemPrompt,
-        user_prompt: userPrompt,
-      },
-    });
+    // Create and generate the ai_chat record
+    const aiChatResult = await createAndGenerateAiChat(
+      profileId,
+      systemPrompt,
+      userPrompt,
+    );
 
-    // Generate the full prompt (this will fetch and replace all variables including jobDescription)
-    const fullPromptResult = await generateAiChatFullPrompt(aiChat.id);
-
-    if (!fullPromptResult.success) {
+    if (!aiChatResult.success || !aiChatResult.aiChat) {
       return {
         success: false,
-        message: `Failed to generate full prompt: ${fullPromptResult.message}`,
+        message: aiChatResult.message,
       };
     }
 
-    // Generate the AI response (job description will be fetched and interpolated)
-    const responseResult = await generateAiChatResponse(aiChat.id);
-
-    if (!responseResult.success) {
-      return {
-        success: false,
-        message: `Failed to generate response: ${responseResult.message}`,
-      };
-    }
-
-    // Fetch the updated ai_chat to get the response
-    const updatedAiChat = await db.ai_chat.findUnique({
-      where: { id: aiChat.id },
-    });
-
-    if (!updatedAiChat?.response) {
-      return {
-        success: false,
-        message:
-          `Failed to retrieve generated response for ai_chat ID ${aiChat.id}`,
-      };
-    }
+    const aiChat = aiChatResult.aiChat;
 
     // Update the application record with the ai_chat reference
     await db.applications.update({
@@ -147,7 +120,7 @@ Write a professional cover letter the applicant can customize and submit directl
         // Only populate cover_letter if it's currently empty
         ...((!application.cover_letter ||
           application.cover_letter.trim() === "") && {
-          cover_letter: updatedAiChat.response,
+          cover_letter: aiChat.response,
         }),
       },
     });

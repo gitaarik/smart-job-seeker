@@ -4,8 +4,7 @@
  */
 
 import { db } from "$lib/db";
-import { generateAiChatFullPrompt } from "./ai-chat-full-prompt-generate";
-import { generateAiChatResponse } from "./ai-chat-response-generate";
+import { createAndGenerateAiChat } from "./ai-chat-utils";
 
 /**
  * Generate answer for a single application interview question
@@ -65,34 +64,21 @@ export async function generateApplicationQuestionAnswer(
     const userPrompt =
       `Please help me answer this interview question for my application: "${question.question}"`;
 
-    // Create the ai_chat record
-    const aiChat = await db.ai_chat.create({
-      data: {
-        profile: profileId,
-        system_prompt: systemPrompt,
-        user_prompt: userPrompt,
-      },
-    });
+    // Create and generate the ai_chat record
+    const aiChatResult = await createAndGenerateAiChat(
+      profileId,
+      systemPrompt,
+      userPrompt,
+    );
 
-    // Generate the full prompt (this will fetch and replace all variables including jobDescription)
-    const fullPromptResult = await generateAiChatFullPrompt(aiChat.id);
-
-    if (!fullPromptResult.success) {
+    if (!aiChatResult.success || !aiChatResult.aiChat) {
       return {
         success: false,
-        message: `Failed to generate full prompt: ${fullPromptResult.message}`,
+        message: aiChatResult.message,
       };
     }
 
-    // Generate the AI response (job description will be fetched and interpolated)
-    const responseResult = await generateAiChatResponse(aiChat.id);
-
-    if (!responseResult.success) {
-      return {
-        success: false,
-        message: `Failed to generate response: ${responseResult.message}`,
-      };
-    }
+    const aiChat = aiChatResult.aiChat;
 
     // Update the application_questions record with the ai_chat reference
     await db.application_questions.update({
