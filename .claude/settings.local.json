@@ -67,7 +67,9 @@
       "mcp__directus__collections",
       "mcp__directus__items",
       "mcp__directus__relations",
-      "mcp__directus__schema"
+      "mcp__directus__schema",
+      "mcp__directus__flows",
+      "mcp__directus__operations"
     ],
     "deny": [],
     "ask": []
