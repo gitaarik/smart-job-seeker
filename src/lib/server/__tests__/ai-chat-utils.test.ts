@@ -23,7 +23,7 @@ import { db } from "$lib/db";
 describe("interpolatePrompt", () => {
   it("should replace single variable occurrence", () => {
     const text = "Hello ${name}!";
-    const result = interpolatePrompt(text, { schema: "", data: "", jobDescription: "" });
+    const result = interpolatePrompt(text, { schema: "", data: "" });
     expect(result).toBe("Hello ${name}!");
   });
 
@@ -45,33 +45,13 @@ describe("interpolatePrompt", () => {
     expect(result).toBe('Data: {"name": "John"}');
   });
 
-  it("should replace jobDescription variable", () => {
-    const text = "Job: ${jobDescription}";
-    const result = interpolatePrompt(text, {
-      schema: "{}",
-      data: "{}",
-      jobDescription: "Senior Developer",
-    });
-    expect(result).toBe("Job: Senior Developer");
-  });
-
-  it("should handle empty jobDescription", () => {
-    const text = "Job: ${jobDescription}";
-    const result = interpolatePrompt(text, {
-      schema: "{}",
-      data: "{}",
-    });
-    expect(result).toBe("Job: ");
-  });
-
   it("should handle multiple variables", () => {
-    const text = "Schema: ${schema}, Data: ${data}, Job: ${jobDescription}";
+    const text = "Schema: ${schema}, Data: ${data}";
     const result = interpolatePrompt(text, {
       schema: "SCHEMA",
       data: "DATA",
-      jobDescription: "JOB",
     });
-    expect(result).toBe("Schema: SCHEMA, Data: DATA, Job: JOB");
+    expect(result).toBe("Schema: SCHEMA, Data: DATA");
   });
 
   it("should handle JSON in replacement value", () => {
@@ -121,10 +101,6 @@ describe("getInterpolatedPrompts", () => {
     dbClient.collected_data.findFirst.mockResolvedValueOnce(
       mockCollectedData,
     );
-    dbClient.application_questions = {
-      findFirst: vi.fn().mockResolvedValueOnce(null),
-    };
-
     const result = await getInterpolatedPrompts(1);
 
     expect(result).toEqual({
@@ -144,10 +120,6 @@ describe("getInterpolatedPrompts", () => {
 
     dbClient.ai_chat.findUnique.mockResolvedValueOnce(mockAiChat);
     dbClient.collected_data.findFirst.mockResolvedValueOnce(null);
-    dbClient.application_questions = {
-      findFirst: vi.fn().mockResolvedValueOnce(null),
-    };
-
     const result = await getInterpolatedPrompts(1);
 
     expect(result).toEqual({
@@ -174,10 +146,6 @@ describe("getInterpolatedPrompts", () => {
     dbClient.collected_data.findFirst.mockResolvedValueOnce(
       mockCollectedData,
     );
-    dbClient.application_questions = {
-      findFirst: vi.fn().mockResolvedValueOnce(null),
-    };
-
     const result = await getInterpolatedPrompts(1);
 
     expect(result).toEqual({
@@ -200,10 +168,6 @@ describe("getInterpolatedPrompts", () => {
       schema: "{}",
       data: "{}",
     });
-
-    dbClient.application_questions = {
-      findFirst: vi.fn().mockResolvedValueOnce(null),
-    };
 
     await getInterpolatedPrompts(1);
 
@@ -232,10 +196,6 @@ describe("getInterpolatedPrompts", () => {
     dbClient.collected_data.findFirst.mockResolvedValueOnce(
       mockCollectedData,
     );
-    dbClient.application_questions = {
-      findFirst: vi.fn().mockResolvedValueOnce(null),
-    };
-
     const result = await getInterpolatedPrompts(1);
 
     expect(result?.systemPrompt).toBe(

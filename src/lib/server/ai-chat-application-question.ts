@@ -44,7 +44,11 @@ export async function generateApplicationQuestionAnswer(
 
     const profileId = question.applications.profile;
 
-    // Create a system prompt that includes the job description placeholder for context
+    // Fetch the job description from the vacancy
+    const jobDescription = question.applications.vacancies?.job_description ||
+      "";
+
+    // Create a system prompt with job description already interpolated
     const systemPrompt =
       `You are a career coach helping a Software Engineer prepare compelling, authentic answers to application interview questions.
 Be concise and helpful. Keep answers to 2-3 short paragraphs maximum.
@@ -61,7 +65,7 @@ Here is the applicant's information:
 
 ## Job Description:
 
-\${jobDescription}
+${jobDescription}
 
 Guidelines for your answer:
 - Only use skills and knowledge from the applicant's actual data

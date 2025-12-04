@@ -8,22 +8,20 @@ import { generateAiChatResponse } from "./ai-chat-response-generate";
 
 /**
  * Interpolate variables in a prompt string
- * Replaces ${schema}, ${data}, and ${jobDescription} with provided values
+ * Replaces ${schema} and ${data} with provided values
  */
 export function interpolatePrompt(
   text: string,
-  variables: { schema: string; data: string; jobDescription?: string },
+  variables: { schema: string; data: string },
 ): string {
   return text
     .replace(/\$\{schema\}/g, variables.schema)
-    .replace(/\$\{data\}/g, variables.data)
-    .replace(/\$\{jobDescription\}/g, variables.jobDescription || "");
+    .replace(/\$\{data\}/g, variables.data);
 }
 
 /**
  * Fetch and interpolate prompts for an AI chat
- * Returns system_prompt and user_prompt with ${schema}, ${data}, and ${jobDescription} replaced
- * Attempts to fetch job description from ai_chat -> application_questions -> applications -> vacancies
+ * Returns system_prompt and user_prompt with ${schema} and ${data} replaced
  */
 export async function getInterpolatedPrompts(aiChatId: number): Promise<
   {
@@ -47,32 +45,10 @@ export async function getInterpolatedPrompts(aiChatId: number): Promise<
     select: { schema: true, data: true },
   });
 
-  // Try to fetch job description from the relation chain:
-  // ai_chat -> application_questions -> applications -> vacancies
-  let jobDescription = "";
-  const applicationQuestion = await db.application_questions
-    .findFirst({
-      where: {
-        ai_chat: aiChatId,
-      },
-      include: {
-        applications: {
-          include: {
-            vacancies: true,
-          },
-        },
-      },
-    });
-
-  if (applicationQuestion?.applications?.vacancies?.job_description) {
-    jobDescription = applicationQuestion.applications.vacancies.job_description;
-  }
-
-  // Prepare replacements (use empty objects/strings as defaults)
+  // Prepare replacements (use empty objects as defaults)
   const variables = {
     schema: collectedData?.schema || "{}",
     data: collectedData?.data || "{}",
-    jobDescription,
   };
 
   // Interpolate variables in both prompts
@@ -94,8 +70,8 @@ export async function getInterpolatedPrompts(aiChatId: number): Promise<
  * 4. Returns the complete ai_chat record with date_created auto-set by database
  *
  * @param profileId - The profile ID for this AI chat
- * @param systemPrompt - System prompt with optional ${schema}, ${data}, ${jobDescription} placeholders
- * @param userPrompt - User prompt with optional ${schema}, ${data}, ${jobDescription} placeholders
+ * @param systemPrompt - System prompt with optional ${schema} and ${data} placeholders
+ * @param userPrompt - User prompt with optional ${schema} and ${data} placeholders
  * @returns Object with success status, message, and the created ai_chat record (if successful)
  */
 export async function createAndGenerateAiChat(
