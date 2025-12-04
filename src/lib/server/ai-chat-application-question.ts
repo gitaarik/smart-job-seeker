@@ -1,5 +1,5 @@
 /**
- * Generate AI-assisted answers for application interview questions
+ * Generate AI-assisted answers for application questions
  * Creates an ai_chat record with context from collected_data, job description, and the question
  */
 
@@ -7,7 +7,7 @@ import { db } from "$lib/db";
 import { createAndGenerateAiChat } from "./ai-chat-utils";
 
 /**
- * Generate answer for a single application interview question
+ * Generate answer for a single application question
  * Steps:
  * 1. Fetch the question, application, and related data
  * 2. Create an ai_chat record with system_prompt including ${jobDescription} placeholder
@@ -22,7 +22,7 @@ export async function generateApplicationQuestionAnswer(
   message: string;
 }> {
   try {
-    // Fetch the interview question with application and vacancy details
+    // Fetch the question with application and vacancy details
     const question = await db.application_questions.findUnique({
       where: { id: questionId },
       include: {
@@ -38,7 +38,7 @@ export async function generateApplicationQuestionAnswer(
       return {
         success: false,
         message:
-          `Application interview question with ID ${questionId} not found`,
+          `Application question with ID ${questionId} not found`,
       };
     }
 
@@ -48,10 +48,10 @@ export async function generateApplicationQuestionAnswer(
     const jobDescription = question.applications.vacancies?.job_description ||
       "";
 
-    // Create and generate the ai_chat record using the interview-question prompt template
+    // Create and generate the ai_chat record using the answer_application_question prompt template
     const aiChatResult = await createAndGenerateAiChat(
       profileId,
-      "interview-question",
+      "answer_application_question",
       {
         jobDescription: jobDescription,
         question: question.question,
@@ -75,7 +75,7 @@ export async function generateApplicationQuestionAnswer(
 
     return {
       success: true,
-      message: `Answer generated for interview question ID ${questionId}`,
+      message: `Answer generated for question ID ${questionId}`,
     };
   } catch (error) {
     const errorMessage = error instanceof Error
@@ -83,7 +83,7 @@ export async function generateApplicationQuestionAnswer(
       : "Unknown error";
     return {
       success: false,
-      message: `Error generating interview question answer: ${errorMessage}`,
+      message: `Error generating question answer: ${errorMessage}`,
     };
   }
 }

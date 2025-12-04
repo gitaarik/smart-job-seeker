@@ -68,10 +68,10 @@ export async function generateApplicationCoverLetter(
       vacancyDetails.push(`Date Posted: ${vacancy.date_posted}`);
     }
 
-    // Create and generate the ai_chat record using the cover-letter prompt template
+    // Create and generate the ai_chat record using the write_cover_letter prompt template
     const aiChatResult = await createAndGenerateAiChat(
       profileId,
-      "cover-letter",
+      "write_cover_letter",
       {
         jobDescription: vacancy.job_description || "",
         vacancyDetails: vacancyDetails.join("\n"),
