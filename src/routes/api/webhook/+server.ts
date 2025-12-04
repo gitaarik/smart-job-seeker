@@ -6,6 +6,7 @@ import { exportProfile } from "$lib/server/profile-export";
 import { generateAiChatFullPrompt } from "$lib/server/ai-chat-full-prompt-generate";
 import { generateAiChatResponse } from "$lib/server/ai-chat-response-generate";
 import { generateApplicationQuestionAnswer } from "$lib/server/ai-chat-application-question";
+import { generateApplicationCoverLetter } from "$lib/server/ai-chat-application-cover-letter";
 import { clearDirectusCache } from "$lib/server/directus";
 
 /**
@@ -146,6 +147,8 @@ async function processWebhookEvent(
       return await handleAiChatGenerateResponse(data);
     case "application_interview_question.generate_ai_answer":
       return await handleApplicationInterviewQuestionGenerateAiAnswer(data);
+    case "application.generate_cover_letter":
+      return await handleApplicationGenerateCoverLetter(data);
     default:
       return {
         processed: true,
@@ -464,6 +467,85 @@ async function handleApplicationInterviewQuestionGenerateAiAnswer(
     return {
       processed: false,
       questionCount: questionIds.length,
+      error: errorMessage,
+    };
+  }
+}
+
+/**
+ * Handle application.generate_cover_letter events
+ * Called to generate AI-assisted cover letters for job applications
+ * Expected data format: { applicationIds: string[] | number[] }
+ */
+async function handleApplicationGenerateCoverLetter(
+  data: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  // Extract and parse application IDs (array of strings/numbers to be converted to numbers)
+  let applicationIds: number[] = [];
+
+  if (Array.isArray(data.applicationIds)) {
+    applicationIds = (data.applicationIds as unknown[])
+      .map((id) => {
+        const parsed = parseInt(String(id), 10);
+        return isNaN(parsed) ? null : parsed;
+      })
+      .filter((id): id is number => id !== null);
+  }
+
+  if (applicationIds.length === 0) {
+    return {
+      processed: false,
+      error:
+        "Missing or invalid applicationIds in data (expected array of numeric strings or numbers)",
+    };
+  }
+
+  try {
+    const results = await Promise.allSettled(
+      applicationIds.map((applicationId) =>
+        generateApplicationCoverLetter(applicationId)
+          .then((result) => ({
+            applicationId,
+            success: result.success,
+            message: result.message,
+          }))
+          .catch((error) => ({
+            applicationId,
+            success: false,
+            message: error instanceof Error ? error.message : "Unknown error",
+          }))
+      ),
+    );
+
+    const successful = results.filter(
+      (r) => r.status === "fulfilled" && (r.value as any).success !== false,
+    );
+    const failed = results.filter(
+      (r) =>
+        r.status === "rejected" ||
+        (r.status === "fulfilled" && (r.value as any).success === false),
+    );
+
+    return {
+      processed: successful.length > 0,
+      applicationCount: applicationIds.length,
+      successCount: successful.length,
+      results: results.map((
+        r,
+      ) => (r.status === "fulfilled" ? r.value : r.reason)),
+      ...(failed.length > 0 && { failureCount: failed.length }),
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error
+      ? error.message
+      : "Unknown error";
+    console.error(
+      `[Webhook] application.generate_cover_letter failed:`,
+      errorMessage,
+    );
+    return {
+      processed: false,
+      applicationCount: applicationIds.length,
       error: errorMessage,
     };
   }
