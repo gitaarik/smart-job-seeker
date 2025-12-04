@@ -55,7 +55,7 @@ export async function generateApplicationCoverLetter(
     // Create system prompt with applicant context
     const systemPrompt =
       `You are an expert career coach helping a Software Engineer write a compelling, personalized cover letter.
-Be professional but warm. Keep it concise (3-4 paragraphs) and compelling.
+Be professional but warm. Keep it concise (max 3 paragraphs) and compelling.
 
 Here is the applicant's information:
 
