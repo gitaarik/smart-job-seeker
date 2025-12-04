@@ -107,7 +107,9 @@ export const ModelName = {
   work_experience_project_technologies: 'work_experience_project_technologies',
   work_experience_projects: 'work_experience_projects',
   ai_prompts: 'ai_prompts',
-  application_questions: 'application_questions'
+  application_questions: 'application_questions',
+  application_activity_log: 'application_activity_log',
+  applications_files: 'applications_files'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -140,7 +142,8 @@ export const ApplicationsScalarFieldEnum = {
   discontinued_note: 'discontinued_note',
   application_note: 'application_note',
   application_seen_date: 'application_seen_date',
-  cover_letter: 'cover_letter'
+  cover_letter: 'cover_letter',
+  cover_letter_ai_chat: 'cover_letter_ai_chat'
 } as const
 
 export type ApplicationsScalarFieldEnum = (typeof ApplicationsScalarFieldEnum)[keyof typeof ApplicationsScalarFieldEnum]
@@ -1091,6 +1094,28 @@ export const Application_questionsScalarFieldEnum = {
 } as const
 
 export type Application_questionsScalarFieldEnum = (typeof Application_questionsScalarFieldEnum)[keyof typeof Application_questionsScalarFieldEnum]
+
+
+export const Application_activity_logScalarFieldEnum = {
+  id: 'id',
+  date_created: 'date_created',
+  date_updated: 'date_updated',
+  date: 'date',
+  title: 'title',
+  note: 'note',
+  application: 'application'
+} as const
+
+export type Application_activity_logScalarFieldEnum = (typeof Application_activity_logScalarFieldEnum)[keyof typeof Application_activity_logScalarFieldEnum]
+
+
+export const Applications_filesScalarFieldEnum = {
+  id: 'id',
+  applications_id: 'applications_id',
+  directus_files_id: 'directus_files_id'
+} as const
+
+export type Applications_filesScalarFieldEnum = (typeof Applications_filesScalarFieldEnum)[keyof typeof Applications_filesScalarFieldEnum]
 
 
 export const SortOrder = {

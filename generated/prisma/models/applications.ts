@@ -30,12 +30,14 @@ export type ApplicationsAvgAggregateOutputType = {
   id: number | null
   vacancy: number | null
   profile: number | null
+  cover_letter_ai_chat: number | null
 }
 
 export type ApplicationsSumAggregateOutputType = {
   id: number | null
   vacancy: number | null
   profile: number | null
+  cover_letter_ai_chat: number | null
 }
 
 export type ApplicationsMinAggregateOutputType = {
@@ -53,6 +55,7 @@ export type ApplicationsMinAggregateOutputType = {
   application_note: string | null
   application_seen_date: Date | null
   cover_letter: string | null
+  cover_letter_ai_chat: number | null
 }
 
 export type ApplicationsMaxAggregateOutputType = {
@@ -70,6 +73,7 @@ export type ApplicationsMaxAggregateOutputType = {
   application_note: string | null
   application_seen_date: Date | null
   cover_letter: string | null
+  cover_letter_ai_chat: number | null
 }
 
 export type ApplicationsCountAggregateOutputType = {
@@ -87,6 +91,7 @@ export type ApplicationsCountAggregateOutputType = {
   application_note: number
   application_seen_date: number
   cover_letter: number
+  cover_letter_ai_chat: number
   _all: number
 }
 
@@ -95,12 +100,14 @@ export type ApplicationsAvgAggregateInputType = {
   id?: true
   vacancy?: true
   profile?: true
+  cover_letter_ai_chat?: true
 }
 
 export type ApplicationsSumAggregateInputType = {
   id?: true
   vacancy?: true
   profile?: true
+  cover_letter_ai_chat?: true
 }
 
 export type ApplicationsMinAggregateInputType = {
@@ -118,6 +125,7 @@ export type ApplicationsMinAggregateInputType = {
   application_note?: true
   application_seen_date?: true
   cover_letter?: true
+  cover_letter_ai_chat?: true
 }
 
 export type ApplicationsMaxAggregateInputType = {
@@ -135,6 +143,7 @@ export type ApplicationsMaxAggregateInputType = {
   application_note?: true
   application_seen_date?: true
   cover_letter?: true
+  cover_letter_ai_chat?: true
 }
 
 export type ApplicationsCountAggregateInputType = {
@@ -152,6 +161,7 @@ export type ApplicationsCountAggregateInputType = {
   application_note?: true
   application_seen_date?: true
   cover_letter?: true
+  cover_letter_ai_chat?: true
   _all?: true
 }
 
@@ -256,6 +266,7 @@ export type ApplicationsGroupByOutputType = {
   application_note: string | null
   application_seen_date: Date | null
   cover_letter: string | null
+  cover_letter_ai_chat: number | null
   _count: ApplicationsCountAggregateOutputType | null
   _avg: ApplicationsAvgAggregateOutputType | null
   _sum: ApplicationsSumAggregateOutputType | null
@@ -296,10 +307,14 @@ export type applicationsWhereInput = {
   application_note?: Prisma.StringNullableFilter<"applications"> | string | null
   application_seen_date?: Prisma.DateTimeNullableFilter<"applications"> | Date | string | null
   cover_letter?: Prisma.StringNullableFilter<"applications"> | string | null
+  cover_letter_ai_chat?: Prisma.IntNullableFilter<"applications"> | number | null
+  application_activity_log?: Prisma.Application_activity_logListRelationFilter
   application_questions?: Prisma.Application_questionsListRelationFilter
+  ai_chat?: Prisma.XOR<Prisma.Ai_chatNullableScalarRelationFilter, Prisma.ai_chatWhereInput> | null
   directus_files?: Prisma.XOR<Prisma.Directus_filesNullableScalarRelationFilter, Prisma.directus_filesWhereInput> | null
   profiles?: Prisma.XOR<Prisma.ProfilesScalarRelationFilter, Prisma.profilesWhereInput>
   vacancies?: Prisma.XOR<Prisma.VacanciesNullableScalarRelationFilter, Prisma.vacanciesWhereInput> | null
+  applications_files?: Prisma.Applications_filesListRelationFilter
 }
 
 export type applicationsOrderByWithRelationInput = {
@@ -317,10 +332,14 @@ export type applicationsOrderByWithRelationInput = {
   application_note?: Prisma.SortOrderInput | Prisma.SortOrder
   application_seen_date?: Prisma.SortOrderInput | Prisma.SortOrder
   cover_letter?: Prisma.SortOrderInput | Prisma.SortOrder
+  cover_letter_ai_chat?: Prisma.SortOrderInput | Prisma.SortOrder
+  application_activity_log?: Prisma.application_activity_logOrderByRelationAggregateInput
   application_questions?: Prisma.application_questionsOrderByRelationAggregateInput
+  ai_chat?: Prisma.ai_chatOrderByWithRelationInput
   directus_files?: Prisma.directus_filesOrderByWithRelationInput
   profiles?: Prisma.profilesOrderByWithRelationInput
   vacancies?: Prisma.vacanciesOrderByWithRelationInput
+  applications_files?: Prisma.applications_filesOrderByRelationAggregateInput
 }
 
 export type applicationsWhereUniqueInput = Prisma.AtLeast<{
@@ -341,10 +360,14 @@ export type applicationsWhereUniqueInput = Prisma.AtLeast<{
   application_note?: Prisma.StringNullableFilter<"applications"> | string | null
   application_seen_date?: Prisma.DateTimeNullableFilter<"applications"> | Date | string | null
   cover_letter?: Prisma.StringNullableFilter<"applications"> | string | null
+  cover_letter_ai_chat?: Prisma.IntNullableFilter<"applications"> | number | null
+  application_activity_log?: Prisma.Application_activity_logListRelationFilter
   application_questions?: Prisma.Application_questionsListRelationFilter
+  ai_chat?: Prisma.XOR<Prisma.Ai_chatNullableScalarRelationFilter, Prisma.ai_chatWhereInput> | null
   directus_files?: Prisma.XOR<Prisma.Directus_filesNullableScalarRelationFilter, Prisma.directus_filesWhereInput> | null
   profiles?: Prisma.XOR<Prisma.ProfilesScalarRelationFilter, Prisma.profilesWhereInput>
   vacancies?: Prisma.XOR<Prisma.VacanciesNullableScalarRelationFilter, Prisma.vacanciesWhereInput> | null
+  applications_files?: Prisma.Applications_filesListRelationFilter
 }, "id">
 
 export type applicationsOrderByWithAggregationInput = {
@@ -362,6 +385,7 @@ export type applicationsOrderByWithAggregationInput = {
   application_note?: Prisma.SortOrderInput | Prisma.SortOrder
   application_seen_date?: Prisma.SortOrderInput | Prisma.SortOrder
   cover_letter?: Prisma.SortOrderInput | Prisma.SortOrder
+  cover_letter_ai_chat?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.applicationsCountOrderByAggregateInput
   _avg?: Prisma.applicationsAvgOrderByAggregateInput
   _max?: Prisma.applicationsMaxOrderByAggregateInput
@@ -387,6 +411,7 @@ export type applicationsScalarWhereWithAggregatesInput = {
   application_note?: Prisma.StringNullableWithAggregatesFilter<"applications"> | string | null
   application_seen_date?: Prisma.DateTimeNullableWithAggregatesFilter<"applications"> | Date | string | null
   cover_letter?: Prisma.StringNullableWithAggregatesFilter<"applications"> | string | null
+  cover_letter_ai_chat?: Prisma.IntNullableWithAggregatesFilter<"applications"> | number | null
 }
 
 export type applicationsCreateInput = {
@@ -400,10 +425,13 @@ export type applicationsCreateInput = {
   application_note?: string | null
   application_seen_date?: Date | string | null
   cover_letter?: string | null
+  application_activity_log?: Prisma.application_activity_logCreateNestedManyWithoutApplicationsInput
   application_questions?: Prisma.application_questionsCreateNestedManyWithoutApplicationsInput
+  ai_chat?: Prisma.ai_chatCreateNestedOneWithoutApplicationsInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutApplicationsInput
   profiles: Prisma.profilesCreateNestedOneWithoutApplicationsInput
   vacancies?: Prisma.vacanciesCreateNestedOneWithoutApplicationsInput
+  applications_files?: Prisma.applications_filesCreateNestedManyWithoutApplicationsInput
 }
 
 export type applicationsUncheckedCreateInput = {
@@ -421,7 +449,10 @@ export type applicationsUncheckedCreateInput = {
   application_note?: string | null
   application_seen_date?: Date | string | null
   cover_letter?: string | null
+  cover_letter_ai_chat?: number | null
+  application_activity_log?: Prisma.application_activity_logUncheckedCreateNestedManyWithoutApplicationsInput
   application_questions?: Prisma.application_questionsUncheckedCreateNestedManyWithoutApplicationsInput
+  applications_files?: Prisma.applications_filesUncheckedCreateNestedManyWithoutApplicationsInput
 }
 
 export type applicationsUpdateInput = {
@@ -435,10 +466,13 @@ export type applicationsUpdateInput = {
   application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cover_letter?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_activity_log?: Prisma.application_activity_logUpdateManyWithoutApplicationsNestedInput
   application_questions?: Prisma.application_questionsUpdateManyWithoutApplicationsNestedInput
+  ai_chat?: Prisma.ai_chatUpdateOneWithoutApplicationsNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutApplicationsNestedInput
   profiles?: Prisma.profilesUpdateOneRequiredWithoutApplicationsNestedInput
   vacancies?: Prisma.vacanciesUpdateOneWithoutApplicationsNestedInput
+  applications_files?: Prisma.applications_filesUpdateManyWithoutApplicationsNestedInput
 }
 
 export type applicationsUncheckedUpdateInput = {
@@ -456,7 +490,10 @@ export type applicationsUncheckedUpdateInput = {
   application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cover_letter?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cover_letter_ai_chat?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  application_activity_log?: Prisma.application_activity_logUncheckedUpdateManyWithoutApplicationsNestedInput
   application_questions?: Prisma.application_questionsUncheckedUpdateManyWithoutApplicationsNestedInput
+  applications_files?: Prisma.applications_filesUncheckedUpdateManyWithoutApplicationsNestedInput
 }
 
 export type applicationsCreateManyInput = {
@@ -474,6 +511,7 @@ export type applicationsCreateManyInput = {
   application_note?: string | null
   application_seen_date?: Date | string | null
   cover_letter?: string | null
+  cover_letter_ai_chat?: number | null
 }
 
 export type applicationsUpdateManyMutationInput = {
@@ -504,6 +542,7 @@ export type applicationsUncheckedUpdateManyInput = {
   application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cover_letter?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cover_letter_ai_chat?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type applicationsCountOrderByAggregateInput = {
@@ -521,12 +560,14 @@ export type applicationsCountOrderByAggregateInput = {
   application_note?: Prisma.SortOrder
   application_seen_date?: Prisma.SortOrder
   cover_letter?: Prisma.SortOrder
+  cover_letter_ai_chat?: Prisma.SortOrder
 }
 
 export type applicationsAvgOrderByAggregateInput = {
   id?: Prisma.SortOrder
   vacancy?: Prisma.SortOrder
   profile?: Prisma.SortOrder
+  cover_letter_ai_chat?: Prisma.SortOrder
 }
 
 export type applicationsMaxOrderByAggregateInput = {
@@ -544,6 +585,7 @@ export type applicationsMaxOrderByAggregateInput = {
   application_note?: Prisma.SortOrder
   application_seen_date?: Prisma.SortOrder
   cover_letter?: Prisma.SortOrder
+  cover_letter_ai_chat?: Prisma.SortOrder
 }
 
 export type applicationsMinOrderByAggregateInput = {
@@ -561,12 +603,14 @@ export type applicationsMinOrderByAggregateInput = {
   application_note?: Prisma.SortOrder
   application_seen_date?: Prisma.SortOrder
   cover_letter?: Prisma.SortOrder
+  cover_letter_ai_chat?: Prisma.SortOrder
 }
 
 export type applicationsSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
   vacancy?: Prisma.SortOrder
   profile?: Prisma.SortOrder
+  cover_letter_ai_chat?: Prisma.SortOrder
 }
 
 export type ApplicationsListRelationFilter = {
@@ -582,6 +626,11 @@ export type applicationsOrderByRelationAggregateInput = {
 export type ApplicationsScalarRelationFilter = {
   is?: Prisma.applicationsWhereInput
   isNot?: Prisma.applicationsWhereInput
+}
+
+export type ApplicationsNullableScalarRelationFilter = {
+  is?: Prisma.applicationsWhereInput | null
+  isNot?: Prisma.applicationsWhereInput | null
 }
 
 export type StringFieldUpdateOperationsInput = {
@@ -738,6 +787,48 @@ export type applicationsUncheckedUpdateManyWithoutVacanciesNestedInput = {
   deleteMany?: Prisma.applicationsScalarWhereInput | Prisma.applicationsScalarWhereInput[]
 }
 
+export type applicationsCreateNestedManyWithoutAi_chatInput = {
+  create?: Prisma.XOR<Prisma.applicationsCreateWithoutAi_chatInput, Prisma.applicationsUncheckedCreateWithoutAi_chatInput> | Prisma.applicationsCreateWithoutAi_chatInput[] | Prisma.applicationsUncheckedCreateWithoutAi_chatInput[]
+  connectOrCreate?: Prisma.applicationsCreateOrConnectWithoutAi_chatInput | Prisma.applicationsCreateOrConnectWithoutAi_chatInput[]
+  createMany?: Prisma.applicationsCreateManyAi_chatInputEnvelope
+  connect?: Prisma.applicationsWhereUniqueInput | Prisma.applicationsWhereUniqueInput[]
+}
+
+export type applicationsUncheckedCreateNestedManyWithoutAi_chatInput = {
+  create?: Prisma.XOR<Prisma.applicationsCreateWithoutAi_chatInput, Prisma.applicationsUncheckedCreateWithoutAi_chatInput> | Prisma.applicationsCreateWithoutAi_chatInput[] | Prisma.applicationsUncheckedCreateWithoutAi_chatInput[]
+  connectOrCreate?: Prisma.applicationsCreateOrConnectWithoutAi_chatInput | Prisma.applicationsCreateOrConnectWithoutAi_chatInput[]
+  createMany?: Prisma.applicationsCreateManyAi_chatInputEnvelope
+  connect?: Prisma.applicationsWhereUniqueInput | Prisma.applicationsWhereUniqueInput[]
+}
+
+export type applicationsUpdateManyWithoutAi_chatNestedInput = {
+  create?: Prisma.XOR<Prisma.applicationsCreateWithoutAi_chatInput, Prisma.applicationsUncheckedCreateWithoutAi_chatInput> | Prisma.applicationsCreateWithoutAi_chatInput[] | Prisma.applicationsUncheckedCreateWithoutAi_chatInput[]
+  connectOrCreate?: Prisma.applicationsCreateOrConnectWithoutAi_chatInput | Prisma.applicationsCreateOrConnectWithoutAi_chatInput[]
+  upsert?: Prisma.applicationsUpsertWithWhereUniqueWithoutAi_chatInput | Prisma.applicationsUpsertWithWhereUniqueWithoutAi_chatInput[]
+  createMany?: Prisma.applicationsCreateManyAi_chatInputEnvelope
+  set?: Prisma.applicationsWhereUniqueInput | Prisma.applicationsWhereUniqueInput[]
+  disconnect?: Prisma.applicationsWhereUniqueInput | Prisma.applicationsWhereUniqueInput[]
+  delete?: Prisma.applicationsWhereUniqueInput | Prisma.applicationsWhereUniqueInput[]
+  connect?: Prisma.applicationsWhereUniqueInput | Prisma.applicationsWhereUniqueInput[]
+  update?: Prisma.applicationsUpdateWithWhereUniqueWithoutAi_chatInput | Prisma.applicationsUpdateWithWhereUniqueWithoutAi_chatInput[]
+  updateMany?: Prisma.applicationsUpdateManyWithWhereWithoutAi_chatInput | Prisma.applicationsUpdateManyWithWhereWithoutAi_chatInput[]
+  deleteMany?: Prisma.applicationsScalarWhereInput | Prisma.applicationsScalarWhereInput[]
+}
+
+export type applicationsUncheckedUpdateManyWithoutAi_chatNestedInput = {
+  create?: Prisma.XOR<Prisma.applicationsCreateWithoutAi_chatInput, Prisma.applicationsUncheckedCreateWithoutAi_chatInput> | Prisma.applicationsCreateWithoutAi_chatInput[] | Prisma.applicationsUncheckedCreateWithoutAi_chatInput[]
+  connectOrCreate?: Prisma.applicationsCreateOrConnectWithoutAi_chatInput | Prisma.applicationsCreateOrConnectWithoutAi_chatInput[]
+  upsert?: Prisma.applicationsUpsertWithWhereUniqueWithoutAi_chatInput | Prisma.applicationsUpsertWithWhereUniqueWithoutAi_chatInput[]
+  createMany?: Prisma.applicationsCreateManyAi_chatInputEnvelope
+  set?: Prisma.applicationsWhereUniqueInput | Prisma.applicationsWhereUniqueInput[]
+  disconnect?: Prisma.applicationsWhereUniqueInput | Prisma.applicationsWhereUniqueInput[]
+  delete?: Prisma.applicationsWhereUniqueInput | Prisma.applicationsWhereUniqueInput[]
+  connect?: Prisma.applicationsWhereUniqueInput | Prisma.applicationsWhereUniqueInput[]
+  update?: Prisma.applicationsUpdateWithWhereUniqueWithoutAi_chatInput | Prisma.applicationsUpdateWithWhereUniqueWithoutAi_chatInput[]
+  updateMany?: Prisma.applicationsUpdateManyWithWhereWithoutAi_chatInput | Prisma.applicationsUpdateManyWithWhereWithoutAi_chatInput[]
+  deleteMany?: Prisma.applicationsScalarWhereInput | Prisma.applicationsScalarWhereInput[]
+}
+
 export type applicationsCreateNestedOneWithoutApplication_questionsInput = {
   create?: Prisma.XOR<Prisma.applicationsCreateWithoutApplication_questionsInput, Prisma.applicationsUncheckedCreateWithoutApplication_questionsInput>
   connectOrCreate?: Prisma.applicationsCreateOrConnectWithoutApplication_questionsInput
@@ -752,6 +843,38 @@ export type applicationsUpdateOneRequiredWithoutApplication_questionsNestedInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.applicationsUpdateToOneWithWhereWithoutApplication_questionsInput, Prisma.applicationsUpdateWithoutApplication_questionsInput>, Prisma.applicationsUncheckedUpdateWithoutApplication_questionsInput>
 }
 
+export type applicationsCreateNestedOneWithoutApplication_activity_logInput = {
+  create?: Prisma.XOR<Prisma.applicationsCreateWithoutApplication_activity_logInput, Prisma.applicationsUncheckedCreateWithoutApplication_activity_logInput>
+  connectOrCreate?: Prisma.applicationsCreateOrConnectWithoutApplication_activity_logInput
+  connect?: Prisma.applicationsWhereUniqueInput
+}
+
+export type applicationsUpdateOneWithoutApplication_activity_logNestedInput = {
+  create?: Prisma.XOR<Prisma.applicationsCreateWithoutApplication_activity_logInput, Prisma.applicationsUncheckedCreateWithoutApplication_activity_logInput>
+  connectOrCreate?: Prisma.applicationsCreateOrConnectWithoutApplication_activity_logInput
+  upsert?: Prisma.applicationsUpsertWithoutApplication_activity_logInput
+  disconnect?: Prisma.applicationsWhereInput | boolean
+  delete?: Prisma.applicationsWhereInput | boolean
+  connect?: Prisma.applicationsWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.applicationsUpdateToOneWithWhereWithoutApplication_activity_logInput, Prisma.applicationsUpdateWithoutApplication_activity_logInput>, Prisma.applicationsUncheckedUpdateWithoutApplication_activity_logInput>
+}
+
+export type applicationsCreateNestedOneWithoutApplications_filesInput = {
+  create?: Prisma.XOR<Prisma.applicationsCreateWithoutApplications_filesInput, Prisma.applicationsUncheckedCreateWithoutApplications_filesInput>
+  connectOrCreate?: Prisma.applicationsCreateOrConnectWithoutApplications_filesInput
+  connect?: Prisma.applicationsWhereUniqueInput
+}
+
+export type applicationsUpdateOneWithoutApplications_filesNestedInput = {
+  create?: Prisma.XOR<Prisma.applicationsCreateWithoutApplications_filesInput, Prisma.applicationsUncheckedCreateWithoutApplications_filesInput>
+  connectOrCreate?: Prisma.applicationsCreateOrConnectWithoutApplications_filesInput
+  upsert?: Prisma.applicationsUpsertWithoutApplications_filesInput
+  disconnect?: Prisma.applicationsWhereInput | boolean
+  delete?: Prisma.applicationsWhereInput | boolean
+  connect?: Prisma.applicationsWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.applicationsUpdateToOneWithWhereWithoutApplications_filesInput, Prisma.applicationsUpdateWithoutApplications_filesInput>, Prisma.applicationsUncheckedUpdateWithoutApplications_filesInput>
+}
+
 export type applicationsCreateWithoutDirectus_filesInput = {
   status?: string
   date_created?: Date | string | null
@@ -763,9 +886,12 @@ export type applicationsCreateWithoutDirectus_filesInput = {
   application_note?: string | null
   application_seen_date?: Date | string | null
   cover_letter?: string | null
+  application_activity_log?: Prisma.application_activity_logCreateNestedManyWithoutApplicationsInput
   application_questions?: Prisma.application_questionsCreateNestedManyWithoutApplicationsInput
+  ai_chat?: Prisma.ai_chatCreateNestedOneWithoutApplicationsInput
   profiles: Prisma.profilesCreateNestedOneWithoutApplicationsInput
   vacancies?: Prisma.vacanciesCreateNestedOneWithoutApplicationsInput
+  applications_files?: Prisma.applications_filesCreateNestedManyWithoutApplicationsInput
 }
 
 export type applicationsUncheckedCreateWithoutDirectus_filesInput = {
@@ -782,7 +908,10 @@ export type applicationsUncheckedCreateWithoutDirectus_filesInput = {
   application_note?: string | null
   application_seen_date?: Date | string | null
   cover_letter?: string | null
+  cover_letter_ai_chat?: number | null
+  application_activity_log?: Prisma.application_activity_logUncheckedCreateNestedManyWithoutApplicationsInput
   application_questions?: Prisma.application_questionsUncheckedCreateNestedManyWithoutApplicationsInput
+  applications_files?: Prisma.applications_filesUncheckedCreateNestedManyWithoutApplicationsInput
 }
 
 export type applicationsCreateOrConnectWithoutDirectus_filesInput = {
@@ -829,6 +958,7 @@ export type applicationsScalarWhereInput = {
   application_note?: Prisma.StringNullableFilter<"applications"> | string | null
   application_seen_date?: Prisma.DateTimeNullableFilter<"applications"> | Date | string | null
   cover_letter?: Prisma.StringNullableFilter<"applications"> | string | null
+  cover_letter_ai_chat?: Prisma.IntNullableFilter<"applications"> | number | null
 }
 
 export type applicationsCreateWithoutProfilesInput = {
@@ -842,9 +972,12 @@ export type applicationsCreateWithoutProfilesInput = {
   application_note?: string | null
   application_seen_date?: Date | string | null
   cover_letter?: string | null
+  application_activity_log?: Prisma.application_activity_logCreateNestedManyWithoutApplicationsInput
   application_questions?: Prisma.application_questionsCreateNestedManyWithoutApplicationsInput
+  ai_chat?: Prisma.ai_chatCreateNestedOneWithoutApplicationsInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutApplicationsInput
   vacancies?: Prisma.vacanciesCreateNestedOneWithoutApplicationsInput
+  applications_files?: Prisma.applications_filesCreateNestedManyWithoutApplicationsInput
 }
 
 export type applicationsUncheckedCreateWithoutProfilesInput = {
@@ -861,7 +994,10 @@ export type applicationsUncheckedCreateWithoutProfilesInput = {
   application_note?: string | null
   application_seen_date?: Date | string | null
   cover_letter?: string | null
+  cover_letter_ai_chat?: number | null
+  application_activity_log?: Prisma.application_activity_logUncheckedCreateNestedManyWithoutApplicationsInput
   application_questions?: Prisma.application_questionsUncheckedCreateNestedManyWithoutApplicationsInput
+  applications_files?: Prisma.applications_filesUncheckedCreateNestedManyWithoutApplicationsInput
 }
 
 export type applicationsCreateOrConnectWithoutProfilesInput = {
@@ -901,9 +1037,12 @@ export type applicationsCreateWithoutVacanciesInput = {
   application_note?: string | null
   application_seen_date?: Date | string | null
   cover_letter?: string | null
+  application_activity_log?: Prisma.application_activity_logCreateNestedManyWithoutApplicationsInput
   application_questions?: Prisma.application_questionsCreateNestedManyWithoutApplicationsInput
+  ai_chat?: Prisma.ai_chatCreateNestedOneWithoutApplicationsInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutApplicationsInput
   profiles: Prisma.profilesCreateNestedOneWithoutApplicationsInput
+  applications_files?: Prisma.applications_filesCreateNestedManyWithoutApplicationsInput
 }
 
 export type applicationsUncheckedCreateWithoutVacanciesInput = {
@@ -920,7 +1059,10 @@ export type applicationsUncheckedCreateWithoutVacanciesInput = {
   application_note?: string | null
   application_seen_date?: Date | string | null
   cover_letter?: string | null
+  cover_letter_ai_chat?: number | null
+  application_activity_log?: Prisma.application_activity_logUncheckedCreateNestedManyWithoutApplicationsInput
   application_questions?: Prisma.application_questionsUncheckedCreateNestedManyWithoutApplicationsInput
+  applications_files?: Prisma.applications_filesUncheckedCreateNestedManyWithoutApplicationsInput
 }
 
 export type applicationsCreateOrConnectWithoutVacanciesInput = {
@@ -949,6 +1091,71 @@ export type applicationsUpdateManyWithWhereWithoutVacanciesInput = {
   data: Prisma.XOR<Prisma.applicationsUpdateManyMutationInput, Prisma.applicationsUncheckedUpdateManyWithoutVacanciesInput>
 }
 
+export type applicationsCreateWithoutAi_chatInput = {
+  status?: string
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  cv_sent_through?: string | null
+  application_sent_date?: Date | string | null
+  discontinued_reason?: string | null
+  discontinued_note?: string | null
+  application_note?: string | null
+  application_seen_date?: Date | string | null
+  cover_letter?: string | null
+  application_activity_log?: Prisma.application_activity_logCreateNestedManyWithoutApplicationsInput
+  application_questions?: Prisma.application_questionsCreateNestedManyWithoutApplicationsInput
+  directus_files?: Prisma.directus_filesCreateNestedOneWithoutApplicationsInput
+  profiles: Prisma.profilesCreateNestedOneWithoutApplicationsInput
+  vacancies?: Prisma.vacanciesCreateNestedOneWithoutApplicationsInput
+  applications_files?: Prisma.applications_filesCreateNestedManyWithoutApplicationsInput
+}
+
+export type applicationsUncheckedCreateWithoutAi_chatInput = {
+  id?: number
+  status?: string
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  vacancy?: number | null
+  profile: number
+  cv_sent_through?: string | null
+  cv_file_sent?: string | null
+  application_sent_date?: Date | string | null
+  discontinued_reason?: string | null
+  discontinued_note?: string | null
+  application_note?: string | null
+  application_seen_date?: Date | string | null
+  cover_letter?: string | null
+  application_activity_log?: Prisma.application_activity_logUncheckedCreateNestedManyWithoutApplicationsInput
+  application_questions?: Prisma.application_questionsUncheckedCreateNestedManyWithoutApplicationsInput
+  applications_files?: Prisma.applications_filesUncheckedCreateNestedManyWithoutApplicationsInput
+}
+
+export type applicationsCreateOrConnectWithoutAi_chatInput = {
+  where: Prisma.applicationsWhereUniqueInput
+  create: Prisma.XOR<Prisma.applicationsCreateWithoutAi_chatInput, Prisma.applicationsUncheckedCreateWithoutAi_chatInput>
+}
+
+export type applicationsCreateManyAi_chatInputEnvelope = {
+  data: Prisma.applicationsCreateManyAi_chatInput | Prisma.applicationsCreateManyAi_chatInput[]
+  skipDuplicates?: boolean
+}
+
+export type applicationsUpsertWithWhereUniqueWithoutAi_chatInput = {
+  where: Prisma.applicationsWhereUniqueInput
+  update: Prisma.XOR<Prisma.applicationsUpdateWithoutAi_chatInput, Prisma.applicationsUncheckedUpdateWithoutAi_chatInput>
+  create: Prisma.XOR<Prisma.applicationsCreateWithoutAi_chatInput, Prisma.applicationsUncheckedCreateWithoutAi_chatInput>
+}
+
+export type applicationsUpdateWithWhereUniqueWithoutAi_chatInput = {
+  where: Prisma.applicationsWhereUniqueInput
+  data: Prisma.XOR<Prisma.applicationsUpdateWithoutAi_chatInput, Prisma.applicationsUncheckedUpdateWithoutAi_chatInput>
+}
+
+export type applicationsUpdateManyWithWhereWithoutAi_chatInput = {
+  where: Prisma.applicationsScalarWhereInput
+  data: Prisma.XOR<Prisma.applicationsUpdateManyMutationInput, Prisma.applicationsUncheckedUpdateManyWithoutAi_chatInput>
+}
+
 export type applicationsCreateWithoutApplication_questionsInput = {
   status?: string
   date_created?: Date | string | null
@@ -960,9 +1167,12 @@ export type applicationsCreateWithoutApplication_questionsInput = {
   application_note?: string | null
   application_seen_date?: Date | string | null
   cover_letter?: string | null
+  application_activity_log?: Prisma.application_activity_logCreateNestedManyWithoutApplicationsInput
+  ai_chat?: Prisma.ai_chatCreateNestedOneWithoutApplicationsInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutApplicationsInput
   profiles: Prisma.profilesCreateNestedOneWithoutApplicationsInput
   vacancies?: Prisma.vacanciesCreateNestedOneWithoutApplicationsInput
+  applications_files?: Prisma.applications_filesCreateNestedManyWithoutApplicationsInput
 }
 
 export type applicationsUncheckedCreateWithoutApplication_questionsInput = {
@@ -980,6 +1190,9 @@ export type applicationsUncheckedCreateWithoutApplication_questionsInput = {
   application_note?: string | null
   application_seen_date?: Date | string | null
   cover_letter?: string | null
+  cover_letter_ai_chat?: number | null
+  application_activity_log?: Prisma.application_activity_logUncheckedCreateNestedManyWithoutApplicationsInput
+  applications_files?: Prisma.applications_filesUncheckedCreateNestedManyWithoutApplicationsInput
 }
 
 export type applicationsCreateOrConnectWithoutApplication_questionsInput = {
@@ -1009,9 +1222,12 @@ export type applicationsUpdateWithoutApplication_questionsInput = {
   application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cover_letter?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_activity_log?: Prisma.application_activity_logUpdateManyWithoutApplicationsNestedInput
+  ai_chat?: Prisma.ai_chatUpdateOneWithoutApplicationsNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutApplicationsNestedInput
   profiles?: Prisma.profilesUpdateOneRequiredWithoutApplicationsNestedInput
   vacancies?: Prisma.vacanciesUpdateOneWithoutApplicationsNestedInput
+  applications_files?: Prisma.applications_filesUpdateManyWithoutApplicationsNestedInput
 }
 
 export type applicationsUncheckedUpdateWithoutApplication_questionsInput = {
@@ -1029,6 +1245,197 @@ export type applicationsUncheckedUpdateWithoutApplication_questionsInput = {
   application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cover_letter?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cover_letter_ai_chat?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  application_activity_log?: Prisma.application_activity_logUncheckedUpdateManyWithoutApplicationsNestedInput
+  applications_files?: Prisma.applications_filesUncheckedUpdateManyWithoutApplicationsNestedInput
+}
+
+export type applicationsCreateWithoutApplication_activity_logInput = {
+  status?: string
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  cv_sent_through?: string | null
+  application_sent_date?: Date | string | null
+  discontinued_reason?: string | null
+  discontinued_note?: string | null
+  application_note?: string | null
+  application_seen_date?: Date | string | null
+  cover_letter?: string | null
+  application_questions?: Prisma.application_questionsCreateNestedManyWithoutApplicationsInput
+  ai_chat?: Prisma.ai_chatCreateNestedOneWithoutApplicationsInput
+  directus_files?: Prisma.directus_filesCreateNestedOneWithoutApplicationsInput
+  profiles: Prisma.profilesCreateNestedOneWithoutApplicationsInput
+  vacancies?: Prisma.vacanciesCreateNestedOneWithoutApplicationsInput
+  applications_files?: Prisma.applications_filesCreateNestedManyWithoutApplicationsInput
+}
+
+export type applicationsUncheckedCreateWithoutApplication_activity_logInput = {
+  id?: number
+  status?: string
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  vacancy?: number | null
+  profile: number
+  cv_sent_through?: string | null
+  cv_file_sent?: string | null
+  application_sent_date?: Date | string | null
+  discontinued_reason?: string | null
+  discontinued_note?: string | null
+  application_note?: string | null
+  application_seen_date?: Date | string | null
+  cover_letter?: string | null
+  cover_letter_ai_chat?: number | null
+  application_questions?: Prisma.application_questionsUncheckedCreateNestedManyWithoutApplicationsInput
+  applications_files?: Prisma.applications_filesUncheckedCreateNestedManyWithoutApplicationsInput
+}
+
+export type applicationsCreateOrConnectWithoutApplication_activity_logInput = {
+  where: Prisma.applicationsWhereUniqueInput
+  create: Prisma.XOR<Prisma.applicationsCreateWithoutApplication_activity_logInput, Prisma.applicationsUncheckedCreateWithoutApplication_activity_logInput>
+}
+
+export type applicationsUpsertWithoutApplication_activity_logInput = {
+  update: Prisma.XOR<Prisma.applicationsUpdateWithoutApplication_activity_logInput, Prisma.applicationsUncheckedUpdateWithoutApplication_activity_logInput>
+  create: Prisma.XOR<Prisma.applicationsCreateWithoutApplication_activity_logInput, Prisma.applicationsUncheckedCreateWithoutApplication_activity_logInput>
+  where?: Prisma.applicationsWhereInput
+}
+
+export type applicationsUpdateToOneWithWhereWithoutApplication_activity_logInput = {
+  where?: Prisma.applicationsWhereInput
+  data: Prisma.XOR<Prisma.applicationsUpdateWithoutApplication_activity_logInput, Prisma.applicationsUncheckedUpdateWithoutApplication_activity_logInput>
+}
+
+export type applicationsUpdateWithoutApplication_activity_logInput = {
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cover_letter?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_questions?: Prisma.application_questionsUpdateManyWithoutApplicationsNestedInput
+  ai_chat?: Prisma.ai_chatUpdateOneWithoutApplicationsNestedInput
+  directus_files?: Prisma.directus_filesUpdateOneWithoutApplicationsNestedInput
+  profiles?: Prisma.profilesUpdateOneRequiredWithoutApplicationsNestedInput
+  vacancies?: Prisma.vacanciesUpdateOneWithoutApplicationsNestedInput
+  applications_files?: Prisma.applications_filesUpdateManyWithoutApplicationsNestedInput
+}
+
+export type applicationsUncheckedUpdateWithoutApplication_activity_logInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  vacancy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  profile?: Prisma.IntFieldUpdateOperationsInput | number
+  cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cv_file_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cover_letter?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cover_letter_ai_chat?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  application_questions?: Prisma.application_questionsUncheckedUpdateManyWithoutApplicationsNestedInput
+  applications_files?: Prisma.applications_filesUncheckedUpdateManyWithoutApplicationsNestedInput
+}
+
+export type applicationsCreateWithoutApplications_filesInput = {
+  status?: string
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  cv_sent_through?: string | null
+  application_sent_date?: Date | string | null
+  discontinued_reason?: string | null
+  discontinued_note?: string | null
+  application_note?: string | null
+  application_seen_date?: Date | string | null
+  cover_letter?: string | null
+  application_activity_log?: Prisma.application_activity_logCreateNestedManyWithoutApplicationsInput
+  application_questions?: Prisma.application_questionsCreateNestedManyWithoutApplicationsInput
+  ai_chat?: Prisma.ai_chatCreateNestedOneWithoutApplicationsInput
+  directus_files?: Prisma.directus_filesCreateNestedOneWithoutApplicationsInput
+  profiles: Prisma.profilesCreateNestedOneWithoutApplicationsInput
+  vacancies?: Prisma.vacanciesCreateNestedOneWithoutApplicationsInput
+}
+
+export type applicationsUncheckedCreateWithoutApplications_filesInput = {
+  id?: number
+  status?: string
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  vacancy?: number | null
+  profile: number
+  cv_sent_through?: string | null
+  cv_file_sent?: string | null
+  application_sent_date?: Date | string | null
+  discontinued_reason?: string | null
+  discontinued_note?: string | null
+  application_note?: string | null
+  application_seen_date?: Date | string | null
+  cover_letter?: string | null
+  cover_letter_ai_chat?: number | null
+  application_activity_log?: Prisma.application_activity_logUncheckedCreateNestedManyWithoutApplicationsInput
+  application_questions?: Prisma.application_questionsUncheckedCreateNestedManyWithoutApplicationsInput
+}
+
+export type applicationsCreateOrConnectWithoutApplications_filesInput = {
+  where: Prisma.applicationsWhereUniqueInput
+  create: Prisma.XOR<Prisma.applicationsCreateWithoutApplications_filesInput, Prisma.applicationsUncheckedCreateWithoutApplications_filesInput>
+}
+
+export type applicationsUpsertWithoutApplications_filesInput = {
+  update: Prisma.XOR<Prisma.applicationsUpdateWithoutApplications_filesInput, Prisma.applicationsUncheckedUpdateWithoutApplications_filesInput>
+  create: Prisma.XOR<Prisma.applicationsCreateWithoutApplications_filesInput, Prisma.applicationsUncheckedCreateWithoutApplications_filesInput>
+  where?: Prisma.applicationsWhereInput
+}
+
+export type applicationsUpdateToOneWithWhereWithoutApplications_filesInput = {
+  where?: Prisma.applicationsWhereInput
+  data: Prisma.XOR<Prisma.applicationsUpdateWithoutApplications_filesInput, Prisma.applicationsUncheckedUpdateWithoutApplications_filesInput>
+}
+
+export type applicationsUpdateWithoutApplications_filesInput = {
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cover_letter?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_activity_log?: Prisma.application_activity_logUpdateManyWithoutApplicationsNestedInput
+  application_questions?: Prisma.application_questionsUpdateManyWithoutApplicationsNestedInput
+  ai_chat?: Prisma.ai_chatUpdateOneWithoutApplicationsNestedInput
+  directus_files?: Prisma.directus_filesUpdateOneWithoutApplicationsNestedInput
+  profiles?: Prisma.profilesUpdateOneRequiredWithoutApplicationsNestedInput
+  vacancies?: Prisma.vacanciesUpdateOneWithoutApplicationsNestedInput
+}
+
+export type applicationsUncheckedUpdateWithoutApplications_filesInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  vacancy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  profile?: Prisma.IntFieldUpdateOperationsInput | number
+  cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cv_file_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cover_letter?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cover_letter_ai_chat?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  application_activity_log?: Prisma.application_activity_logUncheckedUpdateManyWithoutApplicationsNestedInput
+  application_questions?: Prisma.application_questionsUncheckedUpdateManyWithoutApplicationsNestedInput
 }
 
 export type applicationsCreateManyDirectus_filesInput = {
@@ -1045,6 +1452,7 @@ export type applicationsCreateManyDirectus_filesInput = {
   application_note?: string | null
   application_seen_date?: Date | string | null
   cover_letter?: string | null
+  cover_letter_ai_chat?: number | null
 }
 
 export type applicationsUpdateWithoutDirectus_filesInput = {
@@ -1058,9 +1466,12 @@ export type applicationsUpdateWithoutDirectus_filesInput = {
   application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cover_letter?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_activity_log?: Prisma.application_activity_logUpdateManyWithoutApplicationsNestedInput
   application_questions?: Prisma.application_questionsUpdateManyWithoutApplicationsNestedInput
+  ai_chat?: Prisma.ai_chatUpdateOneWithoutApplicationsNestedInput
   profiles?: Prisma.profilesUpdateOneRequiredWithoutApplicationsNestedInput
   vacancies?: Prisma.vacanciesUpdateOneWithoutApplicationsNestedInput
+  applications_files?: Prisma.applications_filesUpdateManyWithoutApplicationsNestedInput
 }
 
 export type applicationsUncheckedUpdateWithoutDirectus_filesInput = {
@@ -1077,7 +1488,10 @@ export type applicationsUncheckedUpdateWithoutDirectus_filesInput = {
   application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cover_letter?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cover_letter_ai_chat?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  application_activity_log?: Prisma.application_activity_logUncheckedUpdateManyWithoutApplicationsNestedInput
   application_questions?: Prisma.application_questionsUncheckedUpdateManyWithoutApplicationsNestedInput
+  applications_files?: Prisma.applications_filesUncheckedUpdateManyWithoutApplicationsNestedInput
 }
 
 export type applicationsUncheckedUpdateManyWithoutDirectus_filesInput = {
@@ -1094,6 +1508,7 @@ export type applicationsUncheckedUpdateManyWithoutDirectus_filesInput = {
   application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cover_letter?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cover_letter_ai_chat?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type applicationsCreateManyProfilesInput = {
@@ -1110,6 +1525,7 @@ export type applicationsCreateManyProfilesInput = {
   application_note?: string | null
   application_seen_date?: Date | string | null
   cover_letter?: string | null
+  cover_letter_ai_chat?: number | null
 }
 
 export type applicationsUpdateWithoutProfilesInput = {
@@ -1123,9 +1539,12 @@ export type applicationsUpdateWithoutProfilesInput = {
   application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cover_letter?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_activity_log?: Prisma.application_activity_logUpdateManyWithoutApplicationsNestedInput
   application_questions?: Prisma.application_questionsUpdateManyWithoutApplicationsNestedInput
+  ai_chat?: Prisma.ai_chatUpdateOneWithoutApplicationsNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutApplicationsNestedInput
   vacancies?: Prisma.vacanciesUpdateOneWithoutApplicationsNestedInput
+  applications_files?: Prisma.applications_filesUpdateManyWithoutApplicationsNestedInput
 }
 
 export type applicationsUncheckedUpdateWithoutProfilesInput = {
@@ -1142,7 +1561,10 @@ export type applicationsUncheckedUpdateWithoutProfilesInput = {
   application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cover_letter?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cover_letter_ai_chat?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  application_activity_log?: Prisma.application_activity_logUncheckedUpdateManyWithoutApplicationsNestedInput
   application_questions?: Prisma.application_questionsUncheckedUpdateManyWithoutApplicationsNestedInput
+  applications_files?: Prisma.applications_filesUncheckedUpdateManyWithoutApplicationsNestedInput
 }
 
 export type applicationsUncheckedUpdateManyWithoutProfilesInput = {
@@ -1159,6 +1581,7 @@ export type applicationsUncheckedUpdateManyWithoutProfilesInput = {
   application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cover_letter?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cover_letter_ai_chat?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type applicationsCreateManyVacanciesInput = {
@@ -1175,6 +1598,7 @@ export type applicationsCreateManyVacanciesInput = {
   application_note?: string | null
   application_seen_date?: Date | string | null
   cover_letter?: string | null
+  cover_letter_ai_chat?: number | null
 }
 
 export type applicationsUpdateWithoutVacanciesInput = {
@@ -1188,9 +1612,12 @@ export type applicationsUpdateWithoutVacanciesInput = {
   application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cover_letter?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_activity_log?: Prisma.application_activity_logUpdateManyWithoutApplicationsNestedInput
   application_questions?: Prisma.application_questionsUpdateManyWithoutApplicationsNestedInput
+  ai_chat?: Prisma.ai_chatUpdateOneWithoutApplicationsNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutApplicationsNestedInput
   profiles?: Prisma.profilesUpdateOneRequiredWithoutApplicationsNestedInput
+  applications_files?: Prisma.applications_filesUpdateManyWithoutApplicationsNestedInput
 }
 
 export type applicationsUncheckedUpdateWithoutVacanciesInput = {
@@ -1207,7 +1634,10 @@ export type applicationsUncheckedUpdateWithoutVacanciesInput = {
   application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cover_letter?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cover_letter_ai_chat?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  application_activity_log?: Prisma.application_activity_logUncheckedUpdateManyWithoutApplicationsNestedInput
   application_questions?: Prisma.application_questionsUncheckedUpdateManyWithoutApplicationsNestedInput
+  applications_files?: Prisma.applications_filesUncheckedUpdateManyWithoutApplicationsNestedInput
 }
 
 export type applicationsUncheckedUpdateManyWithoutVacanciesInput = {
@@ -1215,6 +1645,80 @@ export type applicationsUncheckedUpdateManyWithoutVacanciesInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profile?: Prisma.IntFieldUpdateOperationsInput | number
+  cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cv_file_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cover_letter?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cover_letter_ai_chat?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+}
+
+export type applicationsCreateManyAi_chatInput = {
+  id?: number
+  status?: string
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  vacancy?: number | null
+  profile: number
+  cv_sent_through?: string | null
+  cv_file_sent?: string | null
+  application_sent_date?: Date | string | null
+  discontinued_reason?: string | null
+  discontinued_note?: string | null
+  application_note?: string | null
+  application_seen_date?: Date | string | null
+  cover_letter?: string | null
+}
+
+export type applicationsUpdateWithoutAi_chatInput = {
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cover_letter?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_activity_log?: Prisma.application_activity_logUpdateManyWithoutApplicationsNestedInput
+  application_questions?: Prisma.application_questionsUpdateManyWithoutApplicationsNestedInput
+  directus_files?: Prisma.directus_filesUpdateOneWithoutApplicationsNestedInput
+  profiles?: Prisma.profilesUpdateOneRequiredWithoutApplicationsNestedInput
+  vacancies?: Prisma.vacanciesUpdateOneWithoutApplicationsNestedInput
+  applications_files?: Prisma.applications_filesUpdateManyWithoutApplicationsNestedInput
+}
+
+export type applicationsUncheckedUpdateWithoutAi_chatInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  vacancy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  profile?: Prisma.IntFieldUpdateOperationsInput | number
+  cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cv_file_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cover_letter?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_activity_log?: Prisma.application_activity_logUncheckedUpdateManyWithoutApplicationsNestedInput
+  application_questions?: Prisma.application_questionsUncheckedUpdateManyWithoutApplicationsNestedInput
+  applications_files?: Prisma.applications_filesUncheckedUpdateManyWithoutApplicationsNestedInput
+}
+
+export type applicationsUncheckedUpdateManyWithoutAi_chatInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  vacancy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   cv_file_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1232,11 +1736,15 @@ export type applicationsUncheckedUpdateManyWithoutVacanciesInput = {
  */
 
 export type ApplicationsCountOutputType = {
+  application_activity_log: number
   application_questions: number
+  applications_files: number
 }
 
 export type ApplicationsCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  application_activity_log?: boolean | ApplicationsCountOutputTypeCountApplication_activity_logArgs
   application_questions?: boolean | ApplicationsCountOutputTypeCountApplication_questionsArgs
+  applications_files?: boolean | ApplicationsCountOutputTypeCountApplications_filesArgs
 }
 
 /**
@@ -1252,8 +1760,22 @@ export type ApplicationsCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types
 /**
  * ApplicationsCountOutputType without action
  */
+export type ApplicationsCountOutputTypeCountApplication_activity_logArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.application_activity_logWhereInput
+}
+
+/**
+ * ApplicationsCountOutputType without action
+ */
 export type ApplicationsCountOutputTypeCountApplication_questionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.application_questionsWhereInput
+}
+
+/**
+ * ApplicationsCountOutputType without action
+ */
+export type ApplicationsCountOutputTypeCountApplications_filesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.applications_filesWhereInput
 }
 
 
@@ -1272,10 +1794,14 @@ export type applicationsSelect<ExtArgs extends runtime.Types.Extensions.Internal
   application_note?: boolean
   application_seen_date?: boolean
   cover_letter?: boolean
+  cover_letter_ai_chat?: boolean
+  application_activity_log?: boolean | Prisma.applications$application_activity_logArgs<ExtArgs>
   application_questions?: boolean | Prisma.applications$application_questionsArgs<ExtArgs>
+  ai_chat?: boolean | Prisma.applications$ai_chatArgs<ExtArgs>
   directus_files?: boolean | Prisma.applications$directus_filesArgs<ExtArgs>
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
   vacancies?: boolean | Prisma.applications$vacanciesArgs<ExtArgs>
+  applications_files?: boolean | Prisma.applications$applications_filesArgs<ExtArgs>
   _count?: boolean | Prisma.ApplicationsCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["applications"]>
 
@@ -1294,6 +1820,8 @@ export type applicationsSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   application_note?: boolean
   application_seen_date?: boolean
   cover_letter?: boolean
+  cover_letter_ai_chat?: boolean
+  ai_chat?: boolean | Prisma.applications$ai_chatArgs<ExtArgs>
   directus_files?: boolean | Prisma.applications$directus_filesArgs<ExtArgs>
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
   vacancies?: boolean | Prisma.applications$vacanciesArgs<ExtArgs>
@@ -1314,6 +1842,8 @@ export type applicationsSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   application_note?: boolean
   application_seen_date?: boolean
   cover_letter?: boolean
+  cover_letter_ai_chat?: boolean
+  ai_chat?: boolean | Prisma.applications$ai_chatArgs<ExtArgs>
   directus_files?: boolean | Prisma.applications$directus_filesArgs<ExtArgs>
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
   vacancies?: boolean | Prisma.applications$vacanciesArgs<ExtArgs>
@@ -1334,22 +1864,28 @@ export type applicationsSelectScalar = {
   application_note?: boolean
   application_seen_date?: boolean
   cover_letter?: boolean
+  cover_letter_ai_chat?: boolean
 }
 
-export type applicationsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "date_created" | "date_updated" | "vacancy" | "profile" | "cv_sent_through" | "cv_file_sent" | "application_sent_date" | "discontinued_reason" | "discontinued_note" | "application_note" | "application_seen_date" | "cover_letter", ExtArgs["result"]["applications"]>
+export type applicationsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "date_created" | "date_updated" | "vacancy" | "profile" | "cv_sent_through" | "cv_file_sent" | "application_sent_date" | "discontinued_reason" | "discontinued_note" | "application_note" | "application_seen_date" | "cover_letter" | "cover_letter_ai_chat", ExtArgs["result"]["applications"]>
 export type applicationsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  application_activity_log?: boolean | Prisma.applications$application_activity_logArgs<ExtArgs>
   application_questions?: boolean | Prisma.applications$application_questionsArgs<ExtArgs>
+  ai_chat?: boolean | Prisma.applications$ai_chatArgs<ExtArgs>
   directus_files?: boolean | Prisma.applications$directus_filesArgs<ExtArgs>
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
   vacancies?: boolean | Prisma.applications$vacanciesArgs<ExtArgs>
+  applications_files?: boolean | Prisma.applications$applications_filesArgs<ExtArgs>
   _count?: boolean | Prisma.ApplicationsCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type applicationsIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  ai_chat?: boolean | Prisma.applications$ai_chatArgs<ExtArgs>
   directus_files?: boolean | Prisma.applications$directus_filesArgs<ExtArgs>
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
   vacancies?: boolean | Prisma.applications$vacanciesArgs<ExtArgs>
 }
 export type applicationsIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  ai_chat?: boolean | Prisma.applications$ai_chatArgs<ExtArgs>
   directus_files?: boolean | Prisma.applications$directus_filesArgs<ExtArgs>
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
   vacancies?: boolean | Prisma.applications$vacanciesArgs<ExtArgs>
@@ -1358,10 +1894,13 @@ export type applicationsIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types
 export type $applicationsPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "applications"
   objects: {
+    application_activity_log: Prisma.$application_activity_logPayload<ExtArgs>[]
     application_questions: Prisma.$application_questionsPayload<ExtArgs>[]
+    ai_chat: Prisma.$ai_chatPayload<ExtArgs> | null
     directus_files: Prisma.$directus_filesPayload<ExtArgs> | null
     profiles: Prisma.$profilesPayload<ExtArgs>
     vacancies: Prisma.$vacanciesPayload<ExtArgs> | null
+    applications_files: Prisma.$applications_filesPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
@@ -1378,6 +1917,7 @@ export type $applicationsPayload<ExtArgs extends runtime.Types.Extensions.Intern
     application_note: string | null
     application_seen_date: Date | null
     cover_letter: string | null
+    cover_letter_ai_chat: number | null
   }, ExtArgs["result"]["applications"]>
   composites: {}
 }
@@ -1772,10 +2312,13 @@ readonly fields: applicationsFieldRefs;
  */
 export interface Prisma__applicationsClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  application_activity_log<T extends Prisma.applications$application_activity_logArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.applications$application_activity_logArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$application_activity_logPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   application_questions<T extends Prisma.applications$application_questionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.applications$application_questionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$application_questionsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  ai_chat<T extends Prisma.applications$ai_chatArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.applications$ai_chatArgs<ExtArgs>>): Prisma.Prisma__ai_chatClient<runtime.Types.Result.GetResult<Prisma.$ai_chatPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   directus_files<T extends Prisma.applications$directus_filesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.applications$directus_filesArgs<ExtArgs>>): Prisma.Prisma__directus_filesClient<runtime.Types.Result.GetResult<Prisma.$directus_filesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   profiles<T extends Prisma.profilesDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.profilesDefaultArgs<ExtArgs>>): Prisma.Prisma__profilesClient<runtime.Types.Result.GetResult<Prisma.$profilesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   vacancies<T extends Prisma.applications$vacanciesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.applications$vacanciesArgs<ExtArgs>>): Prisma.Prisma__vacanciesClient<runtime.Types.Result.GetResult<Prisma.$vacanciesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  applications_files<T extends Prisma.applications$applications_filesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.applications$applications_filesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$applications_filesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1819,6 +2362,7 @@ export interface applicationsFieldRefs {
   readonly application_note: Prisma.FieldRef<"applications", 'String'>
   readonly application_seen_date: Prisma.FieldRef<"applications", 'DateTime'>
   readonly cover_letter: Prisma.FieldRef<"applications", 'String'>
+  readonly cover_letter_ai_chat: Prisma.FieldRef<"applications", 'Int'>
 }
     
 
@@ -2215,6 +2759,30 @@ export type applicationsDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.
 }
 
 /**
+ * applications.application_activity_log
+ */
+export type applications$application_activity_logArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the application_activity_log
+   */
+  select?: Prisma.application_activity_logSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the application_activity_log
+   */
+  omit?: Prisma.application_activity_logOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.application_activity_logInclude<ExtArgs> | null
+  where?: Prisma.application_activity_logWhereInput
+  orderBy?: Prisma.application_activity_logOrderByWithRelationInput | Prisma.application_activity_logOrderByWithRelationInput[]
+  cursor?: Prisma.application_activity_logWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.Application_activity_logScalarFieldEnum | Prisma.Application_activity_logScalarFieldEnum[]
+}
+
+/**
  * applications.application_questions
  */
 export type applications$application_questionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2236,6 +2804,25 @@ export type applications$application_questionsArgs<ExtArgs extends runtime.Types
   take?: number
   skip?: number
   distinct?: Prisma.Application_questionsScalarFieldEnum | Prisma.Application_questionsScalarFieldEnum[]
+}
+
+/**
+ * applications.ai_chat
+ */
+export type applications$ai_chatArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ai_chat
+   */
+  select?: Prisma.ai_chatSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ai_chat
+   */
+  omit?: Prisma.ai_chatOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ai_chatInclude<ExtArgs> | null
+  where?: Prisma.ai_chatWhereInput
 }
 
 /**
@@ -2274,6 +2861,30 @@ export type applications$vacanciesArgs<ExtArgs extends runtime.Types.Extensions.
    */
   include?: Prisma.vacanciesInclude<ExtArgs> | null
   where?: Prisma.vacanciesWhereInput
+}
+
+/**
+ * applications.applications_files
+ */
+export type applications$applications_filesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the applications_files
+   */
+  select?: Prisma.applications_filesSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the applications_files
+   */
+  omit?: Prisma.applications_filesOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.applications_filesInclude<ExtArgs> | null
+  where?: Prisma.applications_filesWhereInput
+  orderBy?: Prisma.applications_filesOrderByWithRelationInput | Prisma.applications_filesOrderByWithRelationInput[]
+  cursor?: Prisma.applications_filesWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.Applications_filesScalarFieldEnum | Prisma.Applications_filesScalarFieldEnum[]
 }
 
 /**

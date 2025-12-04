@@ -302,3 +302,13 @@ export type ai_prompts = Prisma.ai_promptsModel
  * 
  */
 export type application_questions = Prisma.application_questionsModel
+/**
+ * Model application_activity_log
+ * 
+ */
+export type application_activity_log = Prisma.application_activity_logModel
+/**
+ * Model applications_files
+ * 
+ */
+export type applications_files = Prisma.applications_filesModel
