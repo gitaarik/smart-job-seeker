@@ -92,7 +92,7 @@ Use this information to write a cover letter that highlights relevant experience
 ${vacancyDetails.join("\n")}
 
 Job Description:
-\${jobDescription}
+${vacancy.job_description}
 
 Write a professional cover letter the applicant can customize and submit directly.`;
 
