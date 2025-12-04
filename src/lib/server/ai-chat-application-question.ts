@@ -48,43 +48,14 @@ export async function generateApplicationQuestionAnswer(
     const jobDescription = question.applications.vacancies?.job_description ||
       "";
 
-    // Create a system prompt with job description already interpolated
-    const systemPrompt =
-      `You are a career coach helping a Software Engineer prepare compelling, authentic answers to application interview questions.
-Be concise and helpful. Keep answers to 2-3 short paragraphs maximum.
-
-Here is the applicant's information:
-
-## The schema:
-
-\${schema}
-
-## The data:
-
-\${data}
-
-## Job Description:
-
-${jobDescription}
-
-Guidelines for your answer:
-- Only use skills and knowledge from the applicant's actual data
-- Ground answers in real work and project experience from the data
-- Provide thoughtful suggestions and guidance rather than ready-to-copy answers
-- When multiple suitable answers exist, present all of them with alternatives
-- Use the schema to understand field descriptions and data structure
-- Hiring managers have limited time - be respectful of that
-- Help the applicant customize and personalize their response`;
-
-    // Create the user prompt from the interview question
-    const userPrompt =
-      `Please help me answer this interview question for my application: "${question.question}"`;
-
-    // Create and generate the ai_chat record
+    // Create and generate the ai_chat record using the interview-question prompt template
     const aiChatResult = await createAndGenerateAiChat(
       profileId,
-      systemPrompt,
-      userPrompt,
+      "interview-question",
+      {
+        jobDescription: jobDescription,
+        question: question.question,
+      },
     );
 
     if (!aiChatResult.success || !aiChatResult.aiChat) {

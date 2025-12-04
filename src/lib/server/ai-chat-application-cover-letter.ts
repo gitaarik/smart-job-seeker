@@ -52,24 +52,7 @@ export async function generateApplicationCoverLetter(
     const profileId = application.profile;
     const vacancy = application.vacancies;
 
-    // Create system prompt with applicant context
-    const systemPrompt =
-      `You are an expert career coach helping a Software Engineer write a compelling, personalized cover letter.
-Be professional but warm. Keep it concise (max 3 paragraphs) and compelling.
-
-Here is the applicant's information:
-
-## The schema:
-
-\${schema}
-
-## The data:
-
-\${data}
-
-Use this information to write a cover letter that highlights relevant experience and skills, and ensures the hiring manager sees a genuine fit for the opportunity.`;
-
-    // Build vacancy context for user prompt
+    // Build vacancy context for custom variables
     const vacancyDetails: string[] = [];
     vacancyDetails.push(`Position: ${vacancy.title || "Not specified"}`);
     if (vacancy.company_description) {
@@ -85,22 +68,14 @@ Use this information to write a cover letter that highlights relevant experience
       vacancyDetails.push(`Date Posted: ${vacancy.date_posted}`);
     }
 
-    // Create user prompt with vacancy context
-    const userPrompt =
-      `Please write a cover letter for the following job opportunity:
-
-${vacancyDetails.join("\n")}
-
-Job Description:
-${vacancy.job_description}
-
-Write a professional cover letter the applicant can customize and submit directly.`;
-
-    // Create and generate the ai_chat record
+    // Create and generate the ai_chat record using the cover-letter prompt template
     const aiChatResult = await createAndGenerateAiChat(
       profileId,
-      systemPrompt,
-      userPrompt,
+      "cover-letter",
+      {
+        jobDescription: vacancy.job_description || "",
+        vacancyDetails: vacancyDetails.join("\n"),
+      },
     );
 
     if (!aiChatResult.success || !aiChatResult.aiChat) {

@@ -5,18 +5,54 @@
 import { db } from "$lib/db";
 import { generateAiChatFullPrompt } from "./ai-chat-full-prompt-generate";
 import { generateAiChatResponse } from "./ai-chat-response-generate";
+import { getEnv } from "$lib/tools/get-env";
+import Groq from "groq-sdk";
 
 /**
  * Interpolate variables in a prompt string
- * Replaces ${schema} and ${data} with provided values
+ * Replaces ${variableName} placeholders with provided values
+ * Supports any number of variables passed as key-value pairs
  */
 export function interpolatePrompt(
   text: string,
-  variables: { schema: string; data: string },
+  variables: Record<string, string>,
 ): string {
-  return text
-    .replace(/\$\{schema\}/g, variables.schema)
-    .replace(/\$\{data\}/g, variables.data);
+  let result = text;
+  for (const [key, value] of Object.entries(variables)) {
+    const regex = new RegExp(`\\$\\{${key}\\}`, "g");
+    result = result.replace(regex, value);
+  }
+  return result;
+}
+
+/**
+ * Fetch prompt template from ai_chat_prompts by request identifier
+ * Returns null if template not found or if prompts are missing
+ */
+async function fetchPromptTemplate(
+  request: string,
+): Promise<
+  {
+    system_prompt: string;
+    user_prompt: string;
+  } | null
+> {
+  const template = await db.ai_chat_prompts.findUnique({
+    where: { request },
+    select: {
+      system_prompt: true,
+      user_prompt: true,
+    },
+  });
+
+  if (!template?.system_prompt || !template?.user_prompt) {
+    return null;
+  }
+
+  return {
+    system_prompt: template.system_prompt,
+    user_prompt: template.user_prompt,
+  };
 }
 
 /**
@@ -62,22 +98,26 @@ export async function getInterpolatedPrompts(aiChatId: number): Promise<
 }
 
 /**
- * Create and fully generate an AI chat instance
+ * Create and fully generate an AI chat instance using prompt templates from ai_chat_prompts
  * Orchestrates the entire process:
- * 1. Creates ai_chat record with profile, system_prompt, and user_prompt
- * 2. Generates full_prompt with variable interpolation
- * 3. Generates response via Groq API
- * 4. Returns the complete ai_chat record with date_created auto-set by database
+ * 1. Fetches prompt template from ai_chat_prompts by request identifier
+ * 2. Fetches collected_data for the profile to get schema and data
+ * 3. Merges standard variables (schema, data) with custom variables
+ * 4. Interpolates prompts with all variables
+ * 5. Creates ai_chat record with template prompts (containing placeholders)
+ * 6. Saves interpolated full_prompt
+ * 7. Generates response via Groq API with interpolated prompts
+ * 8. Returns the complete ai_chat record
  *
  * @param profileId - The profile ID for this AI chat
- * @param systemPrompt - System prompt with optional ${schema} and ${data} placeholders
- * @param userPrompt - User prompt with optional ${schema} and ${data} placeholders
+ * @param promptRequest - The unique request identifier from ai_chat_prompts table
+ * @param customVariables - Optional custom variables for interpolation (e.g., {jobDescription: "..."})
  * @returns Object with success status, message, and the created ai_chat record (if successful)
  */
 export async function createAndGenerateAiChat(
   profileId: number,
-  systemPrompt: string,
-  userPrompt: string,
+  promptRequest: string,
+  customVariables?: Record<string, string>,
 ): Promise<{
   success: boolean;
   message: string;
@@ -93,37 +133,96 @@ export async function createAndGenerateAiChat(
   };
 }> {
   try {
-    // Step 1: Create the ai_chat record
+    // Step 1: Fetch prompt template from ai_chat_prompts
+    const promptTemplate = await fetchPromptTemplate(promptRequest);
+
+    if (!promptTemplate) {
+      return {
+        success: false,
+        message:
+          `AI chat prompt template not found for request: '${promptRequest}'. Please ensure the template exists in Directus.`,
+      };
+    }
+
+    // Step 2: Fetch collected_data for the profile
+    const collectedData = await db.collected_data.findFirst({
+      where: { profile: profileId },
+      select: { schema: true, data: true },
+    });
+
+    // Step 3: Merge all variables (standard + custom)
+    const allVariables: Record<string, string> = {
+      schema: collectedData?.schema || "{}",
+      data: collectedData?.data || "{}",
+      ...(customVariables || {}),
+    };
+
+    // Step 4: Interpolate both prompts with all variables
+    const interpolatedSystemPrompt = interpolatePrompt(
+      promptTemplate.system_prompt,
+      allVariables,
+    );
+    const interpolatedUserPrompt = interpolatePrompt(
+      promptTemplate.user_prompt,
+      allVariables,
+    );
+
+    // Step 5: Create the ai_chat record with template prompts (not interpolated)
     const aiChat = await db.ai_chat.create({
       data: {
         profile: profileId,
-        system_prompt: systemPrompt,
-        user_prompt: userPrompt,
+        system_prompt: promptTemplate.system_prompt,
+        user_prompt: promptTemplate.user_prompt,
         date_created: new Date(),
       },
     });
 
-    // Step 2: Generate the full prompt (interpolates variables)
-    const fullPromptResult = await generateAiChatFullPrompt(aiChat.id);
+    // Step 6: Generate and save full_prompt (interpolated combination)
+    const fullPrompt =
+      `${interpolatedSystemPrompt}\n\n## User prompt:\n\n${interpolatedUserPrompt}`;
 
-    if (!fullPromptResult.success) {
+    await db.ai_chat.update({
+      where: { id: aiChat.id },
+      data: { full_prompt: fullPrompt },
+    });
+
+    // Step 7: Generate AI response via Groq API
+    const groq = new Groq({
+      apiKey: getEnv("GROQ_API_KEY", ""),
+    });
+
+    const completion = await groq.chat.completions.create({
+      model: "meta-llama/llama-4-scout-17b-16e-instruct",
+      messages: [
+        {
+          role: "system",
+          content: interpolatedSystemPrompt,
+        },
+        {
+          role: "user",
+          content: interpolatedUserPrompt,
+        },
+      ],
+      max_tokens: 2048,
+      temperature: 0.7,
+    });
+
+    const responseContent = completion.choices[0]?.message?.content;
+
+    if (!responseContent) {
       return {
         success: false,
-        message: `Failed to generate full prompt: ${fullPromptResult.message}`,
+        message: `No response generated for AI chat ID ${aiChat.id}`,
       };
     }
 
-    // Step 3: Generate the AI response
-    const responseResult = await generateAiChatResponse(aiChat.id);
+    // Step 8: Save response
+    await db.ai_chat.update({
+      where: { id: aiChat.id },
+      data: { response: responseContent },
+    });
 
-    if (!responseResult.success) {
-      return {
-        success: false,
-        message: `Failed to generate response: ${responseResult.message}`,
-      };
-    }
-
-    // Step 4: Fetch the complete ai_chat record with all generated fields
+    // Step 9: Fetch and return the complete ai_chat record
     const completeAiChat = await db.ai_chat.findUnique({
       where: { id: aiChat.id },
       select: {
