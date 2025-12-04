@@ -1,11 +1,11 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "@sveltejs/kit";
+import type { WebhookPayload } from "$lib/types/webhook";
 import { getEnv } from "$lib/tools/get-env";
-import type { WebhookPayload, WebhookResponse } from "$lib/types/webhook";
 import { exportProfile } from "$lib/server/profile-export";
 import { generateAiChatFullPrompt } from "$lib/server/ai-chat-full-prompt-generate";
 import { generateAiChatResponse } from "$lib/server/ai-chat-response-generate";
-import { generateApplicationQuestionAnswer } from "$lib/server/ai-chat-interview-question";
+import { generateApplicationQuestionAnswer } from "$lib/server/ai-chat-application-question";
 import { clearDirectusCache } from "$lib/server/directus";
 
 /**
