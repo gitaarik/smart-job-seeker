@@ -50,7 +50,6 @@ const PROFILE_SCHEMA_MAPPING = {
         relations: {
           work_experience_achievements: {
             fields: [
-              "title",
               "description",
             ],
           },
@@ -118,12 +117,6 @@ const PROFILE_SCHEMA_MAPPING = {
           "reflection",
           "category",
         ],
-      },
-      application_questions: {
-        fields: ["question", "answer", "title", "source"],
-      },
-      cheat_sheets: {
-        fields: ["title", "content"],
       },
       salary_expectations: {
         fields: [

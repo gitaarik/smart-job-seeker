@@ -29,7 +29,7 @@
     "host:build": "dotenvx run -- prisma generate && dotenvx run -- vite build",
     "host:preview": "dotenvx run -- vite preview",
     "host:export-profiles-pdf": "npx tsx scripts/export-profiles-pdf.ts",
-    "host:export-profile-json": "bash scripts/export-profile-docker.sh",
+    "host:export-profile-json": "npx tsx scripts/export-profile-json.ts",
     "host:export-profile-schema": "npx tsx scripts/export-profile-schema.ts",
     "host:export-profile-data": "npx tsx scripts/export-profile-data.ts",
     "host:import-profile-json": "npx tsx scripts/import-profile.ts",

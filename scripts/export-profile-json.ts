@@ -101,14 +101,10 @@ interface ExportedProfile {
       url_label?: string;
       tags?: any;
       side_project_achievements: Array<{
-        title?: string;
-        fa_icon?: string;
         description?: string;
-        status?: string;
         sort?: number | null;
       }>;
       side_project_technologies: Array<{
-        status?: string;
         sort?: number | null;
         name?: string;
       }>;
@@ -287,16 +283,13 @@ async function exportProfile(profileId: string): Promise<void> {
             tags: true,
             side_project_achievements: {
               select: {
-                title: true,
-                fa_icon: true,
                 description: true,
-                status: true,
                 sort: true,
               },
               orderBy: { sort: "asc" },
             },
             side_project_technologies: {
-              select: { status: true, sort: true, name: true },
+              select: { sort: true, name: true },
               orderBy: { sort: "asc" },
             },
           },
@@ -349,16 +342,6 @@ async function exportProfile(profileId: string): Promise<void> {
             result: true,
             reflection: true,
             category: true,
-          },
-          orderBy: { sort: "asc" },
-        },
-        application_questions: {
-          select: {
-            sort: true,
-            question: true,
-            answer: true,
-            title: true,
-            source: true,
           },
           orderBy: { sort: "asc" },
         },
@@ -565,9 +548,6 @@ async function exportProfile(profileId: string): Promise<void> {
     console.log(`   - References: ${exportData.profile.references.length}`);
     console.log(
       `   - Project stories: ${exportData.profile.project_stories.length}`,
-    );
-    console.log(
-      `   - Application questions: ${exportData.profile.application_questions.length}`,
     );
     console.log(`   - Cheat sheets: ${exportData.profile.cheat_sheets.length}`);
   } catch (error) {

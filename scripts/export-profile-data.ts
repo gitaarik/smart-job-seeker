@@ -69,7 +69,6 @@ async function exportProfileData(profileId: string): Promise<void> {
             website: true,
             work_experience_achievements: {
               select: {
-                title: true,
                 description: true,
               },
               orderBy: { sort: "asc" },
@@ -94,7 +93,6 @@ async function exportProfileData(profileId: string): Promise<void> {
             url_label: true,
             side_project_achievements: {
               select: {
-                title: true,
                 description: true,
               },
               orderBy: { sort: "asc" },
@@ -147,22 +145,6 @@ async function exportProfileData(profileId: string): Promise<void> {
             result: true,
             reflection: true,
             category: true,
-          },
-          orderBy: { sort: "asc" },
-        },
-        application_questions: {
-          select: {
-            question: true,
-            answer: true,
-            title: true,
-            source: true,
-          },
-          orderBy: { sort: "asc" },
-        },
-        cheat_sheets: {
-          select: {
-            title: true,
-            content: true,
           },
           orderBy: { sort: "asc" },
         },

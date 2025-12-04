@@ -2,7 +2,7 @@
   "profile": {
     "name": "Rik Wanders",
     "title": "Senior Full-Stack Developer",
-    "location": "Ronda, Spain",
+    "location": "Málaga, Spain",
     "phone_number": "+31649118511",
     "email_address": "rik@rikwanders.tech",
     "personal_website": "https://www.rikwanders.tech/",
@@ -14,7 +14,7 @@
     "headline": "Full-Stack Developer 10+ years expertise in Python, Django, Node.js, React, CI/CD, DevOps, UX, AI",
     "summary": "Dutch Senior Full-Stack Developer residing in Spain. 10+ years Python & Node.js experience, scaling complex, high-traffic & data heavy applications with Django & React, and leading development teams. Additional skills in DevOps, CI/CD & UXD. Current with industry trends, AI & security. Thrives in agile teams / startup environments. 5+ years remote work experience.",
     "nationality": "Dutch",
-    "location_url": "https://maps.app.goo.gl/WefqeUxUYBD6Q1qF8",
+    "location_url": "https://maps.app.goo.gl/s3KmPEQxdpDv1V789",
     "location_timezone": "CET/GMT+1",
     "profile_versions": [
       {
@@ -590,15 +590,23 @@
             "status": "published",
             "sort": 1,
             "title": "Team Leadership",
-            "description": "Led distributed development team (3-5 devs) with agile methods and strict code review processes, optimizing output 25%",
+            "description": "Led distributed development team (3-5 devs) with agile methods and strict code review processes, optimizing team output",
             "fa_icon": "users",
             "tags": []
           },
           {
             "status": "published",
             "sort": 2,
+            "title": "Technical leadership",
+            "description": "Ensured uptime and performance of critical services (infra, apps, deployment) on platform with 10,000+ monthly active users",
+            "fa_icon": null,
+            "tags": null
+          },
+          {
+            "status": "published",
+            "sort": 3,
             "title": "Platform Scalability",
-            "description": "Enabled processing thousands of orders per minute, by optimizating SQL & Python/Django process up to 60% & caching",
+            "description": "Scaled platform to handle thousands of orders per minute, by caching & optimizating SQL & Python/Django process up to 60%",
             "fa_icon": "chart-line",
             "tags": [
               "fullstack-django",
@@ -609,7 +617,7 @@
           },
           {
             "status": "published",
-            "sort": 3,
+            "sort": 4,
             "title": "Frontend Modernization",
             "description": "Increased user engagement by +30%, by modernizing frontend UX using React, responsive design & web components",
             "fa_icon": "paintbrush",
@@ -620,7 +628,7 @@
           },
           {
             "status": "published",
-            "sort": 4,
+            "sort": 5,
             "title": "Mobile App Development",
             "description": "Contributed to scalability & 40% revenue growth by leading ticket scan app development with React Native & WebSockets",
             "fa_icon": "mobile",
@@ -631,7 +639,7 @@
           },
           {
             "status": "published",
-            "sort": 5,
+            "sort": 6,
             "title": "Test Driven Development",
             "description": "Decreased regression with 90%, by establishing TDD with quality testing suite using Django & Selenium (+80% coverage)",
             "fa_icon": "shield-alt",
@@ -644,7 +652,7 @@
           },
           {
             "status": "published",
-            "sort": 6,
+            "sort": 7,
             "title": "CI/CD Systems",
             "description": "Reduced deploy time -80% & enabled regular releases, by orchestrating CI/CD systems on Linode using Ansible & Python",
             "fa_icon": "robot",
@@ -657,7 +665,7 @@
           },
           {
             "status": "published",
-            "sort": 7,
+            "sort": 8,
             "title": "Docker Compose Setup",
             "description": "Streamlined onboarding, by coordinating development environment setup of 4 Docker microservices in Docker Compose",
             "fa_icon": "docker",
@@ -670,7 +678,7 @@
           },
           {
             "status": "published",
-            "sort": 8,
+            "sort": 9,
             "title": "Backwards Compatibility",
             "description": "Maintained backward compatibility with legacy PHP system & database, by customizing Django codebase",
             "fa_icon": "clock-rotate-left",
@@ -681,7 +689,7 @@
           },
           {
             "status": "published",
-            "sort": 9,
+            "sort": 10,
             "title": "OAuth Zoom Integration",
             "description": "Enabled clients to organize automatically managed online events with Zoom, by integrating Zoom with OAuth in Django",
             "fa_icon": "key",
@@ -693,7 +701,7 @@
           },
           {
             "status": "published",
-            "sort": 10,
+            "sort": 11,
             "title": "REST API implementations",
             "description": "Allowed users to validate authenticity of 2nd hand tickets, by implementing TicketSwap REST APIs using DRF",
             "fa_icon": "plug",
@@ -705,7 +713,7 @@
           },
           {
             "status": "published",
-            "sort": 11,
+            "sort": 12,
             "title": "Payment Integrations",
             "description": "Processed tens of millions in payment transactions, by building payment service integrations (Mollie, Pay.nl, Paypal)",
             "fa_icon": "credit-card",
@@ -717,7 +725,7 @@
           },
           {
             "status": "published",
-            "sort": 12,
+            "sort": 13,
             "title": "Internationalization",
             "description": "Facilitated market expansion to eurozone, by implementing Django i18n features (language, country & timezone)",
             "fa_icon": "globe",
@@ -1680,12 +1688,12 @@
       {
         "status": "published",
         "sort": 1,
-        "name": "Portfolio website",
+        "name": "Smart Job Seeker",
         "start_date": "2025-08-01T00:00:00.000Z",
         "end_date": null,
-        "url": "https://www.rikwanders.tech/",
+        "url": "https://github.com/gitaarik/smart-job-seeker",
         "stars": null,
-        "summary": "Personal portfolio website showcasing my professional experience, skills, and services as a freelance/independent developer. Including personal dashboard with AI features for efficient job matching. Using Svelte & Directus CMS.",
+        "summary": "An intelligent job search and application management platform that helps you create a detailed profile, discover matching opportunities, and optimize your job application process with AI assistance. Built with TypeScript, Sveltekit, Prisma ORM, Directus CMS, PostgreSQL, Docker Compose and Tailwind CSS.",
         "tags": [
           "fullstack-svelte",
           "fullstack-react",
@@ -1694,27 +1702,22 @@
         "achievements": [],
         "technologies": [
           {
-            "status": "published",
             "sort": 1,
             "name": "Node.js"
           },
           {
-            "status": "published",
             "sort": 2,
             "name": "JavaScript"
           },
           {
-            "status": "published",
             "sort": 3,
             "name": "SvelteKit"
           },
           {
-            "status": "published",
             "sort": 4,
             "name": "LLM integrations"
           },
           {
-            "status": "published",
             "sort": 5,
             "name": "REST APIs"
           }
@@ -1728,59 +1731,44 @@
         "end_date": "2023-01-18T00:00:00.000Z",
         "url": "https://github.com/gitaarik/lit-state",
         "stars": 155,
-        "summary": "Reactive state management library for Lit Web Components, Open-sourced on GitHub & NPM. Used in production at Chipta (ticket shop). Lit + LitState is a simpler, lightweight and browser-native alternative to React + Redux.",
+        "summary": "Reactive state management library for Lit Web Components, open-sourced on GitHub & NPM. Used in production at Chipta (ticket shop). Lit + LitState is a simpler, lightweight and browser-native alternative to React + Redux.",
         "tags": [
           "fullstack-svelte",
-          "fullstack-react"
+          "fullstack-react",
+          "fullstack-django-svelte"
         ],
         "achievements": [
           {
-            "title": null,
-            "fa_icon": null,
             "description": "Created Open-Source NPM package providing reactive state management for Lit Web Components library",
-            "status": "draft",
             "sort": 1
           },
           {
-            "title": null,
-            "fa_icon": null,
             "description": "Received appreciation in community with 152 GitHub stars during time of Lit & Web Components popularity",
-            "status": "draft",
             "sort": 2
           },
           {
-            "title": null,
-            "fa_icon": null,
             "description": "Engaged with users handling GitHub Issues and Pull Requests",
-            "status": "draft",
             "sort": 3
           },
           {
-            "title": null,
-            "fa_icon": null,
             "description": "Employed library succesfully in projects at Chipta",
-            "status": "draft",
             "sort": 4
           }
         ],
         "technologies": [
           {
-            "status": "published",
             "sort": 1,
             "name": "Node.js"
           },
           {
-            "status": "published",
             "sort": 2,
             "name": "JavaScript"
           },
           {
-            "status": "published",
             "sort": 3,
             "name": "Lit"
           },
           {
-            "status": "published",
             "sort": 4,
             "name": "Web Components"
           }
@@ -1802,42 +1790,28 @@
         ],
         "achievements": [
           {
-            "title": null,
-            "fa_icon": null,
             "description": "Conceived Open-Source Python package providing navigation enhancements in Django Admin",
-            "status": "draft",
             "sort": 1
           },
           {
-            "title": null,
-            "fa_icon": null,
             "description": "Received appreciation in community with 108 GitHub stars",
-            "status": "draft",
             "sort": 2
           },
           {
-            "title": null,
-            "fa_icon": null,
             "description": "Engaged with users handling GitHub Issues and Pull Requests",
-            "status": "draft",
             "sort": 3
           },
           {
-            "title": null,
-            "fa_icon": null,
             "description": "Employed library succesfully in projects at Chipta and Tender-it",
-            "status": "draft",
             "sort": 4
           }
         ],
         "technologies": [
           {
-            "status": "published",
             "sort": 1,
             "name": "Python"
           },
           {
-            "status": "published",
             "sort": 2,
             "name": "Django"
           }
@@ -1862,17 +1836,14 @@
         "achievements": [],
         "technologies": [
           {
-            "status": "published",
             "sort": 1,
             "name": "Git"
           },
           {
-            "status": "published",
             "sort": 2,
             "name": "Git Submodules"
           },
           {
-            "status": "published",
             "sort": 3,
             "name": "Bash / Shell scripting"
           }
@@ -1892,56 +1863,44 @@
         ],
         "achievements": [
           {
-            "title": null,
-            "fa_icon": null,
             "description": "Succesfully employed self-created tool to create chord charts and print them for musical projects",
-            "status": "draft",
             "sort": 1
           }
         ],
         "technologies": [
           {
-            "status": "published",
             "sort": 1,
             "name": "Python"
           },
           {
-            "status": "published",
             "sort": 2,
             "name": "Django"
           },
           {
-            "status": "published",
             "sort": 3,
             "name": "Django Rest Framework (DRF)"
           },
           {
-            "status": "published",
             "sort": 4,
             "name": "Node.js"
           },
           {
-            "status": "published",
             "sort": 5,
             "name": "Ember.js"
           },
           {
-            "status": "published",
             "sort": 6,
             "name": "HTML/CSS"
           },
           {
-            "status": "published",
             "sort": 7,
             "name": "JavaScript"
           },
           {
-            "status": "published",
             "sort": 8,
             "name": "PostgreSQL"
           },
           {
-            "status": "published",
             "sort": 9,
             "name": "Elasticsearch"
           }
@@ -1962,21 +1921,16 @@
         ],
         "achievements": [
           {
-            "title": null,
-            "fa_icon": null,
             "description": "Conceived Open-Source Python package providing Adyen payment integrations for Django",
-            "status": "draft",
             "sort": 1
           }
         ],
         "technologies": [
           {
-            "status": "published",
             "sort": 1,
             "name": "Python"
           },
           {
-            "status": "published",
             "sort": 2,
             "name": "HTML"
           }
@@ -1999,22 +1953,18 @@
         "achievements": [],
         "technologies": [
           {
-            "status": "published",
             "sort": 1,
             "name": "Python"
           },
           {
-            "status": "published",
             "sort": 2,
             "name": "MongoDB"
           },
           {
-            "status": "published",
             "sort": 3,
             "name": "MongoEngine"
           },
           {
-            "status": "published",
             "sort": 4,
             "name": "Flask"
           }
@@ -2207,29 +2157,6 @@
         "result": "- Delivered app on time before festival season started\n- App significantly improved event scalability and reach\n- Contributed to 40% revenue increase from mobile ticket sales\n- Developer gained valuable React Native expertise\n- Established foundation for future mobile development projects",
         "reflection": "- Learned that new hip projects from major companies are not necessarily stable or well documented from the start\n- Was ultimately happy with choosing React Native\n- Because it matured and is still one of the main ways of creating apps",
         "category": "challenging_situations"
-      }
-    ],
-    "application_questions": [
-      {
-        "sort": 1,
-        "question": "Tell us about your experience building a project with a Python backend.\n\n- What kind of project was it?\n- What technologies and frameworks did you use (e.g., Flask, FastAPI, Django, etc.)?\n- (Optional) Please share a link (GitHub repo, live demo, or case study) if available.",
-        "answer": "At Chipta I've build the Django backend from the ground up. I attached Django to an existing database, enabling a smooth transition from the previous system. I even modified Django to work with an existing translation system.\n\nI added React to the project for dynamic frontend pages, and used Django REST Framework to create APIs accommodating the React frontend. Many APIs were for admin pages so needed authentication and permission checks. I also implemented pagination, nested routing (using drf-nested-routers), filtering (using django-filter), field-based filtering (using drf-flex-fields), and custom APIs with custom urls.\n\nChipta is a ticketing system for event organizers. They can use the system to create a ticket shop and sell their tickets online. I've scaled the system to be able to handle thousands of ticket orders per minute. To optimize the SQL queries and Python processes, I used tools like Django Silk and Django Debug Toolbar.\n\nChipta has processed millions of euros in transactions. I developed the ticketshop, API and server processes that handle these transactions. I used payment provider SDKs to create the payments and forward users to the payment page.\n\nTo mail the tickets to users, I used Django's EmailMultiAlternatives class to send pretty HTML emails including inline images, not requiring loading external resources.\n\nTo create ticket PDFs, I used Django-WeasyPrint, which uses Weasyprint under the hood, and transforms a Django HTML template, including styles and images, to a PDF file.\n\nI used Python Fabric to build a comprehensive custom CI/CD pipeline to deploy the project to our servers.\n\nI used Selenium to write integration tests to automatically test our frontend.\n\nYou can sign up and create a ticketshop yourself at: https://chipta.com/",
-        "title": "Python backend building experience",
-        "source": "AuditOne"
-      },
-      {
-        "sort": 6,
-        "question": "Have you built or worked on systems that manage a lot of structured information or documents (e.g., internal platforms, CRMs, audit systems, or similar)? *\n\n- Describe what the system did and how you contributed.\n- What kind of data or documents were handled?\n- How did you design the backend (APIs, database, integrations, etc.)?\n- (Optional) Did you add any AI-powered or automation features using Python?",
-        "answer": "At Tender-it, I created a Django + Celery project that ran web crawlers that scraped tender data from various sources in various formats, then parsed that data into one format and saved it to the database. A A tender is a formal competitive bidding process for contracts, usually big government projects. The scripts would import thousands of tenders each day. Then I created a web platform with an Elasticsearch-based search engine to search, filter, sort and score these tenders.\n\nSome sources offered a REST API with JSON or structured data in some way. In those cases it was easy to get the data parse it. But many sources had out-of-date technology, and I needed to use unconventional methods to get the data, like website scraping, API reverse engineering, zip files with XML files over FTP, CSV files over email.\n\nSo I created a base class for importing the data and a base class for parsing the data. Then for each source I created a class, inheriting the base class and implementing the required methods. The base classes provided many helper methods for implementing common functionality. Like this I could easily add new sources.\n\nI imported all structured data into the MariaDB database. Then I created records in Elasticsearch with all the data that should be search-able, with a reference to the complete data in the database. In this way I could use Elasticsearch to efficiently find the desired record, and when found, fetch the complete info from the database.",
-        "title": "Data management system experience",
-        "source": "AuditOne"
-      },
-      {
-        "sort": 9,
-        "question": "Tell us about a project where you built or shipped a full-stack application. What was your role, and what technologies did you use?",
-        "answer": "At Chipta, I led a project creating a ticket scanning app, to scan and validate event entrance tickets, using the phone camera. I decided on using React Native, and guided a medior developer to set up the project and make architectural decisions. I focused on providing the REST APIs and the related business logic.\n\nThe scan app would often be used by multiple people at the same time. So I had to make sure to keep the scan apps synchronized, so the same ticket could not be used multiple times. I used a websocket connection between the apps and the Django backend, using Django Channels. With an open websocket connection, I could instantly send data from the app to the backend and vice-versa, without any request overhead. This allowed me to create a custom protocol to send various types of data, like ticket scans, or undo-ing a scan, or even adding more valid tickets.\n\nWhen an app scanned a ticket, it send data about it to the backend over the websocket connection. Then the backend would broadcast this scan data to the other scan apps with open websocket connections, synchronizing the apps. Also, if an administrator would update the status of a visitor's ticket in the backend, it would also be broadcasted over the websockets.\n\nWe also created functionality for offline usage. The scan app would locally cache the tickets, and if the internet connection would be temporarily gone, still be able to scan tickets. After connection came back, it would restore synchronization and have custom conflict resolution in case of conflicts.\n\nThe scan app was successfully released on the Google Play Store and Apple App Store, under the name \"Chipta\". Hundreds of event organizers have successfully used it to validate tickets from over a million of visitors at their events. The app was very important for Chipta's growth as it significantly reduced custom scanner hardware costs and management, and  contributed to a 40% revenue increase in the 2 years after the release.\n\nChipta in the Google Play Store:\nhttps://play.google.com/store/apps/details?id=com.chipta\n\nChipta in the Apple App Store:\nhttps://apps.apple.com/us/app/chipta/id1156524548",
-        "title": "Full-stack app building experience",
-        "source": "AuditOne"
       }
     ],
     "cheat_sheets": [
