@@ -598,7 +598,7 @@ async function handleProfileVersionGeneratePreviewLinks(
 
         const versionName = encodeURIComponent(profileVersion.name);
         const previewHtml =
-          `<ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 20px; font-size: 16px;"><li>📄 <a href="http://localhost:5173/resume?version=${versionName}" target="_blank">Resume (HTML)</a></li><li>📋 <a href="http://localhost:5173/cv?version=${versionName}" target="_blank">CV (HTML)</a></li><li>📕 <a href="http://localhost:5173/resume.pdf?version=${versionName}" target="_blank">Resume (PDF)</a></li></ul>`;
+          `<ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 20px; font-size: 16px;"><li>📄 <a href="http://localhost:5173/resume?version=${versionName}" target="_blank">Resume (HTML)</a></li><li>📋 <a href="http://localhost:5173/cv?version=${versionName}" target="_blank">CV (HTML)</a></li><li>📕 <a href="http://localhost:5173/resume.pdf?version=${versionName}" target="_blank">Resume (PDF)</a></li><li>📕 <a href="http://localhost:5173/cv.pdf?version=${versionName}" target="_blank">CV (PDF)</a></li></ul>`;
 
         await db.profile_versions.update({
           where: { id: profileVersionId },
