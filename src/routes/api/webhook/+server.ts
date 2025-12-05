@@ -584,8 +584,21 @@ async function handleProfileVersionGeneratePreviewLinks(
   try {
     const results = await Promise.allSettled(
       profileVersionIds.map(async (profileVersionId) => {
+        // Fetch the profile version to get its name
+        const profileVersion = await db.profile_versions.findUnique({
+          where: { id: profileVersionId },
+          select: { name: true },
+        });
+
+        if (!profileVersion || !profileVersion.name) {
+          throw new Error(
+            `Profile version ${profileVersionId} not found or has no name`,
+          );
+        }
+
+        const versionName = encodeURIComponent(profileVersion.name);
         const previewHtml =
-          `<p><a href="http://localhost:5173/resume?version=${profileVersionId}" target="_blank">📄 Resume (HTML)</a><br><a href="http://localhost:5173/cv?version=${profileVersionId}" target="_blank">📋 CV (HTML)</a><br><a href="http://localhost:5173/resume.pdf?version=${profileVersionId}" target="_blank">📕 Resume (PDF)</a></p>`;
+          `<p><a href="http://localhost:5173/resume?version=${versionName}" target="_blank">📄 Resume (HTML)</a><br><a href="http://localhost:5173/cv?version=${versionName}" target="_blank">📋 CV (HTML)</a><br><a href="http://localhost:5173/resume.pdf?version=${versionName}" target="_blank">📕 Resume (PDF)</a></p>`;
 
         await db.profile_versions.update({
           where: { id: profileVersionId },
