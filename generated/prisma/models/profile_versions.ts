@@ -30,12 +30,14 @@ export type Profile_versionsAvgAggregateOutputType = {
   id: number | null
   sort: number | null
   profile: number | null
+  extensions: number | null
 }
 
 export type Profile_versionsSumAggregateOutputType = {
   id: number | null
   sort: number | null
   profile: number | null
+  extensions: number | null
 }
 
 export type Profile_versionsMinAggregateOutputType = {
@@ -48,6 +50,7 @@ export type Profile_versionsMinAggregateOutputType = {
   description: string | null
   profile: number | null
   preview_links: string | null
+  extensions: number | null
 }
 
 export type Profile_versionsMaxAggregateOutputType = {
@@ -60,6 +63,7 @@ export type Profile_versionsMaxAggregateOutputType = {
   description: string | null
   profile: number | null
   preview_links: string | null
+  extensions: number | null
 }
 
 export type Profile_versionsCountAggregateOutputType = {
@@ -73,6 +77,7 @@ export type Profile_versionsCountAggregateOutputType = {
   profile: number
   toggles: number
   preview_links: number
+  extensions: number
   _all: number
 }
 
@@ -81,12 +86,14 @@ export type Profile_versionsAvgAggregateInputType = {
   id?: true
   sort?: true
   profile?: true
+  extensions?: true
 }
 
 export type Profile_versionsSumAggregateInputType = {
   id?: true
   sort?: true
   profile?: true
+  extensions?: true
 }
 
 export type Profile_versionsMinAggregateInputType = {
@@ -99,6 +106,7 @@ export type Profile_versionsMinAggregateInputType = {
   description?: true
   profile?: true
   preview_links?: true
+  extensions?: true
 }
 
 export type Profile_versionsMaxAggregateInputType = {
@@ -111,6 +119,7 @@ export type Profile_versionsMaxAggregateInputType = {
   description?: true
   profile?: true
   preview_links?: true
+  extensions?: true
 }
 
 export type Profile_versionsCountAggregateInputType = {
@@ -124,6 +133,7 @@ export type Profile_versionsCountAggregateInputType = {
   profile?: true
   toggles?: true
   preview_links?: true
+  extensions?: true
   _all?: true
 }
 
@@ -224,6 +234,7 @@ export type Profile_versionsGroupByOutputType = {
   profile: number
   toggles: runtime.JsonValue | null
   preview_links: string | null
+  extensions: number | null
   _count: Profile_versionsCountAggregateOutputType | null
   _avg: Profile_versionsAvgAggregateOutputType | null
   _sum: Profile_versionsSumAggregateOutputType | null
@@ -260,6 +271,9 @@ export type profile_versionsWhereInput = {
   profile?: Prisma.IntFilter<"profile_versions"> | number
   toggles?: Prisma.JsonNullableFilter<"profile_versions">
   preview_links?: Prisma.StringNullableFilter<"profile_versions"> | string | null
+  extensions?: Prisma.IntNullableFilter<"profile_versions"> | number | null
+  profile_versions?: Prisma.XOR<Prisma.Profile_versionsNullableScalarRelationFilter, Prisma.profile_versionsWhereInput> | null
+  other_profile_versions?: Prisma.Profile_versionsListRelationFilter
   profiles?: Prisma.XOR<Prisma.ProfilesScalarRelationFilter, Prisma.profilesWhereInput>
   profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versions?: Prisma.Profile_versions_extendsListRelationFilter
   profile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versions?: Prisma.Profile_versions_extendsListRelationFilter
@@ -276,6 +290,9 @@ export type profile_versionsOrderByWithRelationInput = {
   profile?: Prisma.SortOrder
   toggles?: Prisma.SortOrderInput | Prisma.SortOrder
   preview_links?: Prisma.SortOrderInput | Prisma.SortOrder
+  extensions?: Prisma.SortOrderInput | Prisma.SortOrder
+  profile_versions?: Prisma.profile_versionsOrderByWithRelationInput
+  other_profile_versions?: Prisma.profile_versionsOrderByRelationAggregateInput
   profiles?: Prisma.profilesOrderByWithRelationInput
   profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsOrderByRelationAggregateInput
   profile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsOrderByRelationAggregateInput
@@ -295,6 +312,9 @@ export type profile_versionsWhereUniqueInput = Prisma.AtLeast<{
   profile?: Prisma.IntFilter<"profile_versions"> | number
   toggles?: Prisma.JsonNullableFilter<"profile_versions">
   preview_links?: Prisma.StringNullableFilter<"profile_versions"> | string | null
+  extensions?: Prisma.IntNullableFilter<"profile_versions"> | number | null
+  profile_versions?: Prisma.XOR<Prisma.Profile_versionsNullableScalarRelationFilter, Prisma.profile_versionsWhereInput> | null
+  other_profile_versions?: Prisma.Profile_versionsListRelationFilter
   profiles?: Prisma.XOR<Prisma.ProfilesScalarRelationFilter, Prisma.profilesWhereInput>
   profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versions?: Prisma.Profile_versions_extendsListRelationFilter
   profile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versions?: Prisma.Profile_versions_extendsListRelationFilter
@@ -311,6 +331,7 @@ export type profile_versionsOrderByWithAggregationInput = {
   profile?: Prisma.SortOrder
   toggles?: Prisma.SortOrderInput | Prisma.SortOrder
   preview_links?: Prisma.SortOrderInput | Prisma.SortOrder
+  extensions?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.profile_versionsCountOrderByAggregateInput
   _avg?: Prisma.profile_versionsAvgOrderByAggregateInput
   _max?: Prisma.profile_versionsMaxOrderByAggregateInput
@@ -332,6 +353,7 @@ export type profile_versionsScalarWhereWithAggregatesInput = {
   profile?: Prisma.IntWithAggregatesFilter<"profile_versions"> | number
   toggles?: Prisma.JsonNullableWithAggregatesFilter<"profile_versions">
   preview_links?: Prisma.StringNullableWithAggregatesFilter<"profile_versions"> | string | null
+  extensions?: Prisma.IntNullableWithAggregatesFilter<"profile_versions"> | number | null
 }
 
 export type profile_versionsCreateInput = {
@@ -343,6 +365,8 @@ export type profile_versionsCreateInput = {
   description?: string | null
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: string | null
+  profile_versions?: Prisma.profile_versionsCreateNestedOneWithoutOther_profile_versionsInput
+  other_profile_versions?: Prisma.profile_versionsCreateNestedManyWithoutProfile_versionsInput
   profiles: Prisma.profilesCreateNestedOneWithoutProfile_versionsInput
   profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsCreateNestedManyWithoutProfile_versions_profile_versions_extends_profile_versions_idToprofile_versionsInput
   profile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsCreateNestedManyWithoutProfile_versions_profile_versions_extends_related_profile_versions_idToprofile_versionsInput
@@ -359,6 +383,8 @@ export type profile_versionsUncheckedCreateInput = {
   profile: number
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: string | null
+  extensions?: number | null
+  other_profile_versions?: Prisma.profile_versionsUncheckedCreateNestedManyWithoutProfile_versionsInput
   profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsUncheckedCreateNestedManyWithoutProfile_versions_profile_versions_extends_profile_versions_idToprofile_versionsInput
   profile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsUncheckedCreateNestedManyWithoutProfile_versions_profile_versions_extends_related_profile_versions_idToprofile_versionsInput
 }
@@ -372,6 +398,8 @@ export type profile_versionsUpdateInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_versions?: Prisma.profile_versionsUpdateOneWithoutOther_profile_versionsNestedInput
+  other_profile_versions?: Prisma.profile_versionsUpdateManyWithoutProfile_versionsNestedInput
   profiles?: Prisma.profilesUpdateOneRequiredWithoutProfile_versionsNestedInput
   profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsUpdateManyWithoutProfile_versions_profile_versions_extends_profile_versions_idToprofile_versionsNestedInput
   profile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsUpdateManyWithoutProfile_versions_profile_versions_extends_related_profile_versions_idToprofile_versionsNestedInput
@@ -388,6 +416,8 @@ export type profile_versionsUncheckedUpdateInput = {
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  extensions?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  other_profile_versions?: Prisma.profile_versionsUncheckedUpdateManyWithoutProfile_versionsNestedInput
   profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsUncheckedUpdateManyWithoutProfile_versions_profile_versions_extends_profile_versions_idToprofile_versionsNestedInput
   profile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsUncheckedUpdateManyWithoutProfile_versions_profile_versions_extends_related_profile_versions_idToprofile_versionsNestedInput
 }
@@ -403,6 +433,7 @@ export type profile_versionsCreateManyInput = {
   profile: number
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: string | null
+  extensions?: number | null
 }
 
 export type profile_versionsUpdateManyMutationInput = {
@@ -427,6 +458,22 @@ export type profile_versionsUncheckedUpdateManyInput = {
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  extensions?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+}
+
+export type Profile_versionsNullableScalarRelationFilter = {
+  is?: Prisma.profile_versionsWhereInput | null
+  isNot?: Prisma.profile_versionsWhereInput | null
+}
+
+export type Profile_versionsListRelationFilter = {
+  every?: Prisma.profile_versionsWhereInput
+  some?: Prisma.profile_versionsWhereInput
+  none?: Prisma.profile_versionsWhereInput
+}
+
+export type profile_versionsOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
 }
 
 export type profile_versionsCountOrderByAggregateInput = {
@@ -440,12 +487,14 @@ export type profile_versionsCountOrderByAggregateInput = {
   profile?: Prisma.SortOrder
   toggles?: Prisma.SortOrder
   preview_links?: Prisma.SortOrder
+  extensions?: Prisma.SortOrder
 }
 
 export type profile_versionsAvgOrderByAggregateInput = {
   id?: Prisma.SortOrder
   sort?: Prisma.SortOrder
   profile?: Prisma.SortOrder
+  extensions?: Prisma.SortOrder
 }
 
 export type profile_versionsMaxOrderByAggregateInput = {
@@ -458,6 +507,7 @@ export type profile_versionsMaxOrderByAggregateInput = {
   description?: Prisma.SortOrder
   profile?: Prisma.SortOrder
   preview_links?: Prisma.SortOrder
+  extensions?: Prisma.SortOrder
 }
 
 export type profile_versionsMinOrderByAggregateInput = {
@@ -470,27 +520,72 @@ export type profile_versionsMinOrderByAggregateInput = {
   description?: Prisma.SortOrder
   profile?: Prisma.SortOrder
   preview_links?: Prisma.SortOrder
+  extensions?: Prisma.SortOrder
 }
 
 export type profile_versionsSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
   sort?: Prisma.SortOrder
   profile?: Prisma.SortOrder
+  extensions?: Prisma.SortOrder
 }
 
-export type Profile_versionsListRelationFilter = {
-  every?: Prisma.profile_versionsWhereInput
-  some?: Prisma.profile_versionsWhereInput
-  none?: Prisma.profile_versionsWhereInput
+export type profile_versionsCreateNestedOneWithoutOther_profile_versionsInput = {
+  create?: Prisma.XOR<Prisma.profile_versionsCreateWithoutOther_profile_versionsInput, Prisma.profile_versionsUncheckedCreateWithoutOther_profile_versionsInput>
+  connectOrCreate?: Prisma.profile_versionsCreateOrConnectWithoutOther_profile_versionsInput
+  connect?: Prisma.profile_versionsWhereUniqueInput
 }
 
-export type profile_versionsOrderByRelationAggregateInput = {
-  _count?: Prisma.SortOrder
+export type profile_versionsCreateNestedManyWithoutProfile_versionsInput = {
+  create?: Prisma.XOR<Prisma.profile_versionsCreateWithoutProfile_versionsInput, Prisma.profile_versionsUncheckedCreateWithoutProfile_versionsInput> | Prisma.profile_versionsCreateWithoutProfile_versionsInput[] | Prisma.profile_versionsUncheckedCreateWithoutProfile_versionsInput[]
+  connectOrCreate?: Prisma.profile_versionsCreateOrConnectWithoutProfile_versionsInput | Prisma.profile_versionsCreateOrConnectWithoutProfile_versionsInput[]
+  createMany?: Prisma.profile_versionsCreateManyProfile_versionsInputEnvelope
+  connect?: Prisma.profile_versionsWhereUniqueInput | Prisma.profile_versionsWhereUniqueInput[]
 }
 
-export type Profile_versionsNullableScalarRelationFilter = {
-  is?: Prisma.profile_versionsWhereInput | null
-  isNot?: Prisma.profile_versionsWhereInput | null
+export type profile_versionsUncheckedCreateNestedManyWithoutProfile_versionsInput = {
+  create?: Prisma.XOR<Prisma.profile_versionsCreateWithoutProfile_versionsInput, Prisma.profile_versionsUncheckedCreateWithoutProfile_versionsInput> | Prisma.profile_versionsCreateWithoutProfile_versionsInput[] | Prisma.profile_versionsUncheckedCreateWithoutProfile_versionsInput[]
+  connectOrCreate?: Prisma.profile_versionsCreateOrConnectWithoutProfile_versionsInput | Prisma.profile_versionsCreateOrConnectWithoutProfile_versionsInput[]
+  createMany?: Prisma.profile_versionsCreateManyProfile_versionsInputEnvelope
+  connect?: Prisma.profile_versionsWhereUniqueInput | Prisma.profile_versionsWhereUniqueInput[]
+}
+
+export type profile_versionsUpdateOneWithoutOther_profile_versionsNestedInput = {
+  create?: Prisma.XOR<Prisma.profile_versionsCreateWithoutOther_profile_versionsInput, Prisma.profile_versionsUncheckedCreateWithoutOther_profile_versionsInput>
+  connectOrCreate?: Prisma.profile_versionsCreateOrConnectWithoutOther_profile_versionsInput
+  upsert?: Prisma.profile_versionsUpsertWithoutOther_profile_versionsInput
+  disconnect?: Prisma.profile_versionsWhereInput | boolean
+  delete?: Prisma.profile_versionsWhereInput | boolean
+  connect?: Prisma.profile_versionsWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.profile_versionsUpdateToOneWithWhereWithoutOther_profile_versionsInput, Prisma.profile_versionsUpdateWithoutOther_profile_versionsInput>, Prisma.profile_versionsUncheckedUpdateWithoutOther_profile_versionsInput>
+}
+
+export type profile_versionsUpdateManyWithoutProfile_versionsNestedInput = {
+  create?: Prisma.XOR<Prisma.profile_versionsCreateWithoutProfile_versionsInput, Prisma.profile_versionsUncheckedCreateWithoutProfile_versionsInput> | Prisma.profile_versionsCreateWithoutProfile_versionsInput[] | Prisma.profile_versionsUncheckedCreateWithoutProfile_versionsInput[]
+  connectOrCreate?: Prisma.profile_versionsCreateOrConnectWithoutProfile_versionsInput | Prisma.profile_versionsCreateOrConnectWithoutProfile_versionsInput[]
+  upsert?: Prisma.profile_versionsUpsertWithWhereUniqueWithoutProfile_versionsInput | Prisma.profile_versionsUpsertWithWhereUniqueWithoutProfile_versionsInput[]
+  createMany?: Prisma.profile_versionsCreateManyProfile_versionsInputEnvelope
+  set?: Prisma.profile_versionsWhereUniqueInput | Prisma.profile_versionsWhereUniqueInput[]
+  disconnect?: Prisma.profile_versionsWhereUniqueInput | Prisma.profile_versionsWhereUniqueInput[]
+  delete?: Prisma.profile_versionsWhereUniqueInput | Prisma.profile_versionsWhereUniqueInput[]
+  connect?: Prisma.profile_versionsWhereUniqueInput | Prisma.profile_versionsWhereUniqueInput[]
+  update?: Prisma.profile_versionsUpdateWithWhereUniqueWithoutProfile_versionsInput | Prisma.profile_versionsUpdateWithWhereUniqueWithoutProfile_versionsInput[]
+  updateMany?: Prisma.profile_versionsUpdateManyWithWhereWithoutProfile_versionsInput | Prisma.profile_versionsUpdateManyWithWhereWithoutProfile_versionsInput[]
+  deleteMany?: Prisma.profile_versionsScalarWhereInput | Prisma.profile_versionsScalarWhereInput[]
+}
+
+export type profile_versionsUncheckedUpdateManyWithoutProfile_versionsNestedInput = {
+  create?: Prisma.XOR<Prisma.profile_versionsCreateWithoutProfile_versionsInput, Prisma.profile_versionsUncheckedCreateWithoutProfile_versionsInput> | Prisma.profile_versionsCreateWithoutProfile_versionsInput[] | Prisma.profile_versionsUncheckedCreateWithoutProfile_versionsInput[]
+  connectOrCreate?: Prisma.profile_versionsCreateOrConnectWithoutProfile_versionsInput | Prisma.profile_versionsCreateOrConnectWithoutProfile_versionsInput[]
+  upsert?: Prisma.profile_versionsUpsertWithWhereUniqueWithoutProfile_versionsInput | Prisma.profile_versionsUpsertWithWhereUniqueWithoutProfile_versionsInput[]
+  createMany?: Prisma.profile_versionsCreateManyProfile_versionsInputEnvelope
+  set?: Prisma.profile_versionsWhereUniqueInput | Prisma.profile_versionsWhereUniqueInput[]
+  disconnect?: Prisma.profile_versionsWhereUniqueInput | Prisma.profile_versionsWhereUniqueInput[]
+  delete?: Prisma.profile_versionsWhereUniqueInput | Prisma.profile_versionsWhereUniqueInput[]
+  connect?: Prisma.profile_versionsWhereUniqueInput | Prisma.profile_versionsWhereUniqueInput[]
+  update?: Prisma.profile_versionsUpdateWithWhereUniqueWithoutProfile_versionsInput | Prisma.profile_versionsUpdateWithWhereUniqueWithoutProfile_versionsInput[]
+  updateMany?: Prisma.profile_versionsUpdateManyWithWhereWithoutProfile_versionsInput | Prisma.profile_versionsUpdateManyWithWhereWithoutProfile_versionsInput[]
+  deleteMany?: Prisma.profile_versionsScalarWhereInput | Prisma.profile_versionsScalarWhereInput[]
 }
 
 export type profile_versionsCreateNestedManyWithoutProfilesInput = {
@@ -567,6 +662,158 @@ export type profile_versionsUpdateOneWithoutProfile_versions_extends_profile_ver
   update?: Prisma.XOR<Prisma.XOR<Prisma.profile_versionsUpdateToOneWithWhereWithoutProfile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versionsInput, Prisma.profile_versionsUpdateWithoutProfile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versionsInput>, Prisma.profile_versionsUncheckedUpdateWithoutProfile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versionsInput>
 }
 
+export type profile_versionsCreateWithoutOther_profile_versionsInput = {
+  status?: string
+  sort?: number | null
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  name?: string | null
+  description?: string | null
+  toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  preview_links?: string | null
+  profile_versions?: Prisma.profile_versionsCreateNestedOneWithoutOther_profile_versionsInput
+  profiles: Prisma.profilesCreateNestedOneWithoutProfile_versionsInput
+  profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsCreateNestedManyWithoutProfile_versions_profile_versions_extends_profile_versions_idToprofile_versionsInput
+  profile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsCreateNestedManyWithoutProfile_versions_profile_versions_extends_related_profile_versions_idToprofile_versionsInput
+}
+
+export type profile_versionsUncheckedCreateWithoutOther_profile_versionsInput = {
+  id?: number
+  status?: string
+  sort?: number | null
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  name?: string | null
+  description?: string | null
+  profile: number
+  toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  preview_links?: string | null
+  extensions?: number | null
+  profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsUncheckedCreateNestedManyWithoutProfile_versions_profile_versions_extends_profile_versions_idToprofile_versionsInput
+  profile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsUncheckedCreateNestedManyWithoutProfile_versions_profile_versions_extends_related_profile_versions_idToprofile_versionsInput
+}
+
+export type profile_versionsCreateOrConnectWithoutOther_profile_versionsInput = {
+  where: Prisma.profile_versionsWhereUniqueInput
+  create: Prisma.XOR<Prisma.profile_versionsCreateWithoutOther_profile_versionsInput, Prisma.profile_versionsUncheckedCreateWithoutOther_profile_versionsInput>
+}
+
+export type profile_versionsCreateWithoutProfile_versionsInput = {
+  status?: string
+  sort?: number | null
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  name?: string | null
+  description?: string | null
+  toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  preview_links?: string | null
+  other_profile_versions?: Prisma.profile_versionsCreateNestedManyWithoutProfile_versionsInput
+  profiles: Prisma.profilesCreateNestedOneWithoutProfile_versionsInput
+  profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsCreateNestedManyWithoutProfile_versions_profile_versions_extends_profile_versions_idToprofile_versionsInput
+  profile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsCreateNestedManyWithoutProfile_versions_profile_versions_extends_related_profile_versions_idToprofile_versionsInput
+}
+
+export type profile_versionsUncheckedCreateWithoutProfile_versionsInput = {
+  id?: number
+  status?: string
+  sort?: number | null
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  name?: string | null
+  description?: string | null
+  profile: number
+  toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  preview_links?: string | null
+  other_profile_versions?: Prisma.profile_versionsUncheckedCreateNestedManyWithoutProfile_versionsInput
+  profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsUncheckedCreateNestedManyWithoutProfile_versions_profile_versions_extends_profile_versions_idToprofile_versionsInput
+  profile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsUncheckedCreateNestedManyWithoutProfile_versions_profile_versions_extends_related_profile_versions_idToprofile_versionsInput
+}
+
+export type profile_versionsCreateOrConnectWithoutProfile_versionsInput = {
+  where: Prisma.profile_versionsWhereUniqueInput
+  create: Prisma.XOR<Prisma.profile_versionsCreateWithoutProfile_versionsInput, Prisma.profile_versionsUncheckedCreateWithoutProfile_versionsInput>
+}
+
+export type profile_versionsCreateManyProfile_versionsInputEnvelope = {
+  data: Prisma.profile_versionsCreateManyProfile_versionsInput | Prisma.profile_versionsCreateManyProfile_versionsInput[]
+  skipDuplicates?: boolean
+}
+
+export type profile_versionsUpsertWithoutOther_profile_versionsInput = {
+  update: Prisma.XOR<Prisma.profile_versionsUpdateWithoutOther_profile_versionsInput, Prisma.profile_versionsUncheckedUpdateWithoutOther_profile_versionsInput>
+  create: Prisma.XOR<Prisma.profile_versionsCreateWithoutOther_profile_versionsInput, Prisma.profile_versionsUncheckedCreateWithoutOther_profile_versionsInput>
+  where?: Prisma.profile_versionsWhereInput
+}
+
+export type profile_versionsUpdateToOneWithWhereWithoutOther_profile_versionsInput = {
+  where?: Prisma.profile_versionsWhereInput
+  data: Prisma.XOR<Prisma.profile_versionsUpdateWithoutOther_profile_versionsInput, Prisma.profile_versionsUncheckedUpdateWithoutOther_profile_versionsInput>
+}
+
+export type profile_versionsUpdateWithoutOther_profile_versionsInput = {
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  preview_links?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_versions?: Prisma.profile_versionsUpdateOneWithoutOther_profile_versionsNestedInput
+  profiles?: Prisma.profilesUpdateOneRequiredWithoutProfile_versionsNestedInput
+  profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsUpdateManyWithoutProfile_versions_profile_versions_extends_profile_versions_idToprofile_versionsNestedInput
+  profile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsUpdateManyWithoutProfile_versions_profile_versions_extends_related_profile_versions_idToprofile_versionsNestedInput
+}
+
+export type profile_versionsUncheckedUpdateWithoutOther_profile_versionsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile?: Prisma.IntFieldUpdateOperationsInput | number
+  toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  preview_links?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  extensions?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsUncheckedUpdateManyWithoutProfile_versions_profile_versions_extends_profile_versions_idToprofile_versionsNestedInput
+  profile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsUncheckedUpdateManyWithoutProfile_versions_profile_versions_extends_related_profile_versions_idToprofile_versionsNestedInput
+}
+
+export type profile_versionsUpsertWithWhereUniqueWithoutProfile_versionsInput = {
+  where: Prisma.profile_versionsWhereUniqueInput
+  update: Prisma.XOR<Prisma.profile_versionsUpdateWithoutProfile_versionsInput, Prisma.profile_versionsUncheckedUpdateWithoutProfile_versionsInput>
+  create: Prisma.XOR<Prisma.profile_versionsCreateWithoutProfile_versionsInput, Prisma.profile_versionsUncheckedCreateWithoutProfile_versionsInput>
+}
+
+export type profile_versionsUpdateWithWhereUniqueWithoutProfile_versionsInput = {
+  where: Prisma.profile_versionsWhereUniqueInput
+  data: Prisma.XOR<Prisma.profile_versionsUpdateWithoutProfile_versionsInput, Prisma.profile_versionsUncheckedUpdateWithoutProfile_versionsInput>
+}
+
+export type profile_versionsUpdateManyWithWhereWithoutProfile_versionsInput = {
+  where: Prisma.profile_versionsScalarWhereInput
+  data: Prisma.XOR<Prisma.profile_versionsUpdateManyMutationInput, Prisma.profile_versionsUncheckedUpdateManyWithoutProfile_versionsInput>
+}
+
+export type profile_versionsScalarWhereInput = {
+  AND?: Prisma.profile_versionsScalarWhereInput | Prisma.profile_versionsScalarWhereInput[]
+  OR?: Prisma.profile_versionsScalarWhereInput[]
+  NOT?: Prisma.profile_versionsScalarWhereInput | Prisma.profile_versionsScalarWhereInput[]
+  id?: Prisma.IntFilter<"profile_versions"> | number
+  status?: Prisma.StringFilter<"profile_versions"> | string
+  sort?: Prisma.IntNullableFilter<"profile_versions"> | number | null
+  date_created?: Prisma.DateTimeNullableFilter<"profile_versions"> | Date | string | null
+  date_updated?: Prisma.DateTimeNullableFilter<"profile_versions"> | Date | string | null
+  name?: Prisma.StringNullableFilter<"profile_versions"> | string | null
+  description?: Prisma.StringNullableFilter<"profile_versions"> | string | null
+  profile?: Prisma.IntFilter<"profile_versions"> | number
+  toggles?: Prisma.JsonNullableFilter<"profile_versions">
+  preview_links?: Prisma.StringNullableFilter<"profile_versions"> | string | null
+  extensions?: Prisma.IntNullableFilter<"profile_versions"> | number | null
+}
+
 export type profile_versionsCreateWithoutProfilesInput = {
   status?: string
   sort?: number | null
@@ -576,6 +823,8 @@ export type profile_versionsCreateWithoutProfilesInput = {
   description?: string | null
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: string | null
+  profile_versions?: Prisma.profile_versionsCreateNestedOneWithoutOther_profile_versionsInput
+  other_profile_versions?: Prisma.profile_versionsCreateNestedManyWithoutProfile_versionsInput
   profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsCreateNestedManyWithoutProfile_versions_profile_versions_extends_profile_versions_idToprofile_versionsInput
   profile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsCreateNestedManyWithoutProfile_versions_profile_versions_extends_related_profile_versions_idToprofile_versionsInput
 }
@@ -590,6 +839,8 @@ export type profile_versionsUncheckedCreateWithoutProfilesInput = {
   description?: string | null
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: string | null
+  extensions?: number | null
+  other_profile_versions?: Prisma.profile_versionsUncheckedCreateNestedManyWithoutProfile_versionsInput
   profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsUncheckedCreateNestedManyWithoutProfile_versions_profile_versions_extends_profile_versions_idToprofile_versionsInput
   profile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsUncheckedCreateNestedManyWithoutProfile_versions_profile_versions_extends_related_profile_versions_idToprofile_versionsInput
 }
@@ -620,22 +871,6 @@ export type profile_versionsUpdateManyWithWhereWithoutProfilesInput = {
   data: Prisma.XOR<Prisma.profile_versionsUpdateManyMutationInput, Prisma.profile_versionsUncheckedUpdateManyWithoutProfilesInput>
 }
 
-export type profile_versionsScalarWhereInput = {
-  AND?: Prisma.profile_versionsScalarWhereInput | Prisma.profile_versionsScalarWhereInput[]
-  OR?: Prisma.profile_versionsScalarWhereInput[]
-  NOT?: Prisma.profile_versionsScalarWhereInput | Prisma.profile_versionsScalarWhereInput[]
-  id?: Prisma.IntFilter<"profile_versions"> | number
-  status?: Prisma.StringFilter<"profile_versions"> | string
-  sort?: Prisma.IntNullableFilter<"profile_versions"> | number | null
-  date_created?: Prisma.DateTimeNullableFilter<"profile_versions"> | Date | string | null
-  date_updated?: Prisma.DateTimeNullableFilter<"profile_versions"> | Date | string | null
-  name?: Prisma.StringNullableFilter<"profile_versions"> | string | null
-  description?: Prisma.StringNullableFilter<"profile_versions"> | string | null
-  profile?: Prisma.IntFilter<"profile_versions"> | number
-  toggles?: Prisma.JsonNullableFilter<"profile_versions">
-  preview_links?: Prisma.StringNullableFilter<"profile_versions"> | string | null
-}
-
 export type profile_versionsCreateWithoutProfile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versionsInput = {
   status?: string
   sort?: number | null
@@ -645,6 +880,8 @@ export type profile_versionsCreateWithoutProfile_versions_extends_profile_versio
   description?: string | null
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: string | null
+  profile_versions?: Prisma.profile_versionsCreateNestedOneWithoutOther_profile_versionsInput
+  other_profile_versions?: Prisma.profile_versionsCreateNestedManyWithoutProfile_versionsInput
   profiles: Prisma.profilesCreateNestedOneWithoutProfile_versionsInput
   profile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsCreateNestedManyWithoutProfile_versions_profile_versions_extends_related_profile_versions_idToprofile_versionsInput
 }
@@ -660,6 +897,8 @@ export type profile_versionsUncheckedCreateWithoutProfile_versions_extends_profi
   profile: number
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: string | null
+  extensions?: number | null
+  other_profile_versions?: Prisma.profile_versionsUncheckedCreateNestedManyWithoutProfile_versionsInput
   profile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsUncheckedCreateNestedManyWithoutProfile_versions_profile_versions_extends_related_profile_versions_idToprofile_versionsInput
 }
 
@@ -677,6 +916,8 @@ export type profile_versionsCreateWithoutProfile_versions_extends_profile_versio
   description?: string | null
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: string | null
+  profile_versions?: Prisma.profile_versionsCreateNestedOneWithoutOther_profile_versionsInput
+  other_profile_versions?: Prisma.profile_versionsCreateNestedManyWithoutProfile_versionsInput
   profiles: Prisma.profilesCreateNestedOneWithoutProfile_versionsInput
   profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsCreateNestedManyWithoutProfile_versions_profile_versions_extends_profile_versions_idToprofile_versionsInput
 }
@@ -692,6 +933,8 @@ export type profile_versionsUncheckedCreateWithoutProfile_versions_extends_profi
   profile: number
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: string | null
+  extensions?: number | null
+  other_profile_versions?: Prisma.profile_versionsUncheckedCreateNestedManyWithoutProfile_versionsInput
   profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsUncheckedCreateNestedManyWithoutProfile_versions_profile_versions_extends_profile_versions_idToprofile_versionsInput
 }
 
@@ -720,6 +963,8 @@ export type profile_versionsUpdateWithoutProfile_versions_extends_profile_versio
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_versions?: Prisma.profile_versionsUpdateOneWithoutOther_profile_versionsNestedInput
+  other_profile_versions?: Prisma.profile_versionsUpdateManyWithoutProfile_versionsNestedInput
   profiles?: Prisma.profilesUpdateOneRequiredWithoutProfile_versionsNestedInput
   profile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsUpdateManyWithoutProfile_versions_profile_versions_extends_related_profile_versions_idToprofile_versionsNestedInput
 }
@@ -735,6 +980,8 @@ export type profile_versionsUncheckedUpdateWithoutProfile_versions_extends_profi
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  extensions?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  other_profile_versions?: Prisma.profile_versionsUncheckedUpdateManyWithoutProfile_versionsNestedInput
   profile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsUncheckedUpdateManyWithoutProfile_versions_profile_versions_extends_related_profile_versions_idToprofile_versionsNestedInput
 }
 
@@ -758,6 +1005,8 @@ export type profile_versionsUpdateWithoutProfile_versions_extends_profile_versio
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_versions?: Prisma.profile_versionsUpdateOneWithoutOther_profile_versionsNestedInput
+  other_profile_versions?: Prisma.profile_versionsUpdateManyWithoutProfile_versionsNestedInput
   profiles?: Prisma.profilesUpdateOneRequiredWithoutProfile_versionsNestedInput
   profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsUpdateManyWithoutProfile_versions_profile_versions_extends_profile_versions_idToprofile_versionsNestedInput
 }
@@ -773,7 +1022,66 @@ export type profile_versionsUncheckedUpdateWithoutProfile_versions_extends_profi
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  extensions?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  other_profile_versions?: Prisma.profile_versionsUncheckedUpdateManyWithoutProfile_versionsNestedInput
   profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsUncheckedUpdateManyWithoutProfile_versions_profile_versions_extends_profile_versions_idToprofile_versionsNestedInput
+}
+
+export type profile_versionsCreateManyProfile_versionsInput = {
+  id?: number
+  status?: string
+  sort?: number | null
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  name?: string | null
+  description?: string | null
+  profile: number
+  toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  preview_links?: string | null
+}
+
+export type profile_versionsUpdateWithoutProfile_versionsInput = {
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  preview_links?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  other_profile_versions?: Prisma.profile_versionsUpdateManyWithoutProfile_versionsNestedInput
+  profiles?: Prisma.profilesUpdateOneRequiredWithoutProfile_versionsNestedInput
+  profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsUpdateManyWithoutProfile_versions_profile_versions_extends_profile_versions_idToprofile_versionsNestedInput
+  profile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsUpdateManyWithoutProfile_versions_profile_versions_extends_related_profile_versions_idToprofile_versionsNestedInput
+}
+
+export type profile_versionsUncheckedUpdateWithoutProfile_versionsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile?: Prisma.IntFieldUpdateOperationsInput | number
+  toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  preview_links?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  other_profile_versions?: Prisma.profile_versionsUncheckedUpdateManyWithoutProfile_versionsNestedInput
+  profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsUncheckedUpdateManyWithoutProfile_versions_profile_versions_extends_profile_versions_idToprofile_versionsNestedInput
+  profile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsUncheckedUpdateManyWithoutProfile_versions_profile_versions_extends_related_profile_versions_idToprofile_versionsNestedInput
+}
+
+export type profile_versionsUncheckedUpdateManyWithoutProfile_versionsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile?: Prisma.IntFieldUpdateOperationsInput | number
+  toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  preview_links?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type profile_versionsCreateManyProfilesInput = {
@@ -786,6 +1094,7 @@ export type profile_versionsCreateManyProfilesInput = {
   description?: string | null
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: string | null
+  extensions?: number | null
 }
 
 export type profile_versionsUpdateWithoutProfilesInput = {
@@ -797,6 +1106,8 @@ export type profile_versionsUpdateWithoutProfilesInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_versions?: Prisma.profile_versionsUpdateOneWithoutOther_profile_versionsNestedInput
+  other_profile_versions?: Prisma.profile_versionsUpdateManyWithoutProfile_versionsNestedInput
   profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsUpdateManyWithoutProfile_versions_profile_versions_extends_profile_versions_idToprofile_versionsNestedInput
   profile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsUpdateManyWithoutProfile_versions_profile_versions_extends_related_profile_versions_idToprofile_versionsNestedInput
 }
@@ -811,6 +1122,8 @@ export type profile_versionsUncheckedUpdateWithoutProfilesInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  extensions?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  other_profile_versions?: Prisma.profile_versionsUncheckedUpdateManyWithoutProfile_versionsNestedInput
   profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsUncheckedUpdateManyWithoutProfile_versions_profile_versions_extends_profile_versions_idToprofile_versionsNestedInput
   profile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versions?: Prisma.profile_versions_extendsUncheckedUpdateManyWithoutProfile_versions_profile_versions_extends_related_profile_versions_idToprofile_versionsNestedInput
 }
@@ -825,6 +1138,7 @@ export type profile_versionsUncheckedUpdateManyWithoutProfilesInput = {
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   toggles?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   preview_links?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  extensions?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 
@@ -833,11 +1147,13 @@ export type profile_versionsUncheckedUpdateManyWithoutProfilesInput = {
  */
 
 export type Profile_versionsCountOutputType = {
+  other_profile_versions: number
   profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versions: number
   profile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versions: number
 }
 
 export type Profile_versionsCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  other_profile_versions?: boolean | Profile_versionsCountOutputTypeCountOther_profile_versionsArgs
   profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versions?: boolean | Profile_versionsCountOutputTypeCountProfile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versionsArgs
   profile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versions?: boolean | Profile_versionsCountOutputTypeCountProfile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versionsArgs
 }
@@ -850,6 +1166,13 @@ export type Profile_versionsCountOutputTypeDefaultArgs<ExtArgs extends runtime.T
    * Select specific fields to fetch from the Profile_versionsCountOutputType
    */
   select?: Prisma.Profile_versionsCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * Profile_versionsCountOutputType without action
+ */
+export type Profile_versionsCountOutputTypeCountOther_profile_versionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.profile_versionsWhereInput
 }
 
 /**
@@ -878,6 +1201,9 @@ export type profile_versionsSelect<ExtArgs extends runtime.Types.Extensions.Inte
   profile?: boolean
   toggles?: boolean
   preview_links?: boolean
+  extensions?: boolean
+  profile_versions?: boolean | Prisma.profile_versions$profile_versionsArgs<ExtArgs>
+  other_profile_versions?: boolean | Prisma.profile_versions$other_profile_versionsArgs<ExtArgs>
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
   profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versions?: boolean | Prisma.profile_versions$profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versionsArgs<ExtArgs>
   profile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versions?: boolean | Prisma.profile_versions$profile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versionsArgs<ExtArgs>
@@ -895,6 +1221,8 @@ export type profile_versionsSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   profile?: boolean
   toggles?: boolean
   preview_links?: boolean
+  extensions?: boolean
+  profile_versions?: boolean | Prisma.profile_versions$profile_versionsArgs<ExtArgs>
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["profile_versions"]>
 
@@ -909,6 +1237,8 @@ export type profile_versionsSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   profile?: boolean
   toggles?: boolean
   preview_links?: boolean
+  extensions?: boolean
+  profile_versions?: boolean | Prisma.profile_versions$profile_versionsArgs<ExtArgs>
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["profile_versions"]>
 
@@ -923,25 +1253,32 @@ export type profile_versionsSelectScalar = {
   profile?: boolean
   toggles?: boolean
   preview_links?: boolean
+  extensions?: boolean
 }
 
-export type profile_versionsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "sort" | "date_created" | "date_updated" | "name" | "description" | "profile" | "toggles" | "preview_links", ExtArgs["result"]["profile_versions"]>
+export type profile_versionsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "sort" | "date_created" | "date_updated" | "name" | "description" | "profile" | "toggles" | "preview_links" | "extensions", ExtArgs["result"]["profile_versions"]>
 export type profile_versionsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  profile_versions?: boolean | Prisma.profile_versions$profile_versionsArgs<ExtArgs>
+  other_profile_versions?: boolean | Prisma.profile_versions$other_profile_versionsArgs<ExtArgs>
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
   profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versions?: boolean | Prisma.profile_versions$profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versionsArgs<ExtArgs>
   profile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versions?: boolean | Prisma.profile_versions$profile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versionsArgs<ExtArgs>
   _count?: boolean | Prisma.Profile_versionsCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type profile_versionsIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  profile_versions?: boolean | Prisma.profile_versions$profile_versionsArgs<ExtArgs>
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }
 export type profile_versionsIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  profile_versions?: boolean | Prisma.profile_versions$profile_versionsArgs<ExtArgs>
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }
 
 export type $profile_versionsPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "profile_versions"
   objects: {
+    profile_versions: Prisma.$profile_versionsPayload<ExtArgs> | null
+    other_profile_versions: Prisma.$profile_versionsPayload<ExtArgs>[]
     profiles: Prisma.$profilesPayload<ExtArgs>
     profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versions: Prisma.$profile_versions_extendsPayload<ExtArgs>[]
     profile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versions: Prisma.$profile_versions_extendsPayload<ExtArgs>[]
@@ -957,6 +1294,7 @@ export type $profile_versionsPayload<ExtArgs extends runtime.Types.Extensions.In
     profile: number
     toggles: runtime.JsonValue | null
     preview_links: string | null
+    extensions: number | null
   }, ExtArgs["result"]["profile_versions"]>
   composites: {}
 }
@@ -1351,6 +1689,8 @@ readonly fields: profile_versionsFieldRefs;
  */
 export interface Prisma__profile_versionsClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  profile_versions<T extends Prisma.profile_versions$profile_versionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.profile_versions$profile_versionsArgs<ExtArgs>>): Prisma.Prisma__profile_versionsClient<runtime.Types.Result.GetResult<Prisma.$profile_versionsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  other_profile_versions<T extends Prisma.profile_versions$other_profile_versionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.profile_versions$other_profile_versionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$profile_versionsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   profiles<T extends Prisma.profilesDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.profilesDefaultArgs<ExtArgs>>): Prisma.Prisma__profilesClient<runtime.Types.Result.GetResult<Prisma.$profilesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versions<T extends Prisma.profile_versions$profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.profile_versions$profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$profile_versions_extendsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   profile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versions<T extends Prisma.profile_versions$profile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.profile_versions$profile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$profile_versions_extendsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -1393,6 +1733,7 @@ export interface profile_versionsFieldRefs {
   readonly profile: Prisma.FieldRef<"profile_versions", 'Int'>
   readonly toggles: Prisma.FieldRef<"profile_versions", 'Json'>
   readonly preview_links: Prisma.FieldRef<"profile_versions", 'String'>
+  readonly extensions: Prisma.FieldRef<"profile_versions", 'Int'>
 }
     
 
@@ -1786,6 +2127,49 @@ export type profile_versionsDeleteManyArgs<ExtArgs extends runtime.Types.Extensi
    * Limit how many profile_versions to delete.
    */
   limit?: number
+}
+
+/**
+ * profile_versions.profile_versions
+ */
+export type profile_versions$profile_versionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the profile_versions
+   */
+  select?: Prisma.profile_versionsSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the profile_versions
+   */
+  omit?: Prisma.profile_versionsOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.profile_versionsInclude<ExtArgs> | null
+  where?: Prisma.profile_versionsWhereInput
+}
+
+/**
+ * profile_versions.other_profile_versions
+ */
+export type profile_versions$other_profile_versionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the profile_versions
+   */
+  select?: Prisma.profile_versionsSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the profile_versions
+   */
+  omit?: Prisma.profile_versionsOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.profile_versionsInclude<ExtArgs> | null
+  where?: Prisma.profile_versionsWhereInput
+  orderBy?: Prisma.profile_versionsOrderByWithRelationInput | Prisma.profile_versionsOrderByWithRelationInput[]
+  cursor?: Prisma.profile_versionsWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.Profile_versionsScalarFieldEnum | Prisma.Profile_versionsScalarFieldEnum[]
 }
 
 /**
