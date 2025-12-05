@@ -73,7 +73,8 @@
       id: number;
       name: string;
       toggles: string[];
-      profile_versions_extends: number[];
+      profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versions:
+        number[];
     }>;
   }
 
@@ -95,14 +96,21 @@
     const versionObjs = [versionObj];
 
     const addVersionObjs = (versionObj) => {
-      console.log("hodan", versionObj);
-      if (versionObj && versionObj.profile_versions_extends) {
-        for (const id of versionObj.profile_versions_extends) {
-          console.log("jodol");
-          const versionObj = getVersion(id);
-          versionObjs.push(versionObj);
-
-          addVersionObjs(versionObj);
+      if (
+        versionObj &&
+        versionObj
+          .profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versions
+      ) {
+        for (
+          const junctionObj of versionObj
+            .profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versions
+        ) {
+          const extObj = getVersion(
+            junctionObj.related_profile_versions_id,
+          );
+          console.log("add ob", extObj);
+          versionObjs.push(extObj);
+          addVersionObjs(extObj);
         }
       }
     };
@@ -113,6 +121,7 @@
   }
 
   const versionObjs = getAllVersionObjs(versionObj);
+  console.log("all objs", versionObjs);
 
   // while (versionObj && versionObj.extends_from) {
   //   versionObj = getVersion(versionObj.extends_from);
