@@ -1,19 +1,6 @@
 <script lang="ts">
   import { page } from "$app/state";
-  import {
-    formatDateRangeCompact,
-    formatDateRangeYear,
-  } from "$lib/tools/date-utils";
-  import { formatProjectUrl } from "$lib/tools/url-utils";
-  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import {
-    faEnvelope,
-    faGlobe,
-    faLocationDot,
-    faPhone,
-    faStar,
-  } from "@fortawesome/free-solid-svg-icons";
-  import { faGithub, faLinkedin } from "@fortawesome/free-brands-svg-icons";
+  import { formatDateRangeCompact } from "$lib/tools/date-utils";
   import ContactItem from "./ContactItem.svelte";
 
   interface Profile {
@@ -318,10 +305,6 @@
     <hr class="mt-1 mb-2" />
 
     {#each filterOnTags(profile.side_projects) as project (project.name)}
-      {@const       { isGithub, displayLabel } = formatProjectUrl(
-        project.url,
-        project.url_label,
-      )}
       <div class="mb-3">
         <div class="text-xs font-bold mb-0">
           {project.name} | {
