@@ -339,3 +339,8 @@ export type applications_files = Prisma.applications_filesModel
  * 
  */
 export type ai_chat_prompts = Prisma.ai_chat_promptsModel
+/**
+ * Model profile_versions_extends
+ * 
+ */
+export type profile_versions_extends = Prisma.profile_versions_extendsModel

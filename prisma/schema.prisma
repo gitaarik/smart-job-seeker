@@ -627,19 +627,18 @@ model platform_profiles {
 }
 
 model profile_versions {
-  id                     Int                @id @default(autoincrement())
-  status                 String             @default("draft") @db.VarChar(255)
-  sort                   Int?
-  date_created           DateTime?          @db.Timestamptz(6)
-  date_updated           DateTime?          @db.Timestamptz(6)
-  name                   String?            @db.VarChar(255)
-  description            String?
-  profile                Int
-  toggles                Json?              @db.Json
-  extends_from           Int?
-  profile_versions       profile_versions?  @relation("profile_versionsToprofile_versions", fields: [extends_from], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "profile_versions_extends_from_foreign")
-  other_profile_versions profile_versions[] @relation("profile_versionsToprofile_versions")
-  profiles               profiles           @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "profile_versions_profile_foreign")
+  id                                                                                              Int                        @id @default(autoincrement())
+  status                                                                                          String                     @default("draft") @db.VarChar(255)
+  sort                                                                                            Int?
+  date_created                                                                                    DateTime?                  @db.Timestamptz(6)
+  date_updated                                                                                    DateTime?                  @db.Timestamptz(6)
+  name                                                                                            String?                    @db.VarChar(255)
+  description                                                                                     String?
+  profile                                                                                         Int
+  toggles                                                                                         Json?                      @db.Json
+  profiles                                                                                        profiles                   @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "profile_versions_profile_foreign")
+  profile_versions_extends_profile_versions_extends_profile_versions_idToprofile_versions         profile_versions_extends[] @relation("profile_versions_extends_profile_versions_idToprofile_versions")
+  profile_versions_extends_profile_versions_extends_related_profile_versions_idToprofile_versions profile_versions_extends[] @relation("profile_versions_extends_related_profile_versions_idToprofile_versions")
 }
 
 model profiles {
@@ -1001,6 +1000,14 @@ model ai_chat_prompts {
   request       String    @unique(map: "ai_chat_prompts_request_unique") @db.VarChar(255)
   system_prompt String?
   user_prompt   String?
+}
+
+model profile_versions_extends {
+  id                                                                                      Int               @id @default(autoincrement())
+  profile_versions_id                                                                     Int?
+  related_profile_versions_id                                                             Int?
+  profile_versions_profile_versions_extends_profile_versions_idToprofile_versions         profile_versions? @relation("profile_versions_extends_profile_versions_idToprofile_versions", fields: [profile_versions_id], references: [id], onUpdate: NoAction, map: "profile_versions_extends_profile_versions_id_foreign")
+  profile_versions_profile_versions_extends_related_profile_versions_idToprofile_versions profile_versions? @relation("profile_versions_extends_related_profile_versions_idToprofile_versions", fields: [related_profile_versions_id], references: [id], onUpdate: NoAction, map: "profile_versions_extends_related_profile_versions_id_foreign")
 }
 
 enum Role {

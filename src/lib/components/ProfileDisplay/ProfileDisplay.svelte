@@ -73,7 +73,7 @@
       id: number;
       name: string;
       toggles: string[];
-      extends_from: number;
+      extends_from: number[];
     }>;
   }
 
@@ -90,12 +90,34 @@
 
   const version: string = page.url.searchParams.get("version") || "";
   let versionObj = getVersion(version);
-  const versionObjs = [versionObj];
 
-  while (versionObj && versionObj.extends_from) {
-    versionObj = getVersion(versionObj.extends_from);
-    versionObjs.push(versionObj);
+  function getAllVersionObjs(versionObj) {
+    const versionObjs = [versionObj];
+
+    const addVersionObjs = (versionObj) => {
+      console.log("hodan", versionObj);
+      if (versionObj && versionObj.extends_from) {
+        for (const id of versionObj.extends_from) {
+          console.log("jodol");
+          const versionObj = getVersion(id);
+          versionObjs.push(versionObj);
+
+          addVersionObjs(versionObj);
+        }
+      }
+    };
+
+    addVersionObjs(versionObj);
+
+    return versionObjs;
   }
+
+  const versionObjs = getAllVersionObjs(versionObj);
+
+  // while (versionObj && versionObj.extends_from) {
+  //   versionObj = getVersion(versionObj.extends_from);
+  //   versionObjs.push(versionObj);
+  // }
 
   const versionNames = versionObjs.map((v) => v?.name).filter(
     Boolean,

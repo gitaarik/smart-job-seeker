@@ -110,7 +110,8 @@ export const ModelName = {
   application_questions: 'application_questions',
   application_activity_log: 'application_activity_log',
   applications_files: 'applications_files',
-  ai_chat_prompts: 'ai_chat_prompts'
+  ai_chat_prompts: 'ai_chat_prompts',
+  profile_versions_extends: 'profile_versions_extends'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -748,8 +749,7 @@ export const Profile_versionsScalarFieldEnum = {
   name: 'name',
   description: 'description',
   profile: 'profile',
-  toggles: 'toggles',
-  extends_from: 'extends_from'
+  toggles: 'toggles'
 } as const
 
 export type Profile_versionsScalarFieldEnum = (typeof Profile_versionsScalarFieldEnum)[keyof typeof Profile_versionsScalarFieldEnum]
@@ -1129,6 +1129,15 @@ export const Ai_chat_promptsScalarFieldEnum = {
 } as const
 
 export type Ai_chat_promptsScalarFieldEnum = (typeof Ai_chat_promptsScalarFieldEnum)[keyof typeof Ai_chat_promptsScalarFieldEnum]
+
+
+export const Profile_versions_extendsScalarFieldEnum = {
+  id: 'id',
+  profile_versions_id: 'profile_versions_id',
+  related_profile_versions_id: 'related_profile_versions_id'
+} as const
+
+export type Profile_versions_extendsScalarFieldEnum = (typeof Profile_versions_extendsScalarFieldEnum)[keyof typeof Profile_versions_extendsScalarFieldEnum]
 
 
 export const SortOrder = {

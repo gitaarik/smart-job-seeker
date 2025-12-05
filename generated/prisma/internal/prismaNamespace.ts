@@ -443,7 +443,8 @@ export const ModelName = {
   application_questions: 'application_questions',
   application_activity_log: 'application_activity_log',
   applications_files: 'applications_files',
-  ai_chat_prompts: 'ai_chat_prompts'
+  ai_chat_prompts: 'ai_chat_prompts',
+  profile_versions_extends: 'profile_versions_extends'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -459,7 +460,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "applications" | "cheat_sheets" | "collected_data" | "directus_access" | "directus_activity" | "directus_collections" | "directus_comments" | "directus_dashboards" | "directus_extensions" | "directus_fields" | "directus_files" | "directus_flows" | "directus_folders" | "directus_migrations" | "directus_notifications" | "directus_operations" | "directus_panels" | "directus_permissions" | "directus_policies" | "directus_presets" | "directus_relations" | "directus_revisions" | "directus_roles" | "directus_sessions" | "directus_settings" | "directus_shares" | "directus_translations" | "directus_users" | "directus_versions" | "directus_webhooks" | "education" | "highlights" | "languages" | "outsourcing_platforms" | "platform_profiles" | "profile_versions" | "profiles" | "project_stories" | "references" | "salary_expectations" | "side_project_achievements" | "side_project_technologies" | "side_projects" | "tech_skill_categories" | "tech_skill_types" | "tech_skills" | "vacancies" | "vacancy_resources" | "work_experience_achievements" | "work_experience_technologies" | "work_experiences" | "ai_chat" | "os_contributions" | "work_experience_project_technologies" | "work_experience_projects" | "ai_prompts" | "application_questions" | "application_activity_log" | "applications_files" | "ai_chat_prompts"
+    modelProps: "applications" | "cheat_sheets" | "collected_data" | "directus_access" | "directus_activity" | "directus_collections" | "directus_comments" | "directus_dashboards" | "directus_extensions" | "directus_fields" | "directus_files" | "directus_flows" | "directus_folders" | "directus_migrations" | "directus_notifications" | "directus_operations" | "directus_panels" | "directus_permissions" | "directus_policies" | "directus_presets" | "directus_relations" | "directus_revisions" | "directus_roles" | "directus_sessions" | "directus_settings" | "directus_shares" | "directus_translations" | "directus_users" | "directus_versions" | "directus_webhooks" | "education" | "highlights" | "languages" | "outsourcing_platforms" | "platform_profiles" | "profile_versions" | "profiles" | "project_stories" | "references" | "salary_expectations" | "side_project_achievements" | "side_project_technologies" | "side_projects" | "tech_skill_categories" | "tech_skill_types" | "tech_skills" | "vacancies" | "vacancy_resources" | "work_experience_achievements" | "work_experience_technologies" | "work_experiences" | "ai_chat" | "os_contributions" | "work_experience_project_technologies" | "work_experience_projects" | "ai_prompts" | "application_questions" | "application_activity_log" | "applications_files" | "ai_chat_prompts" | "profile_versions_extends"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -4903,6 +4904,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    profile_versions_extends: {
+      payload: Prisma.$profile_versions_extendsPayload<ExtArgs>
+      fields: Prisma.profile_versions_extendsFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.profile_versions_extendsFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$profile_versions_extendsPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.profile_versions_extendsFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$profile_versions_extendsPayload>
+        }
+        findFirst: {
+          args: Prisma.profile_versions_extendsFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$profile_versions_extendsPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.profile_versions_extendsFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$profile_versions_extendsPayload>
+        }
+        findMany: {
+          args: Prisma.profile_versions_extendsFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$profile_versions_extendsPayload>[]
+        }
+        create: {
+          args: Prisma.profile_versions_extendsCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$profile_versions_extendsPayload>
+        }
+        createMany: {
+          args: Prisma.profile_versions_extendsCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.profile_versions_extendsCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$profile_versions_extendsPayload>[]
+        }
+        delete: {
+          args: Prisma.profile_versions_extendsDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$profile_versions_extendsPayload>
+        }
+        update: {
+          args: Prisma.profile_versions_extendsUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$profile_versions_extendsPayload>
+        }
+        deleteMany: {
+          args: Prisma.profile_versions_extendsDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.profile_versions_extendsUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.profile_versions_extendsUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$profile_versions_extendsPayload>[]
+        }
+        upsert: {
+          args: Prisma.profile_versions_extendsUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$profile_versions_extendsPayload>
+        }
+        aggregate: {
+          args: Prisma.Profile_versions_extendsAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateProfile_versions_extends>
+        }
+        groupBy: {
+          args: Prisma.profile_versions_extendsGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Profile_versions_extendsGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.profile_versions_extendsCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Profile_versions_extendsCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -5561,8 +5636,7 @@ export const Profile_versionsScalarFieldEnum = {
   name: 'name',
   description: 'description',
   profile: 'profile',
-  toggles: 'toggles',
-  extends_from: 'extends_from'
+  toggles: 'toggles'
 } as const
 
 export type Profile_versionsScalarFieldEnum = (typeof Profile_versionsScalarFieldEnum)[keyof typeof Profile_versionsScalarFieldEnum]
@@ -5944,6 +6018,15 @@ export const Ai_chat_promptsScalarFieldEnum = {
 export type Ai_chat_promptsScalarFieldEnum = (typeof Ai_chat_promptsScalarFieldEnum)[keyof typeof Ai_chat_promptsScalarFieldEnum]
 
 
+export const Profile_versions_extendsScalarFieldEnum = {
+  id: 'id',
+  profile_versions_id: 'profile_versions_id',
+  related_profile_versions_id: 'related_profile_versions_id'
+} as const
+
+export type Profile_versions_extendsScalarFieldEnum = (typeof Profile_versions_extendsScalarFieldEnum)[keyof typeof Profile_versions_extendsScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -6220,6 +6303,7 @@ export type GlobalOmitConfig = {
   application_activity_log?: Prisma.application_activity_logOmit
   applications_files?: Prisma.applications_filesOmit
   ai_chat_prompts?: Prisma.ai_chat_promptsOmit
+  profile_versions_extends?: Prisma.profile_versions_extendsOmit
 }
 
 /* Types for Logging */
