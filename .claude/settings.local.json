@@ -70,7 +70,8 @@
       "mcp__directus__schema",
       "mcp__directus__flows",
       "mcp__directus__operations",
-      "mcp__directus__system-prompt"
+      "mcp__directus__system-prompt",
+      "mcp__directus__fields"
     ],
     "deny": [],
     "ask": []

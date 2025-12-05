@@ -8,6 +8,7 @@ import { generateAiChatResponse } from "$lib/server/ai-chat-response-generate";
 import { generateApplicationQuestionAnswer } from "$lib/server/ai-chat-application-question";
 import { generateApplicationCoverLetter } from "$lib/server/ai-chat-application-cover-letter";
 import { clearDirectusCache } from "$lib/server/directus";
+import { db } from "$lib/db";
 
 /**
  * Webhook endpoint for Directus Flow integration
@@ -149,6 +150,8 @@ async function processWebhookEvent(
       return await handleApplicationInterviewQuestionGenerateAiAnswer(data);
     case "application.generate_cover_letter":
       return await handleApplicationGenerateCoverLetter(data);
+    case "profile_version.generate_preview_links":
+      return await handleProfileVersionGeneratePreviewLinks(data);
     default:
       return {
         processed: true,
@@ -546,6 +549,86 @@ async function handleApplicationGenerateCoverLetter(
     return {
       processed: false,
       applicationCount: applicationIds.length,
+      error: errorMessage,
+    };
+  }
+}
+
+/**
+ * Handle profile_version.generate_preview_links events
+ * Called to generate preview link HTML for profile versions
+ * Expected data format: { profileVersionIds: number[] }
+ */
+async function handleProfileVersionGeneratePreviewLinks(
+  data: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  let profileVersionIds: number[] = [];
+
+  if (Array.isArray(data.profileVersionIds)) {
+    profileVersionIds = (data.profileVersionIds as unknown[])
+      .map((id) => {
+        const parsed = parseInt(String(id), 10);
+        return isNaN(parsed) ? null : parsed;
+      })
+      .filter((id): id is number => id !== null);
+  }
+
+  if (profileVersionIds.length === 0) {
+    return {
+      processed: false,
+      error:
+        "Missing or invalid profileVersionIds in data (expected array of numbers)",
+    };
+  }
+
+  try {
+    const results = await Promise.allSettled(
+      profileVersionIds.map(async (profileVersionId) => {
+        const previewHtml =
+          `<p><a href="http://localhost:5173/resume?version=${profileVersionId}" target="_blank">📄 Resume (HTML)</a><br><a href="http://localhost:5173/cv?version=${profileVersionId}" target="_blank">📋 CV (HTML)</a><br><a href="http://localhost:5173/resume.pdf?version=${profileVersionId}" target="_blank">📕 Resume (PDF)</a></p>`;
+
+        await db.profile_versions.update({
+          where: { id: profileVersionId },
+          data: { preview_urls: previewHtml },
+        });
+
+        return {
+          profileVersionId,
+          success: true,
+          message: "Preview links generated successfully",
+        };
+      }),
+    );
+
+    const successful = results.filter(
+      (r) => r.status === "fulfilled" && (r.value as any).success !== false,
+    );
+    const failed = results.filter(
+      (r) =>
+        r.status === "rejected" ||
+        (r.status === "fulfilled" && (r.value as any).success === false),
+    );
+
+    return {
+      processed: successful.length > 0,
+      profileVersionCount: profileVersionIds.length,
+      successCount: successful.length,
+      results: results.map((
+        r,
+      ) => (r.status === "fulfilled" ? r.value : r.reason)),
+      ...(failed.length > 0 && { failureCount: failed.length }),
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error
+      ? error.message
+      : "Unknown error";
+    console.error(
+      `[Webhook] profile_version.generate_preview_links failed:`,
+      errorMessage,
+    );
+    return {
+      processed: false,
+      profileVersionCount: profileVersionIds.length,
       error: errorMessage,
     };
   }
