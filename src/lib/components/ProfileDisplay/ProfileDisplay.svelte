@@ -73,7 +73,7 @@
       id: number;
       name: string;
       toggles: string[];
-      extends_from: number[];
+      profile_versions_extends: number[];
     }>;
   }
 
@@ -96,8 +96,8 @@
 
     const addVersionObjs = (versionObj) => {
       console.log("hodan", versionObj);
-      if (versionObj && versionObj.extends_from) {
-        for (const id of versionObj.extends_from) {
+      if (versionObj && versionObj.profile_versions_extends) {
+        for (const id of versionObj.profile_versions_extends) {
           console.log("jodol");
           const versionObj = getVersion(id);
           versionObjs.push(versionObj);
