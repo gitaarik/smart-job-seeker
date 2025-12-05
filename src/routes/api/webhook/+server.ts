@@ -598,7 +598,22 @@ async function handleProfileVersionGeneratePreviewLinks(
 
         const versionName = encodeURIComponent(profileVersion.name);
         const previewHtml =
-          `<ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 20px; font-size: 16px;"><li>📄 <a href="http://localhost:5173/resume?version=${versionName}" target="_blank">Resume (HTML)</a></li><li>📋 <a href="http://localhost:5173/cv?version=${versionName}" target="_blank">CV (HTML)</a></li><li>📕 <a href="http://localhost:5173/resume.pdf?version=${versionName}" target="_blank">Resume (PDF)</a></li><li>📕 <a href="http://localhost:5173/cv.pdf?version=${versionName}" target="_blank">CV (PDF)</a></li></ul>`;
+          `<div style="display: flex; gap: 32px; font-size: 16px;">` +
+          `<div style="display: flex; flex-direction: column; gap: 8px;">` +
+          `<div style="font-weight: 600; margin-bottom: 10px;">📄 Resume</div>` +
+          `<div style="display: flex; gap: 12px;">` +
+          `<a href="http://localhost:5173/resume?version=${versionName}" target="_blank">HTML</a>` +
+          `<a href="http://localhost:5173/resume.pdf?version=${versionName}" target="_blank">PDF</a>` +
+          `</div>` +
+          `</div>` +
+          `<div style="display: flex; flex-direction: column; gap: 8px;">` +
+          `<div style="font-weight: 600; margin-bottom: 10px;">📋 CV</div>` +
+          `<div style="display: flex; gap: 12px;">` +
+          `<a href="http://localhost:5173/cv?version=${versionName}" target="_blank">HTML</a>` +
+          `<a href="http://localhost:5173/cv.pdf?version=${versionName}" target="_blank">PDF</a>` +
+          `</div>` +
+          `</div>` +
+          `</div>`;
 
         await db.profile_versions.update({
           where: { id: profileVersionId },
