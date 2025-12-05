@@ -5637,7 +5637,7 @@ export const Profile_versionsScalarFieldEnum = {
   description: 'description',
   profile: 'profile',
   toggles: 'toggles',
-  preview_urls: 'preview_urls'
+  preview_links: 'preview_links'
 } as const
 
 export type Profile_versionsScalarFieldEnum = (typeof Profile_versionsScalarFieldEnum)[keyof typeof Profile_versionsScalarFieldEnum]
