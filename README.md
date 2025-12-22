@@ -32,16 +32,33 @@ journey with AI-powered insights and context-aware assistance.
 
 - **Job Application Tracking** - Organize and track all job applications,
   interviews, and follow-ups
-- **AI-Powered Assistance** - Context-aware AI helps improve application quality
-  and strategy
+- **AI-Powered Letter Generation** - Generate cover letters, motivation letters,
+  follow-up emails, and thank-you letters tailored to each job
+- **Intelligent Answer Assistant** - Get AI-generated answers to application
+  questions based on your profile and experience
+- **Iterative Refinement** - Refine AI-generated content through conversational
+  follow-ups for perfect results
+- **Template System** - Use customizable AI prompts for consistent, high-quality
+  output
+- **Application Activity Log** - Track all activities and changes for each
+  application
+- **File Management** - Attach and organize files related to applications
 - **Interview Preparation** - Store and manage interview questions with
   AI-generated answers
 - **Application Analytics** - Insights and metrics to optimize your job search
   process
 
+For detailed AI features documentation, see
+[docs/AI_FEATURES.md](docs/AI_FEATURES.md).
+
 ### Technical Features
 
-- **AI Integration** - Powered by Groq for intelligent, context-aware features
+- **AI Integration** - Powered by Groq for intelligent content generation:
+  - Context-aware letter writing (cover letters, motivation letters, follow-ups,
+    thank-yous)
+  - Interview question answering based on your profile
+  - Iterative refinement through conversational AI
+  - Template-based prompt management
 - **Directus CMS Integration** - Headless CMS for managing portfolio content and
   data
 - **Webhook System** - Secure webhook endpoints for Directus Flow integration
@@ -466,8 +483,11 @@ From [CLAUDE.md](CLAUDE.md):
 ## Documentation
 
 - **[CLAUDE.md](CLAUDE.md)** - Development setup and guidelines
+- **[docs/AI_FEATURES.md](docs/AI_FEATURES.md)** - AI features and usage guide
 - **[docs/WEBHOOK.md](docs/WEBHOOK.md)** - Webhook integration guide
 - **[docs/TESTING.md](docs/TESTING.md)** - Testing framework setup
+- **[docs/AUTHENTICATION.md](docs/AUTHENTICATION.md)** - Authentication system
+  documentation
 
 ## Contributing
 

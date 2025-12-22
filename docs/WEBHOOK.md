@@ -64,7 +64,7 @@ variable.
 
 ```json
 {
-  "eventType": "profile.export|item.create|item.update|item.delete|custom.event",
+  "eventType": "profile.export|ai_chat.generate_full_prompt|ai_chat.generate_response|ai_chat.create_followup|application_letter.generate|application_letter.create_followup|application_interview_question.generate_ai_answer|application_questions.create_followup|profile_version.generate_preview_links|item.create|item.update|item.delete|custom.event",
   "data": {
     "id": "some-id",
     "field1": "value1",
@@ -274,6 +274,543 @@ and `export-profile-data.ts` scripts.
 - `exportProfile(profileId)` - Exports both schema and data
 - `exportProfileSchema(profileId)` - Exports schema only
 - `exportProfileData(profileId)` - Exports data only
+
+### ai_chat.generate_full_prompt
+
+Generates the `full_prompt` field for AI chat instances by combining
+`system_prompt` and `user_prompt` with variable interpolation. Supports template
+variables like `${schema}`, `${data}`, and `${jobDescription}`.
+
+**Request:**
+
+```json
+{
+  "eventType": "ai_chat.generate_full_prompt",
+  "data": {
+    "aiChatIds": [123, 456, 789]
+  }
+}
+```
+
+**Response (HTTP 200):**
+
+```json
+{
+  "success": true,
+  "message": "Webhook processed successfully",
+  "data": {
+    "processed": true,
+    "aiChatCount": 3,
+    "successCount": 3,
+    "results": [
+      {
+        "aiChatId": 123,
+        "success": true,
+        "message": "Full prompt generated successfully"
+      },
+      {
+        "aiChatId": 456,
+        "success": true,
+        "message": "Full prompt generated successfully"
+      },
+      {
+        "aiChatId": 789,
+        "success": true,
+        "message": "Full prompt generated successfully"
+      }
+    ]
+  }
+}
+```
+
+**What it does:**
+
+1. Accepts one or more AI chat IDs
+2. For each AI chat instance:
+   - Fetches the `system_prompt` and `user_prompt` fields
+   - Fetches related profile data and job description if referenced
+   - Interpolates template variables (`${schema}`, `${data}`,
+     `${jobDescription}`)
+   - Combines prompts into a single `full_prompt` field
+   - Updates the AI chat record with the generated prompt
+3. Returns detailed results for each AI chat instance
+4. Used as the first step in AI content generation workflow
+
+**Use Case:** Automatically prepare AI prompts when users create new AI chat
+instances from templates. The generated `full_prompt` is then used by the
+`ai_chat.generate_response` event.
+
+**Handler Location:** `src/routes/api/webhook/+server.ts` →
+`handleAiChatGenerateFullPrompt()`
+
+**Utility Functions:** `src/lib/server/ai-chat-full-prompt-generate.ts`
+
+### ai_chat.generate_response
+
+Generates AI responses using the Groq API based on the `full_prompt` field.
+Requires `GROQ_API_KEY` environment variable to be set.
+
+**Request:**
+
+```json
+{
+  "eventType": "ai_chat.generate_response",
+  "data": {
+    "aiChatIds": [123, 456]
+  }
+}
+```
+
+**Response (HTTP 200):**
+
+```json
+{
+  "success": true,
+  "message": "Webhook processed successfully",
+  "data": {
+    "processed": true,
+    "aiChatCount": 2,
+    "successCount": 2,
+    "results": [
+      {
+        "aiChatId": 123,
+        "success": true,
+        "message": "AI response generated successfully"
+      },
+      {
+        "aiChatId": 456,
+        "success": true,
+        "message": "AI response generated successfully"
+      }
+    ]
+  }
+}
+```
+
+**What it does:**
+
+1. Accepts one or more AI chat IDs
+2. For each AI chat instance:
+   - Fetches the `full_prompt` field (must be populated first)
+   - Sends the prompt to Groq API for AI response generation
+   - Stores the generated response in the `ai_response` field
+   - Updates metadata (model used, tokens, etc.)
+3. Returns detailed results for each AI chat instance
+4. Processes requests in parallel for efficiency
+
+**Use Case:** Generate AI content (cover letters, interview answers, etc.) after
+the full prompt has been prepared. This is the second step in the AI generation
+workflow.
+
+**Prerequisites:**
+
+- AI chat must have `full_prompt` populated (use `ai_chat.generate_full_prompt`
+  first)
+- `GROQ_API_KEY` environment variable must be configured
+
+**Handler Location:** `src/routes/api/webhook/+server.ts` →
+`handleAiChatGenerateResponse()`
+
+**Utility Functions:** `src/lib/server/ai-chat-response-generate.ts`
+
+### ai_chat.create_followup
+
+Creates follow-up AI chat instances for iterative refinement of AI-generated
+content. Allows users to request modifications (tone, length, emphasis) to
+existing AI responses.
+
+**Request:**
+
+```json
+{
+  "eventType": "ai_chat.create_followup",
+  "data": {
+    "keys": [123, 456],
+    "followup_request": "Make it more formal and concise",
+    "include_original_context": "true"
+  }
+}
+```
+
+**Response (HTTP 200):**
+
+```json
+{
+  "success": true,
+  "message": "Webhook processed successfully",
+  "data": {
+    "processed": true,
+    "parentAiChatCount": 2,
+    "successCount": 2,
+    "results": [
+      {
+        "parentAiChatId": 123,
+        "success": true,
+        "message": "Follow-up AI chat created successfully",
+        "newAiChatId": 789
+      },
+      {
+        "parentAiChatId": 456,
+        "success": true,
+        "message": "Follow-up AI chat created successfully",
+        "newAiChatId": 790
+      }
+    ]
+  }
+}
+```
+
+**What it does:**
+
+1. Accepts one or more parent AI chat IDs and a follow-up request
+2. For each parent AI chat:
+   - Creates a new AI chat instance linked to the parent
+   - Includes the parent's response in the context
+   - Optionally includes the original context (profile data, job description)
+   - Sets up the new prompt combining original context + previous response +
+     follow-up request
+   - Links the new AI chat to the same application/letter/question as the parent
+3. Returns the new AI chat IDs for further processing
+
+**Use Case:** Enable iterative refinement of AI-generated content. Users can
+request changes like "make it shorter", "use more technical language", "add more
+enthusiasm" without starting from scratch.
+
+**Handler Location:** `src/routes/api/webhook/+server.ts` →
+`handleAiChatCreateFollowup()`
+
+**Utility Functions:** `src/lib/server/ai-chat-create-followup.ts`
+
+### application_letter.generate
+
+Generates application letters (cover letters, motivation letters, follow-up
+emails, thank-you letters) using AI based on profile data and job description.
+
+**Request:**
+
+```json
+{
+  "eventType": "application_letter.generate",
+  "data": {
+    "letterIds": [45, 46, 47],
+    "additionalContext": "Emphasize my leadership experience"
+  }
+}
+```
+
+**Response (HTTP 200):**
+
+```json
+{
+  "success": true,
+  "message": "Webhook processed successfully",
+  "data": {
+    "processed": true,
+    "letterCount": 3,
+    "successCount": 3,
+    "results": [
+      {
+        "letterId": 45,
+        "success": true,
+        "message": "Application letter generated successfully"
+      },
+      {
+        "letterId": 46,
+        "success": true,
+        "message": "Application letter generated successfully"
+      },
+      {
+        "letterId": 47,
+        "success": true,
+        "message": "Application letter generated successfully"
+      }
+    ]
+  }
+}
+```
+
+**What it does:**
+
+1. Accepts one or more letter IDs and optional additional context
+2. For each letter:
+   - Fetches the letter record including type (cover_letter, motivation_letter,
+     follow_up_email, thank_you_letter)
+   - Fetches related application and job description
+   - Fetches profile data for the application
+   - Creates an AI chat instance with appropriate template
+   - Generates full prompt with all context
+   - Calls Groq API to generate the letter content
+   - Updates the letter with generated content
+   - Links the AI chat to the letter for follow-up capability
+3. Supports batch processing for efficiency
+
+**Letter Types:**
+
+- `cover_letter` - Formal introduction to accompany application
+- `motivation_letter` - Detailed explanation of interest and qualifications
+- `follow_up_email` - Check-in after application submission
+- `thank_you_letter` - Post-interview appreciation
+
+**Use Case:** Automatically generate personalized letters for job applications
+based on the candidate's profile and specific job requirements.
+
+**Handler Location:** `src/routes/api/webhook/+server.ts` →
+`handleApplicationLetterGenerate()`
+
+**Utility Functions:** `src/lib/server/ai-chat-application-letter.ts`
+
+### application_letter.create_followup
+
+Creates a follow-up AI chat to refine an existing application letter. Allows
+users to request modifications without regenerating from scratch.
+
+**Request:**
+
+```json
+{
+  "eventType": "application_letter.create_followup",
+  "data": {
+    "letterId": 45,
+    "followup_request": "Make it more enthusiastic and reduce to 3 paragraphs",
+    "include_original_context": true
+  }
+}
+```
+
+**Response (HTTP 200):**
+
+```json
+{
+  "success": true,
+  "message": "Webhook processed successfully",
+  "data": {
+    "success": true,
+    "message": "Follow-up AI chat created successfully",
+    "data": {
+      "aiChatId": 789,
+      "letterId": 45
+    }
+  }
+}
+```
+
+**What it does:**
+
+1. Accepts a letter ID and follow-up request
+2. Fetches the letter and its linked AI chat
+3. Creates a new AI chat instance as a follow-up to the original
+4. Includes:
+   - The previously generated letter content
+   - Optionally, the original context (profile, job description)
+   - The new follow-up request
+5. Links the new AI chat to the letter
+6. Returns the new AI chat ID for processing
+
+**Use Case:** Enable iterative improvement of application letters. Common
+requests include adjusting tone, length, emphasis on specific experiences, or
+formatting changes.
+
+**Handler Location:** `src/routes/api/webhook/+server.ts` →
+`handleApplicationLetterCreateFollowup()`
+
+**Utility Functions:** `src/lib/server/ai-chat-application-letter-followup.ts`
+
+### application_interview_question.generate_ai_answer
+
+Generates AI-assisted answers to application interview questions based on the
+candidate's profile and the specific question.
+
+**Request:**
+
+```json
+{
+  "eventType": "application_interview_question.generate_ai_answer",
+  "data": {
+    "ids": [12, 13, 14]
+  }
+}
+```
+
+**Response (HTTP 200):**
+
+```json
+{
+  "success": true,
+  "message": "Webhook processed successfully",
+  "data": {
+    "processed": true,
+    "questionCount": 3,
+    "successCount": 3,
+    "results": [
+      {
+        "questionId": 12,
+        "success": true,
+        "message": "AI answer generated successfully"
+      },
+      {
+        "questionId": 13,
+        "success": true,
+        "message": "AI answer generated successfully"
+      },
+      {
+        "questionId": 14,
+        "success": true,
+        "message": "AI answer generated successfully"
+      }
+    ]
+  }
+}
+```
+
+**What it does:**
+
+1. Accepts one or more question IDs
+2. For each question:
+   - Fetches the question and related application
+   - Fetches the candidate's profile data
+   - Creates an AI chat instance with the question-answering template
+   - Generates a prompt including profile context and the question
+   - Calls Groq API to generate a personalized answer
+   - Updates the question with the AI-generated answer
+   - Links the AI chat for follow-up refinement
+3. Processes multiple questions in parallel
+
+**Use Case:** Help candidates prepare for interviews by generating personalized
+answers based on their actual experience and skills. Answers can be refined
+using the follow-up system.
+
+**Handler Location:** `src/routes/api/webhook/+server.ts` →
+`handleApplicationInterviewQuestionGenerateAiAnswer()`
+
+**Utility Functions:** `src/lib/server/ai-chat-application-question.ts`
+
+### application_questions.create_followup
+
+Creates a follow-up AI chat to refine an AI-generated answer to an application
+question.
+
+**Request:**
+
+```json
+{
+  "eventType": "application_questions.create_followup",
+  "data": {
+    "questionId": 12,
+    "followup_request": "Add a specific example from my work at TechCorp",
+    "include_original_context": true
+  }
+}
+```
+
+**Response (HTTP 200):**
+
+```json
+{
+  "success": true,
+  "message": "Webhook processed successfully",
+  "data": {
+    "success": true,
+    "message": "Follow-up AI chat created successfully",
+    "data": {
+      "aiChatId": 795,
+      "questionId": 12
+    }
+  }
+}
+```
+
+**What it does:**
+
+1. Accepts a question ID and follow-up request
+2. Fetches the question and its linked AI chat with the previous answer
+3. Creates a new AI chat instance as a follow-up
+4. Includes:
+   - The previously generated answer
+   - Optionally, the original context (profile data, question text)
+   - The new follow-up request
+5. Links the new AI chat to the question
+6. Returns the new AI chat ID for processing
+
+**Use Case:** Refine AI-generated interview answers by adding specific examples,
+adjusting length, changing tone, or emphasizing particular aspects of
+experience.
+
+**Handler Location:** `src/routes/api/webhook/+server.ts` →
+`handleApplicationQuestionsCreateFollowup()`
+
+**Utility Functions:** `src/lib/server/ai-chat-application-question-followup.ts`
+
+### profile_version.generate_preview_links
+
+Generates HTML preview links for profile versions, providing quick access to
+resume and CV in both HTML and PDF formats.
+
+**Request:**
+
+```json
+{
+  "eventType": "profile_version.generate_preview_links",
+  "data": {
+    "profileVersionIds": [5, 6, 7]
+  }
+}
+```
+
+**Response (HTTP 200):**
+
+```json
+{
+  "success": true,
+  "message": "Webhook processed successfully",
+  "data": {
+    "processed": true,
+    "profileVersionCount": 3,
+    "successCount": 3,
+    "results": [
+      {
+        "profileVersionId": 5,
+        "success": true,
+        "message": "Preview links generated successfully"
+      },
+      {
+        "profileVersionId": 6,
+        "success": true,
+        "message": "Preview links generated successfully"
+      },
+      {
+        "profileVersionId": 7,
+        "success": true,
+        "message": "Preview links generated successfully"
+      }
+    ]
+  }
+}
+```
+
+**What it does:**
+
+1. Accepts one or more profile version IDs
+2. For each profile version:
+   - Fetches the version name
+   - Generates HTML with links to resume and CV pages
+   - Creates links for both HTML view and PDF download
+   - URL-encodes the version name for proper routing
+   - Updates the `preview_links` field with the generated HTML
+3. Returns success status for each profile version
+
+**Generated Links:**
+
+- Resume HTML: `http://localhost:5173/resume?version={versionName}`
+- Resume PDF: `http://localhost:5173/resume.pdf?version={versionName}`
+- CV HTML: `http://localhost:5173/cv?version={versionName}`
+- CV PDF: `http://localhost:5173/cv.pdf?version={versionName}`
+
+**Use Case:** Automatically generate convenient preview links when profile
+versions are created, making it easy to view and share different versions of
+resumes and CVs.
+
+**Handler Location:** `src/routes/api/webhook/+server.ts` →
+`handleProfileVersionGeneratePreviewLinks()`
 
 ### item.create
 
