@@ -1,19 +1,6 @@
 <script lang="ts">
   import { page } from "$app/state";
-  import {
-    formatDateRangeCompact,
-    formatDateRangeYear,
-  } from "$lib/tools/date-utils";
-  import { formatProjectUrl } from "$lib/tools/url-utils";
-  import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import {
-    faEnvelope,
-    faGlobe,
-    faLocationDot,
-    faPhone,
-    faStar,
-  } from "@fortawesome/free-solid-svg-icons";
-  import { faGithub, faLinkedin } from "@fortawesome/free-brands-svg-icons";
+  import { formatDateRangeCompact } from "$lib/tools/date-utils";
   import ContactItem from "./ContactItem.svelte";
 
   interface Profile {
@@ -86,7 +73,8 @@
       id: number;
       name: string;
       toggles: string[];
-      extends_from: number;
+      profile_version_extensions_profile_version_extensions_extendedToprofile_versions:
+        number[];
     }>;
   }
 
@@ -103,12 +91,42 @@
 
   const version: string = page.url.searchParams.get("version") || "";
   let versionObj = getVersion(version);
-  const versionObjs = [versionObj];
 
-  while (versionObj && versionObj.extends_from) {
-    versionObj = getVersion(versionObj.extends_from);
-    versionObjs.push(versionObj);
+  function getAllVersionObjs(versionObj) {
+    const versionObjs = [versionObj];
+
+    const addVersionObjs = (versionObj) => {
+      if (
+        versionObj &&
+        versionObj
+          .profile_version_extensions_profile_version_extensions_extendedToprofile_versions
+      ) {
+        for (
+          const junctionObj of versionObj
+            .profile_version_extensions_profile_version_extensions_extendedToprofile_versions
+        ) {
+          const extObj = getVersion(
+            junctionObj.related_profile_versions_id,
+          );
+          console.log("add ob", extObj);
+          versionObjs.push(extObj);
+          addVersionObjs(extObj);
+        }
+      }
+    };
+
+    addVersionObjs(versionObj);
+
+    return versionObjs;
   }
+
+  const versionObjs = getAllVersionObjs(versionObj);
+  console.log("all objs", versionObjs);
+
+  // while (versionObj && versionObj.extends_from) {
+  //   versionObj = getVersion(versionObj.extends_from);
+  //   versionObjs.push(versionObj);
+  // }
 
   const versionNames = versionObjs.map((v) => v?.name).filter(
     Boolean,
@@ -318,10 +336,6 @@
     <hr class="mt-1 mb-2" />
 
     {#each filterOnTags(profile.side_projects) as project (project.name)}
-      {@const       { isGithub, displayLabel } = formatProjectUrl(
-        project.url,
-        project.url_label,
-      )}
       <div class="mb-3">
         <div class="text-xs font-bold mb-0">
           {project.name} | {

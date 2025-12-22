@@ -52,7 +52,8 @@ export const resume = {
     summary:
       "Dutch Senior Full Stack Developer residing in Spain, 12+ years Full Stack Python & Node.js experience, scaling complex, high-traffic & data heavy applications with Django & React, and leading agile development teams. Additional skills in DevOps, CI/CD & UX design. Always current with industry trends, AI, and security practices. Thrives in agile teams and/or startup environments. 5+ years remote work experience.",
 
-    headline: "Full Stack Developer 12+ years expertise in Python, Django, Node.js, React, CI/CD, DevOps, UX, AI",
+    headline:
+      "Full Stack Developer 12+ years expertise in Python, Django, Node.js, React, CI/CD, DevOps, UX, AI",
 
     highlights: [
       {
@@ -625,7 +626,7 @@ export const resume = {
           // outcome:
           //   "Complete platform migration with no downtime or data loss. Significantly improved development velocity and maintainability.",
         },
-      ]
+      ],
     },
 
     {
@@ -1592,29 +1593,29 @@ export const resume = {
               "Manual integration testing required before each production deployment",
               "Testing process took up to 1.5 hours per release",
               "Process was error prone because of human errors",
-              "Time-consuming manual process slowed down development cycle"
+              "Time-consuming manual process slowed down development cycle",
             ],
             task: [
               "Eliminate manual testing bottleneck",
               "Enable faster, more reliable deployments",
               "Reduce time investment required for each release",
-              "Improve reliability of test results"
+              "Improve reliability of test results",
             ],
             action: [
               "Researched automated testing solutions and selected Selenium",
               "Built comprehensive Selenium test suite covering the existing manual test procedures",
               "Integrated automated tests into deployment pipeline",
-              "Created documentation for developers on running tests and creating new ones"
+              "Created documentation for developers on running tests and creating new ones",
             ],
             result: [
               "Reduced integration testing time from 1.5 hours to 5 minutes",
               "Enabled any developer to run complete integration test suite",
               "Increased deployment frequency and confidence",
-              "Eliminated testing bottleneck and improved development velocity"
-            ]
-          }
-        }
-      ]
+              "Eliminated testing bottleneck and improved development velocity",
+            ],
+          },
+        },
+      ],
     },
     {
       category: "Innovation & Improvement",

@@ -1,31 +1,35 @@
-import { getEnv } from '$lib/tools/get-env'
+import { getEnv } from "$lib/tools/get-env";
 
-const SMTP2GO_API_KEY = getEnv('SMTP2GO_API_KEY')
-const FROM_EMAIL = getEnv('FROM_EMAIL') || 'noreply@localhost'
-const FROM_NAME = getEnv('FROM_NAME') || 'Portfolio App'
+const SMTP2GO_API_KEY = getEnv("SMTP2GO_API_KEY");
+const FROM_EMAIL = getEnv("FROM_EMAIL") || "noreply@localhost";
+const FROM_NAME = getEnv("FROM_NAME") || "Portfolio App";
 
 if (!SMTP2GO_API_KEY) {
-  console.warn('SMTP2GO_API_KEY is not set. Email functionality will be disabled.')
+  console.warn(
+    "SMTP2GO_API_KEY is not set. Email functionality will be disabled.",
+  );
 }
 
 export interface EmailOptions {
-  to: string
-  subject: string
-  html: string
+  to: string;
+  subject: string;
+  html: string;
 }
 
-export async function sendEmail({ to, subject, html }: EmailOptions): Promise<boolean> {
+export async function sendEmail(
+  { to, subject, html }: EmailOptions,
+): Promise<boolean> {
   if (!SMTP2GO_API_KEY) {
-    console.error('SMTP2GO API key is not configured')
-    return false
+    console.error("SMTP2GO API key is not configured");
+    return false;
   }
 
   try {
-    const response = await fetch('https://api.smtp2go.com/v3/email/send', {
-      method: 'POST',
+    const response = await fetch("https://api.smtp2go.com/v3/email/send", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'X-Smtp2go-Api-Key': SMTP2GO_API_KEY,
+        "Content-Type": "application/json",
+        "X-Smtp2go-Api-Key": SMTP2GO_API_KEY,
       },
       body: JSON.stringify({
         api_key: SMTP2GO_API_KEY,
@@ -34,25 +38,30 @@ export async function sendEmail({ to, subject, html }: EmailOptions): Promise<bo
         subject: subject,
         html_body: html,
       }),
-    })
+    });
 
-    const data = await response.json()
+    const data = await response.json();
 
     if (data.data?.succeeded && data.data.succeeded > 0) {
-      return true
+      return true;
     } else {
-      console.error('SMTP2GO API error:', data)
-      return false
+      console.error("SMTP2GO API error:", data);
+      return false;
     }
   } catch (error) {
-    console.error('Failed to send email via SMTP2GO API:', error)
-    return false
+    console.error("Failed to send email via SMTP2GO API:", error);
+    return false;
   }
 }
 
-export async function sendPasswordResetEmail(email: string, resetToken: string): Promise<boolean> {
-  const resetUrl = `${getEnv('APP_URL')}/auth/reset-password?token=${resetToken}`
-  
+export async function sendPasswordResetEmail(
+  email: string,
+  resetToken: string,
+): Promise<boolean> {
+  const resetUrl = `${
+    getEnv("APP_URL")
+  }/auth/reset-password?token=${resetToken}`;
+
   const html = `
     <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif;">
       <h2>Password Reset Request</h2>
@@ -68,11 +77,11 @@ export async function sendPasswordResetEmail(email: string, resetToken: string):
       <p>This link will expire in 1 hour.</p>
       <p>If you didn't request a password reset, please ignore this email.</p>
     </div>
-  `
-  
+  `;
+
   return sendEmail({
     to: email,
-    subject: 'Password Reset Request',
-    html
-  })
+    subject: "Password Reset Request",
+    html,
+  });
 }

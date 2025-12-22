@@ -18,6 +18,7 @@
       "Bash(git log:*)",
       "Bash(grep:*)",
       "Bash(jq:*)",
+      "Bash(ls:*)",
       "Bash(mkdir:*)",
       "Bash(mv:*)",
       "Bash(node:*)",
@@ -53,6 +54,7 @@
       "Bash(src/routes/api/webhook/+server.ts )",
       "Bash(src/routes/api/webhook/__tests__/ai-chat-generate.test.ts )",
       "Bash(tree:*)",
+      "Bash(xargs ls:*)",
       "Bash(y)",
       "WebFetch(domain:console.groq.com)",
       "WebFetch(domain:directus.io)",
@@ -65,9 +67,13 @@
       "WebFetch(domain:www.prisma.io)",
       "WebSearch",
       "mcp__directus__collections",
+      "mcp__directus__fields",
+      "mcp__directus__flows",
       "mcp__directus__items",
+      "mcp__directus__operations",
       "mcp__directus__relations",
-      "mcp__directus__schema"
+      "mcp__directus__schema",
+      "mcp__directus__system-prompt"
     ],
     "deny": [],
     "ask": []
