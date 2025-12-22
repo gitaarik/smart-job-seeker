@@ -4,7 +4,7 @@
  */
 
 import { db } from "$lib/db";
-import { getInterpolatedPrompts } from "./ai-chat-utils";
+import { getInterpolatedPrompts, makeFullPrompt } from "./ai-chat-utils";
 
 /**
  * Generate full prompt for a single AI chat using the same prisma instance
@@ -24,9 +24,8 @@ export async function generateAiChatFullPrompt(aiChatId: number): Promise<{
       };
     }
 
-    // Combine system_prompt and user_prompt with 2 newlines
-    const fullPrompt =
-      `${prompts.systemPrompt}\n\n## User prompt:\n\n${prompts.userPrompt}`;
+    // Make full prompt
+    const fullPrompt = makeFullPrompt(prompts.systemPrompt, prompts.userPrompt);
 
     // Update the full_prompt field
     await db.ai_chat.update({
