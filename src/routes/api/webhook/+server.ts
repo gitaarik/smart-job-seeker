@@ -1,12 +1,17 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "@sveltejs/kit";
+import type { WebhookPayload } from "$lib/types/webhook";
 import { getEnv } from "$lib/tools/get-env";
-import type { WebhookPayload, WebhookResponse } from "$lib/types/webhook";
 import { exportProfile } from "$lib/server/profile-export";
 import { generateAiChatFullPrompt } from "$lib/server/ai-chat-full-prompt-generate";
 import { generateAiChatResponse } from "$lib/server/ai-chat-response-generate";
-import { generateInterviewQuestionAnswer } from "$lib/server/ai-chat-interview-question";
+import { generateApplicationQuestionAnswer } from "$lib/server/ai-chat-application-question";
+import { generateApplicationLetter } from "$lib/server/ai-chat-application-letter";
+import { createApplicationLetterFollowup } from "$lib/server/ai-chat-application-letter-followup";
+import { createApplicationQuestionFollowup } from "$lib/server/ai-chat-application-question-followup";
+import { createFollowupAiChat } from "$lib/server/ai-chat-create-followup";
 import { clearDirectusCache } from "$lib/server/directus";
+import { db } from "$lib/db";
 
 /**
  * Webhook endpoint for Directus Flow integration
@@ -146,6 +151,16 @@ async function processWebhookEvent(
       return await handleAiChatGenerateResponse(data);
     case "application_interview_question.generate_ai_answer":
       return await handleApplicationInterviewQuestionGenerateAiAnswer(data);
+    case "application_letter.generate":
+      return await handleApplicationLetterGenerate(data);
+    case "application_letter.create_followup":
+      return await handleApplicationLetterCreateFollowup(data);
+    case "application_questions.create_followup":
+      return await handleApplicationQuestionsCreateFollowup(data);
+    case "ai_chat.create_followup":
+      return await handleAiChatCreateFollowup(data);
+    case "profile_version.generate_preview_links":
+      return await handleProfileVersionGeneratePreviewLinks(data);
     default:
       return {
         processed: true,
@@ -421,7 +436,7 @@ async function handleApplicationInterviewQuestionGenerateAiAnswer(
   try {
     const results = await Promise.allSettled(
       questionIds.map((questionId) =>
-        generateInterviewQuestionAnswer(questionId)
+        generateApplicationQuestionAnswer(questionId)
           .then((result) => ({
             questionId,
             success: result.success,
@@ -464,6 +479,434 @@ async function handleApplicationInterviewQuestionGenerateAiAnswer(
     return {
       processed: false,
       questionCount: questionIds.length,
+      error: errorMessage,
+    };
+  }
+}
+
+/**
+ * Handle application_letter.generate events
+ * Called to generate AI-assisted letters for application_letters
+ * Expected data format: { letterIds: number[] }
+ */
+async function handleApplicationLetterGenerate(
+  data: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  let letterIds: number[] = [];
+
+  if (Array.isArray(data.letterIds)) {
+    letterIds = (data.letterIds as unknown[])
+      .map((id) => {
+        const parsed = parseInt(String(id), 10);
+        return isNaN(parsed) ? null : parsed;
+      })
+      .filter((id): id is number => id !== null);
+  }
+
+  if (letterIds.length === 0) {
+    return {
+      processed: false,
+      error: "Missing or invalid letterIds in data (expected array of numbers)",
+    };
+  }
+
+  // Extract optional additional context from the data
+  const additionalContext = typeof data.additionalContext === "string"
+    ? data.additionalContext
+    : undefined;
+
+  try {
+    const results = await Promise.allSettled(
+      letterIds.map((letterId) =>
+        generateApplicationLetter(letterId, additionalContext)
+          .then((result) => ({
+            letterId,
+            success: result.success,
+            message: result.message,
+          }))
+          .catch((error) => ({
+            letterId,
+            success: false,
+            message: error instanceof Error ? error.message : "Unknown error",
+          }))
+      ),
+    );
+
+    const successful = results.filter(
+      (r) => r.status === "fulfilled" && (r.value as any).success !== false,
+    );
+    const failed = results.filter(
+      (r) =>
+        r.status === "rejected" ||
+        (r.status === "fulfilled" && (r.value as any).success === false),
+    );
+
+    return {
+      processed: successful.length > 0,
+      letterCount: letterIds.length,
+      successCount: successful.length,
+      results: results.map((
+        r,
+      ) => (r.status === "fulfilled" ? r.value : r.reason)),
+      ...(failed.length > 0 && { failureCount: failed.length }),
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error
+      ? error.message
+      : "Unknown error";
+    console.error(
+      `[Webhook] application_letter.generate failed:`,
+      errorMessage,
+    );
+    return {
+      processed: false,
+      letterCount: letterIds.length,
+      error: errorMessage,
+    };
+  }
+}
+
+/**
+ * Handle application_letter.create_followup events
+ * Called to create a follow-up AI chat for an application letter
+ * Expected data format: { letterId: number, followup_request: string, include_original_context?: boolean }
+ */
+async function handleApplicationLetterCreateFollowup(
+  data: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  // Extract and validate letterId
+  const letterIdRaw = data.letterId;
+  const letterId = typeof letterIdRaw === "number"
+    ? letterIdRaw
+    : (typeof letterIdRaw === "string" ? parseInt(letterIdRaw, 10) : NaN);
+
+  if (isNaN(letterId)) {
+    return {
+      success: false,
+      error: "Missing or invalid letterId in data (expected number)",
+    };
+  }
+
+  // Extract follow-up request
+  const followupRequest = typeof data.followup_request === "string"
+    ? data.followup_request
+    : "";
+
+  if (!followupRequest.trim()) {
+    return {
+      success: false,
+      error: "Missing or empty followup_request in data",
+    };
+  }
+
+  // Extract optional include_original_context
+  const includeOriginalContext = data.include_original_context === "true" ||
+    data.include_original_context === true;
+
+  try {
+    const result = await createApplicationLetterFollowup(
+      letterId,
+      followupRequest,
+      includeOriginalContext,
+    );
+
+    return {
+      success: result.success,
+      message: result.message,
+      data: result.aiChat
+        ? {
+          aiChatId: result.aiChat.id,
+          letterId: letterId,
+        }
+        : undefined,
+      ...(result.success ? {} : { error: result.message }),
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error
+      ? error.message
+      : "Unknown error";
+    console.error(
+      `[Webhook] application_letter.create_followup failed:`,
+      errorMessage,
+    );
+    return {
+      success: false,
+      error: errorMessage,
+    };
+  }
+}
+
+/**
+ * Handle application_questions.create_followup events
+ * Called to create a follow-up AI chat for an application question
+ * Expected data format: { questionId: number, followup_request: string, include_original_context?: boolean }
+ */
+async function handleApplicationQuestionsCreateFollowup(
+  data: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  // Extract and validate questionId
+  const questionIdRaw = data.questionId;
+  const questionId = typeof questionIdRaw === "number"
+    ? questionIdRaw
+    : (typeof questionIdRaw === "string" ? parseInt(questionIdRaw, 10) : NaN);
+
+  if (isNaN(questionId)) {
+    return {
+      success: false,
+      error: "Missing or invalid questionId in data (expected number)",
+    };
+  }
+
+  // Extract follow-up request
+  const followupRequest = typeof data.followup_request === "string"
+    ? data.followup_request
+    : "";
+
+  if (!followupRequest.trim()) {
+    return {
+      success: false,
+      error: "Missing or empty followup_request in data",
+    };
+  }
+
+  // Extract optional include_original_context
+  const includeOriginalContext = data.include_original_context === "true" ||
+    data.include_original_context === true;
+
+  try {
+    const result = await createApplicationQuestionFollowup(
+      questionId,
+      followupRequest,
+      includeOriginalContext,
+    );
+
+    return {
+      success: result.success,
+      message: result.message,
+      data: result.aiChat
+        ? {
+          aiChatId: result.aiChat.id,
+          questionId: questionId,
+        }
+        : undefined,
+      ...(result.success ? {} : { error: result.message }),
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error
+      ? error.message
+      : "Unknown error";
+    console.error(
+      `[Webhook] application_questions.create_followup failed:`,
+      errorMessage,
+    );
+    return {
+      success: false,
+      error: errorMessage,
+    };
+  }
+}
+
+/**
+ * Handle profile_version.generate_preview_links events
+ * Called to generate preview link HTML for profile versions
+ * Expected data format: { profileVersionIds: number[] }
+ */
+async function handleProfileVersionGeneratePreviewLinks(
+  data: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  let profileVersionIds: number[] = [];
+
+  if (Array.isArray(data.profileVersionIds)) {
+    profileVersionIds = (data.profileVersionIds as unknown[])
+      .map((id) => {
+        const parsed = parseInt(String(id), 10);
+        return isNaN(parsed) ? null : parsed;
+      })
+      .filter((id): id is number => id !== null);
+  }
+
+  if (profileVersionIds.length === 0) {
+    return {
+      processed: false,
+      error:
+        "Missing or invalid profileVersionIds in data (expected array of numbers)",
+    };
+  }
+
+  try {
+    const results = await Promise.allSettled(
+      profileVersionIds.map(async (profileVersionId) => {
+        // Fetch the profile version to get its name
+        const profileVersion = await db.profile_versions.findUnique({
+          where: { id: profileVersionId },
+          select: { name: true },
+        });
+
+        if (!profileVersion || !profileVersion.name) {
+          throw new Error(
+            `Profile version ${profileVersionId} not found or has no name`,
+          );
+        }
+
+        const versionName = encodeURIComponent(profileVersion.name);
+        const previewHtml =
+          `<div style="display: flex; gap: 32px; font-size: 16px;">` +
+          `<div style="display: flex; flex-direction: column; gap: 8px;">` +
+          `<div style="font-weight: 600; margin-bottom: 10px;">📄 Resume</div>` +
+          `<div style="display: flex; gap: 12px;">` +
+          `<a href="http://localhost:5173/resume?version=${versionName}" target="_blank">HTML</a>` +
+          `<a href="http://localhost:5173/resume.pdf?version=${versionName}" target="_blank">PDF</a>` +
+          `</div>` +
+          `</div>` +
+          `<div style="display: flex; flex-direction: column; gap: 8px;">` +
+          `<div style="font-weight: 600; margin-bottom: 10px;">📋 CV</div>` +
+          `<div style="display: flex; gap: 12px;">` +
+          `<a href="http://localhost:5173/cv?version=${versionName}" target="_blank">HTML</a>` +
+          `<a href="http://localhost:5173/cv.pdf?version=${versionName}" target="_blank">PDF</a>` +
+          `</div>` +
+          `</div>` +
+          `</div>`;
+
+        await db.profile_versions.update({
+          where: { id: profileVersionId },
+          data: { preview_links: previewHtml },
+        });
+
+        return {
+          profileVersionId,
+          success: true,
+          message: "Preview links generated successfully",
+        };
+      }),
+    );
+
+    const successful = results.filter(
+      (r) => r.status === "fulfilled" && (r.value as any).success !== false,
+    );
+    const failed = results.filter(
+      (r) =>
+        r.status === "rejected" ||
+        (r.status === "fulfilled" && (r.value as any).success === false),
+    );
+
+    return {
+      processed: successful.length > 0,
+      profileVersionCount: profileVersionIds.length,
+      successCount: successful.length,
+      results: results.map((
+        r,
+      ) => (r.status === "fulfilled" ? r.value : r.reason)),
+      ...(failed.length > 0 && { failureCount: failed.length }),
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error
+      ? error.message
+      : "Unknown error";
+    console.error(
+      `[Webhook] profile_version.generate_preview_links failed:`,
+      errorMessage,
+    );
+    return {
+      processed: false,
+      profileVersionCount: profileVersionIds.length,
+      error: errorMessage,
+    };
+  }
+}
+
+/**
+ * Handle ai_chat.create_followup events
+ * Called to create follow-up ai_chat instances for iterative refinement
+ * Expected data format: {
+ *   keys: number[],
+ *   followup_request: string,
+ *   include_original_context?: string
+ * }
+ */
+async function handleAiChatCreateFollowup(
+  data: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  // Extract parent ai_chat IDs (called "keys" to match Directus convention)
+  let parentAiChatIds: number[] = [];
+
+  if (Array.isArray(data.keys)) {
+    parentAiChatIds = (data.keys as unknown[])
+      .map((id) => {
+        const parsed = parseInt(String(id), 10);
+        return isNaN(parsed) ? null : parsed;
+      })
+      .filter((id): id is number => id !== null);
+  }
+
+  if (parentAiChatIds.length === 0) {
+    return {
+      processed: false,
+      error: "Missing or invalid keys in data (expected array of ai_chat IDs)",
+    };
+  }
+
+  // Validate followup_request
+  const followupRequest = data.followup_request;
+  if (typeof followupRequest !== "string" || !followupRequest.trim()) {
+    return {
+      processed: false,
+      error:
+        "Missing or invalid followup_request in data (expected non-empty string)",
+    };
+  }
+
+  // Get includeOriginalContext option (default: false)
+  const includeOriginalContext = data.include_original_context === "true";
+
+  try {
+    const results = await Promise.allSettled(
+      parentAiChatIds.map((parentAiChatId) =>
+        createFollowupAiChat(parentAiChatId, followupRequest, {
+          includeOriginalContext,
+        })
+          .then((result) => ({
+            parentAiChatId,
+            success: result.success,
+            message: result.message,
+            newAiChatId: result.aiChat?.id,
+          }))
+          .catch((error) => ({
+            parentAiChatId,
+            success: false,
+            message: error instanceof Error ? error.message : "Unknown error",
+          }))
+      ),
+    );
+
+    const successful = results.filter(
+      (r) => r.status === "fulfilled" && (r.value as any).success !== false,
+    );
+    const failed = results.filter(
+      (r) =>
+        r.status === "rejected" ||
+        (r.status === "fulfilled" && (r.value as any).success === false),
+    );
+
+    return {
+      processed: successful.length > 0,
+      parentAiChatCount: parentAiChatIds.length,
+      successCount: successful.length,
+      results: results.map((
+        r,
+      ) => (r.status === "fulfilled" ? r.value : r.reason)),
+      ...(failed.length > 0 && { failureCount: failed.length }),
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error
+      ? error.message
+      : "Unknown error";
+    console.error(
+      `[Webhook] ai_chat.create_followup failed:`,
+      errorMessage,
+    );
+    return {
+      processed: false,
+      parentAiChatCount: parentAiChatIds.length,
       error: errorMessage,
     };
   }

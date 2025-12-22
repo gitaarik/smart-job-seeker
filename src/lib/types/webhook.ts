@@ -27,3 +27,37 @@ export interface WebhookError {
   message: string;
   statusCode: number;
 }
+
+/**
+ * Data structure for application_letter.generate webhook event
+ */
+export interface ApplicationLetterGenerateData {
+  /** Array of application letter IDs to generate */
+  letterIds: (string | number)[];
+  /** Optional additional context for the AI prompt */
+  additionalContext?: string;
+}
+
+/**
+ * Data structure for application_letter.create_followup webhook event
+ */
+export interface ApplicationLetterCreateFollowupData {
+  /** Application letter ID to create follow-up for */
+  letterId: number;
+  /** User's follow-up request describing what to refine */
+  followup_request: string;
+  /** Whether to include original context variables in the prompts */
+  include_original_context?: boolean;
+}
+
+/**
+ * Data structure for application_questions.create_followup webhook event
+ */
+export interface ApplicationQuestionsCreateFollowupData {
+  /** Application question ID to create follow-up for */
+  questionId: number;
+  /** User's follow-up request describing what to refine */
+  followup_request: string;
+  /** Whether to include original context variables in the prompts */
+  include_original_context?: boolean;
+}
