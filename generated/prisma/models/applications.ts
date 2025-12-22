@@ -30,12 +30,14 @@ export type ApplicationsAvgAggregateOutputType = {
   id: number | null
   vacancy: number | null
   profile: number | null
+  salary_expectation: runtime.Decimal | null
 }
 
 export type ApplicationsSumAggregateOutputType = {
   id: number | null
   vacancy: number | null
   profile: number | null
+  salary_expectation: runtime.Decimal | null
 }
 
 export type ApplicationsMinAggregateOutputType = {
@@ -52,7 +54,9 @@ export type ApplicationsMinAggregateOutputType = {
   discontinued_note: string | null
   application_note: string | null
   application_seen_date: Date | null
-  cover_letter: string | null
+  salary_expectation: runtime.Decimal | null
+  salary_currency: string | null
+  salary_period: string | null
 }
 
 export type ApplicationsMaxAggregateOutputType = {
@@ -69,7 +73,9 @@ export type ApplicationsMaxAggregateOutputType = {
   discontinued_note: string | null
   application_note: string | null
   application_seen_date: Date | null
-  cover_letter: string | null
+  salary_expectation: runtime.Decimal | null
+  salary_currency: string | null
+  salary_period: string | null
 }
 
 export type ApplicationsCountAggregateOutputType = {
@@ -86,7 +92,9 @@ export type ApplicationsCountAggregateOutputType = {
   discontinued_note: number
   application_note: number
   application_seen_date: number
-  cover_letter: number
+  salary_expectation: number
+  salary_currency: number
+  salary_period: number
   _all: number
 }
 
@@ -95,12 +103,14 @@ export type ApplicationsAvgAggregateInputType = {
   id?: true
   vacancy?: true
   profile?: true
+  salary_expectation?: true
 }
 
 export type ApplicationsSumAggregateInputType = {
   id?: true
   vacancy?: true
   profile?: true
+  salary_expectation?: true
 }
 
 export type ApplicationsMinAggregateInputType = {
@@ -117,7 +127,9 @@ export type ApplicationsMinAggregateInputType = {
   discontinued_note?: true
   application_note?: true
   application_seen_date?: true
-  cover_letter?: true
+  salary_expectation?: true
+  salary_currency?: true
+  salary_period?: true
 }
 
 export type ApplicationsMaxAggregateInputType = {
@@ -134,7 +146,9 @@ export type ApplicationsMaxAggregateInputType = {
   discontinued_note?: true
   application_note?: true
   application_seen_date?: true
-  cover_letter?: true
+  salary_expectation?: true
+  salary_currency?: true
+  salary_period?: true
 }
 
 export type ApplicationsCountAggregateInputType = {
@@ -151,7 +165,9 @@ export type ApplicationsCountAggregateInputType = {
   discontinued_note?: true
   application_note?: true
   application_seen_date?: true
-  cover_letter?: true
+  salary_expectation?: true
+  salary_currency?: true
+  salary_period?: true
   _all?: true
 }
 
@@ -255,7 +271,9 @@ export type ApplicationsGroupByOutputType = {
   discontinued_note: string | null
   application_note: string | null
   application_seen_date: Date | null
-  cover_letter: string | null
+  salary_expectation: runtime.Decimal | null
+  salary_currency: string | null
+  salary_period: string | null
   _count: ApplicationsCountAggregateOutputType | null
   _avg: ApplicationsAvgAggregateOutputType | null
   _sum: ApplicationsSumAggregateOutputType | null
@@ -295,11 +313,16 @@ export type applicationsWhereInput = {
   discontinued_note?: Prisma.StringNullableFilter<"applications"> | string | null
   application_note?: Prisma.StringNullableFilter<"applications"> | string | null
   application_seen_date?: Prisma.DateTimeNullableFilter<"applications"> | Date | string | null
-  cover_letter?: Prisma.StringNullableFilter<"applications"> | string | null
+  salary_expectation?: Prisma.DecimalNullableFilter<"applications"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: Prisma.StringNullableFilter<"applications"> | string | null
+  salary_period?: Prisma.StringNullableFilter<"applications"> | string | null
+  application_activity_log?: Prisma.Application_activity_logListRelationFilter
+  application_letters?: Prisma.Application_lettersListRelationFilter
   application_questions?: Prisma.Application_questionsListRelationFilter
   directus_files?: Prisma.XOR<Prisma.Directus_filesNullableScalarRelationFilter, Prisma.directus_filesWhereInput> | null
   profiles?: Prisma.XOR<Prisma.ProfilesScalarRelationFilter, Prisma.profilesWhereInput>
   vacancies?: Prisma.XOR<Prisma.VacanciesNullableScalarRelationFilter, Prisma.vacanciesWhereInput> | null
+  applications_files?: Prisma.Applications_filesListRelationFilter
 }
 
 export type applicationsOrderByWithRelationInput = {
@@ -316,11 +339,16 @@ export type applicationsOrderByWithRelationInput = {
   discontinued_note?: Prisma.SortOrderInput | Prisma.SortOrder
   application_note?: Prisma.SortOrderInput | Prisma.SortOrder
   application_seen_date?: Prisma.SortOrderInput | Prisma.SortOrder
-  cover_letter?: Prisma.SortOrderInput | Prisma.SortOrder
+  salary_expectation?: Prisma.SortOrderInput | Prisma.SortOrder
+  salary_currency?: Prisma.SortOrderInput | Prisma.SortOrder
+  salary_period?: Prisma.SortOrderInput | Prisma.SortOrder
+  application_activity_log?: Prisma.application_activity_logOrderByRelationAggregateInput
+  application_letters?: Prisma.application_lettersOrderByRelationAggregateInput
   application_questions?: Prisma.application_questionsOrderByRelationAggregateInput
   directus_files?: Prisma.directus_filesOrderByWithRelationInput
   profiles?: Prisma.profilesOrderByWithRelationInput
   vacancies?: Prisma.vacanciesOrderByWithRelationInput
+  applications_files?: Prisma.applications_filesOrderByRelationAggregateInput
 }
 
 export type applicationsWhereUniqueInput = Prisma.AtLeast<{
@@ -340,11 +368,16 @@ export type applicationsWhereUniqueInput = Prisma.AtLeast<{
   discontinued_note?: Prisma.StringNullableFilter<"applications"> | string | null
   application_note?: Prisma.StringNullableFilter<"applications"> | string | null
   application_seen_date?: Prisma.DateTimeNullableFilter<"applications"> | Date | string | null
-  cover_letter?: Prisma.StringNullableFilter<"applications"> | string | null
+  salary_expectation?: Prisma.DecimalNullableFilter<"applications"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: Prisma.StringNullableFilter<"applications"> | string | null
+  salary_period?: Prisma.StringNullableFilter<"applications"> | string | null
+  application_activity_log?: Prisma.Application_activity_logListRelationFilter
+  application_letters?: Prisma.Application_lettersListRelationFilter
   application_questions?: Prisma.Application_questionsListRelationFilter
   directus_files?: Prisma.XOR<Prisma.Directus_filesNullableScalarRelationFilter, Prisma.directus_filesWhereInput> | null
   profiles?: Prisma.XOR<Prisma.ProfilesScalarRelationFilter, Prisma.profilesWhereInput>
   vacancies?: Prisma.XOR<Prisma.VacanciesNullableScalarRelationFilter, Prisma.vacanciesWhereInput> | null
+  applications_files?: Prisma.Applications_filesListRelationFilter
 }, "id">
 
 export type applicationsOrderByWithAggregationInput = {
@@ -361,7 +394,9 @@ export type applicationsOrderByWithAggregationInput = {
   discontinued_note?: Prisma.SortOrderInput | Prisma.SortOrder
   application_note?: Prisma.SortOrderInput | Prisma.SortOrder
   application_seen_date?: Prisma.SortOrderInput | Prisma.SortOrder
-  cover_letter?: Prisma.SortOrderInput | Prisma.SortOrder
+  salary_expectation?: Prisma.SortOrderInput | Prisma.SortOrder
+  salary_currency?: Prisma.SortOrderInput | Prisma.SortOrder
+  salary_period?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.applicationsCountOrderByAggregateInput
   _avg?: Prisma.applicationsAvgOrderByAggregateInput
   _max?: Prisma.applicationsMaxOrderByAggregateInput
@@ -386,7 +421,9 @@ export type applicationsScalarWhereWithAggregatesInput = {
   discontinued_note?: Prisma.StringNullableWithAggregatesFilter<"applications"> | string | null
   application_note?: Prisma.StringNullableWithAggregatesFilter<"applications"> | string | null
   application_seen_date?: Prisma.DateTimeNullableWithAggregatesFilter<"applications"> | Date | string | null
-  cover_letter?: Prisma.StringNullableWithAggregatesFilter<"applications"> | string | null
+  salary_expectation?: Prisma.DecimalNullableWithAggregatesFilter<"applications"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: Prisma.StringNullableWithAggregatesFilter<"applications"> | string | null
+  salary_period?: Prisma.StringNullableWithAggregatesFilter<"applications"> | string | null
 }
 
 export type applicationsCreateInput = {
@@ -399,11 +436,16 @@ export type applicationsCreateInput = {
   discontinued_note?: string | null
   application_note?: string | null
   application_seen_date?: Date | string | null
-  cover_letter?: string | null
+  salary_expectation?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: string | null
+  salary_period?: string | null
+  application_activity_log?: Prisma.application_activity_logCreateNestedManyWithoutApplicationsInput
+  application_letters?: Prisma.application_lettersCreateNestedManyWithoutApplicationsInput
   application_questions?: Prisma.application_questionsCreateNestedManyWithoutApplicationsInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutApplicationsInput
   profiles: Prisma.profilesCreateNestedOneWithoutApplicationsInput
   vacancies?: Prisma.vacanciesCreateNestedOneWithoutApplicationsInput
+  applications_files?: Prisma.applications_filesCreateNestedManyWithoutApplicationsInput
 }
 
 export type applicationsUncheckedCreateInput = {
@@ -420,8 +462,13 @@ export type applicationsUncheckedCreateInput = {
   discontinued_note?: string | null
   application_note?: string | null
   application_seen_date?: Date | string | null
-  cover_letter?: string | null
+  salary_expectation?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: string | null
+  salary_period?: string | null
+  application_activity_log?: Prisma.application_activity_logUncheckedCreateNestedManyWithoutApplicationsInput
+  application_letters?: Prisma.application_lettersUncheckedCreateNestedManyWithoutApplicationsInput
   application_questions?: Prisma.application_questionsUncheckedCreateNestedManyWithoutApplicationsInput
+  applications_files?: Prisma.applications_filesUncheckedCreateNestedManyWithoutApplicationsInput
 }
 
 export type applicationsUpdateInput = {
@@ -434,11 +481,16 @@ export type applicationsUpdateInput = {
   discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  cover_letter?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_expectation?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_activity_log?: Prisma.application_activity_logUpdateManyWithoutApplicationsNestedInput
+  application_letters?: Prisma.application_lettersUpdateManyWithoutApplicationsNestedInput
   application_questions?: Prisma.application_questionsUpdateManyWithoutApplicationsNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutApplicationsNestedInput
   profiles?: Prisma.profilesUpdateOneRequiredWithoutApplicationsNestedInput
   vacancies?: Prisma.vacanciesUpdateOneWithoutApplicationsNestedInput
+  applications_files?: Prisma.applications_filesUpdateManyWithoutApplicationsNestedInput
 }
 
 export type applicationsUncheckedUpdateInput = {
@@ -455,8 +507,13 @@ export type applicationsUncheckedUpdateInput = {
   discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  cover_letter?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_expectation?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_activity_log?: Prisma.application_activity_logUncheckedUpdateManyWithoutApplicationsNestedInput
+  application_letters?: Prisma.application_lettersUncheckedUpdateManyWithoutApplicationsNestedInput
   application_questions?: Prisma.application_questionsUncheckedUpdateManyWithoutApplicationsNestedInput
+  applications_files?: Prisma.applications_filesUncheckedUpdateManyWithoutApplicationsNestedInput
 }
 
 export type applicationsCreateManyInput = {
@@ -473,7 +530,9 @@ export type applicationsCreateManyInput = {
   discontinued_note?: string | null
   application_note?: string | null
   application_seen_date?: Date | string | null
-  cover_letter?: string | null
+  salary_expectation?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: string | null
+  salary_period?: string | null
 }
 
 export type applicationsUpdateManyMutationInput = {
@@ -486,7 +545,9 @@ export type applicationsUpdateManyMutationInput = {
   discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  cover_letter?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_expectation?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type applicationsUncheckedUpdateManyInput = {
@@ -503,7 +564,9 @@ export type applicationsUncheckedUpdateManyInput = {
   discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  cover_letter?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_expectation?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type applicationsCountOrderByAggregateInput = {
@@ -520,13 +583,16 @@ export type applicationsCountOrderByAggregateInput = {
   discontinued_note?: Prisma.SortOrder
   application_note?: Prisma.SortOrder
   application_seen_date?: Prisma.SortOrder
-  cover_letter?: Prisma.SortOrder
+  salary_expectation?: Prisma.SortOrder
+  salary_currency?: Prisma.SortOrder
+  salary_period?: Prisma.SortOrder
 }
 
 export type applicationsAvgOrderByAggregateInput = {
   id?: Prisma.SortOrder
   vacancy?: Prisma.SortOrder
   profile?: Prisma.SortOrder
+  salary_expectation?: Prisma.SortOrder
 }
 
 export type applicationsMaxOrderByAggregateInput = {
@@ -543,7 +609,9 @@ export type applicationsMaxOrderByAggregateInput = {
   discontinued_note?: Prisma.SortOrder
   application_note?: Prisma.SortOrder
   application_seen_date?: Prisma.SortOrder
-  cover_letter?: Prisma.SortOrder
+  salary_expectation?: Prisma.SortOrder
+  salary_currency?: Prisma.SortOrder
+  salary_period?: Prisma.SortOrder
 }
 
 export type applicationsMinOrderByAggregateInput = {
@@ -560,13 +628,16 @@ export type applicationsMinOrderByAggregateInput = {
   discontinued_note?: Prisma.SortOrder
   application_note?: Prisma.SortOrder
   application_seen_date?: Prisma.SortOrder
-  cover_letter?: Prisma.SortOrder
+  salary_expectation?: Prisma.SortOrder
+  salary_currency?: Prisma.SortOrder
+  salary_period?: Prisma.SortOrder
 }
 
 export type applicationsSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
   vacancy?: Prisma.SortOrder
   profile?: Prisma.SortOrder
+  salary_expectation?: Prisma.SortOrder
 }
 
 export type ApplicationsListRelationFilter = {
@@ -584,6 +655,11 @@ export type ApplicationsScalarRelationFilter = {
   isNot?: Prisma.applicationsWhereInput
 }
 
+export type ApplicationsNullableScalarRelationFilter = {
+  is?: Prisma.applicationsWhereInput | null
+  isNot?: Prisma.applicationsWhereInput | null
+}
+
 export type StringFieldUpdateOperationsInput = {
   set?: string
 }
@@ -594,6 +670,14 @@ export type NullableDateTimeFieldUpdateOperationsInput = {
 
 export type NullableStringFieldUpdateOperationsInput = {
   set?: string | null
+}
+
+export type NullableDecimalFieldUpdateOperationsInput = {
+  set?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  increment?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  decrement?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  multiply?: runtime.Decimal | runtime.DecimalJsLike | number | string
+  divide?: runtime.Decimal | runtime.DecimalJsLike | number | string
 }
 
 export type IntFieldUpdateOperationsInput = {
@@ -752,6 +836,52 @@ export type applicationsUpdateOneRequiredWithoutApplication_questionsNestedInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.applicationsUpdateToOneWithWhereWithoutApplication_questionsInput, Prisma.applicationsUpdateWithoutApplication_questionsInput>, Prisma.applicationsUncheckedUpdateWithoutApplication_questionsInput>
 }
 
+export type applicationsCreateNestedOneWithoutApplication_activity_logInput = {
+  create?: Prisma.XOR<Prisma.applicationsCreateWithoutApplication_activity_logInput, Prisma.applicationsUncheckedCreateWithoutApplication_activity_logInput>
+  connectOrCreate?: Prisma.applicationsCreateOrConnectWithoutApplication_activity_logInput
+  connect?: Prisma.applicationsWhereUniqueInput
+}
+
+export type applicationsUpdateOneWithoutApplication_activity_logNestedInput = {
+  create?: Prisma.XOR<Prisma.applicationsCreateWithoutApplication_activity_logInput, Prisma.applicationsUncheckedCreateWithoutApplication_activity_logInput>
+  connectOrCreate?: Prisma.applicationsCreateOrConnectWithoutApplication_activity_logInput
+  upsert?: Prisma.applicationsUpsertWithoutApplication_activity_logInput
+  disconnect?: Prisma.applicationsWhereInput | boolean
+  delete?: Prisma.applicationsWhereInput | boolean
+  connect?: Prisma.applicationsWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.applicationsUpdateToOneWithWhereWithoutApplication_activity_logInput, Prisma.applicationsUpdateWithoutApplication_activity_logInput>, Prisma.applicationsUncheckedUpdateWithoutApplication_activity_logInput>
+}
+
+export type applicationsCreateNestedOneWithoutApplications_filesInput = {
+  create?: Prisma.XOR<Prisma.applicationsCreateWithoutApplications_filesInput, Prisma.applicationsUncheckedCreateWithoutApplications_filesInput>
+  connectOrCreate?: Prisma.applicationsCreateOrConnectWithoutApplications_filesInput
+  connect?: Prisma.applicationsWhereUniqueInput
+}
+
+export type applicationsUpdateOneWithoutApplications_filesNestedInput = {
+  create?: Prisma.XOR<Prisma.applicationsCreateWithoutApplications_filesInput, Prisma.applicationsUncheckedCreateWithoutApplications_filesInput>
+  connectOrCreate?: Prisma.applicationsCreateOrConnectWithoutApplications_filesInput
+  upsert?: Prisma.applicationsUpsertWithoutApplications_filesInput
+  disconnect?: Prisma.applicationsWhereInput | boolean
+  delete?: Prisma.applicationsWhereInput | boolean
+  connect?: Prisma.applicationsWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.applicationsUpdateToOneWithWhereWithoutApplications_filesInput, Prisma.applicationsUpdateWithoutApplications_filesInput>, Prisma.applicationsUncheckedUpdateWithoutApplications_filesInput>
+}
+
+export type applicationsCreateNestedOneWithoutApplication_lettersInput = {
+  create?: Prisma.XOR<Prisma.applicationsCreateWithoutApplication_lettersInput, Prisma.applicationsUncheckedCreateWithoutApplication_lettersInput>
+  connectOrCreate?: Prisma.applicationsCreateOrConnectWithoutApplication_lettersInput
+  connect?: Prisma.applicationsWhereUniqueInput
+}
+
+export type applicationsUpdateOneRequiredWithoutApplication_lettersNestedInput = {
+  create?: Prisma.XOR<Prisma.applicationsCreateWithoutApplication_lettersInput, Prisma.applicationsUncheckedCreateWithoutApplication_lettersInput>
+  connectOrCreate?: Prisma.applicationsCreateOrConnectWithoutApplication_lettersInput
+  upsert?: Prisma.applicationsUpsertWithoutApplication_lettersInput
+  connect?: Prisma.applicationsWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.applicationsUpdateToOneWithWhereWithoutApplication_lettersInput, Prisma.applicationsUpdateWithoutApplication_lettersInput>, Prisma.applicationsUncheckedUpdateWithoutApplication_lettersInput>
+}
+
 export type applicationsCreateWithoutDirectus_filesInput = {
   status?: string
   date_created?: Date | string | null
@@ -762,10 +892,15 @@ export type applicationsCreateWithoutDirectus_filesInput = {
   discontinued_note?: string | null
   application_note?: string | null
   application_seen_date?: Date | string | null
-  cover_letter?: string | null
+  salary_expectation?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: string | null
+  salary_period?: string | null
+  application_activity_log?: Prisma.application_activity_logCreateNestedManyWithoutApplicationsInput
+  application_letters?: Prisma.application_lettersCreateNestedManyWithoutApplicationsInput
   application_questions?: Prisma.application_questionsCreateNestedManyWithoutApplicationsInput
   profiles: Prisma.profilesCreateNestedOneWithoutApplicationsInput
   vacancies?: Prisma.vacanciesCreateNestedOneWithoutApplicationsInput
+  applications_files?: Prisma.applications_filesCreateNestedManyWithoutApplicationsInput
 }
 
 export type applicationsUncheckedCreateWithoutDirectus_filesInput = {
@@ -781,8 +916,13 @@ export type applicationsUncheckedCreateWithoutDirectus_filesInput = {
   discontinued_note?: string | null
   application_note?: string | null
   application_seen_date?: Date | string | null
-  cover_letter?: string | null
+  salary_expectation?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: string | null
+  salary_period?: string | null
+  application_activity_log?: Prisma.application_activity_logUncheckedCreateNestedManyWithoutApplicationsInput
+  application_letters?: Prisma.application_lettersUncheckedCreateNestedManyWithoutApplicationsInput
   application_questions?: Prisma.application_questionsUncheckedCreateNestedManyWithoutApplicationsInput
+  applications_files?: Prisma.applications_filesUncheckedCreateNestedManyWithoutApplicationsInput
 }
 
 export type applicationsCreateOrConnectWithoutDirectus_filesInput = {
@@ -828,7 +968,9 @@ export type applicationsScalarWhereInput = {
   discontinued_note?: Prisma.StringNullableFilter<"applications"> | string | null
   application_note?: Prisma.StringNullableFilter<"applications"> | string | null
   application_seen_date?: Prisma.DateTimeNullableFilter<"applications"> | Date | string | null
-  cover_letter?: Prisma.StringNullableFilter<"applications"> | string | null
+  salary_expectation?: Prisma.DecimalNullableFilter<"applications"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: Prisma.StringNullableFilter<"applications"> | string | null
+  salary_period?: Prisma.StringNullableFilter<"applications"> | string | null
 }
 
 export type applicationsCreateWithoutProfilesInput = {
@@ -841,10 +983,15 @@ export type applicationsCreateWithoutProfilesInput = {
   discontinued_note?: string | null
   application_note?: string | null
   application_seen_date?: Date | string | null
-  cover_letter?: string | null
+  salary_expectation?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: string | null
+  salary_period?: string | null
+  application_activity_log?: Prisma.application_activity_logCreateNestedManyWithoutApplicationsInput
+  application_letters?: Prisma.application_lettersCreateNestedManyWithoutApplicationsInput
   application_questions?: Prisma.application_questionsCreateNestedManyWithoutApplicationsInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutApplicationsInput
   vacancies?: Prisma.vacanciesCreateNestedOneWithoutApplicationsInput
+  applications_files?: Prisma.applications_filesCreateNestedManyWithoutApplicationsInput
 }
 
 export type applicationsUncheckedCreateWithoutProfilesInput = {
@@ -860,8 +1007,13 @@ export type applicationsUncheckedCreateWithoutProfilesInput = {
   discontinued_note?: string | null
   application_note?: string | null
   application_seen_date?: Date | string | null
-  cover_letter?: string | null
+  salary_expectation?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: string | null
+  salary_period?: string | null
+  application_activity_log?: Prisma.application_activity_logUncheckedCreateNestedManyWithoutApplicationsInput
+  application_letters?: Prisma.application_lettersUncheckedCreateNestedManyWithoutApplicationsInput
   application_questions?: Prisma.application_questionsUncheckedCreateNestedManyWithoutApplicationsInput
+  applications_files?: Prisma.applications_filesUncheckedCreateNestedManyWithoutApplicationsInput
 }
 
 export type applicationsCreateOrConnectWithoutProfilesInput = {
@@ -900,10 +1052,15 @@ export type applicationsCreateWithoutVacanciesInput = {
   discontinued_note?: string | null
   application_note?: string | null
   application_seen_date?: Date | string | null
-  cover_letter?: string | null
+  salary_expectation?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: string | null
+  salary_period?: string | null
+  application_activity_log?: Prisma.application_activity_logCreateNestedManyWithoutApplicationsInput
+  application_letters?: Prisma.application_lettersCreateNestedManyWithoutApplicationsInput
   application_questions?: Prisma.application_questionsCreateNestedManyWithoutApplicationsInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutApplicationsInput
   profiles: Prisma.profilesCreateNestedOneWithoutApplicationsInput
+  applications_files?: Prisma.applications_filesCreateNestedManyWithoutApplicationsInput
 }
 
 export type applicationsUncheckedCreateWithoutVacanciesInput = {
@@ -919,8 +1076,13 @@ export type applicationsUncheckedCreateWithoutVacanciesInput = {
   discontinued_note?: string | null
   application_note?: string | null
   application_seen_date?: Date | string | null
-  cover_letter?: string | null
+  salary_expectation?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: string | null
+  salary_period?: string | null
+  application_activity_log?: Prisma.application_activity_logUncheckedCreateNestedManyWithoutApplicationsInput
+  application_letters?: Prisma.application_lettersUncheckedCreateNestedManyWithoutApplicationsInput
   application_questions?: Prisma.application_questionsUncheckedCreateNestedManyWithoutApplicationsInput
+  applications_files?: Prisma.applications_filesUncheckedCreateNestedManyWithoutApplicationsInput
 }
 
 export type applicationsCreateOrConnectWithoutVacanciesInput = {
@@ -959,10 +1121,15 @@ export type applicationsCreateWithoutApplication_questionsInput = {
   discontinued_note?: string | null
   application_note?: string | null
   application_seen_date?: Date | string | null
-  cover_letter?: string | null
+  salary_expectation?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: string | null
+  salary_period?: string | null
+  application_activity_log?: Prisma.application_activity_logCreateNestedManyWithoutApplicationsInput
+  application_letters?: Prisma.application_lettersCreateNestedManyWithoutApplicationsInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutApplicationsInput
   profiles: Prisma.profilesCreateNestedOneWithoutApplicationsInput
   vacancies?: Prisma.vacanciesCreateNestedOneWithoutApplicationsInput
+  applications_files?: Prisma.applications_filesCreateNestedManyWithoutApplicationsInput
 }
 
 export type applicationsUncheckedCreateWithoutApplication_questionsInput = {
@@ -979,7 +1146,12 @@ export type applicationsUncheckedCreateWithoutApplication_questionsInput = {
   discontinued_note?: string | null
   application_note?: string | null
   application_seen_date?: Date | string | null
-  cover_letter?: string | null
+  salary_expectation?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: string | null
+  salary_period?: string | null
+  application_activity_log?: Prisma.application_activity_logUncheckedCreateNestedManyWithoutApplicationsInput
+  application_letters?: Prisma.application_lettersUncheckedCreateNestedManyWithoutApplicationsInput
+  applications_files?: Prisma.applications_filesUncheckedCreateNestedManyWithoutApplicationsInput
 }
 
 export type applicationsCreateOrConnectWithoutApplication_questionsInput = {
@@ -1008,10 +1180,15 @@ export type applicationsUpdateWithoutApplication_questionsInput = {
   discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  cover_letter?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_expectation?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_activity_log?: Prisma.application_activity_logUpdateManyWithoutApplicationsNestedInput
+  application_letters?: Prisma.application_lettersUpdateManyWithoutApplicationsNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutApplicationsNestedInput
   profiles?: Prisma.profilesUpdateOneRequiredWithoutApplicationsNestedInput
   vacancies?: Prisma.vacanciesUpdateOneWithoutApplicationsNestedInput
+  applications_files?: Prisma.applications_filesUpdateManyWithoutApplicationsNestedInput
 }
 
 export type applicationsUncheckedUpdateWithoutApplication_questionsInput = {
@@ -1028,7 +1205,318 @@ export type applicationsUncheckedUpdateWithoutApplication_questionsInput = {
   discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  cover_letter?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_expectation?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_activity_log?: Prisma.application_activity_logUncheckedUpdateManyWithoutApplicationsNestedInput
+  application_letters?: Prisma.application_lettersUncheckedUpdateManyWithoutApplicationsNestedInput
+  applications_files?: Prisma.applications_filesUncheckedUpdateManyWithoutApplicationsNestedInput
+}
+
+export type applicationsCreateWithoutApplication_activity_logInput = {
+  status?: string
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  cv_sent_through?: string | null
+  application_sent_date?: Date | string | null
+  discontinued_reason?: string | null
+  discontinued_note?: string | null
+  application_note?: string | null
+  application_seen_date?: Date | string | null
+  salary_expectation?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: string | null
+  salary_period?: string | null
+  application_letters?: Prisma.application_lettersCreateNestedManyWithoutApplicationsInput
+  application_questions?: Prisma.application_questionsCreateNestedManyWithoutApplicationsInput
+  directus_files?: Prisma.directus_filesCreateNestedOneWithoutApplicationsInput
+  profiles: Prisma.profilesCreateNestedOneWithoutApplicationsInput
+  vacancies?: Prisma.vacanciesCreateNestedOneWithoutApplicationsInput
+  applications_files?: Prisma.applications_filesCreateNestedManyWithoutApplicationsInput
+}
+
+export type applicationsUncheckedCreateWithoutApplication_activity_logInput = {
+  id?: number
+  status?: string
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  vacancy?: number | null
+  profile: number
+  cv_sent_through?: string | null
+  cv_file_sent?: string | null
+  application_sent_date?: Date | string | null
+  discontinued_reason?: string | null
+  discontinued_note?: string | null
+  application_note?: string | null
+  application_seen_date?: Date | string | null
+  salary_expectation?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: string | null
+  salary_period?: string | null
+  application_letters?: Prisma.application_lettersUncheckedCreateNestedManyWithoutApplicationsInput
+  application_questions?: Prisma.application_questionsUncheckedCreateNestedManyWithoutApplicationsInput
+  applications_files?: Prisma.applications_filesUncheckedCreateNestedManyWithoutApplicationsInput
+}
+
+export type applicationsCreateOrConnectWithoutApplication_activity_logInput = {
+  where: Prisma.applicationsWhereUniqueInput
+  create: Prisma.XOR<Prisma.applicationsCreateWithoutApplication_activity_logInput, Prisma.applicationsUncheckedCreateWithoutApplication_activity_logInput>
+}
+
+export type applicationsUpsertWithoutApplication_activity_logInput = {
+  update: Prisma.XOR<Prisma.applicationsUpdateWithoutApplication_activity_logInput, Prisma.applicationsUncheckedUpdateWithoutApplication_activity_logInput>
+  create: Prisma.XOR<Prisma.applicationsCreateWithoutApplication_activity_logInput, Prisma.applicationsUncheckedCreateWithoutApplication_activity_logInput>
+  where?: Prisma.applicationsWhereInput
+}
+
+export type applicationsUpdateToOneWithWhereWithoutApplication_activity_logInput = {
+  where?: Prisma.applicationsWhereInput
+  data: Prisma.XOR<Prisma.applicationsUpdateWithoutApplication_activity_logInput, Prisma.applicationsUncheckedUpdateWithoutApplication_activity_logInput>
+}
+
+export type applicationsUpdateWithoutApplication_activity_logInput = {
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  salary_expectation?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_letters?: Prisma.application_lettersUpdateManyWithoutApplicationsNestedInput
+  application_questions?: Prisma.application_questionsUpdateManyWithoutApplicationsNestedInput
+  directus_files?: Prisma.directus_filesUpdateOneWithoutApplicationsNestedInput
+  profiles?: Prisma.profilesUpdateOneRequiredWithoutApplicationsNestedInput
+  vacancies?: Prisma.vacanciesUpdateOneWithoutApplicationsNestedInput
+  applications_files?: Prisma.applications_filesUpdateManyWithoutApplicationsNestedInput
+}
+
+export type applicationsUncheckedUpdateWithoutApplication_activity_logInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  vacancy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  profile?: Prisma.IntFieldUpdateOperationsInput | number
+  cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cv_file_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  salary_expectation?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_letters?: Prisma.application_lettersUncheckedUpdateManyWithoutApplicationsNestedInput
+  application_questions?: Prisma.application_questionsUncheckedUpdateManyWithoutApplicationsNestedInput
+  applications_files?: Prisma.applications_filesUncheckedUpdateManyWithoutApplicationsNestedInput
+}
+
+export type applicationsCreateWithoutApplications_filesInput = {
+  status?: string
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  cv_sent_through?: string | null
+  application_sent_date?: Date | string | null
+  discontinued_reason?: string | null
+  discontinued_note?: string | null
+  application_note?: string | null
+  application_seen_date?: Date | string | null
+  salary_expectation?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: string | null
+  salary_period?: string | null
+  application_activity_log?: Prisma.application_activity_logCreateNestedManyWithoutApplicationsInput
+  application_letters?: Prisma.application_lettersCreateNestedManyWithoutApplicationsInput
+  application_questions?: Prisma.application_questionsCreateNestedManyWithoutApplicationsInput
+  directus_files?: Prisma.directus_filesCreateNestedOneWithoutApplicationsInput
+  profiles: Prisma.profilesCreateNestedOneWithoutApplicationsInput
+  vacancies?: Prisma.vacanciesCreateNestedOneWithoutApplicationsInput
+}
+
+export type applicationsUncheckedCreateWithoutApplications_filesInput = {
+  id?: number
+  status?: string
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  vacancy?: number | null
+  profile: number
+  cv_sent_through?: string | null
+  cv_file_sent?: string | null
+  application_sent_date?: Date | string | null
+  discontinued_reason?: string | null
+  discontinued_note?: string | null
+  application_note?: string | null
+  application_seen_date?: Date | string | null
+  salary_expectation?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: string | null
+  salary_period?: string | null
+  application_activity_log?: Prisma.application_activity_logUncheckedCreateNestedManyWithoutApplicationsInput
+  application_letters?: Prisma.application_lettersUncheckedCreateNestedManyWithoutApplicationsInput
+  application_questions?: Prisma.application_questionsUncheckedCreateNestedManyWithoutApplicationsInput
+}
+
+export type applicationsCreateOrConnectWithoutApplications_filesInput = {
+  where: Prisma.applicationsWhereUniqueInput
+  create: Prisma.XOR<Prisma.applicationsCreateWithoutApplications_filesInput, Prisma.applicationsUncheckedCreateWithoutApplications_filesInput>
+}
+
+export type applicationsUpsertWithoutApplications_filesInput = {
+  update: Prisma.XOR<Prisma.applicationsUpdateWithoutApplications_filesInput, Prisma.applicationsUncheckedUpdateWithoutApplications_filesInput>
+  create: Prisma.XOR<Prisma.applicationsCreateWithoutApplications_filesInput, Prisma.applicationsUncheckedCreateWithoutApplications_filesInput>
+  where?: Prisma.applicationsWhereInput
+}
+
+export type applicationsUpdateToOneWithWhereWithoutApplications_filesInput = {
+  where?: Prisma.applicationsWhereInput
+  data: Prisma.XOR<Prisma.applicationsUpdateWithoutApplications_filesInput, Prisma.applicationsUncheckedUpdateWithoutApplications_filesInput>
+}
+
+export type applicationsUpdateWithoutApplications_filesInput = {
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  salary_expectation?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_activity_log?: Prisma.application_activity_logUpdateManyWithoutApplicationsNestedInput
+  application_letters?: Prisma.application_lettersUpdateManyWithoutApplicationsNestedInput
+  application_questions?: Prisma.application_questionsUpdateManyWithoutApplicationsNestedInput
+  directus_files?: Prisma.directus_filesUpdateOneWithoutApplicationsNestedInput
+  profiles?: Prisma.profilesUpdateOneRequiredWithoutApplicationsNestedInput
+  vacancies?: Prisma.vacanciesUpdateOneWithoutApplicationsNestedInput
+}
+
+export type applicationsUncheckedUpdateWithoutApplications_filesInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  vacancy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  profile?: Prisma.IntFieldUpdateOperationsInput | number
+  cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cv_file_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  salary_expectation?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_activity_log?: Prisma.application_activity_logUncheckedUpdateManyWithoutApplicationsNestedInput
+  application_letters?: Prisma.application_lettersUncheckedUpdateManyWithoutApplicationsNestedInput
+  application_questions?: Prisma.application_questionsUncheckedUpdateManyWithoutApplicationsNestedInput
+}
+
+export type applicationsCreateWithoutApplication_lettersInput = {
+  status?: string
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  cv_sent_through?: string | null
+  application_sent_date?: Date | string | null
+  discontinued_reason?: string | null
+  discontinued_note?: string | null
+  application_note?: string | null
+  application_seen_date?: Date | string | null
+  salary_expectation?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: string | null
+  salary_period?: string | null
+  application_activity_log?: Prisma.application_activity_logCreateNestedManyWithoutApplicationsInput
+  application_questions?: Prisma.application_questionsCreateNestedManyWithoutApplicationsInput
+  directus_files?: Prisma.directus_filesCreateNestedOneWithoutApplicationsInput
+  profiles: Prisma.profilesCreateNestedOneWithoutApplicationsInput
+  vacancies?: Prisma.vacanciesCreateNestedOneWithoutApplicationsInput
+  applications_files?: Prisma.applications_filesCreateNestedManyWithoutApplicationsInput
+}
+
+export type applicationsUncheckedCreateWithoutApplication_lettersInput = {
+  id?: number
+  status?: string
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  vacancy?: number | null
+  profile: number
+  cv_sent_through?: string | null
+  cv_file_sent?: string | null
+  application_sent_date?: Date | string | null
+  discontinued_reason?: string | null
+  discontinued_note?: string | null
+  application_note?: string | null
+  application_seen_date?: Date | string | null
+  salary_expectation?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: string | null
+  salary_period?: string | null
+  application_activity_log?: Prisma.application_activity_logUncheckedCreateNestedManyWithoutApplicationsInput
+  application_questions?: Prisma.application_questionsUncheckedCreateNestedManyWithoutApplicationsInput
+  applications_files?: Prisma.applications_filesUncheckedCreateNestedManyWithoutApplicationsInput
+}
+
+export type applicationsCreateOrConnectWithoutApplication_lettersInput = {
+  where: Prisma.applicationsWhereUniqueInput
+  create: Prisma.XOR<Prisma.applicationsCreateWithoutApplication_lettersInput, Prisma.applicationsUncheckedCreateWithoutApplication_lettersInput>
+}
+
+export type applicationsUpsertWithoutApplication_lettersInput = {
+  update: Prisma.XOR<Prisma.applicationsUpdateWithoutApplication_lettersInput, Prisma.applicationsUncheckedUpdateWithoutApplication_lettersInput>
+  create: Prisma.XOR<Prisma.applicationsCreateWithoutApplication_lettersInput, Prisma.applicationsUncheckedCreateWithoutApplication_lettersInput>
+  where?: Prisma.applicationsWhereInput
+}
+
+export type applicationsUpdateToOneWithWhereWithoutApplication_lettersInput = {
+  where?: Prisma.applicationsWhereInput
+  data: Prisma.XOR<Prisma.applicationsUpdateWithoutApplication_lettersInput, Prisma.applicationsUncheckedUpdateWithoutApplication_lettersInput>
+}
+
+export type applicationsUpdateWithoutApplication_lettersInput = {
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  salary_expectation?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_activity_log?: Prisma.application_activity_logUpdateManyWithoutApplicationsNestedInput
+  application_questions?: Prisma.application_questionsUpdateManyWithoutApplicationsNestedInput
+  directus_files?: Prisma.directus_filesUpdateOneWithoutApplicationsNestedInput
+  profiles?: Prisma.profilesUpdateOneRequiredWithoutApplicationsNestedInput
+  vacancies?: Prisma.vacanciesUpdateOneWithoutApplicationsNestedInput
+  applications_files?: Prisma.applications_filesUpdateManyWithoutApplicationsNestedInput
+}
+
+export type applicationsUncheckedUpdateWithoutApplication_lettersInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  vacancy?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  profile?: Prisma.IntFieldUpdateOperationsInput | number
+  cv_sent_through?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  cv_file_sent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_sent_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  discontinued_reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  salary_expectation?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_activity_log?: Prisma.application_activity_logUncheckedUpdateManyWithoutApplicationsNestedInput
+  application_questions?: Prisma.application_questionsUncheckedUpdateManyWithoutApplicationsNestedInput
+  applications_files?: Prisma.applications_filesUncheckedUpdateManyWithoutApplicationsNestedInput
 }
 
 export type applicationsCreateManyDirectus_filesInput = {
@@ -1044,7 +1532,9 @@ export type applicationsCreateManyDirectus_filesInput = {
   discontinued_note?: string | null
   application_note?: string | null
   application_seen_date?: Date | string | null
-  cover_letter?: string | null
+  salary_expectation?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: string | null
+  salary_period?: string | null
 }
 
 export type applicationsUpdateWithoutDirectus_filesInput = {
@@ -1057,10 +1547,15 @@ export type applicationsUpdateWithoutDirectus_filesInput = {
   discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  cover_letter?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_expectation?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_activity_log?: Prisma.application_activity_logUpdateManyWithoutApplicationsNestedInput
+  application_letters?: Prisma.application_lettersUpdateManyWithoutApplicationsNestedInput
   application_questions?: Prisma.application_questionsUpdateManyWithoutApplicationsNestedInput
   profiles?: Prisma.profilesUpdateOneRequiredWithoutApplicationsNestedInput
   vacancies?: Prisma.vacanciesUpdateOneWithoutApplicationsNestedInput
+  applications_files?: Prisma.applications_filesUpdateManyWithoutApplicationsNestedInput
 }
 
 export type applicationsUncheckedUpdateWithoutDirectus_filesInput = {
@@ -1076,8 +1571,13 @@ export type applicationsUncheckedUpdateWithoutDirectus_filesInput = {
   discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  cover_letter?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_expectation?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_activity_log?: Prisma.application_activity_logUncheckedUpdateManyWithoutApplicationsNestedInput
+  application_letters?: Prisma.application_lettersUncheckedUpdateManyWithoutApplicationsNestedInput
   application_questions?: Prisma.application_questionsUncheckedUpdateManyWithoutApplicationsNestedInput
+  applications_files?: Prisma.applications_filesUncheckedUpdateManyWithoutApplicationsNestedInput
 }
 
 export type applicationsUncheckedUpdateManyWithoutDirectus_filesInput = {
@@ -1093,7 +1593,9 @@ export type applicationsUncheckedUpdateManyWithoutDirectus_filesInput = {
   discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  cover_letter?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_expectation?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type applicationsCreateManyProfilesInput = {
@@ -1109,7 +1611,9 @@ export type applicationsCreateManyProfilesInput = {
   discontinued_note?: string | null
   application_note?: string | null
   application_seen_date?: Date | string | null
-  cover_letter?: string | null
+  salary_expectation?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: string | null
+  salary_period?: string | null
 }
 
 export type applicationsUpdateWithoutProfilesInput = {
@@ -1122,10 +1626,15 @@ export type applicationsUpdateWithoutProfilesInput = {
   discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  cover_letter?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_expectation?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_activity_log?: Prisma.application_activity_logUpdateManyWithoutApplicationsNestedInput
+  application_letters?: Prisma.application_lettersUpdateManyWithoutApplicationsNestedInput
   application_questions?: Prisma.application_questionsUpdateManyWithoutApplicationsNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutApplicationsNestedInput
   vacancies?: Prisma.vacanciesUpdateOneWithoutApplicationsNestedInput
+  applications_files?: Prisma.applications_filesUpdateManyWithoutApplicationsNestedInput
 }
 
 export type applicationsUncheckedUpdateWithoutProfilesInput = {
@@ -1141,8 +1650,13 @@ export type applicationsUncheckedUpdateWithoutProfilesInput = {
   discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  cover_letter?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_expectation?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_activity_log?: Prisma.application_activity_logUncheckedUpdateManyWithoutApplicationsNestedInput
+  application_letters?: Prisma.application_lettersUncheckedUpdateManyWithoutApplicationsNestedInput
   application_questions?: Prisma.application_questionsUncheckedUpdateManyWithoutApplicationsNestedInput
+  applications_files?: Prisma.applications_filesUncheckedUpdateManyWithoutApplicationsNestedInput
 }
 
 export type applicationsUncheckedUpdateManyWithoutProfilesInput = {
@@ -1158,7 +1672,9 @@ export type applicationsUncheckedUpdateManyWithoutProfilesInput = {
   discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  cover_letter?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_expectation?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type applicationsCreateManyVacanciesInput = {
@@ -1174,7 +1690,9 @@ export type applicationsCreateManyVacanciesInput = {
   discontinued_note?: string | null
   application_note?: string | null
   application_seen_date?: Date | string | null
-  cover_letter?: string | null
+  salary_expectation?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: string | null
+  salary_period?: string | null
 }
 
 export type applicationsUpdateWithoutVacanciesInput = {
@@ -1187,10 +1705,15 @@ export type applicationsUpdateWithoutVacanciesInput = {
   discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  cover_letter?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_expectation?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_activity_log?: Prisma.application_activity_logUpdateManyWithoutApplicationsNestedInput
+  application_letters?: Prisma.application_lettersUpdateManyWithoutApplicationsNestedInput
   application_questions?: Prisma.application_questionsUpdateManyWithoutApplicationsNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutApplicationsNestedInput
   profiles?: Prisma.profilesUpdateOneRequiredWithoutApplicationsNestedInput
+  applications_files?: Prisma.applications_filesUpdateManyWithoutApplicationsNestedInput
 }
 
 export type applicationsUncheckedUpdateWithoutVacanciesInput = {
@@ -1206,8 +1729,13 @@ export type applicationsUncheckedUpdateWithoutVacanciesInput = {
   discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  cover_letter?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_expectation?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_activity_log?: Prisma.application_activity_logUncheckedUpdateManyWithoutApplicationsNestedInput
+  application_letters?: Prisma.application_lettersUncheckedUpdateManyWithoutApplicationsNestedInput
   application_questions?: Prisma.application_questionsUncheckedUpdateManyWithoutApplicationsNestedInput
+  applications_files?: Prisma.applications_filesUncheckedUpdateManyWithoutApplicationsNestedInput
 }
 
 export type applicationsUncheckedUpdateManyWithoutVacanciesInput = {
@@ -1223,7 +1751,9 @@ export type applicationsUncheckedUpdateManyWithoutVacanciesInput = {
   discontinued_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   application_seen_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  cover_letter?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_expectation?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 
@@ -1232,11 +1762,17 @@ export type applicationsUncheckedUpdateManyWithoutVacanciesInput = {
  */
 
 export type ApplicationsCountOutputType = {
+  application_activity_log: number
+  application_letters: number
   application_questions: number
+  applications_files: number
 }
 
 export type ApplicationsCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  application_activity_log?: boolean | ApplicationsCountOutputTypeCountApplication_activity_logArgs
+  application_letters?: boolean | ApplicationsCountOutputTypeCountApplication_lettersArgs
   application_questions?: boolean | ApplicationsCountOutputTypeCountApplication_questionsArgs
+  applications_files?: boolean | ApplicationsCountOutputTypeCountApplications_filesArgs
 }
 
 /**
@@ -1252,8 +1788,29 @@ export type ApplicationsCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types
 /**
  * ApplicationsCountOutputType without action
  */
+export type ApplicationsCountOutputTypeCountApplication_activity_logArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.application_activity_logWhereInput
+}
+
+/**
+ * ApplicationsCountOutputType without action
+ */
+export type ApplicationsCountOutputTypeCountApplication_lettersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.application_lettersWhereInput
+}
+
+/**
+ * ApplicationsCountOutputType without action
+ */
 export type ApplicationsCountOutputTypeCountApplication_questionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.application_questionsWhereInput
+}
+
+/**
+ * ApplicationsCountOutputType without action
+ */
+export type ApplicationsCountOutputTypeCountApplications_filesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.applications_filesWhereInput
 }
 
 
@@ -1271,11 +1828,16 @@ export type applicationsSelect<ExtArgs extends runtime.Types.Extensions.Internal
   discontinued_note?: boolean
   application_note?: boolean
   application_seen_date?: boolean
-  cover_letter?: boolean
+  salary_expectation?: boolean
+  salary_currency?: boolean
+  salary_period?: boolean
+  application_activity_log?: boolean | Prisma.applications$application_activity_logArgs<ExtArgs>
+  application_letters?: boolean | Prisma.applications$application_lettersArgs<ExtArgs>
   application_questions?: boolean | Prisma.applications$application_questionsArgs<ExtArgs>
   directus_files?: boolean | Prisma.applications$directus_filesArgs<ExtArgs>
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
   vacancies?: boolean | Prisma.applications$vacanciesArgs<ExtArgs>
+  applications_files?: boolean | Prisma.applications$applications_filesArgs<ExtArgs>
   _count?: boolean | Prisma.ApplicationsCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["applications"]>
 
@@ -1293,7 +1855,9 @@ export type applicationsSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   discontinued_note?: boolean
   application_note?: boolean
   application_seen_date?: boolean
-  cover_letter?: boolean
+  salary_expectation?: boolean
+  salary_currency?: boolean
+  salary_period?: boolean
   directus_files?: boolean | Prisma.applications$directus_filesArgs<ExtArgs>
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
   vacancies?: boolean | Prisma.applications$vacanciesArgs<ExtArgs>
@@ -1313,7 +1877,9 @@ export type applicationsSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   discontinued_note?: boolean
   application_note?: boolean
   application_seen_date?: boolean
-  cover_letter?: boolean
+  salary_expectation?: boolean
+  salary_currency?: boolean
+  salary_period?: boolean
   directus_files?: boolean | Prisma.applications$directus_filesArgs<ExtArgs>
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
   vacancies?: boolean | Prisma.applications$vacanciesArgs<ExtArgs>
@@ -1333,15 +1899,20 @@ export type applicationsSelectScalar = {
   discontinued_note?: boolean
   application_note?: boolean
   application_seen_date?: boolean
-  cover_letter?: boolean
+  salary_expectation?: boolean
+  salary_currency?: boolean
+  salary_period?: boolean
 }
 
-export type applicationsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "date_created" | "date_updated" | "vacancy" | "profile" | "cv_sent_through" | "cv_file_sent" | "application_sent_date" | "discontinued_reason" | "discontinued_note" | "application_note" | "application_seen_date" | "cover_letter", ExtArgs["result"]["applications"]>
+export type applicationsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "date_created" | "date_updated" | "vacancy" | "profile" | "cv_sent_through" | "cv_file_sent" | "application_sent_date" | "discontinued_reason" | "discontinued_note" | "application_note" | "application_seen_date" | "salary_expectation" | "salary_currency" | "salary_period", ExtArgs["result"]["applications"]>
 export type applicationsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  application_activity_log?: boolean | Prisma.applications$application_activity_logArgs<ExtArgs>
+  application_letters?: boolean | Prisma.applications$application_lettersArgs<ExtArgs>
   application_questions?: boolean | Prisma.applications$application_questionsArgs<ExtArgs>
   directus_files?: boolean | Prisma.applications$directus_filesArgs<ExtArgs>
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
   vacancies?: boolean | Prisma.applications$vacanciesArgs<ExtArgs>
+  applications_files?: boolean | Prisma.applications$applications_filesArgs<ExtArgs>
   _count?: boolean | Prisma.ApplicationsCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type applicationsIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1358,10 +1929,13 @@ export type applicationsIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types
 export type $applicationsPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "applications"
   objects: {
+    application_activity_log: Prisma.$application_activity_logPayload<ExtArgs>[]
+    application_letters: Prisma.$application_lettersPayload<ExtArgs>[]
     application_questions: Prisma.$application_questionsPayload<ExtArgs>[]
     directus_files: Prisma.$directus_filesPayload<ExtArgs> | null
     profiles: Prisma.$profilesPayload<ExtArgs>
     vacancies: Prisma.$vacanciesPayload<ExtArgs> | null
+    applications_files: Prisma.$applications_filesPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
@@ -1377,7 +1951,9 @@ export type $applicationsPayload<ExtArgs extends runtime.Types.Extensions.Intern
     discontinued_note: string | null
     application_note: string | null
     application_seen_date: Date | null
-    cover_letter: string | null
+    salary_expectation: runtime.Decimal | null
+    salary_currency: string | null
+    salary_period: string | null
   }, ExtArgs["result"]["applications"]>
   composites: {}
 }
@@ -1772,10 +2348,13 @@ readonly fields: applicationsFieldRefs;
  */
 export interface Prisma__applicationsClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  application_activity_log<T extends Prisma.applications$application_activity_logArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.applications$application_activity_logArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$application_activity_logPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  application_letters<T extends Prisma.applications$application_lettersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.applications$application_lettersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$application_lettersPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   application_questions<T extends Prisma.applications$application_questionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.applications$application_questionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$application_questionsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   directus_files<T extends Prisma.applications$directus_filesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.applications$directus_filesArgs<ExtArgs>>): Prisma.Prisma__directus_filesClient<runtime.Types.Result.GetResult<Prisma.$directus_filesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   profiles<T extends Prisma.profilesDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.profilesDefaultArgs<ExtArgs>>): Prisma.Prisma__profilesClient<runtime.Types.Result.GetResult<Prisma.$profilesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   vacancies<T extends Prisma.applications$vacanciesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.applications$vacanciesArgs<ExtArgs>>): Prisma.Prisma__vacanciesClient<runtime.Types.Result.GetResult<Prisma.$vacanciesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  applications_files<T extends Prisma.applications$applications_filesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.applications$applications_filesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$applications_filesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1818,7 +2397,9 @@ export interface applicationsFieldRefs {
   readonly discontinued_note: Prisma.FieldRef<"applications", 'String'>
   readonly application_note: Prisma.FieldRef<"applications", 'String'>
   readonly application_seen_date: Prisma.FieldRef<"applications", 'DateTime'>
-  readonly cover_letter: Prisma.FieldRef<"applications", 'String'>
+  readonly salary_expectation: Prisma.FieldRef<"applications", 'Decimal'>
+  readonly salary_currency: Prisma.FieldRef<"applications", 'String'>
+  readonly salary_period: Prisma.FieldRef<"applications", 'String'>
 }
     
 
@@ -2215,6 +2796,54 @@ export type applicationsDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.
 }
 
 /**
+ * applications.application_activity_log
+ */
+export type applications$application_activity_logArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the application_activity_log
+   */
+  select?: Prisma.application_activity_logSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the application_activity_log
+   */
+  omit?: Prisma.application_activity_logOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.application_activity_logInclude<ExtArgs> | null
+  where?: Prisma.application_activity_logWhereInput
+  orderBy?: Prisma.application_activity_logOrderByWithRelationInput | Prisma.application_activity_logOrderByWithRelationInput[]
+  cursor?: Prisma.application_activity_logWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.Application_activity_logScalarFieldEnum | Prisma.Application_activity_logScalarFieldEnum[]
+}
+
+/**
+ * applications.application_letters
+ */
+export type applications$application_lettersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the application_letters
+   */
+  select?: Prisma.application_lettersSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the application_letters
+   */
+  omit?: Prisma.application_lettersOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.application_lettersInclude<ExtArgs> | null
+  where?: Prisma.application_lettersWhereInput
+  orderBy?: Prisma.application_lettersOrderByWithRelationInput | Prisma.application_lettersOrderByWithRelationInput[]
+  cursor?: Prisma.application_lettersWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.Application_lettersScalarFieldEnum | Prisma.Application_lettersScalarFieldEnum[]
+}
+
+/**
  * applications.application_questions
  */
 export type applications$application_questionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2274,6 +2903,30 @@ export type applications$vacanciesArgs<ExtArgs extends runtime.Types.Extensions.
    */
   include?: Prisma.vacanciesInclude<ExtArgs> | null
   where?: Prisma.vacanciesWhereInput
+}
+
+/**
+ * applications.applications_files
+ */
+export type applications$applications_filesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the applications_files
+   */
+  select?: Prisma.applications_filesSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the applications_files
+   */
+  omit?: Prisma.applications_filesOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.applications_filesInclude<ExtArgs> | null
+  where?: Prisma.applications_filesWhereInput
+  orderBy?: Prisma.applications_filesOrderByWithRelationInput | Prisma.applications_filesOrderByWithRelationInput[]
+  cursor?: Prisma.applications_filesWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.Applications_filesScalarFieldEnum | Prisma.Applications_filesScalarFieldEnum[]
 }
 
 /**
