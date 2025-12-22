@@ -36,8 +36,12 @@ export async function loadProfile() {
       },
       references: { orderBy: { sort: "asc" } },
       profile_versions: {
+        include: {
+          profile_version_extensions_profile_version_extensions_extendedToprofile_versions:
+            {},
+        },
         orderBy: { sort: "asc" },
-        where: { status: { equals: "published" } }
+        where: { status: { equals: "published" } },
       },
     },
   });

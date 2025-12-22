@@ -1,18 +1,18 @@
-import { defineConfig } from 'vitest/config';
-import { sveltekit } from '@sveltejs/kit/vite';
-import { execSync } from 'child_process';
+import { defineConfig } from "vitest/config";
+import { sveltekit } from "@sveltejs/kit/vite";
+import { execSync } from "child_process";
 
 // Pre-generate Prisma client before tests
 try {
-  execSync('npx prisma generate', { stdio: 'inherit' });
+  execSync("npx prisma generate", { stdio: "inherit" });
 } catch (error) {
-  console.error('Failed to generate Prisma client:', error);
+  console.error("Failed to generate Prisma client:", error);
 }
 
 export default defineConfig({
   plugins: [sveltekit()],
   test: {
-    environment: 'node',
-    setupFiles: ['./vitest.setup.ts'],
+    environment: "node",
+    setupFiles: ["./vitest.setup.ts"],
   },
 });

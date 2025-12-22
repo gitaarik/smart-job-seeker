@@ -1,5 +1,8 @@
-export function detectTagAdded(targetElement: HTMLElement, tagName: string, callback: CallableFunction) {
-
+export function detectTagAdded(
+  targetElement: HTMLElement,
+  tagName: string,
+  callback: CallableFunction,
+) {
   const observer = new MutationObserver((mutations) => {
     // Check each mutation for added nodes
     mutations.forEach((mutation) => {
@@ -10,7 +13,10 @@ export function detectTagAdded(targetElement: HTMLElement, tagName: string, call
           if (node.nodeType === Node.ELEMENT_NODE) {
             const element = node as HTMLElement; // Type assertion to HTMLElement
             // Check if node itself is `tagName` or contains `tagName`
-            if (element.tagName.toLowerCase() === tagName.toLowerCase() || element.querySelector(tagName)) {
+            if (
+              element.tagName.toLowerCase() === tagName.toLowerCase() ||
+              element.querySelector(tagName)
+            ) {
               callback();
             }
           }
@@ -21,7 +27,7 @@ export function detectTagAdded(targetElement: HTMLElement, tagName: string, call
 
   const config = {
     childList: true, // Watch for addition/removal of child nodes
-    subtree: true,   // Watch the entire subtree of the target element
+    subtree: true, // Watch the entire subtree of the target element
   };
 
   observer.observe(targetElement, config);

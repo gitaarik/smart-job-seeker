@@ -4,7 +4,7 @@ import { getWindowVariable } from "./window";
 export function track(name: string): void {
   vercelTrack(name);
 
-  const umami = getWindowVariable('umami')
+  const umami = getWindowVariable("umami");
 
   if (umami && typeof umami.track === "function") {
     umami.track(name);

@@ -1,4 +1,4 @@
-import { createHmac } from 'crypto';
+import { createHmac } from "crypto";
 
 /**
  * Webhook utility functions for both server-side webhook generation and verification
@@ -14,10 +14,10 @@ import { createHmac } from 'crypto';
  */
 export function generateWebhookSignature(
   payload: Record<string, unknown>,
-  secret: string
+  secret: string,
 ): string {
   const payloadString = JSON.stringify(payload);
-  return createHmac('sha256', secret).update(payloadString).digest('hex');
+  return createHmac("sha256", secret).update(payloadString).digest("hex");
 }
 
 /**
@@ -28,8 +28,11 @@ export function generateWebhookSignature(
  * @param secret - The webhook secret key
  * @returns HMAC-SHA256 hex signature
  */
-export function generateWebhookSignatureFromString(rawPayload: string, secret: string): string {
-  return createHmac('sha256', secret).update(rawPayload).digest('hex');
+export function generateWebhookSignatureFromString(
+  rawPayload: string,
+  secret: string,
+): string {
+  return createHmac("sha256", secret).update(rawPayload).digest("hex");
 }
 
 /**
@@ -44,7 +47,7 @@ export function generateWebhookSignatureFromString(rawPayload: string, secret: s
 export function verifyWebhookSignature(
   payload: Record<string, unknown>,
   signature: string,
-  secret: string
+  secret: string,
 ): boolean {
   const expectedSignature = generateWebhookSignature(payload, secret);
   return signature === expectedSignature;
@@ -61,8 +64,11 @@ export function verifyWebhookSignature(
 export function verifyWebhookSignatureFromString(
   rawPayload: string,
   signature: string,
-  secret: string
+  secret: string,
 ): boolean {
-  const expectedSignature = generateWebhookSignatureFromString(rawPayload, secret);
+  const expectedSignature = generateWebhookSignatureFromString(
+    rawPayload,
+    secret,
+  );
   return signature === expectedSignature;
 }

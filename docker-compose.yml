@@ -48,6 +48,7 @@ services:
     environment:
       NODE_ENV: development
       DATABASE_URL: postgres://postgres:postgres@database:5432/smartjobseeker
+      POSTGRES_URL: postgres://postgres:postgres@database:5432/smartjobseeker
   admin:
     extends:
       file: docker-compose.directus.yml

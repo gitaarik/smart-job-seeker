@@ -1,10 +1,10 @@
-import { browser } from '$app/environment';
+import { browser } from "$app/environment";
 
 export function getWindowVariable(
   variableName: keyof Window | "umami" | "turnstile",
-  defaultValue: string | null = null
+  defaultValue: string | null = null,
 ) {
-  if (browser && typeof window !== 'undefined') {
+  if (browser && typeof window !== "undefined") {
     return window[variableName] ?? defaultValue;
   }
   return defaultValue;
