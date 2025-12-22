@@ -212,10 +212,16 @@ async function importProfile(
         console.log("Deleting existing related data...");
         // Delete all related data for this profile
         await Promise.all([
-          dbDirect.profile_versions.deleteMany({ where: { profile: profileId } }),
+          dbDirect.profile_versions.deleteMany({
+            where: { profile: profileId },
+          }),
           dbDirect.highlights.deleteMany({ where: { profile: profileId } }),
           dbDirect.work_experience_project_technologies.deleteMany({
-            where: { work_experience_projects: { work_experiences: { profile: profileId } } },
+            where: {
+              work_experience_projects: {
+                work_experiences: { profile: profileId },
+              },
+            },
           }),
           dbDirect.work_experience_projects.deleteMany({
             where: { work_experiences: { profile: profileId } },
@@ -226,7 +232,9 @@ async function importProfile(
           dbDirect.work_experience_technologies.deleteMany({
             where: { work_experiences: { profile: profileId } },
           }),
-          dbDirect.work_experiences.deleteMany({ where: { profile: profileId } }),
+          dbDirect.work_experiences.deleteMany({
+            where: { profile: profileId },
+          }),
           dbDirect.side_project_achievements.deleteMany({
             where: { side_projects: { profile: profileId } },
           }),
@@ -237,7 +245,9 @@ async function importProfile(
           dbDirect.education.deleteMany({ where: { profile: profileId } }),
           dbDirect.languages.deleteMany({ where: { profile: profileId } }),
           dbDirect.references.deleteMany({ where: { profile: profileId } }),
-          dbDirect.project_stories.deleteMany({ where: { profile: profileId } }),
+          dbDirect.project_stories.deleteMany({
+            where: { profile: profileId },
+          }),
           dbDirect.application_questions.deleteMany({
             where: { profile: profileId },
           }),
@@ -467,22 +477,30 @@ async function importProfile(
         // Import projects
         if (work.projects && work.projects.length > 0) {
           for (const project of work.projects) {
-            const createdProject = await dbDirect.work_experience_projects.create({
-              data: {
-                status: project.status || "draft",
-                sort: project.sort,
-                name: project.name,
-                url: project.url,
-                start_date: project.start_date ? new Date(project.start_date) : null,
-                end_date: project.end_date ? new Date(project.end_date) : null,
-                description: project.description,
-                outcome: project.outcome,
-                work_experience: createdWork.id,
-              },
-            });
+            const createdProject = await dbDirect.work_experience_projects
+              .create({
+                data: {
+                  status: project.status || "draft",
+                  sort: project.sort,
+                  name: project.name,
+                  url: project.url,
+                  start_date: project.start_date
+                    ? new Date(project.start_date)
+                    : null,
+                  end_date: project.end_date
+                    ? new Date(project.end_date)
+                    : null,
+                  description: project.description,
+                  outcome: project.outcome,
+                  work_experience: createdWork.id,
+                },
+              });
 
             // Import project technologies
-            if (project.work_experience_project_technologies && project.work_experience_project_technologies.length > 0) {
+            if (
+              project.work_experience_project_technologies &&
+              project.work_experience_project_technologies.length > 0
+            ) {
               for (const tech of project.work_experience_project_technologies) {
                 await dbDirect.work_experience_project_technologies.create({
                   data: {

@@ -81,4 +81,3 @@ try {
   console.error("Error generating JSON Resume:", error.message);
   process.exit(1);
 }
-

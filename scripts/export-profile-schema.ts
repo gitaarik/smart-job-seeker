@@ -50,7 +50,6 @@ const PROFILE_SCHEMA_MAPPING = {
         relations: {
           work_experience_achievements: {
             fields: [
-              "title",
               "description",
             ],
           },
@@ -58,12 +57,19 @@ const PROFILE_SCHEMA_MAPPING = {
             fields: ["name"],
           },
           work_experience_projects: {
-            fields: ["name", "url", "start_date", "end_date", "description", "outcome"],
+            fields: [
+              "name",
+              "url",
+              "start_date",
+              "end_date",
+              "description",
+              "outcome",
+            ],
             relations: {
               work_experience_project_technologies: {
-                fields: ["name"]
-              }
-            }
+                fields: ["name"],
+              },
+            },
           },
         },
       },
@@ -119,12 +125,6 @@ const PROFILE_SCHEMA_MAPPING = {
           "category",
         ],
       },
-      application_questions: {
-        fields: ["question", "answer", "title", "source"],
-      },
-      cheat_sheets: {
-        fields: ["title", "content"],
-      },
       salary_expectations: {
         fields: [
           "job_title",
@@ -151,7 +151,7 @@ interface SchemaNode {
 async function buildSchemaNode(
   collection: string,
   fieldNames: string[],
-  relations?: Record<string, { fields: string[]; relations?: any }>
+  relations?: Record<string, { fields: string[]; relations?: any }>,
 ): Promise<SchemaNode> {
   // Fetch collection note
   const collectionMeta = await dbDirect.directus_collections.findUnique({
@@ -174,7 +174,7 @@ async function buildSchemaNode(
   });
 
   const fieldNotesMap = Object.fromEntries(
-    fieldMetas.map((fm) => [fm.field, removeMd(fm.note || "")])
+    fieldMetas.map((fm) => [fm.field, removeMd(fm.note || "")]),
   );
 
   for (const fieldName of fieldNames) {
@@ -188,7 +188,7 @@ async function buildSchemaNode(
       node.relations[relationName] = await buildSchemaNode(
         relationName,
         relationConfig.fields,
-        relationConfig.relations
+        relationConfig.relations,
       );
     }
   }
@@ -218,7 +218,7 @@ async function exportProfileSchema(profileId: string): Promise<void> {
     const schema = await buildSchemaNode(
       "profiles",
       profilesConfig.fields,
-      profilesConfig.relations
+      profilesConfig.relations,
     );
 
     // Store in collected_data
