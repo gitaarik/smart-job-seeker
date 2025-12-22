@@ -61,6 +61,7 @@ export type Salary_expectationsMinAggregateOutputType = {
   year_salary: number | null
   daily_rate: number | null
   profile: number | null
+  currency: string | null
 }
 
 export type Salary_expectationsMaxAggregateOutputType = {
@@ -78,6 +79,7 @@ export type Salary_expectationsMaxAggregateOutputType = {
   year_salary: number | null
   daily_rate: number | null
   profile: number | null
+  currency: string | null
 }
 
 export type Salary_expectationsCountAggregateOutputType = {
@@ -95,6 +97,7 @@ export type Salary_expectationsCountAggregateOutputType = {
   year_salary: number
   daily_rate: number
   profile: number
+  currency: number
   _all: number
 }
 
@@ -134,6 +137,7 @@ export type Salary_expectationsMinAggregateInputType = {
   year_salary?: true
   daily_rate?: true
   profile?: true
+  currency?: true
 }
 
 export type Salary_expectationsMaxAggregateInputType = {
@@ -151,6 +155,7 @@ export type Salary_expectationsMaxAggregateInputType = {
   year_salary?: true
   daily_rate?: true
   profile?: true
+  currency?: true
 }
 
 export type Salary_expectationsCountAggregateInputType = {
@@ -168,6 +173,7 @@ export type Salary_expectationsCountAggregateInputType = {
   year_salary?: true
   daily_rate?: true
   profile?: true
+  currency?: true
   _all?: true
 }
 
@@ -272,6 +278,7 @@ export type Salary_expectationsGroupByOutputType = {
   year_salary: number | null
   daily_rate: number | null
   profile: number
+  currency: string | null
   _count: Salary_expectationsCountAggregateOutputType | null
   _avg: Salary_expectationsAvgAggregateOutputType | null
   _sum: Salary_expectationsSumAggregateOutputType | null
@@ -312,6 +319,7 @@ export type salary_expectationsWhereInput = {
   year_salary?: Prisma.IntNullableFilter<"salary_expectations"> | number | null
   daily_rate?: Prisma.IntNullableFilter<"salary_expectations"> | number | null
   profile?: Prisma.IntFilter<"salary_expectations"> | number
+  currency?: Prisma.StringNullableFilter<"salary_expectations"> | string | null
   profiles?: Prisma.XOR<Prisma.ProfilesScalarRelationFilter, Prisma.profilesWhereInput>
 }
 
@@ -330,6 +338,7 @@ export type salary_expectationsOrderByWithRelationInput = {
   year_salary?: Prisma.SortOrderInput | Prisma.SortOrder
   daily_rate?: Prisma.SortOrderInput | Prisma.SortOrder
   profile?: Prisma.SortOrder
+  currency?: Prisma.SortOrderInput | Prisma.SortOrder
   profiles?: Prisma.profilesOrderByWithRelationInput
 }
 
@@ -351,6 +360,7 @@ export type salary_expectationsWhereUniqueInput = Prisma.AtLeast<{
   year_salary?: Prisma.IntNullableFilter<"salary_expectations"> | number | null
   daily_rate?: Prisma.IntNullableFilter<"salary_expectations"> | number | null
   profile?: Prisma.IntFilter<"salary_expectations"> | number
+  currency?: Prisma.StringNullableFilter<"salary_expectations"> | string | null
   profiles?: Prisma.XOR<Prisma.ProfilesScalarRelationFilter, Prisma.profilesWhereInput>
 }, "id">
 
@@ -369,6 +379,7 @@ export type salary_expectationsOrderByWithAggregationInput = {
   year_salary?: Prisma.SortOrderInput | Prisma.SortOrder
   daily_rate?: Prisma.SortOrderInput | Prisma.SortOrder
   profile?: Prisma.SortOrder
+  currency?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.salary_expectationsCountOrderByAggregateInput
   _avg?: Prisma.salary_expectationsAvgOrderByAggregateInput
   _max?: Prisma.salary_expectationsMaxOrderByAggregateInput
@@ -394,6 +405,7 @@ export type salary_expectationsScalarWhereWithAggregatesInput = {
   year_salary?: Prisma.IntNullableWithAggregatesFilter<"salary_expectations"> | number | null
   daily_rate?: Prisma.IntNullableWithAggregatesFilter<"salary_expectations"> | number | null
   profile?: Prisma.IntWithAggregatesFilter<"salary_expectations"> | number
+  currency?: Prisma.StringNullableWithAggregatesFilter<"salary_expectations"> | string | null
 }
 
 export type salary_expectationsCreateInput = {
@@ -409,6 +421,7 @@ export type salary_expectationsCreateInput = {
   month_salary?: number | null
   year_salary?: number | null
   daily_rate?: number | null
+  currency?: string | null
   profiles: Prisma.profilesCreateNestedOneWithoutSalary_expectationsInput
 }
 
@@ -427,6 +440,7 @@ export type salary_expectationsUncheckedCreateInput = {
   year_salary?: number | null
   daily_rate?: number | null
   profile: number
+  currency?: string | null
 }
 
 export type salary_expectationsUpdateInput = {
@@ -442,6 +456,7 @@ export type salary_expectationsUpdateInput = {
   month_salary?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   year_salary?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   daily_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profiles?: Prisma.profilesUpdateOneRequiredWithoutSalary_expectationsNestedInput
 }
 
@@ -460,6 +475,7 @@ export type salary_expectationsUncheckedUpdateInput = {
   year_salary?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   daily_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
+  currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type salary_expectationsCreateManyInput = {
@@ -477,6 +493,7 @@ export type salary_expectationsCreateManyInput = {
   year_salary?: number | null
   daily_rate?: number | null
   profile: number
+  currency?: string | null
 }
 
 export type salary_expectationsUpdateManyMutationInput = {
@@ -492,6 +509,7 @@ export type salary_expectationsUpdateManyMutationInput = {
   month_salary?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   year_salary?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   daily_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type salary_expectationsUncheckedUpdateManyInput = {
@@ -509,6 +527,7 @@ export type salary_expectationsUncheckedUpdateManyInput = {
   year_salary?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   daily_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
+  currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type Salary_expectationsListRelationFilter = {
@@ -536,6 +555,7 @@ export type salary_expectationsCountOrderByAggregateInput = {
   year_salary?: Prisma.SortOrder
   daily_rate?: Prisma.SortOrder
   profile?: Prisma.SortOrder
+  currency?: Prisma.SortOrder
 }
 
 export type salary_expectationsAvgOrderByAggregateInput = {
@@ -563,6 +583,7 @@ export type salary_expectationsMaxOrderByAggregateInput = {
   year_salary?: Prisma.SortOrder
   daily_rate?: Prisma.SortOrder
   profile?: Prisma.SortOrder
+  currency?: Prisma.SortOrder
 }
 
 export type salary_expectationsMinOrderByAggregateInput = {
@@ -580,6 +601,7 @@ export type salary_expectationsMinOrderByAggregateInput = {
   year_salary?: Prisma.SortOrder
   daily_rate?: Prisma.SortOrder
   profile?: Prisma.SortOrder
+  currency?: Prisma.SortOrder
 }
 
 export type salary_expectationsSumOrderByAggregateInput = {
@@ -647,6 +669,7 @@ export type salary_expectationsCreateWithoutProfilesInput = {
   month_salary?: number | null
   year_salary?: number | null
   daily_rate?: number | null
+  currency?: string | null
 }
 
 export type salary_expectationsUncheckedCreateWithoutProfilesInput = {
@@ -663,6 +686,7 @@ export type salary_expectationsUncheckedCreateWithoutProfilesInput = {
   month_salary?: number | null
   year_salary?: number | null
   daily_rate?: number | null
+  currency?: string | null
 }
 
 export type salary_expectationsCreateOrConnectWithoutProfilesInput = {
@@ -709,6 +733,7 @@ export type salary_expectationsScalarWhereInput = {
   year_salary?: Prisma.IntNullableFilter<"salary_expectations"> | number | null
   daily_rate?: Prisma.IntNullableFilter<"salary_expectations"> | number | null
   profile?: Prisma.IntFilter<"salary_expectations"> | number
+  currency?: Prisma.StringNullableFilter<"salary_expectations"> | string | null
 }
 
 export type salary_expectationsCreateManyProfilesInput = {
@@ -725,6 +750,7 @@ export type salary_expectationsCreateManyProfilesInput = {
   month_salary?: number | null
   year_salary?: number | null
   daily_rate?: number | null
+  currency?: string | null
 }
 
 export type salary_expectationsUpdateWithoutProfilesInput = {
@@ -740,6 +766,7 @@ export type salary_expectationsUpdateWithoutProfilesInput = {
   month_salary?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   year_salary?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   daily_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type salary_expectationsUncheckedUpdateWithoutProfilesInput = {
@@ -756,6 +783,7 @@ export type salary_expectationsUncheckedUpdateWithoutProfilesInput = {
   month_salary?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   year_salary?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   daily_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type salary_expectationsUncheckedUpdateManyWithoutProfilesInput = {
@@ -772,6 +800,7 @@ export type salary_expectationsUncheckedUpdateManyWithoutProfilesInput = {
   month_salary?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   year_salary?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   daily_rate?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 
@@ -791,6 +820,7 @@ export type salary_expectationsSelect<ExtArgs extends runtime.Types.Extensions.I
   year_salary?: boolean
   daily_rate?: boolean
   profile?: boolean
+  currency?: boolean
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["salary_expectations"]>
 
@@ -809,6 +839,7 @@ export type salary_expectationsSelectCreateManyAndReturn<ExtArgs extends runtime
   year_salary?: boolean
   daily_rate?: boolean
   profile?: boolean
+  currency?: boolean
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["salary_expectations"]>
 
@@ -827,6 +858,7 @@ export type salary_expectationsSelectUpdateManyAndReturn<ExtArgs extends runtime
   year_salary?: boolean
   daily_rate?: boolean
   profile?: boolean
+  currency?: boolean
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["salary_expectations"]>
 
@@ -845,9 +877,10 @@ export type salary_expectationsSelectScalar = {
   year_salary?: boolean
   daily_rate?: boolean
   profile?: boolean
+  currency?: boolean
 }
 
-export type salary_expectationsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "sort" | "date_created" | "date_updated" | "job_title" | "company_type" | "employment_type" | "work_arrangement" | "region" | "hourly_rate" | "month_salary" | "year_salary" | "daily_rate" | "profile", ExtArgs["result"]["salary_expectations"]>
+export type salary_expectationsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "sort" | "date_created" | "date_updated" | "job_title" | "company_type" | "employment_type" | "work_arrangement" | "region" | "hourly_rate" | "month_salary" | "year_salary" | "daily_rate" | "profile" | "currency", ExtArgs["result"]["salary_expectations"]>
 export type salary_expectationsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }
@@ -878,6 +911,7 @@ export type $salary_expectationsPayload<ExtArgs extends runtime.Types.Extensions
     year_salary: number | null
     daily_rate: number | null
     profile: number
+    currency: string | null
   }, ExtArgs["result"]["salary_expectations"]>
   composites: {}
 }
@@ -1316,6 +1350,7 @@ export interface salary_expectationsFieldRefs {
   readonly year_salary: Prisma.FieldRef<"salary_expectations", 'Int'>
   readonly daily_rate: Prisma.FieldRef<"salary_expectations", 'Int'>
   readonly profile: Prisma.FieldRef<"salary_expectations", 'Int'>
+  readonly currency: Prisma.FieldRef<"salary_expectations", 'String'>
 }
     
 
