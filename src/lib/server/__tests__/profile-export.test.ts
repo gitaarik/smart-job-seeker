@@ -3,10 +3,10 @@
  * Tests schema and data export logic with mocked database
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock the database
-vi.mock('$lib/db', () => ({
+vi.mock("$lib/db", () => ({
   db: {
     profiles: {
       findUnique: vi.fn(),
@@ -26,43 +26,47 @@ vi.mock('$lib/db', () => ({
 }));
 
 // Mock remove-markdown
-vi.mock('remove-markdown', () => ({
-  default: (text: string) => text.replace(/[#*_`\[\]]/g, ''),
+vi.mock("remove-markdown", () => ({
+  default: (text: string) => text.replace(/[#*_`\[\]]/g, ""),
 }));
 
-import { exportProfileSchema, exportProfileData, exportProfile } from '../profile-export';
-import { db } from '$lib/db';
+import {
+  exportProfile,
+  exportProfileData,
+  exportProfileSchema,
+} from "../profile-export";
+import { db } from "$lib/db";
 
-describe('exportProfileSchema', () => {
+describe("exportProfileSchema", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('should return error for non-existent profile', async () => {
+  it("should return error for non-existent profile", async () => {
     const mockDb = db as any;
     mockDb.profiles.findUnique.mockResolvedValueOnce(null);
 
     const result = await exportProfileSchema(999);
 
     expect(result.success).toBe(false);
-    expect(result.message).toContain('not found');
+    expect(result.message).toContain("not found");
   });
 });
 
-describe('exportProfileData', () => {
+describe("exportProfileData", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('should export data for valid profile', async () => {
+  it("should export data for valid profile", async () => {
     const mockDb = db as any;
 
     const mockProfileData = {
-      name: 'John Doe',
-      title: 'Senior Developer',
-      location: 'Amsterdam',
-      highlights: [{ text: 'Highlight 1' }],
-      tech_skill_categories: [{ name: 'JavaScript' }],
+      name: "John Doe",
+      title: "Senior Developer",
+      location: "Amsterdam",
+      highlights: [{ text: "Highlight 1" }],
+      tech_skill_categories: [{ name: "JavaScript" }],
       work_experiences: [],
       side_projects: [],
       education: [],
@@ -82,26 +86,26 @@ describe('exportProfileData', () => {
     const result = await exportProfileData(1);
 
     expect(result.success).toBe(true);
-    expect(result.message).toContain('Profile data exported');
+    expect(result.message).toContain("Profile data exported");
   });
 
-  it('should return error for non-existent profile', async () => {
+  it("should return error for non-existent profile", async () => {
     const mockDb = db as any;
     mockDb.profiles.findUnique.mockResolvedValueOnce(null);
 
     const result = await exportProfileData(999);
 
     expect(result.success).toBe(false);
-    expect(result.message).toContain('not found');
+    expect(result.message).toContain("not found");
   });
 });
 
-describe('exportProfile', () => {
+describe("exportProfile", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('should return results with schemaResult and dataResult properties', async () => {
+  it("should return results with schemaResult and dataResult properties", async () => {
     const mockDb = db as any;
 
     // Setup for schema export - will fail (profile not found)
@@ -113,10 +117,10 @@ describe('exportProfile', () => {
     const result = await exportProfile(1);
 
     // Verify structure of response
-    expect(result).toHaveProperty('success');
-    expect(result).toHaveProperty('schemaResult');
-    expect(result).toHaveProperty('dataResult');
-    expect(result.schemaResult).toHaveProperty('success');
-    expect(result.dataResult).toHaveProperty('success');
+    expect(result).toHaveProperty("success");
+    expect(result).toHaveProperty("schemaResult");
+    expect(result).toHaveProperty("dataResult");
+    expect(result.schemaResult).toHaveProperty("success");
+    expect(result.dataResult).toHaveProperty("success");
   });
 });
