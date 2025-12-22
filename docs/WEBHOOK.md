@@ -1,10 +1,13 @@
 # Webhook Integration Guide
 
-This document explains how to set up and use the secure webhook endpoint for Directus Flow integration.
+This document explains how to set up and use the secure webhook endpoint for
+Directus Flow integration.
 
 ## Overview
 
-The webhook endpoint (`POST /api/webhook`) allows Directus Flow scripts to securely send data to your SvelteKit application. The integration uses a shared secret key for authentication.
+The webhook endpoint (`POST /api/webhook`) allows Directus Flow scripts to
+securely send data to your SvelteKit application. The integration uses a shared
+secret key for authentication.
 
 ## Setup
 
@@ -17,13 +20,15 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
 Output example:
+
 ```
 a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f
 ```
 
 ### 2. Configure Environment Variable
 
-Add the generated secret to your `.env` file (or `.env.me` for local development):
+Add the generated secret to your `.env` file (or `.env.me` for local
+development):
 
 ```
 WEBHOOK_SECRET="a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f"
@@ -52,7 +57,8 @@ Content-Type: application/json
 x-webhook-secret: your-webhook-secret-key
 ```
 
-The `x-webhook-secret` header must match the `WEBHOOK_SECRET` environment variable.
+The `x-webhook-secret` header must match the `WEBHOOK_SECRET` environment
+variable.
 
 ### Body
 
@@ -69,7 +75,8 @@ The `x-webhook-secret` header must match the `WEBHOOK_SECRET` environment variab
 
 ### Payload Fields
 
-- **eventType** (required): Type of event (`profile.export`, `item.create`, `item.update`, `item.delete`, or custom)
+- **eventType** (required): Type of event (`profile.export`, `item.create`,
+  `item.update`, `item.delete`, or custom)
 - **data** (required): The actual payload data
 
 ## Response Format
@@ -166,9 +173,13 @@ In the Webhook operation:
 The webhook handler processes different event types:
 
 ### profile.export
-Exports both profile schema and data to the `collected_data` collection for one or more profiles. This combines the functionality of `export-profile-schema.ts` and `export-profile-data.ts` scripts.
+
+Exports both profile schema and data to the `collected_data` collection for one
+or more profiles. This combines the functionality of `export-profile-schema.ts`
+and `export-profile-data.ts` scripts.
 
 **Request (Multiple Profiles):**
+
 ```json
 {
   "eventType": "profile.export",
@@ -179,6 +190,7 @@ Exports both profile schema and data to the `collected_data` collection for one 
 ```
 
 **Request (Single Profile - Backwards Compatible):**
+
 ```json
 {
   "eventType": "profile.export",
@@ -189,6 +201,7 @@ Exports both profile schema and data to the `collected_data` collection for one 
 ```
 
 **Response (HTTP 200):**
+
 ```json
 {
   "success": true,
@@ -240,23 +253,30 @@ Exports both profile schema and data to the `collected_data` collection for one 
 ```
 
 **What it does:**
+
 1. Accepts one or more profile IDs
 2. Processes each profile in parallel (non-blocking)
 3. For each profile:
-   - Exports the profile schema (field names and notes) from Directus collections
-   - Fetches all profile data including related records (work experiences, education, skills, etc.)
+   - Exports the profile schema (field names and notes) from Directus
+     collections
+   - Fetches all profile data including related records (work experiences,
+     education, skills, etc.)
    - Stores both in the `collected_data` collection for the profile
    - Updates existing entries or creates new ones
-4. Returns detailed results for each profile, including individual success/failure status
+4. Returns detailed results for each profile, including individual
+   success/failure status
 
-**Default Handler Location:** `src/routes/api/webhook/+server.ts` → `handleProfileExport()`
+**Default Handler Location:** `src/routes/api/webhook/+server.ts` →
+`handleProfileExport()`
 
 **Utility Functions:** `src/lib/server/profile-export.ts`
+
 - `exportProfile(profileId)` - Exports both schema and data
 - `exportProfileSchema(profileId)` - Exports schema only
 - `exportProfileData(profileId)` - Exports data only
 
 ### item.create
+
 Called when a new item is created in Directus.
 
 ```json
@@ -269,9 +289,11 @@ Called when a new item is created in Directus.
 }
 ```
 
-**Default Handler Location:** `src/routes/api/webhook/+server.ts` → `handleItemCreate()`
+**Default Handler Location:** `src/routes/api/webhook/+server.ts` →
+`handleItemCreate()`
 
 ### item.update
+
 Called when an existing item is updated.
 
 ```json
@@ -284,9 +306,11 @@ Called when an existing item is updated.
 }
 ```
 
-**Default Handler Location:** `src/routes/api/webhook/+server.ts` → `handleItemUpdate()`
+**Default Handler Location:** `src/routes/api/webhook/+server.ts` →
+`handleItemUpdate()`
 
 ### item.delete
+
 Called when an item is deleted.
 
 ```json
@@ -298,9 +322,11 @@ Called when an item is deleted.
 }
 ```
 
-**Default Handler Location:** `src/routes/api/webhook/+server.ts` → `handleItemDelete()`
+**Default Handler Location:** `src/routes/api/webhook/+server.ts` →
+`handleItemDelete()`
 
 ### custom.event
+
 For custom events defined in your Flow.
 
 ```json
@@ -315,20 +341,22 @@ For custom events defined in your Flow.
 }
 ```
 
-**Default Handler Location:** `src/routes/api/webhook/+server.ts` → `handleCustomEvent()`
+**Default Handler Location:** `src/routes/api/webhook/+server.ts` →
+`handleCustomEvent()`
 
 ## Implementing Custom Logic
 
-To handle specific webhook events, modify the handler functions in `src/routes/api/webhook/+server.ts`:
+To handle specific webhook events, modify the handler functions in
+`src/routes/api/webhook/+server.ts`:
 
 ```typescript
 async function handleItemCreate(
   data: Record<string, unknown>,
   eventId: string,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
 ): Promise<Record<string, unknown>> {
   // Add your business logic here
-  console.log('Processing creation:', data);
+  console.log("Processing creation:", data);
 
   // Example: Send notification
   // await sendEmailNotification(data);
@@ -339,8 +367,8 @@ async function handleItemCreate(
   return {
     processed: true,
     eventId,
-    action: 'item.create',
-    itemId: data.id
+    action: "item.create",
+    itemId: data.id,
   };
 }
 ```
@@ -362,32 +390,34 @@ curl -X POST http://localhost:5173/api/webhook \
 ### Using Node.js
 
 ```javascript
-const https = require('https');
+const https = require("https");
 
-const secret = 'your-webhook-secret';
+const secret = "your-webhook-secret";
 const payload = {
-  eventType: 'item.create',
-  data: { id: '123', name: 'Test' }
+  eventType: "item.create",
+  data: { id: "123", name: "Test" },
 };
 
 const payloadString = JSON.stringify(payload);
 
 const options = {
-  hostname: 'localhost',
+  hostname: "localhost",
   port: 5173,
-  path: '/api/webhook',
-  method: 'POST',
+  path: "/api/webhook",
+  method: "POST",
   headers: {
-    'Content-Type': 'application/json',
-    'x-webhook-secret': secret,
-    'Content-Length': payloadString.length
-  }
+    "Content-Type": "application/json",
+    "x-webhook-secret": secret,
+    "Content-Length": payloadString.length,
+  },
 };
 
 const req = https.request(options, (res) => {
-  let data = '';
-  res.on('data', (chunk) => { data += chunk; });
-  res.on('end', () => console.log(JSON.parse(data)));
+  let data = "";
+  res.on("data", (chunk) => {
+    data += chunk;
+  });
+  res.on("end", () => console.log(JSON.parse(data)));
 });
 
 req.write(payloadString);
@@ -405,25 +435,29 @@ req.end();
 
 ## Environment Variables
 
-| Variable | Description | Example |
-|----------|-------------|---------|
+| Variable         | Description                      | Example            |
+| ---------------- | -------------------------------- | ------------------ |
 | `WEBHOOK_SECRET` | Shared secret for authentication | 64-char hex string |
 
 ## Troubleshooting
 
 ### "Missing webhook secret header"
+
 - Ensure you're sending the `x-webhook-secret` header
 - Check the header name exactly matches (case-sensitive)
 
 ### "Invalid webhook secret"
+
 - Verify the secret matches the `WEBHOOK_SECRET` environment variable
 - Ensure there are no extra spaces or trailing characters in the secret
 
 ### "Invalid JSON payload"
+
 - Validate the JSON payload is properly formatted
 - Check for encoding issues (must be UTF-8)
 
 ### Webhook not being called from Directus Flow
+
 - Verify the Flow is enabled
 - Check the Flow logs in Directus Admin
 - Ensure the trigger condition is met

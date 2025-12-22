@@ -1,6 +1,7 @@
 # Authentication System
 
-This portfolio website now includes a complete authentication system with user registration, login, password reset, and protected routes.
+This portfolio website now includes a complete authentication system with user
+registration, login, password reset, and protected routes.
 
 ## Features
 
@@ -33,13 +34,16 @@ APP_URL="http://localhost:5173"
 
 ### 2. SMTP2GO Setup
 
-1. **Sign up for SMTP2GO**: Go to [https://www.smtp2go.com/](https://www.smtp2go.com/)
-2. **Get your API key**: 
+1. **Sign up for SMTP2GO**: Go to
+   [https://www.smtp2go.com/](https://www.smtp2go.com/)
+2. **Get your API key**:
    - Log into your SMTP2GO dashboard
    - Navigate to Settings > API Keys
    - Create a new API key with "Send Email" permissions
-3. **Update your `.env`**: Replace `your-smtp2go-api-key` with your actual API key
-4. **Configure sender email**: Set `FROM_EMAIL` to a domain you own or verify with SMTP2GO
+3. **Update your `.env`**: Replace `your-smtp2go-api-key` with your actual API
+   key
+4. **Configure sender email**: Set `FROM_EMAIL` to a domain you own or verify
+   with SMTP2GO
 
 ### 3. Database
 
@@ -58,7 +62,7 @@ The Prisma PostgreSQL server is already running. The user table includes:
 ### Authentication Endpoints
 
 - `POST /api/auth/register` - User registration
-- `POST /api/auth/login` - User login  
+- `POST /api/auth/login` - User login
 - `POST /api/auth/logout` - User logout
 - `POST /api/auth/forgot-password` - Request password reset
 - `POST /api/auth/reset-password` - Reset password with token
@@ -67,28 +71,30 @@ The Prisma PostgreSQL server is already running. The user table includes:
 ### Example Usage
 
 #### Registration
+
 ```javascript
-const response = await fetch('/api/auth/register', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
+const response = await fetch("/api/auth/register", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    email: 'user@example.com',
-    password: 'securepassword',
-    firstName: 'John',
-    lastName: 'Doe'
-  })
+    email: "user@example.com",
+    password: "securepassword",
+    firstName: "John",
+    lastName: "Doe",
+  }),
 });
 ```
 
 #### Login
+
 ```javascript
-const response = await fetch('/api/auth/login', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
+const response = await fetch("/api/auth/login", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    email: 'user@example.com',
-    password: 'securepassword'
-  })
+    email: "user@example.com",
+    password: "securepassword",
+  }),
 });
 ```
 
@@ -142,15 +148,18 @@ const response = await fetch('/api/auth/login', {
 ## Troubleshooting
 
 ### "secretOrPrivateKey must have a value"
+
 - Ensure `JWT_SECRET` is set in your `.env` file
 - Restart the development server after changing environment variables
 
 ### Email not sending
+
 - Verify your SMTP2GO API key is correct
 - Check that `FROM_EMAIL` is properly configured
 - Ensure you have sending credits in your SMTP2GO account
 
 ### Authentication not working
+
 - Clear browser cookies and try again
 - Check browser network tab for API errors
 - Verify Prisma database connection is working
