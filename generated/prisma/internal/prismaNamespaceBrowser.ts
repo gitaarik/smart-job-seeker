@@ -107,7 +107,12 @@ export const ModelName = {
   work_experience_project_technologies: 'work_experience_project_technologies',
   work_experience_projects: 'work_experience_projects',
   ai_prompts: 'ai_prompts',
-  application_questions: 'application_questions'
+  application_questions: 'application_questions',
+  application_activity_log: 'application_activity_log',
+  applications_files: 'applications_files',
+  ai_chat_prompts: 'ai_chat_prompts',
+  profile_version_extensions: 'profile_version_extensions',
+  application_letters: 'application_letters'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -140,7 +145,9 @@ export const ApplicationsScalarFieldEnum = {
   discontinued_note: 'discontinued_note',
   application_note: 'application_note',
   application_seen_date: 'application_seen_date',
-  cover_letter: 'cover_letter'
+  salary_expectation: 'salary_expectation',
+  salary_currency: 'salary_currency',
+  salary_period: 'salary_period'
 } as const
 
 export type ApplicationsScalarFieldEnum = (typeof ApplicationsScalarFieldEnum)[keyof typeof ApplicationsScalarFieldEnum]
@@ -745,7 +752,7 @@ export const Profile_versionsScalarFieldEnum = {
   description: 'description',
   profile: 'profile',
   toggles: 'toggles',
-  extends_from: 'extends_from'
+  preview_links: 'preview_links'
 } as const
 
 export type Profile_versionsScalarFieldEnum = (typeof Profile_versionsScalarFieldEnum)[keyof typeof Profile_versionsScalarFieldEnum]
@@ -825,7 +832,8 @@ export const Salary_expectationsScalarFieldEnum = {
   month_salary: 'month_salary',
   year_salary: 'year_salary',
   daily_rate: 'daily_rate',
-  profile: 'profile'
+  profile: 'profile',
+  currency: 'currency'
 } as const
 
 export type Salary_expectationsScalarFieldEnum = (typeof Salary_expectationsScalarFieldEnum)[keyof typeof Salary_expectationsScalarFieldEnum]
@@ -1008,7 +1016,9 @@ export const Ai_chatScalarFieldEnum = {
   system_prompt: 'system_prompt',
   user_prompt: 'user_prompt',
   full_prompt: 'full_prompt',
-  response: 'response'
+  response: 'response',
+  context: 'context',
+  followup_to: 'followup_to'
 } as const
 
 export type Ai_chatScalarFieldEnum = (typeof Ai_chatScalarFieldEnum)[keyof typeof Ai_chatScalarFieldEnum]
@@ -1087,10 +1097,69 @@ export const Application_questionsScalarFieldEnum = {
   application: 'application',
   question: 'question',
   answer: 'answer',
-  ai_chat: 'ai_chat'
+  ai_chat: 'ai_chat',
+  ai_chat_response: 'ai_chat_response'
 } as const
 
 export type Application_questionsScalarFieldEnum = (typeof Application_questionsScalarFieldEnum)[keyof typeof Application_questionsScalarFieldEnum]
+
+
+export const Application_activity_logScalarFieldEnum = {
+  id: 'id',
+  date_created: 'date_created',
+  date_updated: 'date_updated',
+  date: 'date',
+  title: 'title',
+  note: 'note',
+  application: 'application'
+} as const
+
+export type Application_activity_logScalarFieldEnum = (typeof Application_activity_logScalarFieldEnum)[keyof typeof Application_activity_logScalarFieldEnum]
+
+
+export const Applications_filesScalarFieldEnum = {
+  id: 'id',
+  applications_id: 'applications_id',
+  directus_files_id: 'directus_files_id'
+} as const
+
+export type Applications_filesScalarFieldEnum = (typeof Applications_filesScalarFieldEnum)[keyof typeof Applications_filesScalarFieldEnum]
+
+
+export const Ai_chat_promptsScalarFieldEnum = {
+  id: 'id',
+  date_created: 'date_created',
+  date_updated: 'date_updated',
+  request: 'request',
+  system_prompt: 'system_prompt',
+  user_prompt: 'user_prompt'
+} as const
+
+export type Ai_chat_promptsScalarFieldEnum = (typeof Ai_chat_promptsScalarFieldEnum)[keyof typeof Ai_chat_promptsScalarFieldEnum]
+
+
+export const Profile_version_extensionsScalarFieldEnum = {
+  id: 'id',
+  extender: 'extender',
+  extended: 'extended'
+} as const
+
+export type Profile_version_extensionsScalarFieldEnum = (typeof Profile_version_extensionsScalarFieldEnum)[keyof typeof Profile_version_extensionsScalarFieldEnum]
+
+
+export const Application_lettersScalarFieldEnum = {
+  id: 'id',
+  date_created: 'date_created',
+  date_updated: 'date_updated',
+  application: 'application',
+  letter_type: 'letter_type',
+  content: 'content',
+  ai_chat: 'ai_chat',
+  status: 'status',
+  ai_chat_response: 'ai_chat_response'
+} as const
+
+export type Application_lettersScalarFieldEnum = (typeof Application_lettersScalarFieldEnum)[keyof typeof Application_lettersScalarFieldEnum]
 
 
 export const SortOrder = {

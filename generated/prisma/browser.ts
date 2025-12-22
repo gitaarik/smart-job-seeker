@@ -302,3 +302,28 @@ export type ai_prompts = Prisma.ai_promptsModel
  * 
  */
 export type application_questions = Prisma.application_questionsModel
+/**
+ * Model application_activity_log
+ * 
+ */
+export type application_activity_log = Prisma.application_activity_logModel
+/**
+ * Model applications_files
+ * 
+ */
+export type applications_files = Prisma.applications_filesModel
+/**
+ * Model ai_chat_prompts
+ * 
+ */
+export type ai_chat_prompts = Prisma.ai_chat_promptsModel
+/**
+ * Model profile_version_extensions
+ * 
+ */
+export type profile_version_extensions = Prisma.profile_version_extensionsModel
+/**
+ * Model application_letters
+ * 
+ */
+export type application_letters = Prisma.application_lettersModel

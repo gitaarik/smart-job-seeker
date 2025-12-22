@@ -8,24 +8,29 @@ datasource db {
 }
 
 model applications {
-  id                    Int                     @id @default(autoincrement())
-  status                String                  @default("draft") @db.VarChar(255)
-  date_created          DateTime?               @db.Timestamptz(6)
-  date_updated          DateTime?               @db.Timestamptz(6)
-  vacancy               Int?
-  profile               Int
-  cv_sent_through       String?                 @db.VarChar(255)
-  cv_file_sent          String?                 @db.Uuid
-  application_sent_date DateTime?               @db.Date
-  discontinued_reason   String?                 @db.VarChar(255)
-  discontinued_note     String?
-  application_note      String?
-  application_seen_date DateTime?               @db.Date
-  cover_letter          String?
-  application_questions application_questions[]
-  directus_files        directus_files?         @relation(fields: [cv_file_sent], references: [id], onUpdate: NoAction, map: "applications_cv_file_sent_foreign")
-  profiles              profiles                @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "applications_profile_foreign")
-  vacancies             vacancies?              @relation(fields: [vacancy], references: [id], onUpdate: NoAction, map: "applications_vacancy_foreign")
+  id                       Int                        @id @default(autoincrement())
+  status                   String                     @default("draft") @db.VarChar(255)
+  date_created             DateTime?                  @db.Timestamptz(6)
+  date_updated             DateTime?                  @db.Timestamptz(6)
+  vacancy                  Int?
+  profile                  Int
+  cv_sent_through          String?                    @db.VarChar(255)
+  cv_file_sent             String?                    @db.Uuid
+  application_sent_date    DateTime?                  @db.Date
+  discontinued_reason      String?                    @db.VarChar(255)
+  discontinued_note        String?
+  application_note         String?
+  application_seen_date    DateTime?                  @db.Date
+  salary_expectation       Decimal?                   @db.Decimal(10, 2)
+  salary_currency          String?                    @default("EUR") @db.VarChar(255)
+  salary_period            String?                    @db.VarChar(255)
+  application_activity_log application_activity_log[]
+  application_letters      application_letters[]
+  application_questions    application_questions[]
+  directus_files           directus_files?            @relation(fields: [cv_file_sent], references: [id], onUpdate: NoAction, map: "applications_cv_file_sent_foreign")
+  profiles                 profiles                   @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "applications_profile_foreign")
+  vacancies                vacancies?                 @relation(fields: [vacancy], references: [id], onUpdate: NoAction, map: "applications_vacancy_foreign")
+  applications_files       applications_files[]
 }
 
 model cheat_sheets {
@@ -158,40 +163,41 @@ model directus_fields {
 }
 
 model directus_files {
-  id                                                                    String              @id @db.Uuid
-  storage                                                               String              @db.VarChar(255)
-  filename_disk                                                         String?             @db.VarChar(255)
-  filename_download                                                     String              @db.VarChar(255)
-  title                                                                 String?             @db.VarChar(255)
-  type                                                                  String?             @db.VarChar(255)
-  folder                                                                String?             @db.Uuid
-  uploaded_by                                                           String?             @db.Uuid
-  created_on                                                            DateTime            @default(now()) @db.Timestamptz(6)
-  modified_by                                                           String?             @db.Uuid
-  modified_on                                                           DateTime            @default(now()) @db.Timestamptz(6)
-  charset                                                               String?             @db.VarChar(50)
+  id                                                                    String               @id @db.Uuid
+  storage                                                               String               @db.VarChar(255)
+  filename_disk                                                         String?              @db.VarChar(255)
+  filename_download                                                     String               @db.VarChar(255)
+  title                                                                 String?              @db.VarChar(255)
+  type                                                                  String?              @db.VarChar(255)
+  folder                                                                String?              @db.Uuid
+  uploaded_by                                                           String?              @db.Uuid
+  created_on                                                            DateTime             @default(now()) @db.Timestamptz(6)
+  modified_by                                                           String?              @db.Uuid
+  modified_on                                                           DateTime             @default(now()) @db.Timestamptz(6)
+  charset                                                               String?              @db.VarChar(50)
   filesize                                                              BigInt?
   width                                                                 Int?
   height                                                                Int?
   duration                                                              Int?
-  embed                                                                 String?             @db.VarChar(200)
+  embed                                                                 String?              @db.VarChar(200)
   description                                                           String?
   location                                                              String?
   tags                                                                  String?
-  metadata                                                              Json?               @db.Json
+  metadata                                                              Json?                @db.Json
   focal_point_x                                                         Int?
   focal_point_y                                                         Int?
-  tus_id                                                                String?             @db.VarChar(64)
-  tus_data                                                              Json?               @db.Json
-  uploaded_on                                                           DateTime?           @db.Timestamptz(6)
+  tus_id                                                                String?              @db.VarChar(64)
+  tus_data                                                              Json?                @db.Json
+  uploaded_on                                                           DateTime?            @db.Timestamptz(6)
   applications                                                          applications[]
-  directus_folders                                                      directus_folders?   @relation(fields: [folder], references: [id], onUpdate: NoAction, map: "directus_files_folder_foreign")
-  directus_users_directus_files_modified_byTodirectus_users             directus_users?     @relation("directus_files_modified_byTodirectus_users", fields: [modified_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "directus_files_modified_by_foreign")
-  directus_users_directus_files_uploaded_byTodirectus_users             directus_users?     @relation("directus_files_uploaded_byTodirectus_users", fields: [uploaded_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "directus_files_uploaded_by_foreign")
-  directus_settings_directus_settings_project_logoTodirectus_files      directus_settings[] @relation("directus_settings_project_logoTodirectus_files")
-  directus_settings_directus_settings_public_backgroundTodirectus_files directus_settings[] @relation("directus_settings_public_backgroundTodirectus_files")
-  directus_settings_directus_settings_public_faviconTodirectus_files    directus_settings[] @relation("directus_settings_public_faviconTodirectus_files")
-  directus_settings_directus_settings_public_foregroundTodirectus_files directus_settings[] @relation("directus_settings_public_foregroundTodirectus_files")
+  applications_files                                                    applications_files[]
+  directus_folders                                                      directus_folders?    @relation(fields: [folder], references: [id], onUpdate: NoAction, map: "directus_files_folder_foreign")
+  directus_users_directus_files_modified_byTodirectus_users             directus_users?      @relation("directus_files_modified_byTodirectus_users", fields: [modified_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "directus_files_modified_by_foreign")
+  directus_users_directus_files_uploaded_byTodirectus_users             directus_users?      @relation("directus_files_uploaded_byTodirectus_users", fields: [uploaded_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "directus_files_uploaded_by_foreign")
+  directus_settings_directus_settings_project_logoTodirectus_files      directus_settings[]  @relation("directus_settings_project_logoTodirectus_files")
+  directus_settings_directus_settings_public_backgroundTodirectus_files directus_settings[]  @relation("directus_settings_public_backgroundTodirectus_files")
+  directus_settings_directus_settings_public_faviconTodirectus_files    directus_settings[]  @relation("directus_settings_public_faviconTodirectus_files")
+  directus_settings_directus_settings_public_foregroundTodirectus_files directus_settings[]  @relation("directus_settings_public_foregroundTodirectus_files")
   education                                                             education[]
   profiles                                                              profiles[]
   vacancy_resources                                                     vacancy_resources[]
@@ -622,19 +628,19 @@ model platform_profiles {
 }
 
 model profile_versions {
-  id                     Int                @id @default(autoincrement())
-  status                 String             @default("draft") @db.VarChar(255)
-  sort                   Int?
-  date_created           DateTime?          @db.Timestamptz(6)
-  date_updated           DateTime?          @db.Timestamptz(6)
-  name                   String?            @db.VarChar(255)
-  description            String?
-  profile                Int
-  toggles                Json?              @db.Json
-  extends_from           Int?
-  profile_versions       profile_versions?  @relation("profile_versionsToprofile_versions", fields: [extends_from], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "profile_versions_extends_from_foreign")
-  other_profile_versions profile_versions[] @relation("profile_versionsToprofile_versions")
-  profiles               profiles           @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "profile_versions_profile_foreign")
+  id                                                                               Int                          @id @default(autoincrement())
+  status                                                                           String                       @default("draft") @db.VarChar(255)
+  sort                                                                             Int?
+  date_created                                                                     DateTime?                    @db.Timestamptz(6)
+  date_updated                                                                     DateTime?                    @db.Timestamptz(6)
+  name                                                                             String?                      @db.VarChar(255)
+  description                                                                      String?
+  profile                                                                          Int
+  toggles                                                                          Json?                        @db.Json
+  preview_links                                                                    String?
+  profile_version_extensions_profile_version_extensions_extendedToprofile_versions profile_version_extensions[] @relation("profile_version_extensions_extendedToprofile_versions")
+  profile_version_extensions_profile_version_extensions_extenderToprofile_versions profile_version_extensions[] @relation("profile_version_extensions_extenderToprofile_versions")
+  profiles                                                                         profiles                     @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "profile_versions_profile_foreign")
 }
 
 model profiles {
@@ -722,6 +728,7 @@ model salary_expectations {
   year_salary      Int?
   daily_rate       Int?
   profile          Int
+  currency         String?   @default("EUR") @db.VarChar(255)
   profiles         profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "salary_expectations_profile_foreign")
 }
 
@@ -891,7 +898,12 @@ model ai_chat {
   user_prompt                                                  String
   full_prompt                                                  String?
   response                                                     String?
+  context                                                      Json?                   @db.Json
+  followup_to                                                  Int?
+  ai_chat                                                      ai_chat?                @relation("ai_chatToai_chat", fields: [followup_to], references: [id], onUpdate: NoAction, map: "ai_chat_followup_to_foreign")
+  other_ai_chat                                                ai_chat[]               @relation("ai_chatToai_chat")
   profiles                                                     profiles                @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "ai_chat_profile_foreign")
+  application_letters_application_letters_ai_chatToai_chat     application_letters[]   @relation("application_letters_ai_chatToai_chat")
   application_questions_application_questions_ai_chatToai_chat application_questions[] @relation("application_questions_ai_chatToai_chat")
 }
 
@@ -965,8 +977,59 @@ model application_questions {
   question                                       String
   answer                                         String?
   ai_chat                                        Int?
+  ai_chat_response                               String?
   ai_chat_application_questions_ai_chatToai_chat ai_chat?     @relation("application_questions_ai_chatToai_chat", fields: [ai_chat], references: [id], onUpdate: NoAction, map: "application_questions_ai_chat_foreign")
   applications                                   applications @relation(fields: [application], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "application_questions_application_foreign")
+}
+
+model application_activity_log {
+  id           Int           @id @default(autoincrement())
+  date_created DateTime?     @db.Timestamptz(6)
+  date_updated DateTime?     @db.Timestamptz(6)
+  date         DateTime?     @db.Date
+  title        String?       @db.VarChar(255)
+  note         String?
+  application  Int?
+  applications applications? @relation(fields: [application], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "application_activity_log_application_foreign")
+}
+
+model applications_files {
+  id                Int             @id @default(autoincrement())
+  applications_id   Int?
+  directus_files_id String?         @db.Uuid
+  applications      applications?   @relation(fields: [applications_id], references: [id], onUpdate: NoAction, map: "applications_files_applications_id_foreign")
+  directus_files    directus_files? @relation(fields: [directus_files_id], references: [id], onUpdate: NoAction, map: "applications_files_directus_files_id_foreign")
+}
+
+model ai_chat_prompts {
+  id            Int       @id @default(autoincrement())
+  date_created  DateTime? @db.Timestamptz(6)
+  date_updated  DateTime? @db.Timestamptz(6)
+  request       String    @unique(map: "ai_chat_prompts_request_unique") @db.VarChar(255)
+  system_prompt String?
+  user_prompt   String?
+}
+
+model profile_version_extensions {
+  id                                                                     Int               @id @default(autoincrement())
+  extender                                                               Int?
+  extended                                                               Int?
+  profile_versions_profile_version_extensions_extendedToprofile_versions profile_versions? @relation("profile_version_extensions_extendedToprofile_versions", fields: [extended], references: [id], onUpdate: NoAction, map: "profile_version_extensions_extended_foreign")
+  profile_versions_profile_version_extensions_extenderToprofile_versions profile_versions? @relation("profile_version_extensions_extenderToprofile_versions", fields: [extender], references: [id], onUpdate: NoAction, map: "profile_version_extensions_extender_foreign")
+}
+
+model application_letters {
+  id                                           Int          @id @default(autoincrement())
+  date_created                                 DateTime?    @db.Timestamptz(6)
+  date_updated                                 DateTime?    @db.Timestamptz(6)
+  application                                  Int
+  letter_type                                  String       @default("cover_letter") @db.VarChar(255)
+  content                                      String?
+  ai_chat                                      Int?
+  status                                       String       @default("draft") @db.VarChar(255)
+  ai_chat_response                             String?
+  ai_chat_application_letters_ai_chatToai_chat ai_chat?     @relation("application_letters_ai_chatToai_chat", fields: [ai_chat], references: [id], onUpdate: NoAction, map: "application_letters_ai_chat_foreign")
+  applications                                 applications @relation(fields: [application], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "application_letters_application_foreign")
 }
 
 enum Role {
