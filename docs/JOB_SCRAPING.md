@@ -4,29 +4,30 @@ This document describes the job scraping infrastructure built to automatically e
 
 ## Overview
 
-The job scraping system consists of four main components that work together to scrape, process, and store job listings:
+The job scraping system uses a **simplified, URL-based approach** where each job search is configured with a complete, pre-tested search URL. The system consists of four main components:
 
 1. **HTML Extraction** - Extract links from search result pages
 2. **HTML Stripping** - Clean HTML for efficient LLM processing
 3. **LLM Integration** - AI-powered data extraction with structured output
-4. **Job Scraping** - Orchestrate the scraping workflow
+4. **Job Scraping** - Orchestrate the scraping workflow with pre-configured URLs
 
 ## Architecture
 
 ```
-Job Search Page → HTML Extract → Job Links
-                                    ↓
-Job Posting Page → HTML Strip → LLM Extract → Database
+Pre-configured Search URL → Job Search Page → HTML Extract → Job Links
+                                                                 ↓
+                                      Job Posting Page → HTML Strip → LLM Extract → Database
 ```
 
 ### Data Flow
 
-1. **Search Results**: Scrape job search results page
-2. **Link Extraction**: Extract individual job posting URLs
-3. **Job Fetching**: Fetch each job posting page
-4. **HTML Cleaning**: Strip unnecessary HTML elements
-5. **AI Extraction**: Use LLM to extract structured job data
-6. **Storage**: Upsert job data to database
+1. **Search URL**: Use pre-configured, complete search URL from `job_searches` table
+2. **Search Results**: Navigate to search results page
+3. **Link Extraction**: Extract individual job posting URLs
+4. **Job Fetching**: Fetch each job posting page
+5. **HTML Cleaning**: Strip unnecessary HTML elements
+6. **AI Extraction**: Use LLM to extract structured job data
+7. **Storage**: Upsert job data to database
 
 ## Components
 
@@ -158,9 +159,9 @@ const response = await generateChatCompletion([
 });
 ```
 
-### 4. Job Scraper (`vacancy-scraper.ts`)
+### 4. Job Scraper (`vacancy-scraper.ts` / `job-scraper.ts`)
 
-Orchestrates the scraping workflow with database integration.
+Core library functions for extracting job data from HTML.
 
 **Functions:**
 
@@ -194,32 +195,47 @@ interface JobData {
 }
 ```
 
-**Example Workflow:**
+### 5. Scraping Script (`scripts/scrape-job-sites.ts`)
+
+Command-line script that orchestrates the complete scraping workflow using Puppeteer.
+
+**How it works:**
 
 ```typescript
-import { extractJobLinks, extractJobData, upsertJob } from '$lib/server/vacancy-scraper';
+// 1. Fetch active job searches with pre-configured URLs
+const searchActions = await db.job_searches.findMany({
+  where: { status: "active" }
+});
 
-// 1. Get search results
-const searchHtml = await fetch('https://jobsite.com/search?q=developer');
+// 2. For each search, use the search_url directly
+for (const searchAction of searchActions) {
+  const searchUrl = searchAction.search_url;
 
-// 2. Extract job links
-const jobLinks = await extractJobLinks(searchHtml);
+  // Navigate to search page
+  await page.goto(searchUrl);
 
-// 3. Process each job
-for (const jobUrl of jobLinks) {
-  const jobHtml = await fetch(jobUrl);
-  const jobData = await extractJobData(jobHtml, jobUrl);
-  const result = await upsertJob(jobData, jobUrl, 'LinkedIn');
+  // Extract job links
+  const jobUrls = await extractJobLinks(html);
 
-  console.log(`Job ${result.id} ${result.created ? 'created' : 'updated'}`);
+  // Process each job
+  for (const url of jobUrls) {
+    const jobData = await extractJobData(jobHtml, url);
+    await upsertJob(jobData, url, importSource);
+  }
 }
 ```
+
+**Key Features:**
+- **Simple URL usage** - No dynamic URL building or parameter mapping
+- **Platform detection** - Automatically detects platform from URL hostname
+- **Persistent browser** - Uses Chrome profile for handling authentication
+- **Rate limiting** - 2-second delay between job requests
 
 ## Database Schema
 
 ### Jobs Collection
 
-The `jobs` collection (formerly `vacancies`) stores scraped job listings:
+The `jobs` collection stores scraped job listings:
 
 **Key Fields:**
 - `id` - Primary key
@@ -233,16 +249,37 @@ The `jobs` collection (formerly `vacancies`) stores scraped job listings:
 - `scrape_count` - Number of times scraped
 - `date_posted` - When job was posted
 - `location` - Job location
-- `remote` - Remote work options
-- `experience_level` - Required experience
-- `job_type` - Full-time, part-time, contract, etc.
+- `remote_options` - Remote work options (JSON array for multiple selections)
+- `experience_levels` - Required experience levels (JSON array for multiple selections)
+- `job_types` - Employment types (JSON array for multiple selections)
 - `salary_range` - Salary information
+
+### Job Searches Collection
+
+The `job_searches` collection stores search configurations with pre-configured URLs:
+
+**Key Fields:**
+- `id` - Primary key
+- `name` - Descriptive name (e.g., "LinkedIn - TypeScript - Amsterdam")
+- `search_url` - Complete, pre-configured search URL
+- `profile` - M2O relation to profiles
+- `status` - active/inactive
+- `last_run` - Last execution timestamp
+- `date_created`, `date_updated` - Timestamps
+
+**Example:**
+```json
+{
+  "name": "LinkedIn - Senior TypeScript Developer - Remote",
+  "search_url": "https://www.linkedin.com/jobs/search/?keywords=Senior%20TypeScript%20Developer&f_WT=2",
+  "status": "active"
+}
+```
 
 ### Related Collections
 
-- **job_sites** - Job posting sources (LinkedIn, Indeed, etc.)
-- **job_searches** - Search configurations with M2M relation to job sites
 - **job_resources** - Additional resources linked to jobs
+- **profiles** - User profiles (linked from job_searches)
 
 ### AI Prompt Templates
 
@@ -265,10 +302,38 @@ Both templates support:
 
 ### Manual Scraping Script
 
-The `scripts/scrape-job-sites.ts` script provides a command-line interface for testing:
+The `scripts/scrape-job-sites.ts` script provides a command-line interface:
 
 ```bash
 npm run docker:cli
+npx tsx scripts/scrape-job-sites.ts
+```
+
+**How it works:**
+1. Reads all active job searches from the `job_searches` table
+2. For each search, navigates to the pre-configured `search_url`
+3. Extracts job links from the search results page
+4. Processes each job (extract data, store in database)
+5. Updates the `last_run` timestamp
+
+### Configuration
+
+**Step 1: Create a job search in Directus**
+
+Navigate to the `job_searches` collection and create a new record:
+
+- **Name**: Descriptive label (e.g., "LinkedIn - TypeScript - Amsterdam")
+- **Search URL**: Complete search URL from the job platform
+- **Profile**: Link to your profile
+- **Status**: Set to "active"
+
+**Example URLs:**
+- LinkedIn: `https://www.linkedin.com/jobs/search/?keywords=TypeScript%20Developer&location=Amsterdam&f_JT=F`
+- Indeed: `https://www.indeed.com/jobs?q=Python+Developer&l=Remote&remotejob=1`
+
+**Step 2: Run the scraping script**
+
+```bash
 npx tsx scripts/scrape-job-sites.ts
 ```
 
@@ -276,11 +341,9 @@ npx tsx scripts/scrape-job-sites.ts
 
 For production use, integrate with Directus Flows or cron jobs:
 
-1. **Create Flow** - Schedule or webhook-triggered
-2. **HTTP Request** - Fetch search results
-3. **Trigger Operation** - Call scraping flow
-4. **Process Jobs** - Extract and store data
-5. **Notification** - Alert on completion/errors
+1. **Create Flow** - Schedule-triggered (e.g., daily at 9 AM)
+2. **Exec Operation** - Run scraping script: `npx tsx scripts/scrape-job-sites.ts`
+3. **Notification** - Alert on completion/errors
 
 ## Performance Considerations
 
@@ -364,24 +427,33 @@ npm test
 ### Planned Features
 
 1. **Multi-platform Support**
-   - LinkedIn scraper
    - Indeed scraper
-   - Platform-specific extractors
+   - Glassdoor scraper
+   - More job platforms with pre-configured search URLs
 
 2. **Smart Matching**
-   - Profile-to-job matching
+   - Profile-to-job matching engine
    - Skill-based recommendations
-   - Location preferences
+   - Location and remote work preferences
+   - Salary range filtering
 
-3. **Monitoring**
+3. **Monitoring & Analytics**
    - Scrape success rate tracking
    - Error rate monitoring
    - Performance metrics
+   - Job market trend analysis
 
 4. **Optimization**
    - Incremental scraping (only new jobs)
-   - Smart refresh scheduling
-   - Duplicate detection improvements
+   - Smart refresh scheduling based on job age
+   - Improved duplicate detection
+   - Parallel scraping for multiple searches
+
+5. **User Experience**
+   - Job search template library (common searches)
+   - URL builder helper for creating search URLs
+   - Job alert notifications
+   - Save favorite jobs
 
 ## Security & Ethics
 

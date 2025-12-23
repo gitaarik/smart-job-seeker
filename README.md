@@ -12,7 +12,7 @@ An intelligent job search and application management platform that helps you cre
 - **Data Export** - Export your profile in multiple formats
 
 ### Job Scraping & Matching
-- **Automated Job Scraping** - Scrape job listings from multiple platforms
+- **Automated Job Scraping** - Scrape job listings from multiple platforms using pre-configured search URLs
 - **HTML Processing** - Extract and clean job posting data for AI analysis
 - **LLM Integration** - AI-powered job data extraction with structured output
 - **Smart Matching** - Match your profile against scraped jobs (coming soon)
@@ -85,9 +85,8 @@ See [AI_FEATURES.md](docs/AI_FEATURES.md) for detailed AI documentation.
 ## Database Schema
 
 Key collections:
-- **jobs** - Job listings (formerly vacancies)
-- **job_sites** - Job posting sources
-- **job_searches** - Search configurations with M2M relation to job sites
+- **jobs** - Job listings with multi-select fields for types, experience levels, and remote options
+- **job_searches** - Search configurations with pre-configured search URLs
 - **job_resources** - Additional job-related resources
 - **applications** - Job application tracking
 - **profiles** - User portfolios
