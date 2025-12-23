@@ -182,7 +182,7 @@ describe("generateAiChatResponse", () => {
     const result = await generateAiChatResponse(1);
 
     expect(result.success).toBe(false);
-    expect(result.message).toContain("No response generated");
+    expect(result.message).toContain("No content returned from LLM");
   });
 
   it("should handle empty choices array", async () => {
@@ -203,7 +203,7 @@ describe("generateAiChatResponse", () => {
     const result = await generateAiChatResponse(1);
 
     expect(result.success).toBe(false);
-    expect(result.message).toContain("No response generated");
+    expect(result.message).toContain("No content returned from LLM");
   });
 
   it("should handle database update error", async () => {
