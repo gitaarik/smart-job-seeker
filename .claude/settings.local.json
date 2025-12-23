@@ -55,6 +55,7 @@
       "Bash(src/routes/api/webhook/__tests__/ai-chat-generate.test.ts )",
       "Bash(tree:*)",
       "Bash(xargs ls:*)",
+      "Bash(xargs:*)",
       "Bash(y)",
       "WebFetch(domain:console.groq.com)",
       "WebFetch(domain:directus.io)",
