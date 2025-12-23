@@ -6,6 +6,11 @@ This project uses Docker Compose with these containers:
 
 - **Directus CMS** used to build and manage the data in the database
 - Is the source of truth for the database
+- Use the Directus MCP server to make changes in the database
+- Prisma ORM is used within the Sveltekit app for connecting to the same
+  Directus database
+- Use `npm run docker:update-schema` to synchronize the prisma schema with
+  the database changes made in Directus
 
 ## `app`
 
