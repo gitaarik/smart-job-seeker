@@ -1,523 +1,191 @@
 # Smart Job Seeker
 
-An intelligent job search and application management platform that helps you
-create a detailed profile, discover matching opportunities, and optimize your
-job application process with AI assistance.
+An intelligent job search and application management platform that helps you create a detailed profile, discover matching opportunities, and optimize your job application process with AI assistance.
 
-**Vision:** Create your profile once, automatically match it against scraped job
-listings from various platforms, and intelligently manage your entire job search
-journey with AI-powered insights and context-aware assistance.
+**Vision:** Create your profile once, automatically match it against scraped job listings from various platforms, and intelligently manage your entire job search journey with AI-powered insights.
 
-## Core Features
+## Key Features
 
-### Profile Management
+### Profile & Portfolio
+- **Comprehensive Profiles** - Work experience, education, skills, and expertise
+- **Personal Portfolio** - Modern, responsive showcase of your professional background
+- **Data Export** - Export your profile in multiple formats
 
-- **Comprehensive User Profiles** - Create detailed profiles with work
-  experience, education, skills, methodologies, and technical expertise
-- **Personal Portfolio Website** - Modern, responsive portfolio showcasing
-  professional background, skills, and experience
-- **Profile Data Export** - Export profile data and schema in multiple formats
-  for portability
+### Job Scraping & Matching
+- **Automated Job Scraping** - Scrape job listings from multiple platforms
+- **HTML Processing** - Extract and clean job posting data for AI analysis
+- **LLM Integration** - AI-powered job data extraction with structured output
+- **Smart Matching** - Match your profile against scraped jobs (coming soon)
 
-### Job Search & Matching (Coming Soon 🚀)
+### Application Management
+- **Application Tracking** - Organize jobs, interviews, and follow-ups
+- **AI-Powered Writing** - Generate cover letters, follow-ups, and thank-you notes
+- **Interview Prep** - AI-generated answers to application questions
+- **Activity Logging** - Track all application activities
+- **File Management** - Organize application-related documents
 
-- **Job Scraping** - Automatically scrape job listings from multiple platforms
-  (feature in development)
-- **Intelligent Matching** - Match your profile against scraped jobs using
-  AI-powered analysis
-- **Smart Discovery** - Discover relevant opportunities based on your skills and
-  preferences
+### Technical Highlights
+- **Groq AI Integration** - Fast, context-aware content generation
+- **Directus CMS** - Headless CMS for content management
+- **Webhook System** - Secure integration with Directus Flows
+- **JSON Resume** - Standard resume format with PDF export
 
-### Application Management & AI Assistance
+## Quick Start
 
-- **Job Application Tracking** - Organize and track all job applications,
-  interviews, and follow-ups
-- **AI-Powered Letter Generation** - Generate cover letters, motivation letters,
-  follow-up emails, and thank-you letters tailored to each job
-- **Intelligent Answer Assistant** - Get AI-generated answers to application
-  questions based on your profile and experience
-- **Iterative Refinement** - Refine AI-generated content through conversational
-  follow-ups for perfect results
-- **Template System** - Use customizable AI prompts for consistent, high-quality
-  output
-- **Application Activity Log** - Track all activities and changes for each
-  application
-- **File Management** - Attach and organize files related to applications
-- **Interview Preparation** - Store and manage interview questions with
-  AI-generated answers
-- **Application Analytics** - Insights and metrics to optimize your job search
-  process
+### Prerequisites
+- Node.js 18+
+- Docker & Docker Compose
 
-For detailed AI features documentation, see
-[docs/AI_FEATURES.md](docs/AI_FEATURES.md).
+### Installation
 
-### Technical Features
+```bash
+# Clone and install
+git clone <repository-url>
+cd smart-job-seeker
+npm install
 
-- **AI Integration** - Powered by Groq for intelligent content generation:
-  - Context-aware letter writing (cover letters, motivation letters, follow-ups,
-    thank-yous)
-  - Interview question answering based on your profile
-  - Iterative refinement through conversational AI
-  - Template-based prompt management
-- **Directus CMS Integration** - Headless CMS for managing portfolio content and
-  data
-- **Webhook System** - Secure webhook endpoints for Directus Flow integration
-- **Resume Management** - JSON Resume support with PDF export capabilities
+# Configure environment
+cp .env.example .env
+# Edit .env with your configuration
+
+# Start development environment
+npm run dev
+```
+
+This starts:
+- **Directus CMS** at http://localhost:8055
+- **SvelteKit app** at http://localhost:5173
+- **PostgreSQL database** on port 5432
+
+## Architecture
+
+### Tech Stack
+- **Frontend**: SvelteKit 5, Svelte 5, TypeScript, Tailwind CSS
+- **Backend**: Node.js, SvelteKit Server Routes, Prisma ORM
+- **Database**: PostgreSQL with Directus CMS
+- **AI**: Groq API for LLM features
+- **DevOps**: Docker Compose, Vitest
+
+### Key Modules
+
+**Job Scraping Pipeline**
+- `html-extract.ts` - Extract links from search results
+- `html-strip.ts` - Clean HTML for LLM processing
+- `llm.ts` - Generic LLM chat completion interface
+- `vacancy-scraper.ts` - Job data extraction and storage
+
+**AI Features**
+- AI-powered cover letter generation
+- Interview question answering
+- Iterative content refinement
+- Template-based prompt management
+
+See [AI_FEATURES.md](docs/AI_FEATURES.md) for detailed AI documentation.
+
+## Database Schema
+
+Key collections:
+- **jobs** - Job listings (formerly vacancies)
+- **job_sites** - Job posting sources
+- **job_searches** - Search configurations with M2M relation to job sites
+- **job_resources** - Additional job-related resources
+- **applications** - Job application tracking
+- **profiles** - User portfolios
+- **ai_chat_prompts** - AI prompt templates
+
+Complete schema: `prisma/schema.prisma`
+
+## Development
+
+### Common Commands
+
+```bash
+# Development
+npm run dev                      # Start all services
+npm run docker:cli               # Access app container
+
+# Database
+npm run docker:update-schema     # Sync Prisma from Directus
+npm run docker:db:backup         # Backup database
+
+# Code Quality
+npm run check                    # Type checking
+npm run test                     # Run tests
+npx deno fmt                     # Format code
+
+# Profile Management
+npm run docker:export-profile-json
+npm run docker:export-profiles-pdf
+```
+
+See [DEVELOPMENT.md](docs/DEVELOPMENT.md) for complete development guide.
+
+## Testing
+
+```bash
+npm run test              # Run all tests (180 tests)
+npm run test:watch       # Watch mode
+npm run test:ui          # Test UI dashboard
+```
+
+- Test coverage for all core modules
+- Mocked external dependencies
+- Unit and integration tests
+
+See [TESTING.md](docs/TESTING.md) for testing guide.
+
+## Documentation
+
+- **[DEVELOPMENT.md](docs/DEVELOPMENT.md)** - Development setup and workflows
+- **[AI_FEATURES.md](docs/AI_FEATURES.md)** - AI features and usage
+- **[WEBHOOK.md](docs/WEBHOOK.md)** - Webhook integration
+- **[TESTING.md](docs/TESTING.md)** - Testing framework
+- **[AUTHENTICATION.md](docs/AUTHENTICATION.md)** - Auth system
+- **[CLAUDE.md](CLAUDE.md)** - Development notes
+
+## Deployment
+
+Configured for **Vercel** deployment:
+
+```bash
+npm run build
+```
+
+Required environment variables:
+- `JWT_SECRET`, `DATABASE_URL`, `GROQ_API_KEY`, `SMTP2GO_API_KEY`
+- `WEBHOOK_SECRET`, Directus configuration
 
 ## Roadmap
 
 ### Current Status ✅
-
-- User authentication and profile system
-- Comprehensive job application tracking
-- AI-powered interview preparation and application assistance
-- Directus CMS integration for content management
-- All infrastructure in place for job matching
-
-### Upcoming (Next Big Feature) 🚀
-
-- **Job Scraping Module** - Automated job listing scraper from multiple job
-  platforms (LinkedIn, Indeed, etc.)
-- **Profile Matching Engine** - Intelligent matching between user profiles and
-  scraped job listings
-- **Smart Job Recommendations** - AI-powered job suggestions based on profile
-  fit
-- **Automated Application Workflow** - Semi-automated job application process
-  with AI assistance
-
-The job scraping functionality will be the cornerstone feature that ties
-everything together, allowing users to passively discover matching opportunities
-while the system intelligently manages their application process.
-
-## Tech Stack
-
-### Frontend
-
-- **SvelteKit 5** - Modern web framework with TypeScript
-- **Svelte** - Reactive UI framework
-- **TypeScript** - Type-safe development
-- **Tailwind CSS** - Utility-first CSS framework
-- **FontAwesome** - Icon library
-
-### Backend
-
-- **Node.js** - JavaScript runtime
-- **TypeScript** - Type safety for backend code
-- **SvelteKit Server Routes** - API endpoints and server logic
-- **Prisma** - Object-relational mapping (ORM)
-- **JWT** - JSON Web Token authentication
-
-### Database & CMS
-
-- **PostgreSQL** - Relational database
-- **Directus** - Headless CMS
-- **Prisma Schema** - Database schema management
-
-### External Services
-
-- **Groq API** - High-performance LLM inference for AI-powered features
-- **SMTP2GO** - Email delivery service
-
-### DevOps & Tools
-
-- **Docker & Docker Compose** - Containerization and orchestration
-- **Vite** - Build tool and dev server
-- **Vitest** - Unit and integration testing
-- **Prisma Migrations** - Database versioning
-- **Deno fmt** - Code formatting
-
-## Project Structure
-
-```
-smart-job-seeker/
-├── src/
-│   ├── routes/                    # SvelteKit pages and API routes
-│   │   ├── +page.svelte          # Home page
-│   │   ├── portfolio/            # Portfolio section
-│   │   ├── resume/               # Resume page
-│   │   └── api/                  # API endpoints
-│   │       └── webhook/          # Webhook handler
-│   ├── lib/
-│   │   ├── server/               # Server-side utilities
-│   │   ├── components/           # Reusable Svelte components
-│   │   ├── data/                 # Static data and config
-│   │   └── images/               # Image assets
-│   ├── app.html                  # Root HTML template
-│   ├── app.css                   # Global styles
-│   └── hooks.server.ts           # Server hooks
-├── prisma/
-│   ├── schema.prisma             # Database schema
-│   └── migrations/               # Database migrations
-├── scripts/                       # Utility scripts
-│   ├── export-profile-schema.ts
-│   ├── export-profile-data.ts
-│   ├── export-profiles-pdf.ts
-│   ├── build-json-resume.ts
-│   └── ...
-├── docker-compose.yml            # Docker services configuration
-├── Dockerfile                     # SvelteKit app image
-├── package.json                  # Dependencies and scripts
-├── tsconfig.json                 # TypeScript configuration
-├── CLAUDE.md                      # Development notes
-└── docs/
-    ├── AUTHENTICATION.md         # Auth system documentation
-    ├── WEBHOOK.md               # Webhook integration guide
-    └── TESTING.md               # Testing guide
-```
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 18+
-- Docker & Docker Compose
-- npm or yarn
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd smart-job-seeker
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Configure environment variables**
-   ```bash
-   cp .env.example .env
-   ```
-
-   Update `.env` with your configuration:
-   - `APP_URL` - Application URL
-   - `JWT_SECRET` - Secret for JWT tokens
-   - `DATABASE_URL` - PostgreSQL connection string
-   - `SMTP2GO_API_KEY` - Email service API key
-   - `GROQ_API_KEY` - Groq API key for AI features
-   - Directus admin credentials and configuration
-
-### Development
-
-**Start all services with Docker Compose:**
-
-```bash
-npm run dev
-```
-
-**Note:** The first startup can take some time
-
-This starts:
-
-- **Directus CMS** on `http://localhost:8055`
-- **SvelteKit app** on `http://localhost:5173`
-- **PostgreSQL database** on port 5432
-
-**Useful development commands:**
-
-```bash
-npm run docker:cli               # Access app container shell
-npm run docker:db:cli            # Access PostgreSQL CLI
-npm run docker:update-schema     # Sync Prisma schema from DB
-npm run docker:db:migrate        # Run database migrations
-npm run docker:export-profile-*  # Export profile data/schema
-```
-
-## API Endpoints
-
-### Webhook
-
-- `POST /api/webhook` - Secure webhook endpoint for Directus integration
-  - Supports: `profile.export`, `item.create`, `item.update`, `item.delete`,
-    `custom.event`
-
-## Database Schema
-
-The Prisma schema includes models for:
-
-- **Users** - Authentication and profiles
-- **Profiles** - User portfolios
-- **Applications** - Job application tracking
-- **Vacancies** - Job listings
-- **Work Experience** - Career history
-- **Education** - Educational background
-- **Skills** - Technical and professional skills
-- **Interviews** - Interview questions and answers
-- **Collected Data** - Exported profile data
-- **Directus** - CMS integration models
-
-See `prisma/schema.prisma` for complete schema details.
-
-## Webhook Integration
-
-Secure webhook endpoint for Directus Flow integration at `POST /api/webhook`.
-
-**Features:**
-
-- HMAC-SHA256 signature verification
-- Multiple event type support
-- Batch profile export
-- Profile schema and data collection
-
-**Event Types:**
-
-- `profile.export` - Export profile data and schema
-- `item.create` - Item creation handler
-- `item.update` - Item update handler
-- `item.delete` - Item deletion handler
-- `custom.event` - Custom event handler
-
-For setup and usage, see [docs/WEBHOOK.md](docs/WEBHOOK.md).
-
-## Testing
-
-This project uses **Vitest** for unit and integration testing.
-
-```bash
-npm run test              # Run all tests
-npm run test:watch       # Run tests in watch mode
-npm run test:ui          # Open test UI dashboard
-```
-
-**Test Structure:**
-
-- Webhook handler tests: `src/routes/api/webhook/__tests__/`
-- Utility function tests: `src/lib/server/__tests__/`
-- Mocked database calls for isolation
-
-For complete testing guide, see [docs/TESTING.md](docs/TESTING.md).
-
-## Code Quality
-
-The project follows strict code quality standards:
-
-```bash
-npm run check           # Type checking and svelte-check
-npm run lint           # ESLint and Prettier
-npm run format         # Auto-format code with Prettier
-npx deno fmt          # Format TypeScript/SvelteKit code
-npx deno fmt --unstable-component  # Format Svelte files
-```
-
-**Requirements:**
-
-- TypeScript strict mode enabled
-- ESLint with Svelte support
-- Prettier for consistent formatting
-- Deno formatter for modern code standards
-
-## Scripts
-
-### Installation
-
-```bash
-npm run init          # Install dependencies & generate Prisma
-npm run reinstall     # Clean install dependencies & generate Prisma
-```
-
-### Database Management
-
-```bash
-npm run docker:db:migrate              # Run migrations
-npm run docker:db:migrate:new          # Create new migration
-npm run docker:db:backup               # Backup database
-npm run docker:db:restore              # Restore database
-npm run docker:update-schema           # Sync Prisma schema
-```
-
-### Profile Management
-
-```bash
-npm run docker:export-profiles-pdf     # Export profiles as PDF
-npm run docker:export-profile-json     # Export profile as JSON
-npm run docker:export-profile-schema   # Export profile schema
-npm run docker:export-profile-data     # Export profile data
-npm run docker:import-profile-json     # Import profile from JSON
-npm run docker:clear-directus-cache    # Clear Directus cache
-```
-
-### Development
-
-```bash
-npm run dev                            # Start all services with Docker Compose
-npm run docker:build                   # Build SvelteKit in container
-npm run docker:cli                     # Access app container shell
-npm run check                          # TypeScript and Svelte checks
-npm run lint                           # Lint code
-npm run format                         # Format code
-npm run test                           # Run tests
-npm run test:watch                     # Run tests in watch mode
-npm run test:ui                        # Open test UI dashboard
-```
-
-## Deployment
-
-The application is configured for deployment on **Vercel** with adapter already
-configured.
-
-**Build process:**
-
-```bash
-npm install
-npm run build
-```
-
-**Environment variables** must be set in production:
-
-- `JWT_SECRET` - Secure random token
-- `DATABASE_URL` - Production PostgreSQL URL
-- `GROQ_API_KEY` - Groq API credentials for AI features
-- `SMTP2GO_API_KEY` - Email service credentials
-- `WEBHOOK_SECRET` - Webhook authentication
-- Directus configuration (ADMIN_SECRET, ADMIN_EMAIL, etc.)
-
-## Docker Services
-
-### Admin (Directus CMS)
-
-```bash
-docker compose up admin
-# Access at http://localhost:8055
-```
-
-### App (SvelteKit)
-
-```bash
-docker compose up app
-# Access at http://localhost:5173
-```
-
-### Database (PostgreSQL)
-
-```bash
-docker compose up database
-# Port: 5432
-# User: postgres
-# Database: smartjobseeker
-```
-
-**Run all services:**
-
-```bash
-npm run dev
-```
-
-**Stop services:**
-
-```bash
-docker compose down
-```
-
-**Access container shell:**
-
-```bash
-npm run docker:cli
-```
-
-## Configuration
-
-### Environment Variables
-
-Key environment variables (see `.env.example` for complete list):
-
-| Variable          | Description                   | Example                 |
-| ----------------- | ----------------------------- | ----------------------- |
-| `APP_URL`         | Application URL               | `http://localhost:5173` |
-| `JWT_SECRET`      | JWT signing secret            | 64-character hex string |
-| `DATABASE_URL`    | PostgreSQL connection         | `postgresql://...`      |
-| `GROQ_API_KEY`    | Groq API key for LLM features | `gsk_...`               |
-| `SMTP2GO_API_KEY` | Email service API key         | `api_...`               |
-| `WEBHOOK_SECRET`  | Webhook authentication secret | 64-character hex string |
-
-### Prisma
-
-Database schema and migrations are managed through Prisma.
-
-```bash
-npx prisma studio          # View database in UI
-npx prisma migrate dev     # Create and apply migrations
-npx prisma generate       # Generate Prisma Client
-```
-
-See `prisma/schema.prisma` for the complete schema.
-
-## Performance
-
-### Optimization Features
-
-- **Image Optimization** - Enhanced images with `@sveltejs/enhanced-img`
-- **Code Splitting** - Automatic code splitting via SvelteKit
-- **Lazy Loading** - AOS (Animate on Scroll) for performance
-- **CSS Optimization** - Tailwind CSS with PurgeCSS
-- **Build Optimization** - Vite for fast builds
-
-### Monitoring
-
-- Vercel Analytics integration
-- Error tracking capability
-- Performance monitoring ready
-
-## Security
-
-### Features
-
-- **HMAC-SHA256** - Webhook signature verification for secure Directus
-  integration
-- **Secure Headers** - Automatic in production
-- **Environment Variable Protection** - Sensitive credentials stored securely
-
-## Development Notes
-
-From [CLAUDE.md](CLAUDE.md):
-
-- **TypeScript** is enabled with strict type checking
-- Use `npx tsx` for running TypeScript scripts
-- Use ES Modules (`import`) instead of CommonJS (`require`)
-- Use `rm -f` instead of `rm` when removing files
-- Use modern Svelte 5 APIs: `import { page } from '$app/state'`
-- Format code with `npx deno fmt` after changes
-- For `.svelte` files: `npx deno fmt --unstable-component`
-
-## Documentation
-
-- **[CLAUDE.md](CLAUDE.md)** - Development setup and guidelines
-- **[docs/AI_FEATURES.md](docs/AI_FEATURES.md)** - AI features and usage guide
-- **[docs/WEBHOOK.md](docs/WEBHOOK.md)** - Webhook integration guide
-- **[docs/TESTING.md](docs/TESTING.md)** - Testing framework setup
-- **[docs/AUTHENTICATION.md](docs/AUTHENTICATION.md)** - Authentication system
-  documentation
+- User authentication and profiles
+- Job application tracking with AI assistance
+- Interview preparation tools
+- **Job scraping infrastructure** (newly added)
+- Directus CMS integration
+
+### Next Steps 🚀
+- Profile-to-job matching engine
+- Smart job recommendations
+- Automated application workflow
+- Multi-platform scraping expansion
 
 ## Contributing
 
-When contributing to this project:
-
-1. Follow the code quality standards (lint, format, type check)
+1. Follow code quality standards (lint, format, type check)
 2. Write tests for new features
-3. Update documentation if needed
-4. Use descriptive commit messages
-5. Ensure all tests pass before submitting
+3. Update documentation
+4. Ensure all tests pass
 
-## Support
-
-For issues or questions:
-
-- Check existing documentation in `/docs`
-- Review test files for usage examples
-- Check the CLAUDE.md development notes
-- Consult API endpoint examples in authentication docs
+See [DEVELOPMENT.md](docs/DEVELOPMENT.md) for guidelines.
 
 ## License
 
-This project is licensed under the GNU General Public License v3.0 - see the
-[LICENSE](LICENSE) file for details.
+GNU General Public License v3.0 - see [LICENSE](LICENSE) file.
 
 ## About
 
-**Smart Job Seeker** is a personal project by Rik Wanders, a Senior Full Stack
-Developer with 12+ years of experience in Python, Node.js, and modern web
-technologies.
+Built by **Rik Wanders**, Senior Full Stack Developer with 12+ years of experience.
 
 - **Website:** https://www.rikwanders.tech/
 - **GitHub:** https://github.com/gitaarik
