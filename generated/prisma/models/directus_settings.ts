@@ -74,6 +74,9 @@ export type Directus_settingsMinAggregateOutputType = {
   org_name: string | null
   product_updates: boolean | null
   project_status: string | null
+  ai_openai_api_key: string | null
+  ai_anthropic_api_key: string | null
+  ai_system_prompt: string | null
 }
 
 export type Directus_settingsMaxAggregateOutputType = {
@@ -114,6 +117,9 @@ export type Directus_settingsMaxAggregateOutputType = {
   org_name: string | null
   product_updates: boolean | null
   project_status: string | null
+  ai_openai_api_key: string | null
+  ai_anthropic_api_key: string | null
+  ai_system_prompt: string | null
 }
 
 export type Directus_settingsCountAggregateOutputType = {
@@ -162,6 +168,9 @@ export type Directus_settingsCountAggregateOutputType = {
   org_name: number
   product_updates: number
   project_status: number
+  ai_openai_api_key: number
+  ai_anthropic_api_key: number
+  ai_system_prompt: number
   _all: number
 }
 
@@ -214,6 +223,9 @@ export type Directus_settingsMinAggregateInputType = {
   org_name?: true
   product_updates?: true
   project_status?: true
+  ai_openai_api_key?: true
+  ai_anthropic_api_key?: true
+  ai_system_prompt?: true
 }
 
 export type Directus_settingsMaxAggregateInputType = {
@@ -254,6 +266,9 @@ export type Directus_settingsMaxAggregateInputType = {
   org_name?: true
   product_updates?: true
   project_status?: true
+  ai_openai_api_key?: true
+  ai_anthropic_api_key?: true
+  ai_system_prompt?: true
 }
 
 export type Directus_settingsCountAggregateInputType = {
@@ -302,6 +317,9 @@ export type Directus_settingsCountAggregateInputType = {
   org_name?: true
   product_updates?: true
   project_status?: true
+  ai_openai_api_key?: true
+  ai_anthropic_api_key?: true
+  ai_system_prompt?: true
   _all?: true
 }
 
@@ -437,6 +455,9 @@ export type Directus_settingsGroupByOutputType = {
   org_name: string | null
   product_updates: boolean | null
   project_status: string | null
+  ai_openai_api_key: string | null
+  ai_anthropic_api_key: string | null
+  ai_system_prompt: string | null
   _count: Directus_settingsCountAggregateOutputType | null
   _avg: Directus_settingsAvgAggregateOutputType | null
   _sum: Directus_settingsSumAggregateOutputType | null
@@ -508,6 +529,9 @@ export type directus_settingsWhereInput = {
   org_name?: Prisma.StringNullableFilter<"directus_settings"> | string | null
   product_updates?: Prisma.BoolNullableFilter<"directus_settings"> | boolean | null
   project_status?: Prisma.StringNullableFilter<"directus_settings"> | string | null
+  ai_openai_api_key?: Prisma.StringNullableFilter<"directus_settings"> | string | null
+  ai_anthropic_api_key?: Prisma.StringNullableFilter<"directus_settings"> | string | null
+  ai_system_prompt?: Prisma.StringNullableFilter<"directus_settings"> | string | null
   directus_files_directus_settings_project_logoTodirectus_files?: Prisma.XOR<Prisma.Directus_filesNullableScalarRelationFilter, Prisma.directus_filesWhereInput> | null
   directus_files_directus_settings_public_backgroundTodirectus_files?: Prisma.XOR<Prisma.Directus_filesNullableScalarRelationFilter, Prisma.directus_filesWhereInput> | null
   directus_files_directus_settings_public_faviconTodirectus_files?: Prisma.XOR<Prisma.Directus_filesNullableScalarRelationFilter, Prisma.directus_filesWhereInput> | null
@@ -562,6 +586,9 @@ export type directus_settingsOrderByWithRelationInput = {
   org_name?: Prisma.SortOrderInput | Prisma.SortOrder
   product_updates?: Prisma.SortOrderInput | Prisma.SortOrder
   project_status?: Prisma.SortOrderInput | Prisma.SortOrder
+  ai_openai_api_key?: Prisma.SortOrderInput | Prisma.SortOrder
+  ai_anthropic_api_key?: Prisma.SortOrderInput | Prisma.SortOrder
+  ai_system_prompt?: Prisma.SortOrderInput | Prisma.SortOrder
   directus_files_directus_settings_project_logoTodirectus_files?: Prisma.directus_filesOrderByWithRelationInput
   directus_files_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_filesOrderByWithRelationInput
   directus_files_directus_settings_public_faviconTodirectus_files?: Prisma.directus_filesOrderByWithRelationInput
@@ -619,6 +646,9 @@ export type directus_settingsWhereUniqueInput = Prisma.AtLeast<{
   org_name?: Prisma.StringNullableFilter<"directus_settings"> | string | null
   product_updates?: Prisma.BoolNullableFilter<"directus_settings"> | boolean | null
   project_status?: Prisma.StringNullableFilter<"directus_settings"> | string | null
+  ai_openai_api_key?: Prisma.StringNullableFilter<"directus_settings"> | string | null
+  ai_anthropic_api_key?: Prisma.StringNullableFilter<"directus_settings"> | string | null
+  ai_system_prompt?: Prisma.StringNullableFilter<"directus_settings"> | string | null
   directus_files_directus_settings_project_logoTodirectus_files?: Prisma.XOR<Prisma.Directus_filesNullableScalarRelationFilter, Prisma.directus_filesWhereInput> | null
   directus_files_directus_settings_public_backgroundTodirectus_files?: Prisma.XOR<Prisma.Directus_filesNullableScalarRelationFilter, Prisma.directus_filesWhereInput> | null
   directus_files_directus_settings_public_faviconTodirectus_files?: Prisma.XOR<Prisma.Directus_filesNullableScalarRelationFilter, Prisma.directus_filesWhereInput> | null
@@ -673,6 +703,9 @@ export type directus_settingsOrderByWithAggregationInput = {
   org_name?: Prisma.SortOrderInput | Prisma.SortOrder
   product_updates?: Prisma.SortOrderInput | Prisma.SortOrder
   project_status?: Prisma.SortOrderInput | Prisma.SortOrder
+  ai_openai_api_key?: Prisma.SortOrderInput | Prisma.SortOrder
+  ai_anthropic_api_key?: Prisma.SortOrderInput | Prisma.SortOrder
+  ai_system_prompt?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.directus_settingsCountOrderByAggregateInput
   _avg?: Prisma.directus_settingsAvgOrderByAggregateInput
   _max?: Prisma.directus_settingsMaxOrderByAggregateInput
@@ -729,6 +762,9 @@ export type directus_settingsScalarWhereWithAggregatesInput = {
   org_name?: Prisma.StringNullableWithAggregatesFilter<"directus_settings"> | string | null
   product_updates?: Prisma.BoolNullableWithAggregatesFilter<"directus_settings"> | boolean | null
   project_status?: Prisma.StringNullableWithAggregatesFilter<"directus_settings"> | string | null
+  ai_openai_api_key?: Prisma.StringNullableWithAggregatesFilter<"directus_settings"> | string | null
+  ai_anthropic_api_key?: Prisma.StringNullableWithAggregatesFilter<"directus_settings"> | string | null
+  ai_system_prompt?: Prisma.StringNullableWithAggregatesFilter<"directus_settings"> | string | null
 }
 
 export type directus_settingsCreateInput = {
@@ -770,6 +806,9 @@ export type directus_settingsCreateInput = {
   org_name?: string | null
   product_updates?: boolean | null
   project_status?: string | null
+  ai_openai_api_key?: string | null
+  ai_anthropic_api_key?: string | null
+  ai_system_prompt?: string | null
   directus_files_directus_settings_project_logoTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_project_logoTodirectus_filesInput
   directus_files_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_public_backgroundTodirectus_filesInput
   directus_files_directus_settings_public_faviconTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_public_faviconTodirectus_filesInput
@@ -824,6 +863,9 @@ export type directus_settingsUncheckedCreateInput = {
   org_name?: string | null
   product_updates?: boolean | null
   project_status?: string | null
+  ai_openai_api_key?: string | null
+  ai_anthropic_api_key?: string | null
+  ai_system_prompt?: string | null
 }
 
 export type directus_settingsUpdateInput = {
@@ -865,6 +907,9 @@ export type directus_settingsUpdateInput = {
   org_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   product_updates?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   project_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   directus_files_directus_settings_project_logoTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_project_logoTodirectus_filesNestedInput
   directus_files_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_public_backgroundTodirectus_filesNestedInput
   directus_files_directus_settings_public_faviconTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_public_faviconTodirectus_filesNestedInput
@@ -919,6 +964,9 @@ export type directus_settingsUncheckedUpdateInput = {
   org_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   product_updates?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   project_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type directus_settingsCreateManyInput = {
@@ -967,6 +1015,9 @@ export type directus_settingsCreateManyInput = {
   org_name?: string | null
   product_updates?: boolean | null
   project_status?: string | null
+  ai_openai_api_key?: string | null
+  ai_anthropic_api_key?: string | null
+  ai_system_prompt?: string | null
 }
 
 export type directus_settingsUpdateManyMutationInput = {
@@ -1008,6 +1059,9 @@ export type directus_settingsUpdateManyMutationInput = {
   org_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   product_updates?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   project_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type directus_settingsUncheckedUpdateManyInput = {
@@ -1056,6 +1110,9 @@ export type directus_settingsUncheckedUpdateManyInput = {
   org_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   product_updates?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   project_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type Directus_settingsListRelationFilter = {
@@ -1114,6 +1171,9 @@ export type directus_settingsCountOrderByAggregateInput = {
   org_name?: Prisma.SortOrder
   product_updates?: Prisma.SortOrder
   project_status?: Prisma.SortOrder
+  ai_openai_api_key?: Prisma.SortOrder
+  ai_anthropic_api_key?: Prisma.SortOrder
+  ai_system_prompt?: Prisma.SortOrder
 }
 
 export type directus_settingsAvgOrderByAggregateInput = {
@@ -1159,6 +1219,9 @@ export type directus_settingsMaxOrderByAggregateInput = {
   org_name?: Prisma.SortOrder
   product_updates?: Prisma.SortOrder
   project_status?: Prisma.SortOrder
+  ai_openai_api_key?: Prisma.SortOrder
+  ai_anthropic_api_key?: Prisma.SortOrder
+  ai_system_prompt?: Prisma.SortOrder
 }
 
 export type directus_settingsMinOrderByAggregateInput = {
@@ -1199,6 +1262,9 @@ export type directus_settingsMinOrderByAggregateInput = {
   org_name?: Prisma.SortOrder
   product_updates?: Prisma.SortOrder
   project_status?: Prisma.SortOrder
+  ai_openai_api_key?: Prisma.SortOrder
+  ai_anthropic_api_key?: Prisma.SortOrder
+  ai_system_prompt?: Prisma.SortOrder
 }
 
 export type directus_settingsSumOrderByAggregateInput = {
@@ -1497,6 +1563,9 @@ export type directus_settingsCreateWithoutDirectus_files_directus_settings_proje
   org_name?: string | null
   product_updates?: boolean | null
   project_status?: string | null
+  ai_openai_api_key?: string | null
+  ai_anthropic_api_key?: string | null
+  ai_system_prompt?: string | null
   directus_files_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_public_backgroundTodirectus_filesInput
   directus_files_directus_settings_public_faviconTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_public_faviconTodirectus_filesInput
   directus_files_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_public_foregroundTodirectus_filesInput
@@ -1549,6 +1618,9 @@ export type directus_settingsUncheckedCreateWithoutDirectus_files_directus_setti
   org_name?: string | null
   product_updates?: boolean | null
   project_status?: string | null
+  ai_openai_api_key?: string | null
+  ai_anthropic_api_key?: string | null
+  ai_system_prompt?: string | null
 }
 
 export type directus_settingsCreateOrConnectWithoutDirectus_files_directus_settings_project_logoTodirectus_filesInput = {
@@ -1600,6 +1672,9 @@ export type directus_settingsCreateWithoutDirectus_files_directus_settings_publi
   org_name?: string | null
   product_updates?: boolean | null
   project_status?: string | null
+  ai_openai_api_key?: string | null
+  ai_anthropic_api_key?: string | null
+  ai_system_prompt?: string | null
   directus_files_directus_settings_project_logoTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_project_logoTodirectus_filesInput
   directus_files_directus_settings_public_faviconTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_public_faviconTodirectus_filesInput
   directus_files_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_public_foregroundTodirectus_filesInput
@@ -1652,6 +1727,9 @@ export type directus_settingsUncheckedCreateWithoutDirectus_files_directus_setti
   org_name?: string | null
   product_updates?: boolean | null
   project_status?: string | null
+  ai_openai_api_key?: string | null
+  ai_anthropic_api_key?: string | null
+  ai_system_prompt?: string | null
 }
 
 export type directus_settingsCreateOrConnectWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesInput = {
@@ -1703,6 +1781,9 @@ export type directus_settingsCreateWithoutDirectus_files_directus_settings_publi
   org_name?: string | null
   product_updates?: boolean | null
   project_status?: string | null
+  ai_openai_api_key?: string | null
+  ai_anthropic_api_key?: string | null
+  ai_system_prompt?: string | null
   directus_files_directus_settings_project_logoTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_project_logoTodirectus_filesInput
   directus_files_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_public_backgroundTodirectus_filesInput
   directus_files_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_public_foregroundTodirectus_filesInput
@@ -1755,6 +1836,9 @@ export type directus_settingsUncheckedCreateWithoutDirectus_files_directus_setti
   org_name?: string | null
   product_updates?: boolean | null
   project_status?: string | null
+  ai_openai_api_key?: string | null
+  ai_anthropic_api_key?: string | null
+  ai_system_prompt?: string | null
 }
 
 export type directus_settingsCreateOrConnectWithoutDirectus_files_directus_settings_public_faviconTodirectus_filesInput = {
@@ -1806,6 +1890,9 @@ export type directus_settingsCreateWithoutDirectus_files_directus_settings_publi
   org_name?: string | null
   product_updates?: boolean | null
   project_status?: string | null
+  ai_openai_api_key?: string | null
+  ai_anthropic_api_key?: string | null
+  ai_system_prompt?: string | null
   directus_files_directus_settings_project_logoTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_project_logoTodirectus_filesInput
   directus_files_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_public_backgroundTodirectus_filesInput
   directus_files_directus_settings_public_faviconTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_public_faviconTodirectus_filesInput
@@ -1858,6 +1945,9 @@ export type directus_settingsUncheckedCreateWithoutDirectus_files_directus_setti
   org_name?: string | null
   product_updates?: boolean | null
   project_status?: string | null
+  ai_openai_api_key?: string | null
+  ai_anthropic_api_key?: string | null
+  ai_system_prompt?: string | null
 }
 
 export type directus_settingsCreateOrConnectWithoutDirectus_files_directus_settings_public_foregroundTodirectus_filesInput = {
@@ -1935,6 +2025,9 @@ export type directus_settingsScalarWhereInput = {
   org_name?: Prisma.StringNullableFilter<"directus_settings"> | string | null
   product_updates?: Prisma.BoolNullableFilter<"directus_settings"> | boolean | null
   project_status?: Prisma.StringNullableFilter<"directus_settings"> | string | null
+  ai_openai_api_key?: Prisma.StringNullableFilter<"directus_settings"> | string | null
+  ai_anthropic_api_key?: Prisma.StringNullableFilter<"directus_settings"> | string | null
+  ai_system_prompt?: Prisma.StringNullableFilter<"directus_settings"> | string | null
 }
 
 export type directus_settingsUpsertWithWhereUniqueWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesInput = {
@@ -2024,6 +2117,9 @@ export type directus_settingsCreateWithoutDirectus_foldersInput = {
   org_name?: string | null
   product_updates?: boolean | null
   project_status?: string | null
+  ai_openai_api_key?: string | null
+  ai_anthropic_api_key?: string | null
+  ai_system_prompt?: string | null
   directus_files_directus_settings_project_logoTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_project_logoTodirectus_filesInput
   directus_files_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_public_backgroundTodirectus_filesInput
   directus_files_directus_settings_public_faviconTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_public_faviconTodirectus_filesInput
@@ -2076,6 +2172,9 @@ export type directus_settingsUncheckedCreateWithoutDirectus_foldersInput = {
   org_name?: string | null
   product_updates?: boolean | null
   project_status?: string | null
+  ai_openai_api_key?: string | null
+  ai_anthropic_api_key?: string | null
+  ai_system_prompt?: string | null
 }
 
 export type directus_settingsCreateOrConnectWithoutDirectus_foldersInput = {
@@ -2143,6 +2242,9 @@ export type directus_settingsCreateWithoutDirectus_rolesInput = {
   org_name?: string | null
   product_updates?: boolean | null
   project_status?: string | null
+  ai_openai_api_key?: string | null
+  ai_anthropic_api_key?: string | null
+  ai_system_prompt?: string | null
   directus_files_directus_settings_project_logoTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_project_logoTodirectus_filesInput
   directus_files_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_public_backgroundTodirectus_filesInput
   directus_files_directus_settings_public_faviconTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_public_faviconTodirectus_filesInput
@@ -2195,6 +2297,9 @@ export type directus_settingsUncheckedCreateWithoutDirectus_rolesInput = {
   org_name?: string | null
   product_updates?: boolean | null
   project_status?: string | null
+  ai_openai_api_key?: string | null
+  ai_anthropic_api_key?: string | null
+  ai_system_prompt?: string | null
 }
 
 export type directus_settingsCreateOrConnectWithoutDirectus_rolesInput = {
@@ -2268,6 +2373,9 @@ export type directus_settingsCreateManyDirectus_files_directus_settings_project_
   org_name?: string | null
   product_updates?: boolean | null
   project_status?: string | null
+  ai_openai_api_key?: string | null
+  ai_anthropic_api_key?: string | null
+  ai_system_prompt?: string | null
 }
 
 export type directus_settingsCreateManyDirectus_files_directus_settings_public_backgroundTodirectus_filesInput = {
@@ -2315,6 +2423,9 @@ export type directus_settingsCreateManyDirectus_files_directus_settings_public_b
   org_name?: string | null
   product_updates?: boolean | null
   project_status?: string | null
+  ai_openai_api_key?: string | null
+  ai_anthropic_api_key?: string | null
+  ai_system_prompt?: string | null
 }
 
 export type directus_settingsCreateManyDirectus_files_directus_settings_public_faviconTodirectus_filesInput = {
@@ -2362,6 +2473,9 @@ export type directus_settingsCreateManyDirectus_files_directus_settings_public_f
   org_name?: string | null
   product_updates?: boolean | null
   project_status?: string | null
+  ai_openai_api_key?: string | null
+  ai_anthropic_api_key?: string | null
+  ai_system_prompt?: string | null
 }
 
 export type directus_settingsCreateManyDirectus_files_directus_settings_public_foregroundTodirectus_filesInput = {
@@ -2409,6 +2523,9 @@ export type directus_settingsCreateManyDirectus_files_directus_settings_public_f
   org_name?: string | null
   product_updates?: boolean | null
   project_status?: string | null
+  ai_openai_api_key?: string | null
+  ai_anthropic_api_key?: string | null
+  ai_system_prompt?: string | null
 }
 
 export type directus_settingsUpdateWithoutDirectus_files_directus_settings_project_logoTodirectus_filesInput = {
@@ -2450,6 +2567,9 @@ export type directus_settingsUpdateWithoutDirectus_files_directus_settings_proje
   org_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   product_updates?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   project_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   directus_files_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_public_backgroundTodirectus_filesNestedInput
   directus_files_directus_settings_public_faviconTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_public_faviconTodirectus_filesNestedInput
   directus_files_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_public_foregroundTodirectus_filesNestedInput
@@ -2502,6 +2622,9 @@ export type directus_settingsUncheckedUpdateWithoutDirectus_files_directus_setti
   org_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   product_updates?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   project_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_project_logoTodirectus_filesInput = {
@@ -2549,6 +2672,9 @@ export type directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_s
   org_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   product_updates?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   project_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type directus_settingsUpdateWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesInput = {
@@ -2590,6 +2716,9 @@ export type directus_settingsUpdateWithoutDirectus_files_directus_settings_publi
   org_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   product_updates?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   project_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   directus_files_directus_settings_project_logoTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_project_logoTodirectus_filesNestedInput
   directus_files_directus_settings_public_faviconTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_public_faviconTodirectus_filesNestedInput
   directus_files_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_public_foregroundTodirectus_filesNestedInput
@@ -2642,6 +2771,9 @@ export type directus_settingsUncheckedUpdateWithoutDirectus_files_directus_setti
   org_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   product_updates?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   project_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesInput = {
@@ -2689,6 +2821,9 @@ export type directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_s
   org_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   product_updates?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   project_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type directus_settingsUpdateWithoutDirectus_files_directus_settings_public_faviconTodirectus_filesInput = {
@@ -2730,6 +2865,9 @@ export type directus_settingsUpdateWithoutDirectus_files_directus_settings_publi
   org_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   product_updates?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   project_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   directus_files_directus_settings_project_logoTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_project_logoTodirectus_filesNestedInput
   directus_files_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_public_backgroundTodirectus_filesNestedInput
   directus_files_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_public_foregroundTodirectus_filesNestedInput
@@ -2782,6 +2920,9 @@ export type directus_settingsUncheckedUpdateWithoutDirectus_files_directus_setti
   org_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   product_updates?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   project_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_public_faviconTodirectus_filesInput = {
@@ -2829,6 +2970,9 @@ export type directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_s
   org_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   product_updates?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   project_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type directus_settingsUpdateWithoutDirectus_files_directus_settings_public_foregroundTodirectus_filesInput = {
@@ -2870,6 +3014,9 @@ export type directus_settingsUpdateWithoutDirectus_files_directus_settings_publi
   org_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   product_updates?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   project_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   directus_files_directus_settings_project_logoTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_project_logoTodirectus_filesNestedInput
   directus_files_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_public_backgroundTodirectus_filesNestedInput
   directus_files_directus_settings_public_faviconTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_public_faviconTodirectus_filesNestedInput
@@ -2922,6 +3069,9 @@ export type directus_settingsUncheckedUpdateWithoutDirectus_files_directus_setti
   org_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   product_updates?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   project_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_public_foregroundTodirectus_filesInput = {
@@ -2969,6 +3119,9 @@ export type directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_s
   org_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   product_updates?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   project_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type directus_settingsCreateManyDirectus_foldersInput = {
@@ -3016,6 +3169,9 @@ export type directus_settingsCreateManyDirectus_foldersInput = {
   org_name?: string | null
   product_updates?: boolean | null
   project_status?: string | null
+  ai_openai_api_key?: string | null
+  ai_anthropic_api_key?: string | null
+  ai_system_prompt?: string | null
 }
 
 export type directus_settingsUpdateWithoutDirectus_foldersInput = {
@@ -3057,6 +3213,9 @@ export type directus_settingsUpdateWithoutDirectus_foldersInput = {
   org_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   product_updates?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   project_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   directus_files_directus_settings_project_logoTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_project_logoTodirectus_filesNestedInput
   directus_files_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_public_backgroundTodirectus_filesNestedInput
   directus_files_directus_settings_public_faviconTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_public_faviconTodirectus_filesNestedInput
@@ -3109,6 +3268,9 @@ export type directus_settingsUncheckedUpdateWithoutDirectus_foldersInput = {
   org_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   product_updates?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   project_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type directus_settingsUncheckedUpdateManyWithoutDirectus_foldersInput = {
@@ -3156,6 +3318,9 @@ export type directus_settingsUncheckedUpdateManyWithoutDirectus_foldersInput = {
   org_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   product_updates?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   project_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type directus_settingsCreateManyDirectus_rolesInput = {
@@ -3203,6 +3368,9 @@ export type directus_settingsCreateManyDirectus_rolesInput = {
   org_name?: string | null
   product_updates?: boolean | null
   project_status?: string | null
+  ai_openai_api_key?: string | null
+  ai_anthropic_api_key?: string | null
+  ai_system_prompt?: string | null
 }
 
 export type directus_settingsUpdateWithoutDirectus_rolesInput = {
@@ -3244,6 +3412,9 @@ export type directus_settingsUpdateWithoutDirectus_rolesInput = {
   org_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   product_updates?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   project_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   directus_files_directus_settings_project_logoTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_project_logoTodirectus_filesNestedInput
   directus_files_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_public_backgroundTodirectus_filesNestedInput
   directus_files_directus_settings_public_faviconTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_public_faviconTodirectus_filesNestedInput
@@ -3296,6 +3467,9 @@ export type directus_settingsUncheckedUpdateWithoutDirectus_rolesInput = {
   org_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   product_updates?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   project_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type directus_settingsUncheckedUpdateManyWithoutDirectus_rolesInput = {
@@ -3343,6 +3517,9 @@ export type directus_settingsUncheckedUpdateManyWithoutDirectus_rolesInput = {
   org_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   product_updates?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   project_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 
@@ -3393,6 +3570,9 @@ export type directus_settingsSelect<ExtArgs extends runtime.Types.Extensions.Int
   org_name?: boolean
   product_updates?: boolean
   project_status?: boolean
+  ai_openai_api_key?: boolean
+  ai_anthropic_api_key?: boolean
+  ai_system_prompt?: boolean
   directus_files_directus_settings_project_logoTodirectus_files?: boolean | Prisma.directus_settings$directus_files_directus_settings_project_logoTodirectus_filesArgs<ExtArgs>
   directus_files_directus_settings_public_backgroundTodirectus_files?: boolean | Prisma.directus_settings$directus_files_directus_settings_public_backgroundTodirectus_filesArgs<ExtArgs>
   directus_files_directus_settings_public_faviconTodirectus_files?: boolean | Prisma.directus_settings$directus_files_directus_settings_public_faviconTodirectus_filesArgs<ExtArgs>
@@ -3447,6 +3627,9 @@ export type directus_settingsSelectCreateManyAndReturn<ExtArgs extends runtime.T
   org_name?: boolean
   product_updates?: boolean
   project_status?: boolean
+  ai_openai_api_key?: boolean
+  ai_anthropic_api_key?: boolean
+  ai_system_prompt?: boolean
   directus_files_directus_settings_project_logoTodirectus_files?: boolean | Prisma.directus_settings$directus_files_directus_settings_project_logoTodirectus_filesArgs<ExtArgs>
   directus_files_directus_settings_public_backgroundTodirectus_files?: boolean | Prisma.directus_settings$directus_files_directus_settings_public_backgroundTodirectus_filesArgs<ExtArgs>
   directus_files_directus_settings_public_faviconTodirectus_files?: boolean | Prisma.directus_settings$directus_files_directus_settings_public_faviconTodirectus_filesArgs<ExtArgs>
@@ -3501,6 +3684,9 @@ export type directus_settingsSelectUpdateManyAndReturn<ExtArgs extends runtime.T
   org_name?: boolean
   product_updates?: boolean
   project_status?: boolean
+  ai_openai_api_key?: boolean
+  ai_anthropic_api_key?: boolean
+  ai_system_prompt?: boolean
   directus_files_directus_settings_project_logoTodirectus_files?: boolean | Prisma.directus_settings$directus_files_directus_settings_project_logoTodirectus_filesArgs<ExtArgs>
   directus_files_directus_settings_public_backgroundTodirectus_files?: boolean | Prisma.directus_settings$directus_files_directus_settings_public_backgroundTodirectus_filesArgs<ExtArgs>
   directus_files_directus_settings_public_faviconTodirectus_files?: boolean | Prisma.directus_settings$directus_files_directus_settings_public_faviconTodirectus_filesArgs<ExtArgs>
@@ -3555,9 +3741,12 @@ export type directus_settingsSelectScalar = {
   org_name?: boolean
   product_updates?: boolean
   project_status?: boolean
+  ai_openai_api_key?: boolean
+  ai_anthropic_api_key?: boolean
+  ai_system_prompt?: boolean
 }
 
-export type directus_settingsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "project_name" | "project_url" | "project_color" | "project_logo" | "public_foreground" | "public_background" | "public_note" | "auth_login_attempts" | "auth_password_policy" | "storage_asset_transform" | "storage_asset_presets" | "custom_css" | "storage_default_folder" | "basemaps" | "mapbox_key" | "module_bar" | "project_descriptor" | "default_language" | "custom_aspect_ratios" | "public_favicon" | "default_appearance" | "default_theme_light" | "theme_light_overrides" | "default_theme_dark" | "theme_dark_overrides" | "report_error_url" | "report_bug_url" | "report_feature_url" | "public_registration" | "public_registration_verify_email" | "public_registration_role" | "public_registration_email_filter" | "visual_editor_urls" | "project_id" | "mcp_enabled" | "mcp_allow_deletes" | "mcp_prompts_collection" | "mcp_system_prompt_enabled" | "mcp_system_prompt" | "project_owner" | "project_usage" | "org_name" | "product_updates" | "project_status", ExtArgs["result"]["directus_settings"]>
+export type directus_settingsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "project_name" | "project_url" | "project_color" | "project_logo" | "public_foreground" | "public_background" | "public_note" | "auth_login_attempts" | "auth_password_policy" | "storage_asset_transform" | "storage_asset_presets" | "custom_css" | "storage_default_folder" | "basemaps" | "mapbox_key" | "module_bar" | "project_descriptor" | "default_language" | "custom_aspect_ratios" | "public_favicon" | "default_appearance" | "default_theme_light" | "theme_light_overrides" | "default_theme_dark" | "theme_dark_overrides" | "report_error_url" | "report_bug_url" | "report_feature_url" | "public_registration" | "public_registration_verify_email" | "public_registration_role" | "public_registration_email_filter" | "visual_editor_urls" | "project_id" | "mcp_enabled" | "mcp_allow_deletes" | "mcp_prompts_collection" | "mcp_system_prompt_enabled" | "mcp_system_prompt" | "project_owner" | "project_usage" | "org_name" | "product_updates" | "project_status" | "ai_openai_api_key" | "ai_anthropic_api_key" | "ai_system_prompt", ExtArgs["result"]["directus_settings"]>
 export type directus_settingsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   directus_files_directus_settings_project_logoTodirectus_files?: boolean | Prisma.directus_settings$directus_files_directus_settings_project_logoTodirectus_filesArgs<ExtArgs>
   directus_files_directus_settings_public_backgroundTodirectus_files?: boolean | Prisma.directus_settings$directus_files_directus_settings_public_backgroundTodirectus_filesArgs<ExtArgs>
@@ -3639,6 +3828,9 @@ export type $directus_settingsPayload<ExtArgs extends runtime.Types.Extensions.I
     org_name: string | null
     product_updates: boolean | null
     project_status: string | null
+    ai_openai_api_key: string | null
+    ai_anthropic_api_key: string | null
+    ai_system_prompt: string | null
   }, ExtArgs["result"]["directus_settings"]>
   composites: {}
 }
@@ -4113,6 +4305,9 @@ export interface directus_settingsFieldRefs {
   readonly org_name: Prisma.FieldRef<"directus_settings", 'String'>
   readonly product_updates: Prisma.FieldRef<"directus_settings", 'Boolean'>
   readonly project_status: Prisma.FieldRef<"directus_settings", 'String'>
+  readonly ai_openai_api_key: Prisma.FieldRef<"directus_settings", 'String'>
+  readonly ai_anthropic_api_key: Prisma.FieldRef<"directus_settings", 'String'>
+  readonly ai_system_prompt: Prisma.FieldRef<"directus_settings", 'String'>
 }
     
 

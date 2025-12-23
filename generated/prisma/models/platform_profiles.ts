@@ -368,16 +368,6 @@ export type platform_profilesUncheckedUpdateManyInput = {
   outsourcing_platform?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
-export type Platform_profilesListRelationFilter = {
-  every?: Prisma.platform_profilesWhereInput
-  some?: Prisma.platform_profilesWhereInput
-  none?: Prisma.platform_profilesWhereInput
-}
-
-export type platform_profilesOrderByRelationAggregateInput = {
-  _count?: Prisma.SortOrder
-}
-
 export type platform_profilesCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -422,46 +412,14 @@ export type platform_profilesSumOrderByAggregateInput = {
   outsourcing_platform?: Prisma.SortOrder
 }
 
-export type platform_profilesCreateNestedManyWithoutOutsourcing_platformsInput = {
-  create?: Prisma.XOR<Prisma.platform_profilesCreateWithoutOutsourcing_platformsInput, Prisma.platform_profilesUncheckedCreateWithoutOutsourcing_platformsInput> | Prisma.platform_profilesCreateWithoutOutsourcing_platformsInput[] | Prisma.platform_profilesUncheckedCreateWithoutOutsourcing_platformsInput[]
-  connectOrCreate?: Prisma.platform_profilesCreateOrConnectWithoutOutsourcing_platformsInput | Prisma.platform_profilesCreateOrConnectWithoutOutsourcing_platformsInput[]
-  createMany?: Prisma.platform_profilesCreateManyOutsourcing_platformsInputEnvelope
-  connect?: Prisma.platform_profilesWhereUniqueInput | Prisma.platform_profilesWhereUniqueInput[]
+export type Platform_profilesListRelationFilter = {
+  every?: Prisma.platform_profilesWhereInput
+  some?: Prisma.platform_profilesWhereInput
+  none?: Prisma.platform_profilesWhereInput
 }
 
-export type platform_profilesUncheckedCreateNestedManyWithoutOutsourcing_platformsInput = {
-  create?: Prisma.XOR<Prisma.platform_profilesCreateWithoutOutsourcing_platformsInput, Prisma.platform_profilesUncheckedCreateWithoutOutsourcing_platformsInput> | Prisma.platform_profilesCreateWithoutOutsourcing_platformsInput[] | Prisma.platform_profilesUncheckedCreateWithoutOutsourcing_platformsInput[]
-  connectOrCreate?: Prisma.platform_profilesCreateOrConnectWithoutOutsourcing_platformsInput | Prisma.platform_profilesCreateOrConnectWithoutOutsourcing_platformsInput[]
-  createMany?: Prisma.platform_profilesCreateManyOutsourcing_platformsInputEnvelope
-  connect?: Prisma.platform_profilesWhereUniqueInput | Prisma.platform_profilesWhereUniqueInput[]
-}
-
-export type platform_profilesUpdateManyWithoutOutsourcing_platformsNestedInput = {
-  create?: Prisma.XOR<Prisma.platform_profilesCreateWithoutOutsourcing_platformsInput, Prisma.platform_profilesUncheckedCreateWithoutOutsourcing_platformsInput> | Prisma.platform_profilesCreateWithoutOutsourcing_platformsInput[] | Prisma.platform_profilesUncheckedCreateWithoutOutsourcing_platformsInput[]
-  connectOrCreate?: Prisma.platform_profilesCreateOrConnectWithoutOutsourcing_platformsInput | Prisma.platform_profilesCreateOrConnectWithoutOutsourcing_platformsInput[]
-  upsert?: Prisma.platform_profilesUpsertWithWhereUniqueWithoutOutsourcing_platformsInput | Prisma.platform_profilesUpsertWithWhereUniqueWithoutOutsourcing_platformsInput[]
-  createMany?: Prisma.platform_profilesCreateManyOutsourcing_platformsInputEnvelope
-  set?: Prisma.platform_profilesWhereUniqueInput | Prisma.platform_profilesWhereUniqueInput[]
-  disconnect?: Prisma.platform_profilesWhereUniqueInput | Prisma.platform_profilesWhereUniqueInput[]
-  delete?: Prisma.platform_profilesWhereUniqueInput | Prisma.platform_profilesWhereUniqueInput[]
-  connect?: Prisma.platform_profilesWhereUniqueInput | Prisma.platform_profilesWhereUniqueInput[]
-  update?: Prisma.platform_profilesUpdateWithWhereUniqueWithoutOutsourcing_platformsInput | Prisma.platform_profilesUpdateWithWhereUniqueWithoutOutsourcing_platformsInput[]
-  updateMany?: Prisma.platform_profilesUpdateManyWithWhereWithoutOutsourcing_platformsInput | Prisma.platform_profilesUpdateManyWithWhereWithoutOutsourcing_platformsInput[]
-  deleteMany?: Prisma.platform_profilesScalarWhereInput | Prisma.platform_profilesScalarWhereInput[]
-}
-
-export type platform_profilesUncheckedUpdateManyWithoutOutsourcing_platformsNestedInput = {
-  create?: Prisma.XOR<Prisma.platform_profilesCreateWithoutOutsourcing_platformsInput, Prisma.platform_profilesUncheckedCreateWithoutOutsourcing_platformsInput> | Prisma.platform_profilesCreateWithoutOutsourcing_platformsInput[] | Prisma.platform_profilesUncheckedCreateWithoutOutsourcing_platformsInput[]
-  connectOrCreate?: Prisma.platform_profilesCreateOrConnectWithoutOutsourcing_platformsInput | Prisma.platform_profilesCreateOrConnectWithoutOutsourcing_platformsInput[]
-  upsert?: Prisma.platform_profilesUpsertWithWhereUniqueWithoutOutsourcing_platformsInput | Prisma.platform_profilesUpsertWithWhereUniqueWithoutOutsourcing_platformsInput[]
-  createMany?: Prisma.platform_profilesCreateManyOutsourcing_platformsInputEnvelope
-  set?: Prisma.platform_profilesWhereUniqueInput | Prisma.platform_profilesWhereUniqueInput[]
-  disconnect?: Prisma.platform_profilesWhereUniqueInput | Prisma.platform_profilesWhereUniqueInput[]
-  delete?: Prisma.platform_profilesWhereUniqueInput | Prisma.platform_profilesWhereUniqueInput[]
-  connect?: Prisma.platform_profilesWhereUniqueInput | Prisma.platform_profilesWhereUniqueInput[]
-  update?: Prisma.platform_profilesUpdateWithWhereUniqueWithoutOutsourcing_platformsInput | Prisma.platform_profilesUpdateWithWhereUniqueWithoutOutsourcing_platformsInput[]
-  updateMany?: Prisma.platform_profilesUpdateManyWithWhereWithoutOutsourcing_platformsInput | Prisma.platform_profilesUpdateManyWithWhereWithoutOutsourcing_platformsInput[]
-  deleteMany?: Prisma.platform_profilesScalarWhereInput | Prisma.platform_profilesScalarWhereInput[]
+export type platform_profilesOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
 }
 
 export type platform_profilesCreateNestedManyWithoutProfilesInput = {
@@ -506,60 +464,46 @@ export type platform_profilesUncheckedUpdateManyWithoutProfilesNestedInput = {
   deleteMany?: Prisma.platform_profilesScalarWhereInput | Prisma.platform_profilesScalarWhereInput[]
 }
 
-export type platform_profilesCreateWithoutOutsourcing_platformsInput = {
-  status?: string
-  sort?: number | null
-  date_created?: Date | string | null
-  date_updated?: Date | string | null
-  profiles?: Prisma.profilesCreateNestedOneWithoutPlatform_profilesInput
+export type platform_profilesCreateNestedManyWithoutOutsourcing_platformsInput = {
+  create?: Prisma.XOR<Prisma.platform_profilesCreateWithoutOutsourcing_platformsInput, Prisma.platform_profilesUncheckedCreateWithoutOutsourcing_platformsInput> | Prisma.platform_profilesCreateWithoutOutsourcing_platformsInput[] | Prisma.platform_profilesUncheckedCreateWithoutOutsourcing_platformsInput[]
+  connectOrCreate?: Prisma.platform_profilesCreateOrConnectWithoutOutsourcing_platformsInput | Prisma.platform_profilesCreateOrConnectWithoutOutsourcing_platformsInput[]
+  createMany?: Prisma.platform_profilesCreateManyOutsourcing_platformsInputEnvelope
+  connect?: Prisma.platform_profilesWhereUniqueInput | Prisma.platform_profilesWhereUniqueInput[]
 }
 
-export type platform_profilesUncheckedCreateWithoutOutsourcing_platformsInput = {
-  id?: number
-  status?: string
-  sort?: number | null
-  date_created?: Date | string | null
-  date_updated?: Date | string | null
-  profile?: number | null
+export type platform_profilesUncheckedCreateNestedManyWithoutOutsourcing_platformsInput = {
+  create?: Prisma.XOR<Prisma.platform_profilesCreateWithoutOutsourcing_platformsInput, Prisma.platform_profilesUncheckedCreateWithoutOutsourcing_platformsInput> | Prisma.platform_profilesCreateWithoutOutsourcing_platformsInput[] | Prisma.platform_profilesUncheckedCreateWithoutOutsourcing_platformsInput[]
+  connectOrCreate?: Prisma.platform_profilesCreateOrConnectWithoutOutsourcing_platformsInput | Prisma.platform_profilesCreateOrConnectWithoutOutsourcing_platformsInput[]
+  createMany?: Prisma.platform_profilesCreateManyOutsourcing_platformsInputEnvelope
+  connect?: Prisma.platform_profilesWhereUniqueInput | Prisma.platform_profilesWhereUniqueInput[]
 }
 
-export type platform_profilesCreateOrConnectWithoutOutsourcing_platformsInput = {
-  where: Prisma.platform_profilesWhereUniqueInput
-  create: Prisma.XOR<Prisma.platform_profilesCreateWithoutOutsourcing_platformsInput, Prisma.platform_profilesUncheckedCreateWithoutOutsourcing_platformsInput>
+export type platform_profilesUpdateManyWithoutOutsourcing_platformsNestedInput = {
+  create?: Prisma.XOR<Prisma.platform_profilesCreateWithoutOutsourcing_platformsInput, Prisma.platform_profilesUncheckedCreateWithoutOutsourcing_platformsInput> | Prisma.platform_profilesCreateWithoutOutsourcing_platformsInput[] | Prisma.platform_profilesUncheckedCreateWithoutOutsourcing_platformsInput[]
+  connectOrCreate?: Prisma.platform_profilesCreateOrConnectWithoutOutsourcing_platformsInput | Prisma.platform_profilesCreateOrConnectWithoutOutsourcing_platformsInput[]
+  upsert?: Prisma.platform_profilesUpsertWithWhereUniqueWithoutOutsourcing_platformsInput | Prisma.platform_profilesUpsertWithWhereUniqueWithoutOutsourcing_platformsInput[]
+  createMany?: Prisma.platform_profilesCreateManyOutsourcing_platformsInputEnvelope
+  set?: Prisma.platform_profilesWhereUniqueInput | Prisma.platform_profilesWhereUniqueInput[]
+  disconnect?: Prisma.platform_profilesWhereUniqueInput | Prisma.platform_profilesWhereUniqueInput[]
+  delete?: Prisma.platform_profilesWhereUniqueInput | Prisma.platform_profilesWhereUniqueInput[]
+  connect?: Prisma.platform_profilesWhereUniqueInput | Prisma.platform_profilesWhereUniqueInput[]
+  update?: Prisma.platform_profilesUpdateWithWhereUniqueWithoutOutsourcing_platformsInput | Prisma.platform_profilesUpdateWithWhereUniqueWithoutOutsourcing_platformsInput[]
+  updateMany?: Prisma.platform_profilesUpdateManyWithWhereWithoutOutsourcing_platformsInput | Prisma.platform_profilesUpdateManyWithWhereWithoutOutsourcing_platformsInput[]
+  deleteMany?: Prisma.platform_profilesScalarWhereInput | Prisma.platform_profilesScalarWhereInput[]
 }
 
-export type platform_profilesCreateManyOutsourcing_platformsInputEnvelope = {
-  data: Prisma.platform_profilesCreateManyOutsourcing_platformsInput | Prisma.platform_profilesCreateManyOutsourcing_platformsInput[]
-  skipDuplicates?: boolean
-}
-
-export type platform_profilesUpsertWithWhereUniqueWithoutOutsourcing_platformsInput = {
-  where: Prisma.platform_profilesWhereUniqueInput
-  update: Prisma.XOR<Prisma.platform_profilesUpdateWithoutOutsourcing_platformsInput, Prisma.platform_profilesUncheckedUpdateWithoutOutsourcing_platformsInput>
-  create: Prisma.XOR<Prisma.platform_profilesCreateWithoutOutsourcing_platformsInput, Prisma.platform_profilesUncheckedCreateWithoutOutsourcing_platformsInput>
-}
-
-export type platform_profilesUpdateWithWhereUniqueWithoutOutsourcing_platformsInput = {
-  where: Prisma.platform_profilesWhereUniqueInput
-  data: Prisma.XOR<Prisma.platform_profilesUpdateWithoutOutsourcing_platformsInput, Prisma.platform_profilesUncheckedUpdateWithoutOutsourcing_platformsInput>
-}
-
-export type platform_profilesUpdateManyWithWhereWithoutOutsourcing_platformsInput = {
-  where: Prisma.platform_profilesScalarWhereInput
-  data: Prisma.XOR<Prisma.platform_profilesUpdateManyMutationInput, Prisma.platform_profilesUncheckedUpdateManyWithoutOutsourcing_platformsInput>
-}
-
-export type platform_profilesScalarWhereInput = {
-  AND?: Prisma.platform_profilesScalarWhereInput | Prisma.platform_profilesScalarWhereInput[]
-  OR?: Prisma.platform_profilesScalarWhereInput[]
-  NOT?: Prisma.platform_profilesScalarWhereInput | Prisma.platform_profilesScalarWhereInput[]
-  id?: Prisma.IntFilter<"platform_profiles"> | number
-  status?: Prisma.StringFilter<"platform_profiles"> | string
-  sort?: Prisma.IntNullableFilter<"platform_profiles"> | number | null
-  date_created?: Prisma.DateTimeNullableFilter<"platform_profiles"> | Date | string | null
-  date_updated?: Prisma.DateTimeNullableFilter<"platform_profiles"> | Date | string | null
-  profile?: Prisma.IntNullableFilter<"platform_profiles"> | number | null
-  outsourcing_platform?: Prisma.IntNullableFilter<"platform_profiles"> | number | null
+export type platform_profilesUncheckedUpdateManyWithoutOutsourcing_platformsNestedInput = {
+  create?: Prisma.XOR<Prisma.platform_profilesCreateWithoutOutsourcing_platformsInput, Prisma.platform_profilesUncheckedCreateWithoutOutsourcing_platformsInput> | Prisma.platform_profilesCreateWithoutOutsourcing_platformsInput[] | Prisma.platform_profilesUncheckedCreateWithoutOutsourcing_platformsInput[]
+  connectOrCreate?: Prisma.platform_profilesCreateOrConnectWithoutOutsourcing_platformsInput | Prisma.platform_profilesCreateOrConnectWithoutOutsourcing_platformsInput[]
+  upsert?: Prisma.platform_profilesUpsertWithWhereUniqueWithoutOutsourcing_platformsInput | Prisma.platform_profilesUpsertWithWhereUniqueWithoutOutsourcing_platformsInput[]
+  createMany?: Prisma.platform_profilesCreateManyOutsourcing_platformsInputEnvelope
+  set?: Prisma.platform_profilesWhereUniqueInput | Prisma.platform_profilesWhereUniqueInput[]
+  disconnect?: Prisma.platform_profilesWhereUniqueInput | Prisma.platform_profilesWhereUniqueInput[]
+  delete?: Prisma.platform_profilesWhereUniqueInput | Prisma.platform_profilesWhereUniqueInput[]
+  connect?: Prisma.platform_profilesWhereUniqueInput | Prisma.platform_profilesWhereUniqueInput[]
+  update?: Prisma.platform_profilesUpdateWithWhereUniqueWithoutOutsourcing_platformsInput | Prisma.platform_profilesUpdateWithWhereUniqueWithoutOutsourcing_platformsInput[]
+  updateMany?: Prisma.platform_profilesUpdateManyWithWhereWithoutOutsourcing_platformsInput | Prisma.platform_profilesUpdateManyWithWhereWithoutOutsourcing_platformsInput[]
+  deleteMany?: Prisma.platform_profilesScalarWhereInput | Prisma.platform_profilesScalarWhereInput[]
 }
 
 export type platform_profilesCreateWithoutProfilesInput = {
@@ -605,7 +549,28 @@ export type platform_profilesUpdateManyWithWhereWithoutProfilesInput = {
   data: Prisma.XOR<Prisma.platform_profilesUpdateManyMutationInput, Prisma.platform_profilesUncheckedUpdateManyWithoutProfilesInput>
 }
 
-export type platform_profilesCreateManyOutsourcing_platformsInput = {
+export type platform_profilesScalarWhereInput = {
+  AND?: Prisma.platform_profilesScalarWhereInput | Prisma.platform_profilesScalarWhereInput[]
+  OR?: Prisma.platform_profilesScalarWhereInput[]
+  NOT?: Prisma.platform_profilesScalarWhereInput | Prisma.platform_profilesScalarWhereInput[]
+  id?: Prisma.IntFilter<"platform_profiles"> | number
+  status?: Prisma.StringFilter<"platform_profiles"> | string
+  sort?: Prisma.IntNullableFilter<"platform_profiles"> | number | null
+  date_created?: Prisma.DateTimeNullableFilter<"platform_profiles"> | Date | string | null
+  date_updated?: Prisma.DateTimeNullableFilter<"platform_profiles"> | Date | string | null
+  profile?: Prisma.IntNullableFilter<"platform_profiles"> | number | null
+  outsourcing_platform?: Prisma.IntNullableFilter<"platform_profiles"> | number | null
+}
+
+export type platform_profilesCreateWithoutOutsourcing_platformsInput = {
+  status?: string
+  sort?: number | null
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  profiles?: Prisma.profilesCreateNestedOneWithoutPlatform_profilesInput
+}
+
+export type platform_profilesUncheckedCreateWithoutOutsourcing_platformsInput = {
   id?: number
   status?: string
   sort?: number | null
@@ -614,30 +579,30 @@ export type platform_profilesCreateManyOutsourcing_platformsInput = {
   profile?: number | null
 }
 
-export type platform_profilesUpdateWithoutOutsourcing_platformsInput = {
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  profiles?: Prisma.profilesUpdateOneWithoutPlatform_profilesNestedInput
+export type platform_profilesCreateOrConnectWithoutOutsourcing_platformsInput = {
+  where: Prisma.platform_profilesWhereUniqueInput
+  create: Prisma.XOR<Prisma.platform_profilesCreateWithoutOutsourcing_platformsInput, Prisma.platform_profilesUncheckedCreateWithoutOutsourcing_platformsInput>
 }
 
-export type platform_profilesUncheckedUpdateWithoutOutsourcing_platformsInput = {
-  id?: Prisma.IntFieldUpdateOperationsInput | number
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  profile?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+export type platform_profilesCreateManyOutsourcing_platformsInputEnvelope = {
+  data: Prisma.platform_profilesCreateManyOutsourcing_platformsInput | Prisma.platform_profilesCreateManyOutsourcing_platformsInput[]
+  skipDuplicates?: boolean
 }
 
-export type platform_profilesUncheckedUpdateManyWithoutOutsourcing_platformsInput = {
-  id?: Prisma.IntFieldUpdateOperationsInput | number
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  profile?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+export type platform_profilesUpsertWithWhereUniqueWithoutOutsourcing_platformsInput = {
+  where: Prisma.platform_profilesWhereUniqueInput
+  update: Prisma.XOR<Prisma.platform_profilesUpdateWithoutOutsourcing_platformsInput, Prisma.platform_profilesUncheckedUpdateWithoutOutsourcing_platformsInput>
+  create: Prisma.XOR<Prisma.platform_profilesCreateWithoutOutsourcing_platformsInput, Prisma.platform_profilesUncheckedCreateWithoutOutsourcing_platformsInput>
+}
+
+export type platform_profilesUpdateWithWhereUniqueWithoutOutsourcing_platformsInput = {
+  where: Prisma.platform_profilesWhereUniqueInput
+  data: Prisma.XOR<Prisma.platform_profilesUpdateWithoutOutsourcing_platformsInput, Prisma.platform_profilesUncheckedUpdateWithoutOutsourcing_platformsInput>
+}
+
+export type platform_profilesUpdateManyWithWhereWithoutOutsourcing_platformsInput = {
+  where: Prisma.platform_profilesScalarWhereInput
+  data: Prisma.XOR<Prisma.platform_profilesUpdateManyMutationInput, Prisma.platform_profilesUncheckedUpdateManyWithoutOutsourcing_platformsInput>
 }
 
 export type platform_profilesCreateManyProfilesInput = {
@@ -673,6 +638,41 @@ export type platform_profilesUncheckedUpdateManyWithoutProfilesInput = {
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   outsourcing_platform?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+}
+
+export type platform_profilesCreateManyOutsourcing_platformsInput = {
+  id?: number
+  status?: string
+  sort?: number | null
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  profile?: number | null
+}
+
+export type platform_profilesUpdateWithoutOutsourcing_platformsInput = {
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profiles?: Prisma.profilesUpdateOneWithoutPlatform_profilesNestedInput
+}
+
+export type platform_profilesUncheckedUpdateWithoutOutsourcing_platformsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profile?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+}
+
+export type platform_profilesUncheckedUpdateManyWithoutOutsourcing_platformsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profile?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 

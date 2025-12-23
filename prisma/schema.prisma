@@ -12,7 +12,7 @@ model applications {
   status                   String                     @default("draft") @db.VarChar(255)
   date_created             DateTime?                  @db.Timestamptz(6)
   date_updated             DateTime?                  @db.Timestamptz(6)
-  vacancy                  Int?
+  job                      Int?
   profile                  Int
   cv_sent_through          String?                    @db.VarChar(255)
   cv_file_sent             String?                    @db.Uuid
@@ -29,7 +29,7 @@ model applications {
   application_questions    application_questions[]
   directus_files           directus_files?            @relation(fields: [cv_file_sent], references: [id], onUpdate: NoAction, map: "applications_cv_file_sent_foreign")
   profiles                 profiles                   @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "applications_profile_foreign")
-  vacancies                vacancies?                 @relation(fields: [vacancy], references: [id], onUpdate: NoAction, map: "applications_vacancy_foreign")
+  jobs                     jobs?                      @relation(fields: [job], references: [id], onUpdate: NoAction, map: "applications_job_foreign")
   applications_files       applications_files[]
 }
 
@@ -199,8 +199,8 @@ model directus_files {
   directus_settings_directus_settings_public_faviconTodirectus_files    directus_settings[]  @relation("directus_settings_public_faviconTodirectus_files")
   directus_settings_directus_settings_public_foregroundTodirectus_files directus_settings[]  @relation("directus_settings_public_foregroundTodirectus_files")
   education                                                             education[]
+  job_resources                                                         job_resources[]
   profiles                                                              profiles[]
-  vacancy_resources                                                     vacancy_resources[]
   work_experiences                                                      work_experiences[]
 }
 
@@ -440,6 +440,9 @@ model directus_settings {
   org_name                                                           String?           @db.VarChar(255)
   product_updates                                                    Boolean?
   project_status                                                     String?           @db.VarChar(255)
+  ai_openai_api_key                                                  String?
+  ai_anthropic_api_key                                               String?
+  ai_system_prompt                                                   String?
   directus_files_directus_settings_project_logoTodirectus_files      directus_files?   @relation("directus_settings_project_logoTodirectus_files", fields: [project_logo], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "directus_settings_project_logo_foreign")
   directus_files_directus_settings_public_backgroundTodirectus_files directus_files?   @relation("directus_settings_public_backgroundTodirectus_files", fields: [public_background], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "directus_settings_public_background_foreign")
   directus_files_directus_settings_public_faviconTodirectus_files    directus_files?   @relation("directus_settings_public_faviconTodirectus_files", fields: [public_favicon], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "directus_settings_public_favicon_foreign")
@@ -603,18 +606,6 @@ model languages {
   profiles      profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "languages_profile_foreign")
 }
 
-model outsourcing_platforms {
-  id                Int                 @id @default(autoincrement())
-  status            String              @default("draft") @db.VarChar(255)
-  sort              Int?
-  date_created      DateTime?           @db.Timestamptz(6)
-  date_updated      DateTime?           @db.Timestamptz(6)
-  name              String              @db.VarChar(255)
-  url               String?             @db.VarChar(255)
-  type              String?             @db.VarChar(255)
-  platform_profiles platform_profiles[]
-}
-
 model platform_profiles {
   id                    Int                    @id @default(autoincrement())
   status                String                 @default("signup_in_progress") @db.VarChar(255)
@@ -671,6 +662,7 @@ model profiles {
   collected_data        collected_data[]
   education             education[]
   highlights            highlights[]
+  job_searches          job_searches[]
   languages             languages[]
   os_contributions      os_contributions[]
   platform_profiles     platform_profiles[]
@@ -809,35 +801,6 @@ model tech_skills {
   years_experience      Int?
   tech_skill_categories tech_skill_categories @relation(fields: [category], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "tech_skills_category_foreign")
   tech_skill_types      tech_skill_types?     @relation(fields: [tech_type], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tech_skills_tech_type_foreign")
-}
-
-model vacancies {
-  id                  Int                 @id @default(autoincrement())
-  status              String              @default("draft") @db.VarChar(255)
-  date_created        DateTime?           @db.Timestamptz(6)
-  date_updated        DateTime?           @db.Timestamptz(6)
-  source_url          String?             @db.VarChar(255)
-  title               String?             @db.VarChar(255)
-  job_description     String?
-  job_poster          String?             @db.VarChar(255)
-  import_source       String?             @db.VarChar(255)
-  company_description String?
-  date_posted         DateTime?           @db.Date
-  applications        applications[]
-  vacancy_resources   vacancy_resources[]
-}
-
-model vacancy_resources {
-  id             Int             @id @default(autoincrement())
-  sort           Int?
-  date_created   DateTime?       @db.Timestamptz(6)
-  date_updated   DateTime?       @db.Timestamptz(6)
-  name           String?         @db.VarChar(255)
-  url            String?         @db.VarChar(255)
-  file           String?         @db.Uuid
-  vacancy        Int
-  directus_files directus_files? @relation(fields: [file], references: [id], onUpdate: NoAction, map: "vacancy_resources_file_foreign")
-  vacancies      vacancies       @relation(fields: [vacancy], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "vacancy_resources_vacancy_foreign")
 }
 
 model work_experience_achievements {
@@ -1008,6 +971,7 @@ model ai_chat_prompts {
   request       String    @unique(map: "ai_chat_prompts_request_unique") @db.VarChar(255)
   system_prompt String?
   user_prompt   String?
+  format        Json?     @db.Json
 }
 
 model profile_version_extensions {
@@ -1030,6 +994,96 @@ model application_letters {
   ai_chat_response                             String?
   ai_chat_application_letters_ai_chatToai_chat ai_chat?     @relation("application_letters_ai_chatToai_chat", fields: [ai_chat], references: [id], onUpdate: NoAction, map: "application_letters_ai_chat_foreign")
   applications                                 applications @relation(fields: [application], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "application_letters_application_foreign")
+}
+
+model job_sites {
+  id                     Int                      @id @default(autoincrement())
+  status                 String                   @default("active") @db.VarChar(255)
+  date_created           DateTime?                @db.Timestamptz(6)
+  date_updated           DateTime?                @db.Timestamptz(6)
+  name                   String                   @db.VarChar(255)
+  search_url_base        String                   @db.VarChar(255)
+  search_param_mappings  Json?                    @db.Json
+  job_searches_job_sites job_searches_job_sites[]
+}
+
+model outsourcing_platforms {
+  id                Int                 @id @default(autoincrement())
+  status            String              @default("draft") @db.VarChar(255)
+  sort              Int?
+  date_created      DateTime?           @db.Timestamptz(6)
+  date_updated      DateTime?           @db.Timestamptz(6)
+  name              String              @db.VarChar(255)
+  url               String?             @db.VarChar(255)
+  type              String?             @db.VarChar(255)
+  platform_profiles platform_profiles[]
+}
+
+model job_resources {
+  id             Int             @id(map: "vacancy_resources_pkey") @default(autoincrement())
+  sort           Int?
+  date_created   DateTime?       @db.Timestamptz(6)
+  date_updated   DateTime?       @db.Timestamptz(6)
+  name           String?         @db.VarChar(255)
+  url            String?         @db.VarChar(255)
+  file           String?         @db.Uuid
+  job            Int
+  directus_files directus_files? @relation(fields: [file], references: [id], onUpdate: NoAction, map: "job_resources_file_foreign")
+  jobs           jobs            @relation(fields: [job], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_resources_job_foreign")
+}
+
+model jobs {
+  id                  Int             @id(map: "vacancies_pkey") @default(autoincrement())
+  status              String          @default("draft") @db.VarChar(255)
+  date_created        DateTime?       @db.Timestamptz(6)
+  date_updated        DateTime?       @db.Timestamptz(6)
+  source_url          String?         @db.VarChar(255)
+  title               String?         @db.VarChar(255)
+  job_description     String?
+  job_poster          String?         @db.VarChar(255)
+  import_source       String?         @db.VarChar(255)
+  company_description String?
+  date_posted         DateTime?       @db.Date
+  salary_min          Int?
+  salary_max          Int?
+  salary_currency     String?         @db.VarChar(255)
+  salary_period       String?         @db.VarChar(255)
+  experience_level    String?         @db.VarChar(100)
+  import_error        String?
+  import_status       String?         @db.VarChar(255)
+  job_type            String?         @db.VarChar(100)
+  last_scraped        DateTime?       @db.Timestamptz(6)
+  location            String?         @db.VarChar(255)
+  remote              String?         @db.VarChar(100)
+  salary_range        String?         @db.VarChar(255)
+  scrape_count        Int?            @default(0)
+  applications        applications[]
+  job_resources       job_resources[]
+}
+
+model job_searches {
+  id                     Int                      @id(map: "user_search_actions_pkey") @default(autoincrement())
+  status                 String                   @default("active") @db.VarChar(255)
+  date_created           DateTime?                @db.Timestamptz(6)
+  date_updated           DateTime?                @db.Timestamptz(6)
+  name                   String                   @db.VarChar(255)
+  profile                Int
+  keywords               String?                  @db.VarChar(255)
+  location               String?                  @db.VarChar(255)
+  job_type               String?
+  experience_level       String?
+  remote                 String?
+  last_run               DateTime?                @db.Timestamptz(6)
+  profiles               profiles                 @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_searches_profile_foreign")
+  job_searches_job_sites job_searches_job_sites[]
+}
+
+model job_searches_job_sites {
+  id                     Int           @id(map: "user_search_actions_job_sites_pkey") @default(autoincrement())
+  user_search_actions_id Int?
+  job_sites_id           Int?
+  job_searches           job_searches? @relation(fields: [user_search_actions_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_searches_job_sites_job_searches_id_foreign")
+  job_sites              job_sites?    @relation(fields: [job_sites_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_searches_job_sites_job_sites_id_foreign")
 }
 
 enum Role {

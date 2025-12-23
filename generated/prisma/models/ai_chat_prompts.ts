@@ -59,6 +59,7 @@ export type Ai_chat_promptsCountAggregateOutputType = {
   request: number
   system_prompt: number
   user_prompt: number
+  format: number
   _all: number
 }
 
@@ -96,6 +97,7 @@ export type Ai_chat_promptsCountAggregateInputType = {
   request?: true
   system_prompt?: true
   user_prompt?: true
+  format?: true
   _all?: true
 }
 
@@ -192,6 +194,7 @@ export type Ai_chat_promptsGroupByOutputType = {
   request: string
   system_prompt: string | null
   user_prompt: string | null
+  format: runtime.JsonValue | null
   _count: Ai_chat_promptsCountAggregateOutputType | null
   _avg: Ai_chat_promptsAvgAggregateOutputType | null
   _sum: Ai_chat_promptsSumAggregateOutputType | null
@@ -224,6 +227,7 @@ export type ai_chat_promptsWhereInput = {
   request?: Prisma.StringFilter<"ai_chat_prompts"> | string
   system_prompt?: Prisma.StringNullableFilter<"ai_chat_prompts"> | string | null
   user_prompt?: Prisma.StringNullableFilter<"ai_chat_prompts"> | string | null
+  format?: Prisma.JsonNullableFilter<"ai_chat_prompts">
 }
 
 export type ai_chat_promptsOrderByWithRelationInput = {
@@ -233,6 +237,7 @@ export type ai_chat_promptsOrderByWithRelationInput = {
   request?: Prisma.SortOrder
   system_prompt?: Prisma.SortOrderInput | Prisma.SortOrder
   user_prompt?: Prisma.SortOrderInput | Prisma.SortOrder
+  format?: Prisma.SortOrderInput | Prisma.SortOrder
 }
 
 export type ai_chat_promptsWhereUniqueInput = Prisma.AtLeast<{
@@ -245,6 +250,7 @@ export type ai_chat_promptsWhereUniqueInput = Prisma.AtLeast<{
   date_updated?: Prisma.DateTimeNullableFilter<"ai_chat_prompts"> | Date | string | null
   system_prompt?: Prisma.StringNullableFilter<"ai_chat_prompts"> | string | null
   user_prompt?: Prisma.StringNullableFilter<"ai_chat_prompts"> | string | null
+  format?: Prisma.JsonNullableFilter<"ai_chat_prompts">
 }, "id" | "request">
 
 export type ai_chat_promptsOrderByWithAggregationInput = {
@@ -254,6 +260,7 @@ export type ai_chat_promptsOrderByWithAggregationInput = {
   request?: Prisma.SortOrder
   system_prompt?: Prisma.SortOrderInput | Prisma.SortOrder
   user_prompt?: Prisma.SortOrderInput | Prisma.SortOrder
+  format?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.ai_chat_promptsCountOrderByAggregateInput
   _avg?: Prisma.ai_chat_promptsAvgOrderByAggregateInput
   _max?: Prisma.ai_chat_promptsMaxOrderByAggregateInput
@@ -271,6 +278,7 @@ export type ai_chat_promptsScalarWhereWithAggregatesInput = {
   request?: Prisma.StringWithAggregatesFilter<"ai_chat_prompts"> | string
   system_prompt?: Prisma.StringNullableWithAggregatesFilter<"ai_chat_prompts"> | string | null
   user_prompt?: Prisma.StringNullableWithAggregatesFilter<"ai_chat_prompts"> | string | null
+  format?: Prisma.JsonNullableWithAggregatesFilter<"ai_chat_prompts">
 }
 
 export type ai_chat_promptsCreateInput = {
@@ -279,6 +287,7 @@ export type ai_chat_promptsCreateInput = {
   request: string
   system_prompt?: string | null
   user_prompt?: string | null
+  format?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type ai_chat_promptsUncheckedCreateInput = {
@@ -288,6 +297,7 @@ export type ai_chat_promptsUncheckedCreateInput = {
   request: string
   system_prompt?: string | null
   user_prompt?: string | null
+  format?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type ai_chat_promptsUpdateInput = {
@@ -296,6 +306,7 @@ export type ai_chat_promptsUpdateInput = {
   request?: Prisma.StringFieldUpdateOperationsInput | string
   system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  format?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type ai_chat_promptsUncheckedUpdateInput = {
@@ -305,6 +316,7 @@ export type ai_chat_promptsUncheckedUpdateInput = {
   request?: Prisma.StringFieldUpdateOperationsInput | string
   system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  format?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type ai_chat_promptsCreateManyInput = {
@@ -314,6 +326,7 @@ export type ai_chat_promptsCreateManyInput = {
   request: string
   system_prompt?: string | null
   user_prompt?: string | null
+  format?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type ai_chat_promptsUpdateManyMutationInput = {
@@ -322,6 +335,7 @@ export type ai_chat_promptsUpdateManyMutationInput = {
   request?: Prisma.StringFieldUpdateOperationsInput | string
   system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  format?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type ai_chat_promptsUncheckedUpdateManyInput = {
@@ -331,6 +345,7 @@ export type ai_chat_promptsUncheckedUpdateManyInput = {
   request?: Prisma.StringFieldUpdateOperationsInput | string
   system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  format?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type ai_chat_promptsCountOrderByAggregateInput = {
@@ -340,6 +355,7 @@ export type ai_chat_promptsCountOrderByAggregateInput = {
   request?: Prisma.SortOrder
   system_prompt?: Prisma.SortOrder
   user_prompt?: Prisma.SortOrder
+  format?: Prisma.SortOrder
 }
 
 export type ai_chat_promptsAvgOrderByAggregateInput = {
@@ -377,6 +393,7 @@ export type ai_chat_promptsSelect<ExtArgs extends runtime.Types.Extensions.Inter
   request?: boolean
   system_prompt?: boolean
   user_prompt?: boolean
+  format?: boolean
 }, ExtArgs["result"]["ai_chat_prompts"]>
 
 export type ai_chat_promptsSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -386,6 +403,7 @@ export type ai_chat_promptsSelectCreateManyAndReturn<ExtArgs extends runtime.Typ
   request?: boolean
   system_prompt?: boolean
   user_prompt?: boolean
+  format?: boolean
 }, ExtArgs["result"]["ai_chat_prompts"]>
 
 export type ai_chat_promptsSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -395,6 +413,7 @@ export type ai_chat_promptsSelectUpdateManyAndReturn<ExtArgs extends runtime.Typ
   request?: boolean
   system_prompt?: boolean
   user_prompt?: boolean
+  format?: boolean
 }, ExtArgs["result"]["ai_chat_prompts"]>
 
 export type ai_chat_promptsSelectScalar = {
@@ -404,9 +423,10 @@ export type ai_chat_promptsSelectScalar = {
   request?: boolean
   system_prompt?: boolean
   user_prompt?: boolean
+  format?: boolean
 }
 
-export type ai_chat_promptsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "date_created" | "date_updated" | "request" | "system_prompt" | "user_prompt", ExtArgs["result"]["ai_chat_prompts"]>
+export type ai_chat_promptsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "date_created" | "date_updated" | "request" | "system_prompt" | "user_prompt" | "format", ExtArgs["result"]["ai_chat_prompts"]>
 
 export type $ai_chat_promptsPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "ai_chat_prompts"
@@ -418,6 +438,7 @@ export type $ai_chat_promptsPayload<ExtArgs extends runtime.Types.Extensions.Int
     request: string
     system_prompt: string | null
     user_prompt: string | null
+    format: runtime.JsonValue | null
   }, ExtArgs["result"]["ai_chat_prompts"]>
   composites: {}
 }
@@ -847,6 +868,7 @@ export interface ai_chat_promptsFieldRefs {
   readonly request: Prisma.FieldRef<"ai_chat_prompts", 'String'>
   readonly system_prompt: Prisma.FieldRef<"ai_chat_prompts", 'String'>
   readonly user_prompt: Prisma.FieldRef<"ai_chat_prompts", 'String'>
+  readonly format: Prisma.FieldRef<"ai_chat_prompts", 'Json'>
 }
     
 

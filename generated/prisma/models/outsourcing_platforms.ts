@@ -382,6 +382,11 @@ export type outsourcing_platformsUncheckedUpdateManyInput = {
   type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
+export type Outsourcing_platformsNullableScalarRelationFilter = {
+  is?: Prisma.outsourcing_platformsWhereInput | null
+  isNot?: Prisma.outsourcing_platformsWhereInput | null
+}
+
 export type outsourcing_platformsCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -423,11 +428,6 @@ export type outsourcing_platformsMinOrderByAggregateInput = {
 export type outsourcing_platformsSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
   sort?: Prisma.SortOrder
-}
-
-export type Outsourcing_platformsNullableScalarRelationFilter = {
-  is?: Prisma.outsourcing_platformsWhereInput | null
-  isNot?: Prisma.outsourcing_platformsWhereInput | null
 }
 
 export type outsourcing_platformsCreateNestedOneWithoutPlatform_profilesInput = {

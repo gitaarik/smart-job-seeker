@@ -183,11 +183,6 @@ export type highlights = Prisma.highlightsModel
  */
 export type languages = Prisma.languagesModel
 /**
- * Model outsourcing_platforms
- * 
- */
-export type outsourcing_platforms = Prisma.outsourcing_platformsModel
-/**
  * Model platform_profiles
  * 
  */
@@ -247,16 +242,6 @@ export type tech_skill_types = Prisma.tech_skill_typesModel
  * 
  */
 export type tech_skills = Prisma.tech_skillsModel
-/**
- * Model vacancies
- * 
- */
-export type vacancies = Prisma.vacanciesModel
-/**
- * Model vacancy_resources
- * 
- */
-export type vacancy_resources = Prisma.vacancy_resourcesModel
 /**
  * Model work_experience_achievements
  * 
@@ -327,3 +312,33 @@ export type profile_version_extensions = Prisma.profile_version_extensionsModel
  * 
  */
 export type application_letters = Prisma.application_lettersModel
+/**
+ * Model job_sites
+ * 
+ */
+export type job_sites = Prisma.job_sitesModel
+/**
+ * Model outsourcing_platforms
+ * 
+ */
+export type outsourcing_platforms = Prisma.outsourcing_platformsModel
+/**
+ * Model job_resources
+ * 
+ */
+export type job_resources = Prisma.job_resourcesModel
+/**
+ * Model jobs
+ * 
+ */
+export type jobs = Prisma.jobsModel
+/**
+ * Model job_searches
+ * 
+ */
+export type job_searches = Prisma.job_searchesModel
+/**
+ * Model job_searches_job_sites
+ * 
+ */
+export type job_searches_job_sites = Prisma.job_searches_job_sitesModel
