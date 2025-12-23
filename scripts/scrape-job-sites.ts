@@ -18,64 +18,37 @@ import { join } from "path";
 interface SearchAction {
   id: number;
   name: string;
-  keywords: string | null;
-  location: string | null;
-  job_type: string | null; // Comma-separated values for multiple selections
-  experience_level: string | null; // Comma-separated values for multiple selections
-  remote: string | null; // Comma-separated values for multiple selections
-  user_search_actions_job_sites: Array<{
-    job_sites: JobSite | null;
-  }>;
-}
-
-interface JobSite {
-  id: number;
-  name: string;
-  search_url_base: string;
-  search_param_mappings: unknown;
+  search_url: string | null;
 }
 
 /**
- * LinkedIn-specific scraping logic
+ * Generic scraping logic for any job site
  */
-async function scrapeLinkedIn(
+async function scrapeJobSite(
   page: Page,
   searchAction: SearchAction,
-  jobSite: JobSite,
 ): Promise<void> {
-  // 1. Build search URL using search_param_mappings
-  const params = new URLSearchParams();
-  const mappings = jobSite.search_param_mappings as Record<string, string>;
-
-  // Map each field from searchAction to the site-specific parameter
-  const searchFields = {
-    keywords: searchAction.keywords,
-    location: searchAction.location,
-    job_type: searchAction.job_type,
-    experience_level: searchAction.experience_level,
-    remote: searchAction.remote,
-  };
-
-  for (const [internalKey, value] of Object.entries(searchFields)) {
-    if (value && mappings[internalKey]) {
-      // Handle comma-separated values for multiple selections
-      params.set(mappings[internalKey], value);
-    }
+  if (!searchAction.search_url) {
+    console.log("⚠ No search URL configured for this search action");
+    return;
   }
 
-  const searchUrl = `${jobSite.search_url_base}?${params.toString()}`;
+  const searchUrl = searchAction.search_url;
 
-  // 2. Navigate to search results
+  // 1. Navigate to search results
   console.log(`Navigating to: ${searchUrl}`);
   await page.goto(searchUrl, { waitUntil: "networkidle2" });
 
-  // 3. Get page HTML
+  // 2. Get page HTML
   const html = await page.content();
 
-  // 4. Extract job links using LLM
+  // 3. Extract job links using LLM
   console.log("Extracting job links...");
   const jobUrls = await extractJobLinks(html);
   console.log(`Found ${jobUrls.length} jobs`);
+
+  // 4. Determine import source from URL
+  const importSource = getImportSource(searchUrl);
 
   // 5. Process each job
   for (const url of jobUrls) {
@@ -91,7 +64,7 @@ async function scrapeLinkedIn(
       const jobData = await extractJobData(jobHtml, url);
 
       // Create/update job
-      const result = await upsertJob(jobData, url, "LinkedIn");
+      const result = await upsertJob(jobData, url, importSource);
       console.log(
         `✓ ${result.created ? "Created" : "Updated"} job #${result.id}`,
       );
@@ -105,6 +78,21 @@ async function scrapeLinkedIn(
       );
       // Continue with next job
     }
+  }
+}
+
+/**
+ * Determine import source from search URL hostname
+ */
+function getImportSource(url: string): string {
+  try {
+    const hostname = new URL(url).hostname;
+    if (hostname.includes("linkedin.com")) return "LinkedIn";
+    if (hostname.includes("indeed.com")) return "Indeed";
+    if (hostname.includes("glassdoor.com")) return "Glassdoor";
+    return hostname; // Fallback to hostname
+  } catch {
+    return "Unknown";
   }
 }
 
@@ -133,17 +121,9 @@ async function scrapeJobSites(): Promise<void> {
   const page = await browser.newPage();
 
   try {
-    // 1. Fetch all active user search actions with their related job sites
-    const searchActions = await dbDirect.user_search_actions.findMany({
+    // 1. Fetch all active job searches
+    const searchActions = await dbDirect.job_searches.findMany({
       where: { status: "active" },
-      include: {
-        profiles: true,
-        user_search_actions_job_sites: {
-          include: {
-            job_sites: true,
-          },
-        },
-      },
     });
 
     console.log(`\nFound ${searchActions.length} active search action(s)\n`);
@@ -151,34 +131,13 @@ async function scrapeJobSites(): Promise<void> {
     // 2. For each search action
     for (const searchAction of searchActions) {
       console.log(`\n========================================`);
-      console.log(`Search Action: ${searchAction.name}`);
+      console.log(`Search: ${searchAction.name}`);
       console.log(`========================================\n`);
 
-      // Get enabled job sites from M2M relationship
-      const enabledJobSites = searchAction.user_search_actions_job_sites
-        .map((junction) => junction.job_sites)
-        .filter((site): site is NonNullable<typeof site> =>
-          site !== null && site.status === "active"
-        );
-
-      if (enabledJobSites.length === 0) {
-        console.log("⚠ No active job sites enabled for this search action");
-        continue;
-      }
-
-      // 3. For each enabled job site
-      for (const jobSite of enabledJobSites) {
-        console.log(`\n--- Scraping ${jobSite.name} ---\n`);
-
-        // Site-specific scraping logic
-        if (jobSite.name === "LinkedIn") {
-          await scrapeLinkedIn(page, searchAction, jobSite);
-        }
-        // Add more job sites here as needed
-      }
+      await scrapeJobSite(page, searchAction);
 
       // Update last_run timestamp
-      await dbDirect.user_search_actions.update({
+      await dbDirect.job_searches.update({
         where: { id: searchAction.id },
         data: { last_run: new Date() },
       });
