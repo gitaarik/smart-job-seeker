@@ -26,14 +26,14 @@ const choicesCache = new Map<string, Array<{ text: string; value: string }>>();
 /**
  * Get the display label for a dropdown field choice value
  *
- * @param collection - The Directus collection name (e.g., "vacancies")
+ * @param collection - The Directus collection name (e.g., "jobs")
  * @param field - The field name (e.g., "import_source")
  * @param key - The choice value/key (e.g., "linkedin_jobs")
  * @returns The display label (e.g., "LinkedIn Jobs") or the key if not found
  *
  * @example
  * ```ts
- * const label = await getFieldChoiceLabel("vacancies", "import_source", "linkedin_jobs");
+ * const label = await getFieldChoiceLabel("jobs", "import_source", "linkedin_jobs");
  * // Returns: "LinkedIn Jobs"
  * ```
  */
