@@ -28,31 +28,31 @@ export type AggregateJob_searches_job_sites = {
 
 export type Job_searches_job_sitesAvgAggregateOutputType = {
   id: number | null
-  user_search_actions_id: number | null
+  job_searches_id: number | null
   job_sites_id: number | null
 }
 
 export type Job_searches_job_sitesSumAggregateOutputType = {
   id: number | null
-  user_search_actions_id: number | null
+  job_searches_id: number | null
   job_sites_id: number | null
 }
 
 export type Job_searches_job_sitesMinAggregateOutputType = {
   id: number | null
-  user_search_actions_id: number | null
+  job_searches_id: number | null
   job_sites_id: number | null
 }
 
 export type Job_searches_job_sitesMaxAggregateOutputType = {
   id: number | null
-  user_search_actions_id: number | null
+  job_searches_id: number | null
   job_sites_id: number | null
 }
 
 export type Job_searches_job_sitesCountAggregateOutputType = {
   id: number
-  user_search_actions_id: number
+  job_searches_id: number
   job_sites_id: number
   _all: number
 }
@@ -60,31 +60,31 @@ export type Job_searches_job_sitesCountAggregateOutputType = {
 
 export type Job_searches_job_sitesAvgAggregateInputType = {
   id?: true
-  user_search_actions_id?: true
+  job_searches_id?: true
   job_sites_id?: true
 }
 
 export type Job_searches_job_sitesSumAggregateInputType = {
   id?: true
-  user_search_actions_id?: true
+  job_searches_id?: true
   job_sites_id?: true
 }
 
 export type Job_searches_job_sitesMinAggregateInputType = {
   id?: true
-  user_search_actions_id?: true
+  job_searches_id?: true
   job_sites_id?: true
 }
 
 export type Job_searches_job_sitesMaxAggregateInputType = {
   id?: true
-  user_search_actions_id?: true
+  job_searches_id?: true
   job_sites_id?: true
 }
 
 export type Job_searches_job_sitesCountAggregateInputType = {
   id?: true
-  user_search_actions_id?: true
+  job_searches_id?: true
   job_sites_id?: true
   _all?: true
 }
@@ -177,7 +177,7 @@ export type job_searches_job_sitesGroupByArgs<ExtArgs extends runtime.Types.Exte
 
 export type Job_searches_job_sitesGroupByOutputType = {
   id: number
-  user_search_actions_id: number | null
+  job_searches_id: number | null
   job_sites_id: number | null
   _count: Job_searches_job_sitesCountAggregateOutputType | null
   _avg: Job_searches_job_sitesAvgAggregateOutputType | null
@@ -206,7 +206,7 @@ export type job_searches_job_sitesWhereInput = {
   OR?: Prisma.job_searches_job_sitesWhereInput[]
   NOT?: Prisma.job_searches_job_sitesWhereInput | Prisma.job_searches_job_sitesWhereInput[]
   id?: Prisma.IntFilter<"job_searches_job_sites"> | number
-  user_search_actions_id?: Prisma.IntNullableFilter<"job_searches_job_sites"> | number | null
+  job_searches_id?: Prisma.IntNullableFilter<"job_searches_job_sites"> | number | null
   job_sites_id?: Prisma.IntNullableFilter<"job_searches_job_sites"> | number | null
   job_searches?: Prisma.XOR<Prisma.Job_searchesNullableScalarRelationFilter, Prisma.job_searchesWhereInput> | null
   job_sites?: Prisma.XOR<Prisma.Job_sitesNullableScalarRelationFilter, Prisma.job_sitesWhereInput> | null
@@ -214,7 +214,7 @@ export type job_searches_job_sitesWhereInput = {
 
 export type job_searches_job_sitesOrderByWithRelationInput = {
   id?: Prisma.SortOrder
-  user_search_actions_id?: Prisma.SortOrderInput | Prisma.SortOrder
+  job_searches_id?: Prisma.SortOrderInput | Prisma.SortOrder
   job_sites_id?: Prisma.SortOrderInput | Prisma.SortOrder
   job_searches?: Prisma.job_searchesOrderByWithRelationInput
   job_sites?: Prisma.job_sitesOrderByWithRelationInput
@@ -225,7 +225,7 @@ export type job_searches_job_sitesWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.job_searches_job_sitesWhereInput | Prisma.job_searches_job_sitesWhereInput[]
   OR?: Prisma.job_searches_job_sitesWhereInput[]
   NOT?: Prisma.job_searches_job_sitesWhereInput | Prisma.job_searches_job_sitesWhereInput[]
-  user_search_actions_id?: Prisma.IntNullableFilter<"job_searches_job_sites"> | number | null
+  job_searches_id?: Prisma.IntNullableFilter<"job_searches_job_sites"> | number | null
   job_sites_id?: Prisma.IntNullableFilter<"job_searches_job_sites"> | number | null
   job_searches?: Prisma.XOR<Prisma.Job_searchesNullableScalarRelationFilter, Prisma.job_searchesWhereInput> | null
   job_sites?: Prisma.XOR<Prisma.Job_sitesNullableScalarRelationFilter, Prisma.job_sitesWhereInput> | null
@@ -233,7 +233,7 @@ export type job_searches_job_sitesWhereUniqueInput = Prisma.AtLeast<{
 
 export type job_searches_job_sitesOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
-  user_search_actions_id?: Prisma.SortOrderInput | Prisma.SortOrder
+  job_searches_id?: Prisma.SortOrderInput | Prisma.SortOrder
   job_sites_id?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.job_searches_job_sitesCountOrderByAggregateInput
   _avg?: Prisma.job_searches_job_sitesAvgOrderByAggregateInput
@@ -247,7 +247,7 @@ export type job_searches_job_sitesScalarWhereWithAggregatesInput = {
   OR?: Prisma.job_searches_job_sitesScalarWhereWithAggregatesInput[]
   NOT?: Prisma.job_searches_job_sitesScalarWhereWithAggregatesInput | Prisma.job_searches_job_sitesScalarWhereWithAggregatesInput[]
   id?: Prisma.IntWithAggregatesFilter<"job_searches_job_sites"> | number
-  user_search_actions_id?: Prisma.IntNullableWithAggregatesFilter<"job_searches_job_sites"> | number | null
+  job_searches_id?: Prisma.IntNullableWithAggregatesFilter<"job_searches_job_sites"> | number | null
   job_sites_id?: Prisma.IntNullableWithAggregatesFilter<"job_searches_job_sites"> | number | null
 }
 
@@ -258,7 +258,7 @@ export type job_searches_job_sitesCreateInput = {
 
 export type job_searches_job_sitesUncheckedCreateInput = {
   id?: number
-  user_search_actions_id?: number | null
+  job_searches_id?: number | null
   job_sites_id?: number | null
 }
 
@@ -269,13 +269,13 @@ export type job_searches_job_sitesUpdateInput = {
 
 export type job_searches_job_sitesUncheckedUpdateInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
-  user_search_actions_id?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  job_searches_id?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   job_sites_id?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type job_searches_job_sitesCreateManyInput = {
   id?: number
-  user_search_actions_id?: number | null
+  job_searches_id?: number | null
   job_sites_id?: number | null
 }
 
@@ -285,7 +285,7 @@ export type job_searches_job_sitesUpdateManyMutationInput = {
 
 export type job_searches_job_sitesUncheckedUpdateManyInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
-  user_search_actions_id?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  job_searches_id?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   job_sites_id?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
@@ -301,31 +301,31 @@ export type job_searches_job_sitesOrderByRelationAggregateInput = {
 
 export type job_searches_job_sitesCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  user_search_actions_id?: Prisma.SortOrder
+  job_searches_id?: Prisma.SortOrder
   job_sites_id?: Prisma.SortOrder
 }
 
 export type job_searches_job_sitesAvgOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  user_search_actions_id?: Prisma.SortOrder
+  job_searches_id?: Prisma.SortOrder
   job_sites_id?: Prisma.SortOrder
 }
 
 export type job_searches_job_sitesMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  user_search_actions_id?: Prisma.SortOrder
+  job_searches_id?: Prisma.SortOrder
   job_sites_id?: Prisma.SortOrder
 }
 
 export type job_searches_job_sitesMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  user_search_actions_id?: Prisma.SortOrder
+  job_searches_id?: Prisma.SortOrder
   job_sites_id?: Prisma.SortOrder
 }
 
 export type job_searches_job_sitesSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  user_search_actions_id?: Prisma.SortOrder
+  job_searches_id?: Prisma.SortOrder
   job_sites_id?: Prisma.SortOrder
 }
 
@@ -419,7 +419,7 @@ export type job_searches_job_sitesCreateWithoutJob_sitesInput = {
 
 export type job_searches_job_sitesUncheckedCreateWithoutJob_sitesInput = {
   id?: number
-  user_search_actions_id?: number | null
+  job_searches_id?: number | null
 }
 
 export type job_searches_job_sitesCreateOrConnectWithoutJob_sitesInput = {
@@ -453,7 +453,7 @@ export type job_searches_job_sitesScalarWhereInput = {
   OR?: Prisma.job_searches_job_sitesScalarWhereInput[]
   NOT?: Prisma.job_searches_job_sitesScalarWhereInput | Prisma.job_searches_job_sitesScalarWhereInput[]
   id?: Prisma.IntFilter<"job_searches_job_sites"> | number
-  user_search_actions_id?: Prisma.IntNullableFilter<"job_searches_job_sites"> | number | null
+  job_searches_id?: Prisma.IntNullableFilter<"job_searches_job_sites"> | number | null
   job_sites_id?: Prisma.IntNullableFilter<"job_searches_job_sites"> | number | null
 }
 
@@ -494,7 +494,7 @@ export type job_searches_job_sitesUpdateManyWithWhereWithoutJob_searchesInput = 
 
 export type job_searches_job_sitesCreateManyJob_sitesInput = {
   id?: number
-  user_search_actions_id?: number | null
+  job_searches_id?: number | null
 }
 
 export type job_searches_job_sitesUpdateWithoutJob_sitesInput = {
@@ -503,12 +503,12 @@ export type job_searches_job_sitesUpdateWithoutJob_sitesInput = {
 
 export type job_searches_job_sitesUncheckedUpdateWithoutJob_sitesInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
-  user_search_actions_id?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  job_searches_id?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type job_searches_job_sitesUncheckedUpdateManyWithoutJob_sitesInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
-  user_search_actions_id?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  job_searches_id?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type job_searches_job_sitesCreateManyJob_searchesInput = {
@@ -534,7 +534,7 @@ export type job_searches_job_sitesUncheckedUpdateManyWithoutJob_searchesInput = 
 
 export type job_searches_job_sitesSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  user_search_actions_id?: boolean
+  job_searches_id?: boolean
   job_sites_id?: boolean
   job_searches?: boolean | Prisma.job_searches_job_sites$job_searchesArgs<ExtArgs>
   job_sites?: boolean | Prisma.job_searches_job_sites$job_sitesArgs<ExtArgs>
@@ -542,7 +542,7 @@ export type job_searches_job_sitesSelect<ExtArgs extends runtime.Types.Extension
 
 export type job_searches_job_sitesSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  user_search_actions_id?: boolean
+  job_searches_id?: boolean
   job_sites_id?: boolean
   job_searches?: boolean | Prisma.job_searches_job_sites$job_searchesArgs<ExtArgs>
   job_sites?: boolean | Prisma.job_searches_job_sites$job_sitesArgs<ExtArgs>
@@ -550,7 +550,7 @@ export type job_searches_job_sitesSelectCreateManyAndReturn<ExtArgs extends runt
 
 export type job_searches_job_sitesSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  user_search_actions_id?: boolean
+  job_searches_id?: boolean
   job_sites_id?: boolean
   job_searches?: boolean | Prisma.job_searches_job_sites$job_searchesArgs<ExtArgs>
   job_sites?: boolean | Prisma.job_searches_job_sites$job_sitesArgs<ExtArgs>
@@ -558,11 +558,11 @@ export type job_searches_job_sitesSelectUpdateManyAndReturn<ExtArgs extends runt
 
 export type job_searches_job_sitesSelectScalar = {
   id?: boolean
-  user_search_actions_id?: boolean
+  job_searches_id?: boolean
   job_sites_id?: boolean
 }
 
-export type job_searches_job_sitesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "user_search_actions_id" | "job_sites_id", ExtArgs["result"]["job_searches_job_sites"]>
+export type job_searches_job_sitesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "job_searches_id" | "job_sites_id", ExtArgs["result"]["job_searches_job_sites"]>
 export type job_searches_job_sitesInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   job_searches?: boolean | Prisma.job_searches_job_sites$job_searchesArgs<ExtArgs>
   job_sites?: boolean | Prisma.job_searches_job_sites$job_sitesArgs<ExtArgs>
@@ -584,7 +584,7 @@ export type $job_searches_job_sitesPayload<ExtArgs extends runtime.Types.Extensi
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
-    user_search_actions_id: number | null
+    job_searches_id: number | null
     job_sites_id: number | null
   }, ExtArgs["result"]["job_searches_job_sites"]>
   composites: {}
@@ -1012,7 +1012,7 @@ export interface Prisma__job_searches_job_sitesClient<T, Null = never, ExtArgs e
  */
 export interface job_searches_job_sitesFieldRefs {
   readonly id: Prisma.FieldRef<"job_searches_job_sites", 'Int'>
-  readonly user_search_actions_id: Prisma.FieldRef<"job_searches_job_sites", 'Int'>
+  readonly job_searches_id: Prisma.FieldRef<"job_searches_job_sites", 'Int'>
   readonly job_sites_id: Prisma.FieldRef<"job_searches_job_sites", 'Int'>
 }
     

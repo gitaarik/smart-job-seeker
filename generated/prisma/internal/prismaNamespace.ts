@@ -6372,7 +6372,10 @@ export const JobsScalarFieldEnum = {
   location: 'location',
   remote: 'remote',
   salary_range: 'salary_range',
-  scrape_count: 'scrape_count'
+  scrape_count: 'scrape_count',
+  job_types: 'job_types',
+  experience_levels: 'experience_levels',
+  remote_options: 'remote_options'
 } as const
 
 export type JobsScalarFieldEnum = (typeof JobsScalarFieldEnum)[keyof typeof JobsScalarFieldEnum]
@@ -6386,11 +6389,11 @@ export const Job_searchesScalarFieldEnum = {
   name: 'name',
   profile: 'profile',
   keywords: 'keywords',
-  location: 'location',
-  job_type: 'job_type',
-  experience_level: 'experience_level',
+  last_run: 'last_run',
   remote: 'remote',
-  last_run: 'last_run'
+  experience_level: 'experience_level',
+  contract_type: 'contract_type',
+  search_url: 'search_url'
 } as const
 
 export type Job_searchesScalarFieldEnum = (typeof Job_searchesScalarFieldEnum)[keyof typeof Job_searchesScalarFieldEnum]
@@ -6398,7 +6401,7 @@ export type Job_searchesScalarFieldEnum = (typeof Job_searchesScalarFieldEnum)[k
 
 export const Job_searches_job_sitesScalarFieldEnum = {
   id: 'id',
-  user_search_actions_id: 'user_search_actions_id',
+  job_searches_id: 'job_searches_id',
   job_sites_id: 'job_sites_id'
 } as const
 

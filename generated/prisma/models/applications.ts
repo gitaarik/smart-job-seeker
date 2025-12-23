@@ -320,8 +320,8 @@ export type applicationsWhereInput = {
   application_letters?: Prisma.Application_lettersListRelationFilter
   application_questions?: Prisma.Application_questionsListRelationFilter
   directus_files?: Prisma.XOR<Prisma.Directus_filesNullableScalarRelationFilter, Prisma.directus_filesWhereInput> | null
-  profiles?: Prisma.XOR<Prisma.ProfilesScalarRelationFilter, Prisma.profilesWhereInput>
   jobs?: Prisma.XOR<Prisma.JobsNullableScalarRelationFilter, Prisma.jobsWhereInput> | null
+  profiles?: Prisma.XOR<Prisma.ProfilesScalarRelationFilter, Prisma.profilesWhereInput>
   applications_files?: Prisma.Applications_filesListRelationFilter
 }
 
@@ -346,8 +346,8 @@ export type applicationsOrderByWithRelationInput = {
   application_letters?: Prisma.application_lettersOrderByRelationAggregateInput
   application_questions?: Prisma.application_questionsOrderByRelationAggregateInput
   directus_files?: Prisma.directus_filesOrderByWithRelationInput
-  profiles?: Prisma.profilesOrderByWithRelationInput
   jobs?: Prisma.jobsOrderByWithRelationInput
+  profiles?: Prisma.profilesOrderByWithRelationInput
   applications_files?: Prisma.applications_filesOrderByRelationAggregateInput
 }
 
@@ -375,8 +375,8 @@ export type applicationsWhereUniqueInput = Prisma.AtLeast<{
   application_letters?: Prisma.Application_lettersListRelationFilter
   application_questions?: Prisma.Application_questionsListRelationFilter
   directus_files?: Prisma.XOR<Prisma.Directus_filesNullableScalarRelationFilter, Prisma.directus_filesWhereInput> | null
-  profiles?: Prisma.XOR<Prisma.ProfilesScalarRelationFilter, Prisma.profilesWhereInput>
   jobs?: Prisma.XOR<Prisma.JobsNullableScalarRelationFilter, Prisma.jobsWhereInput> | null
+  profiles?: Prisma.XOR<Prisma.ProfilesScalarRelationFilter, Prisma.profilesWhereInput>
   applications_files?: Prisma.Applications_filesListRelationFilter
 }, "id">
 
@@ -443,8 +443,8 @@ export type applicationsCreateInput = {
   application_letters?: Prisma.application_lettersCreateNestedManyWithoutApplicationsInput
   application_questions?: Prisma.application_questionsCreateNestedManyWithoutApplicationsInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutApplicationsInput
-  profiles: Prisma.profilesCreateNestedOneWithoutApplicationsInput
   jobs?: Prisma.jobsCreateNestedOneWithoutApplicationsInput
+  profiles: Prisma.profilesCreateNestedOneWithoutApplicationsInput
   applications_files?: Prisma.applications_filesCreateNestedManyWithoutApplicationsInput
 }
 
@@ -488,8 +488,8 @@ export type applicationsUpdateInput = {
   application_letters?: Prisma.application_lettersUpdateManyWithoutApplicationsNestedInput
   application_questions?: Prisma.application_questionsUpdateManyWithoutApplicationsNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutApplicationsNestedInput
-  profiles?: Prisma.profilesUpdateOneRequiredWithoutApplicationsNestedInput
   jobs?: Prisma.jobsUpdateOneWithoutApplicationsNestedInput
+  profiles?: Prisma.profilesUpdateOneRequiredWithoutApplicationsNestedInput
   applications_files?: Prisma.applications_filesUpdateManyWithoutApplicationsNestedInput
 }
 
@@ -898,8 +898,8 @@ export type applicationsCreateWithoutDirectus_filesInput = {
   application_activity_log?: Prisma.application_activity_logCreateNestedManyWithoutApplicationsInput
   application_letters?: Prisma.application_lettersCreateNestedManyWithoutApplicationsInput
   application_questions?: Prisma.application_questionsCreateNestedManyWithoutApplicationsInput
-  profiles: Prisma.profilesCreateNestedOneWithoutApplicationsInput
   jobs?: Prisma.jobsCreateNestedOneWithoutApplicationsInput
+  profiles: Prisma.profilesCreateNestedOneWithoutApplicationsInput
   applications_files?: Prisma.applications_filesCreateNestedManyWithoutApplicationsInput
 }
 
@@ -1058,8 +1058,8 @@ export type applicationsCreateWithoutApplication_questionsInput = {
   application_activity_log?: Prisma.application_activity_logCreateNestedManyWithoutApplicationsInput
   application_letters?: Prisma.application_lettersCreateNestedManyWithoutApplicationsInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutApplicationsInput
-  profiles: Prisma.profilesCreateNestedOneWithoutApplicationsInput
   jobs?: Prisma.jobsCreateNestedOneWithoutApplicationsInput
+  profiles: Prisma.profilesCreateNestedOneWithoutApplicationsInput
   applications_files?: Prisma.applications_filesCreateNestedManyWithoutApplicationsInput
 }
 
@@ -1117,8 +1117,8 @@ export type applicationsUpdateWithoutApplication_questionsInput = {
   application_activity_log?: Prisma.application_activity_logUpdateManyWithoutApplicationsNestedInput
   application_letters?: Prisma.application_lettersUpdateManyWithoutApplicationsNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutApplicationsNestedInput
-  profiles?: Prisma.profilesUpdateOneRequiredWithoutApplicationsNestedInput
   jobs?: Prisma.jobsUpdateOneWithoutApplicationsNestedInput
+  profiles?: Prisma.profilesUpdateOneRequiredWithoutApplicationsNestedInput
   applications_files?: Prisma.applications_filesUpdateManyWithoutApplicationsNestedInput
 }
 
@@ -1160,8 +1160,8 @@ export type applicationsCreateWithoutApplication_activity_logInput = {
   application_letters?: Prisma.application_lettersCreateNestedManyWithoutApplicationsInput
   application_questions?: Prisma.application_questionsCreateNestedManyWithoutApplicationsInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutApplicationsInput
-  profiles: Prisma.profilesCreateNestedOneWithoutApplicationsInput
   jobs?: Prisma.jobsCreateNestedOneWithoutApplicationsInput
+  profiles: Prisma.profilesCreateNestedOneWithoutApplicationsInput
   applications_files?: Prisma.applications_filesCreateNestedManyWithoutApplicationsInput
 }
 
@@ -1219,8 +1219,8 @@ export type applicationsUpdateWithoutApplication_activity_logInput = {
   application_letters?: Prisma.application_lettersUpdateManyWithoutApplicationsNestedInput
   application_questions?: Prisma.application_questionsUpdateManyWithoutApplicationsNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutApplicationsNestedInput
-  profiles?: Prisma.profilesUpdateOneRequiredWithoutApplicationsNestedInput
   jobs?: Prisma.jobsUpdateOneWithoutApplicationsNestedInput
+  profiles?: Prisma.profilesUpdateOneRequiredWithoutApplicationsNestedInput
   applications_files?: Prisma.applications_filesUpdateManyWithoutApplicationsNestedInput
 }
 
@@ -1263,8 +1263,8 @@ export type applicationsCreateWithoutApplications_filesInput = {
   application_letters?: Prisma.application_lettersCreateNestedManyWithoutApplicationsInput
   application_questions?: Prisma.application_questionsCreateNestedManyWithoutApplicationsInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutApplicationsInput
-  profiles: Prisma.profilesCreateNestedOneWithoutApplicationsInput
   jobs?: Prisma.jobsCreateNestedOneWithoutApplicationsInput
+  profiles: Prisma.profilesCreateNestedOneWithoutApplicationsInput
 }
 
 export type applicationsUncheckedCreateWithoutApplications_filesInput = {
@@ -1322,8 +1322,8 @@ export type applicationsUpdateWithoutApplications_filesInput = {
   application_letters?: Prisma.application_lettersUpdateManyWithoutApplicationsNestedInput
   application_questions?: Prisma.application_questionsUpdateManyWithoutApplicationsNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutApplicationsNestedInput
-  profiles?: Prisma.profilesUpdateOneRequiredWithoutApplicationsNestedInput
   jobs?: Prisma.jobsUpdateOneWithoutApplicationsNestedInput
+  profiles?: Prisma.profilesUpdateOneRequiredWithoutApplicationsNestedInput
 }
 
 export type applicationsUncheckedUpdateWithoutApplications_filesInput = {
@@ -1364,8 +1364,8 @@ export type applicationsCreateWithoutApplication_lettersInput = {
   application_activity_log?: Prisma.application_activity_logCreateNestedManyWithoutApplicationsInput
   application_questions?: Prisma.application_questionsCreateNestedManyWithoutApplicationsInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutApplicationsInput
-  profiles: Prisma.profilesCreateNestedOneWithoutApplicationsInput
   jobs?: Prisma.jobsCreateNestedOneWithoutApplicationsInput
+  profiles: Prisma.profilesCreateNestedOneWithoutApplicationsInput
   applications_files?: Prisma.applications_filesCreateNestedManyWithoutApplicationsInput
 }
 
@@ -1423,8 +1423,8 @@ export type applicationsUpdateWithoutApplication_lettersInput = {
   application_activity_log?: Prisma.application_activity_logUpdateManyWithoutApplicationsNestedInput
   application_questions?: Prisma.application_questionsUpdateManyWithoutApplicationsNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutApplicationsNestedInput
-  profiles?: Prisma.profilesUpdateOneRequiredWithoutApplicationsNestedInput
   jobs?: Prisma.jobsUpdateOneWithoutApplicationsNestedInput
+  profiles?: Prisma.profilesUpdateOneRequiredWithoutApplicationsNestedInput
   applications_files?: Prisma.applications_filesUpdateManyWithoutApplicationsNestedInput
 }
 
@@ -1553,8 +1553,8 @@ export type applicationsUpdateWithoutDirectus_filesInput = {
   application_activity_log?: Prisma.application_activity_logUpdateManyWithoutApplicationsNestedInput
   application_letters?: Prisma.application_lettersUpdateManyWithoutApplicationsNestedInput
   application_questions?: Prisma.application_questionsUpdateManyWithoutApplicationsNestedInput
-  profiles?: Prisma.profilesUpdateOneRequiredWithoutApplicationsNestedInput
   jobs?: Prisma.jobsUpdateOneWithoutApplicationsNestedInput
+  profiles?: Prisma.profilesUpdateOneRequiredWithoutApplicationsNestedInput
   applications_files?: Prisma.applications_filesUpdateManyWithoutApplicationsNestedInput
 }
 
@@ -1835,8 +1835,8 @@ export type applicationsSelect<ExtArgs extends runtime.Types.Extensions.Internal
   application_letters?: boolean | Prisma.applications$application_lettersArgs<ExtArgs>
   application_questions?: boolean | Prisma.applications$application_questionsArgs<ExtArgs>
   directus_files?: boolean | Prisma.applications$directus_filesArgs<ExtArgs>
-  profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
   jobs?: boolean | Prisma.applications$jobsArgs<ExtArgs>
+  profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
   applications_files?: boolean | Prisma.applications$applications_filesArgs<ExtArgs>
   _count?: boolean | Prisma.ApplicationsCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["applications"]>
@@ -1859,8 +1859,8 @@ export type applicationsSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   salary_currency?: boolean
   salary_period?: boolean
   directus_files?: boolean | Prisma.applications$directus_filesArgs<ExtArgs>
-  profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
   jobs?: boolean | Prisma.applications$jobsArgs<ExtArgs>
+  profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["applications"]>
 
 export type applicationsSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1881,8 +1881,8 @@ export type applicationsSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   salary_currency?: boolean
   salary_period?: boolean
   directus_files?: boolean | Prisma.applications$directus_filesArgs<ExtArgs>
-  profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
   jobs?: boolean | Prisma.applications$jobsArgs<ExtArgs>
+  profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["applications"]>
 
 export type applicationsSelectScalar = {
@@ -1910,20 +1910,20 @@ export type applicationsInclude<ExtArgs extends runtime.Types.Extensions.Interna
   application_letters?: boolean | Prisma.applications$application_lettersArgs<ExtArgs>
   application_questions?: boolean | Prisma.applications$application_questionsArgs<ExtArgs>
   directus_files?: boolean | Prisma.applications$directus_filesArgs<ExtArgs>
-  profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
   jobs?: boolean | Prisma.applications$jobsArgs<ExtArgs>
+  profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
   applications_files?: boolean | Prisma.applications$applications_filesArgs<ExtArgs>
   _count?: boolean | Prisma.ApplicationsCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type applicationsIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   directus_files?: boolean | Prisma.applications$directus_filesArgs<ExtArgs>
-  profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
   jobs?: boolean | Prisma.applications$jobsArgs<ExtArgs>
+  profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }
 export type applicationsIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   directus_files?: boolean | Prisma.applications$directus_filesArgs<ExtArgs>
-  profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
   jobs?: boolean | Prisma.applications$jobsArgs<ExtArgs>
+  profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }
 
 export type $applicationsPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1933,8 +1933,8 @@ export type $applicationsPayload<ExtArgs extends runtime.Types.Extensions.Intern
     application_letters: Prisma.$application_lettersPayload<ExtArgs>[]
     application_questions: Prisma.$application_questionsPayload<ExtArgs>[]
     directus_files: Prisma.$directus_filesPayload<ExtArgs> | null
-    profiles: Prisma.$profilesPayload<ExtArgs>
     jobs: Prisma.$jobsPayload<ExtArgs> | null
+    profiles: Prisma.$profilesPayload<ExtArgs>
     applications_files: Prisma.$applications_filesPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
@@ -2352,8 +2352,8 @@ export interface Prisma__applicationsClient<T, Null = never, ExtArgs extends run
   application_letters<T extends Prisma.applications$application_lettersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.applications$application_lettersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$application_lettersPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   application_questions<T extends Prisma.applications$application_questionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.applications$application_questionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$application_questionsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   directus_files<T extends Prisma.applications$directus_filesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.applications$directus_filesArgs<ExtArgs>>): Prisma.Prisma__directus_filesClient<runtime.Types.Result.GetResult<Prisma.$directus_filesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-  profiles<T extends Prisma.profilesDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.profilesDefaultArgs<ExtArgs>>): Prisma.Prisma__profilesClient<runtime.Types.Result.GetResult<Prisma.$profilesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   jobs<T extends Prisma.applications$jobsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.applications$jobsArgs<ExtArgs>>): Prisma.Prisma__jobsClient<runtime.Types.Result.GetResult<Prisma.$jobsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  profiles<T extends Prisma.profilesDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.profilesDefaultArgs<ExtArgs>>): Prisma.Prisma__profilesClient<runtime.Types.Result.GetResult<Prisma.$profilesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   applications_files<T extends Prisma.applications$applications_filesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.applications$applications_filesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$applications_filesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.

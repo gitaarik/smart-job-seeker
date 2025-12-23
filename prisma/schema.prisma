@@ -28,8 +28,8 @@ model applications {
   application_letters      application_letters[]
   application_questions    application_questions[]
   directus_files           directus_files?            @relation(fields: [cv_file_sent], references: [id], onUpdate: NoAction, map: "applications_cv_file_sent_foreign")
-  profiles                 profiles                   @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "applications_profile_foreign")
   jobs                     jobs?                      @relation(fields: [job], references: [id], onUpdate: NoAction, map: "applications_job_foreign")
+  profiles                 profiles                   @relation(fields: [profile], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "applications_profile_foreign")
   applications_files       applications_files[]
 }
 
@@ -1020,7 +1020,7 @@ model outsourcing_platforms {
 }
 
 model job_resources {
-  id             Int             @id(map: "vacancy_resources_pkey") @default(autoincrement())
+  id             Int             @id @default(autoincrement())
   sort           Int?
   date_created   DateTime?       @db.Timestamptz(6)
   date_updated   DateTime?       @db.Timestamptz(6)
@@ -1033,7 +1033,7 @@ model job_resources {
 }
 
 model jobs {
-  id                  Int             @id(map: "vacancies_pkey") @default(autoincrement())
+  id                  Int             @id @default(autoincrement())
   status              String          @default("draft") @db.VarChar(255)
   date_created        DateTime?       @db.Timestamptz(6)
   date_updated        DateTime?       @db.Timestamptz(6)
@@ -1057,33 +1057,36 @@ model jobs {
   remote              String?         @db.VarChar(100)
   salary_range        String?         @db.VarChar(255)
   scrape_count        Int?            @default(0)
+  job_types           Json?           @db.Json
+  experience_levels   Json?           @db.Json
+  remote_options      Json?           @db.Json
   applications        applications[]
   job_resources       job_resources[]
 }
 
 model job_searches {
-  id                     Int                      @id(map: "user_search_actions_pkey") @default(autoincrement())
+  id                     Int                      @id @default(autoincrement())
   status                 String                   @default("active") @db.VarChar(255)
   date_created           DateTime?                @db.Timestamptz(6)
   date_updated           DateTime?                @db.Timestamptz(6)
   name                   String                   @db.VarChar(255)
   profile                Int
   keywords               String?                  @db.VarChar(255)
-  location               String?                  @db.VarChar(255)
-  job_type               String?
-  experience_level       String?
-  remote                 String?
   last_run               DateTime?                @db.Timestamptz(6)
+  remote                 Json?                    @db.Json
+  experience_level       Json?                    @db.Json
+  contract_type          Json?                    @db.Json
+  search_url             String?
   profiles               profiles                 @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_searches_profile_foreign")
   job_searches_job_sites job_searches_job_sites[]
 }
 
 model job_searches_job_sites {
-  id                     Int           @id(map: "user_search_actions_job_sites_pkey") @default(autoincrement())
-  user_search_actions_id Int?
-  job_sites_id           Int?
-  job_searches           job_searches? @relation(fields: [user_search_actions_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_searches_job_sites_job_searches_id_foreign")
-  job_sites              job_sites?    @relation(fields: [job_sites_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_searches_job_sites_job_sites_id_foreign")
+  id              Int           @id @default(autoincrement())
+  job_searches_id Int?
+  job_sites_id    Int?
+  job_searches    job_searches? @relation(fields: [job_searches_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_searches_job_sites_job_searches_id_foreign")
+  job_sites       job_sites?    @relation(fields: [job_sites_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_searches_job_sites_job_sites_id_foreign")
 }
 
 enum Role {
