@@ -128,7 +128,7 @@ describe("extractJobLinks", () => {
     );
 
     await expect(extractJobLinks("<html></html>")).rejects.toThrow(
-      "LLM response is not an array",
+      "Failed to extract job links: LLM response is not an array",
     );
   });
 
@@ -143,7 +143,7 @@ describe("extractJobLinks", () => {
     mockGenerateChatCompletion.mockResolvedValueOnce("invalid json");
 
     await expect(extractJobLinks("<html></html>")).rejects.toThrow(
-      "Failed to extract job links",
+      /Failed to extract job links:/,
     );
   });
 });
@@ -244,7 +244,7 @@ describe("extractJobData", () => {
 
     await expect(
       extractJobData("<html></html>", "https://example.com/job/123"),
-    ).rejects.toThrow("Failed to extract job data");
+    ).rejects.toThrow(/Failed to extract job data from/);
   });
 });
 
