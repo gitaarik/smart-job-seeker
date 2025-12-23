@@ -116,35 +116,47 @@ describe("extractJobLinks", () => {
   });
 
   it("should throw error if LLM response is not an array", async () => {
-    mockDb.ai_chat_prompts.findUnique.mockResolvedValueOnce({
-      request: "extract_job_links",
-      system_prompt: "Extract job links",
-      user_prompt: "HTML: {{html}}",
-      format: null,
-    });
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-    mockGenerateChatCompletion.mockResolvedValueOnce(
-      JSON.stringify({ links: [] }),
-    );
+    try {
+      mockDb.ai_chat_prompts.findUnique.mockResolvedValueOnce({
+        request: "extract_job_links",
+        system_prompt: "Extract job links",
+        user_prompt: "HTML: {{html}}",
+        format: null,
+      });
 
-    await expect(extractJobLinks("<html></html>")).rejects.toThrow(
-      "Failed to extract job links: LLM response is not an array",
-    );
+      mockGenerateChatCompletion.mockResolvedValueOnce(
+        JSON.stringify({ links: [] }),
+      );
+
+      await expect(extractJobLinks("<html></html>")).rejects.toThrow(
+        "Failed to extract job links: LLM response is not an array",
+      );
+    } finally {
+      consoleSpy.mockRestore();
+    }
   });
 
   it("should throw error if JSON parsing fails", async () => {
-    mockDb.ai_chat_prompts.findUnique.mockResolvedValueOnce({
-      request: "extract_job_links",
-      system_prompt: "Extract job links",
-      user_prompt: "HTML: {{html}}",
-      format: null,
-    });
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-    mockGenerateChatCompletion.mockResolvedValueOnce("invalid json");
+    try {
+      mockDb.ai_chat_prompts.findUnique.mockResolvedValueOnce({
+        request: "extract_job_links",
+        system_prompt: "Extract job links",
+        user_prompt: "HTML: {{html}}",
+        format: null,
+      });
 
-    await expect(extractJobLinks("<html></html>")).rejects.toThrow(
-      /Failed to extract job links:/,
-    );
+      mockGenerateChatCompletion.mockResolvedValueOnce("invalid json");
+
+      await expect(extractJobLinks("<html></html>")).rejects.toThrow(
+        /Failed to extract job links:/,
+      );
+    } finally {
+      consoleSpy.mockRestore();
+    }
   });
 });
 
@@ -233,18 +245,24 @@ describe("extractJobData", () => {
   });
 
   it("should throw error if JSON parsing fails", async () => {
-    mockDb.ai_chat_prompts.findUnique.mockResolvedValueOnce({
-      request: "extract_job_data",
-      system_prompt: "Extract job data",
-      user_prompt: "HTML: {{html}}",
-      format: null,
-    });
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-    mockGenerateChatCompletion.mockResolvedValueOnce("invalid json");
+    try {
+      mockDb.ai_chat_prompts.findUnique.mockResolvedValueOnce({
+        request: "extract_job_data",
+        system_prompt: "Extract job data",
+        user_prompt: "HTML: {{html}}",
+        format: null,
+      });
 
-    await expect(
-      extractJobData("<html></html>", "https://example.com/job/123"),
-    ).rejects.toThrow(/Failed to extract job data from/);
+      mockGenerateChatCompletion.mockResolvedValueOnce("invalid json");
+
+      await expect(
+        extractJobData("<html></html>", "https://example.com/job/123"),
+      ).rejects.toThrow(/Failed to extract job data from/);
+    } finally {
+      consoleSpy.mockRestore();
+    }
   });
 });
 
