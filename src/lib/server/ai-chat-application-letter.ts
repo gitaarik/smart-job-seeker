@@ -1,6 +1,6 @@
 /**
  * Generate AI-assisted letters for job applications
- * Creates an ai_chat record with applicant context in system prompt and vacancy context in user prompt
+ * Creates an ai_chat record with applicant context in system prompt and job context in user prompt
  */
 
 import { db } from "$lib/db";
@@ -20,12 +20,12 @@ const LETTER_TYPE_TO_PROMPT: Record<string, string> = {
 /**
  * Generate letter for a single application_letter
  * Steps:
- * 1. Fetch the application_letter with related application and vacancy details
- * 2. Skip if application_letter doesn't have a linked application or vacancy
+ * 1. Fetch the application_letter with related application and job details
+ * 2. Skip if application_letter doesn't have a linked application or job
  * 3. Determine the appropriate AI prompt based on letter_type
  * 4. Create an ai_chat record with:
  *    - system_prompt: applicant context (${schema}, ${data})
- *    - user_prompt: vacancy context and job description (${jobDescription})
+ *    - user_prompt: job context and job description (${jobDescription})
  * 5. Generate the full prompt (variables will be replaced including job description)
  * 6. Generate the AI response
  * 7. Update the application_letter record with the ai_chat reference
@@ -39,13 +39,13 @@ export async function generateApplicationLetter(
   message: string;
 }> {
   try {
-    // Fetch the application_letter with related application and vacancy details
+    // Fetch the application_letter with related application and job details
     const letter = await db.application_letters.findUnique({
       where: { id: letterId },
       include: {
         applications: {
           include: {
-            vacancies: true,
+            jobs: true,
           },
         },
       },
@@ -67,17 +67,17 @@ export async function generateApplicationLetter(
       };
     }
 
-    // Skip if application has no vacancy
-    if (!letter.applications.vacancies) {
+    // Skip if application has no job
+    if (!letter.applications.jobs) {
       return {
         success: false,
         message:
-          `Application for letter ${letterId} does not have a linked vacancy`,
+          `Application for letter ${letterId} does not have a linked job`,
       };
     }
 
     const profileId = letter.applications.profile;
-    const vacancy = letter.applications.vacancies;
+    const job = letter.applications.jobs;
     const letterType = letter.letter_type;
 
     // Get the appropriate prompt type based on letter type
@@ -90,33 +90,33 @@ export async function generateApplicationLetter(
       };
     }
 
-    // Build vacancy context for custom variables
-    const vacancyDetails: Record<string, string> = {
-      position: vacancy.title || "Not specified",
-      job_description: vacancy.job_description || "Not specified",
+    // Build job context for custom variables
+    const jobDetails: Record<string, string> = {
+      position: job.title || "Not specified",
+      job_description: job.job_description || "Not specified",
     };
 
-    if (vacancy.company_description) {
-      vacancyDetails.company = vacancy.company_description;
+    if (job.company_description) {
+      job.company = job.company_description;
     }
-    if (vacancy.import_source) {
-      vacancyDetails.source = await getFieldChoiceLabel(
-        "vacancies",
+    if (job.import_source) {
+      jobDetails.source = await getFieldChoiceLabel(
+        "jobs",
         "import_source",
-        vacancy.import_source,
+        job.import_source,
       );
     }
-    if (vacancy.job_poster) {
-      vacancyDetails.postedBy = vacancy.job_poster;
+    if (job.job_poster) {
+      jobDetails.postedBy = job.job_poster;
     }
-    if (vacancy.date_posted) {
-      vacancyDetails.datePosted = vacancy.date_posted.toISOString();
+    if (job.date_posted) {
+      jobDetails.datePosted = job.date_posted.toISOString();
     }
 
     // Create and generate the ai_chat record using the appropriate prompt template
     const customVariables: Record<string, unknown> = {
-      jobDescription: vacancy.job_description || "",
-      vacancyDetails: vacancyDetails,
+      jobDescription: job.job_description || "",
+      jobDetails: jobDetails,
     };
 
     // Add additional context if provided

@@ -22,13 +22,13 @@ export async function generateApplicationQuestionAnswer(
   message: string;
 }> {
   try {
-    // Fetch the question with application and vacancy details
+    // Fetch the question with application and job details
     const question = await db.application_questions.findUnique({
       where: { id: questionId },
       include: {
         applications: {
           include: {
-            vacancies: true,
+            jobs: true,
           },
         },
       },
@@ -43,8 +43,8 @@ export async function generateApplicationQuestionAnswer(
 
     const profileId = question.applications.profile;
 
-    // Fetch the job description from the vacancy
-    const jobDescription = question.applications.vacancies?.job_description ||
+    // Fetch the job description from the job
+    const jobDescription = question.applications.jobs?.job_description ||
       "";
 
     // Create and generate the ai_chat record using the answer_application_question prompt template

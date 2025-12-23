@@ -5,8 +5,7 @@
 import { db } from "$lib/db";
 import { generateAiChatFullPrompt } from "./ai-chat-full-prompt-generate";
 import { generateAiChatResponse } from "./ai-chat-response-generate";
-import { getEnv } from "$lib/tools/get-env";
-import Groq from "groq-sdk";
+import { generateChatCompletion } from "./llm";
 
 /**
  * Interpolate variables in a prompt string
@@ -239,35 +238,11 @@ export async function createAndGenerateAiChat(
       data: { full_prompt: fullPrompt },
     });
 
-    // Step 7: Generate AI response via Groq API
-    const groq = new Groq({
-      apiKey: getEnv("GROQ_API_KEY", ""),
-    });
-
-    const completion = await groq.chat.completions.create({
-      model: "meta-llama/llama-4-scout-17b-16e-instruct",
-      messages: [
-        {
-          role: "system",
-          content: interpolatedSystemPrompt,
-        },
-        {
-          role: "user",
-          content: interpolatedUserPrompt,
-        },
-      ],
-      max_tokens: 2048,
-      temperature: 0.7,
-    });
-
-    const responseContent = completion.choices[0]?.message?.content;
-
-    if (!responseContent) {
-      return {
-        success: false,
-        message: `No response generated for AI chat ID ${aiChat.id}`,
-      };
-    }
+    // Step 7: Generate AI response using generic LLM function
+    const responseContent = await generateChatCompletion([
+      { role: "system", content: interpolatedSystemPrompt },
+      { role: "user", content: interpolatedUserPrompt },
+    ]);
 
     // Step 8: Save response
     await db.ai_chat.update({
