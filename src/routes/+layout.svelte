@@ -1,6 +1,6 @@
 <script lang="ts">
   import "../app.css";
-  import { initializeTheme } from "$lib/stores/theme";
+  import { initializeTheme } from "$lib/stores/theme.svelte";
   import type { LayoutData } from "./$types";
 
   let { children, data }: { children: any; data: LayoutData } = $props();

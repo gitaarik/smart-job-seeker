@@ -16,8 +16,8 @@
   } from "@fortawesome/free-brands-svg-icons";
 
   import { track } from "$lib/tools/analytics";
-  import { isHuman } from "$lib/stores/is-human";
-  import { theme } from "$lib/stores/theme";
+  import { isHumanState } from "$lib/stores/is-human.svelte";
+  import { themeState } from "$lib/stores/theme.svelte";
   import { getWindowVariable } from "$lib/tools/window";
 
   let isLoading = true;
@@ -93,7 +93,7 @@
       "error-callback": handleTurnstileError,
       "expired-callback": handleTurnstileExpired,
       "unsupported-callback": handleTurnstileUnsupported,
-      theme: $theme || "auto", // "light", "dark" or "auto"
+      theme: themeState.actual || "auto", // "light", "dark" or "auto"
       size: "normal", // or "compact"
     });
   }
@@ -110,7 +110,7 @@
       const success = await verifyTurnstile(token);
 
       if (success) {
-        isHuman.set(true);
+        isHumanState.value = true;
         track("HumanValidated");
       } else {
         isVerifyError = true;
@@ -126,13 +126,13 @@
 
   function handleTurnstileError(error: any) {
     console.error("Turnstile error:", error);
-    if (!$isHuman) {
+    if (!isHumanState.value) {
       isVerifyError = true;
     }
   }
 
   function handleTurnstileExpired() {
-    isHuman.set(false);
+    isHumanState.value = false;
   }
 
   function handleTurnstileUnsupported() {
@@ -159,7 +159,7 @@
 </script>
 
 <div class="flex flex-col items-center h-full">
-  {#if !$isHuman}
+  {#if !isHumanState.value}
     {#if isLoadError || isVerifyError}
       <div class="px-4 md:px-8 text-center text-crimson">
         <p>

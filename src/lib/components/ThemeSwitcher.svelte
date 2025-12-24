@@ -1,5 +1,10 @@
 <script lang="ts">
-  import { switchTheme, theme, themePreference } from "$lib/stores/theme";
+  import {
+    switchTheme,
+    themeState,
+    updateDOM,
+    saveToCookie,
+  } from "$lib/stores/theme.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faCircleHalfStroke,
@@ -8,8 +13,18 @@
   } from "@fortawesome/free-solid-svg-icons";
   import { track } from "$lib/tools/analytics";
 
-  let showThemeIndicator = false;
+  let showThemeIndicator = $state(false);
   let fadeTimeout: NodeJS.Timeout;
+
+  // Side effects: Update DOM when theme changes
+  $effect(() => {
+    updateDOM(themeState.actual);
+  });
+
+  // Side effects: Save preference to cookie when it changes
+  $effect(() => {
+    saveToCookie(themeState.preference);
+  });
 
   function showIndicator() {
     clearTimeout(fadeTimeout);
@@ -26,7 +41,7 @@
   }
 
   function getTopOffset() {
-    switch ($themePreference) {
+    switch (themeState.preference) {
       case "light":
         return "top-0";
       case "dark":
@@ -39,7 +54,7 @@
   }
 
   function getIndicatorTopOffset() {
-    switch ($themePreference) {
+    switch (themeState.preference) {
       case "light":
         return "top-0";
       case "dark":
@@ -52,26 +67,26 @@
   }
 
   function getAriaLabel() {
-    switch ($themePreference) {
+    switch (themeState.preference) {
       case "light":
         return "Theme: Light (click to switch to Dark)";
       case "dark":
         return "Theme: Dark (click to switch to Auto)";
       case "auto":
-        return `Theme: Auto (currently ${$theme}, click to switch to Light)`;
+        return `Theme: Auto (currently ${themeState.actual}, click to switch to Light)`;
       default:
         return "Toggle theme";
     }
   }
 
   function getThemeDisplayName() {
-    switch ($themePreference) {
+    switch (themeState.preference) {
       case "light":
         return "Light";
       case "dark":
         return "Dark";
       case "auto":
-        return `Auto (${$theme})`;
+        return `Auto (${themeState.actual})`;
       default:
         return "Unknown";
     }
@@ -113,7 +128,7 @@
     class="relative block w-[42px] h-[42px] rounded-3xl border bg-glass-light border-glass cursor-pointer shadow transition-all duration-200 focus:outline-none overflow-hidden hover:scale-105 active:scale-95"
     aria-label={getAriaLabel()}
     title={getAriaLabel()}
-    on:click={handleToggleTheme}
+    onclick={handleToggleTheme}
   >
     <span
       class="block absolute {getTopOffset()} transition-[top] duration-250"
