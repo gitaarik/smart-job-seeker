@@ -6,6 +6,11 @@ import {
   verifyWebhookAuth,
 } from "$lib/server/webhook-handlers";
 import { clearDirectusCache } from "$lib/server/directus";
+import {
+  createRateLimitResponse,
+  webhookRateLimiter,
+} from "$lib/server/middleware/rate-limit";
+import { errorTracker } from "$lib/server/monitoring/error-tracker";
 
 /**
  * Webhook endpoint for Directus Flow integration
@@ -14,6 +19,15 @@ import { clearDirectusCache } from "$lib/server/directus";
 
 export const POST: RequestHandler = async (event) => {
   try {
+    // Step 0: Rate limiting
+    if (!webhookRateLimiter.tryConsume(event.request)) {
+      errorTracker.logWarning("Webhook rate limit exceeded", {
+        operation: "webhook",
+        metadata: { path: event.url.pathname },
+      });
+      return createRateLimitResponse();
+    }
+
     // Step 1: Verify authentication
     const authResult = await verifyWebhookAuth(event);
     if (!authResult.success) {
@@ -90,6 +104,15 @@ export const POST: RequestHandler = async (event) => {
     const errorMessage = error instanceof Error
       ? error.message
       : "Unknown error";
+
+    errorTracker.logError(
+      "Webhook processing failed",
+      error instanceof Error ? error : new Error(String(error)),
+      {
+        operation: "webhook",
+        metadata: { path: event.url.pathname },
+      },
+    );
 
     return json(
       {
