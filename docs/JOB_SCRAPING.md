@@ -167,7 +167,7 @@ const response = await generateChatCompletion([
 });
 ```
 
-### 4. Job Scraper (`vacancy-scraper.ts` / `job-scraper.ts`)
+### 4. Job Scraper (`job-scraper.ts`)
 
 Core library functions for extracting job data from HTML.
 
@@ -454,7 +454,7 @@ npm test
 - `html-extract.test.ts` (7 tests)
 - `html-strip.test.ts` (13 tests)
 - `llm.test.ts` (9 tests)
-- `vacancy-scraper.test.ts` (13 tests)
+- `job-scraper.test.ts` (13 tests)
 
 ## Future Enhancements
 

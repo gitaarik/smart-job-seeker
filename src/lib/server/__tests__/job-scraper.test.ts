@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { extractJobData, extractJobLinks, upsertJob } from "../vacancy-scraper";
+import { extractJobData, extractJobLinks, upsertJob } from "../job-scraper";
 
 // Mock dependencies
 vi.mock("../llm", () => ({

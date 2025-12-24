@@ -46,7 +46,7 @@ This schema defines an array of job URLs.
 ```
 
 **Note:** The current implementation expects a plain array at the root level. To
-use this schema, you'll need to update the parsing code in `vacancy-scraper.ts`
+use this schema, you'll need to update the parsing code in `job-scraper.ts`
 line 58 to use `response.links` instead of parsing the response as a direct
 array. Alternatively, use this simpler root-level array schema:
 
@@ -197,7 +197,7 @@ compatibility:
 }
 ```
 
-**Handling Empty Values:** The code in `vacancy-scraper.ts` should be updated to
+**Handling Empty Values:** The code in `job-scraper.ts` should be updated to
 convert empty strings to `null` for database insertion:
 
 ```typescript

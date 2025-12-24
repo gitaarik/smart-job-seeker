@@ -87,7 +87,7 @@ This starts:
 - `html-extract.ts` - Extract links from search results
 - `html-strip.ts` - Clean HTML for LLM processing
 - `llm.ts` - Generic LLM chat completion interface
-- `vacancy-scraper.ts` - Job data extraction and storage
+- `job-scraper.ts` - Job data extraction and storage
 
 **AI Features**
 
