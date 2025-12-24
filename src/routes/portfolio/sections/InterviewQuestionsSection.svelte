@@ -1,6 +1,6 @@
 <script lang="ts">
   import InfoSection from "./InfoSection.svelte";
-  import InterviewQuestionCategory from "./InterviewQuestionCategory.svelte";
+  import InterviewQuestionCategory from "../components/InterviewQuestionCategory.svelte";
   import { faQuestionCircle } from "@fortawesome/free-solid-svg-icons";
   import { resume } from "$lib/data/resume";
 

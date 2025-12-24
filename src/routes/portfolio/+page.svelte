@@ -1,13 +1,13 @@
 <script lang="ts">
   import type { PageData } from "./$types";
-  import HeaderSection from "./HeaderSection.svelte";
-  import OverviewSection from "./OverviewSection.svelte";
-  import TechnicalExpertiseSection from "./TechnicalExpertiseSection.svelte";
-  import ProfessionalExperience from "./ProfessionalExperience.svelte";
-  import ReferencesSection from "./ReferencesSection.svelte";
-  import EducationSection from "./EducationSection.svelte";
-  import ProjectsSection from "./ProjectsSection.svelte";
-  import HobbiesInterestsSection from "./HobbiesInterestsSection.svelte";
+  import HeaderSection from "./sections/HeaderSection.svelte";
+  import OverviewSection from "./sections/OverviewSection.svelte";
+  import TechnicalExpertiseSection from "./sections/TechnicalExpertiseSection.svelte";
+  import ProfessionalExperience from "./components/ProfessionalExperience.svelte";
+  import ReferencesSection from "./sections/ReferencesSection.svelte";
+  import EducationSection from "./sections/EducationSection.svelte";
+  import ProjectsSection from "./sections/ProjectsSection.svelte";
+  import HobbiesInterestsSection from "./sections/HobbiesInterestsSection.svelte";
   import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
 
   export let data: PageData;

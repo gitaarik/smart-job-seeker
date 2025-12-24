@@ -11,8 +11,8 @@
   import { resume } from "$lib/data/resume";
   import { formatDateRangeVerbose } from "$lib/tools/date-utils";
   import { formatProjectUrl } from "$lib/tools/url-utils";
-  import InfoBoxes from "./InfoBoxes.svelte";
-  import TechTag from "./TechTag.svelte";
+  import InfoBoxes from "../components/InfoBoxes.svelte";
+  import TechTag from "../components/TechTag.svelte";
 
   let props = $props();
   const profile = props.profile;
