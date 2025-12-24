@@ -5,7 +5,7 @@ services:
     image: directus/directus:latest
     restart: unless-stopped
     ports:
-      - 8055:8055
+      - ${SJS_ADMIN_PORT:-8055}:8055
     volumes:
       - ./directus/uploads:/directus/uploads
       - ./directus/extensions:/directus/extensions
@@ -14,21 +14,21 @@ services:
       admin-cache:
         condition: service_healthy
     environment:
-      ADMIN_EMAIL: ${ADMIN_EMAIL}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
-      ADMIN_TOKEN: ${ADMIN_TOKEN}
-      SECRET: ${ADMIN_SECRET}
-      WEBHOOK_SECRET: ${WEBHOOK_SECRET}
-      PUBLIC_URL: ${ADMIN_PUBLIC_URL}
+      ADMIN_EMAIL: ${SJS_ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${SJS_ADMIN_PASSWORD}
+      ADMIN_TOKEN: ${SJS_ADMIN_TOKEN}
+      SECRET: ${SJS_ADMIN_SECRET}
+      WEBHOOK_SECRET: ${SJS_WEBHOOK_SECRET}
+      PUBLIC_URL: ${SJS_ADMIN_URL}
 
       # Database settings:
-      DB_CLIENT: ${DB_CLIENT}
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT}
-      DB_DATABASE: ${DB_DATABASE}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_SSL: ${DB_SSL}
+      DB_CLIENT: ${SJS_DB_CLIENT}
+      DB_HOST: ${SJS_DB_HOST}
+      DB_PORT: 5432
+      DB_DATABASE: ${SJS_DB_DATABASE}
+      DB_USER: ${SJS_DB_USER}
+      DB_PASSWORD: ${SJS_DB_PASSWORD}
+      DB_SSL: ${SJS_DB_SSL}
       # DB_CONNECTION_TIMEOUT: 60000
       # DB_ACQUIRE_CONNECTION_TIMEOUT: 60000
 

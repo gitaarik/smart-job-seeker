@@ -31,13 +31,13 @@ Add the generated secret to your `.env` file (or `.env.me` for local
 development):
 
 ```
-WEBHOOK_SECRET="a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f"
+SJS_WEBHOOK_SECRET="a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f"
 ```
 
 For production, add to `.env.production`:
 
 ```
-WEBHOOK_SECRET="your-production-webhook-secret-key"
+SJS_WEBHOOK_SECRET="your-production-webhook-secret-key"
 ```
 
 ## Webhook Endpoint
@@ -57,7 +57,7 @@ Content-Type: application/json
 x-webhook-secret: your-webhook-secret-key
 ```
 
-The `x-webhook-secret` header must match the `WEBHOOK_SECRET` environment
+The `x-webhook-secret` header must match the `SJS_WEBHOOK_SECRET` environment
 variable.
 
 ### Body
@@ -348,7 +348,7 @@ instances from templates. The generated `full_prompt` is then used by the
 ### ai_chat.generate_response
 
 Generates AI responses using the Groq API based on the `full_prompt` field.
-Requires `GROQ_API_KEY` environment variable to be set.
+Requires `SJS_GROQ_API_KEY` environment variable to be set.
 
 **Request:**
 
@@ -406,7 +406,7 @@ workflow.
 
 - AI chat must have `full_prompt` populated (use `ai_chat.generate_full_prompt`
   first)
-- `GROQ_API_KEY` environment variable must be configured
+- `SJS_GROQ_API_KEY` environment variable must be configured
 
 **Handler Location:** `src/routes/api/webhook/+server.ts` →
 `handleAiChatGenerateResponse()`
@@ -964,7 +964,7 @@ req.end();
 ## Security Considerations
 
 1. **Always use HTTPS in production** - Never send webhooks over plain HTTP
-2. **Rotate webhook secrets periodically** - Change `WEBHOOK_SECRET` regularly
+2. **Rotate webhook secrets periodically** - Change `SJS_WEBHOOK_SECRET` regularly
 3. **Keep secret private** - Do not commit the secret to version control
 4. **Validate event structure** - The endpoint validates required fields
 5. **Log webhook events** - Monitor webhook activity for debugging
@@ -972,9 +972,9 @@ req.end();
 
 ## Environment Variables
 
-| Variable         | Description                      | Example            |
-| ---------------- | -------------------------------- | ------------------ |
-| `WEBHOOK_SECRET` | Shared secret for authentication | 64-char hex string |
+| Variable             | Description                      | Example            |
+| -------------------- | -------------------------------- | ------------------ |
+| `SJS_WEBHOOK_SECRET` | Shared secret for authentication | 64-char hex string |
 
 ## Troubleshooting
 
@@ -985,7 +985,7 @@ req.end();
 
 ### "Invalid webhook secret"
 
-- Verify the secret matches the `WEBHOOK_SECRET` environment variable
+- Verify the secret matches the `SJS_WEBHOOK_SECRET` environment variable
 - Ensure there are no extra spaces or trailing characters in the secret
 
 ### "Invalid JSON payload"

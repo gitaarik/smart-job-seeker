@@ -28,11 +28,11 @@ contributing to Smart Job Seeker.
    ```
 
    Update `.env` with your configuration:
-   - `APP_URL` - Application URL
-   - `JWT_SECRET` - Secret for JWT tokens
-   - `DATABASE_URL` - PostgreSQL connection string
-   - `SMTP2GO_API_KEY` - Email service API key
-   - `GROQ_API_KEY` - Groq API key for AI features
+   - `SJS_APP_URL` - Application URL
+   - `SJS_JWT_SECRET` - Secret for JWT tokens
+   - `SJS_DATABASE_URL` - PostgreSQL connection string
+   - `SJS_SMTP2GO_API_KEY` - Email service API key
+   - `SJS_GROQ_API_KEY` - Groq API key for AI features
    - Directus admin credentials and configuration
 
 ## Development Workflow
@@ -300,13 +300,12 @@ npm run build
 ### Environment Variables
 
 Required in production:
-
-- `JWT_SECRET` - Secure random token
-- `DATABASE_URL` - Production PostgreSQL URL
-- `GROQ_API_KEY` - Groq API credentials
-- `SMTP2GO_API_KEY` - Email service credentials
-- `WEBHOOK_SECRET` - Webhook authentication
-- Directus configuration (ADMIN_SECRET, ADMIN_EMAIL, etc.)
+- `SJS_JWT_SECRET` - Secure random token
+- `SJS_DATABASE_URL` - Production PostgreSQL URL
+- `SJS_GROQ_API_KEY` - Groq API credentials
+- `SJS_SMTP2GO_API_KEY` - Email service credentials
+- `SJS_WEBHOOK_SECRET` - Webhook authentication
+- Directus configuration (SJS_ADMIN_SECRET, SJS_ADMIN_EMAIL, etc.)
 
 ## Performance Optimization
 

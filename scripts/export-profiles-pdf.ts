@@ -10,6 +10,9 @@ import puppeteer from "puppeteer";
 import path from "path";
 import fs from "fs";
 import { dbDirect } from "$lib/db";
+import { getEnv } from "$lib/tools/get-env";
+
+const appPort = getEnv('SJS_APP_PORT')
 
 async function exportProfilesToPDF() {
   console.log("🚀 Starting profile PDF export (Resume & CV)...");
@@ -80,7 +83,7 @@ async function exportProfilesToPDF() {
       }
 
       // Load resume page
-      const resumeUrl = `http://localhost:5173/${version.route}`;
+      const resumeUrl = `http://localhost:${appPort}/${version.route}`;
       console.log(`🔗 Loading resume from: ${resumeUrl}`);
 
       await page.goto(resumeUrl, {
@@ -141,7 +144,7 @@ async function exportProfilesToPDF() {
 // Check if development server is running
 async function checkDevServer() {
   try {
-    const response = await fetch("http://localhost:5173/resume");
+    const response = await fetch(`http://localhost:${appPort}/resume`);
     return response.ok;
   } catch {
     return false;
@@ -154,7 +157,7 @@ async function main() {
 
     if (!serverRunning) {
       console.error(
-        "❌ Development server is not running on http://localhost:5173",
+        `❌ Development server is not running on http://localhost:${appPort}`,
       );
       console.log("💡 Please start the dev server first with: npm run dev");
       process.exit(1);

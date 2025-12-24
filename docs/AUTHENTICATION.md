@@ -21,15 +21,15 @@ Update your `.env` file with the following variables:
 
 ```env
 # JWT Secret (already configured with secure random key)
-JWT_SECRET="5e85f7e3c23984bba36951494572bdb98565fac82bd67deaecaf072c6e9a1b5302189020737331a2e32d1ded21d53767d958153d1ec086bedd2efe55bb96b002"
+SJS_JWT_SECRET="5e85f7e3c23984bba36951494572bdb98565fac82bd67deaecaf072c6e9a1b5302189020737331a2e32d1ded21d53767d958153d1ec086bedd2efe55bb96b002"
 
 # SMTP2GO API Configuration
-SMTP2GO_API_KEY="your-smtp2go-api-key"
-FROM_EMAIL="noreply@yourdomain.com"
-FROM_NAME="Portfolio App"
+SJS_SMTP2GO_API_KEY="your-smtp2go-api-key"
+SJS_FROM_EMAIL="noreply@yourdomain.com"
+SJS_FROM_NAME="Portfolio App"
 
 # Application URL
-APP_URL="http://localhost:5173"
+SJS_APP_URL="http://localhost:5173"
 ```
 
 ### 2. SMTP2GO Setup
@@ -42,7 +42,7 @@ APP_URL="http://localhost:5173"
    - Create a new API key with "Send Email" permissions
 3. **Update your `.env`**: Replace `your-smtp2go-api-key` with your actual API
    key
-4. **Configure sender email**: Set `FROM_EMAIL` to a domain you own or verify
+4. **Configure sender email**: Set `SJS_FROM_EMAIL` to a domain you own or verify
    with SMTP2GO
 
 ### 3. Database
@@ -135,12 +135,12 @@ const response = await fetch("/api/auth/login", {
 ## Production Deployment
 
 1. **Update environment variables**:
-   - Set `APP_URL` to your production domain
+   - Set `SJS_APP_URL` to your production domain
    - Use a production PostgreSQL database
    - Ensure SMTP2GO API key is configured
 
 2. **Security considerations**:
-   - JWT_SECRET should be a secure random string (already configured)
+   - SJS_JWT_SECRET should be a secure random string (already configured)
    - Use HTTPS in production
    - Configure proper CORS policies
    - Set up proper error monitoring
@@ -149,13 +149,13 @@ const response = await fetch("/api/auth/login", {
 
 ### "secretOrPrivateKey must have a value"
 
-- Ensure `JWT_SECRET` is set in your `.env` file
+- Ensure `SJS_JWT_SECRET` is set in your `.env` file
 - Restart the development server after changing environment variables
 
 ### Email not sending
 
 - Verify your SMTP2GO API key is correct
-- Check that `FROM_EMAIL` is properly configured
+- Check that `SJS_FROM_EMAIL` is properly configured
 - Ensure you have sending credits in your SMTP2GO account
 
 ### Authentication not working

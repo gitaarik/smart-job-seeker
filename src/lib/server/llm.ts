@@ -86,7 +86,7 @@ export async function generateChatCompletion(
 
   // Initialize client (currently Groq)
   const client = new Groq({
-    apiKey: config.groqApiKey || getEnv("GROQ_API_KEY", ""),
+    apiKey: config.groqApiKey || getEnv("SJS_GROQ_API_KEY", ""),
   });
 
   // Make completion request with retry logic

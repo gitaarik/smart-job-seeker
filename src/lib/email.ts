@@ -1,8 +1,8 @@
 import { getEnv } from "$lib/tools/get-env";
 
-const SMTP2GO_API_KEY = getEnv("SMTP2GO_API_KEY");
-const FROM_EMAIL = getEnv("FROM_EMAIL") || "noreply@localhost";
-const FROM_NAME = getEnv("FROM_NAME") || "Portfolio App";
+const SMTP2GO_API_KEY = getEnv("SJS_SMTP2GO_API_KEY");
+const FROM_EMAIL = getEnv("SJS_FROM_EMAIL") || "noreply@localhost";
+const FROM_NAME = getEnv("SJS_FROM_NAME") || "Portfolio App";
 
 if (!SMTP2GO_API_KEY) {
   console.warn(
@@ -59,7 +59,7 @@ export async function sendPasswordResetEmail(
   resetToken: string,
 ): Promise<boolean> {
   const resetUrl = `${
-    getEnv("APP_URL")
+    getEnv("SJS_APP_PUBLIC_URL")
   }/auth/reset-password?token=${resetToken}`;
 
   const html = `

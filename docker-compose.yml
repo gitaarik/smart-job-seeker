@@ -11,7 +11,7 @@ services:
       - ./scripts/:/scripts
       - ./db-dumps/:/db-dumps
     ports:
-      - 5432:5432
+      - ${SJS_DB_PORT:-5432}:5432
     command: |
       bash -c "cp /db-dumps/latest.sql /docker-entrypoint-initdb.d/latest.sql 2>/dev/null || true && docker-entrypoint.sh postgres"
     healthcheck:
@@ -28,7 +28,7 @@ services:
     working_dir: /app
     restart: unless-stopped
     ports:
-      - 5173:5173
+      - ${SJS_APP_PORT:-5173}:5173
     volumes:
       - .:/app
       - /app/node_modules
@@ -47,8 +47,8 @@ services:
       start_period: 300s
     environment:
       NODE_ENV: development
-      DATABASE_URL: postgres://postgres:postgres@database:5432/smartjobseeker
-      POSTGRES_URL: postgres://postgres:postgres@database:5432/smartjobseeker
+      DATABASE_URL: postgres://postgres:postgres@database:${SJS_APP_PORT}/smartjobseeker
+      POSTGRES_URL: postgres://postgres:postgres@database:${SJS_APP_PORT}/smartjobseeker
   admin:
     extends:
       file: docker-compose.directus.yml
@@ -77,6 +77,6 @@ services:
       #   depends_on:
       #     - database
       #   environment:
-      #     DATABASE_URL: 'postgres://postgres:postgres@database:5432/smartjobseeker'
+      #     DATABASE_URL: 'postgres://postgres:postgres@database:${SJS_DB_PORT}/smartjobseeker'
 volumes:
   postgres_data:
