@@ -5,12 +5,18 @@
   import { fade, slide } from "svelte/transition";
   import ContactInfo from "./ContactInfo.svelte";
 
-  export let contentClass: string = "";
+  interface Props {
+    contentClass?: string;
+    class?: string;
+  }
+
+  let { contentClass = "", class: classNames = "" }: Props = $props();
+
   const animationSpeed = 250;
 
   let containerEl: HTMLElement;
-  let expandButton: boolean = false;
-  let expandContent: boolean = false;
+  let expandButton = $state(false);
+  let expandContent = $state(false);
 
   function handleGetInTouch() {
     if (expandButton) return;
@@ -44,26 +50,17 @@
     }, animationSpeed);
   }
 
-  let containerStyle: string = "";
-  let buttonStyle: string = "";
-  let buttonContainerStyle: string = "";
+  const containerStyle = $derived(
+    expandButton ? "max-w-[523px]" : "max-w-[220px]",
+  );
 
-  $: {
-    if (expandButton) {
-      containerStyle = "max-w-[523px]";
-      buttonStyle = "";
-      buttonContainerStyle = "max-w-[523px] rounded-t-lg";
-    } else {
-      containerStyle = "max-w-[220px]";
-      buttonStyle = "cursor-pointer";
-      buttonContainerStyle = "max-w-[220px] rounded-lg cursor-pointer";
-      buttonContainerStyle +=
-        " hover:bg-aqua focus:bg-aqua hover:scale-105 focus:scale-105";
-    }
-  }
+  const buttonStyle = $derived(expandButton ? "" : "cursor-pointer");
 
-  let classNames: string = "";
-  export { classNames as class };
+  const buttonContainerStyle = $derived(
+    expandButton
+      ? "max-w-[523px] rounded-t-lg"
+      : "max-w-[220px] rounded-lg cursor-pointer hover:bg-aqua focus:bg-aqua hover:scale-105 focus:scale-105",
+  );
 </script>
 
 <div
@@ -75,7 +72,7 @@
   >
     <button
       class="py-4 px-8 block w-full {buttonStyle}"
-      on:click={handleGetInTouch}
+      onclick={handleGetInTouch}
     >
       <div class="inline-flex">
         <FontAwesomeIcon icon={faComments} class="w-6 h-5 mr-3 mt-1" />
@@ -89,7 +86,7 @@
     {#if expandContent}
       <button
         class="absolute right-4 top-[14px] cursor-pointer text-2xl hover:rotate-90 transition"
-        on:click={handleCloseContactInfo}
+        onclick={handleCloseContactInfo}
         transition:fade
       >
         <FontAwesomeIcon icon={faTimes} />

@@ -22,7 +22,11 @@
     faWrench,
   } from "@fortawesome/free-solid-svg-icons";
 
-  export let activeSection = "overview";
+  interface Props {
+    activeSection?: string;
+  }
+
+  let { activeSection = "overview" }: Props = $props();
 
   const sections = [
     {

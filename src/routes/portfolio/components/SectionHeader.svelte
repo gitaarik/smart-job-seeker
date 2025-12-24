@@ -1,8 +1,13 @@
 <script lang="ts">
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+  import type { IconProp } from "@fortawesome/fontawesome-svg-core";
 
-  export let title: string;
-  export let icon;
+  interface Props {
+    title: string;
+    icon: IconProp;
+  }
+
+  let { title, icon }: Props = $props();
 </script>
 
 <h2 class="relative border-b-2 border-ocean pb-1 mb-5">

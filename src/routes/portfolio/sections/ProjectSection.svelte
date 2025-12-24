@@ -1,9 +1,17 @@
 <script lang="ts">
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { faCalendarAlt, faCheckCircle, faBullseye } from "@fortawesome/free-solid-svg-icons";
+  import {
+    faCalendarAlt,
+    faCheckCircle,
+    faBullseye,
+  } from "@fortawesome/free-solid-svg-icons";
 
-  export let project: any;
-  export let companyName: string;
+  interface Props {
+    project: any;
+    companyName: string;
+  }
+
+  let { project, companyName }: Props = $props();
 </script>
 
 <div class="bg-white/60 rounded-lg border border-ocean/20 p-4 sm:p-6">

@@ -10,7 +10,7 @@
   import HobbiesInterestsSection from "./sections/HobbiesInterestsSection.svelte";
   import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
 
-  export let data: PageData;
+  let { data }: { data: PageData } = $props();
 </script>
 
 <svelte:head>

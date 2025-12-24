@@ -2,7 +2,7 @@
   import type { PageData } from "./$types";
   import { ProfileDisplay } from "$lib/components/ProfileDisplay";
 
-  export let data: PageData;
+  let { data }: { data: PageData } = $props();
 </script>
 
 {#if data.profile}

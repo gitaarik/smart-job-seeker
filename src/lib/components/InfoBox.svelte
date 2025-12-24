@@ -1,8 +1,10 @@
 <script lang="ts">
-  export let headerText: string = "";
+  interface Props {
+    headerText?: string;
+    class?: string;
+  }
 
-  let classNames: string = "";
-  export { classNames as class };
+  let { headerText = "", class: classNames = "" }: Props = $props();
 </script>
 
 <div

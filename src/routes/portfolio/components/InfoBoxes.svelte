@@ -8,10 +8,12 @@
     fa_icon?: any;
   };
 
-  export let items: Array<Item> = [];
+  interface Props {
+    items?: Array<Item>;
+    class?: string;
+  }
 
-  let classNames = "";
-  export { classNames as class };
+  let { items = [], class: classNames = "" }: Props = $props();
 </script>
 
 <div

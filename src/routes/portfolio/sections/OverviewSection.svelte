@@ -3,7 +3,11 @@
   import SummarySection from "./SummarySection.svelte";
   import KeyQualificationsSection from "./KeyQualificationsSection.svelte";
 
-  export let profile;
+  interface Props {
+    profile: any;
+  }
+
+  let { profile }: Props = $props();
 </script>
 
 <div class="space-y-10 print:space-y-7">

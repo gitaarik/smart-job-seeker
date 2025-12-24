@@ -1,8 +1,12 @@
 <script lang="ts">
-  export let label: string;
-  export let href: string | null = null;
-  export let content: string | null = null;
-  export let type: "link" | "email" | "phone" = "link";
+  interface Props {
+    label: string;
+    href?: string | null;
+    content?: string | null;
+    type?: "link" | "email" | "phone";
+  }
+
+  let { label, href = null, content = null, type = "link" }: Props = $props();
 </script>
 
 <span

@@ -78,8 +78,12 @@
     }>;
   }
 
-  export let profile: Profile;
-  export let type: string | null = null;
+  interface Props {
+    profile: Profile;
+    type?: string | null;
+  }
+
+  let { profile, type = null }: Props = $props();
 
   function getVersion(idx: string | number) {
     if (typeof idx === "number") {

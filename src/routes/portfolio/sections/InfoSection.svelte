@@ -1,11 +1,14 @@
 <script lang="ts">
   import SectionHeader from "../components/SectionHeader.svelte";
+  import type { IconProp } from "@fortawesome/fontawesome-svg-core";
 
-  export let title;
-  export let icon;
+  interface Props {
+    title: string;
+    icon: IconProp;
+    class?: string;
+  }
 
-  let classNames = "";
-  export { classNames as class };
+  let { title, icon, class: classNames = "" }: Props = $props();
 </script>
 
 <article

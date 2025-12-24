@@ -2,11 +2,15 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import type { IconProp } from "@fortawesome/fontawesome-svg-core";
 
-  let elLink: HTMLElement;
+  interface Props {
+    icon: IconProp;
+    href?: string;
+    title?: string;
+  }
 
-  export let icon: IconProp;
-  export let href: string = "";
-  export let title: string = "";
+  let { icon, href = "", title = "" }: Props = $props();
+
+  let elLink: HTMLElement;
 
   function handleClick() {
     elLink.blur();
@@ -19,7 +23,7 @@
   {title}
   class="flex justify-end items-center gap-2 hover:text-white hover:underline focus:text-aqua transition text-nowrap"
   bind:this={elLink}
-  on:click={handleClick}
+  onclick={handleClick}
 >
   <FontAwesomeIcon
     {icon}

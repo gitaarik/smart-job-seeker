@@ -1,5 +1,9 @@
 <script lang="ts">
-  export let tech: Record<string, string>;
+  interface Props {
+    tech: Record<string, string>;
+  }
+
+  let { tech }: Props = $props();
 </script>
 
 <li

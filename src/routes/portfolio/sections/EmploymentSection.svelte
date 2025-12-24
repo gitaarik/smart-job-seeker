@@ -14,8 +14,12 @@
   import { formatDateRangeVerbose } from "$lib/tools/date-utils";
   import { getImg } from "$lib/tools/get-img";
 
-  export let data;
-  export let isFirst = false;
+  interface Props {
+    data: any;
+    isFirst?: boolean;
+  }
+
+  let { data, isFirst = false }: Props = $props();
 </script>
 
 <section class="break-inside-avoid {isFirst ? 'mt-12 print:mt-0' : ''}">

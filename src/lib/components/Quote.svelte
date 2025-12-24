@@ -1,5 +1,9 @@
 <script lang="ts">
-  export let author: string;
+  interface Props {
+    author: string;
+  }
+
+  let { author }: Props = $props();
 </script>
 
 <blockquote class="py-15 sm:text-lg">

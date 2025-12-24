@@ -1,7 +1,11 @@
 <script lang="ts">
   import Logo from "$lib/components/Logo.svelte";
 
-  export let profile;
+  interface Props {
+    profile: any;
+  }
+
+  let { profile }: Props = $props();
 </script>
 
 <header class="flex flex-col items-center">
