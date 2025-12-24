@@ -27,6 +27,16 @@ vi.mock("../ai-chat-utils", () => ({
   getInterpolatedPrompts: vi.fn(),
 }));
 
+vi.mock("../config", () => ({
+  config: {
+    groqApiKey: "test-api-key",
+    retryMaxAttempts: 3,
+    retryInitialDelay: 1000,
+    retryMaxDelay: 10000,
+    llmCacheTTL: 3600000,
+  },
+}));
+
 const { mockCreate } = vi.hoisted(() => ({
   mockCreate: vi.fn(),
 }));
@@ -46,10 +56,13 @@ import { db } from "$lib/db";
 import { getInterpolatedPrompts } from "../ai-chat-utils";
 import { generateAiChatResponse } from "../ai-chat-response-generate";
 import Groq from "groq-sdk";
+import { llmCache } from "../cache/llm-cache";
 
 describe("generateAiChatResponse", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Clear LLM cache to prevent cache hits affecting tests
+    llmCache.clear();
   });
 
   it("should return error if ai_chat not found", async () => {

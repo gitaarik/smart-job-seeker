@@ -6,6 +6,17 @@ vi.mock("$lib/tools/get-env", () => ({
   getEnv: vi.fn(() => "test-api-key"),
 }));
 
+// Mock config
+vi.mock("../config", () => ({
+  config: {
+    groqApiKey: "test-api-key",
+    retryMaxAttempts: 3,
+    retryInitialDelay: 1000,
+    retryMaxDelay: 10000,
+    llmCacheTTL: 3600000,
+  },
+}));
+
 // Create hoisted mock
 const { mockCreate } = vi.hoisted(() => ({
   mockCreate: vi.fn(),
@@ -24,10 +35,13 @@ vi.mock("groq-sdk", () => ({
 }));
 
 import { generateChatCompletion } from "../llm";
+import { llmCache } from "../cache/llm-cache";
 
 describe("generateChatCompletion", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Clear LLM cache to prevent cache hits affecting tests
+    llmCache.clear();
   });
 
   it("should generate chat completion with default options", async () => {

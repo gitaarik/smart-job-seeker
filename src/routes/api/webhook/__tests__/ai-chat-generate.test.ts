@@ -22,6 +22,7 @@ vi.mock("$lib/server/ai-chat-response-generate", () => ({
 import { generateAiChatFullPrompt } from "$lib/server/ai-chat-full-prompt-generate";
 import { generateAiChatResponse } from "$lib/server/ai-chat-response-generate";
 import { POST } from "../+server";
+import { webhookRateLimiter } from "$lib/server/middleware/rate-limit";
 
 /**
  * Helper function to create a mock Request
@@ -48,8 +49,14 @@ function createMockRequest(
 function createMockEvent(request: Request) {
   return {
     request,
+    url: new URL("http://localhost:5173/api/webhook"),
   } as any;
 }
+
+// Reset rate limiter before each test to prevent rate limit errors
+beforeEach(() => {
+  webhookRateLimiter.reset();
+});
 
 describe("POST /api/webhook - ai_chat.generate_full_prompt event", () => {
   const secret = "test-webhook-secret-key-1234567890123456";

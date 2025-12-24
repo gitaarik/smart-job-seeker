@@ -122,6 +122,13 @@ class RateLimiter {
       }
     }
   }
+
+  /**
+   * Reset all buckets (useful for testing)
+   */
+  reset(): void {
+    this.buckets.clear();
+  }
 }
 
 // Create rate limiter instances for different endpoints

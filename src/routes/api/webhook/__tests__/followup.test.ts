@@ -26,6 +26,7 @@ import { createApplicationLetterFollowup } from "$lib/server/ai-chat-application
 import { createApplicationQuestionFollowup } from "$lib/server/ai-chat-application-question-followup";
 import { createFollowupAiChat } from "$lib/server/ai-chat-create-followup";
 import { POST } from "../+server";
+import { webhookRateLimiter } from "$lib/server/middleware/rate-limit";
 
 /**
  * Helper function to create a mock Request
@@ -52,8 +53,14 @@ function createMockRequest(
 function createMockEvent(request: Request) {
   return {
     request,
+    url: new URL("http://localhost:5173/api/webhook"),
   } as any;
 }
+
+// Reset rate limiter before each test to prevent rate limit errors
+beforeEach(() => {
+  webhookRateLimiter.reset();
+});
 
 describe("POST /api/webhook - application_letter.create_followup event", () => {
   const secret = "test-webhook-secret-key-1234567890123456";
