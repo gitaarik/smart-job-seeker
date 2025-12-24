@@ -14,5 +14,19 @@ export default defineConfig({
   test: {
     environment: "node",
     setupFiles: ["./vitest.setup.ts"],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json", "html"],
+      exclude: [
+        "node_modules/**",
+        "generated/**",
+        ".svelte-kit/**",
+        "**/*.config.ts",
+        "**/*.config.js",
+        "**/test-utils/**",
+        "**/__tests__/**",
+        "**/vitest.setup.ts",
+      ],
+    },
   },
 });

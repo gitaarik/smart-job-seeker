@@ -1,10 +1,13 @@
 # Job Scraping System
 
-This document describes the job scraping infrastructure built to automatically extract job listings from various platforms and store them in the database.
+This document describes the job scraping infrastructure built to automatically
+extract job listings from various platforms and store them in the database.
 
 ## Overview
 
-The job scraping system uses a **simplified, URL-based approach** where each job search is configured with a complete, pre-tested search URL. The system consists of four main components:
+The job scraping system uses a **simplified, URL-based approach** where each job
+search is configured with a complete, pre-tested search URL. The system consists
+of four main components:
 
 1. **HTML Extraction** - Extract links from search result pages
 2. **HTML Stripping** - Clean HTML for efficient LLM processing
@@ -21,7 +24,8 @@ Pre-configured Search URL → Job Search Page → HTML Extract → Job Links
 
 ### Data Flow
 
-1. **Search URL**: Use pre-configured, complete search URL from `job_searches` table
+1. **Search URL**: Use pre-configured, complete search URL from `job_searches`
+   table
 2. **Search Results**: Navigate to search results page
 3. **Link Extraction**: Extract individual job posting URLs
 4. **Job Fetching**: Fetch each job posting page
@@ -44,6 +48,7 @@ extractLinks(html: string, pattern?: RegExp): string[]
 Extracts all links from HTML, optionally filtered by regex pattern.
 
 **Features:**
+
 - Deduplication of URLs
 - Optional regex filtering
 - Handles malformed HTML gracefully
@@ -51,9 +56,9 @@ Extracts all links from HTML, optionally filtered by regex pattern.
 **Example:**
 
 ```typescript
-import { extractLinks } from '$lib/server/html-extract';
+import { extractLinks } from "$lib/server/html-extract";
 
-const html = await fetch('https://jobsite.com/search');
+const html = await fetch("https://jobsite.com/search");
 const jobLinks = extractLinks(html, /\/job\//);
 // Returns: ['https://jobsite.com/job/123', 'https://jobsite.com/job/456']
 ```
@@ -71,6 +76,7 @@ stripHtmlForLlm(html: string): string
 Cleans HTML while preserving semantic structure.
 
 **What it removes:**
+
 - Script and style tags
 - HTML comments
 - Head section
@@ -79,6 +85,7 @@ Cleans HTML while preserving semantic structure.
 - Most attributes (keeps: href, src, alt, title, aria-label)
 
 **What it preserves:**
+
 - Semantic structure (headings, paragraphs, lists)
 - Important attributes for context
 - Self-closing tags (br, hr, img, input)
@@ -87,9 +94,9 @@ Cleans HTML while preserving semantic structure.
 **Example:**
 
 ```typescript
-import { stripHtmlForLlm } from '$lib/server/html-strip';
+import { stripHtmlForLlm } from "$lib/server/html-strip";
 
-const jobPage = await fetch('https://jobsite.com/job/123');
+const jobPage = await fetch("https://jobsite.com/job/123");
 const cleaned = stripHtmlForLlm(jobPage);
 // Returns minimal HTML optimized for LLM analysis
 ```
@@ -102,12 +109,12 @@ Generic LLM chat completion interface (currently uses Groq).
 
 ```typescript
 interface ChatMessage {
-  role: 'system' | 'user' | 'assistant';
+  role: "system" | "user" | "assistant";
   content: string;
 }
 
 interface ResponseFormat {
-  type: 'json_schema';
+  type: "json_schema";
   json_schema: {
     name: string;
     strict?: boolean;
@@ -133,6 +140,7 @@ async generateChatCompletion(
 ```
 
 **Features:**
+
 - Provider-agnostic interface (easy to switch from Groq)
 - Structured output support via JSON schemas
 - Configurable model, temperature, max tokens
@@ -141,21 +149,21 @@ async generateChatCompletion(
 **Example:**
 
 ```typescript
-import { generateChatCompletion } from '$lib/server/llm';
+import { generateChatCompletion } from "$lib/server/llm";
 
 const response = await generateChatCompletion([
-  { role: 'system', content: 'Extract job data from HTML' },
-  { role: 'user', content: cleanedHtml }
+  { role: "system", content: "Extract job data from HTML" },
+  { role: "user", content: cleanedHtml },
 ], {
   temperature: 0.3,
   responseFormat: {
-    type: 'json_schema',
+    type: "json_schema",
     json_schema: {
-      name: 'job_data',
+      name: "job_data",
       strict: true,
-      schema: jobDataSchema
-    }
-  }
+      schema: jobDataSchema,
+    },
+  },
 });
 ```
 
@@ -172,6 +180,7 @@ async upsertJob(jobData: JobData, sourceUrl: string, importSource: string): Prom
 ```
 
 **Features:**
+
 - Uses AI prompt templates from database (`ai_chat_prompts`)
 - Structured output extraction
 - Automatic job deduplication by URL
@@ -197,14 +206,15 @@ interface JobData {
 
 ### 5. Scraping Script (`scripts/scrape-job-sites.ts`)
 
-Command-line script that orchestrates the complete scraping workflow using Puppeteer.
+Command-line script that orchestrates the complete scraping workflow using
+Puppeteer.
 
 **How it works:**
 
 ```typescript
 // 1. Fetch active job searches with pre-configured URLs
 const searchActions = await db.job_searches.findMany({
-  where: { status: "active" }
+  where: { status: "active" },
 });
 
 // 2. For each search, use the search_url directly
@@ -226,6 +236,7 @@ for (const searchAction of searchActions) {
 ```
 
 **Key Features:**
+
 - **Simple URL usage** - No dynamic URL building or parameter mapping
 - **Platform detection** - Automatically detects platform from URL hostname
 - **Persistent browser** - Uses Chrome profile for handling authentication
@@ -238,6 +249,7 @@ for (const searchAction of searchActions) {
 The `jobs` collection stores scraped job listings:
 
 **Key Fields:**
+
 - `id` - Primary key
 - `title` - Job title
 - `job_description` - Job requirements and details
@@ -250,15 +262,18 @@ The `jobs` collection stores scraped job listings:
 - `date_posted` - When job was posted
 - `location` - Job location
 - `remote_options` - Remote work options (JSON array for multiple selections)
-- `experience_levels` - Required experience levels (JSON array for multiple selections)
+- `experience_levels` - Required experience levels (JSON array for multiple
+  selections)
 - `job_types` - Employment types (JSON array for multiple selections)
 - `salary_range` - Salary information
 
 ### Job Searches Collection
 
-The `job_searches` collection stores search configurations with pre-configured URLs:
+The `job_searches` collection stores search configurations with pre-configured
+URLs:
 
 **Key Fields:**
+
 - `id` - Primary key
 - `name` - Descriptive name (e.g., "LinkedIn - TypeScript - Amsterdam")
 - `search_url` - Complete, pre-configured search URL
@@ -268,6 +283,7 @@ The `job_searches` collection stores search configurations with pre-configured U
 - `date_created`, `date_updated` - Timestamps
 
 **Example:**
+
 ```json
 {
   "name": "LinkedIn - Senior TypeScript Developer - Remote",
@@ -286,14 +302,17 @@ The `job_searches` collection stores search configurations with pre-configured U
 Scraping uses two prompt templates stored in `ai_chat_prompts`:
 
 **1. `extract_job_links`**
+
 - Extracts job posting URLs from search results
 - Returns: Array of URLs
 
 **2. `extract_job_data`**
+
 - Extracts structured data from job posting
 - Returns: JobData object
 
 Both templates support:
+
 - Variable interpolation (e.g., `{{html}}`)
 - Structured output via `format` field (JSON schema)
 - System and user prompts
@@ -310,6 +329,7 @@ npx tsx scripts/scrape-job-sites.ts
 ```
 
 **How it works:**
+
 1. Reads all active job searches from the `job_searches` table
 2. For each search, navigates to the pre-configured `search_url`
 3. Extracts job links from the search results page
@@ -328,7 +348,9 @@ Navigate to the `job_searches` collection and create a new record:
 - **Status**: Set to "active"
 
 **Example URLs:**
-- LinkedIn: `https://www.linkedin.com/jobs/search/?keywords=TypeScript%20Developer&location=Amsterdam&f_JT=F`
+
+- LinkedIn:
+  `https://www.linkedin.com/jobs/search/?keywords=TypeScript%20Developer&location=Amsterdam&f_JT=F`
 - Indeed: `https://www.indeed.com/jobs?q=Python+Developer&l=Remote&remotejob=1`
 
 **Step 2: Run the scraping script**
@@ -342,7 +364,8 @@ npx tsx scripts/scrape-job-sites.ts
 For production use, integrate with Directus Flows or cron jobs:
 
 1. **Create Flow** - Schedule-triggered (e.g., daily at 9 AM)
-2. **Exec Operation** - Run scraping script: `npx tsx scripts/scrape-job-sites.ts`
+2. **Exec Operation** - Run scraping script:
+   `npx tsx scripts/scrape-job-sites.ts`
 3. **Notification** - Alert on completion/errors
 
 ## Performance Considerations
@@ -350,6 +373,7 @@ For production use, integrate with Directus Flows or cron jobs:
 ### HTML Stripping Benefits
 
 Stripping HTML before LLM processing:
+
 - **Reduces tokens** - 50-80% reduction in token count
 - **Improves accuracy** - Less noise in extraction
 - **Lowers costs** - Fewer tokens = lower API costs
@@ -358,6 +382,7 @@ Stripping HTML before LLM processing:
 ### Batching
 
 For large-scale scraping:
+
 - Process jobs in batches (10-20 at a time)
 - Add delays between requests to avoid rate limiting
 - Use concurrent processing with limits
@@ -375,6 +400,7 @@ for (let i = 0; i < jobLinks.length; i += batchSize) {
 ### Deduplication
 
 The system automatically deduplicates by `source_url`:
+
 - Existing jobs are updated with fresh data
 - `scrape_count` tracks refresh frequency
 - `last_scraped` timestamp for monitoring
@@ -384,26 +410,33 @@ The system automatically deduplicates by `source_url`:
 ### Common Errors
 
 **1. Prompt Template Not Found**
+
 ```
 Error: Prompt template 'extract_job_links' not found
 ```
+
 **Solution**: Create prompt templates in Directus
 
 **2. Invalid JSON Response**
+
 ```
 Error: Failed to extract job links: Unexpected token
 ```
+
 **Solution**: Check LLM response format, adjust prompt template
 
 **3. No Content from LLM**
+
 ```
 Error: No content returned from LLM
 ```
+
 **Solution**: Check API key, model availability, request format
 
 ### Logging
 
 The scraper includes comprehensive error logging:
+
 - Failed parsing attempts logged with response
 - Database errors captured
 - Source URL included in error messages
@@ -417,6 +450,7 @@ npm test
 ```
 
 **Test Files:**
+
 - `html-extract.test.ts` (7 tests)
 - `html-strip.test.ts` (13 tests)
 - `llm.test.ts` (9 tests)
@@ -460,6 +494,7 @@ npm test
 ### Rate Limiting
 
 Always respect website rate limits:
+
 - Add delays between requests
 - Monitor response codes
 - Implement exponential backoff
@@ -467,6 +502,7 @@ Always respect website rate limits:
 ### robots.txt
 
 Check and respect robots.txt:
+
 ```bash
 curl https://example.com/robots.txt
 ```
@@ -474,6 +510,7 @@ curl https://example.com/robots.txt
 ### Terms of Service
 
 Review and comply with:
+
 - Platform terms of service
 - Data usage policies
 - Scraping restrictions

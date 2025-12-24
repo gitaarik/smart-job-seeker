@@ -1,4 +1,4 @@
-import { db } from "$lib/db.js";
+import { db } from "$lib/db";
 
 export async function load({ locals }) {
   const profiles = await db.profiles.findMany({

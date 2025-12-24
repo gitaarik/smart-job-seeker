@@ -1,10 +1,14 @@
 # Structured Output JSON Schemas
 
-This document contains example JSON schemas for the `format` field in the `ai_chat_prompts` collection. These schemas enable Groq's structured output feature, which ensures the LLM returns JSON that exactly matches the specified schema.
+This document contains example JSON schemas for the `format` field in the
+`ai_chat_prompts` collection. These schemas enable Groq's structured output
+feature, which ensures the LLM returns JSON that exactly matches the specified
+schema.
 
 ## Overview
 
-The `format` field accepts a JSON Schema object that defines the expected structure of the LLM's response. When a `format` is provided:
+The `format` field accepts a JSON Schema object that defines the expected
+structure of the LLM's response. When a `format` is provided:
 
 1. The LLM uses constrained decoding to guarantee output matches the schema
 2. You can remove JSON format instructions from your prompts (saves tokens)
@@ -41,7 +45,10 @@ This schema defines an array of job URLs.
 }
 ```
 
-**Note:** The current implementation expects a plain array at the root level. To use this schema, you'll need to update the parsing code in `vacancy-scraper.ts` line 58 to use `response.links` instead of parsing the response as a direct array. Alternatively, use this simpler root-level array schema:
+**Note:** The current implementation expects a plain array at the root level. To
+use this schema, you'll need to update the parsing code in `vacancy-scraper.ts`
+line 58 to use `response.links` instead of parsing the response as a direct
+array. Alternatively, use this simpler root-level array schema:
 
 ```json
 {
@@ -120,11 +127,14 @@ This schema defines the structure for extracted job information.
 }
 ```
 
-**Note:** This schema uses `["string", "null"]` for nullable fields. For strict mode compatibility, consider using a single type with empty string defaults instead, or set `strict: false` in the code.
+**Note:** This schema uses `["string", "null"]` for nullable fields. For strict
+mode compatibility, consider using a single type with empty string defaults
+instead, or set `strict: false` in the code.
 
 ### 3. Alternative Job Data Schema (Strict Mode Compatible)
 
-This version uses only non-nullable strings for better strict mode compatibility:
+This version uses only non-nullable strings for better strict mode
+compatibility:
 
 ```json
 {
@@ -187,12 +197,13 @@ This version uses only non-nullable strings for better strict mode compatibility
 }
 ```
 
-**Handling Empty Values:** The code in `vacancy-scraper.ts` should be updated to convert empty strings to `null` for database insertion:
+**Handling Empty Values:** The code in `vacancy-scraper.ts` should be updated to
+convert empty strings to `null` for database insertion:
 
 ```typescript
 // Convert empty strings to null
-Object.keys(data).forEach(key => {
-  if (data[key] === '') {
+Object.keys(data).forEach((key) => {
+  if (data[key] === "") {
     data[key] = null;
   }
 });
@@ -211,7 +222,8 @@ The LLM will now guarantee JSON output matching your schema!
 ## Benefits
 
 - **More reliable**: Guaranteed schema compliance (no more JSON parsing errors)
-- **Token efficient**: Remove "Please return JSON in this format..." from prompts
+- **Token efficient**: Remove "Please return JSON in this format..." from
+  prompts
 - **Type safe**: Exact structure you specify
 - **Better UX**: Users get consistent, predictable responses
 

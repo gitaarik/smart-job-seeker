@@ -1,6 +1,7 @@
 # Development Guide
 
-This guide covers development setup, best practices, and workflows for contributing to Smart Job Seeker.
+This guide covers development setup, best practices, and workflows for
+contributing to Smart Job Seeker.
 
 ## Prerequisites
 
@@ -47,6 +48,7 @@ npm run dev
 **Note:** The first startup can take some time
 
 This starts:
+
 - **Directus CMS** on `http://localhost:8055`
 - **SvelteKit app** on `http://localhost:5173`
 - **PostgreSQL database** on port 5432
@@ -143,7 +145,8 @@ smart-job-seeker/
 
 ### Prisma Workflow
 
-The project uses Directus as the source of truth for the database schema. Changes should be made in Directus, then synchronized to Prisma.
+The project uses Directus as the source of truth for the database schema.
+Changes should be made in Directus, then synchronized to Prisma.
 
 1. **Make changes in Directus** (http://localhost:8055)
 2. **Sync Prisma schema**: `npm run docker:update-schema`
@@ -187,6 +190,7 @@ npm run test:ui          # Open test UI dashboard
 ### Writing Tests
 
 When adding new features:
+
 1. Write tests in `__tests__/` directory next to the module
 2. Follow existing test patterns (see examples in codebase)
 3. Mock external dependencies (database, APIs)
@@ -199,18 +203,21 @@ For complete testing guide, see [TESTING.md](TESTING.md).
 ### Service Details
 
 **Admin (Directus CMS)**
+
 ```bash
 docker compose up admin
 # Access at http://localhost:8055
 ```
 
 **App (SvelteKit)**
+
 ```bash
 docker compose up app
 # Access at http://localhost:5173
 ```
 
 **Database (PostgreSQL)**
+
 ```bash
 docker compose up database
 # Port: 5432
@@ -242,11 +249,13 @@ docker compose logs -f admin
 Secure webhook endpoint at `POST /api/webhook` for Directus integration.
 
 **Features:**
+
 - HMAC-SHA256 signature verification
 - Multiple event type support
 - Batch profile export
 
 **Event Types:**
+
 - `profile.export` - Export profile data and schema
 - `item.create` - Item creation handler
 - `item.update` - Item update handler
@@ -291,6 +300,7 @@ npm run build
 ### Environment Variables
 
 Required in production:
+
 - `JWT_SECRET` - Secure random token
 - `DATABASE_URL` - Production PostgreSQL URL
 - `GROQ_API_KEY` - Groq API credentials
@@ -335,6 +345,7 @@ For issues or questions:
 ## Tech Stack Details
 
 ### Frontend
+
 - **SvelteKit 5** - Modern web framework
 - **Svelte 5** - Reactive UI framework
 - **TypeScript** - Type safety
@@ -342,21 +353,25 @@ For issues or questions:
 - **FontAwesome** - Icon library
 
 ### Backend
+
 - **Node.js** - JavaScript runtime
 - **SvelteKit Server Routes** - API endpoints
 - **Prisma** - ORM for PostgreSQL
 - **JWT** - Authentication
 
 ### Database & CMS
+
 - **PostgreSQL** - Relational database
 - **Directus** - Headless CMS
 - **Prisma Schema** - Database management
 
 ### External Services
+
 - **Groq API** - High-performance LLM inference
 - **SMTP2GO** - Email delivery
 
 ### DevOps
+
 - **Docker & Docker Compose** - Containerization
 - **Vite** - Build tool
 - **Vitest** - Testing framework

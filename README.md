@@ -1,30 +1,41 @@
 # Smart Job Seeker
 
-An intelligent job search and application management platform that helps you create a detailed profile, discover matching opportunities, and optimize your job application process with AI assistance.
+An intelligent job search and application management platform that helps you
+create a detailed profile, discover matching opportunities, and optimize your
+job application process with AI assistance.
 
-**Vision:** Create your profile once, automatically match it against scraped job listings from various platforms, and intelligently manage your entire job search journey with AI-powered insights.
+**Vision:** Create your profile once, automatically match it against scraped job
+listings from various platforms, and intelligently manage your entire job search
+journey with AI-powered insights.
 
 ## Key Features
 
 ### Profile & Portfolio
+
 - **Comprehensive Profiles** - Work experience, education, skills, and expertise
-- **Personal Portfolio** - Modern, responsive showcase of your professional background
+- **Personal Portfolio** - Modern, responsive showcase of your professional
+  background
 - **Data Export** - Export your profile in multiple formats
 
 ### Job Scraping & Matching
-- **Automated Job Scraping** - Scrape job listings from multiple platforms using pre-configured search URLs
+
+- **Automated Job Scraping** - Scrape job listings from multiple platforms using
+  pre-configured search URLs
 - **HTML Processing** - Extract and clean job posting data for AI analysis
 - **LLM Integration** - AI-powered job data extraction with structured output
 - **Smart Matching** - Match your profile against scraped jobs (coming soon)
 
 ### Application Management
+
 - **Application Tracking** - Organize jobs, interviews, and follow-ups
-- **AI-Powered Writing** - Generate cover letters, follow-ups, and thank-you notes
+- **AI-Powered Writing** - Generate cover letters, follow-ups, and thank-you
+  notes
 - **Interview Prep** - AI-generated answers to application questions
 - **Activity Logging** - Track all application activities
 - **File Management** - Organize application-related documents
 
 ### Technical Highlights
+
 - **Groq AI Integration** - Fast, context-aware content generation
 - **Directus CMS** - Headless CMS for content management
 - **Webhook System** - Secure integration with Directus Flows
@@ -33,6 +44,7 @@ An intelligent job search and application management platform that helps you cre
 ## Quick Start
 
 ### Prerequisites
+
 - Node.js 18+
 - Docker & Docker Compose
 
@@ -53,6 +65,7 @@ npm run dev
 ```
 
 This starts:
+
 - **Directus CMS** at http://localhost:8055
 - **SvelteKit app** at http://localhost:5173
 - **PostgreSQL database** on port 5432
@@ -60,6 +73,7 @@ This starts:
 ## Architecture
 
 ### Tech Stack
+
 - **Frontend**: SvelteKit 5, Svelte 5, TypeScript, Tailwind CSS
 - **Backend**: Node.js, SvelteKit Server Routes, Prisma ORM
 - **Database**: PostgreSQL with Directus CMS
@@ -69,12 +83,14 @@ This starts:
 ### Key Modules
 
 **Job Scraping Pipeline**
+
 - `html-extract.ts` - Extract links from search results
 - `html-strip.ts` - Clean HTML for LLM processing
 - `llm.ts` - Generic LLM chat completion interface
 - `vacancy-scraper.ts` - Job data extraction and storage
 
 **AI Features**
+
 - AI-powered cover letter generation
 - Interview question answering
 - Iterative content refinement
@@ -85,7 +101,9 @@ See [AI_FEATURES.md](docs/AI_FEATURES.md) for detailed AI documentation.
 ## Database Schema
 
 Key collections:
-- **jobs** - Job listings with multi-select fields for types, experience levels, and remote options
+
+- **jobs** - Job listings with multi-select fields for types, experience levels,
+  and remote options
 - **job_searches** - Search configurations with pre-configured search URLs
 - **job_resources** - Additional job-related resources
 - **applications** - Job application tracking
@@ -151,12 +169,14 @@ npm run build
 ```
 
 Required environment variables:
+
 - `JWT_SECRET`, `DATABASE_URL`, `GROQ_API_KEY`, `SMTP2GO_API_KEY`
 - `WEBHOOK_SECRET`, Directus configuration
 
 ## Roadmap
 
 ### Current Status ✅
+
 - User authentication and profiles
 - Job application tracking with AI assistance
 - Interview preparation tools
@@ -164,6 +184,7 @@ Required environment variables:
 - Directus CMS integration
 
 ### Next Steps 🚀
+
 - Profile-to-job matching engine
 - Smart job recommendations
 - Automated application workflow
@@ -184,7 +205,8 @@ GNU General Public License v3.0 - see [LICENSE](LICENSE) file.
 
 ## About
 
-Built by **Rik Wanders**, Senior Full Stack Developer with 12+ years of experience.
+Built by **Rik Wanders**, Senior Full Stack Developer with 12+ years of
+experience.
 
 - **Website:** https://www.rikwanders.tech/
 - **GitHub:** https://github.com/gitaarik

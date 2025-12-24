@@ -44,7 +44,8 @@
     "lint": "prettier --check . && eslint .",
     "test": "vitest",
     "test:watch": "vitest --watch",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage"
   },
   "devDependencies": {
     "@eslint/compat": "^1.2.5",
