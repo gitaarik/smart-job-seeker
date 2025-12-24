@@ -76,7 +76,8 @@
       "mcp__directus__schema",
       "mcp__directus__system-prompt",
       "Bash(git reset:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(npx vite-node:*)"
     ],
     "deny": [],
     "ask": []
