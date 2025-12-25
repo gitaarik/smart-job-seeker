@@ -964,7 +964,8 @@ req.end();
 ## Security Considerations
 
 1. **Always use HTTPS in production** - Never send webhooks over plain HTTP
-2. **Rotate webhook secrets periodically** - Change `SJS_WEBHOOK_SECRET` regularly
+2. **Rotate webhook secrets periodically** - Change `SJS_WEBHOOK_SECRET`
+   regularly
 3. **Keep secret private** - Do not commit the secret to version control
 4. **Validate event structure** - The endpoint validates required fields
 5. **Log webhook events** - Monitor webhook activity for debugging

@@ -96,8 +96,8 @@ Before using AI features, ensure your profile is complete and detailed:
 
 ### Environment Setup
 
-Ensure the `SJS_GROQ_API_KEY` environment variable is configured. This key enables
-AI response generation.
+Ensure the `SJS_GROQ_API_KEY` environment variable is configured. This key
+enables AI response generation.
 
 If you're a system administrator, add to your `.env` file:
 

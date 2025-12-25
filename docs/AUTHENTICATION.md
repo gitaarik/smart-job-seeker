@@ -42,8 +42,8 @@ SJS_APP_URL="http://localhost:5173"
    - Create a new API key with "Send Email" permissions
 3. **Update your `.env`**: Replace `your-smtp2go-api-key` with your actual API
    key
-4. **Configure sender email**: Set `SJS_FROM_EMAIL` to a domain you own or verify
-   with SMTP2GO
+4. **Configure sender email**: Set `SJS_FROM_EMAIL` to a domain you own or
+   verify with SMTP2GO
 
 ### 3. Database
 

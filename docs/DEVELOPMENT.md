@@ -300,6 +300,7 @@ npm run build
 ### Environment Variables
 
 Required in production:
+
 - `SJS_JWT_SECRET` - Secure random token
 - `SJS_DATABASE_URL` - Production PostgreSQL URL
 - `SJS_GROQ_API_KEY` - Groq API credentials
