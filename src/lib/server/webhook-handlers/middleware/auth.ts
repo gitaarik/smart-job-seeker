@@ -15,13 +15,13 @@ export async function verifyWebhookAuth(event: {
   request: Request;
 }): Promise<WebhookMiddlewareResult> {
   // Get webhook secret from environment
-  const webhookSecret = getEnv("WEBHOOK_SECRET", "");
+  const webhookSecret = getEnv("SJS_WEBHOOK_SECRET", "");
 
   if (!webhookSecret) {
     return {
       success: false,
       message: "Webhook not configured",
-      error: "WEBHOOK_SECRET environment variable is not set",
+      error: "SJS_WEBHOOK_SECRET environment variable is not set",
       status: 500,
     };
   }

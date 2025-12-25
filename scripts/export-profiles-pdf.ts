@@ -12,7 +12,7 @@ import fs from "fs";
 import { dbDirect } from "$lib/db";
 import { getEnv } from "$lib/tools/get-env";
 
-const appPort = getEnv('SJS_APP_PORT')
+const appPort = getEnv("SJS_APP_PORT");
 
 async function exportProfilesToPDF() {
   console.log("🚀 Starting profile PDF export (Resume & CV)...");

@@ -1,8 +1,6 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
-
-// Your Cloudflare Turnstile secret key (keep this secure!)
-const TURNSTILE_SECRET_KEY = "0x4AAAAAABkW4r42MikTFiY2ZV-IaGmrThM";
+import { getEnv } from "$lib/tools/get-env";
 
 export const POST: RequestHandler = async ({ request }) => {
   try {
@@ -14,6 +12,12 @@ export const POST: RequestHandler = async ({ request }) => {
       });
     }
 
+    const turnstileSecret = getEnv("SJS_TURNSTILE_SECRET_KEY");
+
+    if (!turnstileSecret) {
+      throw new Error("SJS_TURNSTILE_SECRET_KEY env var unset");
+    }
+
     // Verify the Turnstile token with Cloudflare
     const verifyResponse = await fetch(
       "https://challenges.cloudflare.com/turnstile/v0/siteverify",
@@ -23,7 +27,7 @@ export const POST: RequestHandler = async ({ request }) => {
           "Content-Type": "application/x-www-form-urlencoded",
         },
         body: new URLSearchParams({
-          secret: TURNSTILE_SECRET_KEY,
+          secret: turnstileSecret,
           response: token,
         }),
       },

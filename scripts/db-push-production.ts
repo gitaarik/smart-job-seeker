@@ -72,14 +72,14 @@ const TABLES_TO_SYNC = [
 console.log("📋 Tables to sync:", TABLES_TO_SYNC.join(", "));
 
 // Load dev DB connection details from .env (using dotenvx)
-const DEV_DB_USER = dotenvx.get("DB_USER");
-const DEV_DB_PASSWORD = dotenvx.get("DB_PASSWORD");
-const DEV_DB_NAME = dotenvx.get("DB_DATABASE");
+const DEV_DB_USER = dotenvx.get("SJS_DB_USER");
+const DEV_DB_PASSWORD = dotenvx.get("SJS_DB_PASSWORD");
+const DEV_DB_NAME = dotenvx.get("SJS_DB_DATABASE");
 const DEV_DB_CONTAINER = "database";
 
 if (!DEV_DB_USER || !DEV_DB_PASSWORD || !DEV_DB_NAME) {
   console.error("❌ Error: Missing dev DB credentials in .env");
-  console.error("Required: DB_USER, DB_PASSWORD, DB_DATABASE");
+  console.error("Required: SJS_DB_USER, SJS_DB_PASSWORD, SJS_DB_DATABASE");
   process.exit(1);
 }
 
@@ -93,9 +93,9 @@ if (prodConfig.error) {
   process.exit(1);
 }
 
-const prodDbUrl = prodConfig.parsed?.POSTGRES_URL;
+const prodDbUrl = prodConfig.parsed?.SJS_POSTGRES_URL;
 if (!prodDbUrl) {
-  console.error("❌ Error: POSTGRES_URL not found in .env.production");
+  console.error("❌ Error: SJS_POSTGRES_URL not found in .env.production");
   console.error(
     "Make sure DOTENV_PRIVATE_KEY_PRODUCTION is set to decrypt the values",
   );
