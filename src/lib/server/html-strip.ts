@@ -23,6 +23,31 @@ export function stripHtmlForLlm(html: string): string {
   $("head").remove();
   $("svg").remove();
   $("noscript").remove();
+  $("iframe").remove();
+  $("video").remove();
+  $("audio").remove();
+  $("canvas").remove();
+
+  // Remove common navigation/UI elements that don't contain useful content
+  $("nav").remove();
+  $("header").remove();
+  $("footer").remove();
+  $("[role='navigation']").remove();
+  $("[role='banner']").remove();
+  $("[role='contentinfo']").remove();
+  $(".artdeco-modal").remove(); // LinkedIn modals
+  $(".global-nav").remove(); // LinkedIn nav
+  $("[data-test-modal]").remove(); // Generic modals
+
+  // Remove all images - they take up space and LLM doesn't need them
+  $("img").remove();
+  $("picture").remove();
+
+  // Remove all forms of hidden content
+  $("[hidden]").remove();
+  $("[style*='display:none']").remove();
+  $("[style*='display: none']").remove();
+  $("[aria-hidden='true']").remove();
 
   // Remove HTML comments (recursively find all comment nodes)
   $("*")
@@ -32,17 +57,13 @@ export function stripHtmlForLlm(html: string): string {
     })
     .remove();
 
-  // 2. Keep only important attributes
+  // 2. Keep only essential attributes and truncate long values
   const keepAttributes = new Set([
-    "href",
-    "src",
-    "alt",
-    "title",
-    "aria-label",
-    "name",
-    "value",
-    "type",
+    "href", // Links to jobs
+    "type", // Input types (password, email, etc.)
   ]);
+
+  const maxAttrLength = 200; // Truncate long URLs
 
   $("*").each((_: number, elem: cheerio.Element) => {
     const element = $(elem);
@@ -52,16 +73,32 @@ export function stripHtmlForLlm(html: string): string {
       Object.keys(attrs).forEach((attr) => {
         if (!keepAttributes.has(attr)) {
           element.removeAttr(attr);
+        } else {
+          // Truncate long attribute values (especially URLs)
+          const value = element.attr(attr);
+          if (value && value.length > maxAttrLength) {
+            element.attr(attr, value.substring(0, maxAttrLength) + "...");
+          }
         }
       });
     }
   });
 
-  // 3. Remove empty elements (except self-closing tags)
+  // 3. Unwrap unnecessary container elements (divs/spans with no attributes)
+  $("div, span").each((_: number, elem: cheerio.Element) => {
+    const element = $(elem);
+    const attrs = element.attr();
+
+    // If element has no attributes, unwrap it (keep children, remove wrapper)
+    if (!attrs || Object.keys(attrs).length === 0) {
+      element.replaceWith(element.contents());
+    }
+  });
+
+  // 4. Remove empty elements (except self-closing tags)
   const selfClosingTags = new Set([
     "br",
     "hr",
-    "img",
     "input",
     "meta",
     "link",
@@ -77,7 +114,7 @@ export function stripHtmlForLlm(html: string): string {
 
   let changed = true;
   let iterations = 0;
-  const maxIterations = 5;
+  const maxIterations = 10; // Increased for more thorough cleaning
 
   while (changed && iterations < maxIterations) {
     changed = false;
@@ -90,7 +127,9 @@ export function stripHtmlForLlm(html: string): string {
       if (selfClosingTags.has(tagName)) return;
 
       const text = element.text().trim();
-      const hasContentChildren = element.find("img, input, br, hr").length > 0;
+      const hasContentChildren =
+        element.find("input, br, hr, a, button").length >
+          0;
 
       if (!text && !hasContentChildren) {
         element.remove();
@@ -99,11 +138,29 @@ export function stripHtmlForLlm(html: string): string {
     });
   }
 
-  // 4. Get HTML and normalize whitespace
+  // 5. Get HTML and aggressively normalize whitespace
   let cleaned = $.html();
+
+  // Remove all newlines and collapse whitespace
+  cleaned = cleaned.replace(/\n/g, "");
+  cleaned = cleaned.replace(/\r/g, "");
+  cleaned = cleaned.replace(/\t/g, " ");
   cleaned = cleaned.replace(/\s+/g, " ");
   cleaned = cleaned.replace(/>\s+</g, "><");
+  cleaned = cleaned.replace(/\s+>/g, ">");
+  cleaned = cleaned.replace(/<\s+/g, "<");
   cleaned = cleaned.trim();
+
+  // 6. Truncate if still too large (last resort)
+  // Groq model limit: 30k tokens per request
+  // Target: ~20k tokens for content = ~80k chars (leaving room for prompt + response)
+  const maxChars = 80000;
+  if (cleaned.length > maxChars) {
+    console.warn(
+      `⚠️  HTML too large (${cleaned.length} chars), truncating to ${maxChars} chars`,
+    );
+    cleaned = cleaned.substring(0, maxChars) + "<!-- Content truncated -->";
+  }
 
   return cleaned;
 }
