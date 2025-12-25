@@ -77,12 +77,12 @@ describe("stripHtmlForLlm", () => {
     expect(result).toContain("Content");
   });
 
-  it("should keep important attributes (href, src, alt, title)", () => {
+  it("should keep important attributes (href and type only)", () => {
     const html = `
       <html>
         <body>
           <a href="https://example.com" class="link" id="test">Link</a>
-          <img src="image.jpg" alt="Image" width="100" height="100">
+          <input type="email" name="email" class="input">
         </body>
       </html>
     `;
@@ -90,11 +90,10 @@ describe("stripHtmlForLlm", () => {
     const result = stripHtmlForLlm(html);
 
     expect(result).toContain('href="https://example.com"');
-    expect(result).toContain('src="image.jpg"');
-    expect(result).toContain('alt="Image"');
+    expect(result).toContain('type="email"');
     expect(result).not.toContain('class="link"');
     expect(result).not.toContain('id="test"');
-    expect(result).not.toContain('width="100"');
+    expect(result).not.toContain('name="email"');
   });
 
   it("should remove empty elements", () => {
@@ -117,7 +116,7 @@ describe("stripHtmlForLlm", () => {
     expect(result.match(/<span><\/span>/g)).toBeNull();
   });
 
-  it("should preserve self-closing tags", () => {
+  it("should preserve self-closing tags (br, hr but not img)", () => {
     const html = `
       <html>
         <body>
@@ -132,7 +131,8 @@ describe("stripHtmlForLlm", () => {
 
     expect(result).toContain("<br>");
     expect(result).toContain("<hr>");
-    expect(result).toContain("<img");
+    // Images are removed to save tokens
+    expect(result).not.toContain("<img");
   });
 
   it("should normalize whitespace", () => {
@@ -216,7 +216,7 @@ describe("stripHtmlForLlm", () => {
     expect(result).toContain("<p>");
   });
 
-  it("should keep aria-label attribute", () => {
+  it("should remove aria-label attribute (not in keeplist)", () => {
     const html = `
       <html>
         <body>
@@ -227,8 +227,10 @@ describe("stripHtmlForLlm", () => {
 
     const result = stripHtmlForLlm(html);
 
-    expect(result).toContain('aria-label="Close dialog"');
+    // Only href and type attributes are kept
+    expect(result).not.toContain('aria-label="Close dialog"');
     expect(result).not.toContain('class="btn"');
+    expect(result).toContain("X"); // Content should remain
   });
 
   it("should handle complex real-world HTML", () => {
@@ -267,11 +269,14 @@ describe("stripHtmlForLlm", () => {
     expect(result).toContain("Software Engineer");
     expect(result).toContain("Company Name");
     expect(result).toContain("Job description here");
-    expect(result).toContain('href="/"');
+    // Header and nav are removed, so href is not present
+    expect(result).not.toContain('href="/"');
     expect(result).not.toContain("charset");
     expect(result).not.toContain("class=");
     expect(result).not.toContain("id=");
     expect(result).not.toContain("<script");
     expect(result).not.toContain("<style");
+    expect(result).not.toContain("<header");
+    expect(result).not.toContain("<nav");
   });
 });
