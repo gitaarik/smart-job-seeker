@@ -17,7 +17,7 @@ vi.mock("../ai-chat-utils", () => ({
 }));
 
 vi.mock("$lib/db", () => ({
-  db: {
+  dbDirect: {
     ai_chat_prompts: {
       findUnique: vi.fn(),
     },
@@ -38,7 +38,7 @@ describe("extractJobLinks", () => {
     const llmModule = await import("../llm");
     mockGenerateChatCompletion = vi.mocked(llmModule).generateChatCompletion;
     const dbModule = await import("$lib/db");
-    mockDb = vi.mocked(dbModule).db;
+    mockDb = vi.mocked(dbModule).dbDirect;
   });
 
   it("should extract job links from HTML", async () => {
@@ -52,10 +52,12 @@ describe("extractJobLinks", () => {
     });
 
     mockGenerateChatCompletion.mockResolvedValueOnce(
-      JSON.stringify([
-        "https://example.com/job/123",
-        "https://example.com/job/456",
-      ]),
+      JSON.stringify({
+        urls: [
+          "https://example.com/job/123",
+          "https://example.com/job/456",
+        ],
+      }),
     );
 
     const links = await extractJobLinks(html);
@@ -82,7 +84,7 @@ describe("extractJobLinks", () => {
     });
 
     mockGenerateChatCompletion.mockResolvedValueOnce(
-      JSON.stringify(["https://example.com/job/123"]),
+      JSON.stringify({ urls: ["https://example.com/job/123"] }),
     );
 
     await extractJobLinks(html);
@@ -127,7 +129,7 @@ describe("extractJobLinks", () => {
       );
 
       await expect(extractJobLinks("<html></html>")).rejects.toThrow(
-        "Failed to extract job links: LLM response is not an array",
+        "Failed to extract job links: LLM response.urls is not an array",
       );
     } finally {
       consoleSpy.mockRestore();
@@ -165,7 +167,7 @@ describe("extractJobData", () => {
     const llmModule = await import("../llm");
     mockGenerateChatCompletion = vi.mocked(llmModule).generateChatCompletion;
     const dbModule = await import("$lib/db");
-    mockDb = vi.mocked(dbModule).db;
+    mockDb = vi.mocked(dbModule).dbDirect;
   });
 
   it("should extract job data from HTML", async () => {
@@ -189,7 +191,11 @@ describe("extractJobData", () => {
       remote: "yes",
       experience_level: "Senior",
       job_type: "Full-time",
-      salary_range: "$100k-$150k",
+      salary_min: 100000,
+      salary_max: 150000,
+      salary_currency: "USD",
+      salary_period: "year",
+      skills: ["JavaScript", "React", "Node.js"],
     };
 
     mockGenerateChatCompletion.mockResolvedValueOnce(JSON.stringify(jobData));
@@ -222,7 +228,11 @@ describe("extractJobData", () => {
       remote: null,
       experience_level: null,
       job_type: null,
-      salary_range: null,
+      salary_min: null,
+      salary_max: null,
+      salary_currency: null,
+      salary_period: null,
+      skills: null,
     };
 
     mockGenerateChatCompletion.mockResolvedValueOnce(JSON.stringify(jobData));
@@ -268,7 +278,7 @@ describe("upsertJob", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     const dbModule = await import("$lib/db");
-    mockDb = vi.mocked(dbModule).db;
+    mockDb = vi.mocked(dbModule).dbDirect;
   });
 
   it("should create new job if not exists", async () => {
@@ -282,7 +292,11 @@ describe("upsertJob", () => {
       remote: "yes",
       experience_level: "Senior",
       job_type: "Full-time",
-      salary_range: "$100k-$150k",
+      salary_min: 100000,
+      salary_max: 150000,
+      salary_currency: "USD",
+      salary_period: "year",
+      skills: ["JavaScript", "React", "Node.js"],
     };
 
     const sourceUrl = "https://example.com/job/123";
@@ -297,7 +311,19 @@ describe("upsertJob", () => {
     expect(result.created).toBe(true);
     expect(mockDb.jobs.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
-        ...jobData,
+        title: jobData.title,
+        job_description: jobData.job_description,
+        company_description: jobData.company_description,
+        job_poster: jobData.job_poster,
+        location: jobData.location,
+        salary_min: jobData.salary_min,
+        salary_max: jobData.salary_max,
+        salary_currency: jobData.salary_currency,
+        salary_period: jobData.salary_period,
+        skills: jobData.skills,
+        remote_options: [jobData.remote],
+        job_types: [jobData.job_type],
+        experience_levels: [jobData.experience_level],
         source_url: sourceUrl,
         import_source: importSource,
         import_status: "published",
@@ -318,7 +344,11 @@ describe("upsertJob", () => {
       remote: "yes",
       experience_level: "Senior",
       job_type: "Full-time",
-      salary_range: "$100k-$150k",
+      salary_min: 100000,
+      salary_max: 150000,
+      salary_currency: "USD",
+      salary_period: "year",
+      skills: ["JavaScript", "React", "Node.js"],
     };
 
     const sourceUrl = "https://example.com/job/123";
@@ -336,7 +366,19 @@ describe("upsertJob", () => {
     expect(mockDb.jobs.update).toHaveBeenCalledWith({
       where: { id: 1 },
       data: expect.objectContaining({
-        ...jobData,
+        title: jobData.title,
+        job_description: jobData.job_description,
+        company_description: jobData.company_description,
+        job_poster: jobData.job_poster,
+        location: jobData.location,
+        salary_min: jobData.salary_min,
+        salary_max: jobData.salary_max,
+        salary_currency: jobData.salary_currency,
+        salary_period: jobData.salary_period,
+        skills: jobData.skills,
+        remote_options: [jobData.remote],
+        job_types: [jobData.job_type],
+        experience_levels: [jobData.experience_level],
         import_status: "published",
         import_error: null,
         scrape_count: 3,
@@ -355,7 +397,11 @@ describe("upsertJob", () => {
       remote: null,
       experience_level: null,
       job_type: null,
-      salary_range: null,
+      salary_min: null,
+      salary_max: null,
+      salary_currency: null,
+      salary_period: null,
+      skills: null,
     };
 
     mockDb.jobs.findFirst.mockResolvedValueOnce({
@@ -384,7 +430,11 @@ describe("upsertJob", () => {
       remote: null,
       experience_level: null,
       job_type: null,
-      salary_range: null,
+      salary_min: null,
+      salary_max: null,
+      salary_currency: null,
+      salary_period: null,
+      skills: null,
     };
 
     mockDb.jobs.findFirst.mockResolvedValueOnce({
