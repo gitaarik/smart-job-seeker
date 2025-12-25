@@ -22,23 +22,14 @@ export interface AppConfig {
 
   // LLM
   groqApiKey: string;
-  openaiApiKey: string;
 
-  // Rate Limiting
-  rateLimitMaxTokens: number;
-  rateLimitRefillRate: number;
-
-  // Caching
+  // LLM Configuration
   llmCacheTTL: number; // milliseconds
 
-  // Retry
+  // Retry Configuration
   retryMaxAttempts: number;
   retryInitialDelay: number;
   retryMaxDelay: number;
-
-  // Monitoring
-  sentryDsn?: string;
-  enableDebugLogging: boolean;
 }
 
 /**
@@ -54,40 +45,26 @@ function loadConfig(): AppConfig {
     isProduction: nodeEnv === "production",
 
     // Database
-    databaseUrl: getEnv("DATABASE_URL"),
+    databaseUrl: getEnv("SJS_DATABASE_URL"),
 
     // External Services
-    directusUrl: getEnv("DIRECTUS_URL"),
-    directusToken: getEnv("DIRECTUS_TOKEN"),
-    directusWebhookSecret: getEnv("DIRECTUS_WEBHOOK_SECRET"),
+    directusUrl: getEnv("SJS_ADMIN_URL"),
+    directusToken: getEnv("SJS_ADMIN_TOKEN"),
+    directusWebhookSecret: getEnv("SJS_WEBHOOK_SECRET"),
 
     // LLM
-    groqApiKey: getEnv("GROQ_API_KEY"),
-    openaiApiKey: getEnv("OPENAI_API_KEY"),
+    groqApiKey: getEnv("SJS_GROQ_API_KEY"),
 
-    // Rate Limiting (with defaults)
-    rateLimitMaxTokens: parseInt(
-      getEnv("RATE_LIMIT_MAX_TOKENS", "20"),
-      10,
-    ),
-    rateLimitRefillRate: parseFloat(
-      getEnv("RATE_LIMIT_REFILL_RATE", "0.5"),
-    ),
-
-    // Caching
+    // Caching (1 hour default)
     llmCacheTTL: parseInt(
-      getEnv("LLM_CACHE_TTL", String(1000 * 60 * 60)), // 1 hour default
+      getEnv("SJS_LLM_CACHE_TTL", String(1000 * 60 * 60)),
       10,
     ),
 
     // Retry
-    retryMaxAttempts: parseInt(getEnv("RETRY_MAX_ATTEMPTS", "3"), 10),
-    retryInitialDelay: parseInt(getEnv("RETRY_INITIAL_DELAY", "1000"), 10),
-    retryMaxDelay: parseInt(getEnv("RETRY_MAX_DELAY", "10000"), 10),
-
-    // Monitoring
-    sentryDsn: process.env.SENTRY_DSN,
-    enableDebugLogging: getEnv("ENABLE_DEBUG_LOGGING", "false") === "true",
+    retryMaxAttempts: parseInt(getEnv("SJS_RETRY_MAX_ATTEMPTS", "3"), 10),
+    retryInitialDelay: parseInt(getEnv("SJS_RETRY_INITIAL_DELAY", "1000"), 10),
+    retryMaxDelay: parseInt(getEnv("SJS_RETRY_MAX_DELAY", "10000"), 10),
   };
 }
 

@@ -47,8 +47,10 @@ services:
       start_period: 300s
     environment:
       NODE_ENV: development
-      DATABASE_URL: postgres://postgres:postgres@database:${SJS_APP_PORT}/smartjobseeker
-      POSTGRES_URL: postgres://postgres:postgres@database:${SJS_APP_PORT}/smartjobseeker
+      # Override SJS_DATABASE_URL to use direct database connection instead of Prisma Accelerate
+      # SJS_DATABASE_URL: ${SJS_POSTGRES_URL_DOCKER}
+      # DATABASE_URL is also set for compatibility with standard Prisma tools
+      DATABASE_URL: ${SJS_POSTGRES_URL_DOCKER}
   admin:
     extends:
       file: docker-compose.directus.yml

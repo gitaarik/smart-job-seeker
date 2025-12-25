@@ -9,11 +9,11 @@ export interface DirectusSchema {
 }
 
 function getDirectusUrl(): string {
-  const url = getEnv("SJS_ADMIN_INTERNAL_URL");
+  const url = getEnv("SJS_ADMIN_URL");
 
   if (!url) {
     throw new Error(
-      "SJS_ADMIN_INTERNAL_URL environment variable is not set",
+      "SJS_ADMIN_URL environment variable is not set",
     );
   }
 

@@ -1,6 +1,7 @@
 import { PrismaClient } from "../../generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { getEnv } from "$lib/tools/get-env";
+import { isRunningInDocker } from "$lib/server/utils/docker";
 
 const databaseUrl = getEnv("SJS_DATABASE_URL");
 
@@ -14,10 +15,17 @@ const adapter = new PrismaPg({
 export const db = new PrismaClient({ adapter });
 
 // Direct PostgreSQL connection for CLI scripts
-const postgresUrl = getEnv("SJS_POSTGRES_URL");
+// When running in Docker: use 'database' as hostname (Docker service name)
+// When running on host: use 'localhost' to connect to the exposed port
+const postgresUrl = isRunningInDocker()
+  ? getEnv("SJS_POSTGRES_URL_DOCKER")
+  : getEnv("SJS_POSTGRES_URL_HOST");
 
 if (!postgresUrl) {
-  throw new Error("SJS_POSTGRES_URL environment variable not set");
+  const envVar = isRunningInDocker()
+    ? "SJS_POSTGRES_URL_DOCKER"
+    : "SJS_POSTGRES_URL_HOST";
+  throw new Error(`${envVar} environment variable not set`);
 }
 
 const adapterDirect = new PrismaPg({
