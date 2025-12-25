@@ -115,7 +115,9 @@ export const ModelName = {
   job_resources: 'job_resources',
   jobs: 'jobs',
   job_searches: 'job_searches',
-  job_searches_job_sites: 'job_searches_job_sites'
+  job_searches_job_sites: 'job_searches_job_sites',
+  job_match_preferences: 'job_match_preferences',
+  job_matches: 'job_matches'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1181,14 +1183,10 @@ export const JobsScalarFieldEnum = {
   salary_max: 'salary_max',
   salary_currency: 'salary_currency',
   salary_period: 'salary_period',
-  experience_level: 'experience_level',
   import_error: 'import_error',
   import_status: 'import_status',
-  job_type: 'job_type',
   last_scraped: 'last_scraped',
   location: 'location',
-  remote: 'remote',
-  salary_range: 'salary_range',
   scrape_count: 'scrape_count',
   job_types: 'job_types',
   experience_levels: 'experience_levels',
@@ -1220,6 +1218,40 @@ export const Job_searches_job_sitesScalarFieldEnum = {
 } as const
 
 export type Job_searches_job_sitesScalarFieldEnum = (typeof Job_searches_job_sitesScalarFieldEnum)[keyof typeof Job_searches_job_sitesScalarFieldEnum]
+
+
+export const Job_match_preferencesScalarFieldEnum = {
+  id: 'id',
+  date_created: 'date_created',
+  date_updated: 'date_updated',
+  job_types: 'job_types',
+  experience_levels: 'experience_levels',
+  remote_options: 'remote_options',
+  locations: 'locations',
+  profile: 'profile'
+} as const
+
+export type Job_match_preferencesScalarFieldEnum = (typeof Job_match_preferencesScalarFieldEnum)[keyof typeof Job_match_preferencesScalarFieldEnum]
+
+
+export const Job_matchesScalarFieldEnum = {
+  id: 'id',
+  score: 'score',
+  summary: 'summary',
+  reasoning: 'reasoning',
+  skill_match_percentage: 'skill_match_percentage',
+  strengths: 'strengths',
+  gaps: 'gaps',
+  recommendation: 'recommendation',
+  job_date_updated_when_matched: 'job_date_updated_when_matched',
+  status: 'status',
+  date_created: 'date_created',
+  date_updated: 'date_updated',
+  collected_data: 'collected_data',
+  job: 'job'
+} as const
+
+export type Job_matchesScalarFieldEnum = (typeof Job_matchesScalarFieldEnum)[keyof typeof Job_matchesScalarFieldEnum]
 
 
 export const SortOrder = {

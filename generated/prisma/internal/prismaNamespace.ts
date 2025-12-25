@@ -448,7 +448,9 @@ export const ModelName = {
   job_resources: 'job_resources',
   jobs: 'jobs',
   job_searches: 'job_searches',
-  job_searches_job_sites: 'job_searches_job_sites'
+  job_searches_job_sites: 'job_searches_job_sites',
+  job_match_preferences: 'job_match_preferences',
+  job_matches: 'job_matches'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -464,7 +466,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "applications" | "cheat_sheets" | "collected_data" | "directus_access" | "directus_activity" | "directus_collections" | "directus_comments" | "directus_dashboards" | "directus_extensions" | "directus_fields" | "directus_files" | "directus_flows" | "directus_folders" | "directus_migrations" | "directus_notifications" | "directus_operations" | "directus_panels" | "directus_permissions" | "directus_policies" | "directus_presets" | "directus_relations" | "directus_revisions" | "directus_roles" | "directus_sessions" | "directus_settings" | "directus_shares" | "directus_translations" | "directus_users" | "directus_versions" | "directus_webhooks" | "education" | "highlights" | "languages" | "platform_profiles" | "profile_versions" | "profiles" | "project_stories" | "references" | "salary_expectations" | "side_project_achievements" | "side_project_technologies" | "side_projects" | "tech_skill_categories" | "tech_skill_types" | "tech_skills" | "work_experience_achievements" | "work_experience_technologies" | "work_experiences" | "ai_chat" | "os_contributions" | "work_experience_project_technologies" | "work_experience_projects" | "ai_prompts" | "application_questions" | "application_activity_log" | "applications_files" | "ai_chat_prompts" | "profile_version_extensions" | "application_letters" | "job_sites" | "outsourcing_platforms" | "job_resources" | "jobs" | "job_searches" | "job_searches_job_sites"
+    modelProps: "applications" | "cheat_sheets" | "collected_data" | "directus_access" | "directus_activity" | "directus_collections" | "directus_comments" | "directus_dashboards" | "directus_extensions" | "directus_fields" | "directus_files" | "directus_flows" | "directus_folders" | "directus_migrations" | "directus_notifications" | "directus_operations" | "directus_panels" | "directus_permissions" | "directus_policies" | "directus_presets" | "directus_relations" | "directus_revisions" | "directus_roles" | "directus_sessions" | "directus_settings" | "directus_shares" | "directus_translations" | "directus_users" | "directus_versions" | "directus_webhooks" | "education" | "highlights" | "languages" | "platform_profiles" | "profile_versions" | "profiles" | "project_stories" | "references" | "salary_expectations" | "side_project_achievements" | "side_project_technologies" | "side_projects" | "tech_skill_categories" | "tech_skill_types" | "tech_skills" | "work_experience_achievements" | "work_experience_technologies" | "work_experiences" | "ai_chat" | "os_contributions" | "work_experience_project_technologies" | "work_experience_projects" | "ai_prompts" | "application_questions" | "application_activity_log" | "applications_files" | "ai_chat_prompts" | "profile_version_extensions" | "application_letters" | "job_sites" | "outsourcing_platforms" | "job_resources" | "jobs" | "job_searches" | "job_searches_job_sites" | "job_match_preferences" | "job_matches"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -5278,6 +5280,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    job_match_preferences: {
+      payload: Prisma.$job_match_preferencesPayload<ExtArgs>
+      fields: Prisma.job_match_preferencesFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.job_match_preferencesFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_match_preferencesPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.job_match_preferencesFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_match_preferencesPayload>
+        }
+        findFirst: {
+          args: Prisma.job_match_preferencesFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_match_preferencesPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.job_match_preferencesFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_match_preferencesPayload>
+        }
+        findMany: {
+          args: Prisma.job_match_preferencesFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_match_preferencesPayload>[]
+        }
+        create: {
+          args: Prisma.job_match_preferencesCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_match_preferencesPayload>
+        }
+        createMany: {
+          args: Prisma.job_match_preferencesCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.job_match_preferencesCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_match_preferencesPayload>[]
+        }
+        delete: {
+          args: Prisma.job_match_preferencesDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_match_preferencesPayload>
+        }
+        update: {
+          args: Prisma.job_match_preferencesUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_match_preferencesPayload>
+        }
+        deleteMany: {
+          args: Prisma.job_match_preferencesDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.job_match_preferencesUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.job_match_preferencesUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_match_preferencesPayload>[]
+        }
+        upsert: {
+          args: Prisma.job_match_preferencesUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_match_preferencesPayload>
+        }
+        aggregate: {
+          args: Prisma.Job_match_preferencesAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateJob_match_preferences>
+        }
+        groupBy: {
+          args: Prisma.job_match_preferencesGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Job_match_preferencesGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.job_match_preferencesCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Job_match_preferencesCountAggregateOutputType> | number
+        }
+      }
+    }
+    job_matches: {
+      payload: Prisma.$job_matchesPayload<ExtArgs>
+      fields: Prisma.job_matchesFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.job_matchesFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_matchesPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.job_matchesFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_matchesPayload>
+        }
+        findFirst: {
+          args: Prisma.job_matchesFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_matchesPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.job_matchesFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_matchesPayload>
+        }
+        findMany: {
+          args: Prisma.job_matchesFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_matchesPayload>[]
+        }
+        create: {
+          args: Prisma.job_matchesCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_matchesPayload>
+        }
+        createMany: {
+          args: Prisma.job_matchesCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.job_matchesCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_matchesPayload>[]
+        }
+        delete: {
+          args: Prisma.job_matchesDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_matchesPayload>
+        }
+        update: {
+          args: Prisma.job_matchesUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_matchesPayload>
+        }
+        deleteMany: {
+          args: Prisma.job_matchesDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.job_matchesUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.job_matchesUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_matchesPayload>[]
+        }
+        upsert: {
+          args: Prisma.job_matchesUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_matchesPayload>
+        }
+        aggregate: {
+          args: Prisma.Job_matchesAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateJob_matches>
+        }
+        groupBy: {
+          args: Prisma.job_matchesGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Job_matchesGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.job_matchesCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Job_matchesCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -6364,14 +6514,10 @@ export const JobsScalarFieldEnum = {
   salary_max: 'salary_max',
   salary_currency: 'salary_currency',
   salary_period: 'salary_period',
-  experience_level: 'experience_level',
   import_error: 'import_error',
   import_status: 'import_status',
-  job_type: 'job_type',
   last_scraped: 'last_scraped',
   location: 'location',
-  remote: 'remote',
-  salary_range: 'salary_range',
   scrape_count: 'scrape_count',
   job_types: 'job_types',
   experience_levels: 'experience_levels',
@@ -6403,6 +6549,40 @@ export const Job_searches_job_sitesScalarFieldEnum = {
 } as const
 
 export type Job_searches_job_sitesScalarFieldEnum = (typeof Job_searches_job_sitesScalarFieldEnum)[keyof typeof Job_searches_job_sitesScalarFieldEnum]
+
+
+export const Job_match_preferencesScalarFieldEnum = {
+  id: 'id',
+  date_created: 'date_created',
+  date_updated: 'date_updated',
+  job_types: 'job_types',
+  experience_levels: 'experience_levels',
+  remote_options: 'remote_options',
+  locations: 'locations',
+  profile: 'profile'
+} as const
+
+export type Job_match_preferencesScalarFieldEnum = (typeof Job_match_preferencesScalarFieldEnum)[keyof typeof Job_match_preferencesScalarFieldEnum]
+
+
+export const Job_matchesScalarFieldEnum = {
+  id: 'id',
+  score: 'score',
+  summary: 'summary',
+  reasoning: 'reasoning',
+  skill_match_percentage: 'skill_match_percentage',
+  strengths: 'strengths',
+  gaps: 'gaps',
+  recommendation: 'recommendation',
+  job_date_updated_when_matched: 'job_date_updated_when_matched',
+  status: 'status',
+  date_created: 'date_created',
+  date_updated: 'date_updated',
+  collected_data: 'collected_data',
+  job: 'job'
+} as const
+
+export type Job_matchesScalarFieldEnum = (typeof Job_matchesScalarFieldEnum)[keyof typeof Job_matchesScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -6700,6 +6880,8 @@ export type GlobalOmitConfig = {
   jobs?: Prisma.jobsOmit
   job_searches?: Prisma.job_searchesOmit
   job_searches_job_sites?: Prisma.job_searches_job_sitesOmit
+  job_match_preferences?: Prisma.job_match_preferencesOmit
+  job_matches?: Prisma.job_matchesOmit
 }
 
 /* Types for Logging */

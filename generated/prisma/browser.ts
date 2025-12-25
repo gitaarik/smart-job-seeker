@@ -342,3 +342,13 @@ export type job_searches = Prisma.job_searchesModel
  * 
  */
 export type job_searches_job_sites = Prisma.job_searches_job_sitesModel
+/**
+ * Model job_match_preferences
+ * 
+ */
+export type job_match_preferences = Prisma.job_match_preferencesModel
+/**
+ * Model job_matches
+ * 
+ */
+export type job_matches = Prisma.job_matchesModel

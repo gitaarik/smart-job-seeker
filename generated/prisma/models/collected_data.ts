@@ -221,6 +221,7 @@ export type collected_dataWhereInput = {
   data?: Prisma.StringNullableFilter<"collected_data"> | string | null
   profile?: Prisma.IntNullableFilter<"collected_data"> | number | null
   profiles?: Prisma.XOR<Prisma.ProfilesNullableScalarRelationFilter, Prisma.profilesWhereInput> | null
+  job_matches_job_matches_collected_dataTocollected_data?: Prisma.Job_matchesListRelationFilter
 }
 
 export type collected_dataOrderByWithRelationInput = {
@@ -230,6 +231,7 @@ export type collected_dataOrderByWithRelationInput = {
   data?: Prisma.SortOrderInput | Prisma.SortOrder
   profile?: Prisma.SortOrderInput | Prisma.SortOrder
   profiles?: Prisma.profilesOrderByWithRelationInput
+  job_matches_job_matches_collected_dataTocollected_data?: Prisma.job_matchesOrderByRelationAggregateInput
 }
 
 export type collected_dataWhereUniqueInput = Prisma.AtLeast<{
@@ -242,6 +244,7 @@ export type collected_dataWhereUniqueInput = Prisma.AtLeast<{
   data?: Prisma.StringNullableFilter<"collected_data"> | string | null
   profile?: Prisma.IntNullableFilter<"collected_data"> | number | null
   profiles?: Prisma.XOR<Prisma.ProfilesNullableScalarRelationFilter, Prisma.profilesWhereInput> | null
+  job_matches_job_matches_collected_dataTocollected_data?: Prisma.Job_matchesListRelationFilter
 }, "id">
 
 export type collected_dataOrderByWithAggregationInput = {
@@ -273,6 +276,7 @@ export type collected_dataCreateInput = {
   schema?: string | null
   data?: string | null
   profiles?: Prisma.profilesCreateNestedOneWithoutCollected_dataInput
+  job_matches_job_matches_collected_dataTocollected_data?: Prisma.job_matchesCreateNestedManyWithoutCollected_data_job_matches_collected_dataTocollected_dataInput
 }
 
 export type collected_dataUncheckedCreateInput = {
@@ -281,6 +285,7 @@ export type collected_dataUncheckedCreateInput = {
   schema?: string | null
   data?: string | null
   profile?: number | null
+  job_matches_job_matches_collected_dataTocollected_data?: Prisma.job_matchesUncheckedCreateNestedManyWithoutCollected_data_job_matches_collected_dataTocollected_dataInput
 }
 
 export type collected_dataUpdateInput = {
@@ -288,6 +293,7 @@ export type collected_dataUpdateInput = {
   schema?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   data?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profiles?: Prisma.profilesUpdateOneWithoutCollected_dataNestedInput
+  job_matches_job_matches_collected_dataTocollected_data?: Prisma.job_matchesUpdateManyWithoutCollected_data_job_matches_collected_dataTocollected_dataNestedInput
 }
 
 export type collected_dataUncheckedUpdateInput = {
@@ -296,6 +302,7 @@ export type collected_dataUncheckedUpdateInput = {
   schema?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   data?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  job_matches_job_matches_collected_dataTocollected_data?: Prisma.job_matchesUncheckedUpdateManyWithoutCollected_data_job_matches_collected_dataTocollected_dataNestedInput
 }
 
 export type collected_dataCreateManyInput = {
@@ -364,6 +371,11 @@ export type collected_dataOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
+export type Collected_dataScalarRelationFilter = {
+  is?: Prisma.collected_dataWhereInput
+  isNot?: Prisma.collected_dataWhereInput
+}
+
 export type collected_dataCreateNestedManyWithoutProfilesInput = {
   create?: Prisma.XOR<Prisma.collected_dataCreateWithoutProfilesInput, Prisma.collected_dataUncheckedCreateWithoutProfilesInput> | Prisma.collected_dataCreateWithoutProfilesInput[] | Prisma.collected_dataUncheckedCreateWithoutProfilesInput[]
   connectOrCreate?: Prisma.collected_dataCreateOrConnectWithoutProfilesInput | Prisma.collected_dataCreateOrConnectWithoutProfilesInput[]
@@ -406,10 +418,25 @@ export type collected_dataUncheckedUpdateManyWithoutProfilesNestedInput = {
   deleteMany?: Prisma.collected_dataScalarWhereInput | Prisma.collected_dataScalarWhereInput[]
 }
 
+export type collected_dataCreateNestedOneWithoutJob_matches_job_matches_collected_dataTocollected_dataInput = {
+  create?: Prisma.XOR<Prisma.collected_dataCreateWithoutJob_matches_job_matches_collected_dataTocollected_dataInput, Prisma.collected_dataUncheckedCreateWithoutJob_matches_job_matches_collected_dataTocollected_dataInput>
+  connectOrCreate?: Prisma.collected_dataCreateOrConnectWithoutJob_matches_job_matches_collected_dataTocollected_dataInput
+  connect?: Prisma.collected_dataWhereUniqueInput
+}
+
+export type collected_dataUpdateOneRequiredWithoutJob_matches_job_matches_collected_dataTocollected_dataNestedInput = {
+  create?: Prisma.XOR<Prisma.collected_dataCreateWithoutJob_matches_job_matches_collected_dataTocollected_dataInput, Prisma.collected_dataUncheckedCreateWithoutJob_matches_job_matches_collected_dataTocollected_dataInput>
+  connectOrCreate?: Prisma.collected_dataCreateOrConnectWithoutJob_matches_job_matches_collected_dataTocollected_dataInput
+  upsert?: Prisma.collected_dataUpsertWithoutJob_matches_job_matches_collected_dataTocollected_dataInput
+  connect?: Prisma.collected_dataWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.collected_dataUpdateToOneWithWhereWithoutJob_matches_job_matches_collected_dataTocollected_dataInput, Prisma.collected_dataUpdateWithoutJob_matches_job_matches_collected_dataTocollected_dataInput>, Prisma.collected_dataUncheckedUpdateWithoutJob_matches_job_matches_collected_dataTocollected_dataInput>
+}
+
 export type collected_dataCreateWithoutProfilesInput = {
   date_updated?: Date | string | null
   schema?: string | null
   data?: string | null
+  job_matches_job_matches_collected_dataTocollected_data?: Prisma.job_matchesCreateNestedManyWithoutCollected_data_job_matches_collected_dataTocollected_dataInput
 }
 
 export type collected_dataUncheckedCreateWithoutProfilesInput = {
@@ -417,6 +444,7 @@ export type collected_dataUncheckedCreateWithoutProfilesInput = {
   date_updated?: Date | string | null
   schema?: string | null
   data?: string | null
+  job_matches_job_matches_collected_dataTocollected_data?: Prisma.job_matchesUncheckedCreateNestedManyWithoutCollected_data_job_matches_collected_dataTocollected_dataInput
 }
 
 export type collected_dataCreateOrConnectWithoutProfilesInput = {
@@ -456,6 +484,52 @@ export type collected_dataScalarWhereInput = {
   profile?: Prisma.IntNullableFilter<"collected_data"> | number | null
 }
 
+export type collected_dataCreateWithoutJob_matches_job_matches_collected_dataTocollected_dataInput = {
+  date_updated?: Date | string | null
+  schema?: string | null
+  data?: string | null
+  profiles?: Prisma.profilesCreateNestedOneWithoutCollected_dataInput
+}
+
+export type collected_dataUncheckedCreateWithoutJob_matches_job_matches_collected_dataTocollected_dataInput = {
+  id?: number
+  date_updated?: Date | string | null
+  schema?: string | null
+  data?: string | null
+  profile?: number | null
+}
+
+export type collected_dataCreateOrConnectWithoutJob_matches_job_matches_collected_dataTocollected_dataInput = {
+  where: Prisma.collected_dataWhereUniqueInput
+  create: Prisma.XOR<Prisma.collected_dataCreateWithoutJob_matches_job_matches_collected_dataTocollected_dataInput, Prisma.collected_dataUncheckedCreateWithoutJob_matches_job_matches_collected_dataTocollected_dataInput>
+}
+
+export type collected_dataUpsertWithoutJob_matches_job_matches_collected_dataTocollected_dataInput = {
+  update: Prisma.XOR<Prisma.collected_dataUpdateWithoutJob_matches_job_matches_collected_dataTocollected_dataInput, Prisma.collected_dataUncheckedUpdateWithoutJob_matches_job_matches_collected_dataTocollected_dataInput>
+  create: Prisma.XOR<Prisma.collected_dataCreateWithoutJob_matches_job_matches_collected_dataTocollected_dataInput, Prisma.collected_dataUncheckedCreateWithoutJob_matches_job_matches_collected_dataTocollected_dataInput>
+  where?: Prisma.collected_dataWhereInput
+}
+
+export type collected_dataUpdateToOneWithWhereWithoutJob_matches_job_matches_collected_dataTocollected_dataInput = {
+  where?: Prisma.collected_dataWhereInput
+  data: Prisma.XOR<Prisma.collected_dataUpdateWithoutJob_matches_job_matches_collected_dataTocollected_dataInput, Prisma.collected_dataUncheckedUpdateWithoutJob_matches_job_matches_collected_dataTocollected_dataInput>
+}
+
+export type collected_dataUpdateWithoutJob_matches_job_matches_collected_dataTocollected_dataInput = {
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  schema?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  data?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profiles?: Prisma.profilesUpdateOneWithoutCollected_dataNestedInput
+}
+
+export type collected_dataUncheckedUpdateWithoutJob_matches_job_matches_collected_dataTocollected_dataInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  schema?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  data?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+}
+
 export type collected_dataCreateManyProfilesInput = {
   id?: number
   date_updated?: Date | string | null
@@ -467,6 +541,7 @@ export type collected_dataUpdateWithoutProfilesInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   schema?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   data?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  job_matches_job_matches_collected_dataTocollected_data?: Prisma.job_matchesUpdateManyWithoutCollected_data_job_matches_collected_dataTocollected_dataNestedInput
 }
 
 export type collected_dataUncheckedUpdateWithoutProfilesInput = {
@@ -474,6 +549,7 @@ export type collected_dataUncheckedUpdateWithoutProfilesInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   schema?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   data?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  job_matches_job_matches_collected_dataTocollected_data?: Prisma.job_matchesUncheckedUpdateManyWithoutCollected_data_job_matches_collected_dataTocollected_dataNestedInput
 }
 
 export type collected_dataUncheckedUpdateManyWithoutProfilesInput = {
@@ -484,6 +560,35 @@ export type collected_dataUncheckedUpdateManyWithoutProfilesInput = {
 }
 
 
+/**
+ * Count Type Collected_dataCountOutputType
+ */
+
+export type Collected_dataCountOutputType = {
+  job_matches_job_matches_collected_dataTocollected_data: number
+}
+
+export type Collected_dataCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  job_matches_job_matches_collected_dataTocollected_data?: boolean | Collected_dataCountOutputTypeCountJob_matches_job_matches_collected_dataTocollected_dataArgs
+}
+
+/**
+ * Collected_dataCountOutputType without action
+ */
+export type Collected_dataCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Collected_dataCountOutputType
+   */
+  select?: Prisma.Collected_dataCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * Collected_dataCountOutputType without action
+ */
+export type Collected_dataCountOutputTypeCountJob_matches_job_matches_collected_dataTocollected_dataArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.job_matchesWhereInput
+}
+
 
 export type collected_dataSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -492,6 +597,8 @@ export type collected_dataSelect<ExtArgs extends runtime.Types.Extensions.Intern
   data?: boolean
   profile?: boolean
   profiles?: boolean | Prisma.collected_data$profilesArgs<ExtArgs>
+  job_matches_job_matches_collected_dataTocollected_data?: boolean | Prisma.collected_data$job_matches_job_matches_collected_dataTocollected_dataArgs<ExtArgs>
+  _count?: boolean | Prisma.Collected_dataCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["collected_data"]>
 
 export type collected_dataSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -523,6 +630,8 @@ export type collected_dataSelectScalar = {
 export type collected_dataOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "date_updated" | "schema" | "data" | "profile", ExtArgs["result"]["collected_data"]>
 export type collected_dataInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   profiles?: boolean | Prisma.collected_data$profilesArgs<ExtArgs>
+  job_matches_job_matches_collected_dataTocollected_data?: boolean | Prisma.collected_data$job_matches_job_matches_collected_dataTocollected_dataArgs<ExtArgs>
+  _count?: boolean | Prisma.Collected_dataCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type collected_dataIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   profiles?: boolean | Prisma.collected_data$profilesArgs<ExtArgs>
@@ -535,6 +644,7 @@ export type $collected_dataPayload<ExtArgs extends runtime.Types.Extensions.Inte
   name: "collected_data"
   objects: {
     profiles: Prisma.$profilesPayload<ExtArgs> | null
+    job_matches_job_matches_collected_dataTocollected_data: Prisma.$job_matchesPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
@@ -937,6 +1047,7 @@ readonly fields: collected_dataFieldRefs;
 export interface Prisma__collected_dataClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   profiles<T extends Prisma.collected_data$profilesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.collected_data$profilesArgs<ExtArgs>>): Prisma.Prisma__profilesClient<runtime.Types.Result.GetResult<Prisma.$profilesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  job_matches_job_matches_collected_dataTocollected_data<T extends Prisma.collected_data$job_matches_job_matches_collected_dataTocollected_dataArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.collected_data$job_matches_job_matches_collected_dataTocollected_dataArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$job_matchesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1383,6 +1494,30 @@ export type collected_data$profilesArgs<ExtArgs extends runtime.Types.Extensions
    */
   include?: Prisma.profilesInclude<ExtArgs> | null
   where?: Prisma.profilesWhereInput
+}
+
+/**
+ * collected_data.job_matches_job_matches_collected_dataTocollected_data
+ */
+export type collected_data$job_matches_job_matches_collected_dataTocollected_dataArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the job_matches
+   */
+  select?: Prisma.job_matchesSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the job_matches
+   */
+  omit?: Prisma.job_matchesOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.job_matchesInclude<ExtArgs> | null
+  where?: Prisma.job_matchesWhereInput
+  orderBy?: Prisma.job_matchesOrderByWithRelationInput | Prisma.job_matchesOrderByWithRelationInput[]
+  cursor?: Prisma.job_matchesWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.Job_matchesScalarFieldEnum | Prisma.Job_matchesScalarFieldEnum[]
 }
 
 /**
