@@ -8,17 +8,75 @@
 import puppeteer, { type Page } from "puppeteer";
 import { dbDirect } from "$lib/db";
 import {
+  detectLoginPage,
   extractJobData,
   extractJobLinks,
   upsertJob,
 } from "$lib/server/job-scraper";
 import { existsSync, mkdirSync } from "fs";
 import { join } from "path";
+import { exec } from "child_process";
+import { promisify } from "util";
+
+const execAsync = promisify(exec);
 
 interface SearchAction {
   id: number;
   name: string;
   search_url: string | null;
+}
+
+/**
+ * Check if current page is a login page using LLM
+ */
+async function isLoginPage(page: Page): Promise<boolean> {
+  try {
+    const html = await page.content();
+    return await detectLoginPage(html);
+  } catch (error) {
+    console.error(
+      "⚠️  Failed to detect login page:",
+      error instanceof Error ? error.message : String(error),
+    );
+    // Fallback to false to continue (don't block on detection errors)
+    return false;
+  }
+}
+
+/**
+ * Wait for user to manually log in (max 2 minutes)
+ */
+async function waitForManualLogin(page: Page): Promise<boolean> {
+  console.log("\n" + "=".repeat(60));
+  console.log("⚠️  LinkedIn Login Required");
+  console.log("=".repeat(60));
+  console.log("Please log into LinkedIn in the browser window.");
+  console.log("You have 2 minutes to complete the login.");
+  console.log("=".repeat(60) + "\n");
+
+  const timeoutMs = 2 * 60 * 1000; // 2 minutes
+  const startTime = Date.now();
+  const checkInterval = 5000; // Check every 5 seconds
+
+  // Wait for user to log in (check every 5 seconds, max 2 minutes)
+  while (Date.now() - startTime < timeoutMs) {
+    const remainingSeconds = Math.floor(
+      (timeoutMs - (Date.now() - startTime)) / 1000,
+    );
+    console.log(`⏱️  Waiting for login... (${remainingSeconds}s remaining)`);
+
+    if (!(await isLoginPage(page))) {
+      console.log("✅ Login detected! Continuing...\n");
+      // Wait for page to fully load
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      return true;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, checkInterval));
+  }
+
+  console.log("❌ Login timeout (2 minutes elapsed)");
+  return false;
 }
 
 /**
@@ -37,15 +95,78 @@ async function scrapeJobSite(
 
   // 1. Navigate to search results
   console.log(`Navigating to: ${searchUrl}`);
-  await page.goto(searchUrl, { waitUntil: "networkidle2" });
+  await page.goto(searchUrl, {
+    waitUntil: "domcontentloaded",
+    timeout: 60000,
+  });
 
-  // 2. Get page HTML
+  // Wait for page to settle
+  await new Promise((resolve) => setTimeout(resolve, 3000));
+
+  // 2. Check if page is a login page
+  if (await isLoginPage(page)) {
+    const loginSuccessful = await waitForManualLogin(page);
+
+    if (!loginSuccessful) {
+      console.log("⚠️  Skipping this search due to login timeout");
+      return;
+    }
+
+    // Navigate again after login
+    await page.goto(searchUrl, {
+      waitUntil: "domcontentloaded",
+      timeout: 60000,
+    });
+
+    // Wait for page to settle
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+  }
+
+  // 3. Get page HTML
   const html = await page.content();
 
-  // 3. Extract job links using LLM
+  // 4. Extract job links using LLM
   console.log("Extracting job links...");
-  const jobUrls = await extractJobLinks(html);
-  console.log(`Found ${jobUrls.length} jobs`);
+  let jobUrls: string[];
+  try {
+    jobUrls = await extractJobLinks(html);
+
+    if (!jobUrls || jobUrls.length === 0) {
+      console.log("⚠️  No job links found. This might indicate:");
+      console.log("   - LinkedIn detected automation and blocked access");
+      console.log("   - The search returned no results");
+      console.log("   - The page structure has changed");
+      return;
+    }
+
+    // Convert relative URLs to absolute URLs
+    const baseUrl = new URL(searchUrl);
+    jobUrls = jobUrls.map((url) => {
+      // If URL is relative, make it absolute
+      if (url.startsWith("/")) {
+        return `${baseUrl.origin}${url}`;
+      }
+      return url;
+    });
+
+    console.log(`Found ${jobUrls.length} job link(s)`);
+  } catch (error) {
+    console.error(
+      "❌ Error extracting job links:",
+      error instanceof Error ? error.message : String(error),
+    );
+
+    // Check if it's a missing prompt error
+    if (
+      error instanceof Error && error.message.includes("not found")
+    ) {
+      console.log(
+        "\n💡 Tip: Make sure the 'extract_job_links' prompt exists in the ai_chat_prompts table in Directus",
+      );
+    }
+
+    return;
+  }
 
   // 4. Determine import source from URL
   const importSource = getImportSource(searchUrl);
@@ -56,7 +177,14 @@ async function scrapeJobSite(
       console.log(`\nProcessing: ${url}`);
 
       // Navigate to job page
-      await page.goto(url, { waitUntil: "networkidle2" });
+      await page.goto(url, {
+        waitUntil: "domcontentloaded",
+        timeout: 60000,
+      });
+
+      // Wait for page to settle
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
       const jobHtml = await page.content();
 
       // Extract job data using LLM
@@ -76,6 +204,16 @@ async function scrapeJobSite(
         `✗ Failed to process ${url}:`,
         error instanceof Error ? error.message : String(error),
       );
+
+      // Check if it's a missing prompt error
+      if (
+        error instanceof Error && error.message.includes("not found")
+      ) {
+        console.log(
+          "💡 Tip: Make sure the 'extract_job_data' prompt exists in the ai_chat_prompts table",
+        );
+      }
+
       // Continue with next job
     }
   }
@@ -93,6 +231,22 @@ function getImportSource(url: string): string {
     return hostname; // Fallback to hostname
   } catch {
     return "Unknown";
+  }
+}
+
+/**
+ * Clear Directus cache
+ */
+async function clearDirectusCache(): Promise<void> {
+  try {
+    console.log("\n🧹 Clearing Directus cache...");
+    await execAsync("npm run docker:clear-directus-cache");
+    console.log("✅ Directus cache cleared");
+  } catch (error) {
+    console.error(
+      "⚠️  Failed to clear Directus cache:",
+      error instanceof Error ? error.message : String(error),
+    );
   }
 }
 
@@ -152,8 +306,24 @@ async function scrapeJobSites(): Promise<void> {
     process.exit(1);
   } finally {
     await browser.close();
+    await clearDirectusCache();
   }
 }
+
+// Handle interrupts (Ctrl+C) and termination signals
+let isExiting = false;
+
+async function handleExit(signal: string) {
+  if (isExiting) return;
+  isExiting = true;
+
+  console.log(`\n\n⚠️  Received ${signal}, cleaning up...`);
+  await clearDirectusCache();
+  process.exit(0);
+}
+
+process.on("SIGINT", () => handleExit("SIGINT"));
+process.on("SIGTERM", () => handleExit("SIGTERM"));
 
 // Execute
 scrapeJobSites().catch((error) => {
