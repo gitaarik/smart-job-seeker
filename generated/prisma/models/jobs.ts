@@ -122,6 +122,7 @@ export type JobsCountAggregateOutputType = {
   job_types: number
   experience_levels: number
   remote_options: number
+  skills: number
   _all: number
 }
 
@@ -222,6 +223,7 @@ export type JobsCountAggregateInputType = {
   job_types?: true
   experience_levels?: true
   remote_options?: true
+  skills?: true
   _all?: true
 }
 
@@ -339,6 +341,7 @@ export type JobsGroupByOutputType = {
   job_types: runtime.JsonValue | null
   experience_levels: runtime.JsonValue | null
   remote_options: runtime.JsonValue | null
+  skills: runtime.JsonValue | null
   _count: JobsCountAggregateOutputType | null
   _avg: JobsAvgAggregateOutputType | null
   _sum: JobsSumAggregateOutputType | null
@@ -392,6 +395,7 @@ export type jobsWhereInput = {
   job_types?: Prisma.JsonNullableFilter<"jobs">
   experience_levels?: Prisma.JsonNullableFilter<"jobs">
   remote_options?: Prisma.JsonNullableFilter<"jobs">
+  skills?: Prisma.JsonNullableFilter<"jobs">
   applications?: Prisma.ApplicationsListRelationFilter
   job_resources?: Prisma.Job_resourcesListRelationFilter
 }
@@ -424,6 +428,7 @@ export type jobsOrderByWithRelationInput = {
   job_types?: Prisma.SortOrderInput | Prisma.SortOrder
   experience_levels?: Prisma.SortOrderInput | Prisma.SortOrder
   remote_options?: Prisma.SortOrderInput | Prisma.SortOrder
+  skills?: Prisma.SortOrderInput | Prisma.SortOrder
   applications?: Prisma.applicationsOrderByRelationAggregateInput
   job_resources?: Prisma.job_resourcesOrderByRelationAggregateInput
 }
@@ -459,6 +464,7 @@ export type jobsWhereUniqueInput = Prisma.AtLeast<{
   job_types?: Prisma.JsonNullableFilter<"jobs">
   experience_levels?: Prisma.JsonNullableFilter<"jobs">
   remote_options?: Prisma.JsonNullableFilter<"jobs">
+  skills?: Prisma.JsonNullableFilter<"jobs">
   applications?: Prisma.ApplicationsListRelationFilter
   job_resources?: Prisma.Job_resourcesListRelationFilter
 }, "id">
@@ -491,6 +497,7 @@ export type jobsOrderByWithAggregationInput = {
   job_types?: Prisma.SortOrderInput | Prisma.SortOrder
   experience_levels?: Prisma.SortOrderInput | Prisma.SortOrder
   remote_options?: Prisma.SortOrderInput | Prisma.SortOrder
+  skills?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.jobsCountOrderByAggregateInput
   _avg?: Prisma.jobsAvgOrderByAggregateInput
   _max?: Prisma.jobsMaxOrderByAggregateInput
@@ -529,6 +536,7 @@ export type jobsScalarWhereWithAggregatesInput = {
   job_types?: Prisma.JsonNullableWithAggregatesFilter<"jobs">
   experience_levels?: Prisma.JsonNullableWithAggregatesFilter<"jobs">
   remote_options?: Prisma.JsonNullableWithAggregatesFilter<"jobs">
+  skills?: Prisma.JsonNullableWithAggregatesFilter<"jobs">
 }
 
 export type jobsCreateInput = {
@@ -558,6 +566,7 @@ export type jobsCreateInput = {
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   applications?: Prisma.applicationsCreateNestedManyWithoutJobsInput
   job_resources?: Prisma.job_resourcesCreateNestedManyWithoutJobsInput
 }
@@ -590,6 +599,7 @@ export type jobsUncheckedCreateInput = {
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutJobsInput
   job_resources?: Prisma.job_resourcesUncheckedCreateNestedManyWithoutJobsInput
 }
@@ -621,6 +631,7 @@ export type jobsUpdateInput = {
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   applications?: Prisma.applicationsUpdateManyWithoutJobsNestedInput
   job_resources?: Prisma.job_resourcesUpdateManyWithoutJobsNestedInput
 }
@@ -653,6 +664,7 @@ export type jobsUncheckedUpdateInput = {
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutJobsNestedInput
   job_resources?: Prisma.job_resourcesUncheckedUpdateManyWithoutJobsNestedInput
 }
@@ -685,6 +697,7 @@ export type jobsCreateManyInput = {
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type jobsUpdateManyMutationInput = {
@@ -714,6 +727,7 @@ export type jobsUpdateManyMutationInput = {
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type jobsUncheckedUpdateManyInput = {
@@ -744,6 +758,7 @@ export type jobsUncheckedUpdateManyInput = {
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type JobsNullableScalarRelationFilter = {
@@ -784,6 +799,7 @@ export type jobsCountOrderByAggregateInput = {
   job_types?: Prisma.SortOrder
   experience_levels?: Prisma.SortOrder
   remote_options?: Prisma.SortOrder
+  skills?: Prisma.SortOrder
 }
 
 export type jobsAvgOrderByAggregateInput = {
@@ -911,6 +927,7 @@ export type jobsCreateWithoutApplicationsInput = {
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   job_resources?: Prisma.job_resourcesCreateNestedManyWithoutJobsInput
 }
 
@@ -942,6 +959,7 @@ export type jobsUncheckedCreateWithoutApplicationsInput = {
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   job_resources?: Prisma.job_resourcesUncheckedCreateNestedManyWithoutJobsInput
 }
 
@@ -988,6 +1006,7 @@ export type jobsUpdateWithoutApplicationsInput = {
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   job_resources?: Prisma.job_resourcesUpdateManyWithoutJobsNestedInput
 }
 
@@ -1019,6 +1038,7 @@ export type jobsUncheckedUpdateWithoutApplicationsInput = {
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   job_resources?: Prisma.job_resourcesUncheckedUpdateManyWithoutJobsNestedInput
 }
 
@@ -1049,6 +1069,7 @@ export type jobsCreateWithoutJob_resourcesInput = {
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   applications?: Prisma.applicationsCreateNestedManyWithoutJobsInput
 }
 
@@ -1080,6 +1101,7 @@ export type jobsUncheckedCreateWithoutJob_resourcesInput = {
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutJobsInput
 }
 
@@ -1126,6 +1148,7 @@ export type jobsUpdateWithoutJob_resourcesInput = {
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   applications?: Prisma.applicationsUpdateManyWithoutJobsNestedInput
 }
 
@@ -1157,6 +1180,7 @@ export type jobsUncheckedUpdateWithoutJob_resourcesInput = {
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutJobsNestedInput
 }
 
@@ -1228,6 +1252,7 @@ export type jobsSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   job_types?: boolean
   experience_levels?: boolean
   remote_options?: boolean
+  skills?: boolean
   applications?: boolean | Prisma.jobs$applicationsArgs<ExtArgs>
   job_resources?: boolean | Prisma.jobs$job_resourcesArgs<ExtArgs>
   _count?: boolean | Prisma.JobsCountOutputTypeDefaultArgs<ExtArgs>
@@ -1261,6 +1286,7 @@ export type jobsSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   job_types?: boolean
   experience_levels?: boolean
   remote_options?: boolean
+  skills?: boolean
 }, ExtArgs["result"]["jobs"]>
 
 export type jobsSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1291,6 +1317,7 @@ export type jobsSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   job_types?: boolean
   experience_levels?: boolean
   remote_options?: boolean
+  skills?: boolean
 }, ExtArgs["result"]["jobs"]>
 
 export type jobsSelectScalar = {
@@ -1321,9 +1348,10 @@ export type jobsSelectScalar = {
   job_types?: boolean
   experience_levels?: boolean
   remote_options?: boolean
+  skills?: boolean
 }
 
-export type jobsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "date_created" | "date_updated" | "source_url" | "title" | "job_description" | "job_poster" | "import_source" | "company_description" | "date_posted" | "salary_min" | "salary_max" | "salary_currency" | "salary_period" | "experience_level" | "import_error" | "import_status" | "job_type" | "last_scraped" | "location" | "remote" | "salary_range" | "scrape_count" | "job_types" | "experience_levels" | "remote_options", ExtArgs["result"]["jobs"]>
+export type jobsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "date_created" | "date_updated" | "source_url" | "title" | "job_description" | "job_poster" | "import_source" | "company_description" | "date_posted" | "salary_min" | "salary_max" | "salary_currency" | "salary_period" | "experience_level" | "import_error" | "import_status" | "job_type" | "last_scraped" | "location" | "remote" | "salary_range" | "scrape_count" | "job_types" | "experience_levels" | "remote_options" | "skills", ExtArgs["result"]["jobs"]>
 export type jobsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   applications?: boolean | Prisma.jobs$applicationsArgs<ExtArgs>
   job_resources?: boolean | Prisma.jobs$job_resourcesArgs<ExtArgs>
@@ -1366,6 +1394,7 @@ export type $jobsPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     job_types: runtime.JsonValue | null
     experience_levels: runtime.JsonValue | null
     remote_options: runtime.JsonValue | null
+    skills: runtime.JsonValue | null
   }, ExtArgs["result"]["jobs"]>
   composites: {}
 }
@@ -1818,6 +1847,7 @@ export interface jobsFieldRefs {
   readonly job_types: Prisma.FieldRef<"jobs", 'Json'>
   readonly experience_levels: Prisma.FieldRef<"jobs", 'Json'>
   readonly remote_options: Prisma.FieldRef<"jobs", 'Json'>
+  readonly skills: Prisma.FieldRef<"jobs", 'Json'>
 }
     
 

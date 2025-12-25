@@ -1192,7 +1192,8 @@ export const JobsScalarFieldEnum = {
   scrape_count: 'scrape_count',
   job_types: 'job_types',
   experience_levels: 'experience_levels',
-  remote_options: 'remote_options'
+  remote_options: 'remote_options',
+  skills: 'skills'
 } as const
 
 export type JobsScalarFieldEnum = (typeof JobsScalarFieldEnum)[keyof typeof JobsScalarFieldEnum]
@@ -1205,11 +1206,7 @@ export const Job_searchesScalarFieldEnum = {
   date_updated: 'date_updated',
   name: 'name',
   profile: 'profile',
-  keywords: 'keywords',
   last_run: 'last_run',
-  remote: 'remote',
-  experience_level: 'experience_level',
-  contract_type: 'contract_type',
   search_url: 'search_url'
 } as const
 

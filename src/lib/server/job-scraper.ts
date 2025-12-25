@@ -5,7 +5,7 @@
 import { generateChatCompletion } from "./llm";
 import { stripHtmlForLlm } from "./html-strip";
 import { interpolatePrompt } from "./ai-chat-utils";
-import { db } from "$lib/db";
+import { dbDirect as db } from "$lib/db";
 
 /**
  * Extract job links from search results HTML using LLM
@@ -55,10 +55,13 @@ export async function extractJobLinks(
 
   // 5. Parse JSON response
   try {
-    const links = JSON.parse(response);
+    const result = JSON.parse(response);
+
+    // Extract urls array from the structured response
+    const links = result.urls;
 
     if (!Array.isArray(links)) {
-      throw new Error("LLM response is not an array");
+      throw new Error("LLM response.urls is not an array");
     }
 
     return links;
@@ -67,6 +70,66 @@ export async function extractJobLinks(
     console.error("Response was:", response);
     throw new Error(
       `Failed to extract job links: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`,
+    );
+  }
+}
+
+/**
+ * Detect if a page is a login page using LLM
+ * @param pageHtml HTML content of the page
+ * @returns Boolean indicating if it's a login page
+ */
+export async function detectLoginPage(pageHtml: string): Promise<boolean> {
+  // 1. Strip HTML to minimal content
+  const strippedHtml = stripHtmlForLlm(pageHtml);
+
+  // 2. Get prompt template
+  const template = await db.ai_chat_prompts.findUnique({
+    where: { request: "detect_login_page" },
+  });
+
+  if (!template) {
+    throw new Error("Prompt template 'detect_login_page' not found");
+  }
+
+  // 3. Interpolate variables
+  const systemPrompt = template.system_prompt || "";
+  const userPrompt = interpolatePrompt(template.user_prompt || "", {
+    html: strippedHtml,
+  });
+
+  // 4. Prepare structured output format
+  const responseFormat = template.format
+    ? {
+      type: "json_schema" as const,
+      json_schema: {
+        name: "login_detection",
+        strict: true,
+        schema: template.format as Record<string, any>,
+      },
+    }
+    : undefined;
+
+  // 5. Call LLM
+  const response = await generateChatCompletion(
+    [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt },
+    ],
+    { temperature: 0.3, responseFormat },
+  );
+
+  // 6. Parse response
+  try {
+    const result = JSON.parse(response);
+    return result.isLoginPage === true;
+  } catch (error) {
+    console.error("Failed to parse login detection from LLM response:", error);
+    console.error("Response was:", response);
+    throw new Error(
+      `Failed to detect login page: ${
         error instanceof Error ? error.message : "Unknown error"
       }`,
     );
@@ -92,7 +155,11 @@ export async function extractJobData(
   remote: string | null;
   experience_level: string | null;
   job_type: string | null;
-  salary_range: string | null;
+  salary_min: number | null;
+  salary_max: number | null;
+  salary_currency: string | null;
+  salary_period: string | null;
+  skills: string[] | null;
 }> {
   // 1. Strip HTML to minimal content
   const strippedHtml = stripHtmlForLlm(jobHtml);
@@ -136,6 +203,14 @@ export async function extractJobData(
   try {
     const data = JSON.parse(response);
 
+    // Debug: Log extracted data
+    console.log("Extracted job data:", {
+      title: data.title,
+      remote: data.remote,
+      job_type: data.job_type,
+      experience_level: data.experience_level,
+    });
+
     // 6. Convert date_posted to Date object if present
     if (data.date_posted) {
       data.date_posted = new Date(data.date_posted);
@@ -150,6 +225,21 @@ export async function extractJobData(
         error instanceof Error ? error.message : "Unknown error"
       }`,
     );
+  }
+}
+
+/**
+ * Normalize URL by removing query parameters and fragments
+ * This helps match jobs even when tracking params change
+ */
+function normalizeJobUrl(url: string): string {
+  try {
+    const urlObj = new URL(url);
+    // Return just the origin + pathname (no query params or fragments)
+    return `${urlObj.origin}${urlObj.pathname}`;
+  } catch {
+    // If URL parsing fails, return as-is
+    return url;
   }
 }
 
@@ -171,24 +261,55 @@ export async function upsertJob(
     remote: string | null;
     experience_level: string | null;
     job_type: string | null;
-    salary_range: string | null;
+    salary_min: number | null;
+    salary_max: number | null;
+    salary_currency: string | null;
+    salary_period: string | null;
+    skills: string[] | null;
   },
   sourceUrl: string,
   importSource: string,
 ): Promise<{ id: number; created: boolean }> {
-  // Check if job exists by source_url
+  // Normalize URL to match jobs regardless of tracking params
+  const normalizedUrl = normalizeJobUrl(sourceUrl);
+
+  // Check if job exists by normalized source_url
   const existing = await db.jobs.findFirst({
-    where: { source_url: sourceUrl },
+    where: { source_url: normalizedUrl },
   });
 
   const currentDate = new Date();
 
+  // Convert single values to arrays for multi-select JSON fields
+  // Remove the single-value fields and use multi-select fields instead
+  const { remote, job_type, experience_level, skills, ...baseJobData } =
+    jobData;
+
+  const multiSelectData = {
+    remote_options: remote ? [remote] : null,
+    job_types: job_type ? [job_type] : null,
+    experience_levels: experience_level ? [experience_level] : null,
+  };
+
   if (existing) {
     // Update existing
+    console.log(
+      `Updating existing job #${existing.id} (scrape count: ${
+        existing.scrape_count || 0
+      } -> ${(existing.scrape_count || 0) + 1})`,
+    );
+    console.log("Update data:", {
+      remote_options: multiSelectData.remote_options,
+      job_types: multiSelectData.job_types,
+      experience_levels: multiSelectData.experience_levels,
+    });
+
     await db.jobs.update({
       where: { id: existing.id },
       data: {
-        ...jobData,
+        ...baseJobData,
+        ...multiSelectData,
+        skills,
         import_status: "published",
         import_error: null,
         last_scraped: currentDate,
@@ -199,10 +320,13 @@ export async function upsertJob(
     return { id: existing.id, created: false };
   } else {
     // Create new
+    console.log("Creating new job");
     const newJob = await db.jobs.create({
       data: {
-        ...jobData,
-        source_url: sourceUrl,
+        ...baseJobData,
+        ...multiSelectData,
+        skills,
+        source_url: normalizedUrl, // Use normalized URL
         import_source: importSource,
         import_status: "published",
         status: "published",
