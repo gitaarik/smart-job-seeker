@@ -21,10 +21,31 @@ vi.mock("$lib/server/profile-export", () => ({
 vi.mock("$lib/tools/get-env", () => ({
   getEnv: vi.fn((key: string, defaultValue = "") => {
     const envVars: Record<string, string> = {
-      WEBHOOK_SECRET: "test-webhook-secret-key-1234567890123456",
+      SJS_WEBHOOK_SECRET: "test-webhook-secret-key-1234567890123456",
     };
     return envVars[key] ?? defaultValue;
   }),
+}));
+
+// Mock directus cache clearing
+vi.mock("$lib/server/directus", () => ({
+  clearDirectusCache: vi.fn(() => Promise.resolve()),
+}));
+
+// Mock rate limiting
+vi.mock("$lib/server/middleware/rate-limit", () => ({
+  webhookRateLimiter: {
+    tryConsume: vi.fn(() => true), // Always allow requests in tests
+  },
+  createRateLimitResponse: vi.fn(() => new Response(null, { status: 429 })),
+}));
+
+// Mock error tracker
+vi.mock("$lib/server/monitoring/error-tracker", () => ({
+  errorTracker: {
+    logWarning: vi.fn(),
+    logError: vi.fn(),
+  },
 }));
 
 import { exportProfile } from "$lib/server/profile-export";
