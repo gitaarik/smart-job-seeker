@@ -193,29 +193,36 @@ export async function calculateMatch(
     company_description: job.company_description || "",
   };
 
-  // Prepare preferences data for prompt
-  const preferencesData = {
-    job_types: preferences.job_types
-      ? JSON.stringify(preferences.job_types)
-      : "Any",
-    experience_levels: preferences.experience_levels
-      ? JSON.stringify(preferences.experience_levels)
-      : "Any",
-    remote_options: preferences.remote_options
-      ? JSON.stringify(preferences.remote_options)
-      : "Any",
-    locations: preferences.locations
-      ? JSON.stringify(preferences.locations)
-      : "Any",
-  };
-
-  // Interpolate prompts
+  // Interpolate prompts with flattened variables
   const systemPrompt = template.system_prompt || "";
   const userPrompt = interpolatePrompt(template.user_prompt || "", {
     schema: collectedData.schema || "",
     data: collectedData.data || "",
-    preferences: preferencesData,
-    job: jobData,
+
+    // Flatten preferences.* variables
+    "preferences.job_types": preferences.job_types
+      ? JSON.stringify(preferences.job_types)
+      : "Any",
+    "preferences.experience_levels": preferences.experience_levels
+      ? JSON.stringify(preferences.experience_levels)
+      : "Any",
+    "preferences.remote_options": preferences.remote_options
+      ? JSON.stringify(preferences.remote_options)
+      : "Any",
+    "preferences.locations": preferences.locations
+      ? JSON.stringify(preferences.locations)
+      : "Any",
+
+    // Flatten job.* variables
+    "job.title": jobData.title,
+    "job.job_poster": jobData.job_poster,
+    "job.location": jobData.location,
+    "job.job_types": jobData.job_types,
+    "job.experience_levels": jobData.experience_levels,
+    "job.remote_options": jobData.remote_options,
+    "job.skills": jobData.skills,
+    "job.job_description": jobData.job_description,
+    "job.company_description": jobData.company_description,
   });
 
   // Build full prompt for storage
