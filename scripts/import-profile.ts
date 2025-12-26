@@ -3,6 +3,7 @@
 import { dbDirect } from "$lib/db";
 import { readFileSync } from "fs";
 import { v4 as uuidv4 } from "uuid";
+import { Command } from "commander";
 
 interface ImportedProfile {
   profile: {
@@ -735,32 +736,40 @@ async function importProfile(
   }
 }
 
-// Parse command line arguments
-const filePath = process.argv[2];
-const profileId = process.argv[3];
-const deleteFlag = process.argv.includes("--delete");
+// CLI Program
+const program = new Command();
 
-if (!filePath) {
-  console.error(
-    "Usage: npx tsx scripts/import-profile.ts <file-path> [profile-id] [--delete]",
-  );
-  console.error("\nExamples:");
-  console.error("  Create new profile:");
-  console.error(
-    "    npx tsx scripts/import-profile.ts ./exports/my-profile.json",
-  );
-  console.error("\n  Update existing profile:");
-  console.error(
-    "    npx tsx scripts/import-profile.ts ./exports/my-profile.json 123e4567-e89b-12d3-a456-426614174000",
-  );
-  console.error("\n  Update and delete existing data:");
-  console.error(
-    "    npx tsx scripts/import-profile.ts ./exports/my-profile.json 123e4567-e89b-12d3-a456-426614174000 --delete",
-  );
-  process.exit(1);
-}
+program
+  .name("import-profile")
+  .description("Import profile data from JSON export file")
+  .version("1.0.0")
+  .argument("<file-path>", "Path to the JSON export file")
+  .option("-p, --profile-id <id>", "Existing profile ID to update")
+  .option("-d, --delete", "Delete existing data before import", false)
+  .helpOption("-h, --help", "Display help for command")
+  .addHelpText(
+    "after",
+    `
+Examples:
+  Create new profile:
+    npm run host:import-profile-json ./exports/my-profile.json
 
-importProfile(filePath, profileId, deleteFlag).catch((error) => {
+  Update existing profile:
+    npm run host:import-profile-json ./exports/my-profile.json --profile-id=123e4567-e89b-12d3-a456-426614174000
+    npm run host:import-profile-json ./exports/my-profile.json -p 123e4567-e89b-12d3-a456-426614174000
+
+  Update and delete existing data:
+    npm run host:import-profile-json ./exports/my-profile.json -p 123e4567-e89b-12d3-a456-426614174000 --delete
+    npm run host:import-profile-json ./exports/my-profile.json -p 123e4567-e89b-12d3-a456-426614174000 -d
+`,
+  );
+
+program.parse();
+
+const [filePath] = program.args;
+const options = program.opts();
+
+importProfile(filePath, options.profileId, options.delete).catch((error) => {
   console.error("Import failed:", error);
   process.exit(1);
 });

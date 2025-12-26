@@ -5,7 +5,7 @@
  * Uses Puppeteer to scrape job listings and LLM to extract data
  */
 
-import puppeteer, { type Page } from "puppeteer";
+import puppeteer, { type Browser, type Page } from "puppeteer";
 import { dbDirect } from "$lib/db";
 import {
   detectLoginPage,
@@ -13,6 +13,8 @@ import {
   extractJobLinks,
   upsertJob,
 } from "$lib/server/job-scraper";
+import { stripHtmlForLlm } from "$lib/server/html-strip";
+import { Command } from "commander";
 import { existsSync, mkdirSync } from "fs";
 import { join } from "path";
 import { exec } from "child_process";
@@ -24,6 +26,75 @@ interface SearchAction {
   id: number;
   name: string;
   search_url: string | null;
+}
+
+// CLI Program
+const program = new Command();
+
+program
+  .name("scrape-jobs")
+  .description(
+    "Scrape job postings from active job searches or re-scrape a specific job",
+  )
+  .version("1.0.0")
+  .option("-j, --job-id <id>", "Re-scrape a specific job by ID", parseInt)
+  .option(
+    "-f, --force",
+    "Force re-import even if HTML hasn't changed (useful for testing new prompts)",
+  )
+  .helpOption("-h, --help", "Display help for command");
+
+program.parse();
+const options = program.opts();
+
+/**
+ * Normalize URL by removing query parameters and fragments
+ */
+function normalizeJobUrl(url: string): string {
+  try {
+    const urlObj = new URL(url);
+    return `${urlObj.origin}${urlObj.pathname}`;
+  } catch {
+    return url;
+  }
+}
+
+/**
+ * Check if job's HTML has changed compared to database
+ * @param sourceUrl URL of the job posting
+ * @param newStrippedHtml New stripped HTML to compare
+ * @param force If true, always return true (force re-import)
+ * @returns true if HTML is different or job doesn't exist, false if unchanged
+ */
+async function hasHtmlChanged(
+  sourceUrl: string,
+  newStrippedHtml: string,
+  force = false,
+): Promise<boolean> {
+  // If force flag is set, always consider HTML as changed
+  if (force) {
+    return true;
+  }
+
+  const normalizedUrl = normalizeJobUrl(sourceUrl);
+
+  const existingJob = await dbDirect.jobs.findFirst({
+    where: { source_url: normalizedUrl },
+    select: { id: true, source_html_stripped: true },
+  });
+
+  // If job doesn't exist, HTML is "new"
+  if (!existingJob) {
+    return true;
+  }
+
+  // If no existing HTML stored, consider it changed
+  if (!existingJob.source_html_stripped) {
+    return true;
+  }
+
+  // Compare HTML content
+  return existingJob.source_html_stripped !== newStrippedHtml;
 }
 
 /**
@@ -187,6 +258,23 @@ async function scrapeJobSite(
 
       const jobHtml = await page.content();
 
+      // Strip HTML early to check for changes
+      const strippedHtml = stripHtmlForLlm(jobHtml);
+
+      // Check if HTML has changed compared to existing job
+      const htmlChanged = await hasHtmlChanged(
+        url,
+        strippedHtml,
+        options.force,
+      );
+
+      if (!htmlChanged) {
+        console.log(
+          `⏭️  Skipping - HTML unchanged (no new data to extract)`,
+        );
+        continue;
+      }
+
       // Extract job data using LLM
       console.log("Extracting job data...");
       const jobData = await extractJobData(jobHtml, url);
@@ -235,6 +323,113 @@ function getImportSource(url: string): string {
 }
 
 /**
+ * Re-scrape a single job by ID
+ */
+async function rescrapeJobById(
+  jobId: number,
+  browser: Browser,
+): Promise<void> {
+  console.log(`\n🔄 Re-scraping job #${jobId}...`);
+
+  // 1. Look up job in database
+  const job = await dbDirect.jobs.findUnique({
+    where: { id: jobId },
+    select: {
+      id: true,
+      source_url: true,
+      import_source: true,
+      title: true,
+    },
+  });
+
+  if (!job) {
+    console.error(`❌ Job #${jobId} not found in database`);
+    return;
+  }
+
+  if (!job.source_url) {
+    console.error(`❌ Job #${jobId} has no source_url - cannot re-scrape`);
+    return;
+  }
+
+  console.log(`📄 Job: ${job.title || "Untitled"}`);
+  console.log(`🔗 URL: ${job.source_url}`);
+
+  // 2. Determine import source (scraper type)
+  const importSource = job.import_source || getImportSource(job.source_url);
+  console.log(`🔧 Scraper: ${importSource}`);
+
+  // 3. Navigate to job page
+  const page = await browser.newPage();
+
+  try {
+    console.log(`\n🌐 Navigating to job page...`);
+    await page.goto(job.source_url, {
+      waitUntil: "networkidle2",
+      timeout: 60000,
+    });
+
+    // 4. Check for login page
+    const pageHtml = await page.content();
+    const isLogin = await detectLoginPage(pageHtml);
+
+    if (isLogin) {
+      console.error(
+        `❌ Login required for ${importSource}. Please run full scrape to login manually.`,
+      );
+      await page.close();
+      return;
+    }
+
+    // 5. Check if HTML has changed
+    console.log(`🔍 Checking for HTML changes...`);
+    const strippedHtml = stripHtmlForLlm(pageHtml);
+    const htmlChanged = await hasHtmlChanged(
+      job.source_url,
+      strippedHtml,
+      options.force,
+    );
+
+    if (!htmlChanged) {
+      console.log(
+        `⏭️  Skipping - HTML unchanged since last scrape (no new data to extract)`,
+      );
+      await page.close();
+      return;
+    }
+
+    console.log(`✅ HTML has changed - proceeding with extraction`);
+
+    // 6. Extract job data
+    console.log(`📊 Extracting job data...`);
+    const jobData = await extractJobData(pageHtml, job.source_url);
+
+    if (!jobData) {
+      console.error(`❌ Failed to extract job data`);
+      await page.close();
+      return;
+    }
+
+    // 7. Update job in database
+    console.log(`💾 Updating job in database...`);
+    const result = await upsertJob(jobData, job.source_url, importSource);
+
+    console.log(
+      `✅ Job #${result.id} updated successfully (scrape count: ${
+        result.created ? 1 : "incremented"
+      })`,
+    );
+  } catch (error) {
+    console.error(
+      `❌ Error scraping job #${jobId}:`,
+      error instanceof Error ? error.message : String(error),
+    );
+  } finally {
+    await page.close();
+  }
+}
+
+/**
  * Clear Directus cache
  */
 async function clearDirectusCache(): Promise<void> {
@@ -275,6 +470,18 @@ async function scrapeJobSites(): Promise<void> {
   const page = await browser.newPage();
 
   try {
+    // **NEW: Check if single job mode**
+    if (options.jobId) {
+      // Validate job ID
+      if (isNaN(options.jobId)) {
+        console.error("❌ Invalid job ID: must be a number");
+        process.exit(1);
+      }
+      await rescrapeJobById(options.jobId, browser);
+      await browser.close();
+      return; // Exit after single job scrape
+    }
+
     // 1. Fetch all active job searches
     const searchActions = await dbDirect.job_searches.findMany({
       where: { status: "active" },
