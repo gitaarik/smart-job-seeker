@@ -39,6 +39,11 @@ program
   .version("1.0.0")
   .option("-j, --job-id <id>", "Re-scrape a specific job by ID", parseInt)
   .option(
+    "-s, --search-id <id>",
+    "Scrape only a specific job search by ID",
+    parseInt,
+  )
+  .option(
     "-f, --force",
     "Force re-import even if HTML hasn't changed (useful for testing new prompts)",
   )
@@ -482,12 +487,35 @@ async function scrapeJobSites(): Promise<void> {
       return; // Exit after single job scrape
     }
 
-    // 1. Fetch all active job searches
+    // 1. Fetch job searches (all active or specific search)
+    const whereClause: { status?: string; id?: number } = {};
+
+    if (options.searchId) {
+      // Validate search ID
+      if (isNaN(options.searchId)) {
+        console.error("❌ Invalid search ID: must be a number");
+        process.exit(1);
+      }
+      whereClause.id = options.searchId;
+    } else {
+      // Only filter by status if no specific search is requested
+      whereClause.status = "active";
+    }
+
     const searchActions = await dbDirect.job_searches.findMany({
-      where: { status: "active" },
+      where: whereClause,
     });
 
-    console.log(`\nFound ${searchActions.length} active search action(s)\n`);
+    if (searchActions.length === 0) {
+      if (options.searchId) {
+        console.error(`❌ Job search #${options.searchId} not found`);
+      } else {
+        console.log("⚠️  No active job searches found");
+      }
+      process.exit(1);
+    }
+
+    console.log(`\nFound ${searchActions.length} job search(es) to process\n`);
 
     // 2. For each search action
     for (const searchAction of searchActions) {
