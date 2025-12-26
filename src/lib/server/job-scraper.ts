@@ -137,6 +137,33 @@ export async function detectLoginPage(pageHtml: string): Promise<boolean> {
 }
 
 /**
+ * Format salary information for display
+ */
+function formatSalary(data: {
+  salary_min: number | null;
+  salary_max: number | null;
+  salary_currency: string | null;
+  salary_period: string | null;
+}): string | null {
+  if (!data.salary_min && !data.salary_max) {
+    return null;
+  }
+
+  const currency = data.salary_currency || "USD";
+  const period = data.salary_period || "year";
+
+  if (data.salary_min && data.salary_max) {
+    return `${currency} ${data.salary_min.toLocaleString()} - ${data.salary_max.toLocaleString()} per ${period}`;
+  } else if (data.salary_min) {
+    return `${currency} ${data.salary_min.toLocaleString()}+ per ${period}`;
+  } else if (data.salary_max) {
+    return `Up to ${currency} ${data.salary_max.toLocaleString()} per ${period}`;
+  }
+
+  return null;
+}
+
+/**
  * Extract job data from job posting HTML using LLM
  * @param jobHtml HTML content from individual job page
  * @param sourceUrl URL of the job page
@@ -207,9 +234,14 @@ export async function extractJobData(
     // Debug: Log extracted data
     console.log("Extracted job data:", {
       title: data.title,
+      company: data.job_poster,
+      location: data.location,
+      date_posted: data.date_posted?.toLocaleDateString() || null,
+      salary: formatSalary(data),
       remote: data.remote,
       job_type: data.job_type,
       experience_level: data.experience_level,
+      skills: data.skills,
       status: data.status,
     });
 
