@@ -6579,9 +6579,9 @@ export const Job_matchesScalarFieldEnum = {
   status: 'status',
   date_created: 'date_created',
   date_updated: 'date_updated',
-  collected_data: 'collected_data',
   job: 'job',
-  profile: 'profile'
+  profile: 'profile',
+  llm_prompt: 'llm_prompt'
 } as const
 
 export type Job_matchesScalarFieldEnum = (typeof Job_matchesScalarFieldEnum)[keyof typeof Job_matchesScalarFieldEnum]

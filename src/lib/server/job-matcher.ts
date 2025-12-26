@@ -38,6 +38,7 @@ export interface MatchResult {
   gaps: string[];
   recommendation: string;
   jobDateUpdated: Date | null;
+  llmPrompt: string;
 }
 
 /**
@@ -217,6 +218,9 @@ export async function calculateMatch(
     job: jobData,
   });
 
+  // Build full prompt for storage
+  const fullPrompt = `SYSTEM:\n${systemPrompt}\n\nUSER:\n${userPrompt}`;
+
   // Prepare structured output format
   const responseFormat = template.format
     ? {
@@ -252,6 +256,7 @@ export async function calculateMatch(
       gaps: result.gaps,
       recommendation: result.recommendation,
       jobDateUpdated: job.date_updated,
+      llmPrompt: fullPrompt,
     };
   } catch (error) {
     console.error("Failed to parse match score from LLM:", error);
@@ -292,6 +297,7 @@ export async function upsertJobMatch(
     job_date_updated_when_matched: match.jobDateUpdated || currentDate,
     profile: match.profileId,
     date_updated: currentDate,
+    llm_prompt: match.llmPrompt,
   };
 
   if (existing) {
