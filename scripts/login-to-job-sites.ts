@@ -1,0 +1,79 @@
+#!/usr/bin/env node
+
+/**
+ * Login preparation script
+ * Opens Chrome with persistent profile to allow manual login to job sites
+ * User can then run the scraper with saved cookies/session
+ */
+
+import puppeteer from "puppeteer";
+import { existsSync, mkdirSync } from "fs";
+import { join } from "path";
+
+async function openBrowserForLogin(): Promise<void> {
+  // Ensure chrome profile directory exists (same as scraper)
+  const profileDir = join(process.cwd(), "chrome-profiles");
+  if (!existsSync(profileDir)) {
+    mkdirSync(profileDir, { recursive: true });
+  }
+
+  console.log("\n" + "=".repeat(70));
+  console.log("🌐  Job Site Login Preparation");
+  console.log("=".repeat(70));
+  console.log("Opening Chrome with persistent profile...");
+  console.log("Navigate to job sites and log in as needed.");
+  console.log("Your login sessions will be saved for future scraping.");
+  console.log("\n📌 Press Ctrl+C when you're done logging in.");
+  console.log("=".repeat(70) + "\n");
+
+  // Launch browser with same profile as scraper
+  const browser = await puppeteer.launch({
+    headless: false,
+    userDataDir: join(profileDir, "default"),
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--start-maximized",
+    ],
+    defaultViewport: null,
+  });
+
+  try {
+    console.log("✅ Chrome opened with persistent profile");
+    console.log("👉 Navigate to job sites and log in");
+    console.log("📌 Press Ctrl+C when finished\n");
+
+    // Keep browser open until user terminates
+    await new Promise(() => {}); // Never resolves, waits for SIGINT
+  } catch (error) {
+    console.error(
+      "❌ Error:",
+      error instanceof Error ? error.message : String(error),
+    );
+  } finally {
+    await browser.close();
+  }
+}
+
+// Handle interrupts (Ctrl+C)
+let isExiting = false;
+
+async function handleExit(signal: string) {
+  if (isExiting) return;
+  isExiting = true;
+
+  console.log(`\n\n✅ Received ${signal} - closing browser...`);
+  console.log("Your login sessions have been saved!");
+  console.log("You can now run: npm run host:scrape:jobs\n");
+  process.exit(0);
+}
+
+process.on("SIGINT", () => handleExit("SIGINT"));
+process.on("SIGTERM", () => handleExit("SIGTERM"));
+
+// Execute
+openBrowserForLogin().catch((error) => {
+  console.error("Fatal error:", error);
+  process.exit(1);
+});
