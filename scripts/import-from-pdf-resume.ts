@@ -9,6 +9,7 @@ import { Command } from "commander";
 import { extractResumeFromPdf } from "./lib/pdf-resume-extractor";
 import { createProfileFromResume } from "./lib/resume-importer";
 import { getEnv } from "$lib/tools/get-env";
+import { clearDirectusCache } from "$lib/server/directus";
 
 async function importPdfResume(
   filePath: string,
@@ -77,6 +78,11 @@ async function importPdfResume(
     }
 
     console.log(`\n🎉 Success! Profile ID: ${result.profileId}`);
+
+    // Clear Directus cache
+    console.log("\n🔄 Clearing Directus cache...");
+    await clearDirectusCache();
+    console.log("✅ Directus cache cleared");
   } catch (error) {
     console.error("\n❌ Error importing PDF resume:");
     if (error instanceof Error) {

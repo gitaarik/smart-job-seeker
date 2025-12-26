@@ -12,6 +12,7 @@ import {
   validateJsonResume,
 } from "./lib/json-resume-mapper";
 import { createProfileFromResume } from "./lib/resume-importer";
+import { clearDirectusCache } from "$lib/server/directus";
 
 async function importJsonResume(
   filePath: string,
@@ -84,6 +85,11 @@ async function importJsonResume(
     }
 
     console.log(`\n🎉 Success! Profile ID: ${result.profileId}`);
+
+    // Clear Directus cache
+    console.log("\n🔄 Clearing Directus cache...");
+    await clearDirectusCache();
+    console.log("✅ Directus cache cleared");
   } catch (error) {
     console.error("\n❌ Error importing JSON Resume:");
     if (error instanceof Error) {
