@@ -335,16 +335,6 @@ export type profile_version_extensions = Prisma.profile_version_extensionsModel
  */
 export type application_letters = Prisma.application_lettersModel
 /**
- * Model job_sites
- * 
- */
-export type job_sites = Prisma.job_sitesModel
-/**
- * Model outsourcing_platforms
- * 
- */
-export type outsourcing_platforms = Prisma.outsourcing_platformsModel
-/**
  * Model job_resources
  * 
  */
@@ -374,3 +364,8 @@ export type job_match_preferences = Prisma.job_match_preferencesModel
  * 
  */
 export type job_matches = Prisma.job_matchesModel
+/**
+ * Model job_platforms
+ * 
+ */
+export type job_platforms = Prisma.job_platformsModel

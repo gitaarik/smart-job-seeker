@@ -30,14 +30,12 @@ export type Platform_profilesAvgAggregateOutputType = {
   id: number | null
   sort: number | null
   profile: number | null
-  outsourcing_platform: number | null
 }
 
 export type Platform_profilesSumAggregateOutputType = {
   id: number | null
   sort: number | null
   profile: number | null
-  outsourcing_platform: number | null
 }
 
 export type Platform_profilesMinAggregateOutputType = {
@@ -47,7 +45,6 @@ export type Platform_profilesMinAggregateOutputType = {
   date_created: Date | null
   date_updated: Date | null
   profile: number | null
-  outsourcing_platform: number | null
 }
 
 export type Platform_profilesMaxAggregateOutputType = {
@@ -57,7 +54,6 @@ export type Platform_profilesMaxAggregateOutputType = {
   date_created: Date | null
   date_updated: Date | null
   profile: number | null
-  outsourcing_platform: number | null
 }
 
 export type Platform_profilesCountAggregateOutputType = {
@@ -67,7 +63,6 @@ export type Platform_profilesCountAggregateOutputType = {
   date_created: number
   date_updated: number
   profile: number
-  outsourcing_platform: number
   _all: number
 }
 
@@ -76,14 +71,12 @@ export type Platform_profilesAvgAggregateInputType = {
   id?: true
   sort?: true
   profile?: true
-  outsourcing_platform?: true
 }
 
 export type Platform_profilesSumAggregateInputType = {
   id?: true
   sort?: true
   profile?: true
-  outsourcing_platform?: true
 }
 
 export type Platform_profilesMinAggregateInputType = {
@@ -93,7 +86,6 @@ export type Platform_profilesMinAggregateInputType = {
   date_created?: true
   date_updated?: true
   profile?: true
-  outsourcing_platform?: true
 }
 
 export type Platform_profilesMaxAggregateInputType = {
@@ -103,7 +95,6 @@ export type Platform_profilesMaxAggregateInputType = {
   date_created?: true
   date_updated?: true
   profile?: true
-  outsourcing_platform?: true
 }
 
 export type Platform_profilesCountAggregateInputType = {
@@ -113,7 +104,6 @@ export type Platform_profilesCountAggregateInputType = {
   date_created?: true
   date_updated?: true
   profile?: true
-  outsourcing_platform?: true
   _all?: true
 }
 
@@ -210,7 +200,6 @@ export type Platform_profilesGroupByOutputType = {
   date_created: Date | null
   date_updated: Date | null
   profile: number | null
-  outsourcing_platform: number | null
   _count: Platform_profilesCountAggregateOutputType | null
   _avg: Platform_profilesAvgAggregateOutputType | null
   _sum: Platform_profilesSumAggregateOutputType | null
@@ -243,8 +232,6 @@ export type platform_profilesWhereInput = {
   date_created?: Prisma.DateTimeNullableFilter<"platform_profiles"> | Date | string | null
   date_updated?: Prisma.DateTimeNullableFilter<"platform_profiles"> | Date | string | null
   profile?: Prisma.IntNullableFilter<"platform_profiles"> | number | null
-  outsourcing_platform?: Prisma.IntNullableFilter<"platform_profiles"> | number | null
-  outsourcing_platforms?: Prisma.XOR<Prisma.Outsourcing_platformsNullableScalarRelationFilter, Prisma.outsourcing_platformsWhereInput> | null
   profiles?: Prisma.XOR<Prisma.ProfilesNullableScalarRelationFilter, Prisma.profilesWhereInput> | null
 }
 
@@ -255,8 +242,6 @@ export type platform_profilesOrderByWithRelationInput = {
   date_created?: Prisma.SortOrderInput | Prisma.SortOrder
   date_updated?: Prisma.SortOrderInput | Prisma.SortOrder
   profile?: Prisma.SortOrderInput | Prisma.SortOrder
-  outsourcing_platform?: Prisma.SortOrderInput | Prisma.SortOrder
-  outsourcing_platforms?: Prisma.outsourcing_platformsOrderByWithRelationInput
   profiles?: Prisma.profilesOrderByWithRelationInput
 }
 
@@ -270,8 +255,6 @@ export type platform_profilesWhereUniqueInput = Prisma.AtLeast<{
   date_created?: Prisma.DateTimeNullableFilter<"platform_profiles"> | Date | string | null
   date_updated?: Prisma.DateTimeNullableFilter<"platform_profiles"> | Date | string | null
   profile?: Prisma.IntNullableFilter<"platform_profiles"> | number | null
-  outsourcing_platform?: Prisma.IntNullableFilter<"platform_profiles"> | number | null
-  outsourcing_platforms?: Prisma.XOR<Prisma.Outsourcing_platformsNullableScalarRelationFilter, Prisma.outsourcing_platformsWhereInput> | null
   profiles?: Prisma.XOR<Prisma.ProfilesNullableScalarRelationFilter, Prisma.profilesWhereInput> | null
 }, "id">
 
@@ -282,7 +265,6 @@ export type platform_profilesOrderByWithAggregationInput = {
   date_created?: Prisma.SortOrderInput | Prisma.SortOrder
   date_updated?: Prisma.SortOrderInput | Prisma.SortOrder
   profile?: Prisma.SortOrderInput | Prisma.SortOrder
-  outsourcing_platform?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.platform_profilesCountOrderByAggregateInput
   _avg?: Prisma.platform_profilesAvgOrderByAggregateInput
   _max?: Prisma.platform_profilesMaxOrderByAggregateInput
@@ -300,7 +282,6 @@ export type platform_profilesScalarWhereWithAggregatesInput = {
   date_created?: Prisma.DateTimeNullableWithAggregatesFilter<"platform_profiles"> | Date | string | null
   date_updated?: Prisma.DateTimeNullableWithAggregatesFilter<"platform_profiles"> | Date | string | null
   profile?: Prisma.IntNullableWithAggregatesFilter<"platform_profiles"> | number | null
-  outsourcing_platform?: Prisma.IntNullableWithAggregatesFilter<"platform_profiles"> | number | null
 }
 
 export type platform_profilesCreateInput = {
@@ -308,7 +289,6 @@ export type platform_profilesCreateInput = {
   sort?: number | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
-  outsourcing_platforms?: Prisma.outsourcing_platformsCreateNestedOneWithoutPlatform_profilesInput
   profiles?: Prisma.profilesCreateNestedOneWithoutPlatform_profilesInput
 }
 
@@ -319,7 +299,6 @@ export type platform_profilesUncheckedCreateInput = {
   date_created?: Date | string | null
   date_updated?: Date | string | null
   profile?: number | null
-  outsourcing_platform?: number | null
 }
 
 export type platform_profilesUpdateInput = {
@@ -327,7 +306,6 @@ export type platform_profilesUpdateInput = {
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  outsourcing_platforms?: Prisma.outsourcing_platformsUpdateOneWithoutPlatform_profilesNestedInput
   profiles?: Prisma.profilesUpdateOneWithoutPlatform_profilesNestedInput
 }
 
@@ -338,7 +316,6 @@ export type platform_profilesUncheckedUpdateInput = {
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   profile?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  outsourcing_platform?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type platform_profilesCreateManyInput = {
@@ -348,7 +325,6 @@ export type platform_profilesCreateManyInput = {
   date_created?: Date | string | null
   date_updated?: Date | string | null
   profile?: number | null
-  outsourcing_platform?: number | null
 }
 
 export type platform_profilesUpdateManyMutationInput = {
@@ -365,7 +341,6 @@ export type platform_profilesUncheckedUpdateManyInput = {
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   profile?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  outsourcing_platform?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type platform_profilesCountOrderByAggregateInput = {
@@ -375,14 +350,12 @@ export type platform_profilesCountOrderByAggregateInput = {
   date_created?: Prisma.SortOrder
   date_updated?: Prisma.SortOrder
   profile?: Prisma.SortOrder
-  outsourcing_platform?: Prisma.SortOrder
 }
 
 export type platform_profilesAvgOrderByAggregateInput = {
   id?: Prisma.SortOrder
   sort?: Prisma.SortOrder
   profile?: Prisma.SortOrder
-  outsourcing_platform?: Prisma.SortOrder
 }
 
 export type platform_profilesMaxOrderByAggregateInput = {
@@ -392,7 +365,6 @@ export type platform_profilesMaxOrderByAggregateInput = {
   date_created?: Prisma.SortOrder
   date_updated?: Prisma.SortOrder
   profile?: Prisma.SortOrder
-  outsourcing_platform?: Prisma.SortOrder
 }
 
 export type platform_profilesMinOrderByAggregateInput = {
@@ -402,14 +374,12 @@ export type platform_profilesMinOrderByAggregateInput = {
   date_created?: Prisma.SortOrder
   date_updated?: Prisma.SortOrder
   profile?: Prisma.SortOrder
-  outsourcing_platform?: Prisma.SortOrder
 }
 
 export type platform_profilesSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
   sort?: Prisma.SortOrder
   profile?: Prisma.SortOrder
-  outsourcing_platform?: Prisma.SortOrder
 }
 
 export type Platform_profilesListRelationFilter = {
@@ -464,54 +434,11 @@ export type platform_profilesUncheckedUpdateManyWithoutProfilesNestedInput = {
   deleteMany?: Prisma.platform_profilesScalarWhereInput | Prisma.platform_profilesScalarWhereInput[]
 }
 
-export type platform_profilesCreateNestedManyWithoutOutsourcing_platformsInput = {
-  create?: Prisma.XOR<Prisma.platform_profilesCreateWithoutOutsourcing_platformsInput, Prisma.platform_profilesUncheckedCreateWithoutOutsourcing_platformsInput> | Prisma.platform_profilesCreateWithoutOutsourcing_platformsInput[] | Prisma.platform_profilesUncheckedCreateWithoutOutsourcing_platformsInput[]
-  connectOrCreate?: Prisma.platform_profilesCreateOrConnectWithoutOutsourcing_platformsInput | Prisma.platform_profilesCreateOrConnectWithoutOutsourcing_platformsInput[]
-  createMany?: Prisma.platform_profilesCreateManyOutsourcing_platformsInputEnvelope
-  connect?: Prisma.platform_profilesWhereUniqueInput | Prisma.platform_profilesWhereUniqueInput[]
-}
-
-export type platform_profilesUncheckedCreateNestedManyWithoutOutsourcing_platformsInput = {
-  create?: Prisma.XOR<Prisma.platform_profilesCreateWithoutOutsourcing_platformsInput, Prisma.platform_profilesUncheckedCreateWithoutOutsourcing_platformsInput> | Prisma.platform_profilesCreateWithoutOutsourcing_platformsInput[] | Prisma.platform_profilesUncheckedCreateWithoutOutsourcing_platformsInput[]
-  connectOrCreate?: Prisma.platform_profilesCreateOrConnectWithoutOutsourcing_platformsInput | Prisma.platform_profilesCreateOrConnectWithoutOutsourcing_platformsInput[]
-  createMany?: Prisma.platform_profilesCreateManyOutsourcing_platformsInputEnvelope
-  connect?: Prisma.platform_profilesWhereUniqueInput | Prisma.platform_profilesWhereUniqueInput[]
-}
-
-export type platform_profilesUpdateManyWithoutOutsourcing_platformsNestedInput = {
-  create?: Prisma.XOR<Prisma.platform_profilesCreateWithoutOutsourcing_platformsInput, Prisma.platform_profilesUncheckedCreateWithoutOutsourcing_platformsInput> | Prisma.platform_profilesCreateWithoutOutsourcing_platformsInput[] | Prisma.platform_profilesUncheckedCreateWithoutOutsourcing_platformsInput[]
-  connectOrCreate?: Prisma.platform_profilesCreateOrConnectWithoutOutsourcing_platformsInput | Prisma.platform_profilesCreateOrConnectWithoutOutsourcing_platformsInput[]
-  upsert?: Prisma.platform_profilesUpsertWithWhereUniqueWithoutOutsourcing_platformsInput | Prisma.platform_profilesUpsertWithWhereUniqueWithoutOutsourcing_platformsInput[]
-  createMany?: Prisma.platform_profilesCreateManyOutsourcing_platformsInputEnvelope
-  set?: Prisma.platform_profilesWhereUniqueInput | Prisma.platform_profilesWhereUniqueInput[]
-  disconnect?: Prisma.platform_profilesWhereUniqueInput | Prisma.platform_profilesWhereUniqueInput[]
-  delete?: Prisma.platform_profilesWhereUniqueInput | Prisma.platform_profilesWhereUniqueInput[]
-  connect?: Prisma.platform_profilesWhereUniqueInput | Prisma.platform_profilesWhereUniqueInput[]
-  update?: Prisma.platform_profilesUpdateWithWhereUniqueWithoutOutsourcing_platformsInput | Prisma.platform_profilesUpdateWithWhereUniqueWithoutOutsourcing_platformsInput[]
-  updateMany?: Prisma.platform_profilesUpdateManyWithWhereWithoutOutsourcing_platformsInput | Prisma.platform_profilesUpdateManyWithWhereWithoutOutsourcing_platformsInput[]
-  deleteMany?: Prisma.platform_profilesScalarWhereInput | Prisma.platform_profilesScalarWhereInput[]
-}
-
-export type platform_profilesUncheckedUpdateManyWithoutOutsourcing_platformsNestedInput = {
-  create?: Prisma.XOR<Prisma.platform_profilesCreateWithoutOutsourcing_platformsInput, Prisma.platform_profilesUncheckedCreateWithoutOutsourcing_platformsInput> | Prisma.platform_profilesCreateWithoutOutsourcing_platformsInput[] | Prisma.platform_profilesUncheckedCreateWithoutOutsourcing_platformsInput[]
-  connectOrCreate?: Prisma.platform_profilesCreateOrConnectWithoutOutsourcing_platformsInput | Prisma.platform_profilesCreateOrConnectWithoutOutsourcing_platformsInput[]
-  upsert?: Prisma.platform_profilesUpsertWithWhereUniqueWithoutOutsourcing_platformsInput | Prisma.platform_profilesUpsertWithWhereUniqueWithoutOutsourcing_platformsInput[]
-  createMany?: Prisma.platform_profilesCreateManyOutsourcing_platformsInputEnvelope
-  set?: Prisma.platform_profilesWhereUniqueInput | Prisma.platform_profilesWhereUniqueInput[]
-  disconnect?: Prisma.platform_profilesWhereUniqueInput | Prisma.platform_profilesWhereUniqueInput[]
-  delete?: Prisma.platform_profilesWhereUniqueInput | Prisma.platform_profilesWhereUniqueInput[]
-  connect?: Prisma.platform_profilesWhereUniqueInput | Prisma.platform_profilesWhereUniqueInput[]
-  update?: Prisma.platform_profilesUpdateWithWhereUniqueWithoutOutsourcing_platformsInput | Prisma.platform_profilesUpdateWithWhereUniqueWithoutOutsourcing_platformsInput[]
-  updateMany?: Prisma.platform_profilesUpdateManyWithWhereWithoutOutsourcing_platformsInput | Prisma.platform_profilesUpdateManyWithWhereWithoutOutsourcing_platformsInput[]
-  deleteMany?: Prisma.platform_profilesScalarWhereInput | Prisma.platform_profilesScalarWhereInput[]
-}
-
 export type platform_profilesCreateWithoutProfilesInput = {
   status?: string
   sort?: number | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
-  outsourcing_platforms?: Prisma.outsourcing_platformsCreateNestedOneWithoutPlatform_profilesInput
 }
 
 export type platform_profilesUncheckedCreateWithoutProfilesInput = {
@@ -520,7 +447,6 @@ export type platform_profilesUncheckedCreateWithoutProfilesInput = {
   sort?: number | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
-  outsourcing_platform?: number | null
 }
 
 export type platform_profilesCreateOrConnectWithoutProfilesInput = {
@@ -559,50 +485,6 @@ export type platform_profilesScalarWhereInput = {
   date_created?: Prisma.DateTimeNullableFilter<"platform_profiles"> | Date | string | null
   date_updated?: Prisma.DateTimeNullableFilter<"platform_profiles"> | Date | string | null
   profile?: Prisma.IntNullableFilter<"platform_profiles"> | number | null
-  outsourcing_platform?: Prisma.IntNullableFilter<"platform_profiles"> | number | null
-}
-
-export type platform_profilesCreateWithoutOutsourcing_platformsInput = {
-  status?: string
-  sort?: number | null
-  date_created?: Date | string | null
-  date_updated?: Date | string | null
-  profiles?: Prisma.profilesCreateNestedOneWithoutPlatform_profilesInput
-}
-
-export type platform_profilesUncheckedCreateWithoutOutsourcing_platformsInput = {
-  id?: number
-  status?: string
-  sort?: number | null
-  date_created?: Date | string | null
-  date_updated?: Date | string | null
-  profile?: number | null
-}
-
-export type platform_profilesCreateOrConnectWithoutOutsourcing_platformsInput = {
-  where: Prisma.platform_profilesWhereUniqueInput
-  create: Prisma.XOR<Prisma.platform_profilesCreateWithoutOutsourcing_platformsInput, Prisma.platform_profilesUncheckedCreateWithoutOutsourcing_platformsInput>
-}
-
-export type platform_profilesCreateManyOutsourcing_platformsInputEnvelope = {
-  data: Prisma.platform_profilesCreateManyOutsourcing_platformsInput | Prisma.platform_profilesCreateManyOutsourcing_platformsInput[]
-  skipDuplicates?: boolean
-}
-
-export type platform_profilesUpsertWithWhereUniqueWithoutOutsourcing_platformsInput = {
-  where: Prisma.platform_profilesWhereUniqueInput
-  update: Prisma.XOR<Prisma.platform_profilesUpdateWithoutOutsourcing_platformsInput, Prisma.platform_profilesUncheckedUpdateWithoutOutsourcing_platformsInput>
-  create: Prisma.XOR<Prisma.platform_profilesCreateWithoutOutsourcing_platformsInput, Prisma.platform_profilesUncheckedCreateWithoutOutsourcing_platformsInput>
-}
-
-export type platform_profilesUpdateWithWhereUniqueWithoutOutsourcing_platformsInput = {
-  where: Prisma.platform_profilesWhereUniqueInput
-  data: Prisma.XOR<Prisma.platform_profilesUpdateWithoutOutsourcing_platformsInput, Prisma.platform_profilesUncheckedUpdateWithoutOutsourcing_platformsInput>
-}
-
-export type platform_profilesUpdateManyWithWhereWithoutOutsourcing_platformsInput = {
-  where: Prisma.platform_profilesScalarWhereInput
-  data: Prisma.XOR<Prisma.platform_profilesUpdateManyMutationInput, Prisma.platform_profilesUncheckedUpdateManyWithoutOutsourcing_platformsInput>
 }
 
 export type platform_profilesCreateManyProfilesInput = {
@@ -611,7 +493,6 @@ export type platform_profilesCreateManyProfilesInput = {
   sort?: number | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
-  outsourcing_platform?: number | null
 }
 
 export type platform_profilesUpdateWithoutProfilesInput = {
@@ -619,7 +500,6 @@ export type platform_profilesUpdateWithoutProfilesInput = {
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  outsourcing_platforms?: Prisma.outsourcing_platformsUpdateOneWithoutPlatform_profilesNestedInput
 }
 
 export type platform_profilesUncheckedUpdateWithoutProfilesInput = {
@@ -628,7 +508,6 @@ export type platform_profilesUncheckedUpdateWithoutProfilesInput = {
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  outsourcing_platform?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type platform_profilesUncheckedUpdateManyWithoutProfilesInput = {
@@ -637,42 +516,6 @@ export type platform_profilesUncheckedUpdateManyWithoutProfilesInput = {
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  outsourcing_platform?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-}
-
-export type platform_profilesCreateManyOutsourcing_platformsInput = {
-  id?: number
-  status?: string
-  sort?: number | null
-  date_created?: Date | string | null
-  date_updated?: Date | string | null
-  profile?: number | null
-}
-
-export type platform_profilesUpdateWithoutOutsourcing_platformsInput = {
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  profiles?: Prisma.profilesUpdateOneWithoutPlatform_profilesNestedInput
-}
-
-export type platform_profilesUncheckedUpdateWithoutOutsourcing_platformsInput = {
-  id?: Prisma.IntFieldUpdateOperationsInput | number
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  profile?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-}
-
-export type platform_profilesUncheckedUpdateManyWithoutOutsourcing_platformsInput = {
-  id?: Prisma.IntFieldUpdateOperationsInput | number
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  profile?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 
@@ -684,8 +527,6 @@ export type platform_profilesSelect<ExtArgs extends runtime.Types.Extensions.Int
   date_created?: boolean
   date_updated?: boolean
   profile?: boolean
-  outsourcing_platform?: boolean
-  outsourcing_platforms?: boolean | Prisma.platform_profiles$outsourcing_platformsArgs<ExtArgs>
   profiles?: boolean | Prisma.platform_profiles$profilesArgs<ExtArgs>
 }, ExtArgs["result"]["platform_profiles"]>
 
@@ -696,8 +537,6 @@ export type platform_profilesSelectCreateManyAndReturn<ExtArgs extends runtime.T
   date_created?: boolean
   date_updated?: boolean
   profile?: boolean
-  outsourcing_platform?: boolean
-  outsourcing_platforms?: boolean | Prisma.platform_profiles$outsourcing_platformsArgs<ExtArgs>
   profiles?: boolean | Prisma.platform_profiles$profilesArgs<ExtArgs>
 }, ExtArgs["result"]["platform_profiles"]>
 
@@ -708,8 +547,6 @@ export type platform_profilesSelectUpdateManyAndReturn<ExtArgs extends runtime.T
   date_created?: boolean
   date_updated?: boolean
   profile?: boolean
-  outsourcing_platform?: boolean
-  outsourcing_platforms?: boolean | Prisma.platform_profiles$outsourcing_platformsArgs<ExtArgs>
   profiles?: boolean | Prisma.platform_profiles$profilesArgs<ExtArgs>
 }, ExtArgs["result"]["platform_profiles"]>
 
@@ -720,27 +557,22 @@ export type platform_profilesSelectScalar = {
   date_created?: boolean
   date_updated?: boolean
   profile?: boolean
-  outsourcing_platform?: boolean
 }
 
-export type platform_profilesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "sort" | "date_created" | "date_updated" | "profile" | "outsourcing_platform", ExtArgs["result"]["platform_profiles"]>
+export type platform_profilesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "sort" | "date_created" | "date_updated" | "profile", ExtArgs["result"]["platform_profiles"]>
 export type platform_profilesInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  outsourcing_platforms?: boolean | Prisma.platform_profiles$outsourcing_platformsArgs<ExtArgs>
   profiles?: boolean | Prisma.platform_profiles$profilesArgs<ExtArgs>
 }
 export type platform_profilesIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  outsourcing_platforms?: boolean | Prisma.platform_profiles$outsourcing_platformsArgs<ExtArgs>
   profiles?: boolean | Prisma.platform_profiles$profilesArgs<ExtArgs>
 }
 export type platform_profilesIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  outsourcing_platforms?: boolean | Prisma.platform_profiles$outsourcing_platformsArgs<ExtArgs>
   profiles?: boolean | Prisma.platform_profiles$profilesArgs<ExtArgs>
 }
 
 export type $platform_profilesPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "platform_profiles"
   objects: {
-    outsourcing_platforms: Prisma.$outsourcing_platformsPayload<ExtArgs> | null
     profiles: Prisma.$profilesPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
@@ -750,7 +582,6 @@ export type $platform_profilesPayload<ExtArgs extends runtime.Types.Extensions.I
     date_created: Date | null
     date_updated: Date | null
     profile: number | null
-    outsourcing_platform: number | null
   }, ExtArgs["result"]["platform_profiles"]>
   composites: {}
 }
@@ -1145,7 +976,6 @@ readonly fields: platform_profilesFieldRefs;
  */
 export interface Prisma__platform_profilesClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  outsourcing_platforms<T extends Prisma.platform_profiles$outsourcing_platformsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.platform_profiles$outsourcing_platformsArgs<ExtArgs>>): Prisma.Prisma__outsourcing_platformsClient<runtime.Types.Result.GetResult<Prisma.$outsourcing_platformsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   profiles<T extends Prisma.platform_profiles$profilesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.platform_profiles$profilesArgs<ExtArgs>>): Prisma.Prisma__profilesClient<runtime.Types.Result.GetResult<Prisma.$profilesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -1182,7 +1012,6 @@ export interface platform_profilesFieldRefs {
   readonly date_created: Prisma.FieldRef<"platform_profiles", 'DateTime'>
   readonly date_updated: Prisma.FieldRef<"platform_profiles", 'DateTime'>
   readonly profile: Prisma.FieldRef<"platform_profiles", 'Int'>
-  readonly outsourcing_platform: Prisma.FieldRef<"platform_profiles", 'Int'>
 }
     
 
@@ -1576,25 +1405,6 @@ export type platform_profilesDeleteManyArgs<ExtArgs extends runtime.Types.Extens
    * Limit how many platform_profiles to delete.
    */
   limit?: number
-}
-
-/**
- * platform_profiles.outsourcing_platforms
- */
-export type platform_profiles$outsourcing_platformsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the outsourcing_platforms
-   */
-  select?: Prisma.outsourcing_platformsSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the outsourcing_platforms
-   */
-  omit?: Prisma.outsourcing_platformsOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.outsourcing_platformsInclude<ExtArgs> | null
-  where?: Prisma.outsourcing_platformsWhereInput
 }
 
 /**

@@ -110,14 +110,13 @@ export const ModelName = {
   ai_chat_prompts: 'ai_chat_prompts',
   profile_version_extensions: 'profile_version_extensions',
   application_letters: 'application_letters',
-  job_sites: 'job_sites',
-  outsourcing_platforms: 'outsourcing_platforms',
   job_resources: 'job_resources',
   jobs: 'jobs',
   job_searches: 'job_searches',
   job_searches_job_sites: 'job_searches_job_sites',
   job_match_preferences: 'job_match_preferences',
-  job_matches: 'job_matches'
+  job_matches: 'job_matches',
+  job_platforms: 'job_platforms'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -729,8 +728,7 @@ export const Platform_profilesScalarFieldEnum = {
   sort: 'sort',
   date_created: 'date_created',
   date_updated: 'date_updated',
-  profile: 'profile',
-  outsourcing_platform: 'outsourcing_platform'
+  profile: 'profile'
 } as const
 
 export type Platform_profilesScalarFieldEnum = (typeof Platform_profilesScalarFieldEnum)[keyof typeof Platform_profilesScalarFieldEnum]
@@ -1126,33 +1124,6 @@ export const Application_lettersScalarFieldEnum = {
 export type Application_lettersScalarFieldEnum = (typeof Application_lettersScalarFieldEnum)[keyof typeof Application_lettersScalarFieldEnum]
 
 
-export const Job_sitesScalarFieldEnum = {
-  id: 'id',
-  status: 'status',
-  date_created: 'date_created',
-  date_updated: 'date_updated',
-  name: 'name',
-  search_url_base: 'search_url_base',
-  search_param_mappings: 'search_param_mappings'
-} as const
-
-export type Job_sitesScalarFieldEnum = (typeof Job_sitesScalarFieldEnum)[keyof typeof Job_sitesScalarFieldEnum]
-
-
-export const Outsourcing_platformsScalarFieldEnum = {
-  id: 'id',
-  status: 'status',
-  sort: 'sort',
-  date_created: 'date_created',
-  date_updated: 'date_updated',
-  name: 'name',
-  url: 'url',
-  type: 'type'
-} as const
-
-export type Outsourcing_platformsScalarFieldEnum = (typeof Outsourcing_platformsScalarFieldEnum)[keyof typeof Outsourcing_platformsScalarFieldEnum]
-
-
 export const Job_resourcesScalarFieldEnum = {
   id: 'id',
   sort: 'sort',
@@ -1206,7 +1177,8 @@ export const Job_searchesScalarFieldEnum = {
   name: 'name',
   profile: 'profile',
   last_run: 'last_run',
-  search_url: 'search_url'
+  search_url: 'search_url',
+  platform: 'platform'
 } as const
 
 export type Job_searchesScalarFieldEnum = (typeof Job_searchesScalarFieldEnum)[keyof typeof Job_searchesScalarFieldEnum]
@@ -1214,8 +1186,7 @@ export type Job_searchesScalarFieldEnum = (typeof Job_searchesScalarFieldEnum)[k
 
 export const Job_searches_job_sitesScalarFieldEnum = {
   id: 'id',
-  job_searches_id: 'job_searches_id',
-  job_sites_id: 'job_sites_id'
+  job_searches_id: 'job_searches_id'
 } as const
 
 export type Job_searches_job_sitesScalarFieldEnum = (typeof Job_searches_job_sitesScalarFieldEnum)[keyof typeof Job_searches_job_sitesScalarFieldEnum]
@@ -1254,6 +1225,20 @@ export const Job_matchesScalarFieldEnum = {
 } as const
 
 export type Job_matchesScalarFieldEnum = (typeof Job_matchesScalarFieldEnum)[keyof typeof Job_matchesScalarFieldEnum]
+
+
+export const Job_platformsScalarFieldEnum = {
+  id: 'id',
+  status: 'status',
+  sort: 'sort',
+  date_created: 'date_created',
+  date_updated: 'date_updated',
+  name: 'name',
+  url: 'url',
+  type: 'type'
+} as const
+
+export type Job_platformsScalarFieldEnum = (typeof Job_platformsScalarFieldEnum)[keyof typeof Job_platformsScalarFieldEnum]
 
 
 export const SortOrder = {
