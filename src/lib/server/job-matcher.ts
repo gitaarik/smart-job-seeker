@@ -29,10 +29,9 @@ export interface JobMatchPreferences {
  * Match result from LLM scoring
  */
 export interface MatchResult {
-  collectedDataId: number;
+  profileId: number;
   jobId: number;
   score: number;
-  summary: string;
   reasoning: string;
   skill_match_percentage: number;
   strengths: string[];
@@ -145,24 +144,25 @@ export async function filterEligibleJobs(
 
 /**
  * Calculate match score using LLM
- * @param collectedDataId - Collected data ID containing profile snapshot
+ * @param profileId - Profile ID
  * @param job - Job to match against
  * @param preferences - User's matching preferences
  * @returns Match result with score and details
  */
 export async function calculateMatch(
-  collectedDataId: number,
+  profileId: number,
   job: jobs,
   preferences: JobMatchPreferences,
 ): Promise<MatchResult> {
-  // Get collected data (profile snapshot)
-  const collectedData = await db.collected_data.findUnique({
-    where: { id: collectedDataId },
+  // Get latest collected data for profile
+  const collectedData = await db.collected_data.findFirst({
+    where: { profile: profileId },
+    orderBy: { date_updated: "desc" },
   });
 
   if (!collectedData) {
     throw new Error(
-      `Collected data not found for ID: ${collectedDataId}`,
+      `No collected_data found for profile ${profileId}`,
     );
   }
 
@@ -243,10 +243,9 @@ export async function calculateMatch(
     const result = JSON.parse(response);
 
     return {
-      collectedDataId,
+      profileId,
       jobId: job.id,
       score: result.score,
-      summary: result.summary,
       reasoning: result.reasoning,
       skill_match_percentage: result.skill_match_percentage,
       strengths: result.strengths,
@@ -276,7 +275,7 @@ export async function upsertJobMatch(
   // Check if match exists
   const existing = await db.job_matches.findFirst({
     where: {
-      collected_data: match.collectedDataId,
+      profile: match.profileId,
       job: match.jobId,
     },
   });
@@ -285,13 +284,13 @@ export async function upsertJobMatch(
 
   const matchData = {
     score: match.score,
-    summary: match.summary,
     reasoning: match.reasoning,
     skill_match_percentage: match.skill_match_percentage,
     strengths: match.strengths,
     gaps: match.gaps,
     recommendation: match.recommendation,
     job_date_updated_when_matched: match.jobDateUpdated || currentDate,
+    profile: match.profileId,
     date_updated: currentDate,
   };
 
@@ -307,7 +306,6 @@ export async function upsertJobMatch(
     const newMatch = await db.job_matches.create({
       data: {
         ...matchData,
-        collected_data: match.collectedDataId,
         job: match.jobId,
         status: "new",
         date_created: currentDate,

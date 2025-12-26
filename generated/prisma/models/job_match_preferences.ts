@@ -41,6 +41,7 @@ export type Job_match_preferencesMinAggregateOutputType = {
   date_created: Date | null
   date_updated: Date | null
   profile: number | null
+  name: string | null
 }
 
 export type Job_match_preferencesMaxAggregateOutputType = {
@@ -48,6 +49,7 @@ export type Job_match_preferencesMaxAggregateOutputType = {
   date_created: Date | null
   date_updated: Date | null
   profile: number | null
+  name: string | null
 }
 
 export type Job_match_preferencesCountAggregateOutputType = {
@@ -59,6 +61,7 @@ export type Job_match_preferencesCountAggregateOutputType = {
   remote_options: number
   locations: number
   profile: number
+  name: number
   _all: number
 }
 
@@ -78,6 +81,7 @@ export type Job_match_preferencesMinAggregateInputType = {
   date_created?: true
   date_updated?: true
   profile?: true
+  name?: true
 }
 
 export type Job_match_preferencesMaxAggregateInputType = {
@@ -85,6 +89,7 @@ export type Job_match_preferencesMaxAggregateInputType = {
   date_created?: true
   date_updated?: true
   profile?: true
+  name?: true
 }
 
 export type Job_match_preferencesCountAggregateInputType = {
@@ -96,6 +101,7 @@ export type Job_match_preferencesCountAggregateInputType = {
   remote_options?: true
   locations?: true
   profile?: true
+  name?: true
   _all?: true
 }
 
@@ -194,6 +200,7 @@ export type Job_match_preferencesGroupByOutputType = {
   remote_options: runtime.JsonValue | null
   locations: runtime.JsonValue | null
   profile: number
+  name: string | null
   _count: Job_match_preferencesCountAggregateOutputType | null
   _avg: Job_match_preferencesAvgAggregateOutputType | null
   _sum: Job_match_preferencesSumAggregateOutputType | null
@@ -228,6 +235,7 @@ export type job_match_preferencesWhereInput = {
   remote_options?: Prisma.JsonNullableFilter<"job_match_preferences">
   locations?: Prisma.JsonNullableFilter<"job_match_preferences">
   profile?: Prisma.IntFilter<"job_match_preferences"> | number
+  name?: Prisma.StringNullableFilter<"job_match_preferences"> | string | null
   profiles?: Prisma.XOR<Prisma.ProfilesScalarRelationFilter, Prisma.profilesWhereInput>
 }
 
@@ -240,6 +248,7 @@ export type job_match_preferencesOrderByWithRelationInput = {
   remote_options?: Prisma.SortOrderInput | Prisma.SortOrder
   locations?: Prisma.SortOrderInput | Prisma.SortOrder
   profile?: Prisma.SortOrder
+  name?: Prisma.SortOrderInput | Prisma.SortOrder
   profiles?: Prisma.profilesOrderByWithRelationInput
 }
 
@@ -255,6 +264,7 @@ export type job_match_preferencesWhereUniqueInput = Prisma.AtLeast<{
   remote_options?: Prisma.JsonNullableFilter<"job_match_preferences">
   locations?: Prisma.JsonNullableFilter<"job_match_preferences">
   profile?: Prisma.IntFilter<"job_match_preferences"> | number
+  name?: Prisma.StringNullableFilter<"job_match_preferences"> | string | null
   profiles?: Prisma.XOR<Prisma.ProfilesScalarRelationFilter, Prisma.profilesWhereInput>
 }, "id">
 
@@ -267,6 +277,7 @@ export type job_match_preferencesOrderByWithAggregationInput = {
   remote_options?: Prisma.SortOrderInput | Prisma.SortOrder
   locations?: Prisma.SortOrderInput | Prisma.SortOrder
   profile?: Prisma.SortOrder
+  name?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.job_match_preferencesCountOrderByAggregateInput
   _avg?: Prisma.job_match_preferencesAvgOrderByAggregateInput
   _max?: Prisma.job_match_preferencesMaxOrderByAggregateInput
@@ -286,6 +297,7 @@ export type job_match_preferencesScalarWhereWithAggregatesInput = {
   remote_options?: Prisma.JsonNullableWithAggregatesFilter<"job_match_preferences">
   locations?: Prisma.JsonNullableWithAggregatesFilter<"job_match_preferences">
   profile?: Prisma.IntWithAggregatesFilter<"job_match_preferences"> | number
+  name?: Prisma.StringNullableWithAggregatesFilter<"job_match_preferences"> | string | null
 }
 
 export type job_match_preferencesCreateInput = {
@@ -295,6 +307,7 @@ export type job_match_preferencesCreateInput = {
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   locations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  name?: string | null
   profiles: Prisma.profilesCreateNestedOneWithoutJob_match_preferencesInput
 }
 
@@ -307,6 +320,7 @@ export type job_match_preferencesUncheckedCreateInput = {
   remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   locations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   profile: number
+  name?: string | null
 }
 
 export type job_match_preferencesUpdateInput = {
@@ -316,6 +330,7 @@ export type job_match_preferencesUpdateInput = {
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   locations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profiles?: Prisma.profilesUpdateOneRequiredWithoutJob_match_preferencesNestedInput
 }
 
@@ -328,6 +343,7 @@ export type job_match_preferencesUncheckedUpdateInput = {
   remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   locations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   profile?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type job_match_preferencesCreateManyInput = {
@@ -339,6 +355,7 @@ export type job_match_preferencesCreateManyInput = {
   remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   locations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   profile: number
+  name?: string | null
 }
 
 export type job_match_preferencesUpdateManyMutationInput = {
@@ -348,6 +365,7 @@ export type job_match_preferencesUpdateManyMutationInput = {
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   locations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type job_match_preferencesUncheckedUpdateManyInput = {
@@ -359,6 +377,7 @@ export type job_match_preferencesUncheckedUpdateManyInput = {
   remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   locations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   profile?: Prisma.IntFieldUpdateOperationsInput | number
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type Job_match_preferencesListRelationFilter = {
@@ -380,6 +399,7 @@ export type job_match_preferencesCountOrderByAggregateInput = {
   remote_options?: Prisma.SortOrder
   locations?: Prisma.SortOrder
   profile?: Prisma.SortOrder
+  name?: Prisma.SortOrder
 }
 
 export type job_match_preferencesAvgOrderByAggregateInput = {
@@ -392,6 +412,7 @@ export type job_match_preferencesMaxOrderByAggregateInput = {
   date_created?: Prisma.SortOrder
   date_updated?: Prisma.SortOrder
   profile?: Prisma.SortOrder
+  name?: Prisma.SortOrder
 }
 
 export type job_match_preferencesMinOrderByAggregateInput = {
@@ -399,6 +420,7 @@ export type job_match_preferencesMinOrderByAggregateInput = {
   date_created?: Prisma.SortOrder
   date_updated?: Prisma.SortOrder
   profile?: Prisma.SortOrder
+  name?: Prisma.SortOrder
 }
 
 export type job_match_preferencesSumOrderByAggregateInput = {
@@ -455,6 +477,7 @@ export type job_match_preferencesCreateWithoutProfilesInput = {
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   locations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  name?: string | null
 }
 
 export type job_match_preferencesUncheckedCreateWithoutProfilesInput = {
@@ -465,6 +488,7 @@ export type job_match_preferencesUncheckedCreateWithoutProfilesInput = {
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   locations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  name?: string | null
 }
 
 export type job_match_preferencesCreateOrConnectWithoutProfilesInput = {
@@ -505,6 +529,7 @@ export type job_match_preferencesScalarWhereInput = {
   remote_options?: Prisma.JsonNullableFilter<"job_match_preferences">
   locations?: Prisma.JsonNullableFilter<"job_match_preferences">
   profile?: Prisma.IntFilter<"job_match_preferences"> | number
+  name?: Prisma.StringNullableFilter<"job_match_preferences"> | string | null
 }
 
 export type job_match_preferencesCreateManyProfilesInput = {
@@ -515,6 +540,7 @@ export type job_match_preferencesCreateManyProfilesInput = {
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   locations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  name?: string | null
 }
 
 export type job_match_preferencesUpdateWithoutProfilesInput = {
@@ -524,6 +550,7 @@ export type job_match_preferencesUpdateWithoutProfilesInput = {
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   locations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type job_match_preferencesUncheckedUpdateWithoutProfilesInput = {
@@ -534,6 +561,7 @@ export type job_match_preferencesUncheckedUpdateWithoutProfilesInput = {
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   locations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type job_match_preferencesUncheckedUpdateManyWithoutProfilesInput = {
@@ -544,6 +572,7 @@ export type job_match_preferencesUncheckedUpdateManyWithoutProfilesInput = {
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   locations?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 
@@ -557,6 +586,7 @@ export type job_match_preferencesSelect<ExtArgs extends runtime.Types.Extensions
   remote_options?: boolean
   locations?: boolean
   profile?: boolean
+  name?: boolean
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["job_match_preferences"]>
 
@@ -569,6 +599,7 @@ export type job_match_preferencesSelectCreateManyAndReturn<ExtArgs extends runti
   remote_options?: boolean
   locations?: boolean
   profile?: boolean
+  name?: boolean
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["job_match_preferences"]>
 
@@ -581,6 +612,7 @@ export type job_match_preferencesSelectUpdateManyAndReturn<ExtArgs extends runti
   remote_options?: boolean
   locations?: boolean
   profile?: boolean
+  name?: boolean
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["job_match_preferences"]>
 
@@ -593,9 +625,10 @@ export type job_match_preferencesSelectScalar = {
   remote_options?: boolean
   locations?: boolean
   profile?: boolean
+  name?: boolean
 }
 
-export type job_match_preferencesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "date_created" | "date_updated" | "job_types" | "experience_levels" | "remote_options" | "locations" | "profile", ExtArgs["result"]["job_match_preferences"]>
+export type job_match_preferencesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "date_created" | "date_updated" | "job_types" | "experience_levels" | "remote_options" | "locations" | "profile" | "name", ExtArgs["result"]["job_match_preferences"]>
 export type job_match_preferencesInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }
@@ -620,6 +653,7 @@ export type $job_match_preferencesPayload<ExtArgs extends runtime.Types.Extensio
     remote_options: runtime.JsonValue | null
     locations: runtime.JsonValue | null
     profile: number
+    name: string | null
   }, ExtArgs["result"]["job_match_preferences"]>
   composites: {}
 }
@@ -1052,6 +1086,7 @@ export interface job_match_preferencesFieldRefs {
   readonly remote_options: Prisma.FieldRef<"job_match_preferences", 'Json'>
   readonly locations: Prisma.FieldRef<"job_match_preferences", 'Json'>
   readonly profile: Prisma.FieldRef<"job_match_preferences", 'Int'>
+  readonly name: Prisma.FieldRef<"job_match_preferences", 'String'>
 }
     
 

@@ -14,17 +14,8 @@ import {
 } from "$lib/server/job-matcher";
 import { getProfileSkills, needsRematching } from "$lib/server/job-match-utils";
 import { errorTracker } from "$lib/server/monitoring/error-tracker";
-import { exec } from "child_process";
-import { promisify } from "util";
-
-const execAsync = promisify(exec);
-
-interface CliArgs {
-  profileId: number;
-  jobIds?: number[];
-  force: boolean;
-  batchSize: number;
-}
+import { clearDirectusCache } from "$lib/server/directus";
+import { Command } from "commander";
 
 interface MatchStats {
   total: number;
@@ -34,82 +25,43 @@ interface MatchStats {
   failed: number;
 }
 
-/**
- * Parse CLI arguments
- */
-function parseArgs(): CliArgs | null {
-  const args = process.argv.slice(2);
+// CLI Program
+const program = new Command();
 
-  let profileId: number | undefined;
-  let jobIds: number[] | undefined;
-  let force = false;
-  let batchSize = 10;
+program
+  .name("match-jobs")
+  .description(
+    "Match jobs against profile preferences and generate LLM-based match scores",
+  )
+  .version("1.0.0")
+  .requiredOption(
+    "-p, --profile-id <id>",
+    "Profile ID to match jobs for",
+    parseInt,
+  )
+  .option(
+    "-j, --job-ids <ids>",
+    "Comma-separated job IDs to match",
+    (value) => value.split(",").map((id) => parseInt(id.trim(), 10)),
+  )
+  .option("-f, --force", "Force re-match even if unchanged", false)
+  .option(
+    "-b, --batch-size <num>",
+    "Number of jobs to process concurrently",
+    parseInt,
+    10,
+  )
+  .helpOption("-h, --help", "Display help for command");
 
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
-
-    if (arg === "--profile-id") {
-      profileId = parseInt(args[++i], 10);
-    } else if (arg === "--job-ids") {
-      jobIds = args[++i].split(",").map((id) => parseInt(id.trim(), 10));
-    } else if (arg === "--force") {
-      force = true;
-    } else if (arg === "--batch-size") {
-      batchSize = parseInt(args[++i], 10);
-    } else if (arg === "--help" || arg === "-h") {
-      printUsage();
-      return null;
-    } else {
-      console.error(`Unknown argument: ${arg}`);
-      printUsage();
-      return null;
-    }
-  }
-
-  if (!profileId) {
-    console.error("Error: --profile-id is required");
-    printUsage();
-    return null;
-  }
-
-  return { profileId, jobIds, force, batchSize };
-}
-
-/**
- * Print usage information
- */
-function printUsage(): void {
-  console.log(`
-Usage: npm run match-jobs -- [options]
-
-Options:
-  --profile-id <id>         Profile ID to match jobs for (required)
-  --job-ids <ids>          Comma-separated job IDs to match (optional)
-  --force                  Force re-match even if unchanged (optional)
-  --batch-size <num>       Number of jobs to process concurrently (default: 10)
-  --help, -h               Show this help message
-
-Examples:
-  # Match all eligible jobs for profile
-  npm run match-jobs -- --profile-id=1
-
-  # Match specific jobs
-  npm run match-jobs -- --profile-id=1 --job-ids=101,102,103
-
-  # Force re-match all jobs
-  npm run match-jobs -- --profile-id=1 --force
-
-  # Control batch size
-  npm run match-jobs -- --profile-id=1 --batch-size=5
-`);
-}
+program.parse();
+const options = program.opts();
 
 /**
  * Process jobs in batches
  */
 async function processBatch(
   jobs: Array<{ id: number; title: string | null; date_updated: Date | null }>,
-  collectedDataId: number,
+  profileId: number,
   preferences: any,
   force: boolean,
 ): Promise<MatchStats> {
@@ -124,7 +76,7 @@ async function processBatch(
   for (const job of jobs) {
     try {
       // Check if job needs re-matching
-      if (!force && !(await needsRematching(collectedDataId, job.id, job))) {
+      if (!force && !(await needsRematching(profileId, job.id, job))) {
         console.log(
           `⏭️  Skipping job #${job.id} (${
             job.title || "Untitled"
@@ -140,7 +92,7 @@ async function processBatch(
 
       // Calculate match score using LLM
       const matchResult = await calculateMatch(
-        collectedDataId,
+        profileId,
         job,
         preferences,
       );
@@ -161,7 +113,9 @@ async function processBatch(
       }
 
       // Show match summary
-      console.log(`   Summary: ${matchResult.summary.substring(0, 150)}...`);
+      console.log(
+        `   Reasoning: ${matchResult.reasoning.substring(0, 150)}...`,
+      );
       console.log(`   Skills: ${matchResult.skill_match_percentage}%`);
       console.log(
         `   Strengths: ${matchResult.strengths.slice(0, 2).join(", ")}`,
@@ -189,31 +143,16 @@ async function processBatch(
 }
 
 /**
- * Clear Directus cache
- */
-async function clearDirectusCache(): Promise<void> {
-  try {
-    console.log("\n🧹 Clearing Directus cache...");
-    await execAsync("npm run docker:clear-directus-cache");
-    console.log("✅ Directus cache cleared");
-  } catch (error) {
-    console.error(
-      "⚠️  Failed to clear Directus cache:",
-      error instanceof Error ? error.message : String(error),
-    );
-  }
-}
-
-/**
  * Main matching function
  */
 async function matchJobs(): Promise<void> {
-  const args = parseArgs();
-  if (!args) {
+  const { profileId, jobIds, force, batchSize } = options;
+
+  // Validate profile ID
+  if (isNaN(profileId)) {
+    console.error("❌ Invalid profile ID: must be a number");
     process.exit(1);
   }
-
-  const { profileId, jobIds, force, batchSize } = args;
 
   try {
     console.log("========================================");
@@ -317,7 +256,7 @@ async function matchJobs(): Promise<void> {
 
       const batchStats = await processBatch(
         batch,
-        collectedData.id,
+        profileId,
         preferences,
         force,
       );
@@ -370,7 +309,16 @@ async function matchJobs(): Promise<void> {
 
     process.exit(1);
   } finally {
-    await clearDirectusCache();
+    try {
+      console.log("\n🧹 Clearing Directus cache...");
+      await clearDirectusCache();
+      console.log("✅ Directus cache cleared");
+    } catch (error) {
+      console.error(
+        "⚠️  Failed to clear Directus cache:",
+        error instanceof Error ? error.message : String(error),
+      );
+    }
   }
 }
 
@@ -382,7 +330,15 @@ async function handleExit(signal: string) {
   isExiting = true;
 
   console.log(`\n\n⚠️  Received ${signal}, cleaning up...`);
-  await clearDirectusCache();
+  try {
+    await clearDirectusCache();
+    console.log("✅ Directus cache cleared");
+  } catch (error) {
+    console.error(
+      "⚠️  Failed to clear Directus cache:",
+      error instanceof Error ? error.message : String(error),
+    );
+  }
   process.exit(0);
 }
 

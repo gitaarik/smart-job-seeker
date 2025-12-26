@@ -42,19 +42,19 @@ export function hasArrayOverlap<T>(arr1: T[], arr2: T[]): boolean {
 
 /**
  * Check if a job needs re-matching based on its last update timestamp
- * @param collectedDataId - Collected data ID
+ * @param profileId - Profile ID
  * @param jobId - Job ID
  * @param job - Job object with date_updated
  * @returns True if job needs re-matching
  */
 export async function needsRematching(
-  collectedDataId: number,
+  profileId: number,
   jobId: number,
   job: jobs,
 ): Promise<boolean> {
   const existingMatch = await db.job_matches.findFirst({
     where: {
-      collected_data: collectedDataId,
+      profile: profileId,
       job: jobId,
     },
     select: {
