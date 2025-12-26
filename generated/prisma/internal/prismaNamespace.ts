@@ -6522,7 +6522,8 @@ export const JobsScalarFieldEnum = {
   job_types: 'job_types',
   experience_levels: 'experience_levels',
   remote_options: 'remote_options',
-  skills: 'skills'
+  skills: 'skills',
+  source_html_stripped: 'source_html_stripped'
 } as const
 
 export type JobsScalarFieldEnum = (typeof JobsScalarFieldEnum)[keyof typeof JobsScalarFieldEnum]
@@ -6559,7 +6560,8 @@ export const Job_match_preferencesScalarFieldEnum = {
   experience_levels: 'experience_levels',
   remote_options: 'remote_options',
   locations: 'locations',
-  profile: 'profile'
+  profile: 'profile',
+  name: 'name'
 } as const
 
 export type Job_match_preferencesScalarFieldEnum = (typeof Job_match_preferencesScalarFieldEnum)[keyof typeof Job_match_preferencesScalarFieldEnum]
@@ -6568,7 +6570,6 @@ export type Job_match_preferencesScalarFieldEnum = (typeof Job_match_preferences
 export const Job_matchesScalarFieldEnum = {
   id: 'id',
   score: 'score',
-  summary: 'summary',
   reasoning: 'reasoning',
   skill_match_percentage: 'skill_match_percentage',
   strengths: 'strengths',
@@ -6579,7 +6580,8 @@ export const Job_matchesScalarFieldEnum = {
   date_created: 'date_created',
   date_updated: 'date_updated',
   collected_data: 'collected_data',
-  job: 'job'
+  job: 'job',
+  profile: 'profile'
 } as const
 
 export type Job_matchesScalarFieldEnum = (typeof Job_matchesScalarFieldEnum)[keyof typeof Job_matchesScalarFieldEnum]

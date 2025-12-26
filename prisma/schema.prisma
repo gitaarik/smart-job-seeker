@@ -664,6 +664,7 @@ model profiles {
   education             education[]
   highlights            highlights[]
   job_match_preferences job_match_preferences[]
+  job_matches           job_matches[]
   job_searches          job_searches[]
   languages             languages[]
   os_contributions      os_contributions[]
@@ -1035,33 +1036,34 @@ model job_resources {
 }
 
 model jobs {
-  id                  Int             @id @default(autoincrement())
-  status              String          @default("draft") @db.VarChar(255)
-  date_created        DateTime?       @db.Timestamptz(6)
-  date_updated        DateTime?       @db.Timestamptz(6)
-  source_url          String?         @db.VarChar(255)
-  title               String?         @db.VarChar(255)
-  job_description     String?
-  job_poster          String?         @db.VarChar(255)
-  import_source       String?         @db.VarChar(255)
-  company_description String?
-  date_posted         DateTime?       @db.Date
-  salary_min          Int?
-  salary_max          Int?
-  salary_currency     String?         @db.VarChar(255)
-  salary_period       String?         @db.VarChar(255)
-  import_error        String?
-  import_status       String?         @db.VarChar(255)
-  last_scraped        DateTime?       @db.Timestamptz(6)
-  location            String?         @db.VarChar(255)
-  scrape_count        Int?            @default(0)
-  job_types           Json?           @db.Json
-  experience_levels   Json?           @db.Json
-  remote_options      Json?           @db.Json
-  skills              Json?           @db.Json
-  applications        applications[]
-  job_matches         job_matches[]
-  job_resources       job_resources[]
+  id                   Int             @id @default(autoincrement())
+  status               String          @default("draft") @db.VarChar(255)
+  date_created         DateTime?       @db.Timestamptz(6)
+  date_updated         DateTime?       @db.Timestamptz(6)
+  source_url           String?         @db.VarChar(255)
+  title                String?         @db.VarChar(255)
+  job_description      String?
+  job_poster           String?         @db.VarChar(255)
+  import_source        String?         @db.VarChar(255)
+  company_description  String?
+  date_posted          DateTime?       @db.Date
+  salary_min           Int?
+  salary_max           Int?
+  salary_currency      String?         @db.VarChar(255)
+  salary_period        String?         @db.VarChar(255)
+  import_error         String?
+  import_status        String?         @db.VarChar(255)
+  last_scraped         DateTime?       @db.Timestamptz(6)
+  location             String?         @db.VarChar(255)
+  scrape_count         Int?            @default(0)
+  job_types            Json?           @db.Json
+  experience_levels    Json?           @db.Json
+  remote_options       Json?           @db.Json
+  skills               Json?           @db.Json
+  source_html_stripped String?
+  applications         applications[]
+  job_matches          job_matches[]
+  job_resources        job_resources[]
 }
 
 model job_searches {
@@ -1094,13 +1096,13 @@ model job_match_preferences {
   remote_options    Json?     @db.Json
   locations         Json?     @db.Json
   profile           Int
+  name              String?   @db.VarChar(255)
   profiles          profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_match_preferences_profile_foreign")
 }
 
 model job_matches {
   id                                                        Int            @id @default(autoincrement())
   score                                                     Int            @default(0)
-  summary                                                   String?
   reasoning                                                 String?
   skill_match_percentage                                    Int?
   strengths                                                 Json?          @db.Json
@@ -1112,8 +1114,10 @@ model job_matches {
   date_updated                                              DateTime?      @db.Timestamptz(6)
   collected_data                                            Int
   job                                                       Int
+  profile                                                   Int
   collected_data_job_matches_collected_dataTocollected_data collected_data @relation("job_matches_collected_dataTocollected_data", fields: [collected_data], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_matches_collected_data_foreign")
   jobs                                                      jobs           @relation(fields: [job], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_matches_job_foreign")
+  profiles                                                  profiles       @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_matches_profile_foreign")
 }
 
 enum Role {

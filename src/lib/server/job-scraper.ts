@@ -160,6 +160,7 @@ export async function extractJobData(
   salary_currency: string | null;
   salary_period: string | null;
   skills: string[] | null;
+  strippedHtml: string;
 }> {
   // 1. Strip HTML to minimal content
   const strippedHtml = stripHtmlForLlm(jobHtml);
@@ -209,6 +210,7 @@ export async function extractJobData(
       remote: data.remote,
       job_type: data.job_type,
       experience_level: data.experience_level,
+      status: data.status,
     });
 
     // 6. Convert date_posted to Date object if present
@@ -216,7 +218,11 @@ export async function extractJobData(
       data.date_posted = new Date(data.date_posted);
     }
 
-    return data;
+    // 7. Include stripped HTML in return value
+    return {
+      ...data,
+      strippedHtml,
+    };
   } catch (error) {
     console.error("Failed to parse job data from LLM response:", error);
     console.error("Response was:", response);
@@ -266,6 +272,7 @@ export async function upsertJob(
     salary_currency: string | null;
     salary_period: string | null;
     skills: string[] | null;
+    strippedHtml: string;
   },
   sourceUrl: string,
   importSource: string,
@@ -282,8 +289,14 @@ export async function upsertJob(
 
   // Convert single values to arrays for multi-select JSON fields
   // Remove the single-value fields and use multi-select fields instead
-  const { remote, job_type, experience_level, skills, ...baseJobData } =
-    jobData;
+  const {
+    remote,
+    job_type,
+    experience_level,
+    skills,
+    strippedHtml,
+    ...baseJobData
+  } = jobData;
 
   const multiSelectData = {
     remote_options: remote ? [remote] : null,
@@ -310,6 +323,7 @@ export async function upsertJob(
         ...baseJobData,
         ...multiSelectData,
         skills,
+        source_html_stripped: strippedHtml,
         import_status: "published",
         import_error: null,
         last_scraped: currentDate,
@@ -326,6 +340,7 @@ export async function upsertJob(
         ...baseJobData,
         ...multiSelectData,
         skills,
+        source_html_stripped: strippedHtml,
         source_url: normalizedUrl, // Use normalized URL
         import_source: importSource,
         import_status: "published",
