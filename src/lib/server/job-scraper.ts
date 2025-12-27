@@ -135,6 +135,84 @@ export async function extractJobLinks(
 }
 
 /**
+ * Extract clickable element IDs for job cards from search results HTML using LLM
+ * Used for SPA sites where jobs don't have direct URLs
+ * @param searchResultsHtml HTML with data-clickable-id markers already injected
+ * @returns Object with clickable IDs, pattern description, and job count
+ */
+export async function extractJobClickSelectors(
+  searchResultsHtml: string,
+): Promise<{
+  clickableIds: number[];
+  pattern: string;
+  jobCount: number;
+}> {
+  // 1. Strip HTML to minimal content (data-clickable-id attributes survive)
+  const strippedHtml = stripHtmlForLlm(searchResultsHtml);
+
+  // 2. Get prompt template
+  const template = await db.ai_chat_prompts.findUnique({
+    where: { request: "extract_job_click_selectors" },
+  });
+
+  if (!template) {
+    throw new Error("Prompt template 'extract_job_click_selectors' not found");
+  }
+
+  // 3. Interpolate variables
+  const systemPrompt = template.system_prompt || "";
+  const userPrompt = interpolatePrompt(template.user_prompt || "", {
+    html: strippedHtml,
+  });
+
+  // 4. Call LLM using generic utility with optional structured output
+  const responseFormat = template.format
+    ? {
+      type: "json_schema" as const,
+      json_schema: {
+        name: "job_click_selectors",
+        strict: true,
+        schema: template.format as Record<string, any>,
+      },
+    }
+    : undefined;
+
+  const response = await generateChatCompletion(
+    [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt },
+    ],
+    { temperature: 0.3, responseFormat },
+  );
+
+  // 5. Parse JSON response
+  try {
+    const result = JSON.parse(response);
+
+    if (!Array.isArray(result.clickableIds)) {
+      throw new Error("LLM response.clickableIds is not an array");
+    }
+
+    return {
+      clickableIds: result.clickableIds,
+      pattern: result.pattern || "Job cards pattern",
+      jobCount: result.jobCount || result.clickableIds.length,
+    };
+  } catch (error) {
+    console.error(
+      "Failed to parse click selectors from LLM response:",
+      error,
+    );
+    console.error("Response was:", response);
+    throw new Error(
+      `Failed to extract click selectors: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`,
+    );
+  }
+}
+
+/**
  * Detect if a page is a login page using LLM
  * @param pageHtml HTML content of the page
  * @returns Boolean indicating if it's a login page

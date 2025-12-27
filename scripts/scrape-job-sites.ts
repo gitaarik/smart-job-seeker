@@ -193,6 +193,143 @@ async function waitForManualLogin(page: Page): Promise<boolean> {
 }
 
 /**
+ * Scrape jobs using URL-based navigation (traditional)
+ * Extracts job URLs from search results and navigates to each
+ * @returns Array of job URLs
+ */
+async function scrapeJobsWithUrls(
+  page: Page,
+  searchUrl: string,
+): Promise<string[]> {
+  const html = await page.content();
+
+  console.log("Extracting job links...");
+  let jobUrls = await extractJobLinks(html);
+
+  if (!jobUrls || jobUrls.length === 0) {
+    console.log("⚠️  No job links found.");
+
+    // Run inline diagnostics with Playwright
+    const hasLoginForm = await page.locator('form[action*="login"]')
+      .isVisible().catch(() => false);
+    const hasCaptcha = await page.locator('iframe[src*="captcha"]')
+      .isVisible().catch(() => false);
+
+    if (hasLoginForm) {
+      console.log("   Reason: Login page detected");
+      console.log(
+        "   Action: Run script again and complete login when prompted",
+      );
+    } else if (hasCaptcha) {
+      console.log("   Reason: CAPTCHA challenge detected");
+      console.log(
+        "   Action: Wait and try again later, or solve CAPTCHA manually",
+      );
+    } else {
+      console.log("   Possible reasons:");
+      console.log("   - Search returned no results (legitimate)");
+      console.log("   - Page structure changed (update selectors)");
+      console.log("   - Content still loading (increase timeout)");
+    }
+
+    return [];
+  }
+
+  // Convert relative URLs to absolute URLs
+  const baseUrl = new URL(searchUrl);
+  jobUrls = jobUrls.map((url) => {
+    if (url.startsWith("/")) {
+      return `${baseUrl.origin}${url}`;
+    }
+    return url;
+  });
+
+  console.log(`Found ${jobUrls.length} job link(s)`);
+  return jobUrls;
+}
+
+/**
+ * Scrape jobs using click-based navigation (SPAs)
+ * Marks clickable elements with CDP, uses LLM to identify job cards, then clicks each
+ * @returns Array of job HTML content
+ */
+async function scrapeJobsWithClicks(
+  page: Page,
+  siteConfig: ReturnType<typeof getSiteConfig>,
+  searchUrl: string,
+): Promise<string[]> {
+  // Import CDP utilities dynamically
+  const { markClickableElementsInContainer } = await import(
+    "$lib/server/cdp-utils"
+  );
+  const { extractJobClickSelectors } = await import("$lib/server/job-scraper");
+
+  // Mark all clickable elements using CDP
+  console.log("Detecting click handlers via CDP...");
+  const clickableCount = await markClickableElementsInContainer(
+    page,
+    siteConfig.selectors.jobListContainer || "body",
+  );
+
+  console.log(`Found ${clickableCount} elements with click listeners`);
+
+  if (clickableCount === 0) {
+    console.log("⚠️  No clickable elements found");
+    return [];
+  }
+
+  // Get marked HTML
+  const markedHtml = await page.content();
+
+  // Send to LLM to identify job card pattern
+  console.log("Asking LLM to identify job card pattern...");
+  const { clickableIds, pattern, jobCount } = await extractJobClickSelectors(
+    markedHtml,
+  );
+
+  console.log(`LLM identified ${jobCount} job cards: ${pattern}`);
+  console.log(`Clickable IDs: ${clickableIds.join(", ")}`);
+
+  if (clickableIds.length === 0) {
+    console.log("⚠️  LLM found no job cards");
+    return [];
+  }
+
+  const jobHtmlList: string[] = [];
+
+  // Click each identified job card
+  for (const id of clickableIds) {
+    try {
+      console.log(`\nClicking job card with data-clickable-id="${id}"...`);
+
+      await page.locator(`[data-clickable-id="${id}"]`).click();
+
+      // Wait for job detail panel
+      if (siteConfig.selectors.jobDescription) {
+        await page.locator(siteConfig.selectors.jobDescription).waitFor({
+          state: "visible",
+          timeout: 10000,
+        }).catch(() => console.warn("⚠️  Job description not found"));
+      } else {
+        await page.waitForLoadState("networkidle");
+      }
+
+      const jobHtml = await page.content();
+      jobHtmlList.push(jobHtml);
+
+      await page.waitForTimeout(1000);
+    } catch (error) {
+      console.error(
+        `✗ Failed to process clickable ${id}:`,
+        error instanceof Error ? error.message : String(error),
+      );
+    }
+  }
+
+  return jobHtmlList;
+}
+
+/**
  * Generic scraping logic for any job site
  */
 async function scrapeJobSite(
@@ -264,146 +401,160 @@ async function scrapeJobSite(
     }
   }
 
-  // 3. Get page HTML
-  const html = await page.content();
-
-  // 4. Extract job links using LLM
-  console.log("Extracting job links...");
-  let jobUrls: string[];
-  try {
-    jobUrls = await extractJobLinks(html);
-
-    if (!jobUrls || jobUrls.length === 0) {
-      console.log("⚠️  No job links found.");
-
-      // Run inline diagnostics with Playwright
-      const hasLoginForm = await page.locator('form[action*="login"]')
-        .isVisible().catch(() => false);
-      const hasCaptcha = await page.locator('iframe[src*="captcha"]')
-        .isVisible().catch(() => false);
-
-      if (hasLoginForm) {
-        console.log("   Reason: Login page detected");
-        console.log(
-          "   Action: Run script again and complete login when prompted",
-        );
-      } else if (hasCaptcha) {
-        console.log("   Reason: CAPTCHA challenge detected");
-        console.log(
-          "   Action: Wait and try again later, or solve CAPTCHA manually",
-        );
-      } else {
-        console.log("   Possible reasons:");
-        console.log("   - Search returned no results (legitimate)");
-        console.log("   - Page structure changed (update selectors)");
-        console.log("   - Content still loading (increase timeout)");
-      }
-
-      return;
-    }
-
-    // Convert relative URLs to absolute URLs
-    const baseUrl = new URL(searchUrl);
-    jobUrls = jobUrls.map((url) => {
-      // If URL is relative, make it absolute
-      if (url.startsWith("/")) {
-        return `${baseUrl.origin}${url}`;
-      }
-      return url;
-    });
-
-    console.log(`Found ${jobUrls.length} job link(s)`);
-  } catch (error) {
-    console.error(
-      "❌ Error extracting job links:",
-      error instanceof Error ? error.message : String(error),
-    );
-
-    // Check if it's a missing prompt error
-    if (
-      error instanceof Error && error.message.includes("not found")
-    ) {
-      console.log(
-        "\n💡 Tip: Make sure the 'extract_job_links' prompt exists in the ai_chat_prompts table in Directus",
-      );
-    }
-
-    return;
-  }
-
-  // 4. Determine import source from URL
+  // 3. Determine navigation type and import source
+  const navigationType = siteConfig.navigationType || "url";
   const importSource = getImportSource(searchUrl);
 
-  // 5. Process each job
-  for (const url of jobUrls) {
+  console.log(
+    `Using ${
+      navigationType === "click" ? "click-based" : "URL-based"
+    } navigation`,
+  );
+
+  // 4. Branch based on navigation type
+  if (navigationType === "click") {
+    // ============================================
+    // CLICK-BASED NAVIGATION (SPAs)
+    // ============================================
     try {
-      console.log(`\nProcessing: ${url}`);
-
-      // Navigate to job page - Playwright auto-waits!
-      await page.goto(url, {
-        waitUntil: "networkidle",
-        timeout: siteConfig.timeout || config.scraperDefaultTimeout,
-      });
-
-      // Optional: Wait for job description
-      if (siteConfig.selectors.jobDescription) {
-        await page.locator(siteConfig.selectors.jobDescription).waitFor({
-          state: "visible",
-          timeout: 10000,
-        }).catch(() =>
-          console.warn(
-            "⚠️  Job description not found - content may be incomplete",
-          )
-        );
-      }
-
-      const jobHtml = await page.content();
-
-      // Strip HTML early to check for changes
-      const strippedHtml = stripHtmlForLlm(jobHtml);
-
-      // Check if HTML has changed compared to existing job
-      const htmlChanged = await hasHtmlChanged(
-        url,
-        strippedHtml,
-        options.force,
+      const jobHtmlList = await scrapeJobsWithClicks(
+        page,
+        siteConfig,
+        searchUrl,
       );
 
-      if (!htmlChanged) {
-        console.log(
-          `⏭️  Skipping - HTML unchanged (no new data to extract)`,
-        );
-        continue;
+      if (jobHtmlList.length === 0) {
+        console.log("⚠️  No jobs to process");
+        return;
       }
 
-      // Extract job data using LLM
-      console.log("Extracting job data...");
-      const jobData = await extractJobData(jobHtml, url);
+      // Process each job HTML
+      for (let i = 0; i < jobHtmlList.length; i++) {
+        const jobHtml = jobHtmlList[i];
+        // Use synthetic URL for SPAs (no actual URL navigation)
+        const pseudoUrl = `${searchUrl}#job-${i + 1}`;
 
-      // Create/update job
-      const result = await upsertJob(jobData, url, importSource);
-      console.log(
-        `✓ ${result.created ? "Created" : "Updated"} job #${result.id}`,
-      );
+        try {
+          console.log(`\nProcessing job ${i + 1}/${jobHtmlList.length}...`);
 
-      // Delay to avoid rate limiting
-      await page.waitForTimeout(2000);
+          const strippedHtml = stripHtmlForLlm(jobHtml);
+          const htmlChanged = await hasHtmlChanged(
+            pseudoUrl,
+            strippedHtml,
+            options.force,
+          );
+
+          if (!htmlChanged) {
+            console.log(`⏭️  Skipping - HTML unchanged`);
+            continue;
+          }
+
+          console.log("Extracting job data...");
+          const jobData = await extractJobData(jobHtml, pseudoUrl);
+          const result = await upsertJob(jobData, pseudoUrl, importSource);
+          console.log(
+            `✓ ${result.created ? "Created" : "Updated"} job #${result.id}`,
+          );
+        } catch (error) {
+          console.error(
+            `✗ Failed to process job ${i + 1}:`,
+            error instanceof Error ? error.message : String(error),
+          );
+        }
+      }
     } catch (error) {
       console.error(
-        `✗ Failed to process ${url}:`,
+        "❌ Error in click-based navigation:",
         error instanceof Error ? error.message : String(error),
       );
 
-      // Check if it's a missing prompt error
-      if (
-        error instanceof Error && error.message.includes("not found")
-      ) {
+      if (error instanceof Error && error.message.includes("not found")) {
         console.log(
-          "💡 Tip: Make sure the 'extract_job_data' prompt exists in the ai_chat_prompts table",
+          "\n💡 Tip: Make sure the 'extract_job_click_selectors' prompt exists in the ai_chat_prompts table",
         );
       }
+    }
+  } else {
+    // ============================================
+    // URL-BASED NAVIGATION (Traditional)
+    // ============================================
+    try {
+      const jobUrls = await scrapeJobsWithUrls(page, searchUrl);
 
-      // Continue with next job
+      if (jobUrls.length === 0) {
+        return;
+      }
+
+      // Process each job URL
+      for (const url of jobUrls) {
+        try {
+          console.log(`\nProcessing: ${url}`);
+
+          // Navigate to job page - Playwright auto-waits!
+          await page.goto(url, {
+            waitUntil: "networkidle",
+            timeout: siteConfig.timeout || config.scraperDefaultTimeout,
+          });
+
+          // Optional: Wait for job description
+          if (siteConfig.selectors.jobDescription) {
+            await page.locator(siteConfig.selectors.jobDescription).waitFor({
+              state: "visible",
+              timeout: 10000,
+            }).catch(() =>
+              console.warn(
+                "⚠️  Job description not found - content may be incomplete",
+              )
+            );
+          }
+
+          const jobHtml = await page.content();
+          const strippedHtml = stripHtmlForLlm(jobHtml);
+
+          const htmlChanged = await hasHtmlChanged(
+            url,
+            strippedHtml,
+            options.force,
+          );
+
+          if (!htmlChanged) {
+            console.log(`⏭️  Skipping - HTML unchanged`);
+            continue;
+          }
+
+          console.log("Extracting job data...");
+          const jobData = await extractJobData(jobHtml, url);
+          const result = await upsertJob(jobData, url, importSource);
+          console.log(
+            `✓ ${result.created ? "Created" : "Updated"} job #${result.id}`,
+          );
+
+          // Delay to avoid rate limiting
+          await page.waitForTimeout(2000);
+        } catch (error) {
+          console.error(
+            `✗ Failed to process ${url}:`,
+            error instanceof Error ? error.message : String(error),
+          );
+
+          if (error instanceof Error && error.message.includes("not found")) {
+            console.log(
+              "💡 Tip: Make sure the 'extract_job_data' prompt exists in the ai_chat_prompts table",
+            );
+          }
+        }
+      }
+    } catch (error) {
+      console.error(
+        "❌ Error extracting job links:",
+        error instanceof Error ? error.message : String(error),
+      );
+
+      if (error instanceof Error && error.message.includes("not found")) {
+        console.log(
+          "\n💡 Tip: Make sure the 'extract_job_links' prompt exists in the ai_chat_prompts table",
+        );
+      }
     }
   }
 }

@@ -76,6 +76,21 @@ const SITE_CONFIGS: Record<string, SiteConfig> = {
     navigationType: "url",
   },
 
+  // Example SPA job site with click-based navigation
+  "example-spa-job-site.com": {
+    timeout: 30000,
+    selectors: {
+      jobListContainer: ".job-search-results",
+      jobDescription: ".job-detail-panel",
+    },
+    navigationType: "click",
+    validator: async (page: Page) => {
+      const hasResults = await page.locator(".job-search-results").isVisible()
+        .catch(() => false);
+      return hasResults;
+    },
+  },
+
   // Default fallback configuration
   "default": {
     timeout: 30000,
