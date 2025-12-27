@@ -664,6 +664,7 @@ model profiles {
   applications          applications[]
   cheat_sheets          cheat_sheets[]
   collected_data        collected_data[]
+  config                config[]
   education             education[]
   highlights            highlights[]
   job_match_preferences job_match_preferences[]
@@ -1109,6 +1110,12 @@ model job_platforms {
   url          String         @db.VarChar(255)
   type         String?        @db.VarChar(255)
   job_searches job_searches[]
+}
+
+model config {
+  id              Int       @id @default(autoincrement())
+  default_profile Int?
+  profiles        profiles? @relation(fields: [default_profile], references: [id], onUpdate: NoAction, map: "config_default_profile_foreign")
 }
 
 enum Role {

@@ -48,8 +48,18 @@ const PROFILE_INCLUDE = {
  * Get the default profile with all relations
  */
 export async function getDefaultProfile() {
-  return db.profiles.findFirst({
-    where: { is_default: true },
+  // Get config to find default profile ID
+  const config = await db.config.findFirst({
+    select: { default_profile: true },
+  });
+
+  if (!config?.default_profile) {
+    return null;
+  }
+
+  // Fetch the profile with all relations
+  return db.profiles.findUnique({
+    where: { id: config.default_profile },
     include: PROFILE_INCLUDE,
   });
 }
@@ -72,33 +82,36 @@ export async function getProfileOrDefault(profileId?: number) {
 }
 
 /**
- * Set a profile as default (unsets all others)
+ * Set a profile as default
  * @param profileId Profile ID to set as default
  */
 export async function setDefaultProfile(profileId: number) {
-  // First unset all other defaults
-  await db.profiles.updateMany({
-    where: { is_default: true },
-    data: { is_default: false },
-  });
+  // Get or create config record
+  const config = await db.config.findFirst();
 
-  // Then set the new default
-  return db.profiles.update({
-    where: { id: profileId },
-    data: { is_default: true },
-  });
+  if (config) {
+    // Update existing config
+    return db.config.update({
+      where: { id: config.id },
+      data: { default_profile: profileId },
+    });
+  } else {
+    // Create new config
+    return db.config.create({
+      data: { default_profile: profileId },
+    });
+  }
 }
 
 /**
  * Get default profile ID only (lightweight query for scripts)
  */
 export async function getDefaultProfileId(): Promise<number | null> {
-  const profile = await db.profiles.findFirst({
-    where: { is_default: true },
-    select: { id: true },
+  const config = await db.config.findFirst({
+    select: { default_profile: true },
   });
 
-  return profile?.id ?? null;
+  return config?.default_profile ?? null;
 }
 
 // Export the standard include structure for use in other files

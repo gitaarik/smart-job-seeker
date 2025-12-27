@@ -116,7 +116,8 @@ export const ModelName = {
   job_searches_job_sites: 'job_searches_job_sites',
   job_match_preferences: 'job_match_preferences',
   job_matches: 'job_matches',
-  job_platforms: 'job_platforms'
+  job_platforms: 'job_platforms',
+  config: 'config'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1245,6 +1246,14 @@ export const Job_platformsScalarFieldEnum = {
 } as const
 
 export type Job_platformsScalarFieldEnum = (typeof Job_platformsScalarFieldEnum)[keyof typeof Job_platformsScalarFieldEnum]
+
+
+export const ConfigScalarFieldEnum = {
+  id: 'id',
+  default_profile: 'default_profile'
+} as const
+
+export type ConfigScalarFieldEnum = (typeof ConfigScalarFieldEnum)[keyof typeof ConfigScalarFieldEnum]
 
 
 export const SortOrder = {

@@ -347,3 +347,8 @@ export type job_matches = Prisma.job_matchesModel
  * 
  */
 export type job_platforms = Prisma.job_platformsModel
+/**
+ * Model config
+ * 
+ */
+export type config = Prisma.configModel
