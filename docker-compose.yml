@@ -48,7 +48,7 @@ services:
     environment:
       NODE_ENV: development
       # Override SJS_DATABASE_URL to use direct database connection instead of Prisma Accelerate
-      # SJS_DATABASE_URL: ${SJS_POSTGRES_URL_DOCKER}
+      SJS_DATABASE_URL: ${SJS_POSTGRES_URL_DOCKER}
       # DATABASE_URL is also set for compatibility with standard Prisma tools
       DATABASE_URL: ${SJS_POSTGRES_URL_DOCKER}
   admin:
