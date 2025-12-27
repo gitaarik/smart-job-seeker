@@ -5,7 +5,8 @@
  * Uses Puppeteer to scrape job listings and LLM to extract data
  */
 
-import puppeteer, { type Browser, type Page } from "puppeteer";
+import { type Browser, type Page } from "puppeteer";
+import { launchStealthBrowser } from "$lib/server/browser-utils";
 import { dbDirect } from "$lib/db";
 import {
   detectLoginPage,
@@ -462,14 +463,9 @@ async function scrapeJobSites(): Promise<void> {
 
   // Launch browser with persistent profile
   console.log("Launching browser...");
-  const browser = await puppeteer.launch({
+  const browser = await launchStealthBrowser({
     headless: false, // Set to true in production
     userDataDir: join(profileDir, "default"),
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-    ],
   });
 
   const page = await browser.newPage();

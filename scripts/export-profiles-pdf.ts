@@ -6,7 +6,7 @@
 //
 // But you can just use `npm run export-resume` (package.json script)
 
-import puppeteer from "puppeteer";
+import { launchStealthBrowser } from "$lib/server/browser-utils";
 import path from "path";
 import fs from "fs";
 import { dbDirect } from "$lib/db";
@@ -17,10 +17,8 @@ const appPort = getEnv("SJS_APP_PORT");
 async function exportProfilesToPDF() {
   console.log("🚀 Starting profile PDF export (Resume & CV)...");
 
-  const browser = await puppeteer.launch({
+  const browser = await launchStealthBrowser({
     headless: "new",
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
   });
 
   // Fetch the first profile with its versions

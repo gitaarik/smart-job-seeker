@@ -85,6 +85,8 @@
     "prettier-plugin-tailwindcss": "^0.6.11",
     "prisma": "^7.0.1",
     "puppeteer": "^24.16.2",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
     "resumed": "^6.0.0",
     "svelte": "^5.0.0",
     "svelte-check": "^4.0.0",

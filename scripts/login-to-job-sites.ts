@@ -6,7 +6,7 @@
  * User can then run the scraper with saved cookies/session
  */
 
-import puppeteer from "puppeteer";
+import { launchStealthBrowser } from "$lib/server/browser-utils";
 import { existsSync, mkdirSync } from "fs";
 import { join } from "path";
 
@@ -27,15 +27,10 @@ async function openBrowserForLogin(): Promise<void> {
   console.log("=".repeat(70) + "\n");
 
   // Launch browser with same profile as scraper
-  const browser = await puppeteer.launch({
+  const browser = await launchStealthBrowser({
     headless: false,
     userDataDir: join(profileDir, "default"),
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--start-maximized",
-    ],
+    args: ["--start-maximized"],
     defaultViewport: null,
   });
 
