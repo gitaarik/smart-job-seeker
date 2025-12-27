@@ -12,7 +12,9 @@ export interface ResumeBasics {
   phone?: string;
   title?: string;
   summary?: string;
-  location?: string;
+  locationCity?: string; // Separate location fields with prefix
+  locationRegion?: string;
+  locationCountryCode?: string;
   website?: string;
   linkedin?: string;
   github?: string;

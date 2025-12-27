@@ -105,9 +105,6 @@ export async function mapJsonResumeToInternal(
     p.network?.toLowerCase() === "stack overflow"
   )?.url;
 
-  // Build location string
-  const location = buildLocationString(jsonResume.basics.location);
-
   // Map to internal format
   const resumeData: ResumeData = {
     basics: {
@@ -116,7 +113,9 @@ export async function mapJsonResumeToInternal(
       phone: jsonResume.basics.phone,
       title: jsonResume.basics.label,
       summary: jsonResume.basics.summary,
-      location,
+      locationCity: jsonResume.basics.location?.city,
+      locationRegion: jsonResume.basics.location?.region,
+      locationCountryCode: jsonResume.basics.location?.countryCode,
       website: jsonResume.basics.url,
       linkedin,
       github,
@@ -178,23 +177,6 @@ export async function mapJsonResumeToInternal(
   };
 
   return resumeData;
-}
-
-/**
- * Build a location string from JSON Resume location object
- */
-function buildLocationString(
-  location?: JsonResumeSchema["basics"]["location"],
-): string | undefined {
-  if (!location) return undefined;
-
-  const parts: string[] = [];
-
-  if (location.city) parts.push(location.city);
-  if (location.region) parts.push(location.region);
-  if (location.countryCode) parts.push(location.countryCode);
-
-  return parts.length > 0 ? parts.join(", ") : undefined;
 }
 
 /**
