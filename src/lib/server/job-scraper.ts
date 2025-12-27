@@ -236,7 +236,7 @@ export async function extractJobData(
       title: data.title,
       company: data.job_poster,
       location: data.location,
-      date_posted: data.date_posted?.toLocaleDateString() || null,
+      date_posted: data.date_posted || null,
       salary: formatSalary(data),
       remote: data.remote,
       job_type: data.job_type,
