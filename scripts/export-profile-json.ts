@@ -7,7 +7,9 @@ interface ExportedProfile {
   profile: {
     name?: string;
     title?: string;
-    location?: string;
+    location_city?: string;
+    location_region?: string;
+    location_country_code?: string;
     phone_number?: string;
     email_address?: string;
     personal_website?: string;
@@ -434,7 +436,9 @@ async function exportProfile(profileId: string): Promise<void> {
       profile: {
         name: baseProfile.name || undefined,
         title: baseProfile.title || undefined,
-        location: baseProfile.location || undefined,
+        location_city: baseProfile.location_city || undefined,
+        location_region: baseProfile.location_region || undefined,
+        location_country_code: baseProfile.location_country_code || undefined,
         phone_number: baseProfile.phone_number || undefined,
         email_address: baseProfile.email_address || undefined,
         personal_website: baseProfile.personal_website || undefined,

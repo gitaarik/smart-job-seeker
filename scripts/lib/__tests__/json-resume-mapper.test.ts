@@ -5,9 +5,9 @@
 
 import { describe, expect, it } from "vitest";
 import {
+  type JsonResumeSchema,
   mapJsonResumeToInternal,
   validateJsonResume,
-  type JsonResumeSchema,
 } from "../json-resume-mapper";
 
 describe("validateJsonResume", () => {
@@ -92,7 +92,8 @@ describe("mapJsonResumeToInternal", () => {
         email: "john@example.com",
         phone: "(555) 123-4567",
         url: "https://johndoe.com",
-        summary: "Experienced software engineer with 10 years in web development",
+        summary:
+          "Experienced software engineer with 10 years in web development",
         location: {
           city: "San Francisco",
           region: "California",
@@ -125,7 +126,9 @@ describe("mapJsonResumeToInternal", () => {
     expect(result.basics.summary).toBe(
       "Experienced software engineer with 10 years in web development",
     );
-    expect(result.basics.location).toBe("San Francisco, California, US");
+    expect(result.basics.locationCity).toBe("San Francisco");
+    expect(result.basics.locationRegion).toBe("California");
+    expect(result.basics.locationCountryCode).toBe("US");
     expect(result.basics.linkedin).toBe("https://linkedin.com/in/johndoe");
     expect(result.basics.github).toBe("https://github.com/johndoe");
     expect(result.basics.stackoverflow).toBe(
@@ -133,7 +136,7 @@ describe("mapJsonResumeToInternal", () => {
     );
   });
 
-  it("should build location string correctly with partial data", async () => {
+  it("should map location fields correctly with partial data", async () => {
     const jsonResume: JsonResumeSchema = {
       basics: {
         name: "John Doe",
@@ -144,7 +147,9 @@ describe("mapJsonResumeToInternal", () => {
     };
 
     const result = await mapJsonResumeToInternal(jsonResume);
-    expect(result.basics.location).toBe("Amsterdam");
+    expect(result.basics.locationCity).toBe("Amsterdam");
+    expect(result.basics.locationRegion).toBeUndefined();
+    expect(result.basics.locationCountryCode).toBeUndefined();
   });
 
   it("should handle location with city and country", async () => {
@@ -159,7 +164,9 @@ describe("mapJsonResumeToInternal", () => {
     };
 
     const result = await mapJsonResumeToInternal(jsonResume);
-    expect(result.basics.location).toBe("London, UK");
+    expect(result.basics.locationCity).toBe("London");
+    expect(result.basics.locationRegion).toBeUndefined();
+    expect(result.basics.locationCountryCode).toBe("UK");
   });
 
   it("should map work experience correctly", async () => {
@@ -193,7 +200,9 @@ describe("mapJsonResumeToInternal", () => {
     expect(result.work?.[0].endDate).toBe("2023-12-31");
     expect(result.work?.[0].summary).toBe("Led development team");
     expect(result.work?.[0].achievements).toHaveLength(2);
-    expect(result.work?.[0].achievements?.[0]).toBe("Improved performance by 50%");
+    expect(result.work?.[0].achievements?.[0]).toBe(
+      "Improved performance by 50%",
+    );
   });
 
   it("should map education with graduation year extraction", async () => {
@@ -339,7 +348,10 @@ describe("mapJsonResumeToInternal", () => {
         profiles: [
           { network: "linkedin", url: "https://linkedin.com/in/john" },
           { network: "GITHUB", url: "https://github.com/john" },
-          { network: "stackoverflow", url: "https://stackoverflow.com/users/123" },
+          {
+            network: "stackoverflow",
+            url: "https://stackoverflow.com/users/123",
+          },
         ],
       },
     };
