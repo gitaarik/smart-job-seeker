@@ -42,7 +42,6 @@ export type ProfilesMinAggregateOutputType = {
   date_updated: Date | null
   name: string | null
   title: string | null
-  location: string | null
   phone_number: string | null
   email_address: string | null
   personal_website: string | null
@@ -58,6 +57,12 @@ export type ProfilesMinAggregateOutputType = {
   location_url: string | null
   location_timezone: string | null
   sort: number | null
+  city: string | null
+  region: string | null
+  country_code: string | null
+  location_city: string | null
+  location_region: string | null
+  location_country_code: string | null
 }
 
 export type ProfilesMaxAggregateOutputType = {
@@ -66,7 +71,6 @@ export type ProfilesMaxAggregateOutputType = {
   date_updated: Date | null
   name: string | null
   title: string | null
-  location: string | null
   phone_number: string | null
   email_address: string | null
   personal_website: string | null
@@ -82,6 +86,12 @@ export type ProfilesMaxAggregateOutputType = {
   location_url: string | null
   location_timezone: string | null
   sort: number | null
+  city: string | null
+  region: string | null
+  country_code: string | null
+  location_city: string | null
+  location_region: string | null
+  location_country_code: string | null
 }
 
 export type ProfilesCountAggregateOutputType = {
@@ -90,7 +100,6 @@ export type ProfilesCountAggregateOutputType = {
   date_updated: number
   name: number
   title: number
-  location: number
   phone_number: number
   email_address: number
   personal_website: number
@@ -106,6 +115,12 @@ export type ProfilesCountAggregateOutputType = {
   location_url: number
   location_timezone: number
   sort: number
+  city: number
+  region: number
+  country_code: number
+  location_city: number
+  location_region: number
+  location_country_code: number
   _all: number
 }
 
@@ -126,7 +141,6 @@ export type ProfilesMinAggregateInputType = {
   date_updated?: true
   name?: true
   title?: true
-  location?: true
   phone_number?: true
   email_address?: true
   personal_website?: true
@@ -142,6 +156,12 @@ export type ProfilesMinAggregateInputType = {
   location_url?: true
   location_timezone?: true
   sort?: true
+  city?: true
+  region?: true
+  country_code?: true
+  location_city?: true
+  location_region?: true
+  location_country_code?: true
 }
 
 export type ProfilesMaxAggregateInputType = {
@@ -150,7 +170,6 @@ export type ProfilesMaxAggregateInputType = {
   date_updated?: true
   name?: true
   title?: true
-  location?: true
   phone_number?: true
   email_address?: true
   personal_website?: true
@@ -166,6 +185,12 @@ export type ProfilesMaxAggregateInputType = {
   location_url?: true
   location_timezone?: true
   sort?: true
+  city?: true
+  region?: true
+  country_code?: true
+  location_city?: true
+  location_region?: true
+  location_country_code?: true
 }
 
 export type ProfilesCountAggregateInputType = {
@@ -174,7 +199,6 @@ export type ProfilesCountAggregateInputType = {
   date_updated?: true
   name?: true
   title?: true
-  location?: true
   phone_number?: true
   email_address?: true
   personal_website?: true
@@ -190,6 +214,12 @@ export type ProfilesCountAggregateInputType = {
   location_url?: true
   location_timezone?: true
   sort?: true
+  city?: true
+  region?: true
+  country_code?: true
+  location_city?: true
+  location_region?: true
+  location_country_code?: true
   _all?: true
 }
 
@@ -285,7 +315,6 @@ export type ProfilesGroupByOutputType = {
   date_updated: Date | null
   name: string | null
   title: string | null
-  location: string | null
   phone_number: string | null
   email_address: string | null
   personal_website: string | null
@@ -301,6 +330,12 @@ export type ProfilesGroupByOutputType = {
   location_url: string | null
   location_timezone: string | null
   sort: number | null
+  city: string | null
+  region: string | null
+  country_code: string | null
+  location_city: string | null
+  location_region: string | null
+  location_country_code: string | null
   _count: ProfilesCountAggregateOutputType | null
   _avg: ProfilesAvgAggregateOutputType | null
   _sum: ProfilesSumAggregateOutputType | null
@@ -332,7 +367,6 @@ export type profilesWhereInput = {
   date_updated?: Prisma.DateTimeNullableFilter<"profiles"> | Date | string | null
   name?: Prisma.StringNullableFilter<"profiles"> | string | null
   title?: Prisma.StringNullableFilter<"profiles"> | string | null
-  location?: Prisma.StringNullableFilter<"profiles"> | string | null
   phone_number?: Prisma.StringNullableFilter<"profiles"> | string | null
   email_address?: Prisma.StringNullableFilter<"profiles"> | string | null
   personal_website?: Prisma.StringNullableFilter<"profiles"> | string | null
@@ -348,6 +382,12 @@ export type profilesWhereInput = {
   location_url?: Prisma.StringNullableFilter<"profiles"> | string | null
   location_timezone?: Prisma.StringNullableFilter<"profiles"> | string | null
   sort?: Prisma.IntNullableFilter<"profiles"> | number | null
+  city?: Prisma.StringNullableFilter<"profiles"> | string | null
+  region?: Prisma.StringNullableFilter<"profiles"> | string | null
+  country_code?: Prisma.StringNullableFilter<"profiles"> | string | null
+  location_city?: Prisma.StringNullableFilter<"profiles"> | string | null
+  location_region?: Prisma.StringNullableFilter<"profiles"> | string | null
+  location_country_code?: Prisma.StringNullableFilter<"profiles"> | string | null
   ai_chat?: Prisma.Ai_chatListRelationFilter
   applications?: Prisma.ApplicationsListRelationFilter
   cheat_sheets?: Prisma.Cheat_sheetsListRelationFilter
@@ -376,7 +416,6 @@ export type profilesOrderByWithRelationInput = {
   date_updated?: Prisma.SortOrderInput | Prisma.SortOrder
   name?: Prisma.SortOrderInput | Prisma.SortOrder
   title?: Prisma.SortOrderInput | Prisma.SortOrder
-  location?: Prisma.SortOrderInput | Prisma.SortOrder
   phone_number?: Prisma.SortOrderInput | Prisma.SortOrder
   email_address?: Prisma.SortOrderInput | Prisma.SortOrder
   personal_website?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -392,6 +431,12 @@ export type profilesOrderByWithRelationInput = {
   location_url?: Prisma.SortOrderInput | Prisma.SortOrder
   location_timezone?: Prisma.SortOrderInput | Prisma.SortOrder
   sort?: Prisma.SortOrderInput | Prisma.SortOrder
+  city?: Prisma.SortOrderInput | Prisma.SortOrder
+  region?: Prisma.SortOrderInput | Prisma.SortOrder
+  country_code?: Prisma.SortOrderInput | Prisma.SortOrder
+  location_city?: Prisma.SortOrderInput | Prisma.SortOrder
+  location_region?: Prisma.SortOrderInput | Prisma.SortOrder
+  location_country_code?: Prisma.SortOrderInput | Prisma.SortOrder
   ai_chat?: Prisma.ai_chatOrderByRelationAggregateInput
   applications?: Prisma.applicationsOrderByRelationAggregateInput
   cheat_sheets?: Prisma.cheat_sheetsOrderByRelationAggregateInput
@@ -423,7 +468,6 @@ export type profilesWhereUniqueInput = Prisma.AtLeast<{
   date_updated?: Prisma.DateTimeNullableFilter<"profiles"> | Date | string | null
   name?: Prisma.StringNullableFilter<"profiles"> | string | null
   title?: Prisma.StringNullableFilter<"profiles"> | string | null
-  location?: Prisma.StringNullableFilter<"profiles"> | string | null
   phone_number?: Prisma.StringNullableFilter<"profiles"> | string | null
   email_address?: Prisma.StringNullableFilter<"profiles"> | string | null
   personal_website?: Prisma.StringNullableFilter<"profiles"> | string | null
@@ -439,6 +483,12 @@ export type profilesWhereUniqueInput = Prisma.AtLeast<{
   location_url?: Prisma.StringNullableFilter<"profiles"> | string | null
   location_timezone?: Prisma.StringNullableFilter<"profiles"> | string | null
   sort?: Prisma.IntNullableFilter<"profiles"> | number | null
+  city?: Prisma.StringNullableFilter<"profiles"> | string | null
+  region?: Prisma.StringNullableFilter<"profiles"> | string | null
+  country_code?: Prisma.StringNullableFilter<"profiles"> | string | null
+  location_city?: Prisma.StringNullableFilter<"profiles"> | string | null
+  location_region?: Prisma.StringNullableFilter<"profiles"> | string | null
+  location_country_code?: Prisma.StringNullableFilter<"profiles"> | string | null
   ai_chat?: Prisma.Ai_chatListRelationFilter
   applications?: Prisma.ApplicationsListRelationFilter
   cheat_sheets?: Prisma.Cheat_sheetsListRelationFilter
@@ -467,7 +517,6 @@ export type profilesOrderByWithAggregationInput = {
   date_updated?: Prisma.SortOrderInput | Prisma.SortOrder
   name?: Prisma.SortOrderInput | Prisma.SortOrder
   title?: Prisma.SortOrderInput | Prisma.SortOrder
-  location?: Prisma.SortOrderInput | Prisma.SortOrder
   phone_number?: Prisma.SortOrderInput | Prisma.SortOrder
   email_address?: Prisma.SortOrderInput | Prisma.SortOrder
   personal_website?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -483,6 +532,12 @@ export type profilesOrderByWithAggregationInput = {
   location_url?: Prisma.SortOrderInput | Prisma.SortOrder
   location_timezone?: Prisma.SortOrderInput | Prisma.SortOrder
   sort?: Prisma.SortOrderInput | Prisma.SortOrder
+  city?: Prisma.SortOrderInput | Prisma.SortOrder
+  region?: Prisma.SortOrderInput | Prisma.SortOrder
+  country_code?: Prisma.SortOrderInput | Prisma.SortOrder
+  location_city?: Prisma.SortOrderInput | Prisma.SortOrder
+  location_region?: Prisma.SortOrderInput | Prisma.SortOrder
+  location_country_code?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.profilesCountOrderByAggregateInput
   _avg?: Prisma.profilesAvgOrderByAggregateInput
   _max?: Prisma.profilesMaxOrderByAggregateInput
@@ -499,7 +554,6 @@ export type profilesScalarWhereWithAggregatesInput = {
   date_updated?: Prisma.DateTimeNullableWithAggregatesFilter<"profiles"> | Date | string | null
   name?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
   title?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
-  location?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
   phone_number?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
   email_address?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
   personal_website?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
@@ -515,6 +569,12 @@ export type profilesScalarWhereWithAggregatesInput = {
   location_url?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
   location_timezone?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
   sort?: Prisma.IntNullableWithAggregatesFilter<"profiles"> | number | null
+  city?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
+  region?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
+  country_code?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
+  location_city?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
+  location_region?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
+  location_country_code?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
 }
 
 export type profilesCreateInput = {
@@ -522,7 +582,6 @@ export type profilesCreateInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -537,6 +596,12 @@ export type profilesCreateInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -565,7 +630,6 @@ export type profilesUncheckedCreateInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -581,6 +645,12 @@ export type profilesUncheckedCreateInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -607,7 +677,6 @@ export type profilesUpdateInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -622,6 +691,12 @@ export type profilesUpdateInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -650,7 +725,6 @@ export type profilesUncheckedUpdateInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -666,6 +740,12 @@ export type profilesUncheckedUpdateInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -693,7 +773,6 @@ export type profilesCreateManyInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -709,6 +788,12 @@ export type profilesCreateManyInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
 }
 
 export type profilesUpdateManyMutationInput = {
@@ -716,7 +801,6 @@ export type profilesUpdateManyMutationInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -731,6 +815,12 @@ export type profilesUpdateManyMutationInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type profilesUncheckedUpdateManyInput = {
@@ -739,7 +829,6 @@ export type profilesUncheckedUpdateManyInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -755,6 +844,12 @@ export type profilesUncheckedUpdateManyInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type ProfilesScalarRelationFilter = {
@@ -783,7 +878,6 @@ export type profilesCountOrderByAggregateInput = {
   date_updated?: Prisma.SortOrder
   name?: Prisma.SortOrder
   title?: Prisma.SortOrder
-  location?: Prisma.SortOrder
   phone_number?: Prisma.SortOrder
   email_address?: Prisma.SortOrder
   personal_website?: Prisma.SortOrder
@@ -799,6 +893,12 @@ export type profilesCountOrderByAggregateInput = {
   location_url?: Prisma.SortOrder
   location_timezone?: Prisma.SortOrder
   sort?: Prisma.SortOrder
+  city?: Prisma.SortOrder
+  region?: Prisma.SortOrder
+  country_code?: Prisma.SortOrder
+  location_city?: Prisma.SortOrder
+  location_region?: Prisma.SortOrder
+  location_country_code?: Prisma.SortOrder
 }
 
 export type profilesAvgOrderByAggregateInput = {
@@ -812,7 +912,6 @@ export type profilesMaxOrderByAggregateInput = {
   date_updated?: Prisma.SortOrder
   name?: Prisma.SortOrder
   title?: Prisma.SortOrder
-  location?: Prisma.SortOrder
   phone_number?: Prisma.SortOrder
   email_address?: Prisma.SortOrder
   personal_website?: Prisma.SortOrder
@@ -828,6 +927,12 @@ export type profilesMaxOrderByAggregateInput = {
   location_url?: Prisma.SortOrder
   location_timezone?: Prisma.SortOrder
   sort?: Prisma.SortOrder
+  city?: Prisma.SortOrder
+  region?: Prisma.SortOrder
+  country_code?: Prisma.SortOrder
+  location_city?: Prisma.SortOrder
+  location_region?: Prisma.SortOrder
+  location_country_code?: Prisma.SortOrder
 }
 
 export type profilesMinOrderByAggregateInput = {
@@ -836,7 +941,6 @@ export type profilesMinOrderByAggregateInput = {
   date_updated?: Prisma.SortOrder
   name?: Prisma.SortOrder
   title?: Prisma.SortOrder
-  location?: Prisma.SortOrder
   phone_number?: Prisma.SortOrder
   email_address?: Prisma.SortOrder
   personal_website?: Prisma.SortOrder
@@ -852,6 +956,12 @@ export type profilesMinOrderByAggregateInput = {
   location_url?: Prisma.SortOrder
   location_timezone?: Prisma.SortOrder
   sort?: Prisma.SortOrder
+  city?: Prisma.SortOrder
+  region?: Prisma.SortOrder
+  country_code?: Prisma.SortOrder
+  location_city?: Prisma.SortOrder
+  location_region?: Prisma.SortOrder
+  location_country_code?: Prisma.SortOrder
 }
 
 export type profilesSumOrderByAggregateInput = {
@@ -1178,7 +1288,6 @@ export type profilesCreateWithoutApplicationsInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -1193,6 +1302,12 @@ export type profilesCreateWithoutApplicationsInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
   collected_data?: Prisma.collected_dataCreateNestedManyWithoutProfilesInput
@@ -1220,7 +1335,6 @@ export type profilesUncheckedCreateWithoutApplicationsInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -1236,6 +1350,12 @@ export type profilesUncheckedCreateWithoutApplicationsInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
   collected_data?: Prisma.collected_dataUncheckedCreateNestedManyWithoutProfilesInput
@@ -1277,7 +1397,6 @@ export type profilesUpdateWithoutApplicationsInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1292,6 +1411,12 @@ export type profilesUpdateWithoutApplicationsInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
   collected_data?: Prisma.collected_dataUpdateManyWithoutProfilesNestedInput
@@ -1319,7 +1444,6 @@ export type profilesUncheckedUpdateWithoutApplicationsInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1335,6 +1459,12 @@ export type profilesUncheckedUpdateWithoutApplicationsInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
   collected_data?: Prisma.collected_dataUncheckedUpdateManyWithoutProfilesNestedInput
@@ -1360,7 +1490,6 @@ export type profilesCreateWithoutCheat_sheetsInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -1375,6 +1504,12 @@ export type profilesCreateWithoutCheat_sheetsInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   collected_data?: Prisma.collected_dataCreateNestedManyWithoutProfilesInput
@@ -1402,7 +1537,6 @@ export type profilesUncheckedCreateWithoutCheat_sheetsInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -1418,6 +1552,12 @@ export type profilesUncheckedCreateWithoutCheat_sheetsInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   collected_data?: Prisma.collected_dataUncheckedCreateNestedManyWithoutProfilesInput
@@ -1459,7 +1599,6 @@ export type profilesUpdateWithoutCheat_sheetsInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1474,6 +1613,12 @@ export type profilesUpdateWithoutCheat_sheetsInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   collected_data?: Prisma.collected_dataUpdateManyWithoutProfilesNestedInput
@@ -1501,7 +1646,6 @@ export type profilesUncheckedUpdateWithoutCheat_sheetsInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1517,6 +1661,12 @@ export type profilesUncheckedUpdateWithoutCheat_sheetsInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   collected_data?: Prisma.collected_dataUncheckedUpdateManyWithoutProfilesNestedInput
@@ -1542,7 +1692,6 @@ export type profilesCreateWithoutCollected_dataInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -1557,6 +1706,12 @@ export type profilesCreateWithoutCollected_dataInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -1584,7 +1739,6 @@ export type profilesUncheckedCreateWithoutCollected_dataInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -1600,6 +1754,12 @@ export type profilesUncheckedCreateWithoutCollected_dataInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -1641,7 +1801,6 @@ export type profilesUpdateWithoutCollected_dataInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1656,6 +1815,12 @@ export type profilesUpdateWithoutCollected_dataInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -1683,7 +1848,6 @@ export type profilesUncheckedUpdateWithoutCollected_dataInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1699,6 +1863,12 @@ export type profilesUncheckedUpdateWithoutCollected_dataInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -1724,7 +1894,6 @@ export type profilesCreateWithoutDirectus_filesInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -1739,6 +1908,12 @@ export type profilesCreateWithoutDirectus_filesInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -1766,7 +1941,6 @@ export type profilesUncheckedCreateWithoutDirectus_filesInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -1781,6 +1955,12 @@ export type profilesUncheckedCreateWithoutDirectus_filesInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -1837,7 +2017,6 @@ export type profilesScalarWhereInput = {
   date_updated?: Prisma.DateTimeNullableFilter<"profiles"> | Date | string | null
   name?: Prisma.StringNullableFilter<"profiles"> | string | null
   title?: Prisma.StringNullableFilter<"profiles"> | string | null
-  location?: Prisma.StringNullableFilter<"profiles"> | string | null
   phone_number?: Prisma.StringNullableFilter<"profiles"> | string | null
   email_address?: Prisma.StringNullableFilter<"profiles"> | string | null
   personal_website?: Prisma.StringNullableFilter<"profiles"> | string | null
@@ -1853,6 +2032,12 @@ export type profilesScalarWhereInput = {
   location_url?: Prisma.StringNullableFilter<"profiles"> | string | null
   location_timezone?: Prisma.StringNullableFilter<"profiles"> | string | null
   sort?: Prisma.IntNullableFilter<"profiles"> | number | null
+  city?: Prisma.StringNullableFilter<"profiles"> | string | null
+  region?: Prisma.StringNullableFilter<"profiles"> | string | null
+  country_code?: Prisma.StringNullableFilter<"profiles"> | string | null
+  location_city?: Prisma.StringNullableFilter<"profiles"> | string | null
+  location_region?: Prisma.StringNullableFilter<"profiles"> | string | null
+  location_country_code?: Prisma.StringNullableFilter<"profiles"> | string | null
 }
 
 export type profilesCreateWithoutEducationInput = {
@@ -1860,7 +2045,6 @@ export type profilesCreateWithoutEducationInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -1875,6 +2059,12 @@ export type profilesCreateWithoutEducationInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -1902,7 +2092,6 @@ export type profilesUncheckedCreateWithoutEducationInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -1918,6 +2107,12 @@ export type profilesUncheckedCreateWithoutEducationInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -1959,7 +2154,6 @@ export type profilesUpdateWithoutEducationInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1974,6 +2168,12 @@ export type profilesUpdateWithoutEducationInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -2001,7 +2201,6 @@ export type profilesUncheckedUpdateWithoutEducationInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2017,6 +2216,12 @@ export type profilesUncheckedUpdateWithoutEducationInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -2042,7 +2247,6 @@ export type profilesCreateWithoutHighlightsInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -2057,6 +2261,12 @@ export type profilesCreateWithoutHighlightsInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -2084,7 +2294,6 @@ export type profilesUncheckedCreateWithoutHighlightsInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -2100,6 +2309,12 @@ export type profilesUncheckedCreateWithoutHighlightsInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -2141,7 +2356,6 @@ export type profilesUpdateWithoutHighlightsInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2156,6 +2370,12 @@ export type profilesUpdateWithoutHighlightsInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -2183,7 +2403,6 @@ export type profilesUncheckedUpdateWithoutHighlightsInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2199,6 +2418,12 @@ export type profilesUncheckedUpdateWithoutHighlightsInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -2224,7 +2449,6 @@ export type profilesCreateWithoutLanguagesInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -2239,6 +2463,12 @@ export type profilesCreateWithoutLanguagesInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -2266,7 +2496,6 @@ export type profilesUncheckedCreateWithoutLanguagesInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -2282,6 +2511,12 @@ export type profilesUncheckedCreateWithoutLanguagesInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -2323,7 +2558,6 @@ export type profilesUpdateWithoutLanguagesInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2338,6 +2572,12 @@ export type profilesUpdateWithoutLanguagesInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -2365,7 +2605,6 @@ export type profilesUncheckedUpdateWithoutLanguagesInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2381,6 +2620,12 @@ export type profilesUncheckedUpdateWithoutLanguagesInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -2406,7 +2651,6 @@ export type profilesCreateWithoutPlatform_profilesInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -2421,6 +2665,12 @@ export type profilesCreateWithoutPlatform_profilesInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -2448,7 +2698,6 @@ export type profilesUncheckedCreateWithoutPlatform_profilesInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -2464,6 +2713,12 @@ export type profilesUncheckedCreateWithoutPlatform_profilesInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -2505,7 +2760,6 @@ export type profilesUpdateWithoutPlatform_profilesInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2520,6 +2774,12 @@ export type profilesUpdateWithoutPlatform_profilesInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -2547,7 +2807,6 @@ export type profilesUncheckedUpdateWithoutPlatform_profilesInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2563,6 +2822,12 @@ export type profilesUncheckedUpdateWithoutPlatform_profilesInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -2588,7 +2853,6 @@ export type profilesCreateWithoutProfile_versionsInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -2603,6 +2867,12 @@ export type profilesCreateWithoutProfile_versionsInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -2630,7 +2900,6 @@ export type profilesUncheckedCreateWithoutProfile_versionsInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -2646,6 +2915,12 @@ export type profilesUncheckedCreateWithoutProfile_versionsInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -2687,7 +2962,6 @@ export type profilesUpdateWithoutProfile_versionsInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2702,6 +2976,12 @@ export type profilesUpdateWithoutProfile_versionsInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -2729,7 +3009,6 @@ export type profilesUncheckedUpdateWithoutProfile_versionsInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2745,6 +3024,12 @@ export type profilesUncheckedUpdateWithoutProfile_versionsInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -2770,7 +3055,6 @@ export type profilesCreateWithoutProject_storiesInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -2785,6 +3069,12 @@ export type profilesCreateWithoutProject_storiesInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -2812,7 +3102,6 @@ export type profilesUncheckedCreateWithoutProject_storiesInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -2828,6 +3117,12 @@ export type profilesUncheckedCreateWithoutProject_storiesInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -2869,7 +3164,6 @@ export type profilesUpdateWithoutProject_storiesInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2884,6 +3178,12 @@ export type profilesUpdateWithoutProject_storiesInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -2911,7 +3211,6 @@ export type profilesUncheckedUpdateWithoutProject_storiesInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2927,6 +3226,12 @@ export type profilesUncheckedUpdateWithoutProject_storiesInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -2952,7 +3257,6 @@ export type profilesCreateWithoutReferencesInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -2967,6 +3271,12 @@ export type profilesCreateWithoutReferencesInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -2994,7 +3304,6 @@ export type profilesUncheckedCreateWithoutReferencesInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -3010,6 +3319,12 @@ export type profilesUncheckedCreateWithoutReferencesInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -3051,7 +3366,6 @@ export type profilesUpdateWithoutReferencesInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3066,6 +3380,12 @@ export type profilesUpdateWithoutReferencesInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -3093,7 +3413,6 @@ export type profilesUncheckedUpdateWithoutReferencesInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3109,6 +3428,12 @@ export type profilesUncheckedUpdateWithoutReferencesInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -3134,7 +3459,6 @@ export type profilesCreateWithoutSalary_expectationsInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -3149,6 +3473,12 @@ export type profilesCreateWithoutSalary_expectationsInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -3176,7 +3506,6 @@ export type profilesUncheckedCreateWithoutSalary_expectationsInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -3192,6 +3521,12 @@ export type profilesUncheckedCreateWithoutSalary_expectationsInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -3233,7 +3568,6 @@ export type profilesUpdateWithoutSalary_expectationsInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3248,6 +3582,12 @@ export type profilesUpdateWithoutSalary_expectationsInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -3275,7 +3615,6 @@ export type profilesUncheckedUpdateWithoutSalary_expectationsInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3291,6 +3630,12 @@ export type profilesUncheckedUpdateWithoutSalary_expectationsInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -3316,7 +3661,6 @@ export type profilesCreateWithoutSide_projectsInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -3331,6 +3675,12 @@ export type profilesCreateWithoutSide_projectsInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -3358,7 +3708,6 @@ export type profilesUncheckedCreateWithoutSide_projectsInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -3374,6 +3723,12 @@ export type profilesUncheckedCreateWithoutSide_projectsInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -3415,7 +3770,6 @@ export type profilesUpdateWithoutSide_projectsInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3430,6 +3784,12 @@ export type profilesUpdateWithoutSide_projectsInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -3457,7 +3817,6 @@ export type profilesUncheckedUpdateWithoutSide_projectsInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3473,6 +3832,12 @@ export type profilesUncheckedUpdateWithoutSide_projectsInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -3498,7 +3863,6 @@ export type profilesCreateWithoutTech_skill_categoriesInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -3513,6 +3877,12 @@ export type profilesCreateWithoutTech_skill_categoriesInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -3540,7 +3910,6 @@ export type profilesUncheckedCreateWithoutTech_skill_categoriesInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -3556,6 +3925,12 @@ export type profilesUncheckedCreateWithoutTech_skill_categoriesInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -3597,7 +3972,6 @@ export type profilesUpdateWithoutTech_skill_categoriesInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3612,6 +3986,12 @@ export type profilesUpdateWithoutTech_skill_categoriesInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -3639,7 +4019,6 @@ export type profilesUncheckedUpdateWithoutTech_skill_categoriesInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3655,6 +4034,12 @@ export type profilesUncheckedUpdateWithoutTech_skill_categoriesInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -3680,7 +4065,6 @@ export type profilesCreateWithoutWork_experiencesInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -3695,6 +4079,12 @@ export type profilesCreateWithoutWork_experiencesInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -3722,7 +4112,6 @@ export type profilesUncheckedCreateWithoutWork_experiencesInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -3738,6 +4127,12 @@ export type profilesUncheckedCreateWithoutWork_experiencesInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -3779,7 +4174,6 @@ export type profilesUpdateWithoutWork_experiencesInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3794,6 +4188,12 @@ export type profilesUpdateWithoutWork_experiencesInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -3821,7 +4221,6 @@ export type profilesUncheckedUpdateWithoutWork_experiencesInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3837,6 +4236,12 @@ export type profilesUncheckedUpdateWithoutWork_experiencesInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -3862,7 +4267,6 @@ export type profilesCreateWithoutAi_chatInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -3877,6 +4281,12 @@ export type profilesCreateWithoutAi_chatInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
   collected_data?: Prisma.collected_dataCreateNestedManyWithoutProfilesInput
@@ -3904,7 +4314,6 @@ export type profilesUncheckedCreateWithoutAi_chatInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -3920,6 +4329,12 @@ export type profilesUncheckedCreateWithoutAi_chatInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
   collected_data?: Prisma.collected_dataUncheckedCreateNestedManyWithoutProfilesInput
@@ -3961,7 +4376,6 @@ export type profilesUpdateWithoutAi_chatInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3976,6 +4390,12 @@ export type profilesUpdateWithoutAi_chatInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
   collected_data?: Prisma.collected_dataUpdateManyWithoutProfilesNestedInput
@@ -4003,7 +4423,6 @@ export type profilesUncheckedUpdateWithoutAi_chatInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4019,6 +4438,12 @@ export type profilesUncheckedUpdateWithoutAi_chatInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
   collected_data?: Prisma.collected_dataUncheckedUpdateManyWithoutProfilesNestedInput
@@ -4044,7 +4469,6 @@ export type profilesCreateWithoutOs_contributionsInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -4059,6 +4483,12 @@ export type profilesCreateWithoutOs_contributionsInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -4086,7 +4516,6 @@ export type profilesUncheckedCreateWithoutOs_contributionsInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -4102,6 +4531,12 @@ export type profilesUncheckedCreateWithoutOs_contributionsInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -4143,7 +4578,6 @@ export type profilesUpdateWithoutOs_contributionsInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4158,6 +4592,12 @@ export type profilesUpdateWithoutOs_contributionsInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -4185,7 +4625,6 @@ export type profilesUncheckedUpdateWithoutOs_contributionsInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4201,6 +4640,12 @@ export type profilesUncheckedUpdateWithoutOs_contributionsInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -4226,7 +4671,6 @@ export type profilesCreateWithoutJob_searchesInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -4241,6 +4685,12 @@ export type profilesCreateWithoutJob_searchesInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -4268,7 +4718,6 @@ export type profilesUncheckedCreateWithoutJob_searchesInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -4284,6 +4733,12 @@ export type profilesUncheckedCreateWithoutJob_searchesInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -4325,7 +4780,6 @@ export type profilesUpdateWithoutJob_searchesInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4340,6 +4794,12 @@ export type profilesUpdateWithoutJob_searchesInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -4367,7 +4827,6 @@ export type profilesUncheckedUpdateWithoutJob_searchesInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4383,6 +4842,12 @@ export type profilesUncheckedUpdateWithoutJob_searchesInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -4408,7 +4873,6 @@ export type profilesCreateWithoutJob_match_preferencesInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -4423,6 +4887,12 @@ export type profilesCreateWithoutJob_match_preferencesInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -4450,7 +4920,6 @@ export type profilesUncheckedCreateWithoutJob_match_preferencesInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -4466,6 +4935,12 @@ export type profilesUncheckedCreateWithoutJob_match_preferencesInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -4507,7 +4982,6 @@ export type profilesUpdateWithoutJob_match_preferencesInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4522,6 +4996,12 @@ export type profilesUpdateWithoutJob_match_preferencesInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -4549,7 +5029,6 @@ export type profilesUncheckedUpdateWithoutJob_match_preferencesInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4565,6 +5044,12 @@ export type profilesUncheckedUpdateWithoutJob_match_preferencesInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -4590,7 +5075,6 @@ export type profilesCreateWithoutJob_matchesInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -4605,6 +5089,12 @@ export type profilesCreateWithoutJob_matchesInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -4632,7 +5122,6 @@ export type profilesUncheckedCreateWithoutJob_matchesInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -4648,6 +5137,12 @@ export type profilesUncheckedCreateWithoutJob_matchesInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -4689,7 +5184,6 @@ export type profilesUpdateWithoutJob_matchesInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4704,6 +5198,12 @@ export type profilesUpdateWithoutJob_matchesInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -4731,7 +5231,6 @@ export type profilesUncheckedUpdateWithoutJob_matchesInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4747,6 +5246,12 @@ export type profilesUncheckedUpdateWithoutJob_matchesInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -4773,7 +5278,6 @@ export type profilesCreateManyDirectus_filesInput = {
   date_updated?: Date | string | null
   name?: string | null
   title?: string | null
-  location?: string | null
   phone_number?: string | null
   email_address?: string | null
   personal_website?: string | null
@@ -4788,6 +5292,12 @@ export type profilesCreateManyDirectus_filesInput = {
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
 }
 
 export type profilesUpdateWithoutDirectus_filesInput = {
@@ -4795,7 +5305,6 @@ export type profilesUpdateWithoutDirectus_filesInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4810,6 +5319,12 @@ export type profilesUpdateWithoutDirectus_filesInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -4837,7 +5352,6 @@ export type profilesUncheckedUpdateWithoutDirectus_filesInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4852,6 +5366,12 @@ export type profilesUncheckedUpdateWithoutDirectus_filesInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -4879,7 +5399,6 @@ export type profilesUncheckedUpdateManyWithoutDirectus_filesInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4894,6 +5413,12 @@ export type profilesUncheckedUpdateManyWithoutDirectus_filesInput = {
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 
@@ -5095,7 +5620,6 @@ export type profilesSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   date_updated?: boolean
   name?: boolean
   title?: boolean
-  location?: boolean
   phone_number?: boolean
   email_address?: boolean
   personal_website?: boolean
@@ -5111,6 +5635,12 @@ export type profilesSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   location_url?: boolean
   location_timezone?: boolean
   sort?: boolean
+  city?: boolean
+  region?: boolean
+  country_code?: boolean
+  location_city?: boolean
+  location_region?: boolean
+  location_country_code?: boolean
   ai_chat?: boolean | Prisma.profiles$ai_chatArgs<ExtArgs>
   applications?: boolean | Prisma.profiles$applicationsArgs<ExtArgs>
   cheat_sheets?: boolean | Prisma.profiles$cheat_sheetsArgs<ExtArgs>
@@ -5140,7 +5670,6 @@ export type profilesSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   date_updated?: boolean
   name?: boolean
   title?: boolean
-  location?: boolean
   phone_number?: boolean
   email_address?: boolean
   personal_website?: boolean
@@ -5156,6 +5685,12 @@ export type profilesSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   location_url?: boolean
   location_timezone?: boolean
   sort?: boolean
+  city?: boolean
+  region?: boolean
+  country_code?: boolean
+  location_city?: boolean
+  location_region?: boolean
+  location_country_code?: boolean
   directus_files?: boolean | Prisma.profiles$directus_filesArgs<ExtArgs>
 }, ExtArgs["result"]["profiles"]>
 
@@ -5165,7 +5700,6 @@ export type profilesSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   date_updated?: boolean
   name?: boolean
   title?: boolean
-  location?: boolean
   phone_number?: boolean
   email_address?: boolean
   personal_website?: boolean
@@ -5181,6 +5715,12 @@ export type profilesSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   location_url?: boolean
   location_timezone?: boolean
   sort?: boolean
+  city?: boolean
+  region?: boolean
+  country_code?: boolean
+  location_city?: boolean
+  location_region?: boolean
+  location_country_code?: boolean
   directus_files?: boolean | Prisma.profiles$directus_filesArgs<ExtArgs>
 }, ExtArgs["result"]["profiles"]>
 
@@ -5190,7 +5730,6 @@ export type profilesSelectScalar = {
   date_updated?: boolean
   name?: boolean
   title?: boolean
-  location?: boolean
   phone_number?: boolean
   email_address?: boolean
   personal_website?: boolean
@@ -5206,9 +5745,15 @@ export type profilesSelectScalar = {
   location_url?: boolean
   location_timezone?: boolean
   sort?: boolean
+  city?: boolean
+  region?: boolean
+  country_code?: boolean
+  location_city?: boolean
+  location_region?: boolean
+  location_country_code?: boolean
 }
 
-export type profilesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "date_created" | "date_updated" | "name" | "title" | "location" | "phone_number" | "email_address" | "personal_website" | "subtitle" | "core_stack" | "linkedin_profile" | "github_profile" | "stackoverflow_profile" | "headline" | "profile_picture" | "summary" | "nationality" | "location_url" | "location_timezone" | "sort", ExtArgs["result"]["profiles"]>
+export type profilesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "date_created" | "date_updated" | "name" | "title" | "phone_number" | "email_address" | "personal_website" | "subtitle" | "core_stack" | "linkedin_profile" | "github_profile" | "stackoverflow_profile" | "headline" | "profile_picture" | "summary" | "nationality" | "location_url" | "location_timezone" | "sort" | "city" | "region" | "country_code" | "location_city" | "location_region" | "location_country_code", ExtArgs["result"]["profiles"]>
 export type profilesInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   ai_chat?: boolean | Prisma.profiles$ai_chatArgs<ExtArgs>
   applications?: boolean | Prisma.profiles$applicationsArgs<ExtArgs>
@@ -5269,7 +5814,6 @@ export type $profilesPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     date_updated: Date | null
     name: string | null
     title: string | null
-    location: string | null
     phone_number: string | null
     email_address: string | null
     personal_website: string | null
@@ -5285,6 +5829,12 @@ export type $profilesPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     location_url: string | null
     location_timezone: string | null
     sort: number | null
+    city: string | null
+    region: string | null
+    country_code: string | null
+    location_city: string | null
+    location_region: string | null
+    location_country_code: string | null
   }, ExtArgs["result"]["profiles"]>
   composites: {}
 }
@@ -5733,7 +6283,6 @@ export interface profilesFieldRefs {
   readonly date_updated: Prisma.FieldRef<"profiles", 'DateTime'>
   readonly name: Prisma.FieldRef<"profiles", 'String'>
   readonly title: Prisma.FieldRef<"profiles", 'String'>
-  readonly location: Prisma.FieldRef<"profiles", 'String'>
   readonly phone_number: Prisma.FieldRef<"profiles", 'String'>
   readonly email_address: Prisma.FieldRef<"profiles", 'String'>
   readonly personal_website: Prisma.FieldRef<"profiles", 'String'>
@@ -5749,6 +6298,12 @@ export interface profilesFieldRefs {
   readonly location_url: Prisma.FieldRef<"profiles", 'String'>
   readonly location_timezone: Prisma.FieldRef<"profiles", 'String'>
   readonly sort: Prisma.FieldRef<"profiles", 'Int'>
+  readonly city: Prisma.FieldRef<"profiles", 'String'>
+  readonly region: Prisma.FieldRef<"profiles", 'String'>
+  readonly country_code: Prisma.FieldRef<"profiles", 'String'>
+  readonly location_city: Prisma.FieldRef<"profiles", 'String'>
+  readonly location_region: Prisma.FieldRef<"profiles", 'String'>
+  readonly location_country_code: Prisma.FieldRef<"profiles", 'String'>
 }
     
 

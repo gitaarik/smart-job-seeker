@@ -638,7 +638,6 @@ model profiles {
   date_updated          DateTime?               @db.Timestamptz(6)
   name                  String?                 @db.VarChar(255)
   title                 String?                 @db.VarChar(255)
-  location              String?                 @db.VarChar(255)
   phone_number          String?                 @db.VarChar(255)
   email_address         String?                 @db.VarChar(255)
   personal_website      String?                 @db.VarChar(255)
@@ -654,6 +653,12 @@ model profiles {
   location_url          String?                 @db.VarChar(255)
   location_timezone     String?                 @db.VarChar(255)
   sort                  Int?
+  city                  String?                 @db.VarChar(255)
+  region                String?                 @db.VarChar(255)
+  country_code          String?                 @db.VarChar(10)
+  location_city         String?                 @db.VarChar(255)
+  location_region       String?                 @db.VarChar(255)
+  location_country_code String?                 @db.VarChar(10)
   ai_chat               ai_chat[]
   applications          applications[]
   cheat_sheets          cheat_sheets[]

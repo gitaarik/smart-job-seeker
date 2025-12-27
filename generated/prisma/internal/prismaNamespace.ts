@@ -6013,7 +6013,6 @@ export const ProfilesScalarFieldEnum = {
   date_updated: 'date_updated',
   name: 'name',
   title: 'title',
-  location: 'location',
   phone_number: 'phone_number',
   email_address: 'email_address',
   personal_website: 'personal_website',
@@ -6028,7 +6027,13 @@ export const ProfilesScalarFieldEnum = {
   nationality: 'nationality',
   location_url: 'location_url',
   location_timezone: 'location_timezone',
-  sort: 'sort'
+  sort: 'sort',
+  city: 'city',
+  region: 'region',
+  country_code: 'country_code',
+  location_city: 'location_city',
+  location_region: 'location_region',
+  location_country_code: 'location_country_code'
 } as const
 
 export type ProfilesScalarFieldEnum = (typeof ProfilesScalarFieldEnum)[keyof typeof ProfilesScalarFieldEnum]
