@@ -8,6 +8,56 @@ import { interpolatePrompt } from "./ai-chat-utils";
 import { dbDirect as db } from "$lib/db";
 
 /**
+ * Validate job search HTML before processing
+ * Checks for common issues like login pages, errors, CAPTCHA, etc.
+ */
+export function validateJobSearchHtml(html: string): {
+  isValid: boolean;
+  warnings: string[];
+} {
+  const warnings: string[] = [];
+
+  // Check minimum content length
+  if (html.length < 1000) {
+    warnings.push("HTML content suspiciously short (< 1000 chars)");
+  }
+
+  // Check for login/auth indicators
+  const loginIndicators = [
+    "sign in",
+    "log in",
+    "authwall",
+    "join now",
+    "create account",
+  ];
+  if (
+    loginIndicators.some((indicator) => html.toLowerCase().includes(indicator))
+  ) {
+    warnings.push("Login/authentication page detected");
+  }
+
+  // Check for error pages
+  if (html.includes("404") || html.toLowerCase().includes("not found")) {
+    warnings.push("Error page (404) detected");
+  }
+
+  // Check for CAPTCHA
+  if (html.toLowerCase().includes("captcha")) {
+    warnings.push("CAPTCHA challenge detected");
+  }
+
+  // Check for rate limiting
+  if (
+    html.toLowerCase().includes("rate limit") ||
+    html.toLowerCase().includes("too many requests")
+  ) {
+    warnings.push("Rate limiting detected");
+  }
+
+  return { isValid: warnings.length === 0, warnings };
+}
+
+/**
  * Extract job links from search results HTML using LLM
  * @param searchResultsHtml HTML content from job search results page
  * @returns Array of URLs to individual job pages
@@ -15,6 +65,14 @@ import { dbDirect as db } from "$lib/db";
 export async function extractJobLinks(
   searchResultsHtml: string,
 ): Promise<string[]> {
+  // 0. Validate HTML before processing
+  const validation = validateJobSearchHtml(searchResultsHtml);
+
+  if (!validation.isValid) {
+    console.warn("⚠️  HTML validation warnings:", validation.warnings);
+    // Continue anyway - might still extract something useful
+  }
+
   // 1. Strip HTML to minimal content
   const strippedHtml = stripHtmlForLlm(searchResultsHtml);
 

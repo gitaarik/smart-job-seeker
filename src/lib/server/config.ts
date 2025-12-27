@@ -30,6 +30,14 @@ export interface AppConfig {
   retryMaxAttempts: number;
   retryInitialDelay: number;
   retryMaxDelay: number;
+
+  // Scraper Configuration
+  scraperDefaultTimeout: number;
+  scraperNetworkIdleTimeout: number;
+  scraperMaxRetries: number;
+  scraperDebugMode: boolean;
+  scraperScrollMaxIterations: number;
+  scraperSaveDebugScreenshots: boolean;
 }
 
 /**
@@ -65,6 +73,26 @@ function loadConfig(): AppConfig {
     retryMaxAttempts: parseInt(getEnv("SJS_RETRY_MAX_ATTEMPTS", "3"), 10),
     retryInitialDelay: parseInt(getEnv("SJS_RETRY_INITIAL_DELAY", "1000"), 10),
     retryMaxDelay: parseInt(getEnv("SJS_RETRY_MAX_DELAY", "10000"), 10),
+
+    // Scraper
+    scraperDefaultTimeout: parseInt(
+      getEnv("SCRAPER_DEFAULT_TIMEOUT", "30000"),
+      10,
+    ),
+    scraperNetworkIdleTimeout: parseInt(
+      getEnv("SCRAPER_NETWORK_IDLE_TIMEOUT", "45000"),
+      10,
+    ),
+    scraperMaxRetries: parseInt(getEnv("SCRAPER_MAX_RETRIES", "2"), 10),
+    scraperDebugMode: getEnv("SCRAPER_DEBUG_MODE", "false") === "true",
+    scraperScrollMaxIterations: parseInt(
+      getEnv("SCRAPER_SCROLL_MAX_ITERATIONS", "3"),
+      10,
+    ),
+    scraperSaveDebugScreenshots: getEnv(
+      "SCRAPER_SAVE_DEBUG_SCREENSHOTS",
+      "false",
+    ) === "true",
   };
 }
 

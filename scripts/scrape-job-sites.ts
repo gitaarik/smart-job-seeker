@@ -16,10 +16,17 @@ import {
 } from "$lib/server/job-scraper";
 import { stripHtmlForLlm } from "$lib/server/html-strip";
 import { Command } from "commander";
-import { existsSync, mkdirSync } from "fs";
+import { existsSync, mkdirSync, writeFileSync } from "fs";
 import { join } from "path";
 import { exec } from "child_process";
 import { promisify } from "util";
+import { getSiteConfig, getSiteName } from "$lib/server/job-site-configs";
+import {
+  smartWait,
+  validateContentLoaded,
+  type WaitResult,
+} from "$lib/server/page-wait-utils";
+import { config } from "$lib/server/config";
 
 const execAsync = promisify(exec);
 
@@ -63,6 +70,95 @@ function normalizeJobUrl(url: string): string {
   } catch {
     return url;
   }
+}
+
+/**
+ * Save debug screenshot if debug mode is enabled
+ */
+async function saveDebugScreenshot(
+  page: Page,
+  name: string,
+): Promise<void> {
+  if (!config.scraperSaveDebugScreenshots) {
+    return;
+  }
+
+  try {
+    const screenshotDir = join(process.cwd(), "debug-screenshots");
+    if (!existsSync(screenshotDir)) {
+      mkdirSync(screenshotDir, { recursive: true });
+    }
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const filename = `${name}-${timestamp}.png`;
+    const filepath = join(screenshotDir, filename);
+
+    await page.screenshot({ path: filepath, fullPage: true });
+    console.log(`📸 Debug screenshot saved: ${filepath}`);
+  } catch (error) {
+    console.warn(
+      "⚠️  Failed to save debug screenshot:",
+      error instanceof Error ? error.message : String(error),
+    );
+  }
+}
+
+/**
+ * Diagnose why extraction failed
+ */
+async function diagnoseExtractionFailure(
+  page: Page,
+  siteConfig: any,
+): Promise<{
+  hasLoginForm: boolean;
+  captchaDetected: boolean;
+  expectedSelectorsFound: {
+    allFound: boolean;
+    found: string[];
+    missing: string[];
+  };
+  pageReadyState: string;
+}> {
+  const html = await page.content();
+  const htmlLower = html.toLowerCase();
+
+  // Check for login indicators
+  const loginIndicators = [
+    "sign in",
+    "log in",
+    "authwall",
+    "join now",
+    "create account",
+  ];
+  const hasLoginForm = loginIndicators.some((indicator) =>
+    htmlLower.includes(indicator)
+  );
+
+  // Check for CAPTCHA
+  const captchaDetected = htmlLower.includes("captcha");
+
+  // Check expected selectors
+  const selectorsToCheck: string[] = [];
+  if (siteConfig.selectors?.jobListContainer) {
+    selectorsToCheck.push(siteConfig.selectors.jobListContainer);
+  }
+  if (siteConfig.selectors?.jobListItem) {
+    selectorsToCheck.push(siteConfig.selectors.jobListItem);
+  }
+
+  const expectedSelectorsFound = selectorsToCheck.length > 0
+    ? await validateContentLoaded(page, selectorsToCheck)
+    : { allFound: true, found: [], missing: [] };
+
+  // Get page ready state
+  const pageReadyState = await page.evaluate(() => document.readyState);
+
+  return {
+    hasLoginForm,
+    captchaDetected,
+    expectedSelectorsFound,
+    pageReadyState,
+  };
 }
 
 /**
@@ -169,16 +265,40 @@ async function scrapeJobSite(
   }
 
   const searchUrl = searchAction.search_url;
+  const siteConfig = getSiteConfig(searchUrl);
+  const siteName = getSiteName(searchUrl);
 
   // 1. Navigate to search results
-  console.log(`Navigating to: ${searchUrl}`);
+  console.log(`Navigating to: ${searchUrl} (${siteName})`);
   await page.goto(searchUrl, {
-    waitUntil: "domcontentloaded",
-    timeout: 60000,
+    waitUntil: siteConfig.searchPage.waitUntil || "networkidle2",
+    timeout: siteConfig.searchPage.timeout ||
+      config.scraperNetworkIdleTimeout,
   });
 
-  // Wait for page to settle
-  await new Promise((resolve) => setTimeout(resolve, 3000));
+  console.log("Waiting for search results to load...");
+  const waitResult = await smartWait(page, siteConfig.searchPage);
+
+  if (config.scraperDebugMode) {
+    console.log(
+      "Search page wait result:",
+      JSON.stringify(waitResult, null, 2),
+    );
+  }
+
+  if (config.scraperSaveDebugScreenshots) {
+    await saveDebugScreenshot(page, `search-${siteName}`);
+  }
+
+  // Validate content loaded
+  if (siteConfig.selectors.jobListContainer) {
+    const validation = await validateContentLoaded(page, [
+      siteConfig.selectors.jobListContainer,
+    ]);
+    if (!validation.allFound) {
+      console.warn("⚠️  Expected job list container not found:", validation);
+    }
+  }
 
   // 2. Check if page is a login page
   if (await isLoginPage(page)) {
@@ -191,12 +311,13 @@ async function scrapeJobSite(
 
     // Navigate again after login
     await page.goto(searchUrl, {
-      waitUntil: "domcontentloaded",
-      timeout: 60000,
+      waitUntil: siteConfig.searchPage.waitUntil || "networkidle2",
+      timeout: siteConfig.searchPage.timeout ||
+        config.scraperNetworkIdleTimeout,
     });
 
-    // Wait for page to settle
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+    console.log("Waiting for search results to load after login...");
+    await smartWait(page, siteConfig.searchPage);
   }
 
   // 3. Get page HTML
@@ -209,10 +330,41 @@ async function scrapeJobSite(
     jobUrls = await extractJobLinks(html);
 
     if (!jobUrls || jobUrls.length === 0) {
-      console.log("⚠️  No job links found. This might indicate:");
-      console.log("   - LinkedIn detected automation and blocked access");
-      console.log("   - The search returned no results");
-      console.log("   - The page structure has changed");
+      console.log("⚠️  No job links found.");
+
+      // Run diagnostics
+      const diagnostic = await diagnoseExtractionFailure(page, siteConfig);
+
+      if (diagnostic.hasLoginForm) {
+        console.log("   Reason: Login page detected");
+        console.log(
+          "   Action: Run script again and complete login when prompted",
+        );
+      } else if (diagnostic.captchaDetected) {
+        console.log("   Reason: CAPTCHA challenge detected");
+        console.log(
+          "   Action: Wait and try again later, or solve CAPTCHA manually",
+        );
+      } else if (!diagnostic.expectedSelectorsFound.allFound) {
+        console.log("   Reason: Expected page elements not found");
+        console.log("   Missing:", diagnostic.expectedSelectorsFound.missing);
+        console.log(
+          "   Action: Page structure may have changed - update selectors",
+        );
+      } else {
+        console.log("   Possible reasons:");
+        console.log("   - Search returned no results (legitimate)");
+        console.log("   - Page structure changed (update selectors)");
+        console.log("   - Content still loading (increase timeout)");
+      }
+
+      if (config.scraperDebugMode) {
+        console.log(
+          "\n   Full diagnostic report:",
+          JSON.stringify(diagnostic, null, 2),
+        );
+      }
+
       return;
     }
 
@@ -255,12 +407,30 @@ async function scrapeJobSite(
 
       // Navigate to job page
       await page.goto(url, {
-        waitUntil: "domcontentloaded",
-        timeout: 60000,
+        waitUntil: siteConfig.jobDetailPage.waitUntil || "networkidle2",
+        timeout: siteConfig.jobDetailPage.timeout ||
+          config.scraperDefaultTimeout,
       });
 
-      // Wait for page to settle
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const detailWaitResult = await smartWait(page, siteConfig.jobDetailPage);
+
+      if (config.scraperDebugMode) {
+        console.log(
+          "Job detail wait result:",
+          JSON.stringify(detailWaitResult, null, 2),
+        );
+      }
+
+      if (siteConfig.selectors.jobDescription) {
+        const validation = await validateContentLoaded(page, [
+          siteConfig.selectors.jobDescription,
+        ]);
+        if (!validation.allFound) {
+          console.warn(
+            "⚠️  Job description selector not found - content may be incomplete",
+          );
+        }
+      }
 
       const jobHtml = await page.content();
 
@@ -365,15 +535,21 @@ async function rescrapeJobById(
   const importSource = job.import_source || getImportSource(job.source_url);
   console.log(`🔧 Scraper: ${importSource}`);
 
+  // Get site configuration
+  const siteConfig = getSiteConfig(job.source_url);
+
   // 3. Navigate to job page
   const page = await browser.newPage();
 
   try {
     console.log(`\n🌐 Navigating to job page...`);
     await page.goto(job.source_url, {
-      waitUntil: "networkidle2",
-      timeout: 60000,
+      waitUntil: siteConfig.jobDetailPage.waitUntil || "networkidle2",
+      timeout: siteConfig.jobDetailPage.timeout ||
+        config.scraperDefaultTimeout,
     });
+
+    await smartWait(page, siteConfig.jobDetailPage);
 
     // 4. Check for login page
     const pageHtml = await page.content();
