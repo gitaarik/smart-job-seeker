@@ -6,7 +6,10 @@
 //
 // But you can just use `npm run export-resume` (package.json script)
 
-import { launchStealthBrowser } from "$lib/server/browser-utils";
+import {
+  createBrowserContext,
+  launchStealthBrowser,
+} from "$lib/server/browser-utils";
 import path from "path";
 import fs from "fs";
 import { dbDirect } from "$lib/db";
@@ -18,8 +21,10 @@ async function exportProfilesToPDF() {
   console.log("🚀 Starting profile PDF export (Resume & CV)...");
 
   const browser = await launchStealthBrowser({
-    headless: "new",
+    headless: true,
   });
+
+  const context = await createBrowserContext(browser);
 
   // Fetch the first profile with its versions
   const profile = await dbDirect.profiles.findFirst({
@@ -55,13 +60,12 @@ async function exportProfilesToPDF() {
   );
 
   try {
-    const page = await browser.newPage();
+    const page = await context.newPage();
 
     // Set viewport for consistent rendering
-    await page.setViewport({
+    await page.setViewportSize({
       width: 1200,
       height: 1600,
-      deviceScaleFactor: 2,
     });
 
     // Create base output directory if it doesn't exist
@@ -85,7 +89,7 @@ async function exportProfilesToPDF() {
       console.log(`🔗 Loading resume from: ${resumeUrl}`);
 
       await page.goto(resumeUrl, {
-        waitUntil: "networkidle0",
+        waitUntil: "networkidle",
         timeout: 30000,
       });
 
@@ -135,6 +139,7 @@ async function exportProfilesToPDF() {
     console.error("❌ Error exporting resume to PDF:", error);
     process.exit(1);
   } finally {
+    await context.close(); // Close context first
     await browser.close();
   }
 }

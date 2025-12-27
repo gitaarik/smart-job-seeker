@@ -1,10 +1,9 @@
 /**
  * Site-specific configurations for job scraping
- * Defines wait strategies, selectors, and timeouts per job site
+ * Simplified for Playwright's auto-waiting capabilities
  */
 
-import type { Page } from "puppeteer";
-import type { WaitStrategy } from "./page-wait-utils";
+import type { Page } from "playwright";
 
 export interface SiteSelectors {
   jobListContainer?: string;
@@ -13,114 +12,82 @@ export interface SiteSelectors {
   jobDescription?: string;
 }
 
-export interface SiteWaitConfig {
-  searchPage: WaitStrategy;
-  jobDetailPage: WaitStrategy;
+export interface SiteConfig {
+  // Simplified: just timeout
+  timeout?: number;
+
+  // Selectors for validation (optional)
   selectors: SiteSelectors;
+
+  // Custom validation if needed
+  validator?: (page: Page) => Promise<boolean>;
+
+  // Navigation type (Phase 3)
+  navigationType?: "url" | "click";
+
+  // For click-based navigation (Phase 3)
+  clickSelectors?: {
+    jobCard?: string;
+  };
 }
 
 /**
  * Site-specific configurations
  */
-const SITE_CONFIGS: Record<string, SiteWaitConfig> = {
+const SITE_CONFIGS: Record<string, SiteConfig> = {
   "linkedin.com": {
-    searchPage: {
-      waitUntil: "networkidle2",
-      selectors: [
-        ".jobs-search__results-list", // Primary
-        ".scaffold-layout__list-container", // Fallback
-        ".jobs-search-results", // Older layout
-      ],
-      timeout: 45000, // LinkedIn is slow
-      additionalDelay: 2000,
-      validator: async (page: Page) => {
-        // Ensure not on login wall
-        const hasJobs = await page.$(".job-card-container") !== null;
-        const hasLoginWall = await page.$(".authwall-join-form") !== null;
-        return hasJobs && !hasLoginWall;
-      },
-      retryOptions: { maxAttempts: 2, initialDelay: 3000 },
-    },
-    jobDetailPage: {
-      waitUntil: "networkidle2",
-      selectors: [
-        ".jobs-unified-top-card",
-        ".job-details",
-        ".jobs-description",
-      ],
-      timeout: 30000,
-      additionalDelay: 1500,
-    },
+    timeout: 45000, // LinkedIn is slow
     selectors: {
       jobListContainer: ".jobs-search__results-list",
       jobListItem: ".job-card-container",
       jobTitle: ".job-details-jobs-unified-top-card__job-title",
       jobDescription: ".jobs-description",
     },
+    validator: async (page: Page) => {
+      // Ensure not on login wall
+      const hasJobs = await page.locator(".job-card-container").isVisible()
+        .catch(() => false);
+      const hasLoginWall = await page.locator(".authwall-join-form")
+        .isVisible().catch(() => false);
+      return hasJobs && !hasLoginWall;
+    },
+    navigationType: "url",
   },
 
   "indeed.com": {
-    searchPage: {
-      waitUntil: "networkidle2",
-      selector: "#mosaic-provider-jobcards",
-      timeout: 30000,
-      additionalDelay: 1000,
-    },
-    jobDetailPage: {
-      waitUntil: "networkidle2",
-      selector: ".jobsearch-JobComponent",
-      timeout: 20000,
-      additionalDelay: 1000,
-    },
+    timeout: 30000,
     selectors: {
       jobListContainer: "#mosaic-provider-jobcards",
       jobListItem: ".job_seen_beacon",
       jobTitle: ".jobTitle",
       jobDescription: ".jobsearch-JobComponent-description",
     },
+    navigationType: "url",
   },
 
   "glassdoor.com": {
-    searchPage: {
-      waitUntil: "networkidle2",
-      selector: ".JobsList_jobsList__Ey2Vo",
-      timeout: 30000,
-      additionalDelay: 1500,
-    },
-    jobDetailPage: {
-      waitUntil: "networkidle2",
-      selector: ".JobDetails_jobDetails__GL_qI",
-      timeout: 25000,
-      additionalDelay: 1000,
-    },
+    timeout: 30000,
     selectors: {
       jobListContainer: ".JobsList_jobsList__Ey2Vo",
       jobListItem: ".JobCard_jobCard__lpoRV",
       jobTitle: ".JobCard_jobTitle___7I6y",
       jobDescription: ".JobDetails_jobDescription__uW_fK",
     },
+    navigationType: "url",
   },
 
   // Default fallback configuration
   "default": {
-    searchPage: {
-      waitUntil: "networkidle2",
-      timeout: 30000,
-      additionalDelay: 2000,
-    },
-    jobDetailPage: {
-      waitUntil: "networkidle2",
-      timeout: 20000,
-      additionalDelay: 1000,
-    },
+    timeout: 30000,
     selectors: {},
+    navigationType: "url",
   },
 };
 
 /**
  * Get site configuration from URL
  */
-export function getSiteConfig(url: string): SiteWaitConfig {
+export function getSiteConfig(url: string): SiteConfig {
   try {
     const hostname = new URL(url).hostname;
 

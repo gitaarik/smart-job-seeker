@@ -1,15 +1,15 @@
 /**
- * Browser utilities for Puppeteer with stealth configuration
- * Provides Chrome detection and anti-bot detection measures
+ * Browser utilities for Playwright
+ * Provides Chrome detection and browser context creation
  */
 
 import { existsSync } from "fs";
-import puppeteer from "puppeteer-extra";
-import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import type { Browser, PuppeteerLaunchOptions } from "puppeteer";
-
-// Add stealth plugin to puppeteer-extra
-puppeteer.use(StealthPlugin());
+import {
+  type Browser,
+  type BrowserContext,
+  chromium,
+  type LaunchOptions,
+} from "playwright";
 
 // Chrome installation paths to check (Linux)
 const CHROME_PATHS = [
@@ -21,15 +21,15 @@ const CHROME_PATHS = [
 ];
 
 export interface BrowserLaunchOptions {
-  headless?: boolean | "new";
+  headless?: boolean;
   userDataDir?: string;
   args?: string[];
-  defaultViewport?: { width: number; height: number } | null;
+  viewport?: { width: number; height: number } | null;
 }
 
 /**
  * Find Google Chrome executable path
- * Priority: ENV var > known paths > undefined (fallback to Puppeteer's bundled Chromium)
+ * Priority: ENV var > known paths > undefined (fallback to Playwright's bundled Chromium)
  */
 export function findChromeExecutable(): string | undefined {
   // 1. Check environment variable override
@@ -56,7 +56,7 @@ export function findChromeExecutable(): string | undefined {
 
   // 3. Not found - fallback to bundled Chromium
   console.warn(
-    "⚠️  Google Chrome not found. Using Puppeteer bundled Chromium.",
+    "⚠️  Google Chrome not found. Using Playwright bundled Chromium.",
   );
   console.warn("   For better bot detection avoidance, install Chrome:");
   console.warn("   Ubuntu/Debian: sudo apt install google-chrome-stable");
@@ -65,11 +65,11 @@ export function findChromeExecutable(): string | undefined {
 }
 
 /**
- * Get browser launch options with stealth configuration
+ * Get browser launch options
  */
 export function getBrowserLaunchOptions(
   options: BrowserLaunchOptions = {},
-): PuppeteerLaunchOptions {
+): LaunchOptions {
   const executablePath = findChromeExecutable();
 
   // Base anti-detection arguments
@@ -88,16 +88,12 @@ export function getBrowserLaunchOptions(
   return {
     executablePath,
     headless: options.headless ?? false,
-    userDataDir: options.userDataDir,
     args,
-    defaultViewport: options.defaultViewport !== undefined
-      ? options.defaultViewport
-      : { width: 1920, height: 1080 },
   };
 }
 
 /**
- * Launch browser with stealth plugin
+ * Launch browser with Playwright (built-in stealth)
  */
 export async function launchStealthBrowser(
   options: BrowserLaunchOptions = {},
@@ -105,8 +101,8 @@ export async function launchStealthBrowser(
   const launchOptions = getBrowserLaunchOptions(options);
 
   try {
-    console.log("🚀 Launching stealth browser...");
-    const browser = await puppeteer.launch(launchOptions);
+    console.log("🚀 Launching Playwright browser...");
+    const browser = await chromium.launch(launchOptions);
     console.log("✅ Browser launched successfully");
     return browser;
   } catch (error) {
@@ -123,4 +119,29 @@ export async function launchStealthBrowser(
     );
     throw error;
   }
+}
+
+/**
+ * Create browser context with stealth configuration
+ * Playwright uses contexts for isolation (like incognito windows with separate sessions)
+ */
+export async function createBrowserContext(
+  browser: Browser,
+  options: {
+    userDataDir?: string;
+    viewport?: { width: number; height: number } | null;
+  } = {},
+): Promise<BrowserContext> {
+  return await browser.newContext({
+    userAgent:
+      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    viewport: options.viewport !== undefined
+      ? options.viewport
+      : { width: 1920, height: 1080 },
+    locale: "en-US",
+    timezoneId: "America/New_York",
+    storageState: options.userDataDir
+      ? `${options.userDataDir}/state.json`
+      : undefined,
+  });
 }

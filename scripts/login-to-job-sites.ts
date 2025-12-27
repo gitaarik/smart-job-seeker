@@ -6,7 +6,10 @@
  * User can then run the scraper with saved cookies/session
  */
 
-import { launchStealthBrowser } from "$lib/server/browser-utils";
+import {
+  createBrowserContext,
+  launchStealthBrowser,
+} from "$lib/server/browser-utils";
 import { existsSync, mkdirSync } from "fs";
 import { join } from "path";
 
@@ -29,9 +32,13 @@ async function openBrowserForLogin(): Promise<void> {
   // Launch browser with same profile as scraper
   const browser = await launchStealthBrowser({
     headless: false,
-    userDataDir: join(profileDir, "default"),
     args: ["--start-maximized"],
-    defaultViewport: null,
+  });
+
+  // Create browser context with persistent storage and no viewport (maximized)
+  const context = await createBrowserContext(browser, {
+    userDataDir: join(profileDir, "default"),
+    viewport: null, // No viewport = maximized window
   });
 
   try {
@@ -47,6 +54,7 @@ async function openBrowserForLogin(): Promise<void> {
       error instanceof Error ? error.message : String(error),
     );
   } finally {
+    await context.close(); // Close context first
     await browser.close();
   }
 }

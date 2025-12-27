@@ -2,11 +2,14 @@
 
 /**
  * Job site scraping script
- * Uses Puppeteer to scrape job listings and LLM to extract data
+ * Uses Playwright to scrape job listings and LLM to extract data
  */
 
-import { type Browser, type Page } from "puppeteer";
-import { launchStealthBrowser } from "$lib/server/browser-utils";
+import { type Browser, type BrowserContext, type Page } from "playwright";
+import {
+  createBrowserContext,
+  launchStealthBrowser,
+} from "$lib/server/browser-utils";
 import { dbDirect } from "$lib/db";
 import {
   detectLoginPage,
@@ -16,16 +19,11 @@ import {
 } from "$lib/server/job-scraper";
 import { stripHtmlForLlm } from "$lib/server/html-strip";
 import { Command } from "commander";
-import { existsSync, mkdirSync, writeFileSync } from "fs";
+import { existsSync, mkdirSync } from "fs";
 import { join } from "path";
 import { exec } from "child_process";
 import { promisify } from "util";
 import { getSiteConfig, getSiteName } from "$lib/server/job-site-configs";
-import {
-  smartWait,
-  validateContentLoaded,
-  type WaitResult,
-} from "$lib/server/page-wait-utils";
 import { config } from "$lib/server/config";
 
 const execAsync = promisify(exec);
@@ -101,64 +99,6 @@ async function saveDebugScreenshot(
       error instanceof Error ? error.message : String(error),
     );
   }
-}
-
-/**
- * Diagnose why extraction failed
- */
-async function diagnoseExtractionFailure(
-  page: Page,
-  siteConfig: any,
-): Promise<{
-  hasLoginForm: boolean;
-  captchaDetected: boolean;
-  expectedSelectorsFound: {
-    allFound: boolean;
-    found: string[];
-    missing: string[];
-  };
-  pageReadyState: string;
-}> {
-  const html = await page.content();
-  const htmlLower = html.toLowerCase();
-
-  // Check for login indicators
-  const loginIndicators = [
-    "sign in",
-    "log in",
-    "authwall",
-    "join now",
-    "create account",
-  ];
-  const hasLoginForm = loginIndicators.some((indicator) =>
-    htmlLower.includes(indicator)
-  );
-
-  // Check for CAPTCHA
-  const captchaDetected = htmlLower.includes("captcha");
-
-  // Check expected selectors
-  const selectorsToCheck: string[] = [];
-  if (siteConfig.selectors?.jobListContainer) {
-    selectorsToCheck.push(siteConfig.selectors.jobListContainer);
-  }
-  if (siteConfig.selectors?.jobListItem) {
-    selectorsToCheck.push(siteConfig.selectors.jobListItem);
-  }
-
-  const expectedSelectorsFound = selectorsToCheck.length > 0
-    ? await validateContentLoaded(page, selectorsToCheck)
-    : { allFound: true, found: [], missing: [] };
-
-  // Get page ready state
-  const pageReadyState = await page.evaluate(() => document.readyState);
-
-  return {
-    hasLoginForm,
-    captchaDetected,
-    expectedSelectorsFound,
-    pageReadyState,
-  };
 }
 
 /**
@@ -241,11 +181,11 @@ async function waitForManualLogin(page: Page): Promise<boolean> {
     if (!(await isLoginPage(page))) {
       console.log("✅ Login detected! Continuing...\n");
       // Wait for page to fully load
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await page.waitForTimeout(2000);
       return true;
     }
 
-    await new Promise((resolve) => setTimeout(resolve, checkInterval));
+    await page.waitForTimeout(checkInterval);
   }
 
   console.log("❌ Login timeout (2 minutes elapsed)");
@@ -268,36 +208,28 @@ async function scrapeJobSite(
   const siteConfig = getSiteConfig(searchUrl);
   const siteName = getSiteName(searchUrl);
 
-  // 1. Navigate to search results
+  // 1. Navigate to search results - Playwright auto-waits!
   console.log(`Navigating to: ${searchUrl} (${siteName})`);
   await page.goto(searchUrl, {
-    waitUntil: siteConfig.searchPage.waitUntil || "networkidle2",
-    timeout: siteConfig.searchPage.timeout ||
-      config.scraperNetworkIdleTimeout,
+    waitUntil: "networkidle",
+    timeout: siteConfig.timeout || config.scraperNetworkIdleTimeout,
   });
 
-  console.log("Waiting for search results to load...");
-  const waitResult = await smartWait(page, siteConfig.searchPage);
-
-  if (config.scraperDebugMode) {
-    console.log(
-      "Search page wait result:",
-      JSON.stringify(waitResult, null, 2),
-    );
+  // Wait for specific element if configured
+  if (siteConfig.selectors.jobListContainer) {
+    await page.locator(siteConfig.selectors.jobListContainer).waitFor({
+      state: "visible",
+      timeout: siteConfig.timeout || 30000,
+    }).catch(() => {
+      console.warn(
+        "⚠️  Expected job list container not found:",
+        siteConfig.selectors.jobListContainer,
+      );
+    });
   }
 
   if (config.scraperSaveDebugScreenshots) {
     await saveDebugScreenshot(page, `search-${siteName}`);
-  }
-
-  // Validate content loaded
-  if (siteConfig.selectors.jobListContainer) {
-    const validation = await validateContentLoaded(page, [
-      siteConfig.selectors.jobListContainer,
-    ]);
-    if (!validation.allFound) {
-      console.warn("⚠️  Expected job list container not found:", validation);
-    }
   }
 
   // 2. Check if page is a login page
@@ -311,13 +243,25 @@ async function scrapeJobSite(
 
     // Navigate again after login
     await page.goto(searchUrl, {
-      waitUntil: siteConfig.searchPage.waitUntil || "networkidle2",
-      timeout: siteConfig.searchPage.timeout ||
-        config.scraperNetworkIdleTimeout,
+      waitUntil: "networkidle",
+      timeout: siteConfig.timeout || config.scraperNetworkIdleTimeout,
     });
 
     console.log("Waiting for search results to load after login...");
-    await smartWait(page, siteConfig.searchPage);
+    if (siteConfig.selectors.jobListContainer) {
+      await page.locator(siteConfig.selectors.jobListContainer).waitFor({
+        state: "visible",
+        timeout: siteConfig.timeout || 30000,
+      }).catch(() => console.warn("⚠️  Job list container not found"));
+    }
+  }
+
+  // Run custom validator if configured
+  if (siteConfig.validator) {
+    const isValid = await siteConfig.validator(page);
+    if (!isValid) {
+      console.warn("⚠️  Page validation failed");
+    }
   }
 
   // 3. Get page HTML
@@ -332,37 +276,27 @@ async function scrapeJobSite(
     if (!jobUrls || jobUrls.length === 0) {
       console.log("⚠️  No job links found.");
 
-      // Run diagnostics
-      const diagnostic = await diagnoseExtractionFailure(page, siteConfig);
+      // Run inline diagnostics with Playwright
+      const hasLoginForm = await page.locator('form[action*="login"]')
+        .isVisible().catch(() => false);
+      const hasCaptcha = await page.locator('iframe[src*="captcha"]')
+        .isVisible().catch(() => false);
 
-      if (diagnostic.hasLoginForm) {
+      if (hasLoginForm) {
         console.log("   Reason: Login page detected");
         console.log(
           "   Action: Run script again and complete login when prompted",
         );
-      } else if (diagnostic.captchaDetected) {
+      } else if (hasCaptcha) {
         console.log("   Reason: CAPTCHA challenge detected");
         console.log(
           "   Action: Wait and try again later, or solve CAPTCHA manually",
-        );
-      } else if (!diagnostic.expectedSelectorsFound.allFound) {
-        console.log("   Reason: Expected page elements not found");
-        console.log("   Missing:", diagnostic.expectedSelectorsFound.missing);
-        console.log(
-          "   Action: Page structure may have changed - update selectors",
         );
       } else {
         console.log("   Possible reasons:");
         console.log("   - Search returned no results (legitimate)");
         console.log("   - Page structure changed (update selectors)");
         console.log("   - Content still loading (increase timeout)");
-      }
-
-      if (config.scraperDebugMode) {
-        console.log(
-          "\n   Full diagnostic report:",
-          JSON.stringify(diagnostic, null, 2),
-        );
       }
 
       return;
@@ -405,31 +339,22 @@ async function scrapeJobSite(
     try {
       console.log(`\nProcessing: ${url}`);
 
-      // Navigate to job page
+      // Navigate to job page - Playwright auto-waits!
       await page.goto(url, {
-        waitUntil: siteConfig.jobDetailPage.waitUntil || "networkidle2",
-        timeout: siteConfig.jobDetailPage.timeout ||
-          config.scraperDefaultTimeout,
+        waitUntil: "networkidle",
+        timeout: siteConfig.timeout || config.scraperDefaultTimeout,
       });
 
-      const detailWaitResult = await smartWait(page, siteConfig.jobDetailPage);
-
-      if (config.scraperDebugMode) {
-        console.log(
-          "Job detail wait result:",
-          JSON.stringify(detailWaitResult, null, 2),
-        );
-      }
-
+      // Optional: Wait for job description
       if (siteConfig.selectors.jobDescription) {
-        const validation = await validateContentLoaded(page, [
-          siteConfig.selectors.jobDescription,
-        ]);
-        if (!validation.allFound) {
+        await page.locator(siteConfig.selectors.jobDescription).waitFor({
+          state: "visible",
+          timeout: 10000,
+        }).catch(() =>
           console.warn(
-            "⚠️  Job description selector not found - content may be incomplete",
-          );
-        }
+            "⚠️  Job description not found - content may be incomplete",
+          )
+        );
       }
 
       const jobHtml = await page.content();
@@ -462,7 +387,7 @@ async function scrapeJobSite(
       );
 
       // Delay to avoid rate limiting
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await page.waitForTimeout(2000);
     } catch (error) {
       console.error(
         `✗ Failed to process ${url}:`,
@@ -503,7 +428,7 @@ function getImportSource(url: string): string {
  */
 async function rescrapeJobById(
   jobId: number,
-  browser: Browser,
+  context: BrowserContext,
 ): Promise<void> {
   console.log(`\n🔄 Re-scraping job #${jobId}...`);
 
@@ -539,17 +464,22 @@ async function rescrapeJobById(
   const siteConfig = getSiteConfig(job.source_url);
 
   // 3. Navigate to job page
-  const page = await browser.newPage();
+  const page = await context.newPage();
 
   try {
     console.log(`\n🌐 Navigating to job page...`);
     await page.goto(job.source_url, {
-      waitUntil: siteConfig.jobDetailPage.waitUntil || "networkidle2",
-      timeout: siteConfig.jobDetailPage.timeout ||
-        config.scraperDefaultTimeout,
+      waitUntil: "networkidle",
+      timeout: siteConfig.timeout || config.scraperDefaultTimeout,
     });
 
-    await smartWait(page, siteConfig.jobDetailPage);
+    // Optional: Wait for job description
+    if (siteConfig.selectors.jobDescription) {
+      await page.locator(siteConfig.selectors.jobDescription).waitFor({
+        state: "visible",
+        timeout: 10000,
+      }).catch(() => console.warn("⚠️  Job description not found"));
+    }
 
     // 4. Check for login page
     const pageHtml = await page.content();
@@ -641,10 +571,14 @@ async function scrapeJobSites(): Promise<void> {
   console.log("Launching browser...");
   const browser = await launchStealthBrowser({
     headless: false, // Set to true in production
+  });
+
+  // Create browser context with persistent storage
+  const context = await createBrowserContext(browser, {
     userDataDir: join(profileDir, "default"),
   });
 
-  const page = await browser.newPage();
+  const page = await context.newPage();
 
   try {
     // **NEW: Check if single job mode**
@@ -654,7 +588,8 @@ async function scrapeJobSites(): Promise<void> {
         console.error("❌ Invalid job ID: must be a number");
         process.exit(1);
       }
-      await rescrapeJobById(options.jobId, browser);
+      await rescrapeJobById(options.jobId, context);
+      await context.close(); // Close context first
       await browser.close();
       return; // Exit after single job scrape
     }
@@ -712,6 +647,7 @@ async function scrapeJobSites(): Promise<void> {
     );
     process.exit(1);
   } finally {
+    await context.close(); // Close context first
     await browser.close();
     await clearDirectusCache();
   }
