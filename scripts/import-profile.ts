@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { dbDirect } from "$lib/db";
+import { getDefaultProfileId } from "$lib/server/profile-default";
 import { readFileSync } from "fs";
 import { v4 as uuidv4 } from "uuid";
 import { Command } from "commander";
@@ -769,7 +770,28 @@ program.parse();
 const [filePath] = program.args;
 const options = program.opts();
 
-importProfile(filePath, options.profileId, options.delete).catch((error) => {
+async function main() {
+  let profileId = options.profileId;
+
+  // If no profile ID specified, check for default profile
+  if (!profileId) {
+    const defaultId = await getDefaultProfileId();
+    if (defaultId) {
+      profileId = defaultId.toString();
+      console.log(
+        `No --profile-id specified. Updating default profile: ${profileId}`,
+      );
+    } else {
+      console.log(
+        "No --profile-id specified and no default profile set. Creating new profile.",
+      );
+    }
+  }
+
+  await importProfile(filePath, profileId, options.delete);
+}
+
+main().catch((error) => {
   console.error("Import failed:", error);
   process.exit(1);
 });

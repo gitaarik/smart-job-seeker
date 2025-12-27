@@ -15,6 +15,7 @@ import {
 import { getProfileSkills, needsRematching } from "$lib/server/job-match-utils";
 import { errorTracker } from "$lib/server/monitoring/error-tracker";
 import { clearDirectusCache } from "$lib/server/directus";
+import { getDefaultProfileId } from "$lib/server/profile-default";
 import { Command } from "commander";
 
 interface MatchStats {
@@ -34,9 +35,9 @@ program
     "Match jobs against profile preferences and generate LLM-based match scores",
   )
   .version("1.0.0")
-  .requiredOption(
+  .option(
     "-p, --profile-id <id>",
-    "Profile ID to match jobs for",
+    "Profile ID to match jobs for (defaults to default profile)",
     parseInt,
   )
   .option(
@@ -146,7 +147,23 @@ async function processBatch(
  * Main matching function
  */
 async function matchJobs(): Promise<void> {
-  const { profileId, jobIds, force, batchSize } = options;
+  let { profileId } = options;
+  const { jobIds, force, batchSize } = options;
+
+  // Get profile ID from option or default
+  if (!profileId) {
+    profileId = await getDefaultProfileId();
+    if (!profileId) {
+      console.error(
+        "❌ Error: No profile ID provided and no default profile is set",
+      );
+      console.error(
+        "\nSet a default profile in Directus or provide --profile-id",
+      );
+      process.exit(1);
+    }
+    console.log(`Using default profile: ${profileId}`);
+  }
 
   // Validate profile ID
   if (isNaN(profileId)) {

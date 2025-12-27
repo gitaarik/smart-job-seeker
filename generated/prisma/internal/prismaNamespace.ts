@@ -6033,7 +6033,8 @@ export const ProfilesScalarFieldEnum = {
   country_code: 'country_code',
   location_city: 'location_city',
   location_region: 'location_region',
-  location_country_code: 'location_country_code'
+  location_country_code: 'location_country_code',
+  is_default: 'is_default'
 } as const
 
 export type ProfilesScalarFieldEnum = (typeof ProfilesScalarFieldEnum)[keyof typeof ProfilesScalarFieldEnum]

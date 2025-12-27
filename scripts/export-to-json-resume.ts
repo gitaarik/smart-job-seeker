@@ -14,31 +14,45 @@
 import { mkdirSync, writeFileSync } from "fs";
 import { dirname } from "path";
 import { dbDirect } from "../src/lib/db";
+import { getDefaultProfileId } from "../src/lib/server/profile-default";
 import { exportProfileToJsonResume } from "./lib/json-resume-exporter";
 
 async function main() {
   const args = process.argv.slice(2);
 
-  if (args.length === 0) {
-    console.error("❌ Error: Profile ID is required");
-    console.error("\nUsage:");
-    console.error(
-      "  npm run docker:export-to-json-resume <profileId> [outputPath]",
-    );
-    console.error("\nExamples:");
-    console.error("  npm run docker:export-to-json-resume 12");
-    console.error(
-      "  npm run docker:export-to-json-resume 12 ./custom-resume.json",
-    );
-    process.exit(1);
-  }
+  let profileId: number;
 
-  const profileId = parseInt(args[0], 10);
-
-  if (isNaN(profileId)) {
-    console.error(`❌ Error: Invalid profile ID "${args[0]}"`);
-    console.error("Profile ID must be a number");
-    process.exit(1);
+  if (args.length === 0 || !args[0]) {
+    // No profile ID provided, use default
+    const defaultId = await getDefaultProfileId();
+    if (!defaultId) {
+      console.error(
+        "❌ Error: No profile ID provided and no default profile is set",
+      );
+      console.error("\nUsage:");
+      console.error(
+        "  npm run docker:export-to-json-resume [profileId] [outputPath]",
+      );
+      console.error("\nExamples:");
+      console.error("  npm run docker:export-to-json-resume");
+      console.error("  npm run docker:export-to-json-resume 12");
+      console.error(
+        "  npm run docker:export-to-json-resume 12 ./custom-resume.json",
+      );
+      console.error(
+        "\nSet a default profile in Directus or provide a profile ID",
+      );
+      process.exit(1);
+    }
+    profileId = defaultId;
+    console.log(`Using default profile: ${profileId}`);
+  } else {
+    profileId = parseInt(args[0], 10);
+    if (isNaN(profileId)) {
+      console.error(`❌ Error: Invalid profile ID "${args[0]}"`);
+      console.error("Profile ID must be a number");
+      process.exit(1);
+    }
   }
 
   const outputPath = args[1] || `./dist/resume-${profileId}.json`;

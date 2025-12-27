@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { dbDirect } from "$lib/db";
+import { getDefaultProfileId } from "$lib/server/profile-default";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
 
 interface ExportedProfile {
@@ -561,13 +562,29 @@ async function exportProfile(profileId: string): Promise<void> {
 }
 
 // Main execution
-const profileId = process.argv[2];
-if (!profileId) {
-  console.error("Please provide a profile ID as an argument");
-  process.exit(1);
+async function main() {
+  let profileId = process.argv[2];
+
+  if (!profileId) {
+    const defaultId = await getDefaultProfileId();
+    if (!defaultId) {
+      console.error(
+        "❌ Error: No profile ID provided and no default profile is set",
+      );
+      console.error("\nUsage: npm run docker:export-profile-json [profileId]");
+      console.error(
+        "\nSet a default profile in Directus or provide a profile ID",
+      );
+      process.exit(1);
+    }
+    profileId = defaultId.toString();
+    console.log(`Using default profile: ${profileId}`);
+  }
+
+  await exportProfile(profileId);
 }
 
-exportProfile(profileId).catch((error) => {
+main().catch((error) => {
   console.error("Export failed:", error);
   process.exit(1);
 });
