@@ -21,9 +21,16 @@ journey with AI-powered insights.
 
 - **Automated Job Scraping** - Scrape job listings from multiple platforms using
   pre-configured search URLs
+- **Dual-Mode Navigation** - Traditional URL-based and modern click-based (SPA)
+  navigation
+- **Playwright Browser Automation** - Reliable, auto-waiting browser control with
+  stealth capabilities
+- **CDP Integration** - Chrome DevTools Protocol for detecting clickable elements
 - **HTML Processing** - Extract and clean job posting data for AI analysis
 - **LLM Integration** - AI-powered job data extraction with structured output
 - **Smart Matching** - Match your profile against scraped jobs (coming soon)
+
+See [SCRAPING.md](docs/SCRAPING.md) for detailed scraping documentation.
 
 ### Application Management
 
@@ -78,16 +85,20 @@ This starts:
 - **Backend**: Node.js, SvelteKit Server Routes, Prisma ORM
 - **Database**: PostgreSQL with Directus CMS
 - **AI**: Groq API for LLM features
+- **Browser Automation**: Playwright (Chromium) with CDP
 - **DevOps**: Docker Compose, Vitest
 
 ### Key Modules
 
 **Job Scraping Pipeline**
 
-- `html-extract.ts` - Extract links from search results
+- `browser-utils.ts` - Playwright browser launch and context management
+- `cdp-utils.ts` - Chrome DevTools Protocol for click detection
 - `html-strip.ts` - Clean HTML for LLM processing
 - `llm.ts` - Generic LLM chat completion interface
 - `job-scraper.ts` - Job data extraction and storage
+- `job-site-configs.ts` - Site-specific navigation configurations
+- `scrape-job-sites.ts` - Main scraping orchestration with dual-mode support
 
 **AI Features**
 
