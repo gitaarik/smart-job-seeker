@@ -714,8 +714,10 @@ async function clearDirectusCache(): Promise<void> {
 async function scrapeJobSites(): Promise<void> {
   // Ensure chrome profile directory exists
   const profileDir = join(process.cwd(), "chrome-profiles");
-  if (!existsSync(profileDir)) {
-    mkdirSync(profileDir, { recursive: true });
+  const defaultProfileDir = join(profileDir, "default");
+  if (!existsSync(defaultProfileDir)) {
+    mkdirSync(defaultProfileDir, { recursive: true });
+    console.log(`📁 Created profile directory: ${defaultProfileDir}`);
   }
 
   // Launch browser with persistent profile
@@ -726,7 +728,7 @@ async function scrapeJobSites(): Promise<void> {
 
   // Create browser context with persistent storage
   const context = await createBrowserContext(browser, {
-    userDataDir: join(profileDir, "default"),
+    userDataDir: defaultProfileDir,
   });
 
   const page = await context.newPage();

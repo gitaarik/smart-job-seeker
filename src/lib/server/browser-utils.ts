@@ -132,6 +132,20 @@ export async function createBrowserContext(
     viewport?: { width: number; height: number } | null;
   } = {},
 ): Promise<BrowserContext> {
+  // Check if storage state file exists before trying to load it
+  let storageState: string | undefined = undefined;
+  if (options.userDataDir) {
+    const stateFilePath = `${options.userDataDir}/state.json`;
+    if (existsSync(stateFilePath)) {
+      console.log(`📂 Loading session state from: ${stateFilePath}`);
+      storageState = stateFilePath;
+    } else {
+      console.log(
+        `📝 No existing session state found - will create new session`,
+      );
+    }
+  }
+
   return await browser.newContext({
     userAgent:
       "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -140,8 +154,6 @@ export async function createBrowserContext(
       : { width: 1920, height: 1080 },
     locale: "en-US",
     timezoneId: "America/New_York",
-    storageState: options.userDataDir
-      ? `${options.userDataDir}/state.json`
-      : undefined,
+    storageState,
   });
 }
