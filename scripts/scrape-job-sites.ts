@@ -257,13 +257,15 @@ async function scrapeJobsWithUrls(
 /**
  * Scrape jobs using click-based navigation (SPAs)
  * Marks clickable elements with CDP, uses LLM to identify job cards, then clicks each
- * @returns Array of job HTML content
+ * Extracts and saves jobs immediately during clicking for real-time feedback
+ * @returns Number of successfully processed jobs
  */
 async function scrapeJobsWithClicks(
   page: Page,
   siteConfig: ReturnType<typeof getSiteConfig>,
   searchUrl: string,
-): Promise<string[]> {
+  platformId: string,
+): Promise<number> {
   console.log("\n🔄 Starting SPA scraping mode (click-based navigation)");
 
   // Import CDP utilities dynamically
@@ -290,7 +292,7 @@ async function scrapeJobsWithClicks(
 
   if (clickableCount === 0) {
     console.log("   ⚠️  No clickable elements found - page may not be loaded");
-    return [];
+    return 0;
   }
 
   // Get marked HTML
@@ -338,22 +340,28 @@ async function scrapeJobsWithClicks(
 
   if (clickableIds.length === 0) {
     console.log("   ⚠️  No job cards found in the page");
-    return [];
+    return 0;
   }
 
-  const jobHtmlList: string[] = [];
+  let processedCount = 0;
 
-  // Click each identified job card
+  // Click each identified job card and process immediately
   console.log(
-    `\n👆 Step 3/3: Clicking through ${clickableIds.length} job cards...`,
+    `\n👆 Step 3/3: Clicking and processing ${clickableIds.length} job cards...\n`,
   );
   for (let i = 0; i < clickableIds.length; i++) {
     const id = clickableIds[i];
+    const jobNumber = i + 1;
+    const pseudoUrl = `${searchUrl}#spa-job-${jobNumber}`;
+
+    // Visual separator for each job
+    console.log(`\n   [${"─".repeat(56)}]`);
+    console.log(`   Job ${jobNumber}/${clickableIds.length}`);
+    console.log(`   [${"─".repeat(56)}]`);
+
     try {
       console.log(
-        `   [${
-          i + 1
-        }/${clickableIds.length}] Clicking data-extract-clickable-id="${id}"...`,
+        `      👆 Clicking data-extract-clickable-id="${id}"...`,
       );
 
       // Close any open modals first (SPAs often have close buttons or backdrop clicks)
@@ -472,26 +480,44 @@ async function scrapeJobsWithClicks(
         );
       }
 
+      // Log captured HTML size
+      console.log(`      ✓ Captured job HTML (${jobHtml.length} chars)`);
+
       // Debug: Log first 500 chars of captured HTML
       if (config.scraperDebugMode) {
         const preview = stripHtmlForLlm(jobHtml).substring(0, 500);
         console.log(`      [DEBUG] HTML preview: ${preview}...`);
       }
 
-      jobHtmlList.push(jobHtml);
-      console.log(`      ✓ Captured job HTML`);
+      // Strip HTML for LLM processing
+      const strippedHtml = stripHtmlForLlm(jobHtml);
+
+      // Extract and save job immediately
+      console.log(`      🔍 Extracting job data...`);
+      const jobData = await extractJobData(strippedHtml, pseudoUrl);
+
+      console.log(`      💾 Saving to database...`);
+      const result = await upsertJob(jobData, pseudoUrl, platformId);
+
+      const action = result.created ? "Created" : "Updated";
+      console.log(`      ✅ ${action} job #${result.id}`);
+
+      processedCount++;
     } catch (error) {
       console.error(
-        `      ✗ Failed:`,
+        `      ❌ Error processing job ${jobNumber}:`,
         error instanceof Error ? error.message : String(error),
       );
+      // Continue to next job - don't break entire scrape
     }
   }
 
+  console.log(`\n${"═".repeat(60)}`);
   console.log(
-    `\n✅ SPA scraping complete: ${jobHtmlList.length} jobs captured\n`,
+    `✅ SPA scraping complete: ${processedCount}/${clickableIds.length} jobs processed`,
   );
-  return jobHtmlList;
+  console.log(`${"═".repeat(60)}\n`);
+  return processedCount;
 }
 
 /**
@@ -591,51 +617,15 @@ async function scrapeJobSite(
     // CLICK-BASED NAVIGATION (SPAs)
     // ============================================
     try {
-      const jobHtmlList = await scrapeJobsWithClicks(
+      const processedCount = await scrapeJobsWithClicks(
         page,
         siteConfig,
         searchUrl,
+        platformId,
       );
 
-      if (jobHtmlList.length === 0) {
-        console.log("⚠️  No jobs to process");
-        return;
-      }
-
-      // Process each job HTML
-      for (let i = 0; i < jobHtmlList.length; i++) {
-        const jobHtml = jobHtmlList[i];
-        // Use synthetic URL for SPAs (no actual URL navigation)
-        const pseudoUrl = `${searchUrl}#job-${i + 1}`;
-
-        try {
-          console.log(`\nProcessing job ${i + 1}/${jobHtmlList.length}...`);
-
-          const strippedHtml = stripHtmlForLlm(jobHtml);
-          const htmlChanged = await hasHtmlChanged(
-            pseudoUrl,
-            strippedHtml,
-            options.force,
-          );
-
-          if (!htmlChanged) {
-            console.log(`⏭️  Skipping - HTML unchanged`);
-            continue;
-          }
-
-          console.log("Extracting job data...");
-          const jobData = await extractJobData(jobHtml, pseudoUrl);
-          const result = await upsertJob(jobData, pseudoUrl, platformId);
-          console.log(
-            `✓ ${result.created ? "Created" : "Updated"} job #${result.id}`,
-          );
-        } catch (error) {
-          console.error(
-            `✗ Failed to process job ${i + 1}:`,
-            error instanceof Error ? error.message : String(error),
-          );
-        }
-      }
+      console.log(`\n✅ Successfully processed ${processedCount} job(s)\n`);
+      return; // Jobs already processed - early return
     } catch (error) {
       console.error(
         "❌ Error in click-based navigation:",
