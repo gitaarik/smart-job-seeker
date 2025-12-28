@@ -76,6 +76,16 @@ const SITE_CONFIGS: Record<string, SiteConfig> = {
     navigationType: "url",
   },
 
+  // Turing - SPA with click-based navigation
+  "developers.turing.com": {
+    timeout: 30000,
+    selectors: {
+      jobListContainer: "body", // Will be determined dynamically
+      jobDescription: "body", // Will be determined dynamically
+    },
+    navigationType: "click",
+  },
+
   // Example SPA job site with click-based navigation
   "example-spa-job-site.com": {
     timeout: 30000,

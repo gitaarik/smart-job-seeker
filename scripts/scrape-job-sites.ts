@@ -296,22 +296,40 @@ async function scrapeJobsWithClicks(
   const htmlSize = (markedHtml.length / 1024).toFixed(1);
   console.log(`   HTML size: ${htmlSize} KB`);
 
-  // Send to LLM to identify job card pattern
-  console.log("\n🤖 Step 2/3: Asking LLM to identify job card pattern...");
-  const startLlm = Date.now();
+  // Check if we have job-detail-button markers (high-confidence job buttons)
+  const jobDetailButtonMatches = markedHtml.matchAll(/data-clickable-id="(\d+)" data-click-text="job-detail-button"/g);
+  const jobDetailButtonIds = Array.from(jobDetailButtonMatches).map(match => parseInt(match[1]));
 
-  const { clickableIds, pattern, jobCount } = await extractJobClickSelectors(
-    markedHtml,
-  );
+  let clickableIds: number[];
+  let pattern: string;
+  let jobCount: number;
 
-  const llmDuration = ((Date.now() - startLlm) / 1000).toFixed(2);
-  console.log(`   ✓ LLM analysis complete (${llmDuration}s)`);
-  console.log(`   Pattern: ${pattern}`);
-  console.log(`   Job cards found: ${jobCount}`);
-  console.log(`   Clickable IDs: [${clickableIds.join(", ")}]`);
+  if (jobDetailButtonIds.length > 0) {
+    // We found job-detail buttons - use them directly without LLM validation
+    console.log("\n✓ Step 2/3: Using detected job-detail buttons...");
+    clickableIds = jobDetailButtonIds;
+    pattern = "job-detail buttons detected by CDP";
+    jobCount = jobDetailButtonIds.length;
+    console.log(`   Found ${jobCount} job-detail buttons: [${clickableIds.join(", ")}]`);
+  } else {
+    // No job-detail buttons found - fall back to LLM analysis
+    console.log("\n🤖 Step 2/3: Asking LLM to identify job card pattern...");
+    const startLlm = Date.now();
+
+    const result = await extractJobClickSelectors(markedHtml);
+    clickableIds = result.clickableIds;
+    pattern = result.pattern;
+    jobCount = result.jobCount;
+
+    const llmDuration = ((Date.now() - startLlm) / 1000).toFixed(2);
+    console.log(`   ✓ LLM analysis complete (${llmDuration}s)`);
+    console.log(`   Pattern: ${pattern}`);
+    console.log(`   Job cards found: ${jobCount}`);
+    console.log(`   Clickable IDs: [${clickableIds.join(", ")}]`);
+  }
 
   if (clickableIds.length === 0) {
-    console.log("   ⚠️  LLM found no job cards in the page");
+    console.log("   ⚠️  No job cards found in the page");
     return [];
   }
 
@@ -330,23 +348,119 @@ async function scrapeJobsWithClicks(
         }/${clickableIds.length}] Clicking data-clickable-id="${id}"...`,
       );
 
+      // Close any open modals first (SPAs often have close buttons or backdrop clicks)
+      // Try common modal close patterns
+      await page.locator('[class*="close"]').first().click().catch(() => {});
+      await page.locator('[aria-label*="close" i]').first().click().catch(
+        () => {},
+      );
+      await page.keyboard.press("Escape").catch(() => {});
+      await page.waitForTimeout(500);
+
+      // Capture page state before click for comparison
+      const beforeClick = await page.evaluate(() =>
+        document.body.innerText.length
+      );
+
       await page.locator(`[data-clickable-id="${id}"]`).click();
 
-      // Wait for job detail panel
-      if (siteConfig.selectors.jobDescription) {
-        await page.locator(siteConfig.selectors.jobDescription).waitFor({
-          state: "visible",
-          timeout: 10000,
-        }).catch(() => console.warn("      ⚠️  Job description not visible"));
-      } else {
-        await page.waitForLoadState("networkidle");
+      // Wait for SPA to update - look for common modal/dialog/panel containers
+      // This is a generic approach that works across different SPA frameworks
+      await page.waitForTimeout(1000);
+
+      // Check if page content changed after click
+      const afterClick = await page.evaluate(() =>
+        document.body.innerText.length
+      );
+      const contentChanged = Math.abs(afterClick - beforeClick) > 100;
+
+      if (!contentChanged) {
+        console.warn(
+          `      ⚠️  Page content didn't change after click (before: ${beforeClick}, after: ${afterClick})`,
+        );
       }
 
-      const jobHtml = await page.content();
+      // Try to find a modal/dialog/panel that appeared after the click
+      // Check common modal selectors used by various UI frameworks
+      const modalSelectors = [
+        '[role="dialog"]', // ARIA standard
+        '[role="alertdialog"]',
+        ".modal", // Bootstrap
+        ".modal-content",
+        ".ant-modal", // Ant Design
+        ".MuiDialog-root", // Material-UI
+        ".dialog", // Generic
+        '[class*="modal"]', // Any class containing "modal"
+        '[class*="dialog"]',
+        '[class*="drawer"]',
+        '[class*="panel"][class*="detail"]',
+      ];
+
+      let modalContent = null;
+      let modalSelector = null;
+
+      // Try each selector to find the modal
+      for (const selector of modalSelectors) {
+        const modal = page.locator(selector).first();
+        if (await modal.isVisible().catch(() => false)) {
+          // Wait for modal to have substantial content (retry for up to 3 seconds)
+          let attempts = 0;
+          while (attempts < 6) {
+            modalContent = await modal.innerHTML().catch(() => null);
+            if (modalContent && modalContent.length > 1000) {
+              // Check if this is a navigation/menu drawer (not job details)
+              const lowerContent = modalContent.toLowerCase();
+              const isNavDrawer = lowerContent.includes("dashboard") &&
+                (lowerContent.includes("log out") ||
+                  lowerContent.includes("logout") ||
+                  lowerContent.includes("settings"));
+
+              if (isNavDrawer) {
+                console.log(
+                  `      ⚠️  Skipping navigation drawer (${selector})`,
+                );
+                modalContent = null; // Reset to keep looking
+                break;
+              }
+
+              // Found substantial non-nav modal content
+              modalSelector = selector;
+              console.log(
+                `      ✓ Found modal: ${selector} (${
+                  (modalContent.length / 1024).toFixed(1)
+                } KB)`,
+              );
+              break;
+            }
+            await page.waitForTimeout(500);
+            attempts++;
+          }
+
+          if (modalContent && modalContent.length > 1000) {
+            break;
+          }
+        }
+      }
+
+      // If we found modal content, use it; otherwise fall back to full page
+      const jobHtml = modalContent
+        ? `<div class="job-detail-modal">${modalContent}</div>`
+        : await page.content();
+
+      if (!modalContent) {
+        console.warn(
+          "      ⚠️  No modal found, using full page HTML (may extract wrong job)",
+        );
+      }
+
+      // Debug: Log first 500 chars of captured HTML
+      if (config.scraperDebugMode) {
+        const preview = stripHtmlForLlm(jobHtml).substring(0, 500);
+        console.log(`      [DEBUG] HTML preview: ${preview}...`);
+      }
+
       jobHtmlList.push(jobHtml);
       console.log(`      ✓ Captured job HTML`);
-
-      await page.waitForTimeout(1000);
     } catch (error) {
       console.error(
         `      ✗ Failed:`,
@@ -379,9 +493,24 @@ async function scrapeJobSite(
 
   // 1. Navigate to search results - Playwright auto-waits!
   console.log(`Navigating to: ${searchUrl} (${siteName})`);
+
+  // Determine navigation type early to optimize page.goto() strategy
+  const navigationType = searchAction.navigation_type ||
+    searchAction.job_platforms?.navigation_type ||
+    siteConfig.navigationType || "url";
+
+  // For SPAs (click-based), use "load" instead of "networkidle" to avoid timeout
+  // SPAs often have continuous background activity that prevents networkidle
+  const waitStrategy = navigationType === "click" ? "load" : "networkidle";
+  const timeout = navigationType === "click"
+    ? (siteConfig.timeout || config.scraperDefaultTimeout)
+    : (siteConfig.timeout || config.scraperNetworkIdleTimeout);
+
+  console.log(`Using wait strategy: "${waitStrategy}" (timeout: ${timeout}ms)`);
+
   await page.goto(searchUrl, {
-    waitUntil: "networkidle",
-    timeout: siteConfig.timeout || config.scraperNetworkIdleTimeout,
+    waitUntil: waitStrategy,
+    timeout: timeout,
   });
 
   // Wait for specific element if configured
@@ -433,25 +562,8 @@ async function scrapeJobSite(
     }
   }
 
-  // 3. Determine navigation type and import source
-  // Priority: search override > platform default > site config > default "url"
-  const navigationType = searchAction.navigation_type ||
-    searchAction.job_platforms?.navigation_type ||
-    siteConfig.navigationType || "url";
+  // 3. Determine import source
   const importSource = getImportSource(searchUrl);
-
-  const navigationSource = searchAction.navigation_type
-    ? "search override"
-    : searchAction.job_platforms?.navigation_type
-    ? "platform default"
-    : siteConfig.navigationType
-    ? "site config"
-    : "default";
-  console.log(
-    `Using ${
-      navigationType === "click" ? "click-based" : "URL-based"
-    } navigation (${navigationSource})`,
-  );
 
   // 4. Branch based on navigation type
   if (navigationType === "click") {

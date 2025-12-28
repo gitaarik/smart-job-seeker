@@ -409,8 +409,18 @@ export async function extractJobData(
 function normalizeJobUrl(url: string): string {
   try {
     const urlObj = new URL(url);
-    // Return just the origin + pathname (no query params or fragments)
-    return `${urlObj.origin}${urlObj.pathname}`;
+
+    // For SPA pseudoUrls (e.g., #job-1, #job-2), preserve the hash fragment
+    // This allows us to uniquely identify jobs that appear in modals without real URLs
+    const isPseudoUrl = urlObj.hash.match(/^#job-\d+$/);
+
+    if (isPseudoUrl) {
+      // Keep the hash for synthetic job identifiers
+      return `${urlObj.origin}${urlObj.pathname}${urlObj.hash}`;
+    } else {
+      // Return just the origin + pathname (no query params or fragments)
+      return `${urlObj.origin}${urlObj.pathname}`;
+    }
   } catch {
     // If URL parsing fails, return as-is
     return url;
