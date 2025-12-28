@@ -252,6 +252,230 @@ describe("extractJobData", () => {
     expect(result.date_posted).toBeNull();
   });
 
+  it("should parse relative date '3 days ago'", async () => {
+    const html = "<html>Job posting</html>";
+    const sourceUrl = "https://example.com/job/123";
+
+    mockDb.ai_chat_prompts.findUnique.mockResolvedValueOnce({
+      request: "extract_job_data",
+      system_prompt: "Extract job data",
+      user_prompt: "HTML: {{html}}",
+      format: null,
+    });
+
+    const jobData = {
+      title: "Software Engineer",
+      job_description: "Great job",
+      company_description: null,
+      job_poster: null,
+      date_posted: "3 days ago",
+      location: null,
+      remote: null,
+      experience_level: null,
+      job_type: null,
+      salary_min: null,
+      salary_max: null,
+      salary_currency: null,
+      salary_period: null,
+      skills: null,
+      status: null,
+    };
+
+    mockGenerateChatCompletion.mockResolvedValueOnce(JSON.stringify(jobData));
+
+    const result = await extractJobData(html, sourceUrl);
+
+    // Should be a valid Date, approximately 3 days ago
+    expect(result.date_posted).toBeInstanceOf(Date);
+    if (result.date_posted) {
+      const now = new Date();
+      const daysDiff = Math.floor(
+        (now.getTime() - result.date_posted.getTime()) / (1000 * 60 * 60 * 24),
+      );
+      expect(daysDiff).toBeGreaterThanOrEqual(2);
+      expect(daysDiff).toBeLessThanOrEqual(4);
+    }
+  });
+
+  it("should parse relative date 'yesterday'", async () => {
+    const html = "<html>Job posting</html>";
+    const sourceUrl = "https://example.com/job/123";
+
+    mockDb.ai_chat_prompts.findUnique.mockResolvedValueOnce({
+      request: "extract_job_data",
+      system_prompt: "Extract job data",
+      user_prompt: "HTML: {{html}}",
+      format: null,
+    });
+
+    const jobData = {
+      title: "Software Engineer",
+      job_description: "Great job",
+      company_description: null,
+      job_poster: null,
+      date_posted: "posted yesterday",
+      location: null,
+      remote: null,
+      experience_level: null,
+      job_type: null,
+      salary_min: null,
+      salary_max: null,
+      salary_currency: null,
+      salary_period: null,
+      skills: null,
+      status: null,
+    };
+
+    mockGenerateChatCompletion.mockResolvedValueOnce(JSON.stringify(jobData));
+
+    const result = await extractJobData(html, sourceUrl);
+
+    // Should be start of yesterday
+    expect(result.date_posted).toBeInstanceOf(Date);
+    if (result.date_posted) {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      yesterday.setHours(0, 0, 0, 0);
+
+      expect(result.date_posted.getDate()).toBe(yesterday.getDate());
+      expect(result.date_posted.getMonth()).toBe(yesterday.getMonth());
+      expect(result.date_posted.getFullYear()).toBe(yesterday.getFullYear());
+    }
+  });
+
+  it("should set date to null for invalid date strings", async () => {
+    const html = "<html>Job posting</html>";
+    const sourceUrl = "https://example.com/job/123";
+    const consoleWarnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => {});
+
+    try {
+      mockDb.ai_chat_prompts.findUnique.mockResolvedValueOnce({
+        request: "extract_job_data",
+        system_prompt: "Extract job data",
+        user_prompt: "HTML: {{html}}",
+        format: null,
+      });
+
+      const jobData = {
+        title: "Software Engineer",
+        job_description: "Great job",
+        company_description: null,
+        job_poster: null,
+        date_posted: "not a valid date",
+        location: null,
+        remote: null,
+        experience_level: null,
+        job_type: null,
+        salary_min: null,
+        salary_max: null,
+        salary_currency: null,
+        salary_period: null,
+        skills: null,
+        status: null,
+      };
+
+      mockGenerateChatCompletion.mockResolvedValueOnce(JSON.stringify(jobData));
+
+      const result = await extractJobData(html, sourceUrl);
+
+      expect(result.date_posted).toBeNull();
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Invalid date_posted"),
+      );
+    } finally {
+      consoleWarnSpy.mockRestore();
+    }
+  });
+
+  it("should set date to null for future dates", async () => {
+    const html = "<html>Job posting</html>";
+    const sourceUrl = "https://example.com/job/123";
+    const consoleWarnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => {});
+
+    try {
+      mockDb.ai_chat_prompts.findUnique.mockResolvedValueOnce({
+        request: "extract_job_data",
+        system_prompt: "Extract job data",
+        user_prompt: "HTML: {{html}}",
+        format: null,
+      });
+
+      const jobData = {
+        title: "Software Engineer",
+        job_description: "Great job",
+        company_description: null,
+        job_poster: null,
+        date_posted: "2030-12-20",
+        location: null,
+        remote: null,
+        experience_level: null,
+        job_type: null,
+        salary_min: null,
+        salary_max: null,
+        salary_currency: null,
+        salary_period: null,
+        skills: null,
+        status: null,
+      };
+
+      mockGenerateChatCompletion.mockResolvedValueOnce(JSON.stringify(jobData));
+
+      const result = await extractJobData(html, sourceUrl);
+
+      expect(result.date_posted).toBeNull();
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Invalid date_posted"),
+      );
+    } finally {
+      consoleWarnSpy.mockRestore();
+    }
+  });
+
+  it("should parse absolute ISO dates", async () => {
+    const html = "<html>Job posting</html>";
+    const sourceUrl = "https://example.com/job/123";
+
+    mockDb.ai_chat_prompts.findUnique.mockResolvedValueOnce({
+      request: "extract_job_data",
+      system_prompt: "Extract job data",
+      user_prompt: "HTML: {{html}}",
+      format: null,
+    });
+
+    const jobData = {
+      title: "Software Engineer",
+      job_description: "Great job",
+      company_description: null,
+      job_poster: null,
+      date_posted: "2025-12-20",
+      location: null,
+      remote: null,
+      experience_level: null,
+      job_type: null,
+      salary_min: null,
+      salary_max: null,
+      salary_currency: null,
+      salary_period: null,
+      skills: null,
+      status: null,
+    };
+
+    mockGenerateChatCompletion.mockResolvedValueOnce(JSON.stringify(jobData));
+
+    const result = await extractJobData(html, sourceUrl);
+
+    expect(result.date_posted).toBeInstanceOf(Date);
+    if (result.date_posted) {
+      expect(result.date_posted.getFullYear()).toBe(2025);
+      expect(result.date_posted.getMonth()).toBe(11); // December
+      expect(result.date_posted.getDate()).toBe(20);
+    }
+  });
+
   it("should throw error if prompt template not found", async () => {
     mockDb.ai_chat_prompts.findUnique.mockResolvedValueOnce(null);
 

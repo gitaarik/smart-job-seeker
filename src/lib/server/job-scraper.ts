@@ -6,6 +6,10 @@ import { generateChatCompletion } from "./llm";
 import { stripHtmlForLlm } from "./html-strip";
 import { interpolatePrompt } from "./ai-chat-utils";
 import { dbDirect as db } from "$lib/db";
+import {
+  isValidJobPostingDate,
+  parseRelativeDate,
+} from "$lib/tools/date-utils";
 
 /**
  * Validate job search HTML before processing
@@ -382,9 +386,20 @@ export async function extractJobData(
       status: data.status,
     });
 
-    // 6. Convert date_posted to Date object if present
-    if (data.date_posted) {
-      data.date_posted = new Date(data.date_posted);
+    // 6. Parse and validate date_posted
+    const parsedDate = parseRelativeDate(data.date_posted);
+
+    // Validate the parsed date
+    if (parsedDate && isValidJobPostingDate(parsedDate)) {
+      data.date_posted = parsedDate;
+    } else {
+      // Invalid or unparseable date - log warning and set to null
+      if (data.date_posted) {
+        console.warn(
+          `Invalid date_posted for job "${data.title}": "${data.date_posted}" - setting to null`,
+        );
+      }
+      data.date_posted = null;
     }
 
     // 7. Include stripped HTML in return value
