@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { extractJobData, extractJobLinks, upsertJob } from "../job-scraper";
+import {
+  extractJobData,
+  extractJobLinks,
+  normalizeJobUrl,
+  upsertJob,
+} from "../job-scraper";
 
 // Mock dependencies
 vi.mock("../llm", () => ({
@@ -450,5 +455,92 @@ describe("upsertJob", () => {
         scrape_count: 1,
       }),
     });
+  });
+});
+
+describe("normalizeJobUrl", () => {
+  it("should preserve pseudoURL hash fragments for SPA jobs", () => {
+    const url = "https://developers.turing.com/jobs#job-1";
+    const normalized = normalizeJobUrl(url);
+    expect(normalized).toBe("https://developers.turing.com/jobs#job-1");
+  });
+
+  it("should preserve multiple digit job IDs", () => {
+    const url = "https://example.com/jobs#job-123";
+    const normalized = normalizeJobUrl(url);
+    expect(normalized).toBe("https://example.com/jobs#job-123");
+  });
+
+  it("should remove query parameters for normal URLs", () => {
+    const url = "https://example.com/job/123?utm_source=twitter&ref=abc";
+    const normalized = normalizeJobUrl(url);
+    expect(normalized).toBe("https://example.com/job/123");
+  });
+
+  it("should remove hash fragments for normal URLs", () => {
+    const url = "https://example.com/job/123#section";
+    const normalized = normalizeJobUrl(url);
+    expect(normalized).toBe("https://example.com/job/123");
+  });
+
+  it("should remove both query params and hash for normal URLs", () => {
+    const url = "https://example.com/job/123?source=feed#description";
+    const normalized = normalizeJobUrl(url);
+    expect(normalized).toBe("https://example.com/job/123");
+  });
+
+  it("should handle URLs without path", () => {
+    const url = "https://example.com?param=value";
+    const normalized = normalizeJobUrl(url);
+    expect(normalized).toBe("https://example.com/");
+  });
+
+  it("should preserve trailing slash in pathname", () => {
+    const url = "https://example.com/jobs/?source=feed";
+    const normalized = normalizeJobUrl(url);
+    expect(normalized).toBe("https://example.com/jobs/");
+  });
+
+  it("should not preserve non-pseudoURL hash fragments", () => {
+    const url = "https://example.com/jobs#other-fragment";
+    const normalized = normalizeJobUrl(url);
+    expect(normalized).toBe("https://example.com/jobs");
+  });
+
+  it("should handle pseudoURL with query params", () => {
+    const url = "https://example.com/jobs?page=1#job-5";
+    const normalized = normalizeJobUrl(url);
+    // Query params should be removed, but hash should be preserved for pseudoURLs
+    expect(normalized).toBe("https://example.com/jobs#job-5");
+  });
+
+  it("should handle invalid URLs gracefully", () => {
+    const url = "not-a-valid-url";
+    const normalized = normalizeJobUrl(url);
+    expect(normalized).toBe("not-a-valid-url");
+  });
+
+  it("should handle empty string", () => {
+    const url = "";
+    const normalized = normalizeJobUrl(url);
+    expect(normalized).toBe("");
+  });
+
+  it("should handle relative URLs gracefully", () => {
+    const url = "/jobs/123";
+    const normalized = normalizeJobUrl(url);
+    expect(normalized).toBe("/jobs/123");
+  });
+
+  it("should differentiate between different pseudoURL jobs on same base URL", () => {
+    const url1 = "https://example.com/jobs#job-1";
+    const url2 = "https://example.com/jobs#job-2";
+    expect(normalizeJobUrl(url1)).not.toBe(normalizeJobUrl(url2));
+  });
+
+  it("should treat query params as equivalent for normal URLs", () => {
+    const url1 = "https://example.com/job/123?source=feed";
+    const url2 = "https://example.com/job/123?utm_campaign=winter";
+    expect(normalizeJobUrl(url1)).toBe(normalizeJobUrl(url2));
   });
 });

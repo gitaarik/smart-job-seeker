@@ -5,21 +5,37 @@ extract job listings from various platforms and store them in the database.
 
 ## Overview
 
-The job scraping system uses a **simplified, URL-based approach** where each job
-search is configured with a complete, pre-tested search URL. The system consists
-of four main components:
+The job scraping system supports two distinct approaches:
 
-1. **HTML Extraction** - Extract links from search result pages
-2. **HTML Stripping** - Clean HTML for efficient LLM processing
-3. **LLM Integration** - AI-powered data extraction with structured output
-4. **Job Scraping** - Orchestrate the scraping workflow with pre-configured URLs
+1. **URL-based scraping** - Traditional sites where each job has a unique URL
+2. **SPA scraping** - Single Page Applications where jobs appear in modals/drawers
+
+The system consists of five main components:
+
+1. **HTML Extraction** - Extract links from search result pages (URL-based)
+2. **CDP Detection** - Detect clickable job elements via Chrome DevTools Protocol (SPA)
+3. **HTML Stripping** - Clean HTML for efficient LLM processing
+4. **LLM Integration** - AI-powered data extraction with structured output
+5. **Job Scraping** - Orchestrate the scraping workflow with pre-configured URLs
 
 ## Architecture
+
+### URL-based Scraping (Traditional Sites)
 
 ```
 Pre-configured Search URL → Job Search Page → HTML Extract → Job Links
                                                                  ↓
                                       Job Posting Page → HTML Strip → LLM Extract → Database
+```
+
+### SPA Scraping (Modal-based Sites)
+
+```
+Pre-configured Search URL → Job Search Page → CDP Detection → Job Detail Buttons
+                                                                       ↓
+                                              Click Button → Modal Detection → Extract Modal Content
+                                                                                        ↓
+                                                                            HTML Strip → LLM Extract → Database
 ```
 
 ### Data Flow
@@ -204,12 +220,69 @@ interface JobData {
 }
 ```
 
-### 5. Scraping Script (`scripts/scrape-job-sites.ts`)
+### 5. CDP Utilities (`cdp-utils.ts`)
 
-Command-line script that orchestrates the complete scraping workflow using
-Puppeteer.
+Chrome DevTools Protocol utilities for detecting clickable elements in SPAs.
+
+**Functions:**
+
+```typescript
+async markClickableElementsInContainer(
+  page: Page,
+  containerSelector: string = "body"
+): Promise<number>
+```
+
+Detects and marks all clickable elements with event listeners in a container.
 
 **How it works:**
+
+1. Creates CDP session with the browser page
+2. Queries all elements in the specified container
+3. For each element:
+   - Checks for click event listeners via `DOMDebugger.getEventListeners`
+   - Filters out navigation elements (menus, headers, footers)
+   - Filters out action buttons (apply, save, share)
+   - Identifies job-detail buttons by class names
+4. Prioritizes job-detail buttons by sorting them first
+5. Marks elements with sequential `data-clickable-id` attributes
+6. Adds `data-click-text` for context (e.g., "job-detail-button")
+
+**Element Filtering:**
+
+```typescript
+// Excluded patterns
+const excludePatterns = [
+  "menu", "nav", "header", "footer", "pagination",
+  "filter", "sort", "dropdown", "close", "modal", "dialog", "popup"
+];
+
+// Excluded button texts
+const excludeButtonTexts = [
+  "apply", "apply now", "quick apply", "easy apply",
+  "save", "share", "bookmark", "refer", "earn"
+];
+
+// Job-detail button detection
+const isJobDetailButton = className.includes("job-description") ||
+  className.includes("job-detail") ||
+  className.includes("view-detail") ||
+  className.includes("more-info");
+```
+
+**Features:**
+
+- Generic framework detection (works across Ant Design, Bootstrap, Material-UI)
+- Smart filtering to exclude non-job elements
+- Prioritization of high-confidence job buttons
+- External link filtering (preserves only # and javascript: hrefs)
+
+### 6. Scraping Script (`scripts/scrape-job-sites.ts`)
+
+Command-line script that orchestrates the complete scraping workflow using
+Playwright with support for both URL-based and SPA scraping.
+
+**URL-based Navigation:**
 
 ```typescript
 // 1. Fetch active job searches with pre-configured URLs
@@ -235,12 +308,50 @@ for (const searchAction of searchActions) {
 }
 ```
 
+**SPA Click-based Navigation:**
+
+```typescript
+// 1. Use adaptive wait strategy
+const waitStrategy = navigationType === "click" ? "load" : "networkidle";
+await page.goto(searchUrl, { waitUntil: waitStrategy });
+
+// 2. Detect clickable job elements via CDP
+const clickableCount = await markClickableElementsInContainer(page, "body");
+
+// 3. Extract all job-detail-button markers
+const jobDetailButtonIds = extractJobDetailButtonIds(markedHtml);
+
+// 4. Click each button and capture modal content
+for (const id of jobDetailButtonIds) {
+  // Close any existing modals
+  await page.keyboard.press("Escape");
+
+  // Click job detail button
+  await page.locator(`[data-clickable-id="${id}"]`).click();
+
+  // Detect modal using common selectors
+  const modal = await findModal(page, [
+    '[role="dialog"]', '.ant-modal', '.MuiDialog-root'
+  ]);
+
+  // Extract modal content
+  const jobHtml = await modal.innerHTML();
+  const jobData = await extractJobData(jobHtml, pseudoUrl);
+  await upsertJob(jobData, pseudoUrl, importSource);
+}
+```
+
 **Key Features:**
 
-- **Simple URL usage** - No dynamic URL building or parameter mapping
+- **Dual-mode support** - Automatic detection of URL vs SPA navigation
+- **Adaptive wait strategies** - "load" for SPAs, "networkidle" for traditional sites
+- **CDP-based detection** - Finds clickable job elements without selectors
+- **Generic modal detection** - Works across different UI frameworks
+- **Navigation drawer filtering** - Skips user menus and settings
+- **PseudoURL support** - Unique identifiers for modal-based jobs (#job-1, #job-2)
 - **Platform detection** - Automatically detects platform from URL hostname
 - **Persistent browser** - Uses Chrome profile for handling authentication
-- **Rate limiting** - 2-second delay between job requests
+- **Rate limiting** - Delays between job requests
 
 ## Database Schema
 
@@ -277,17 +388,30 @@ URLs:
 - `id` - Primary key
 - `name` - Descriptive name (e.g., "LinkedIn - TypeScript - Amsterdam")
 - `search_url` - Complete, pre-configured search URL
+- `navigation_type` - "url" (default) or "click" for SPA sites
 - `profile` - M2O relation to profiles
 - `status` - active/inactive
 - `last_run` - Last execution timestamp
 - `date_created`, `date_updated` - Timestamps
 
-**Example:**
+**URL-based Example (Traditional Site):**
 
 ```json
 {
   "name": "LinkedIn - Senior TypeScript Developer - Remote",
   "search_url": "https://www.linkedin.com/jobs/search/?keywords=Senior%20TypeScript%20Developer&f_WT=2",
+  "navigation_type": "url",
+  "status": "active"
+}
+```
+
+**Click-based Example (SPA Site):**
+
+```json
+{
+  "name": "Turing - AI/ML Jobs",
+  "search_url": "https://developers.turing.com/jobs",
+  "navigation_type": "click",
   "status": "active"
 }
 ```
@@ -344,19 +468,40 @@ Navigate to the `job_searches` collection and create a new record:
 
 - **Name**: Descriptive label (e.g., "LinkedIn - TypeScript - Amsterdam")
 - **Search URL**: Complete search URL from the job platform
+- **Navigation Type**: "url" for traditional sites, "click" for SPAs
 - **Profile**: Link to your profile
 - **Status**: Set to "active"
 
-**Example URLs:**
+**URL-based Sites (Traditional):**
 
 - LinkedIn:
   `https://www.linkedin.com/jobs/search/?keywords=TypeScript%20Developer&location=Amsterdam&f_JT=F`
 - Indeed: `https://www.indeed.com/jobs?q=Python+Developer&l=Remote&remotejob=1`
+- Glassdoor: `https://www.glassdoor.com/Job/jobs.htm?sc.keyword=Software+Engineer`
+
+**Click-based Sites (SPAs):**
+
+- Turing: `https://developers.turing.com/jobs`
+- Other SPAs where job details appear in modals/drawers
+
+**How to identify if a site is SPA:**
+
+1. Open a job detail - does the URL change?
+   - URL changes → Use `navigation_type: "url"`
+   - URL stays same, modal appears → Use `navigation_type: "click"`
+
+2. Check network activity - do job details load via AJAX?
+   - Full page reload → Use "url"
+   - Background API call + modal → Use "click"
 
 **Step 2: Run the scraping script**
 
 ```bash
+# Run all active searches
 npx tsx scripts/scrape-job-sites.ts
+
+# Run specific search by ID
+npx tsx scripts/scrape-job-sites.ts --search-id 3
 ```
 
 ### Automated Scraping
@@ -545,6 +690,63 @@ Review and comply with:
 3. Add request delays
 4. Consider using faster LLM model
 5. Cache search results
+
+### SPA-specific Issues
+
+**Timeout on page.goto()**
+
+```
+Error: page.goto: Timeout 30000ms exceeded
+```
+
+**Solution**: SPAs have continuous background activity. The scraper automatically
+uses `"load"` wait strategy for click-based navigation.
+
+**No clickable elements found**
+
+```
+⚠️  No clickable elements found - page may not be loaded
+```
+
+**Possible causes:**
+1. Page hasn't fully loaded - increase timeout
+2. Job buttons use different class names - check CDP filtering
+3. Elements are in shadow DOM - not currently supported
+
+**Wrong elements being clicked**
+
+```
+⚠️  Skipping navigation drawer
+```
+
+**Solution**: The scraper automatically filters navigation menus. If job buttons
+aren't detected, check they have classes like: `job-description`, `job-detail`,
+`view-detail`, or `more-info`.
+
+**No modal detected after click**
+
+```
+⚠️  No modal found, using full page HTML (may extract wrong job)
+```
+
+**Possible causes:**
+1. Modal uses non-standard selectors - add to `modalSelectors` array
+2. Modal takes time to load - increase wait timeout
+3. Modal is actually a route change - use `navigation_type: "url"` instead
+
+**All jobs extracted as duplicates**
+
+**Cause**: PseudoURLs weren't being preserved due to hash fragment stripping.
+
+**Solution**: Already fixed in `normalizeJobUrl()` - pseudoURLs like
+`#job-1`, `#job-2` are now preserved.
+
+**Only capturing 5/10 jobs**
+
+**Cause**: LLM was filtering job-detail buttons.
+
+**Solution**: Already fixed - when job-detail buttons are detected, all are used
+without LLM filtering.
 
 ## References
 

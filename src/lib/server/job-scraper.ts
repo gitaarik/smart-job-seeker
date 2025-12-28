@@ -405,8 +405,9 @@ export async function extractJobData(
 /**
  * Normalize URL by removing query parameters and fragments
  * This helps match jobs even when tracking params change
+ * Exported for testing
  */
-function normalizeJobUrl(url: string): string {
+export function normalizeJobUrl(url: string): string {
   try {
     const urlObj = new URL(url);
 
