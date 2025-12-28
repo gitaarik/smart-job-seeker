@@ -752,7 +752,7 @@ async function rescrapeJobById(
     select: {
       id: true,
       source_url: true,
-      import_source: true,
+      job_platform: true,
       title: true,
     },
   });
