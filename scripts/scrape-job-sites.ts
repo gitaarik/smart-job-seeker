@@ -507,9 +507,9 @@ async function scrapeJobSite(
     searchAction.job_platforms?.navigation_type ||
     siteConfig.navigationType || "url";
 
-  // For SPAs (click-based), use "load" instead of "networkidle" to avoid timeout
-  // SPAs often have continuous background activity that prevents networkidle
-  const waitStrategy = navigationType === "click" ? "load" : "networkidle";
+  // Use "load" instead of "networkidle" to avoid timeout issues
+  // Modern sites often have continuous background activity that prevents networkidle
+  const waitStrategy = "load";
   const timeout = navigationType === "click"
     ? (siteConfig.timeout || config.scraperDefaultTimeout)
     : (siteConfig.timeout || config.scraperNetworkIdleTimeout);
@@ -549,8 +549,8 @@ async function scrapeJobSite(
 
     // Navigate again after login
     await page.goto(searchUrl, {
-      waitUntil: "networkidle",
-      timeout: siteConfig.timeout || config.scraperNetworkIdleTimeout,
+      waitUntil: "load",
+      timeout: siteConfig.timeout || config.scraperDefaultTimeout,
     });
 
     console.log("Waiting for search results to load after login...");
@@ -655,7 +655,7 @@ async function scrapeJobSite(
 
           // Navigate to job page - Playwright auto-waits!
           await page.goto(url, {
-            waitUntil: "networkidle",
+            waitUntil: "load",
             timeout: siteConfig.timeout || config.scraperDefaultTimeout,
           });
 
@@ -784,7 +784,7 @@ async function rescrapeJobById(
   try {
     console.log(`\n🌐 Navigating to job page...`);
     await page.goto(job.source_url, {
-      waitUntil: "networkidle",
+      waitUntil: "load", // Use "load" instead of "networkidle" for better reliability
       timeout: siteConfig.timeout || config.scraperDefaultTimeout,
     });
 
