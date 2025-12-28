@@ -205,9 +205,12 @@ async function scrapeJobsWithUrls(
   page: Page,
   searchUrl: string,
 ): Promise<string[]> {
-  const html = await page.content();
+  console.log("\n🔗 Starting URL-based scraping (traditional navigation)");
 
-  console.log("Extracting job links...");
+  const html = await page.content();
+  const htmlSize = (html.length / 1024).toFixed(1);
+
+  console.log(`📄 Extracting job links from HTML (${htmlSize} KB)...`);
   let jobUrls = await extractJobLinks(html);
 
   if (!jobUrls || jobUrls.length === 0) {
@@ -262,6 +265,8 @@ async function scrapeJobsWithClicks(
   siteConfig: ReturnType<typeof getSiteConfig>,
   searchUrl: string,
 ): Promise<string[]> {
+  console.log("\n🔄 Starting SPA scraping mode (click-based navigation)");
+
   // Import CDP utilities dynamically
   const { markClickableElementsInContainer } = await import(
     "$lib/server/cdp-utils"
@@ -269,42 +274,64 @@ async function scrapeJobsWithClicks(
   const { extractJobClickSelectors } = await import("$lib/server/job-scraper");
 
   // Mark all clickable elements using CDP
-  console.log("Detecting click handlers via CDP...");
+  console.log("📍 Step 1/3: Detecting click handlers via CDP...");
+  const container = siteConfig.selectors.jobListContainer || "body";
+  console.log(`   Scanning container: ${container}`);
+  const startCdp = Date.now();
+
   const clickableCount = await markClickableElementsInContainer(
     page,
-    siteConfig.selectors.jobListContainer || "body",
+    container,
   );
 
-  console.log(`Found ${clickableCount} elements with click listeners`);
+  const cdpDuration = ((Date.now() - startCdp) / 1000).toFixed(2);
+  console.log(
+    `   ✓ Found ${clickableCount} elements with click listeners (${cdpDuration}s)`,
+  );
 
   if (clickableCount === 0) {
-    console.log("⚠️  No clickable elements found");
+    console.log("   ⚠️  No clickable elements found - page may not be loaded");
     return [];
   }
 
   // Get marked HTML
   const markedHtml = await page.content();
+  const htmlSize = (markedHtml.length / 1024).toFixed(1);
+  console.log(`   HTML size: ${htmlSize} KB`);
 
   // Send to LLM to identify job card pattern
-  console.log("Asking LLM to identify job card pattern...");
+  console.log("\n🤖 Step 2/3: Asking LLM to identify job card pattern...");
+  const startLlm = Date.now();
+
   const { clickableIds, pattern, jobCount } = await extractJobClickSelectors(
     markedHtml,
   );
 
-  console.log(`LLM identified ${jobCount} job cards: ${pattern}`);
-  console.log(`Clickable IDs: ${clickableIds.join(", ")}`);
+  const llmDuration = ((Date.now() - startLlm) / 1000).toFixed(2);
+  console.log(`   ✓ LLM analysis complete (${llmDuration}s)`);
+  console.log(`   Pattern: ${pattern}`);
+  console.log(`   Job cards found: ${jobCount}`);
+  console.log(`   Clickable IDs: [${clickableIds.join(", ")}]`);
 
   if (clickableIds.length === 0) {
-    console.log("⚠️  LLM found no job cards");
+    console.log("   ⚠️  LLM found no job cards in the page");
     return [];
   }
 
   const jobHtmlList: string[] = [];
 
   // Click each identified job card
-  for (const id of clickableIds) {
+  console.log(
+    `\n👆 Step 3/3: Clicking through ${clickableIds.length} job cards...`,
+  );
+  for (let i = 0; i < clickableIds.length; i++) {
+    const id = clickableIds[i];
     try {
-      console.log(`\nClicking job card with data-clickable-id="${id}"...`);
+      console.log(
+        `   [${
+          i + 1
+        }/${clickableIds.length}] Clicking data-clickable-id="${id}"...`,
+      );
 
       await page.locator(`[data-clickable-id="${id}"]`).click();
 
@@ -313,23 +340,27 @@ async function scrapeJobsWithClicks(
         await page.locator(siteConfig.selectors.jobDescription).waitFor({
           state: "visible",
           timeout: 10000,
-        }).catch(() => console.warn("⚠️  Job description not found"));
+        }).catch(() => console.warn("      ⚠️  Job description not visible"));
       } else {
         await page.waitForLoadState("networkidle");
       }
 
       const jobHtml = await page.content();
       jobHtmlList.push(jobHtml);
+      console.log(`      ✓ Captured job HTML`);
 
       await page.waitForTimeout(1000);
     } catch (error) {
       console.error(
-        `✗ Failed to process clickable ${id}:`,
+        `      ✗ Failed:`,
         error instanceof Error ? error.message : String(error),
       );
     }
   }
 
+  console.log(
+    `\n✅ SPA scraping complete: ${jobHtmlList.length} jobs captured\n`,
+  );
   return jobHtmlList;
 }
 
