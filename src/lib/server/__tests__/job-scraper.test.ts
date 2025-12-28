@@ -426,6 +426,7 @@ describe("upsertJob", () => {
     expect(mockDb.jobs.update).toHaveBeenCalledWith({
       where: { id: 1 },
       data: expect.objectContaining({
+        status: "hiring", // Should default to hiring when null
         scrape_count: 6,
       }),
     });
@@ -460,6 +461,7 @@ describe("upsertJob", () => {
     expect(mockDb.jobs.update).toHaveBeenCalledWith({
       where: { id: 1 },
       data: expect.objectContaining({
+        status: "hiring", // Should default to hiring when null
         scrape_count: 1,
       }),
     });
@@ -500,6 +502,7 @@ describe("upsertJob", () => {
     expect(mockDb.jobs.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         job_poster: "LinkedIn",
+        status: "hiring", // Should default to hiring when null
       }),
     });
   });
@@ -534,6 +537,7 @@ describe("upsertJob", () => {
     expect(mockDb.jobs.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         job_poster: "Indeed",
+        status: "hiring", // Should default to hiring when null
       }),
     });
   });
@@ -568,6 +572,7 @@ describe("upsertJob", () => {
     expect(mockDb.jobs.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         job_poster: "Company Inc",
+        status: "hiring", // Should default to hiring when null
       }),
     });
   });
@@ -602,6 +607,7 @@ describe("upsertJob", () => {
     expect(mockDb.jobs.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         job_poster: null,
+        status: "hiring", // Should default to hiring when null
       }),
     });
   });
@@ -636,6 +642,7 @@ describe("upsertJob", () => {
     expect(mockDb.jobs.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         job_poster: null,
+        status: "hiring", // Should default to hiring when null
       }),
     });
   });
@@ -678,6 +685,7 @@ describe("upsertJob", () => {
       where: { id: 1 },
       data: expect.objectContaining({
         job_poster: "Glassdoor",
+        status: "hiring", // Should default to hiring when null
       }),
     });
   });
