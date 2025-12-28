@@ -24,7 +24,15 @@ export async function markClickableElementsInContainer(
   try {
     // Enable DOM debugging
     await client.send("DOM.enable");
-    await client.send("DOMDebugger.enable");
+
+    // Try to enable DOMDebugger (might not be available in all Chrome versions)
+    try {
+      await client.send("DOMDebugger.enable");
+    } catch (error) {
+      console.warn(
+        "⚠️  DOMDebugger.enable not available - will use basic DOM inspection",
+      );
+    }
 
     // Get the root document
     const { root } = await client.send("DOM.getDocument", { depth: -1 });
