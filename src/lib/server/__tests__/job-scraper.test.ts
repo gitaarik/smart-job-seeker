@@ -504,6 +504,158 @@ describe("extractJobData", () => {
       consoleSpy.mockRestore();
     }
   });
+
+  it("should use fallback title when LLM extraction returns null", async () => {
+    const html = "<html><body><p>Job description here</p></body></html>";
+    const fallbackTitle = "Senior Software Engineer (from search page)";
+
+    mockDb.ai_chat_prompts.findUnique.mockResolvedValueOnce({
+      request: "extract_job_data",
+      system_prompt: "Extract job data",
+      user_prompt: "HTML: {{html}}",
+      format: null,
+    });
+
+    const jobData = {
+      title: null,
+      job_description: "Great job description",
+      company_description: null,
+      job_poster: null,
+      date_posted: null,
+      location: null,
+      remote: null,
+      experience_level: null,
+      job_type: null,
+      salary_min: null,
+      salary_max: null,
+      salary_currency: null,
+      salary_period: null,
+      skills: null,
+      status: null,
+    };
+
+    mockGenerateChatCompletion.mockResolvedValueOnce(JSON.stringify(jobData));
+
+    const result = await extractJobData(html, "https://example.com", {
+      fallbackTitle,
+    });
+
+    expect(result.title).toBe(fallbackTitle);
+  });
+
+  it("should use fallback title when LLM extraction returns empty string", async () => {
+    const html = "<html><body><h1></h1><p>Description</p></body></html>";
+    const fallbackTitle = "Backend Developer";
+
+    mockDb.ai_chat_prompts.findUnique.mockResolvedValueOnce({
+      request: "extract_job_data",
+      system_prompt: "Extract job data",
+      user_prompt: "HTML: {{html}}",
+      format: null,
+    });
+
+    const jobData = {
+      title: "",
+      job_description: "Job description",
+      company_description: null,
+      job_poster: null,
+      date_posted: null,
+      location: null,
+      remote: null,
+      experience_level: null,
+      job_type: null,
+      salary_min: null,
+      salary_max: null,
+      salary_currency: null,
+      salary_period: null,
+      skills: null,
+      status: null,
+    };
+
+    mockGenerateChatCompletion.mockResolvedValueOnce(JSON.stringify(jobData));
+
+    const result = await extractJobData(html, "https://example.com", {
+      fallbackTitle,
+    });
+
+    expect(result.title).toBe(fallbackTitle);
+  });
+
+  it("should prefer LLM-extracted title over fallback", async () => {
+    const html = "<html><body><h1>Full Stack Engineer</h1></body></html>";
+    const fallbackTitle = "Software Developer";
+
+    mockDb.ai_chat_prompts.findUnique.mockResolvedValueOnce({
+      request: "extract_job_data",
+      system_prompt: "Extract job data",
+      user_prompt: "HTML: {{html}}",
+      format: null,
+    });
+
+    const jobData = {
+      title: "Full Stack Engineer",
+      job_description: "Great job",
+      company_description: null,
+      job_poster: null,
+      date_posted: null,
+      location: null,
+      remote: null,
+      experience_level: null,
+      job_type: null,
+      salary_min: null,
+      salary_max: null,
+      salary_currency: null,
+      salary_period: null,
+      skills: null,
+      status: null,
+    };
+
+    mockGenerateChatCompletion.mockResolvedValueOnce(JSON.stringify(jobData));
+
+    const result = await extractJobData(html, "https://example.com", {
+      fallbackTitle,
+    });
+
+    // LLM should extract "Full Stack Engineer" and it should be used
+    expect(result.title).toBe("Full Stack Engineer");
+    expect(result.title).not.toBe(fallbackTitle);
+  });
+
+  it("should work without fallback options (backwards compatibility)", async () => {
+    const html = "<html><body><h1>Data Scientist</h1></body></html>";
+
+    mockDb.ai_chat_prompts.findUnique.mockResolvedValueOnce({
+      request: "extract_job_data",
+      system_prompt: "Extract job data",
+      user_prompt: "HTML: {{html}}",
+      format: null,
+    });
+
+    const jobData = {
+      title: "Data Scientist",
+      job_description: "Great job",
+      company_description: null,
+      job_poster: null,
+      date_posted: null,
+      location: null,
+      remote: null,
+      experience_level: null,
+      job_type: null,
+      salary_min: null,
+      salary_max: null,
+      salary_currency: null,
+      salary_period: null,
+      skills: null,
+      status: null,
+    };
+
+    mockGenerateChatCompletion.mockResolvedValueOnce(JSON.stringify(jobData));
+
+    // Call without options parameter
+    const result = await extractJobData(html, "https://example.com");
+
+    expect(result.title).toBe("Data Scientist");
+  });
 });
 
 describe("upsertJob", () => {

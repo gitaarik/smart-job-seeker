@@ -312,6 +312,9 @@ function formatSalary(data: {
 export async function extractJobData(
   jobHtml: string,
   sourceUrl: string,
+  options?: {
+    fallbackTitle?: string | null;
+  },
 ): Promise<{
   title: string;
   job_description: string | null;
@@ -402,9 +405,15 @@ export async function extractJobData(
       data.date_posted = null;
     }
 
-    // 7. Include stripped HTML in return value
+    // 7. Apply fallback for title if LLM extraction failed or returned empty
+    const effectiveTitle = (data.title && data.title.trim() !== "")
+      ? data.title
+      : (options?.fallbackTitle || data.title);
+
+    // 8. Include stripped HTML in return value
     return {
       ...data,
+      title: effectiveTitle,
       strippedHtml,
     };
   } catch (error) {

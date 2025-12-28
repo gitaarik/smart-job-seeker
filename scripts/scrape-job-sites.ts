@@ -359,6 +359,41 @@ async function scrapeJobsWithClicks(
     console.log(`   Job ${jobNumber}/${clickableIds.length}`);
     console.log(`   [${"─".repeat(56)}]`);
 
+    // Extract context from search page before clicking
+    let searchPageTitle: string | null = null;
+    try {
+      const clickableElement = page.locator(
+        `[data-extract-clickable-id="${id}"]`,
+      ).first();
+      const elementText = await clickableElement.textContent({
+        timeout: 2000,
+      });
+
+      if (elementText) {
+        // Extract first non-empty line as title (simple heuristic)
+        const lines = elementText.trim().split("\n").map((l) => l.trim())
+          .filter((l) => l.length > 0);
+        searchPageTitle = lines[0] || null;
+
+        if (searchPageTitle) {
+          console.log(
+            `      📋 Search page title: "${
+              searchPageTitle.substring(
+                0,
+                60,
+              )
+            }${searchPageTitle.length > 60 ? "..." : ""}"`,
+          );
+        }
+      }
+    } catch (error) {
+      console.debug(
+        `      ⚠️  Could not extract search page title:`,
+        error instanceof Error ? error.message : String(error),
+      );
+      // Continue without fallback title - not a critical error
+    }
+
     try {
       console.log(
         `      👆 Clicking data-extract-clickable-id="${id}"...`,
@@ -494,7 +529,9 @@ async function scrapeJobsWithClicks(
 
       // Extract and save job immediately
       console.log(`      🔍 Extracting job data...`);
-      const jobData = await extractJobData(strippedHtml, pseudoUrl);
+      const jobData = await extractJobData(strippedHtml, pseudoUrl, {
+        fallbackTitle: searchPageTitle,
+      });
 
       console.log(`      💾 Saving to database...`);
       const result = await upsertJob(jobData, pseudoUrl, platformId);
