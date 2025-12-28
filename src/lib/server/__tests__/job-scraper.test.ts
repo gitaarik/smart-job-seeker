@@ -204,6 +204,7 @@ describe("extractJobData", () => {
       salary_currency: "USD",
       salary_period: "year",
       skills: ["JavaScript", "React", "Node.js"],
+      status: "hiring",
     };
 
     mockGenerateChatCompletion.mockResolvedValueOnce(JSON.stringify(jobData));
@@ -241,6 +242,7 @@ describe("extractJobData", () => {
       salary_currency: null,
       salary_period: null,
       skills: null,
+      status: null,
     };
 
     mockGenerateChatCompletion.mockResolvedValueOnce(JSON.stringify(jobData));
@@ -305,6 +307,7 @@ describe("upsertJob", () => {
       salary_currency: "USD",
       salary_period: "year",
       skills: ["JavaScript", "React", "Node.js"],
+      status: "hiring",
     };
 
     const sourceUrl = "https://example.com/job/123";
@@ -334,7 +337,7 @@ describe("upsertJob", () => {
         experience_levels: [jobData.experience_level],
         source_url: sourceUrl,
         job_platform: platformId,
-        status: "hiring",
+        status: jobData.status,
         scrape_count: 1,
       }),
     });
@@ -356,6 +359,7 @@ describe("upsertJob", () => {
       salary_currency: "USD",
       salary_period: "year",
       skills: ["JavaScript", "React", "Node.js"],
+      status: "hiring",
     };
 
     const sourceUrl = "https://example.com/job/123";
@@ -386,7 +390,7 @@ describe("upsertJob", () => {
         remote_options: [jobData.remote],
         job_types: [jobData.job_type],
         experience_levels: [jobData.experience_level],
-        status: "hiring",
+        status: jobData.status,
         import_error: null,
         scrape_count: 3,
       }),
@@ -409,6 +413,7 @@ describe("upsertJob", () => {
       salary_currency: null,
       salary_period: null,
       skills: null,
+      status: null,
     };
 
     mockDb.jobs.findFirst.mockResolvedValueOnce({
@@ -442,6 +447,7 @@ describe("upsertJob", () => {
       salary_currency: null,
       salary_period: null,
       skills: null,
+      status: null,
     };
 
     mockDb.jobs.findFirst.mockResolvedValueOnce({
@@ -475,6 +481,7 @@ describe("upsertJob", () => {
       salary_currency: null,
       salary_period: null,
       skills: null,
+      status: null,
     };
 
     mockDb.jobs.findFirst.mockResolvedValueOnce(null);
@@ -513,6 +520,7 @@ describe("upsertJob", () => {
       salary_currency: null,
       salary_period: null,
       skills: null,
+      status: null,
     };
 
     mockDb.jobs.findFirst.mockResolvedValueOnce(null);
@@ -546,6 +554,7 @@ describe("upsertJob", () => {
       salary_currency: null,
       salary_period: null,
       skills: null,
+      status: null,
     };
 
     mockDb.jobs.findFirst.mockResolvedValueOnce(null);
@@ -579,6 +588,7 @@ describe("upsertJob", () => {
       salary_currency: null,
       salary_period: null,
       skills: null,
+      status: null,
     };
 
     mockDb.jobs.findFirst.mockResolvedValueOnce(null);
@@ -612,6 +622,7 @@ describe("upsertJob", () => {
       salary_currency: null,
       salary_period: null,
       skills: null,
+      status: null,
     };
 
     mockDb.jobs.findFirst.mockResolvedValueOnce(null);
@@ -645,6 +656,7 @@ describe("upsertJob", () => {
       salary_currency: null,
       salary_period: null,
       skills: null,
+      status: null,
     };
 
     mockDb.jobs.findFirst.mockResolvedValueOnce({

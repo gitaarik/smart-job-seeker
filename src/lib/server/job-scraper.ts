@@ -323,6 +323,7 @@ export async function extractJobData(
   salary_currency: string | null;
   salary_period: string | null;
   skills: string[] | null;
+  status: string | null;
   strippedHtml: string;
 }> {
   // 1. Strip HTML to minimal content
@@ -451,6 +452,7 @@ export async function upsertJob(
     salary_currency: string | null;
     salary_period: string | null;
     skills: string[] | null;
+    status: string | null;
     strippedHtml: string;
   },
   sourceUrl: string,
@@ -510,6 +512,8 @@ export async function upsertJob(
       } -> ${(existing.scrape_count || 0) + 1})`,
     );
     console.log("Update data:", {
+      status: jobData.status,
+      job_poster: effectiveJobPoster,
       remote_options: multiSelectData.remote_options,
       job_types: multiSelectData.job_types,
       experience_levels: multiSelectData.experience_levels,
@@ -523,7 +527,6 @@ export async function upsertJob(
         job_poster: effectiveJobPoster,
         skills,
         source_html_stripped: strippedHtml,
-        status: "hiring",
         import_error: null,
         last_scraped: currentDate,
         scrape_count: (existing.scrape_count || 0) + 1,
@@ -543,7 +546,6 @@ export async function upsertJob(
         source_html_stripped: strippedHtml,
         source_url: normalizedUrl, // Use normalized URL
         job_platform: platformId,
-        status: "hiring",
         last_scraped: currentDate,
         scrape_count: 1,
         date_created: currentDate,
