@@ -44,6 +44,7 @@
       "Bash(npx prisma:*)",
       "Bash(npx tsc:*)",
       "Bash(npx tsx:*)",
+      "Bash(npx vite-node:*)",
       "Bash(python3:*)",
       "Bash(rm:*)",
       "Bash(src/lib/server/__tests__/ai-chat-response-generate.test.ts )",
@@ -74,10 +75,7 @@
       "mcp__directus__operations",
       "mcp__directus__relations",
       "mcp__directus__schema",
-      "mcp__directus__system-prompt",
-      "Bash(git reset:*)",
-      "Bash(git restore:*)",
-      "Bash(npx vite-node:*)"
+      "mcp__directus__system-prompt"
     ],
     "deny": [],
     "ask": []
