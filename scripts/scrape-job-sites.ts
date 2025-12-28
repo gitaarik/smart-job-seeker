@@ -12,6 +12,7 @@ import {
   detectLoginPage,
   extractJobData,
   extractJobLinks,
+  getPlatformIdFromUrl,
   upsertJob,
 } from "$lib/server/job-scraper";
 import { stripHtmlForLlm } from "$lib/server/html-strip";
@@ -30,6 +31,7 @@ interface SearchAction {
   name: string;
   search_url: string | null;
   navigation_type: "url" | "click" | null;
+  platform: number | null;
   job_platforms: {
     navigation_type: "url" | "click" | null;
   } | null;
@@ -568,8 +570,9 @@ async function scrapeJobSite(
     }
   }
 
-  // 3. Determine import source
-  const importSource = getImportSource(searchUrl);
+  // 3. Determine platform ID (prefer from job_searches, fallback to URL lookup)
+  const platformId = searchAction.platform ??
+    await getPlatformIdFromUrl(searchUrl);
 
   // 4. Branch based on navigation type
   if (navigationType === "click") {
@@ -611,7 +614,7 @@ async function scrapeJobSite(
 
           console.log("Extracting job data...");
           const jobData = await extractJobData(jobHtml, pseudoUrl);
-          const result = await upsertJob(jobData, pseudoUrl, importSource);
+          const result = await upsertJob(jobData, pseudoUrl, platformId);
           console.log(
             `✓ ${result.created ? "Created" : "Updated"} job #${result.id}`,
           );
@@ -684,7 +687,7 @@ async function scrapeJobSite(
 
           console.log("Extracting job data...");
           const jobData = await extractJobData(jobHtml, url);
-          const result = await upsertJob(jobData, url, importSource);
+          const result = await upsertJob(jobData, url, platformId);
           console.log(
             `✓ ${result.created ? "Created" : "Updated"} job #${result.id}`,
           );
@@ -767,9 +770,10 @@ async function rescrapeJobById(
   console.log(`📄 Job: ${job.title || "Untitled"}`);
   console.log(`🔗 URL: ${job.source_url}`);
 
-  // 2. Determine import source (scraper type)
-  const importSource = job.import_source || getImportSource(job.source_url);
-  console.log(`🔧 Scraper: ${importSource}`);
+  // 2. Determine platform ID
+  const platformId = job.job_platform ||
+    await getPlatformIdFromUrl(job.source_url);
+  console.log(`🔧 Platform ID: ${platformId}`);
 
   // Get site configuration
   const siteConfig = getSiteConfig(job.source_url);
@@ -798,7 +802,7 @@ async function rescrapeJobById(
 
     if (isLogin) {
       console.error(
-        `❌ Login required for ${importSource}. Please run full scrape to login manually.`,
+        `❌ Login required. Please run full scrape to login manually.`,
       );
       await page.close();
       return;
@@ -835,7 +839,7 @@ async function rescrapeJobById(
 
     // 7. Update job in database
     console.log(`💾 Updating job in database...`);
-    const result = await upsertJob(jobData, job.source_url, importSource);
+    const result = await upsertJob(jobData, job.source_url, platformId);
 
     console.log(
       `✅ Job #${result.id} updated successfully (scrape count: ${
@@ -923,6 +927,7 @@ async function scrapeJobSites(): Promise<void> {
         name: true,
         search_url: true,
         navigation_type: true,
+        platform: true,
         job_platforms: {
           select: {
             navigation_type: true,

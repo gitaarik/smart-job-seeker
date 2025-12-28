@@ -6500,7 +6500,8 @@ export const JobsScalarFieldEnum = {
   experience_levels: 'experience_levels',
   remote_options: 'remote_options',
   skills: 'skills',
-  source_html_stripped: 'source_html_stripped'
+  source_html_stripped: 'source_html_stripped',
+  job_platform: 'job_platform'
 } as const
 
 export type JobsScalarFieldEnum = (typeof JobsScalarFieldEnum)[keyof typeof JobsScalarFieldEnum]

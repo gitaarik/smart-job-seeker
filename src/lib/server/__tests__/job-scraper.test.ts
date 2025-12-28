@@ -305,12 +305,12 @@ describe("upsertJob", () => {
     };
 
     const sourceUrl = "https://example.com/job/123";
-    const importSource = "LinkedIn";
+    const platformId = 1;
 
     mockDb.jobs.findFirst.mockResolvedValueOnce(null);
     mockDb.jobs.create.mockResolvedValueOnce({ id: 1 });
 
-    const result = await upsertJob(jobData, sourceUrl, importSource);
+    const result = await upsertJob(jobData, sourceUrl, platformId);
 
     expect(result.id).toBe(1);
     expect(result.created).toBe(true);
@@ -330,7 +330,7 @@ describe("upsertJob", () => {
         job_types: [jobData.job_type],
         experience_levels: [jobData.experience_level],
         source_url: sourceUrl,
-        import_source: importSource,
+        job_platform: platformId,
         status: "hiring",
         scrape_count: 1,
       }),
@@ -356,14 +356,14 @@ describe("upsertJob", () => {
     };
 
     const sourceUrl = "https://example.com/job/123";
-    const importSource = "LinkedIn";
+    const platformId = 1;
 
     mockDb.jobs.findFirst.mockResolvedValueOnce({
       id: 1,
       scrape_count: 2,
     });
 
-    const result = await upsertJob(jobData, sourceUrl, importSource);
+    const result = await upsertJob(jobData, sourceUrl, platformId);
 
     expect(result.id).toBe(1);
     expect(result.created).toBe(false);
@@ -413,7 +413,7 @@ describe("upsertJob", () => {
       scrape_count: 5,
     });
 
-    await upsertJob(jobData, "https://example.com", "Test");
+    await upsertJob(jobData, "https://example.com", 1);
 
     expect(mockDb.jobs.update).toHaveBeenCalledWith({
       where: { id: 1 },
@@ -446,7 +446,7 @@ describe("upsertJob", () => {
       scrape_count: null,
     });
 
-    await upsertJob(jobData, "https://example.com", "Test");
+    await upsertJob(jobData, "https://example.com", 1);
 
     expect(mockDb.jobs.update).toHaveBeenCalledWith({
       where: { id: 1 },

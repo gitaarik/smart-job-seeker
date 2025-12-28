@@ -432,7 +432,7 @@ export function normalizeJobUrl(url: string): string {
  * Create or update job in database
  * @param jobData Job data extracted from HTML
  * @param sourceUrl URL where the job was found
- * @param importSource Name of the job site (e.g., "LinkedIn")
+ * @param platformId ID of the job platform (from job_platforms table)
  * @returns Object with job ID and whether it was created or updated
  */
 export async function upsertJob(
@@ -454,7 +454,7 @@ export async function upsertJob(
     strippedHtml: string;
   },
   sourceUrl: string,
-  importSource: string,
+  platformId: number | null,
 ): Promise<{ id: number; created: boolean }> {
   // Normalize URL to match jobs regardless of tracking params
   const normalizedUrl = normalizeJobUrl(sourceUrl);
@@ -521,7 +521,7 @@ export async function upsertJob(
         skills,
         source_html_stripped: strippedHtml,
         source_url: normalizedUrl, // Use normalized URL
-        import_source: importSource,
+        job_platform: platformId,
         status: "hiring",
         last_scraped: currentDate,
         scrape_count: 1,
