@@ -297,8 +297,12 @@ async function scrapeJobsWithClicks(
   console.log(`   HTML size: ${htmlSize} KB`);
 
   // Check if we have job-detail-button markers (high-confidence job buttons)
-  const jobDetailButtonMatches = markedHtml.matchAll(/data-clickable-id="(\d+)" data-click-text="job-detail-button"/g);
-  const jobDetailButtonIds = Array.from(jobDetailButtonMatches).map(match => parseInt(match[1]));
+  const jobDetailButtonMatches = markedHtml.matchAll(
+    /data-clickable-id="(\d+)" data-click-text="job-detail-button"/g,
+  );
+  const jobDetailButtonIds = Array.from(jobDetailButtonMatches).map((match) =>
+    parseInt(match[1])
+  );
 
   let clickableIds: number[];
   let pattern: string;
@@ -310,7 +314,9 @@ async function scrapeJobsWithClicks(
     clickableIds = jobDetailButtonIds;
     pattern = "job-detail buttons detected by CDP";
     jobCount = jobDetailButtonIds.length;
-    console.log(`   Found ${jobCount} job-detail buttons: [${clickableIds.join(", ")}]`);
+    console.log(
+      `   Found ${jobCount} job-detail buttons: [${clickableIds.join(", ")}]`,
+    );
   } else {
     // No job-detail buttons found - fall back to LLM analysis
     console.log("\n🤖 Step 2/3: Asking LLM to identify job card pattern...");

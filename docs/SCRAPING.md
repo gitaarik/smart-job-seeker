@@ -1,10 +1,13 @@
 # Job Scraping Architecture
 
-This document describes the job scraping system, including both traditional URL-based navigation and modern click-based navigation for Single Page Applications (SPAs).
+This document describes the job scraping system, including both traditional
+URL-based navigation and modern click-based navigation for Single Page
+Applications (SPAs).
 
 ## Overview
 
 The job scraper supports two navigation modes:
+
 1. **URL-based navigation** - Traditional sites with direct job URLs
 2. **Click-based navigation** - SPAs without direct job URLs
 
@@ -30,7 +33,8 @@ src/lib/server/
 
 ### Navigation Mode Selection
 
-The scraper automatically selects the navigation mode based on site configuration:
+The scraper automatically selects the navigation mode based on site
+configuration:
 
 ```typescript
 const siteConfig = getSiteConfig(searchUrl);
@@ -78,10 +82,12 @@ if (navigationType === "click") {
 ### LLM Prompts
 
 **Prompt:** `extract_job_links`
+
 - **Input:** Stripped HTML from search results
 - **Output:** Array of job URLs
 
 **Prompt:** `extract_job_data`
+
 - **Input:** Stripped HTML from job page
 - **Output:** Structured job data (title, company, location, etc.)
 
@@ -119,13 +125,14 @@ if (navigationType === "click") {
 
 ### CDP Click Detection
 
-The scraper uses Chrome DevTools Protocol to find elements with actual event listeners:
+The scraper uses Chrome DevTools Protocol to find elements with actual event
+listeners:
 
 ```typescript
 // Mark all clickable elements in container
 const clickableCount = await markClickableElementsInContainer(
   page,
-  ".job-search-results"
+  ".job-search-results",
 );
 
 // Results in HTML like:
@@ -134,6 +141,7 @@ const clickableCount = await markClickableElementsInContainer(
 ```
 
 **Why CDP?**
+
 - Detects `addEventListener('click', ...)` handlers
 - Finds elements with `cursor: pointer` style
 - Works with React, Vue, Angular, any framework
@@ -142,11 +150,14 @@ const clickableCount = await markClickableElementsInContainer(
 ### LLM Prompts
 
 **Prompt:** `extract_job_click_selectors`
+
 - **Input:** Stripped HTML with `data-clickable-id` markers
 - **Output:** Array of clickable IDs that are job cards
-- **Purpose:** Identifies repeating job card pattern (excludes pagination, filters, etc.)
+- **Purpose:** Identifies repeating job card pattern (excludes pagination,
+  filters, etc.)
 
 **Prompt:** `extract_job_data`
+
 - **Input:** Stripped HTML from job detail panel
 - **Output:** Structured job data (same as URL mode)
 
@@ -161,6 +172,7 @@ https://example-spa-job-site.com/jobs?search=engineer#job-3
 ```
 
 These URLs are used for:
+
 - Job deduplication (same URL = same job)
 - HTML change detection (skip if unchanged)
 - Database source_url field
@@ -187,16 +199,16 @@ await page.locator(".job-description").waitFor({ state: "visible" });
 
 ```typescript
 // CSS selectors
-page.locator(".job-card")
+page.locator(".job-card");
 
 // Text selectors
-page.getByText("Apply Now")
+page.getByText("Apply Now");
 
 // Role selectors
-page.getByRole("button", { name: "Apply" })
+page.getByRole("button", { name: "Apply" });
 
 // Combined
-page.locator(".job-list").getByRole("link")
+page.locator(".job-list").getByRole("link");
 ```
 
 ### CDP Access
@@ -205,9 +217,9 @@ Direct access to Chrome DevTools Protocol for advanced features:
 
 ```typescript
 const client = await page.context().newCDPSession(page);
-await client.send('DOM.enable');
-const { listeners } = await client.send('DOMDebugger.getEventListeners', {
-  objectId: object.objectId
+await client.send("DOM.enable");
+const { listeners } = await client.send("DOMDebugger.getEventListeners", {
+  objectId: object.objectId,
 });
 ```
 
@@ -252,13 +264,13 @@ Add new sites in `src/lib/server/job-site-configs.ts`:
 ```typescript
 export const SITE_CONFIGS: Record<string, SiteConfig> = {
   "mysite.com": {
-    timeout: 30000,                    // Network idle timeout
-    navigationType: "url",             // "url" | "click"
+    timeout: 30000, // Network idle timeout
+    navigationType: "url", // "url" | "click"
     selectors: {
-      jobListContainer: ".jobs-list",  // Optional: container selector
-      jobDescription: ".job-details",  // Optional: job detail selector
+      jobListContainer: ".jobs-list", // Optional: container selector
+      jobDescription: ".job-details", // Optional: job detail selector
     },
-    validator: async (page) => {       // Optional: custom validation
+    validator: async (page) => { // Optional: custom validation
       return await page.locator(".jobs-list").isVisible();
     },
   },
@@ -270,7 +282,8 @@ export const SITE_CONFIGS: Record<string, SiteConfig> = {
 Prompts are managed in Directus (`ai_chat_prompts` collection):
 
 1. **extract_job_links** - Extract URLs from search results (URL mode)
-2. **extract_job_click_selectors** - Identify job cards from markers (click mode)
+2. **extract_job_click_selectors** - Identify job cards from markers (click
+   mode)
 3. **extract_job_data** - Extract structured data from job page (both modes)
 4. **detect_login_page** - Detect if page requires login (both modes)
 
@@ -280,7 +293,7 @@ Prompts are managed in Directus (`ai_chat_prompts` collection):
 
 ```typescript
 // In config
-scraperSaveDebugScreenshots: true
+scraperSaveDebugScreenshots: true;
 ```
 
 Screenshots saved to `debug-screenshots/` directory.
@@ -303,18 +316,21 @@ onclick, onload     // Inline handlers (use CDP instead)
 ### Common Issues
 
 **No job links found:**
+
 - Check if site requires login
 - Verify selectors in config
 - Check for CAPTCHA
 - Inspect debug screenshot
 
 **Click-based navigation not working:**
+
 - Verify `navigationType: "click"` in config
 - Check if `jobListContainer` selector is correct
 - Ensure CDP can access event listeners (Chromium only)
 - Verify LLM prompt `extract_job_click_selectors` exists
 
 **Jobs not updating:**
+
 - HTML change detection prevents re-extraction
 - Use `--force` flag to override
 - Check `source_html_stripped` field in database
@@ -325,13 +341,13 @@ onclick, onload     // Inline handlers (use CDP instead)
 
 From Phase 1-3 migration:
 
-| Metric | Before (Puppeteer) | After (Playwright) |
-|--------|-------------------|-------------------|
-| Lines of code | ~1,389 | ~1,286 (-103 lines) |
-| Custom wait logic | ~160 lines | ~53 lines (-67%) |
-| Dependencies | 3 packages | 2 packages |
-| Auto-waiting | Custom implementation | Built-in |
-| SPA support | Limited | Full (click mode) |
+| Metric            | Before (Puppeteer)    | After (Playwright)  |
+| ----------------- | --------------------- | ------------------- |
+| Lines of code     | ~1,389                | ~1,286 (-103 lines) |
+| Custom wait logic | ~160 lines            | ~53 lines (-67%)    |
+| Dependencies      | 3 packages            | 2 packages          |
+| Auto-waiting      | Custom implementation | Built-in            |
+| SPA support       | Limited               | Full (click mode)   |
 
 ### Optimization Tips
 
@@ -349,6 +365,7 @@ npm test
 ```
 
 Tests cover:
+
 - LLM extraction functions
 - HTML stripping
 - Job upsert logic
@@ -413,4 +430,5 @@ src/lib/server/
 
 ## License
 
-This scraper is part of the Smart Job Seeker application and follows the same license.
+This scraper is part of the Smart Job Seeker application and follows the same
+license.

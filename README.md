@@ -23,9 +23,10 @@ journey with AI-powered insights.
   pre-configured search URLs
 - **Dual-Mode Navigation** - Traditional URL-based and modern click-based (SPA)
   navigation
-- **Playwright Browser Automation** - Reliable, auto-waiting browser control with
-  stealth capabilities
-- **CDP Integration** - Chrome DevTools Protocol for detecting clickable elements
+- **Playwright Browser Automation** - Reliable, auto-waiting browser control
+  with stealth capabilities
+- **CDP Integration** - Chrome DevTools Protocol for detecting clickable
+  elements
 - **HTML Processing** - Extract and clean job posting data for AI analysis
 - **LLM Integration** - AI-powered job data extraction with structured output
 - **Smart Matching** - Match your profile against scraped jobs (coming soon)
