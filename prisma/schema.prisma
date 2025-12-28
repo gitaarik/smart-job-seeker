@@ -1102,15 +1102,16 @@ model job_matches {
 }
 
 model job_platforms {
-  id           Int            @id @default(autoincrement())
-  status       String         @default("draft") @db.VarChar(255)
-  sort         Int?
-  date_created DateTime?      @db.Timestamptz(6)
-  date_updated DateTime?      @db.Timestamptz(6)
-  name         String         @db.VarChar(255)
-  url          String         @db.VarChar(255)
-  type         String?        @db.VarChar(255)
-  job_searches job_searches[]
+  id              Int            @id @default(autoincrement())
+  status          String         @default("draft") @db.VarChar(255)
+  sort            Int?
+  date_created    DateTime?      @db.Timestamptz(6)
+  date_updated    DateTime?      @db.Timestamptz(6)
+  name            String         @db.VarChar(255)
+  url             String         @db.VarChar(255)
+  type            String?        @db.VarChar(255)
+  navigation_type String?        @db.VarChar(255)
+  job_searches    job_searches[]
 }
 
 model config {

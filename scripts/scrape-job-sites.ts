@@ -33,6 +33,9 @@ interface SearchAction {
   name: string;
   search_url: string | null;
   navigation_type: "url" | "click" | null;
+  platform: {
+    navigation_type: "url" | "click" | null;
+  } | null;
 }
 
 // CLI Program
@@ -403,13 +406,16 @@ async function scrapeJobSite(
   }
 
   // 3. Determine navigation type and import source
-  // Priority: database field > site config > default "url"
+  // Priority: search override > platform default > site config > default "url"
   const navigationType = searchAction.navigation_type ||
+    searchAction.platform?.navigation_type ||
     siteConfig.navigationType || "url";
   const importSource = getImportSource(searchUrl);
 
   const navigationSource = searchAction.navigation_type
-    ? "database override"
+    ? "search override"
+    : searchAction.platform?.navigation_type
+    ? "platform default"
     : siteConfig.navigationType
     ? "site config"
     : "default";
@@ -777,6 +783,11 @@ async function scrapeJobSites(): Promise<void> {
         name: true,
         search_url: true,
         navigation_type: true,
+        platform: {
+          select: {
+            navigation_type: true,
+          },
+        },
       },
     });
 

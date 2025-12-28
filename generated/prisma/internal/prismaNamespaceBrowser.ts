@@ -1243,7 +1243,8 @@ export const Job_platformsScalarFieldEnum = {
   date_updated: 'date_updated',
   name: 'name',
   url: 'url',
-  type: 'type'
+  type: 'type',
+  navigation_type: 'navigation_type'
 } as const
 
 export type Job_platformsScalarFieldEnum = (typeof Job_platformsScalarFieldEnum)[keyof typeof Job_platformsScalarFieldEnum]
