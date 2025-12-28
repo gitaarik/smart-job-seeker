@@ -31,6 +31,9 @@ vi.mock("$lib/db", () => ({
       create: vi.fn(),
       update: vi.fn(),
     },
+    job_platforms: {
+      findUnique: vi.fn(),
+    },
   },
 }));
 
@@ -452,6 +455,217 @@ describe("upsertJob", () => {
       where: { id: 1 },
       data: expect.objectContaining({
         scrape_count: 1,
+      }),
+    });
+  });
+
+  it("should use platform name when job_poster is null", async () => {
+    const jobData = {
+      title: "Software Engineer",
+      job_description: null,
+      company_description: null,
+      job_poster: null,
+      date_posted: null,
+      location: null,
+      remote: null,
+      experience_level: null,
+      job_type: null,
+      salary_min: null,
+      salary_max: null,
+      salary_currency: null,
+      salary_period: null,
+      skills: null,
+    };
+
+    mockDb.jobs.findFirst.mockResolvedValueOnce(null);
+    mockDb.job_platforms.findUnique.mockResolvedValueOnce({
+      name: "LinkedIn",
+    });
+    mockDb.jobs.create.mockResolvedValueOnce({ id: 1 });
+
+    await upsertJob(jobData, "https://example.com", 1);
+
+    expect(mockDb.job_platforms.findUnique).toHaveBeenCalledWith({
+      where: { id: 1 },
+      select: { name: true },
+    });
+
+    expect(mockDb.jobs.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        job_poster: "LinkedIn",
+      }),
+    });
+  });
+
+  it("should use platform name when job_poster is empty string", async () => {
+    const jobData = {
+      title: "Software Engineer",
+      job_description: null,
+      company_description: null,
+      job_poster: "   ",
+      date_posted: null,
+      location: null,
+      remote: null,
+      experience_level: null,
+      job_type: null,
+      salary_min: null,
+      salary_max: null,
+      salary_currency: null,
+      salary_period: null,
+      skills: null,
+    };
+
+    mockDb.jobs.findFirst.mockResolvedValueOnce(null);
+    mockDb.job_platforms.findUnique.mockResolvedValueOnce({
+      name: "Indeed",
+    });
+    mockDb.jobs.create.mockResolvedValueOnce({ id: 1 });
+
+    await upsertJob(jobData, "https://example.com", 2);
+
+    expect(mockDb.jobs.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        job_poster: "Indeed",
+      }),
+    });
+  });
+
+  it("should keep original job_poster when provided", async () => {
+    const jobData = {
+      title: "Software Engineer",
+      job_description: null,
+      company_description: null,
+      job_poster: "Company Inc",
+      date_posted: null,
+      location: null,
+      remote: null,
+      experience_level: null,
+      job_type: null,
+      salary_min: null,
+      salary_max: null,
+      salary_currency: null,
+      salary_period: null,
+      skills: null,
+    };
+
+    mockDb.jobs.findFirst.mockResolvedValueOnce(null);
+    mockDb.jobs.create.mockResolvedValueOnce({ id: 1 });
+
+    await upsertJob(jobData, "https://example.com", 1);
+
+    // Should NOT call job_platforms.findUnique
+    expect(mockDb.job_platforms.findUnique).not.toHaveBeenCalled();
+
+    expect(mockDb.jobs.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        job_poster: "Company Inc",
+      }),
+    });
+  });
+
+  it("should keep job_poster null when platformId is null", async () => {
+    const jobData = {
+      title: "Software Engineer",
+      job_description: null,
+      company_description: null,
+      job_poster: null,
+      date_posted: null,
+      location: null,
+      remote: null,
+      experience_level: null,
+      job_type: null,
+      salary_min: null,
+      salary_max: null,
+      salary_currency: null,
+      salary_period: null,
+      skills: null,
+    };
+
+    mockDb.jobs.findFirst.mockResolvedValueOnce(null);
+    mockDb.jobs.create.mockResolvedValueOnce({ id: 1 });
+
+    await upsertJob(jobData, "https://example.com", null);
+
+    // Should NOT call job_platforms.findUnique when platformId is null
+    expect(mockDb.job_platforms.findUnique).not.toHaveBeenCalled();
+
+    expect(mockDb.jobs.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        job_poster: null,
+      }),
+    });
+  });
+
+  it("should keep job_poster null when platform not found", async () => {
+    const jobData = {
+      title: "Software Engineer",
+      job_description: null,
+      company_description: null,
+      job_poster: null,
+      date_posted: null,
+      location: null,
+      remote: null,
+      experience_level: null,
+      job_type: null,
+      salary_min: null,
+      salary_max: null,
+      salary_currency: null,
+      salary_period: null,
+      skills: null,
+    };
+
+    mockDb.jobs.findFirst.mockResolvedValueOnce(null);
+    mockDb.job_platforms.findUnique.mockResolvedValueOnce(null);
+    mockDb.jobs.create.mockResolvedValueOnce({ id: 1 });
+
+    await upsertJob(jobData, "https://example.com", 999);
+
+    expect(mockDb.job_platforms.findUnique).toHaveBeenCalled();
+
+    expect(mockDb.jobs.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        job_poster: null,
+      }),
+    });
+  });
+
+  it("should use platform name in update operation when job_poster is null", async () => {
+    const jobData = {
+      title: "Software Engineer",
+      job_description: null,
+      company_description: null,
+      job_poster: null,
+      date_posted: null,
+      location: null,
+      remote: null,
+      experience_level: null,
+      job_type: null,
+      salary_min: null,
+      salary_max: null,
+      salary_currency: null,
+      salary_period: null,
+      skills: null,
+    };
+
+    mockDb.jobs.findFirst.mockResolvedValueOnce({
+      id: 1,
+      scrape_count: 1,
+    });
+    mockDb.job_platforms.findUnique.mockResolvedValueOnce({
+      name: "Glassdoor",
+    });
+
+    await upsertJob(jobData, "https://example.com", 3);
+
+    expect(mockDb.job_platforms.findUnique).toHaveBeenCalledWith({
+      where: { id: 3 },
+      select: { name: true },
+    });
+
+    expect(mockDb.jobs.update).toHaveBeenCalledWith({
+      where: { id: 1 },
+      data: expect.objectContaining({
+        job_poster: "Glassdoor",
       }),
     });
   });

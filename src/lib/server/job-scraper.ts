@@ -466,6 +466,24 @@ export async function upsertJob(
 
   const currentDate = new Date();
 
+  // Use platform name as fallback if job_poster is null/empty
+  let effectiveJobPoster = jobData.job_poster;
+
+  if (
+    (!jobData.job_poster || jobData.job_poster.trim() === "") &&
+    platformId !== null
+  ) {
+    const platform = await db.job_platforms.findUnique({
+      where: { id: platformId },
+      select: { name: true },
+    });
+
+    if (platform) {
+      effectiveJobPoster = platform.name;
+      console.log(`Using platform name as job_poster: ${platform.name}`);
+    }
+  }
+
   // Convert single values to arrays for multi-select JSON fields
   // Remove the single-value fields and use multi-select fields instead
   const {
@@ -474,6 +492,7 @@ export async function upsertJob(
     experience_level,
     skills,
     strippedHtml,
+    job_poster: _,
     ...baseJobData
   } = jobData;
 
@@ -501,6 +520,7 @@ export async function upsertJob(
       data: {
         ...baseJobData,
         ...multiSelectData,
+        job_poster: effectiveJobPoster,
         skills,
         source_html_stripped: strippedHtml,
         status: "hiring",
@@ -518,6 +538,7 @@ export async function upsertJob(
       data: {
         ...baseJobData,
         ...multiSelectData,
+        job_poster: effectiveJobPoster,
         skills,
         source_html_stripped: strippedHtml,
         source_url: normalizedUrl, // Use normalized URL
