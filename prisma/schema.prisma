@@ -1025,7 +1025,6 @@ model jobs {
   title                String?         @db.VarChar(255)
   job_description      String?
   job_poster           String?         @db.VarChar(255)
-  import_source        String?         @db.VarChar(255)
   company_description  String?
   date_posted          DateTime?       @db.Date
   salary_min           Int?

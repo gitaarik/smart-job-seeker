@@ -51,7 +51,6 @@ export type JobsMinAggregateOutputType = {
   title: string | null
   job_description: string | null
   job_poster: string | null
-  import_source: string | null
   company_description: string | null
   date_posted: Date | null
   salary_min: number | null
@@ -75,7 +74,6 @@ export type JobsMaxAggregateOutputType = {
   title: string | null
   job_description: string | null
   job_poster: string | null
-  import_source: string | null
   company_description: string | null
   date_posted: Date | null
   salary_min: number | null
@@ -99,7 +97,6 @@ export type JobsCountAggregateOutputType = {
   title: number
   job_description: number
   job_poster: number
-  import_source: number
   company_description: number
   date_posted: number
   salary_min: number
@@ -145,7 +142,6 @@ export type JobsMinAggregateInputType = {
   title?: true
   job_description?: true
   job_poster?: true
-  import_source?: true
   company_description?: true
   date_posted?: true
   salary_min?: true
@@ -169,7 +165,6 @@ export type JobsMaxAggregateInputType = {
   title?: true
   job_description?: true
   job_poster?: true
-  import_source?: true
   company_description?: true
   date_posted?: true
   salary_min?: true
@@ -193,7 +188,6 @@ export type JobsCountAggregateInputType = {
   title?: true
   job_description?: true
   job_poster?: true
-  import_source?: true
   company_description?: true
   date_posted?: true
   salary_min?: true
@@ -308,7 +302,6 @@ export type JobsGroupByOutputType = {
   title: string | null
   job_description: string | null
   job_poster: string | null
-  import_source: string | null
   company_description: string | null
   date_posted: Date | null
   salary_min: number | null
@@ -359,7 +352,6 @@ export type jobsWhereInput = {
   title?: Prisma.StringNullableFilter<"jobs"> | string | null
   job_description?: Prisma.StringNullableFilter<"jobs"> | string | null
   job_poster?: Prisma.StringNullableFilter<"jobs"> | string | null
-  import_source?: Prisma.StringNullableFilter<"jobs"> | string | null
   company_description?: Prisma.StringNullableFilter<"jobs"> | string | null
   date_posted?: Prisma.DateTimeNullableFilter<"jobs"> | Date | string | null
   salary_min?: Prisma.IntNullableFilter<"jobs"> | number | null
@@ -391,7 +383,6 @@ export type jobsOrderByWithRelationInput = {
   title?: Prisma.SortOrderInput | Prisma.SortOrder
   job_description?: Prisma.SortOrderInput | Prisma.SortOrder
   job_poster?: Prisma.SortOrderInput | Prisma.SortOrder
-  import_source?: Prisma.SortOrderInput | Prisma.SortOrder
   company_description?: Prisma.SortOrderInput | Prisma.SortOrder
   date_posted?: Prisma.SortOrderInput | Prisma.SortOrder
   salary_min?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -426,7 +417,6 @@ export type jobsWhereUniqueInput = Prisma.AtLeast<{
   title?: Prisma.StringNullableFilter<"jobs"> | string | null
   job_description?: Prisma.StringNullableFilter<"jobs"> | string | null
   job_poster?: Prisma.StringNullableFilter<"jobs"> | string | null
-  import_source?: Prisma.StringNullableFilter<"jobs"> | string | null
   company_description?: Prisma.StringNullableFilter<"jobs"> | string | null
   date_posted?: Prisma.DateTimeNullableFilter<"jobs"> | Date | string | null
   salary_min?: Prisma.IntNullableFilter<"jobs"> | number | null
@@ -458,7 +448,6 @@ export type jobsOrderByWithAggregationInput = {
   title?: Prisma.SortOrderInput | Prisma.SortOrder
   job_description?: Prisma.SortOrderInput | Prisma.SortOrder
   job_poster?: Prisma.SortOrderInput | Prisma.SortOrder
-  import_source?: Prisma.SortOrderInput | Prisma.SortOrder
   company_description?: Prisma.SortOrderInput | Prisma.SortOrder
   date_posted?: Prisma.SortOrderInput | Prisma.SortOrder
   salary_min?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -494,7 +483,6 @@ export type jobsScalarWhereWithAggregatesInput = {
   title?: Prisma.StringNullableWithAggregatesFilter<"jobs"> | string | null
   job_description?: Prisma.StringNullableWithAggregatesFilter<"jobs"> | string | null
   job_poster?: Prisma.StringNullableWithAggregatesFilter<"jobs"> | string | null
-  import_source?: Prisma.StringNullableWithAggregatesFilter<"jobs"> | string | null
   company_description?: Prisma.StringNullableWithAggregatesFilter<"jobs"> | string | null
   date_posted?: Prisma.DateTimeNullableWithAggregatesFilter<"jobs"> | Date | string | null
   salary_min?: Prisma.IntNullableWithAggregatesFilter<"jobs"> | number | null
@@ -521,7 +509,6 @@ export type jobsCreateInput = {
   title?: string | null
   job_description?: string | null
   job_poster?: string | null
-  import_source?: string | null
   company_description?: string | null
   date_posted?: Date | string | null
   salary_min?: number | null
@@ -552,7 +539,6 @@ export type jobsUncheckedCreateInput = {
   title?: string | null
   job_description?: string | null
   job_poster?: string | null
-  import_source?: string | null
   company_description?: string | null
   date_posted?: Date | string | null
   salary_min?: number | null
@@ -582,7 +568,6 @@ export type jobsUpdateInput = {
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_poster?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  import_source?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   company_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_posted?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   salary_min?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -613,7 +598,6 @@ export type jobsUncheckedUpdateInput = {
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_poster?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  import_source?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   company_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_posted?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   salary_min?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -644,7 +628,6 @@ export type jobsCreateManyInput = {
   title?: string | null
   job_description?: string | null
   job_poster?: string | null
-  import_source?: string | null
   company_description?: string | null
   date_posted?: Date | string | null
   salary_min?: number | null
@@ -671,7 +654,6 @@ export type jobsUpdateManyMutationInput = {
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_poster?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  import_source?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   company_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_posted?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   salary_min?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -698,7 +680,6 @@ export type jobsUncheckedUpdateManyInput = {
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_poster?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  import_source?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   company_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_posted?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   salary_min?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -736,7 +717,6 @@ export type jobsCountOrderByAggregateInput = {
   title?: Prisma.SortOrder
   job_description?: Prisma.SortOrder
   job_poster?: Prisma.SortOrder
-  import_source?: Prisma.SortOrder
   company_description?: Prisma.SortOrder
   date_posted?: Prisma.SortOrder
   salary_min?: Prisma.SortOrder
@@ -772,7 +752,6 @@ export type jobsMaxOrderByAggregateInput = {
   title?: Prisma.SortOrder
   job_description?: Prisma.SortOrder
   job_poster?: Prisma.SortOrder
-  import_source?: Prisma.SortOrder
   company_description?: Prisma.SortOrder
   date_posted?: Prisma.SortOrder
   salary_min?: Prisma.SortOrder
@@ -796,7 +775,6 @@ export type jobsMinOrderByAggregateInput = {
   title?: Prisma.SortOrder
   job_description?: Prisma.SortOrder
   job_poster?: Prisma.SortOrder
-  import_source?: Prisma.SortOrder
   company_description?: Prisma.SortOrder
   date_posted?: Prisma.SortOrder
   salary_min?: Prisma.SortOrder
@@ -923,7 +901,6 @@ export type jobsCreateWithoutApplicationsInput = {
   title?: string | null
   job_description?: string | null
   job_poster?: string | null
-  import_source?: string | null
   company_description?: string | null
   date_posted?: Date | string | null
   salary_min?: number | null
@@ -953,7 +930,6 @@ export type jobsUncheckedCreateWithoutApplicationsInput = {
   title?: string | null
   job_description?: string | null
   job_poster?: string | null
-  import_source?: string | null
   company_description?: string | null
   date_posted?: Date | string | null
   salary_min?: number | null
@@ -998,7 +974,6 @@ export type jobsUpdateWithoutApplicationsInput = {
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_poster?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  import_source?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   company_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_posted?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   salary_min?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1028,7 +1003,6 @@ export type jobsUncheckedUpdateWithoutApplicationsInput = {
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_poster?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  import_source?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   company_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_posted?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   salary_min?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1057,7 +1031,6 @@ export type jobsCreateWithoutJob_resourcesInput = {
   title?: string | null
   job_description?: string | null
   job_poster?: string | null
-  import_source?: string | null
   company_description?: string | null
   date_posted?: Date | string | null
   salary_min?: number | null
@@ -1087,7 +1060,6 @@ export type jobsUncheckedCreateWithoutJob_resourcesInput = {
   title?: string | null
   job_description?: string | null
   job_poster?: string | null
-  import_source?: string | null
   company_description?: string | null
   date_posted?: Date | string | null
   salary_min?: number | null
@@ -1132,7 +1104,6 @@ export type jobsUpdateWithoutJob_resourcesInput = {
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_poster?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  import_source?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   company_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_posted?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   salary_min?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1162,7 +1133,6 @@ export type jobsUncheckedUpdateWithoutJob_resourcesInput = {
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_poster?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  import_source?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   company_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_posted?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   salary_min?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1191,7 +1161,6 @@ export type jobsCreateWithoutJob_matchesInput = {
   title?: string | null
   job_description?: string | null
   job_poster?: string | null
-  import_source?: string | null
   company_description?: string | null
   date_posted?: Date | string | null
   salary_min?: number | null
@@ -1221,7 +1190,6 @@ export type jobsUncheckedCreateWithoutJob_matchesInput = {
   title?: string | null
   job_description?: string | null
   job_poster?: string | null
-  import_source?: string | null
   company_description?: string | null
   date_posted?: Date | string | null
   salary_min?: number | null
@@ -1266,7 +1234,6 @@ export type jobsUpdateWithoutJob_matchesInput = {
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_poster?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  import_source?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   company_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_posted?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   salary_min?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1296,7 +1263,6 @@ export type jobsUncheckedUpdateWithoutJob_matchesInput = {
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_poster?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  import_source?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   company_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_posted?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   salary_min?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1325,7 +1291,6 @@ export type jobsCreateWithoutJob_platformsInput = {
   title?: string | null
   job_description?: string | null
   job_poster?: string | null
-  import_source?: string | null
   company_description?: string | null
   date_posted?: Date | string | null
   salary_min?: number | null
@@ -1355,7 +1320,6 @@ export type jobsUncheckedCreateWithoutJob_platformsInput = {
   title?: string | null
   job_description?: string | null
   job_poster?: string | null
-  import_source?: string | null
   company_description?: string | null
   date_posted?: Date | string | null
   salary_min?: number | null
@@ -1414,7 +1378,6 @@ export type jobsScalarWhereInput = {
   title?: Prisma.StringNullableFilter<"jobs"> | string | null
   job_description?: Prisma.StringNullableFilter<"jobs"> | string | null
   job_poster?: Prisma.StringNullableFilter<"jobs"> | string | null
-  import_source?: Prisma.StringNullableFilter<"jobs"> | string | null
   company_description?: Prisma.StringNullableFilter<"jobs"> | string | null
   date_posted?: Prisma.DateTimeNullableFilter<"jobs"> | Date | string | null
   salary_min?: Prisma.IntNullableFilter<"jobs"> | number | null
@@ -1442,7 +1405,6 @@ export type jobsCreateManyJob_platformsInput = {
   title?: string | null
   job_description?: string | null
   job_poster?: string | null
-  import_source?: string | null
   company_description?: string | null
   date_posted?: Date | string | null
   salary_min?: number | null
@@ -1468,7 +1430,6 @@ export type jobsUpdateWithoutJob_platformsInput = {
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_poster?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  import_source?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   company_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_posted?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   salary_min?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1498,7 +1459,6 @@ export type jobsUncheckedUpdateWithoutJob_platformsInput = {
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_poster?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  import_source?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   company_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_posted?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   salary_min?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1528,7 +1488,6 @@ export type jobsUncheckedUpdateManyWithoutJob_platformsInput = {
   title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_poster?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  import_source?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   company_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_posted?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   salary_min?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1604,7 +1563,6 @@ export type jobsSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   title?: boolean
   job_description?: boolean
   job_poster?: boolean
-  import_source?: boolean
   company_description?: boolean
   date_posted?: boolean
   salary_min?: boolean
@@ -1637,7 +1595,6 @@ export type jobsSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   title?: boolean
   job_description?: boolean
   job_poster?: boolean
-  import_source?: boolean
   company_description?: boolean
   date_posted?: boolean
   salary_min?: boolean
@@ -1666,7 +1623,6 @@ export type jobsSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   title?: boolean
   job_description?: boolean
   job_poster?: boolean
-  import_source?: boolean
   company_description?: boolean
   date_posted?: boolean
   salary_min?: boolean
@@ -1695,7 +1651,6 @@ export type jobsSelectScalar = {
   title?: boolean
   job_description?: boolean
   job_poster?: boolean
-  import_source?: boolean
   company_description?: boolean
   date_posted?: boolean
   salary_min?: boolean
@@ -1714,7 +1669,7 @@ export type jobsSelectScalar = {
   job_platform?: boolean
 }
 
-export type jobsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "date_created" | "date_updated" | "source_url" | "title" | "job_description" | "job_poster" | "import_source" | "company_description" | "date_posted" | "salary_min" | "salary_max" | "salary_currency" | "salary_period" | "import_error" | "last_scraped" | "location" | "scrape_count" | "job_types" | "experience_levels" | "remote_options" | "skills" | "source_html_stripped" | "job_platform", ExtArgs["result"]["jobs"]>
+export type jobsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "date_created" | "date_updated" | "source_url" | "title" | "job_description" | "job_poster" | "company_description" | "date_posted" | "salary_min" | "salary_max" | "salary_currency" | "salary_period" | "import_error" | "last_scraped" | "location" | "scrape_count" | "job_types" | "experience_levels" | "remote_options" | "skills" | "source_html_stripped" | "job_platform", ExtArgs["result"]["jobs"]>
 export type jobsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   applications?: boolean | Prisma.jobs$applicationsArgs<ExtArgs>
   job_matches?: boolean | Prisma.jobs$job_matchesArgs<ExtArgs>
@@ -1746,7 +1701,6 @@ export type $jobsPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     title: string | null
     job_description: string | null
     job_poster: string | null
-    import_source: string | null
     company_description: string | null
     date_posted: Date | null
     salary_min: number | null
@@ -2198,7 +2152,6 @@ export interface jobsFieldRefs {
   readonly title: Prisma.FieldRef<"jobs", 'String'>
   readonly job_description: Prisma.FieldRef<"jobs", 'String'>
   readonly job_poster: Prisma.FieldRef<"jobs", 'String'>
-  readonly import_source: Prisma.FieldRef<"jobs", 'String'>
   readonly company_description: Prisma.FieldRef<"jobs", 'String'>
   readonly date_posted: Prisma.FieldRef<"jobs", 'DateTime'>
   readonly salary_min: Prisma.FieldRef<"jobs", 'Int'>

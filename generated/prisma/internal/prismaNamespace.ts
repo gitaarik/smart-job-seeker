@@ -6485,7 +6485,6 @@ export const JobsScalarFieldEnum = {
   title: 'title',
   job_description: 'job_description',
   job_poster: 'job_poster',
-  import_source: 'import_source',
   company_description: 'company_description',
   date_posted: 'date_posted',
   salary_min: 'salary_min',
