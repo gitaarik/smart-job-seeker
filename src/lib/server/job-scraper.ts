@@ -486,6 +486,10 @@ export async function upsertJob(
     }
   }
 
+  // Default status to "hiring" if not explicitly set
+  // Assumption: if a job is posted and not explicitly closed, it's hiring
+  const effectiveStatus = jobData.status || "hiring";
+
   // Convert single values to arrays for multi-select JSON fields
   // Remove the single-value fields and use multi-select fields instead
   const {
@@ -495,6 +499,7 @@ export async function upsertJob(
     skills,
     strippedHtml,
     job_poster: _,
+    status: __,
     ...baseJobData
   } = jobData;
 
@@ -512,7 +517,7 @@ export async function upsertJob(
       } -> ${(existing.scrape_count || 0) + 1})`,
     );
     console.log("Update data:", {
-      status: jobData.status,
+      status: effectiveStatus,
       job_poster: effectiveJobPoster,
       remote_options: multiSelectData.remote_options,
       job_types: multiSelectData.job_types,
@@ -525,6 +530,7 @@ export async function upsertJob(
         ...baseJobData,
         ...multiSelectData,
         job_poster: effectiveJobPoster,
+        status: effectiveStatus,
         skills,
         source_html_stripped: strippedHtml,
         import_error: null,
@@ -542,6 +548,7 @@ export async function upsertJob(
         ...baseJobData,
         ...multiSelectData,
         job_poster: effectiveJobPoster,
+        status: effectiveStatus,
         skills,
         source_html_stripped: strippedHtml,
         source_url: normalizedUrl, // Use normalized URL

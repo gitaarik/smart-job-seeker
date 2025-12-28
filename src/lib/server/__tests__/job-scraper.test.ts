@@ -681,6 +681,71 @@ describe("upsertJob", () => {
       }),
     });
   });
+
+  it("should default status to 'hiring' when null", async () => {
+    const jobData = {
+      title: "Software Engineer",
+      job_description: null,
+      company_description: null,
+      job_poster: null,
+      date_posted: null,
+      location: null,
+      remote: null,
+      experience_level: null,
+      job_type: null,
+      salary_min: null,
+      salary_max: null,
+      salary_currency: null,
+      salary_period: null,
+      skills: null,
+      status: null,
+    };
+
+    mockDb.jobs.findFirst.mockResolvedValueOnce(null);
+    mockDb.jobs.create.mockResolvedValueOnce({ id: 1 });
+
+    await upsertJob(jobData, "https://example.com", null);
+
+    expect(mockDb.jobs.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        status: "hiring", // Should default to hiring when null
+      }),
+    });
+  });
+
+  it("should preserve 'closed' status when explicitly set", async () => {
+    const jobData = {
+      title: "Software Engineer",
+      job_description: null,
+      company_description: null,
+      job_poster: null,
+      date_posted: null,
+      location: null,
+      remote: null,
+      experience_level: null,
+      job_type: null,
+      salary_min: null,
+      salary_max: null,
+      salary_currency: null,
+      salary_period: null,
+      skills: null,
+      status: "closed",
+    };
+
+    mockDb.jobs.findFirst.mockResolvedValueOnce({
+      id: 1,
+      scrape_count: 1,
+    });
+
+    await upsertJob(jobData, "https://example.com", null);
+
+    expect(mockDb.jobs.update).toHaveBeenCalledWith({
+      where: { id: 1 },
+      data: expect.objectContaining({
+        status: "closed", // Should preserve explicit status
+      }),
+    });
+  });
 });
 
 describe("normalizeJobUrl", () => {
