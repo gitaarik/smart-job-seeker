@@ -32,6 +32,7 @@ interface SearchAction {
   id: number;
   name: string;
   search_url: string | null;
+  navigation_type: "url" | "click" | null;
 }
 
 // CLI Program
@@ -402,13 +403,20 @@ async function scrapeJobSite(
   }
 
   // 3. Determine navigation type and import source
-  const navigationType = siteConfig.navigationType || "url";
+  // Priority: database field > site config > default "url"
+  const navigationType = searchAction.navigation_type ||
+    siteConfig.navigationType || "url";
   const importSource = getImportSource(searchUrl);
 
+  const navigationSource = searchAction.navigation_type
+    ? "database override"
+    : siteConfig.navigationType
+    ? "site config"
+    : "default";
   console.log(
     `Using ${
       navigationType === "click" ? "click-based" : "URL-based"
-    } navigation`,
+    } navigation (${navigationSource})`,
   );
 
   // 4. Branch based on navigation type
@@ -764,6 +772,12 @@ async function scrapeJobSites(): Promise<void> {
 
     const searchActions = await dbDirect.job_searches.findMany({
       where: whereClause,
+      select: {
+        id: true,
+        name: true,
+        search_url: true,
+        navigation_type: true,
+      },
     });
 
     if (searchActions.length === 0) {
