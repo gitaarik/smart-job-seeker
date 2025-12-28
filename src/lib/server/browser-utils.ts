@@ -4,12 +4,7 @@
  */
 
 import { existsSync } from "fs";
-import {
-  type Browser,
-  type BrowserContext,
-  chromium,
-  type LaunchOptions,
-} from "playwright";
+import { type BrowserContext, chromium } from "playwright";
 
 // Chrome installation paths to check (Linux)
 const CHROME_PATHS = [
@@ -65,11 +60,14 @@ export function findChromeExecutable(): string | undefined {
 }
 
 /**
- * Get browser launch options
+ * Launch browser with persistent context (saved cookies, localStorage, etc.)
+ * This is the primary browser launch method for maintaining sessions across runs.
+ * Uses Playwright's launchPersistentContext which is equivalent to Puppeteer's userDataDir.
  */
-export function getBrowserLaunchOptions(
+export async function launchBrowser(
+  userDataDir: string,
   options: BrowserLaunchOptions = {},
-): LaunchOptions {
+): Promise<BrowserContext> {
   const executablePath = findChromeExecutable();
 
   // Base anti-detection arguments
@@ -77,83 +75,38 @@ export function getBrowserLaunchOptions(
     "--no-sandbox",
     "--disable-setuid-sandbox",
     "--disable-dev-shm-usage",
-    "--disable-blink-features=AutomationControlled", // Hide automation
+    "--disable-blink-features=AutomationControlled",
     "--disable-features=IsolateOrigins,site-per-process",
-    "--window-size=1920,1080",
+    "--disable-process-singleton-lock", // Allow multiple instances with same profile
   ];
 
   // Merge with user-provided args
   const args = [...baseArgs, ...(options.args || [])];
 
-  return {
-    executablePath,
-    headless: options.headless ?? false,
-    args,
-  };
-}
-
-/**
- * Launch browser with Playwright (built-in stealth)
- */
-export async function launchStealthBrowser(
-  options: BrowserLaunchOptions = {},
-): Promise<Browser> {
-  const launchOptions = getBrowserLaunchOptions(options);
-
   try {
-    console.log("🚀 Launching Playwright browser...");
-    const browser = await chromium.launch(launchOptions);
-    console.log("✅ Browser launched successfully");
-    return browser;
+    console.log(`🚀 Launching persistent browser context...`);
+    console.log(`📂 Profile directory: ${userDataDir}`);
+
+    const context = await chromium.launchPersistentContext(userDataDir, {
+      executablePath,
+      headless: options.headless ?? false,
+      args,
+      viewport: options.viewport !== undefined
+        ? options.viewport
+        : { width: 1920, height: 1080 },
+      userAgent:
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      locale: "en-US",
+      timezoneId: "America/New_York",
+    });
+
+    console.log("✅ Persistent context created successfully");
+    return context;
   } catch (error) {
     console.error(
-      "❌ Failed to launch browser:",
+      "❌ Failed to launch persistent context:",
       error instanceof Error ? error.message : String(error),
-    );
-    console.error("💡 Troubleshooting:");
-    console.error(
-      "   1. Ensure Chrome is installed: sudo apt install google-chrome-stable",
-    );
-    console.error(
-      "   2. Or set custom path: export CHROME_EXECUTABLE_PATH=/path/to/chrome",
     );
     throw error;
   }
-}
-
-/**
- * Create browser context with stealth configuration
- * Playwright uses contexts for isolation (like incognito windows with separate sessions)
- */
-export async function createBrowserContext(
-  browser: Browser,
-  options: {
-    userDataDir?: string;
-    viewport?: { width: number; height: number } | null;
-  } = {},
-): Promise<BrowserContext> {
-  // Check if storage state file exists before trying to load it
-  let storageState: string | undefined = undefined;
-  if (options.userDataDir) {
-    const stateFilePath = `${options.userDataDir}/state.json`;
-    if (existsSync(stateFilePath)) {
-      console.log(`📂 Loading session state from: ${stateFilePath}`);
-      storageState = stateFilePath;
-    } else {
-      console.log(
-        `📝 No existing session state found - will create new session`,
-      );
-    }
-  }
-
-  return await browser.newContext({
-    userAgent:
-      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    viewport: options.viewport !== undefined
-      ? options.viewport
-      : { width: 1920, height: 1080 },
-    locale: "en-US",
-    timezoneId: "America/New_York",
-    storageState,
-  });
 }

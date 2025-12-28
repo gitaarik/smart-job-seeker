@@ -6,10 +6,7 @@
  * User can then run the scraper with saved cookies/session
  */
 
-import {
-  createBrowserContext,
-  launchStealthBrowser,
-} from "$lib/server/browser-utils";
+import { launchBrowser } from "$lib/server/browser-utils";
 import { existsSync, mkdirSync } from "fs";
 import { join } from "path";
 
@@ -20,6 +17,8 @@ async function openBrowserForLogin(): Promise<void> {
     mkdirSync(profileDir, { recursive: true });
   }
 
+  const userDataDir = join(profileDir, "default");
+
   console.log("\n" + "=".repeat(70));
   console.log("🌐  Job Site Login Preparation");
   console.log("=".repeat(70));
@@ -29,15 +28,10 @@ async function openBrowserForLogin(): Promise<void> {
   console.log("\n📌 Press Ctrl+C when you're done logging in.");
   console.log("=".repeat(70) + "\n");
 
-  // Launch browser with same profile as scraper
-  const browser = await launchStealthBrowser({
+  // Launch browser with persistent profile (saves cookies, localStorage, etc.)
+  const context = await launchBrowser(userDataDir, {
     headless: false,
     args: ["--start-maximized"],
-  });
-
-  // Create browser context with persistent storage and no viewport (maximized)
-  const context = await createBrowserContext(browser, {
-    userDataDir: join(profileDir, "default"),
     viewport: null, // No viewport = maximized window
   });
 
@@ -45,6 +39,10 @@ async function openBrowserForLogin(): Promise<void> {
     console.log("✅ Chrome opened with persistent profile");
     console.log("👉 Navigate to job sites and log in");
     console.log("📌 Press Ctrl+C when finished\n");
+
+    // Create a new page with a helpful starting point
+    const page = await context.newPage();
+    await page.goto("about:blank");
 
     // Keep browser open until user terminates
     await new Promise(() => {}); // Never resolves, waits for SIGINT
@@ -54,8 +52,7 @@ async function openBrowserForLogin(): Promise<void> {
       error instanceof Error ? error.message : String(error),
     );
   } finally {
-    await context.close(); // Close context first
-    await browser.close();
+    await context.close();
   }
 }
 

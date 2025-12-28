@@ -6,10 +6,7 @@
 //
 // But you can just use `npm run export-resume` (package.json script)
 
-import {
-  createBrowserContext,
-  launchStealthBrowser,
-} from "$lib/server/browser-utils";
+import { launchBrowser } from "$lib/server/browser-utils";
 import path from "path";
 import fs from "fs";
 import { dbDirect } from "$lib/db";
@@ -20,11 +17,15 @@ const appPort = getEnv("SJS_APP_PORT");
 async function exportProfilesToPDF() {
   console.log("🚀 Starting profile PDF export (Resume & CV)...");
 
-  const browser = await launchStealthBrowser({
+  // Use persistent context for consistent rendering
+  const profileDir = path.join(process.cwd(), "chrome-profiles", "pdf-export");
+  if (!fs.existsSync(profileDir)) {
+    fs.mkdirSync(profileDir, { recursive: true });
+  }
+
+  const context = await launchBrowser(profileDir, {
     headless: true,
   });
-
-  const context = await createBrowserContext(browser);
 
   // Fetch the first profile with its versions
   const profile = await dbDirect.profiles.findFirst({
@@ -139,8 +140,7 @@ async function exportProfilesToPDF() {
     console.error("❌ Error exporting resume to PDF:", error);
     process.exit(1);
   } finally {
-    await context.close(); // Close context first
-    await browser.close();
+    await context.close(); // Closes browser too (persistent context)
   }
 }
 

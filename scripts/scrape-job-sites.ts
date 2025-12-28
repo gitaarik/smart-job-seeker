@@ -5,11 +5,8 @@
  * Uses Playwright to scrape job listings and LLM to extract data
  */
 
-import { type Browser, type BrowserContext, type Page } from "playwright";
-import {
-  createBrowserContext,
-  launchStealthBrowser,
-} from "$lib/server/browser-utils";
+import { type BrowserContext, type Page } from "playwright";
+import { launchBrowser } from "$lib/server/browser-utils";
 import { dbDirect } from "$lib/db";
 import {
   detectLoginPage,
@@ -765,15 +762,10 @@ async function scrapeJobSites(): Promise<void> {
     console.log(`📁 Created profile directory: ${defaultProfileDir}`);
   }
 
-  // Launch browser with persistent profile
+  // Launch browser with persistent profile (same as login script)
   console.log("Launching browser...");
-  const browser = await launchStealthBrowser({
+  const context = await launchBrowser(defaultProfileDir, {
     headless: false, // Set to true in production
-  });
-
-  // Create browser context with persistent storage
-  const context = await createBrowserContext(browser, {
-    userDataDir: defaultProfileDir,
   });
 
   const page = await context.newPage();
@@ -787,8 +779,7 @@ async function scrapeJobSites(): Promise<void> {
         process.exit(1);
       }
       await rescrapeJobById(options.jobId, context);
-      await context.close(); // Close context first
-      await browser.close();
+      await context.close(); // Closes browser too (persistent context)
       return; // Exit after single job scrape
     }
 
@@ -856,8 +847,7 @@ async function scrapeJobSites(): Promise<void> {
     );
     process.exit(1);
   } finally {
-    await context.close(); // Close context first
-    await browser.close();
+    await context.close(); // Closes browser too (persistent context)
     await clearDirectusCache();
   }
 }
