@@ -207,14 +207,14 @@ export async function markClickableElementsInContainer(
       ...clickableNodes.filter((n) => n.text !== "job-detail-button"),
     ];
 
-    // Mark elements with data-clickable-id attributes
+    // Mark elements with data-extract-clickable-id attributes
     for (let i = 0; i < sortedNodes.length; i++) {
       const { nodeId, text } = sortedNodes[i];
       try {
-        // Add data-clickable-id attribute
+        // Add data-extract-clickable-id attribute
         await client.send("DOM.setAttributeValue", {
           nodeId,
-          name: "data-clickable-id",
+          name: "data-extract-clickable-id",
           value: String(i),
         });
 
@@ -222,7 +222,7 @@ export async function markClickableElementsInContainer(
         if (text.length > 0) {
           await client.send("DOM.setAttributeValue", {
             nodeId,
-            name: "data-click-text",
+            name: "data-extract-click-text",
             value: text.substring(0, 50),
           });
         }
@@ -249,4 +249,67 @@ export async function markClickableElementsInContainer(
  */
 export async function markClickableElements(page: Page): Promise<number> {
   return markClickableElementsInContainer(page, "body");
+}
+
+/**
+ * Mark elements with semantic role attributes using CDP
+ * Similar to markClickableElementsInContainer but for semantic hints
+ * This helps the LLM identify specific job fields more accurately
+ *
+ * @param page Playwright page instance
+ * @param selectors Object mapping semantic roles to CSS selectors
+ * @returns Object with total marked count and breakdown by role
+ */
+export async function markSemanticElements(
+  page: Page,
+  selectors: Record<string, string>,
+): Promise<{ total: number; byRole: Record<string, number> }> {
+  const client = await page.context().newCDPSession(page);
+
+  try {
+    await client.send("DOM.enable");
+    const { root } = await client.send("DOM.getDocument", { depth: -1 });
+
+    const markingResults: Record<string, number> = {};
+    let totalMarked = 0;
+
+    for (const [role, selector] of Object.entries(selectors)) {
+      if (!selector) continue;
+
+      try {
+        const { nodeIds } = await client.send("DOM.querySelectorAll", {
+          nodeId: root.nodeId,
+          selector,
+        });
+
+        for (const nodeId of nodeIds) {
+          try {
+            await client.send("DOM.setAttributeValue", {
+              nodeId,
+              name: "data-extract-role",
+              value: role,
+            });
+            totalMarked++;
+          } catch (error) {
+            console.debug(`Failed to mark node with role ${role}:`, error);
+          }
+        }
+
+        markingResults[role] = nodeIds.length;
+        if (nodeIds.length > 0) {
+          console.log(`   ✓ Marked ${nodeIds.length} element(s) as '${role}'`);
+        }
+      } catch (error) {
+        console.warn(`   ⚠ Selector failed for '${role}': ${selector}`);
+        markingResults[role] = 0;
+      }
+    }
+
+    await client.detach();
+    return { total: totalMarked, byRole: markingResults };
+  } catch (error) {
+    console.error("CDP semantic marking error:", error);
+    await client.detach();
+    throw error;
+  }
 }

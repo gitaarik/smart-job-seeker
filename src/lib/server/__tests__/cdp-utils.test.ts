@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { markClickableElementsInContainer } from "../cdp-utils";
+import {
+  markClickableElementsInContainer,
+  markSemanticElements,
+} from "../cdp-utils";
 import type { Page } from "playwright";
 
 // Mock Page and CDP client
@@ -192,5 +195,201 @@ describe("markClickableElementsInContainer", () => {
     );
     expect(count).toBe(0);
     consoleWarnSpy.mockRestore();
+  });
+});
+
+describe("markSemanticElements", () => {
+  let mockPage: any;
+  let mockClient: any;
+  let mockContext: any;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    mockClient = createMockCDPClient();
+
+    const newCDPSession = vi.fn().mockResolvedValue(mockClient);
+    mockContext = { newCDPSession };
+
+    mockPage = {
+      context: vi.fn(() => mockContext),
+    };
+  });
+
+  it("should mark elements with semantic roles", async () => {
+    const consoleLogSpy = vi
+      .spyOn(console, "log")
+      .mockImplementation(() => {});
+
+    mockClient.send
+      .mockResolvedValueOnce({}) // DOM.enable
+      .mockResolvedValueOnce({ root: { nodeId: 1 } }) // DOM.getDocument
+      // First role: job-title
+      .mockResolvedValueOnce({ nodeIds: [10, 11] }) // DOM.querySelectorAll
+      .mockResolvedValueOnce({}) // setAttributeValue node 10
+      .mockResolvedValueOnce({}) // setAttributeValue node 11
+      // Second role: company-name
+      .mockResolvedValueOnce({ nodeIds: [20] }) // DOM.querySelectorAll
+      .mockResolvedValueOnce({}); // setAttributeValue node 20
+
+    const selectors = {
+      "job-title": "h1.title",
+      "company-name": ".company",
+    };
+
+    const result = await markSemanticElements(
+      mockPage as unknown as Page,
+      selectors,
+    );
+
+    expect(result.total).toBe(3);
+    expect(result.byRole["job-title"]).toBe(2);
+    expect(result.byRole["company-name"]).toBe(1);
+    expect(mockClient.detach).toHaveBeenCalled();
+
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining("Marked 2 element(s) as 'job-title'"),
+    );
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect.stringContaining("Marked 1 element(s) as 'company-name'"),
+    );
+
+    consoleLogSpy.mockRestore();
+  });
+
+  it("should handle selector failures gracefully", async () => {
+    const consoleWarnSpy = vi
+      .spyOn(console, "warn")
+      .mockImplementation(() => {});
+
+    mockClient.send
+      .mockResolvedValueOnce({}) // DOM.enable
+      .mockResolvedValueOnce({ root: { nodeId: 1 } }) // DOM.getDocument
+      .mockRejectedValueOnce(new Error("Invalid selector")); // querySelectorAll fails
+
+    const selectors = {
+      "job-title": ".invalid[selector",
+    };
+
+    const result = await markSemanticElements(
+      mockPage as unknown as Page,
+      selectors,
+    );
+
+    expect(result.total).toBe(0);
+    expect(result.byRole["job-title"]).toBe(0);
+    expect(consoleWarnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("Selector failed for 'job-title'"),
+    );
+    expect(mockClient.detach).toHaveBeenCalled();
+
+    consoleWarnSpy.mockRestore();
+  });
+
+  it("should skip empty selectors", async () => {
+    mockClient.send
+      .mockResolvedValueOnce({}) // DOM.enable
+      .mockResolvedValueOnce({ root: { nodeId: 1 } }) // DOM.getDocument
+      .mockResolvedValueOnce({ nodeIds: [10] }) // querySelectorAll for valid selector
+      .mockResolvedValueOnce({}); // setAttributeValue
+
+    const selectors = {
+      "job-title": "h1.title",
+      "company-name": "", // Empty selector
+    };
+
+    const result = await markSemanticElements(
+      mockPage as unknown as Page,
+      selectors,
+    );
+
+    expect(result.total).toBe(1);
+    expect(result.byRole["job-title"]).toBe(1);
+    expect(result.byRole["company-name"]).toBeUndefined();
+  });
+
+  it("should handle setAttribute failures gracefully", async () => {
+    const consoleDebugSpy = vi
+      .spyOn(console, "debug")
+      .mockImplementation(() => {});
+
+    mockClient.send
+      .mockResolvedValueOnce({}) // DOM.enable
+      .mockResolvedValueOnce({ root: { nodeId: 1 } }) // DOM.getDocument
+      .mockResolvedValueOnce({ nodeIds: [10, 11] }) // querySelectorAll
+      .mockResolvedValueOnce({}) // setAttributeValue node 10 (success)
+      .mockRejectedValueOnce(new Error("Node removed")); // setAttributeValue node 11 (failure)
+
+    const selectors = {
+      "job-title": "h1.title",
+    };
+
+    const result = await markSemanticElements(
+      mockPage as unknown as Page,
+      selectors,
+    );
+
+    // Should still count successful markings
+    expect(result.total).toBe(1);
+    expect(result.byRole["job-title"]).toBe(2); // nodeIds count, not successful marks
+    expect(consoleDebugSpy).toHaveBeenCalled();
+
+    consoleDebugSpy.mockRestore();
+  });
+
+  it("should handle CDP errors and detach client", async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    mockClient.send
+      .mockResolvedValueOnce({}) // DOM.enable
+      .mockRejectedValueOnce(new Error("CDP connection error")); // getDocument fails
+
+    const selectors = {
+      "job-title": "h1.title",
+    };
+
+    await expect(
+      markSemanticElements(mockPage as unknown as Page, selectors),
+    ).rejects.toThrow("CDP connection error");
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "CDP semantic marking error:",
+      expect.any(Error),
+    );
+    expect(mockClient.detach).toHaveBeenCalled();
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  it("should not log when no elements are marked for a role", async () => {
+    const consoleLogSpy = vi
+      .spyOn(console, "log")
+      .mockImplementation(() => {});
+
+    mockClient.send
+      .mockResolvedValueOnce({}) // DOM.enable
+      .mockResolvedValueOnce({ root: { nodeId: 1 } }) // DOM.getDocument
+      .mockResolvedValueOnce({ nodeIds: [] }); // querySelectorAll returns no elements
+
+    const selectors = {
+      "job-title": "h1.title",
+    };
+
+    const result = await markSemanticElements(
+      mockPage as unknown as Page,
+      selectors,
+    );
+
+    expect(result.total).toBe(0);
+    expect(result.byRole["job-title"]).toBe(0);
+
+    // Should not log when no elements found
+    expect(consoleLogSpy).not.toHaveBeenCalledWith(
+      expect.stringContaining("Marked"),
+    );
+
+    consoleLogSpy.mockRestore();
   });
 });

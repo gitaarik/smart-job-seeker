@@ -279,4 +279,37 @@ describe("stripHtmlForLlm", () => {
     expect(result).not.toContain("<header");
     expect(result).not.toContain("<nav");
   });
+
+  it("should preserve data-extract-* attributes", () => {
+    const html = `
+      <html>
+        <body>
+          <div data-extract-role="job-title" class="title">Senior Engineer</div>
+          <div data-extract-role="company-name" id="company">Acme Corp</div>
+          <div data-extract-clickable-id="1" data-extract-click-text="job-detail-button">View Details</div>
+          <div data-other-attribute="value" class="other">Some content</div>
+        </body>
+      </html>
+    `;
+
+    const result = stripHtmlForLlm(html);
+
+    // data-extract-* attributes should be preserved
+    expect(result).toContain('data-extract-role="job-title"');
+    expect(result).toContain('data-extract-role="company-name"');
+    expect(result).toContain('data-extract-clickable-id="1"');
+    expect(result).toContain('data-extract-click-text="job-detail-button"');
+
+    // Other attributes should be removed
+    expect(result).not.toContain("data-other-attribute");
+    expect(result).not.toContain('class="title"');
+    expect(result).not.toContain('id="company"');
+    expect(result).not.toContain('class="other"');
+
+    // Content should be preserved
+    expect(result).toContain("Senior Engineer");
+    expect(result).toContain("Acme Corp");
+    expect(result).toContain("View Details");
+    expect(result).toContain("Some content");
+  });
 });

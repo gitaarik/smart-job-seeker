@@ -300,7 +300,7 @@ async function scrapeJobsWithClicks(
 
   // Check if we have job-detail-button markers (high-confidence job buttons)
   const jobDetailButtonMatches = markedHtml.matchAll(
-    /data-clickable-id="(\d+)" data-click-text="job-detail-button"/g,
+    /data-extract-clickable-id="(\d+)" data-extract-click-text="job-detail-button"/g,
   );
   const jobDetailButtonIds = Array.from(jobDetailButtonMatches).map((match) =>
     parseInt(match[1])
@@ -353,7 +353,7 @@ async function scrapeJobsWithClicks(
       console.log(
         `   [${
           i + 1
-        }/${clickableIds.length}] Clicking data-clickable-id="${id}"...`,
+        }/${clickableIds.length}] Clicking data-extract-clickable-id="${id}"...`,
       );
 
       // Close any open modals first (SPAs often have close buttons or backdrop clicks)
@@ -370,7 +370,7 @@ async function scrapeJobsWithClicks(
         document.body.innerText.length
       );
 
-      await page.locator(`[data-clickable-id="${id}"]`).click();
+      await page.locator(`[data-extract-clickable-id="${id}"]`).click();
 
       // Wait for SPA to update - look for common modal/dialog/panel containers
       // This is a generic approach that works across different SPA frameworks
@@ -448,6 +448,17 @@ async function scrapeJobsWithClicks(
             break;
           }
         }
+      }
+
+      // Mark semantic elements in modal if configured
+      if (modalContent && siteConfig.semanticSelectors?.modal) {
+        console.log("      🏷️  Marking semantic elements in modal...");
+        const { markSemanticElements } = await import("$lib/server/cdp-utils");
+        const markResult = await markSemanticElements(
+          page,
+          siteConfig.semanticSelectors.modal,
+        );
+        console.log(`      Marked ${markResult.total} elements`);
       }
 
       // If we found modal content, use it; otherwise fall back to full page
@@ -668,6 +679,21 @@ async function scrapeJobSite(
               console.warn(
                 "⚠️  Job description not found - content may be incomplete",
               )
+            );
+          }
+
+          // Mark semantic elements if configured
+          if (siteConfig.semanticSelectors?.jobPage) {
+            console.log("🏷️  Marking semantic elements...");
+            const { markSemanticElements } = await import(
+              "$lib/server/cdp-utils"
+            );
+            const markResult = await markSemanticElements(
+              page,
+              siteConfig.semanticSelectors.jobPage,
+            );
+            console.log(
+              `   Marked ${markResult.total} elements with semantic roles`,
             );
           }
 
