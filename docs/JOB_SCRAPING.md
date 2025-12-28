@@ -8,12 +8,14 @@ extract job listings from various platforms and store them in the database.
 The job scraping system supports two distinct approaches:
 
 1. **URL-based scraping** - Traditional sites where each job has a unique URL
-2. **SPA scraping** - Single Page Applications where jobs appear in modals/drawers
+2. **SPA scraping** - Single Page Applications where jobs appear in
+   modals/drawers
 
 The system consists of five main components:
 
 1. **HTML Extraction** - Extract links from search result pages (URL-based)
-2. **CDP Detection** - Detect clickable job elements via Chrome DevTools Protocol (SPA)
+2. **CDP Detection** - Detect clickable job elements via Chrome DevTools
+   Protocol (SPA)
 3. **HTML Stripping** - Clean HTML for efficient LLM processing
 4. **LLM Integration** - AI-powered data extraction with structured output
 5. **Job Scraping** - Orchestrate the scraping workflow with pre-configured URLs
@@ -253,14 +255,31 @@ Detects and marks all clickable elements with event listeners in a container.
 ```typescript
 // Excluded patterns
 const excludePatterns = [
-  "menu", "nav", "header", "footer", "pagination",
-  "filter", "sort", "dropdown", "close", "modal", "dialog", "popup"
+  "menu",
+  "nav",
+  "header",
+  "footer",
+  "pagination",
+  "filter",
+  "sort",
+  "dropdown",
+  "close",
+  "modal",
+  "dialog",
+  "popup",
 ];
 
 // Excluded button texts
 const excludeButtonTexts = [
-  "apply", "apply now", "quick apply", "easy apply",
-  "save", "share", "bookmark", "refer", "earn"
+  "apply",
+  "apply now",
+  "quick apply",
+  "easy apply",
+  "save",
+  "share",
+  "bookmark",
+  "refer",
+  "earn",
 ];
 
 // Job-detail button detection
@@ -331,7 +350,9 @@ for (const id of jobDetailButtonIds) {
 
   // Detect modal using common selectors
   const modal = await findModal(page, [
-    '[role="dialog"]', '.ant-modal', '.MuiDialog-root'
+    '[role="dialog"]',
+    ".ant-modal",
+    ".MuiDialog-root",
   ]);
 
   // Extract modal content
@@ -344,11 +365,13 @@ for (const id of jobDetailButtonIds) {
 **Key Features:**
 
 - **Dual-mode support** - Automatic detection of URL vs SPA navigation
-- **Adaptive wait strategies** - "load" for SPAs, "networkidle" for traditional sites
+- **Adaptive wait strategies** - "load" for SPAs, "networkidle" for traditional
+  sites
 - **CDP-based detection** - Finds clickable job elements without selectors
 - **Generic modal detection** - Works across different UI frameworks
 - **Navigation drawer filtering** - Skips user menus and settings
-- **PseudoURL support** - Unique identifiers for modal-based jobs (#job-1, #job-2)
+- **PseudoURL support** - Unique identifiers for modal-based jobs (#job-1,
+  #job-2)
 - **Platform detection** - Automatically detects platform from URL hostname
 - **Persistent browser** - Uses Chrome profile for handling authentication
 - **Rate limiting** - Delays between job requests
@@ -367,7 +390,7 @@ The `jobs` collection stores scraped job listings:
 - `company_description` - About the company
 - `source_url` - Original job posting URL (unique)
 - `import_source` - Platform name (LinkedIn, Indeed, etc.)
-- `import_status` - Scraping status (draft, published, error)
+- `status` - Job status (draft, hiring, archived, etc.)
 - `last_scraped` - Last scrape timestamp
 - `scrape_count` - Number of times scraped
 - `date_posted` - When job was posted
@@ -477,7 +500,8 @@ Navigate to the `job_searches` collection and create a new record:
 - LinkedIn:
   `https://www.linkedin.com/jobs/search/?keywords=TypeScript%20Developer&location=Amsterdam&f_JT=F`
 - Indeed: `https://www.indeed.com/jobs?q=Python+Developer&l=Remote&remotejob=1`
-- Glassdoor: `https://www.glassdoor.com/Job/jobs.htm?sc.keyword=Software+Engineer`
+- Glassdoor:
+  `https://www.glassdoor.com/Job/jobs.htm?sc.keyword=Software+Engineer`
 
 **Click-based Sites (SPAs):**
 
@@ -699,8 +723,8 @@ Review and comply with:
 Error: page.goto: Timeout 30000ms exceeded
 ```
 
-**Solution**: SPAs have continuous background activity. The scraper automatically
-uses `"load"` wait strategy for click-based navigation.
+**Solution**: SPAs have continuous background activity. The scraper
+automatically uses `"load"` wait strategy for click-based navigation.
 
 **No clickable elements found**
 
@@ -709,6 +733,7 @@ uses `"load"` wait strategy for click-based navigation.
 ```
 
 **Possible causes:**
+
 1. Page hasn't fully loaded - increase timeout
 2. Job buttons use different class names - check CDP filtering
 3. Elements are in shadow DOM - not currently supported
@@ -730,6 +755,7 @@ aren't detected, check they have classes like: `job-description`, `job-detail`,
 ```
 
 **Possible causes:**
+
 1. Modal uses non-standard selectors - add to `modalSelectors` array
 2. Modal takes time to load - increase wait timeout
 3. Modal is actually a route change - use `navigation_type: "url"` instead
@@ -738,8 +764,8 @@ aren't detected, check they have classes like: `job-description`, `job-detail`,
 
 **Cause**: PseudoURLs weren't being preserved due to hash fragment stripping.
 
-**Solution**: Already fixed in `normalizeJobUrl()` - pseudoURLs like
-`#job-1`, `#job-2` are now preserved.
+**Solution**: Already fixed in `normalizeJobUrl()` - pseudoURLs like `#job-1`,
+`#job-2` are now preserved.
 
 **Only capturing 5/10 jobs**
 

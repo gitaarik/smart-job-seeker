@@ -1033,7 +1033,6 @@ model jobs {
   salary_currency      String?         @db.VarChar(255)
   salary_period        String?         @db.VarChar(255)
   import_error         String?
-  import_status        String?         @db.VarChar(255)
   last_scraped         DateTime?       @db.Timestamptz(6)
   location             String?         @db.VarChar(255)
   scrape_count         Int?            @default(0)

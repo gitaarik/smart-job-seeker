@@ -6493,7 +6493,6 @@ export const JobsScalarFieldEnum = {
   salary_currency: 'salary_currency',
   salary_period: 'salary_period',
   import_error: 'import_error',
-  import_status: 'import_status',
   last_scraped: 'last_scraped',
   location: 'location',
   scrape_count: 'scrape_count',

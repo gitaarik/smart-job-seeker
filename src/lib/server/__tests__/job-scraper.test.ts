@@ -331,8 +331,7 @@ describe("upsertJob", () => {
         experience_levels: [jobData.experience_level],
         source_url: sourceUrl,
         import_source: importSource,
-        import_status: "published",
-        status: "published",
+        status: "hiring",
         scrape_count: 1,
       }),
     });
@@ -384,7 +383,7 @@ describe("upsertJob", () => {
         remote_options: [jobData.remote],
         job_types: [jobData.job_type],
         experience_levels: [jobData.experience_level],
-        import_status: "published",
+        status: "hiring",
         import_error: null,
         scrape_count: 3,
       }),

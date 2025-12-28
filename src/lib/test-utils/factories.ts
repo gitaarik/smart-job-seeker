@@ -161,7 +161,7 @@ export function createMockJobVacancy(
 ): any {
   return {
     id: 1,
-    status: "published",
+    status: "hiring",
     title: "Senior Developer",
     company: "Tech Corp",
     location: "Amsterdam",

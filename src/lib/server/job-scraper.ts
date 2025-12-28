@@ -503,7 +503,7 @@ export async function upsertJob(
         ...multiSelectData,
         skills,
         source_html_stripped: strippedHtml,
-        import_status: "published",
+        status: "hiring",
         import_error: null,
         last_scraped: currentDate,
         scrape_count: (existing.scrape_count || 0) + 1,
@@ -522,8 +522,7 @@ export async function upsertJob(
         source_html_stripped: strippedHtml,
         source_url: normalizedUrl, // Use normalized URL
         import_source: importSource,
-        import_status: "published",
-        status: "published",
+        status: "hiring",
         last_scraped: currentDate,
         scrape_count: 1,
         date_created: currentDate,
