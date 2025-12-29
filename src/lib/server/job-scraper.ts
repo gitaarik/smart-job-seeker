@@ -336,7 +336,16 @@ export async function extractJobData(
   // 1. Strip HTML to minimal content
   const strippedHtml = stripHtmlForLlm(jobHtml);
 
-  // 2. Get prompt template
+  // 2. Check for invalid/closed job pages (Mercor-specific)
+  // These pages redirect to notification/welcome pages instead of showing job content
+  if (
+    strippedHtml.includes("Welcome to Mercor") &&
+    strippedHtml.includes("Visit the Mercor Explore Page")
+  ) {
+    throw new Error("Invalid job page - redirected to notification page");
+  }
+
+  // 3. Get prompt template
   const template = await db.ai_chat_prompts.findUnique({
     where: { request: "extract_job_data" },
   });
@@ -345,13 +354,13 @@ export async function extractJobData(
     throw new Error("Prompt template 'extract_job_data' not found");
   }
 
-  // 3. Interpolate variables
+  // 4. Interpolate variables
   const systemPrompt = template.system_prompt || "";
   const userPrompt = interpolatePrompt(template.user_prompt || "", {
     html: strippedHtml,
   });
 
-  // 4. Call LLM using generic utility with optional structured output
+  // 5. Call LLM using generic utility with optional structured output
   const responseFormat = template.format
     ? {
       type: "json_schema" as const,
@@ -371,7 +380,7 @@ export async function extractJobData(
     { temperature: 0.3, responseFormat },
   );
 
-  // 5. Parse JSON response
+  // 6. Parse JSON response
   try {
     const data = JSON.parse(response);
 
@@ -389,7 +398,7 @@ export async function extractJobData(
       status: data.status,
     });
 
-    // 6. Parse and validate date_posted
+    // 7. Parse and validate date_posted
     const parsedDate = parseRelativeDate(data.date_posted);
 
     // Validate the parsed date
@@ -405,12 +414,12 @@ export async function extractJobData(
       data.date_posted = null;
     }
 
-    // 7. Apply fallback for title if LLM extraction failed or returned empty
+    // 8. Apply fallback for title if LLM extraction failed or returned empty
     const effectiveTitle = (data.title && data.title.trim() !== "")
       ? data.title
       : (options?.fallbackTitle || data.title);
 
-    // 8. Include stripped HTML in return value
+    // 9. Include stripped HTML in return value
     return {
       ...data,
       title: effectiveTitle,
