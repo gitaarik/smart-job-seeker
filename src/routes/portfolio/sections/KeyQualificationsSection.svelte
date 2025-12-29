@@ -10,10 +10,7 @@
 
 <InfoSection title="Technical Highlights" icon={faStar}>
   <ul class="space-y-4 print:space-y-2 ml-1">
-    {#each profile.highlights as
-      highlight
-      (highlight.text)
-    }
+    {#each profile.highlights as highlight (highlight.text)}
       <li class="flex items-start">
         <FontAwesomeIcon
           icon={getFaIcon(highlight.fa_icon)}

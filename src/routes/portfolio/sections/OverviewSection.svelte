@@ -11,7 +11,7 @@
 </script>
 
 <div class="space-y-10 print:space-y-7">
-  <ProfileSection profile={profile} />
-  <SummarySection profile={profile} />
-  <KeyQualificationsSection profile={profile} />
+  <ProfileSection {profile} />
+  <SummarySection {profile} />
+  <KeyQualificationsSection {profile} />
 </div>

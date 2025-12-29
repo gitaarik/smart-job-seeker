@@ -39,7 +39,8 @@
   const metaUrl = "https://www.rikwanders.tech/";
   const metaDescription =
     "Dutch Senior Full Stack Developer residing in Spain, 12+ years Full Stack Python & Node.js experience, scaling complex, high-traffic & data heavy applications with Django & React, and leading agile development teams. Additional skills in DevOps, CI/CD & UX design. Always current with industry trends, AI, and security practices. Thrives in agile teams and/or startup environments. 5+ years remote work experience.";
-  const metaImg = "https://www.rikwanders.tech/images/profile-pic-square.png";
+  const metaImg =
+    "https://www.rikwanders.tech/images/profile-pic-square.png";
 
   let elAboutSection: HTMLElement;
   let elMoreInfo: HTMLElement;

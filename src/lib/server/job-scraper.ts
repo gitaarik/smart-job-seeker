@@ -428,7 +428,7 @@ export async function extractJobData(
 }
 
 /**
- * Normalize URL by removing query parameters and fragments
+ * Normalize URL by removing tracking parameters but preserving job identifiers
  * This helps match jobs even when tracking params change
  * Exported for testing
  */
@@ -443,10 +443,34 @@ export function normalizeJobUrl(url: string): string {
     if (isPseudoUrl) {
       // Keep the hash for synthetic job identifiers
       return `${urlObj.origin}${urlObj.pathname}${urlObj.hash}`;
-    } else {
-      // Return just the origin + pathname (no query params or fragments)
-      return `${urlObj.origin}${urlObj.pathname}`;
     }
+
+    // Preserve important job identifier query parameters
+    // These are essential for uniquely identifying jobs on SPAs
+    const importantParams = [
+      "listingId", // Mercor
+      "jobId", // Common pattern
+      "id", // Common pattern
+      "gh_jid", // Greenhouse
+      "lever-jid", // Lever
+      "job_id", // Alternative pattern
+      "posting", // Alternative pattern
+    ];
+
+    const preservedParams = new URLSearchParams();
+
+    for (const param of importantParams) {
+      const value = urlObj.searchParams.get(param);
+      if (value) {
+        preservedParams.set(param, value);
+      }
+    }
+
+    // Build normalized URL with preserved params
+    const queryString = preservedParams.toString();
+    const base = `${urlObj.origin}${urlObj.pathname}`;
+
+    return queryString ? `${base}?${queryString}` : base;
   } catch {
     // If URL parsing fails, return as-is
     return url;

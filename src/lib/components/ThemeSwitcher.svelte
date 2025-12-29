@@ -1,9 +1,9 @@
 <script lang="ts">
   import {
+    saveToCookie,
     switchTheme,
     themeState,
     updateDOM,
-    saveToCookie,
   } from "$lib/stores/theme.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {

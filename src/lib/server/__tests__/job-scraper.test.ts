@@ -1145,10 +1145,51 @@ describe("normalizeJobUrl", () => {
     expect(normalized).toBe("https://example.com/jobs#job-123");
   });
 
-  it("should remove query parameters for normal URLs", () => {
+  it("should remove tracking params but keep job identifiers", () => {
     const url = "https://example.com/job/123?utm_source=twitter&ref=abc";
     const normalized = normalizeJobUrl(url);
     expect(normalized).toBe("https://example.com/job/123");
+  });
+
+  it("should preserve listingId parameter (Mercor pattern)", () => {
+    const url =
+      "https://work.mercor.com/explore?listingId=list_AAABmWKD-ht4QOtsw1hPkL0K";
+    const normalized = normalizeJobUrl(url);
+    expect(normalized).toBe(
+      "https://work.mercor.com/explore?listingId=list_AAABmWKD-ht4QOtsw1hPkL0K",
+    );
+  });
+
+  it("should differentiate jobs with different listingIds", () => {
+    const url1 =
+      "https://work.mercor.com/explore?listingId=list_AAABmWKD-ht4QOtsw1hPkL0K";
+    const url2 =
+      "https://work.mercor.com/explore?listingId=list_AAABmpOFrI8_o1919ypMPoR-";
+    expect(normalizeJobUrl(url1)).not.toBe(normalizeJobUrl(url2));
+  });
+
+  it("should preserve jobId parameter", () => {
+    const url = "https://example.com/jobs?jobId=12345&utm_source=feed";
+    const normalized = normalizeJobUrl(url);
+    expect(normalized).toBe("https://example.com/jobs?jobId=12345");
+  });
+
+  it("should preserve id parameter", () => {
+    const url = "https://example.com/jobs?id=abc123&ref=newsletter";
+    const normalized = normalizeJobUrl(url);
+    expect(normalized).toBe("https://example.com/jobs?id=abc123");
+  });
+
+  it("should preserve gh_jid parameter (Greenhouse)", () => {
+    const url = "https://example.com/jobs?gh_jid=4567890&source=linkedin";
+    const normalized = normalizeJobUrl(url);
+    expect(normalized).toBe("https://example.com/jobs?gh_jid=4567890");
+  });
+
+  it("should preserve multiple important params", () => {
+    const url = "https://example.com/jobs?jobId=123&posting=abc&utm_source=x";
+    const normalized = normalizeJobUrl(url);
+    expect(normalized).toBe("https://example.com/jobs?jobId=123&posting=abc");
   });
 
   it("should remove hash fragments for normal URLs", () => {
@@ -1157,13 +1198,13 @@ describe("normalizeJobUrl", () => {
     expect(normalized).toBe("https://example.com/job/123");
   });
 
-  it("should remove both query params and hash for normal URLs", () => {
+  it("should remove both tracking params and hash for normal URLs", () => {
     const url = "https://example.com/job/123?source=feed#description";
     const normalized = normalizeJobUrl(url);
     expect(normalized).toBe("https://example.com/job/123");
   });
 
-  it("should handle URLs without path", () => {
+  it("should handle URLs without important params", () => {
     const url = "https://example.com?param=value";
     const normalized = normalizeJobUrl(url);
     expect(normalized).toBe("https://example.com/");
@@ -1212,9 +1253,18 @@ describe("normalizeJobUrl", () => {
     expect(normalizeJobUrl(url1)).not.toBe(normalizeJobUrl(url2));
   });
 
-  it("should treat query params as equivalent for normal URLs", () => {
+  it("should treat tracking params as equivalent for normal URLs", () => {
     const url1 = "https://example.com/job/123?source=feed";
     const url2 = "https://example.com/job/123?utm_campaign=winter";
     expect(normalizeJobUrl(url1)).toBe(normalizeJobUrl(url2));
+  });
+
+  it("should preserve listingId but remove tracking params", () => {
+    const url =
+      "https://work.mercor.com/explore?listingId=list_123&utm_source=twitter&ref=email";
+    const normalized = normalizeJobUrl(url);
+    expect(normalized).toBe(
+      "https://work.mercor.com/explore?listingId=list_123",
+    );
   });
 });

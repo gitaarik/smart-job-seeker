@@ -2,13 +2,13 @@
   import InfoSection from "./InfoSection.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
+    faBook,
+    faBuilding,
+    faCalendarAlt,
     faExternalLinkAlt,
     faGraduationCap,
-    faBuilding,
-    faMapMarkerAlt,
-    faCalendarAlt,
-    faBook,
     faLink,
+    faMapMarkerAlt,
   } from "@fortawesome/free-solid-svg-icons";
   import { resume } from "$lib/data/resume";
 
@@ -25,7 +25,6 @@
       <div class="break-inside-avoid {index === 0 ? 'mt-12 print:mt-0' : ''}">
         <header class="mb-6 print:mb-4">
           <div class="flex items-start justify-between">
-
             <div class="flex-1">
               <h3 class="text-2xl font-semibold text-ocean mb-1">
                 {edu.institution}
@@ -66,10 +65,12 @@
                     class="mr-1 flex-shrink-0 w-3 h-3"
                   />
                   <span>
-                    {formatDateRangeVerbose(
-                      edu.start_date,
-                      edu.end_date,
-                    )}
+                    {
+                      formatDateRangeVerbose(
+                        edu.start_date,
+                        edu.end_date,
+                      )
+                    }
                   </span>
                 </li>
 

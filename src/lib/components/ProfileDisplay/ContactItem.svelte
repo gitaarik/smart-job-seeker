@@ -6,7 +6,8 @@
     type?: "link" | "email" | "phone";
   }
 
-  let { label, href = null, content = null, type = "link" }: Props = $props();
+  let { label, href = null, content = null, type = "link" }: Props =
+    $props();
 </script>
 
 <span

@@ -1,9 +1,9 @@
 <script lang="ts">
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
+    faBullseye,
     faCalendarAlt,
     faCheckCircle,
-    faBullseye,
   } from "@fortawesome/free-solid-svg-icons";
 
   interface Props {
@@ -25,14 +25,26 @@
       <span class="mx-2">›</span>
       <span class="text-teal font-medium">{project.name}</span>
     </div>
-    
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3">
+
+    <div
+      class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3"
+    >
       <h3 class="text-xl font-bold text-slate">{project.name}</h3>
       <div class="flex items-center text-sm text-teal mt-1 sm:mt-0">
         <FontAwesomeIcon icon={faCalendarAlt} class="w-3 h-3 mr-1" />
         <span>
-          {new Date(project.startDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} - 
-          {new Date(project.endDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+          {
+            new Date(project.startDate).toLocaleDateString(
+              "en-US",
+              { month: "short", year: "numeric" },
+            )
+          } -
+          {
+            new Date(project.endDate).toLocaleDateString("en-US", {
+              month: "short",
+              year: "numeric",
+            })
+          }
         </span>
       </div>
     </div>
@@ -57,7 +69,10 @@
     <!-- Outcome -->
     <div>
       <h4 class="flex items-center text-lg font-semibold text-slate mb-3">
-        <FontAwesomeIcon icon={faCheckCircle} class="w-4 h-4 mr-2 text-emerald-500" />
+        <FontAwesomeIcon
+          icon={faCheckCircle}
+          class="w-4 h-4 mr-2 text-emerald-500"
+        />
         Outcome & Impact
       </h4>
       <p class="text-slate leading-relaxed">{project.outcome}</p>

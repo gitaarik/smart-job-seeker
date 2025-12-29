@@ -35,7 +35,9 @@
               class="flex-shrink-0 mt-1 text-slate/60 group-hover:text-ocean transition-colors duration-200"
             >
               <FontAwesomeIcon
-                icon={isExpanded(categoryIndex, questionIndex) ? faChevronDown : faChevronRight}
+                icon={isExpanded(categoryIndex, questionIndex)
+                  ? faChevronDown
+                  : faChevronRight}
                 class="w-4 h-4"
               />
             </div>
@@ -46,8 +48,12 @@
           <div class="space-y-4">
             <!-- Summary Title -->
             {#if questionItem.answer.title}
-              <div class="bg-slate-100 border border-slate-200 rounded-lg p-3 mb-4">
-                <h6 class="font-bold text-slate-800 text-base">{questionItem.answer.title}</h6>
+              <div
+                class="bg-slate-100 border border-slate-200 rounded-lg p-3 mb-4"
+              >
+                <h6 class="font-bold text-slate-800 text-base">
+                  {questionItem.answer.title}
+                </h6>
               </div>
             {/if}
             <!-- Situation -->
@@ -63,8 +69,10 @@
                   <h5 class="font-semibold text-blue-800 text-sm mb-2">
                     SITUATION
                   </h5>
-                  {#if Array.isArray(questionItem.answer.situation)}
-                    <ul class="text-blue-700 text-sm leading-relaxed list-disc list-inside space-y-1">
+                  {#if                 Array.isArray(questionItem.answer.situation)}
+                    <ul
+                      class="text-blue-700 text-sm leading-relaxed list-disc list-inside space-y-1"
+                    >
                       {#each questionItem.answer.situation as item}
                         <li>{item}</li>
                       {/each}
@@ -94,7 +102,9 @@
                     TASK
                   </h5>
                   {#if Array.isArray(questionItem.answer.task)}
-                    <ul class="text-yellow-700 text-sm leading-relaxed list-disc list-inside space-y-1">
+                    <ul
+                      class="text-yellow-700 text-sm leading-relaxed list-disc list-inside space-y-1"
+                    >
                       {#each questionItem.answer.task as item}
                         <li>{item}</li>
                       {/each}
@@ -124,7 +134,9 @@
                     ACTION
                   </h5>
                   {#if Array.isArray(questionItem.answer.action)}
-                    <ul class="text-purple-700 text-sm leading-relaxed list-disc list-inside space-y-1">
+                    <ul
+                      class="text-purple-700 text-sm leading-relaxed list-disc list-inside space-y-1"
+                    >
                       {#each questionItem.answer.action as item}
                         <li>{item}</li>
                       {/each}
@@ -154,7 +166,9 @@
                     RESULT
                   </h5>
                   {#if Array.isArray(questionItem.answer.result)}
-                    <ul class="text-green-700 text-sm leading-relaxed list-disc list-inside space-y-1">
+                    <ul
+                      class="text-green-700 text-sm leading-relaxed list-disc list-inside space-y-1"
+                    >
                       {#each questionItem.answer.result as item}
                         <li>{item}</li>
                       {/each}

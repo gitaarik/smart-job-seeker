@@ -1,13 +1,13 @@
 <script lang="ts">
   import InfoSection from "./InfoSection.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { 
-    faRocket,
+  import {
+    faBrain,
     faChartBar,
-    faRobot,
-    faServer,
     faPalette,
-    faBrain
+    faRobot,
+    faRocket,
+    faServer,
   } from "@fortawesome/free-solid-svg-icons";
   import { resume } from "$lib/data/resume";
 
@@ -52,7 +52,7 @@
 
   // Convert markdown-style bold text to HTML
   function formatContent(content: string): string {
-    return content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    return content.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
   }
 </script>
 
@@ -63,9 +63,11 @@
       <div class="flex flex-wrap gap-1">
         {#each variations as variation}
           <button
-            class="flex items-center px-3 py-2 rounded-md text-sm transition-colors duration-200 {activeVariation === variation.id
+            class="
+              flex items-center px-3 py-2 rounded-md text-sm transition-colors duration-200 {activeVariation === variation.id
               ? 'bg-ocean text-white'
-              : 'text-slate hover:bg-ocean/10 hover:text-teal'}"
+              : 'text-slate hover:bg-ocean/10 hover:text-teal'}
+            "
             onclick={() => handleVariationClick(variation.id)}
           >
             <FontAwesomeIcon icon={variation.icon} class="w-3 h-3 mr-2" />
@@ -79,10 +81,20 @@
   <!-- Active Variation Content -->
   <div class="prose prose-slate max-w-none">
     <h3 class="text-xl font-semibold text-slate mb-4">
-      {resume.fiveYearVision.variations[activeVariation as keyof typeof resume.fiveYearVision.variations].title}
+      {
+        resume.fiveYearVision
+          .variations[
+            activeVariation as keyof typeof resume.fiveYearVision.variations
+          ].title
+      }
     </h3>
     <div class="text-slate leading-relaxed space-y-4">
-      {#each resume.fiveYearVision.variations[activeVariation as keyof typeof resume.fiveYearVision.variations].content.split('\n\n') as paragraph}
+      {#each         resume.fiveYearVision
+          .variations[
+            activeVariation as keyof typeof resume.fiveYearVision.variations
+          ].content.split("\n\n") as
+        paragraph
+      }
         {#if paragraph.trim()}
           <p class="mb-4">{@html formatContent(paragraph.trim())}</p>
         {/if}

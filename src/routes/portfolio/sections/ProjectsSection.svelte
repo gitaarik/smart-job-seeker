@@ -31,10 +31,10 @@
         <p class="leading-relaxed print:text-sm">{project.summary}</p>
 
         {#if project.url}
-          {@const { isGithub, displayLabel } = formatProjectUrl(
-            project.url,
-            project.url_label,
-          )}
+          {@const         { isGithub, displayLabel } = formatProjectUrl(
+          project.url,
+          project.url_label,
+        )}
           <div class="flex justify-start mt-6">
             <a
               href={project.url}

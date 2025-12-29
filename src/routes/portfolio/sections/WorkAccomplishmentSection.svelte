@@ -2,23 +2,34 @@
   import InfoSection from "./InfoSection.svelte";
   import { resume } from "$lib/data/resume";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { faTrophy, faChartLine, faRocket, faMobile, faShieldAlt } from "@fortawesome/free-solid-svg-icons";
+  import {
+    faChartLine,
+    faMobile,
+    faRocket,
+    faShieldAlt,
+    faTrophy,
+  } from "@fortawesome/free-solid-svg-icons";
 
   // Get the work accomplishment data and Chipta work experience
   const workAccomplishment = resume.workAccomplishment;
   const chiptaWork = resume.work[0];
-  
+
   // Map accomplishments to their respective icons
-  const accomplishmentsWithIcons = workAccomplishment.accomplishments.map((acc, index) => ({
+  const accomplishmentsWithIcons = workAccomplishment.accomplishments.map((
+    acc,
+    index,
+  ) => ({
     ...acc,
-    icon: [faChartLine, faMobile, faShieldAlt][index]
+    icon: [faChartLine, faMobile, faShieldAlt][index],
   }));
 </script>
 
 <InfoSection title="Most Impressive Work Accomplishment" icon={faTrophy}>
   <div class="space-y-8">
     <!-- Introduction -->
-    <div class="bg-gradient-to-r from-frost to-mist border border-ocean/20 rounded-xl p-6">
+    <div
+      class="bg-gradient-to-r from-frost to-mist border border-ocean/20 rounded-xl p-6"
+    >
       <div class="flex items-start gap-4">
         <div class="flex-shrink-0">
           <FontAwesomeIcon icon={faTrophy} class="w-8 h-8 text-amber-500" />
@@ -39,12 +50,17 @@
       <h4 class="text-lg font-semibold text-slate border-b border-cloud pb-2">
         Three Pillars of Success
       </h4>
-      
+
       {#each accomplishmentsWithIcons as accomplishment}
-        <div class="bg-white border border-cloud rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+        <div
+          class="bg-white border border-cloud rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow"
+        >
           <div class="flex items-start gap-4">
             <div class="flex-shrink-0 p-3 bg-frost rounded-lg">
-              <FontAwesomeIcon icon={accomplishment.icon} class="w-6 h-6 text-ocean" />
+              <FontAwesomeIcon
+                icon={accomplishment.icon}
+                class="w-6 h-6 text-ocean"
+              />
             </div>
             <div class="flex-1">
               <h5 class="text-lg font-semibold text-slate mb-3">
@@ -70,7 +86,9 @@
     </div>
 
     <!-- Overall Impact -->
-    <div class="bg-gradient-to-r from-teal/5 to-ocean/5 border border-teal/20 rounded-xl p-6">
+    <div
+      class="bg-gradient-to-r from-teal/5 to-ocean/5 border border-teal/20 rounded-xl p-6"
+    >
       <div class="flex items-start gap-4">
         <div class="flex-shrink-0">
           <FontAwesomeIcon icon={faRocket} class="w-6 h-6 text-teal" />
@@ -88,10 +106,14 @@
 
     <!-- Technologies Used -->
     <div class="border-t border-cloud pt-6">
-      <h4 class="text-base font-semibold text-slate mb-4">Key Technologies Used</h4>
+      <h4 class="text-base font-semibold text-slate mb-4">
+        Key Technologies Used
+      </h4>
       <div class="flex flex-wrap gap-2">
         {#each chiptaWork.technologies.slice(0, 12) as tech}
-          <span class="px-3 py-1 bg-frost text-slate text-sm rounded-full border border-ocean/20">
+          <span
+            class="px-3 py-1 bg-frost text-slate text-sm rounded-full border border-ocean/20"
+          >
             {tech}
           </span>
         {/each}
