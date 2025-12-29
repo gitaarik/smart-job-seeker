@@ -167,5 +167,26 @@ async function detectPaginationWithLLM(html: string): Promise<PaginationInfo> {
     variables: { html },
   });
 
-  return JSON.parse(result.content);
+  // Handle invalid LLM responses
+  if (!result.content || result.content === "undefined") {
+    return {
+      hasPagination: false,
+      hasInfiniteScroll: false,
+      paginationType: "none",
+    };
+  }
+
+  try {
+    return JSON.parse(result.content);
+  } catch (error) {
+    console.warn(
+      "Failed to parse LLM pagination response:",
+      result.content,
+    );
+    return {
+      hasPagination: false,
+      hasInfiniteScroll: false,
+      paginationType: "none",
+    };
+  }
 }

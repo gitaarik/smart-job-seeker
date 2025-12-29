@@ -271,6 +271,29 @@ async function scrapeJobsWithUrls(
     const html = await page.content();
     const htmlSize = (html.length / 1024).toFixed(1);
 
+    // Check for CAPTCHA before attempting extraction
+    const hasCaptchaIframe = await page.locator('iframe[src*="captcha"]')
+      .isVisible().catch(() => false);
+    const hasCaptchaText = html.toLowerCase().includes("captcha");
+
+    if (hasCaptchaIframe || hasCaptchaText) {
+      // Wait for user to solve CAPTCHA
+      const captchaSolved = await waitForCaptchaSolution(page);
+
+      if (!captchaSolved) {
+        console.log("⚠️  Skipping this search due to CAPTCHA timeout");
+        break;
+      }
+
+      // CAPTCHA solved - reload page and retry extraction
+      console.log("🔄 Reloading page after CAPTCHA solution...");
+      await page.reload({ waitUntil: "load", timeout: 30000 });
+      await page.waitForTimeout(2000);
+
+      // Retry extraction on current page
+      continue;
+    }
+
     console.log(`   Extracting job links (${htmlSize} KB)...`);
     let pageUrls = await extractJobLinks(html);
 
@@ -279,10 +302,8 @@ async function scrapeJobsWithUrls(
         // Only show diagnostics on first page
         console.log("   ⚠️  No job links found.");
 
-        // Run inline diagnostics with Playwright
+        // Check for login page
         const hasLoginForm = await page.locator('form[action*="login"]')
-          .isVisible().catch(() => false);
-        const hasCaptcha = await page.locator('iframe[src*="captcha"]')
           .isVisible().catch(() => false);
 
         if (hasLoginForm) {
@@ -290,23 +311,6 @@ async function scrapeJobsWithUrls(
           console.log(
             "   Action: Run script again and complete login when prompted",
           );
-          break;
-        } else if (hasCaptcha) {
-          // Wait for user to solve CAPTCHA
-          const captchaSolved = await waitForCaptchaSolution(page);
-
-          if (!captchaSolved) {
-            console.log("⚠️  Skipping this search due to CAPTCHA timeout");
-            break;
-          }
-
-          // CAPTCHA solved - reload page and retry extraction
-          console.log("🔄 Reloading page after CAPTCHA solution...");
-          await page.reload({ waitUntil: "load", timeout: 30000 });
-          await page.waitForTimeout(2000);
-
-          // Retry extraction on current page
-          continue;
         } else {
           console.log("   Possible reasons:");
           console.log("   - Search returned no results (legitimate)");
