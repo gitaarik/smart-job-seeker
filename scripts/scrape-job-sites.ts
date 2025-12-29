@@ -220,16 +220,23 @@ async function waitForCaptchaSolution(page: Page): Promise<boolean> {
       `⏱️  Waiting for CAPTCHA solution... (${remainingSeconds}s remaining)`,
     );
 
-    // Check if CAPTCHA iframe is gone
+    // Check if any CAPTCHA elements are still visible
     const hasCaptchaIframe = await page.locator('iframe[src*="captcha"]')
       .isVisible()
       .catch(() => false);
+    const hasRecaptcha = await page.locator(".g-recaptcha, #g-recaptcha")
+      .isVisible()
+      .catch(() => false);
+    const hasHcaptcha = await page.locator(".h-captcha, #h-captcha")
+      .isVisible()
+      .catch(() => false);
+    const hasTurnstile = await page.locator(".cf-turnstile")
+      .isVisible()
+      .catch(() => false);
 
-    // Also check if "captcha" text is still in the page
-    const html = await page.content();
-    const hasCaptchaText = html.toLowerCase().includes("captcha");
-
-    if (!hasCaptchaIframe && !hasCaptchaText) {
+    if (
+      !hasCaptchaIframe && !hasRecaptcha && !hasHcaptcha && !hasTurnstile
+    ) {
       console.log("✅ CAPTCHA solved! Continuing...\n");
       // Wait a moment for page to fully update after CAPTCHA
       await page.waitForTimeout(2000);
@@ -271,12 +278,17 @@ async function scrapeJobsWithUrls(
     const html = await page.content();
     const htmlSize = (html.length / 1024).toFixed(1);
 
-    // Check for CAPTCHA before attempting extraction
+    // Check for CAPTCHA before attempting extraction (specific patterns only)
     const hasCaptchaIframe = await page.locator('iframe[src*="captcha"]')
       .isVisible().catch(() => false);
-    const hasCaptchaText = html.toLowerCase().includes("captcha");
+    const hasRecaptcha = await page.locator(".g-recaptcha, #g-recaptcha")
+      .isVisible().catch(() => false);
+    const hasHcaptcha = await page.locator(".h-captcha, #h-captcha")
+      .isVisible().catch(() => false);
+    const hasTurnstile = await page.locator(".cf-turnstile")
+      .isVisible().catch(() => false);
 
-    if (hasCaptchaIframe || hasCaptchaText) {
+    if (hasCaptchaIframe || hasRecaptcha || hasHcaptcha || hasTurnstile) {
       // Wait for user to solve CAPTCHA
       const captchaSolved = await waitForCaptchaSolution(page);
 
