@@ -38,6 +38,13 @@ export interface AppConfig {
   scraperDebugMode: boolean;
   scraperScrollMaxIterations: number;
   scraperSaveDebugScreenshots: boolean;
+
+  // Pagination & Filtering
+  scraperMaxJobsPerSearch: number; // Hard limit on jobs per search
+  scraperMaxJobAge: number; // Max days old for jobs
+  scraperConsecutiveClosedLimit: number; // Stop after N consecutive closed jobs
+  scraperPaginationMaxPages: number; // Safety limit for pagination
+  scraperInfiniteScrollMaxScrolls: number; // Safety limit for scrolling
 }
 
 /**
@@ -93,6 +100,25 @@ function loadConfig(): AppConfig {
       "SCRAPER_SAVE_DEBUG_SCREENSHOTS",
       "false",
     ) === "true",
+
+    // Pagination & Filtering
+    scraperMaxJobsPerSearch: parseInt(
+      getEnv("SCRAPER_MAX_JOBS_PER_SEARCH", "100"),
+      10,
+    ),
+    scraperMaxJobAge: parseInt(getEnv("SCRAPER_MAX_JOB_AGE", "60"), 10),
+    scraperConsecutiveClosedLimit: parseInt(
+      getEnv("SCRAPER_CONSECUTIVE_CLOSED_LIMIT", "5"),
+      10,
+    ),
+    scraperPaginationMaxPages: parseInt(
+      getEnv("SCRAPER_PAGINATION_MAX_PAGES", "10"),
+      10,
+    ),
+    scraperInfiniteScrollMaxScrolls: parseInt(
+      getEnv("SCRAPER_INFINITE_SCROLL_MAX_SCROLLS", "5"),
+      10,
+    ),
   };
 }
 
