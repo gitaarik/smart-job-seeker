@@ -1,9 +1,10 @@
 /**
  * Generic LLM utilities for chat completions
- * Provider-agnostic interface (currently uses Groq, but can be swapped)
+ * Supports multiple providers: Groq and Gemini (Google Generative AI)
  */
 
 import Groq from "groq-sdk";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { getEnv } from "$lib/tools/get-env";
 import { llmCache } from "./cache/llm-cache";
 import { isRetryableError, withRetry } from "./utils/retry";
@@ -51,8 +52,98 @@ function generateCacheKey(
 }
 
 /**
+ * Generate chat completion using Groq
+ */
+async function generateWithGroq(
+  messages: ChatMessage[],
+  model: string,
+  maxTokens: number,
+  temperature: number,
+  responseFormat?: ResponseFormat,
+): Promise<string> {
+  const client = new Groq({
+    apiKey: config.groqApiKey || getEnv("SJS_GROQ_API_KEY", ""),
+  });
+
+  const completion = await client.chat.completions.create({
+    model,
+    messages,
+    max_tokens: maxTokens,
+    temperature,
+    ...(responseFormat && { response_format: responseFormat }),
+  });
+
+  const responseContent = completion.choices[0]?.message?.content;
+
+  if (!responseContent) {
+    throw new Error("No content returned from Groq");
+  }
+
+  return responseContent;
+}
+
+/**
+ * Generate chat completion using Gemini (Google Generative AI)
+ */
+async function generateWithGemini(
+  messages: ChatMessage[],
+  model: string,
+  maxTokens: number,
+  temperature: number,
+  responseFormat?: ResponseFormat,
+): Promise<string> {
+  const genAI = new GoogleGenerativeAI(
+    config.googleApiKey || getEnv("GOOGLE_API_KEY", ""),
+  );
+
+  // Map Groq model names to Google model names if needed
+  const googleModel = model.includes("gemini") ? model : "gemini-1.5-flash";
+
+  const genModel = genAI.getGenerativeModel({
+    model: googleModel,
+    generationConfig: {
+      maxOutputTokens: maxTokens,
+      temperature,
+      ...(responseFormat && { responseMimeType: "application/json" }),
+    },
+  });
+
+  // Convert messages to Google's format
+  const systemMessage = messages.find((m) => m.role === "system");
+  const chatMessages = messages.filter((m) => m.role !== "system");
+
+  // Build chat history
+  const history = chatMessages.slice(0, -1).map((msg) => ({
+    role: msg.role === "assistant" ? "model" : "user",
+    parts: [{ text: msg.content }],
+  }));
+
+  // Get the last user message
+  const lastMessage = chatMessages[chatMessages.length - 1];
+  if (!lastMessage || lastMessage.role !== "user") {
+    throw new Error("Last message must be from user");
+  }
+
+  // Start chat with system instruction if present
+  const chat = genModel.startChat({
+    history,
+    ...(systemMessage && { systemInstruction: systemMessage.content }),
+  });
+
+  const result = await chat.sendMessage(lastMessage.content);
+  const response = result.response;
+  const responseContent = response.text();
+
+  if (!responseContent) {
+    throw new Error("No content returned from Gemini");
+  }
+
+  return responseContent;
+}
+
+/**
  * Generate a chat completion using the configured LLM provider
- * Currently uses Groq, but provider-agnostic interface allows easy switching
+ * Supports Groq and Gemini (Google Generative AI)
  *
  * Includes caching and retry logic for reliability
  *
@@ -66,7 +157,9 @@ export async function generateChatCompletion(
   options: ChatCompletionOptions = {},
 ): Promise<string> {
   const {
-    model = "meta-llama/llama-4-scout-17b-16e-instruct",
+    model = config.llmProvider === "gemini"
+      ? "gemini-1.5-flash"
+      : "meta-llama/llama-4-scout-17b-16e-instruct",
     maxTokens = 2048,
     temperature = 0.7,
     responseFormat,
@@ -79,34 +172,32 @@ export async function generateChatCompletion(
   if (cachedResponse) {
     errorTracker.logDebug("LLM cache hit", {
       operation: "generateChatCompletion",
-      metadata: { model },
+      metadata: { model, provider: config.llmProvider },
     });
     return cachedResponse;
   }
 
-  // Initialize client (currently Groq)
-  const client = new Groq({
-    apiKey: config.groqApiKey || getEnv("SJS_GROQ_API_KEY", ""),
-  });
-
   // Make completion request with retry logic
   const content = await withRetry(
     async () => {
-      const completion = await client.chat.completions.create({
-        model,
-        messages,
-        max_tokens: maxTokens,
-        temperature,
-        ...(responseFormat && { response_format: responseFormat }),
-      });
-
-      const responseContent = completion.choices[0]?.message?.content;
-
-      if (!responseContent) {
-        throw new Error("No content returned from LLM");
+      // Choose provider based on config
+      if (config.llmProvider === "gemini") {
+        return await generateWithGemini(
+          messages,
+          model,
+          maxTokens,
+          temperature,
+          responseFormat,
+        );
+      } else {
+        return await generateWithGroq(
+          messages,
+          model,
+          maxTokens,
+          temperature,
+          responseFormat,
+        );
       }
-
-      return responseContent;
     },
     {
       maxAttempts: config.retryMaxAttempts,
@@ -121,7 +212,11 @@ export async function generateChatCompletion(
 
   errorTracker.logDebug("LLM response generated and cached", {
     operation: "generateChatCompletion",
-    metadata: { model, contentLength: content.length },
+    metadata: {
+      model,
+      provider: config.llmProvider,
+      contentLength: content.length,
+    },
   });
 
   return content;

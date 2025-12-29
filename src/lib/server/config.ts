@@ -21,7 +21,9 @@ export interface AppConfig {
   directusWebhookSecret: string;
 
   // LLM
+  llmProvider: "groq" | "gemini";
   groqApiKey: string;
+  googleApiKey: string;
 
   // LLM Configuration
   llmCacheTTL: number; // milliseconds
@@ -74,7 +76,9 @@ function loadConfig(): AppConfig {
     directusWebhookSecret: getEnv("SJS_WEBHOOK_SECRET"),
 
     // LLM
-    groqApiKey: getEnv("SJS_GROQ_API_KEY"),
+    llmProvider: (getEnv("LLM_PROVIDER", "groq") as "groq" | "gemini"),
+    groqApiKey: getEnv("SJS_GROQ_API_KEY", ""),
+    googleApiKey: getEnv("GOOGLE_API_KEY", ""),
 
     // Caching (1 hour default)
     llmCacheTTL: parseInt(
