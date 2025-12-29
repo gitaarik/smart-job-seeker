@@ -337,12 +337,16 @@ export async function extractJobData(
   const strippedHtml = stripHtmlForLlm(jobHtml);
 
   // 2. Check for invalid/closed job pages (Mercor-specific)
-  // These pages redirect to notification/welcome pages instead of showing job content
+  // Invalid pages are very short (< 1500 chars) and only contain notification content
+  // Valid job pages have much more content (job description, requirements, etc.)
   if (
+    strippedHtml.length < 1500 &&
     strippedHtml.includes("Welcome to Mercor") &&
     strippedHtml.includes("Visit the Mercor Explore Page")
   ) {
-    throw new Error("Invalid job page - redirected to notification page");
+    throw new Error(
+      "Invalid job page - redirected to notification page (page too short)",
+    );
   }
 
   // 3. Get prompt template
