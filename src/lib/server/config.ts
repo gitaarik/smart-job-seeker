@@ -45,6 +45,12 @@ export interface AppConfig {
   scraperConsecutiveClosedLimit: number; // Stop after N consecutive closed jobs
   scraperPaginationMaxPages: number; // Safety limit for pagination
   scraperInfiniteScrollMaxScrolls: number; // Safety limit for scrolling
+
+  // Browser-Use Integration
+  browserUseEnabled: boolean;
+  browserUseUrl: string;
+  browserUseTimeout: number;
+  browserUseFallbackEnabled: boolean;
 }
 
 /**
@@ -119,6 +125,13 @@ function loadConfig(): AppConfig {
       getEnv("SCRAPER_INFINITE_SCROLL_MAX_SCROLLS", "5"),
       10,
     ),
+
+    // Browser-Use Integration
+    browserUseEnabled: getEnv("BROWSER_USE_ENABLED", "false") === "true",
+    browserUseUrl: getEnv("BROWSER_USE_URL", "http://browser-use:8000"),
+    browserUseTimeout: parseInt(getEnv("BROWSER_USE_TIMEOUT", "120000"), 10),
+    browserUseFallbackEnabled:
+      getEnv("BROWSER_USE_FALLBACK_ENABLED", "true") === "true",
   };
 }
 

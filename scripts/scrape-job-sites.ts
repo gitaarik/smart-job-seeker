@@ -23,6 +23,10 @@ import { exec } from "child_process";
 import { promisify } from "util";
 import { getSiteConfig, getSiteName } from "$lib/server/job-site-configs";
 import { config } from "$lib/server/config";
+import { BrowserUseClient } from "$lib/server/browser-use-client";
+import { parseRelativeDate } from "$lib/tools/date-utils";
+import { isJobTooOld, isJobClosed } from "$lib/server/scrape-filters";
+import { interpolatePrompt } from "$lib/server/ai-chat-utils";
 
 const execAsync = promisify(exec);
 
@@ -251,6 +255,108 @@ async function waitForCaptchaSolution(page: Page): Promise<boolean> {
 }
 
 /**
+ * BROWSER-USE SCRAPING (Unified for both URL and Click modes)
+ * Uses Browser-Use API to directly extract structured job data
+ */
+async function scrapeJobsWithBrowserUse(
+  searchUrl: string,
+  navigationType: "url" | "click",
+  platformId: string,
+): Promise<number> {
+  console.log(`\n🤖 Using Browser-Use (${navigationType} mode)...`);
+
+  // Use default config automatically
+  const browserUse = new BrowserUseClient();
+
+  // Fetch prompt template from Directus
+  const template = await dbDirect.ai_chat_prompts.findUnique({
+    where: { request: "extract_job_browser_use" },
+  });
+
+  if (!template) {
+    throw new Error(
+      "Prompt template 'extract_job_browser_use' not found in ai_chat_prompts",
+    );
+  }
+
+  // Build navigation instructions based on mode
+  const navigationInstructions = navigationType === "url"
+    ? `Navigate through pagination links/buttons to find more jobs. Stop after finding ${config.scraperMaxJobsPerSearch} jobs or ${config.scraperPaginationMaxPages} pages.`
+    : `Click on each job card to view details. Stop after finding ${config.scraperMaxJobsPerSearch} jobs.`;
+
+  // Interpolate variables in the user prompt
+  const systemPrompt = template.system_prompt || "";
+  const userPrompt = interpolatePrompt(template.user_prompt || "", {
+    navigationInstructions,
+  });
+
+  // Combine system and user prompts for the Browser-Use task
+  const task = `${systemPrompt}\n\n${userPrompt}`.trim();
+
+  // Execute the task
+  const response = await browserUse.executeTask({
+    task,
+    startUrl: searchUrl,
+    maxTime: 180, // 3 minutes max
+  });
+
+  // Parse the JSON result
+  let jobs: any[];
+  try {
+    // The result might be a string containing JSON or already parsed
+    const resultStr = typeof response.result === "string"
+      ? response.result
+      : JSON.stringify(response.result);
+
+    // Try to extract JSON from the result
+    const jsonMatch = resultStr.match(/\[[\s\S]*\]/);
+    if (jsonMatch) {
+      jobs = JSON.parse(jsonMatch[0]);
+    } else {
+      throw new Error("No JSON array found in response");
+    }
+  } catch (error) {
+    console.error("❌ Failed to parse Browser-Use response:", error);
+    console.log("Raw response:", response.result);
+    throw new Error("Browser-Use returned invalid JSON");
+  }
+
+  console.log(`✅ Browser-Use extracted ${jobs.length} jobs`);
+
+  // Apply filters and save
+  let processedCount = 0;
+  for (const jobData of jobs) {
+    // Parse date_posted if it's a string
+    const datePosted = jobData.date_posted
+      ? parseRelativeDate(jobData.date_posted)
+      : null;
+
+    // Apply filters
+    if (isJobTooOld(datePosted, config.scraperMaxJobAge)) {
+      console.log(`   ⏭️  Skipping - too old: ${jobData.title}`);
+      continue;
+    }
+    if (isJobClosed(jobData.status)) {
+      console.log(`   ⏭️  Skipping - closed: ${jobData.title}`);
+      continue;
+    }
+
+    // Save using existing logic
+    await upsertJob(
+      {
+        ...jobData,
+        date_posted: datePosted,
+      },
+      jobData.application_url,
+      platformId,
+    );
+    processedCount++;
+  }
+
+  return processedCount;
+}
+
+/**
  * Scrape jobs using URL-based navigation (traditional)
  * Extracts job URLs from search results and navigates to each
  * @returns Array of job URLs
@@ -258,7 +364,22 @@ async function waitForCaptchaSolution(page: Page): Promise<boolean> {
 async function scrapeJobsWithUrls(
   page: Page,
   searchUrl: string,
+  platformId: string,
 ): Promise<string[]> {
+  // Try Browser-Use first if enabled
+  if (config.browserUseEnabled) {
+    try {
+      await scrapeJobsWithBrowserUse(searchUrl, "url", platformId);
+      return []; // Jobs already saved - return empty array
+    } catch (error) {
+      console.error("❌ Browser-Use failed:", error);
+      if (!config.browserUseFallbackEnabled) {
+        throw error;
+      }
+      console.log("⚠️  Falling back to manual navigation...");
+    }
+  }
+
   console.log("\n🔗 Starting URL-based scraping (traditional navigation)");
 
   const {
@@ -421,6 +542,19 @@ async function scrapeJobsWithClicks(
   searchUrl: string,
   platformId: string,
 ): Promise<number> {
+  // Try Browser-Use first if enabled
+  if (config.browserUseEnabled) {
+    try {
+      return await scrapeJobsWithBrowserUse(searchUrl, "click", platformId);
+    } catch (error) {
+      console.error("❌ Browser-Use failed:", error);
+      if (!config.browserUseFallbackEnabled) {
+        throw error;
+      }
+      console.log("⚠️  Falling back to manual SPA navigation...");
+    }
+  }
+
   console.log("\n🔄 Starting SPA scraping mode (click-based navigation)");
 
   // Import utilities dynamically
@@ -943,7 +1077,7 @@ async function scrapeJobSite(
     // URL-BASED NAVIGATION (Traditional)
     // ============================================
     try {
-      const jobUrls = await scrapeJobsWithUrls(page, searchUrl);
+      const jobUrls = await scrapeJobsWithUrls(page, searchUrl, platformId);
 
       if (jobUrls.length === 0) {
         return;
