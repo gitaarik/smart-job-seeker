@@ -272,6 +272,11 @@ async function scrapeJobsWithUrls(
   const baseUrl = new URL(searchUrl);
   let currentPage = 1;
 
+  // Wait for page content to be fully loaded (important for SPAs)
+  // Give JavaScript time to fetch and render job listings
+  console.log("⏳ Waiting for page content to load...");
+  await page.waitForTimeout(3000); // 3 seconds for initial content load
+
   while (currentPage <= config.scraperPaginationMaxPages) {
     console.log(`\n📄 Page ${currentPage}...`);
 
