@@ -196,6 +196,54 @@ async function waitForManualLogin(page: Page): Promise<boolean> {
 }
 
 /**
+ * Wait for user to solve CAPTCHA challenge
+ */
+async function waitForCaptchaSolution(page: Page): Promise<boolean> {
+  console.log("\n" + "=".repeat(60));
+  console.log("🤖 CAPTCHA Challenge Detected");
+  console.log("=".repeat(60));
+  console.log("Please solve the CAPTCHA in the browser window.");
+  console.log("You have 5 minutes to complete the challenge.");
+  console.log("The script will automatically continue once solved.");
+  console.log("=".repeat(60) + "\n");
+
+  const timeoutMs = 5 * 60 * 1000; // 5 minutes
+  const startTime = Date.now();
+  const checkInterval = 3000; // Check every 3 seconds
+
+  // Wait for CAPTCHA to be solved (check every 3 seconds, max 5 minutes)
+  while (Date.now() - startTime < timeoutMs) {
+    const remainingSeconds = Math.floor(
+      (timeoutMs - (Date.now() - startTime)) / 1000,
+    );
+    console.log(
+      `⏱️  Waiting for CAPTCHA solution... (${remainingSeconds}s remaining)`,
+    );
+
+    // Check if CAPTCHA iframe is gone
+    const hasCaptchaIframe = await page.locator('iframe[src*="captcha"]')
+      .isVisible()
+      .catch(() => false);
+
+    // Also check if "captcha" text is still in the page
+    const html = await page.content();
+    const hasCaptchaText = html.toLowerCase().includes("captcha");
+
+    if (!hasCaptchaIframe && !hasCaptchaText) {
+      console.log("✅ CAPTCHA solved! Continuing...\n");
+      // Wait a moment for page to fully update after CAPTCHA
+      await page.waitForTimeout(2000);
+      return true;
+    }
+
+    await page.waitForTimeout(checkInterval);
+  }
+
+  console.log("❌ CAPTCHA timeout (5 minutes elapsed)");
+  return false;
+}
+
+/**
  * Scrape jobs using URL-based navigation (traditional)
  * Extracts job URLs from search results and navigates to each
  * @returns Array of job URLs
@@ -242,11 +290,23 @@ async function scrapeJobsWithUrls(
           console.log(
             "   Action: Run script again and complete login when prompted",
           );
+          break;
         } else if (hasCaptcha) {
-          console.log("   Reason: CAPTCHA challenge detected");
-          console.log(
-            "   Action: Wait and try again later, or solve CAPTCHA manually",
-          );
+          // Wait for user to solve CAPTCHA
+          const captchaSolved = await waitForCaptchaSolution(page);
+
+          if (!captchaSolved) {
+            console.log("⚠️  Skipping this search due to CAPTCHA timeout");
+            break;
+          }
+
+          // CAPTCHA solved - reload page and retry extraction
+          console.log("🔄 Reloading page after CAPTCHA solution...");
+          await page.reload({ waitUntil: "load", timeout: 30000 });
+          await page.waitForTimeout(2000);
+
+          // Retry extraction on current page
+          continue;
         } else {
           console.log("   Possible reasons:");
           console.log("   - Search returned no results (legitimate)");
