@@ -28,6 +28,7 @@ class BrowserController:
         start_time = time.time()
 
         # Create the agent
+        # Note: use_vision=False because Groq doesn't support multimodal/vision content
         agent = Agent(
             task=task,
             llm=self.llm,
@@ -36,6 +37,7 @@ class BrowserController:
                     headless=os.getenv("BROWSER_HEADLESS", "true") == "true"
                 )
             ),
+            use_vision=False,
         )
 
         # Run the task
