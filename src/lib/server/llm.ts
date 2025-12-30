@@ -57,7 +57,6 @@ function generateCacheKey(
  */
 async function generateWithGroq(
   messages: ChatMessage[],
-  model: string,
   maxTokens: number,
   temperature: number,
   responseFormat?: ResponseFormat,
@@ -67,7 +66,7 @@ async function generateWithGroq(
   });
 
   const completion = await client.chat.completions.create({
-    model,
+    model: "meta-llama/llama-4-scout-17b-16e-instruct",
     messages,
     max_tokens: maxTokens,
     temperature,
@@ -88,7 +87,6 @@ async function generateWithGroq(
  */
 async function generateWithGemini(
   messages: ChatMessage[],
-  model: string,
   maxTokens: number,
   temperature: number,
   responseFormat?: ResponseFormat,
@@ -97,11 +95,8 @@ async function generateWithGemini(
     config.geminiApiKey || getEnv("SJS_GEMINI_API_KEY", ""),
   );
 
-  // Map Groq model names to Google model names if needed
-  const googleModel = model.includes("gemini") ? model : "gemini-1.5-flash";
-
   const genModel = genAI.getGenerativeModel({
-    model: googleModel,
+    model: "gemini-1.5-flash",
     generationConfig: {
       maxOutputTokens: maxTokens,
       temperature,
@@ -147,7 +142,6 @@ async function generateWithGemini(
  */
 async function generateWithOpenAI(
   messages: ChatMessage[],
-  model: string,
   maxTokens: number,
   temperature: number,
   responseFormat?: ResponseFormat,
@@ -157,7 +151,7 @@ async function generateWithOpenAI(
   });
 
   const completion = await client.chat.completions.create({
-    model,
+    model: "gpt-4o",
     messages,
     max_tokens: maxTokens,
     temperature,
@@ -178,7 +172,6 @@ async function generateWithOpenAI(
  */
 async function generateWithOpenRouter(
   messages: ChatMessage[],
-  model: string,
   maxTokens: number,
   temperature: number,
   responseFormat?: ResponseFormat,
@@ -189,7 +182,7 @@ async function generateWithOpenRouter(
   });
 
   const completion = await client.chat.completions.create({
-    model,
+    model: "anthropic/claude-3.5-sonnet",
     messages,
     max_tokens: maxTokens,
     temperature,
@@ -220,24 +213,8 @@ export async function generateChatCompletion(
   messages: ChatMessage[],
   options: ChatCompletionOptions = {},
 ): Promise<string> {
-  // Select default model based on provider
-  let defaultModel: string;
-  switch (config.llmProvider) {
-    case "gemini":
-      defaultModel = "gemini-1.5-flash";
-      break;
-    case "openai":
-      defaultModel = "gpt-4o";
-      break;
-    case "openrouter":
-      defaultModel = "anthropic/claude-3.5-sonnet";
-      break;
-    default: // groq
-      defaultModel = "meta-llama/llama-4-scout-17b-16e-instruct";
-  }
-
   const {
-    model = defaultModel,
+    model = config.llmProvider, // Use provider name for cache/metadata
     maxTokens = 2048,
     temperature = 0.7,
     responseFormat,
@@ -263,7 +240,6 @@ export async function generateChatCompletion(
         case "gemini":
           return await generateWithGemini(
             messages,
-            model,
             maxTokens,
             temperature,
             responseFormat,
@@ -271,7 +247,6 @@ export async function generateChatCompletion(
         case "openai":
           return await generateWithOpenAI(
             messages,
-            model,
             maxTokens,
             temperature,
             responseFormat,
@@ -279,7 +254,6 @@ export async function generateChatCompletion(
         case "openrouter":
           return await generateWithOpenRouter(
             messages,
-            model,
             maxTokens,
             temperature,
             responseFormat,
@@ -287,7 +261,6 @@ export async function generateChatCompletion(
         default: // groq
           return await generateWithGroq(
             messages,
-            model,
             maxTokens,
             temperature,
             responseFormat,
