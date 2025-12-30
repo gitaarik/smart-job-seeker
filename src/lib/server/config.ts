@@ -51,6 +51,13 @@ export interface AppConfig {
   scraperPaginationMaxPages: number; // Safety limit for pagination
   scraperInfiniteScrollMaxScrolls: number; // Safety limit for scrolling
 
+  // Timing & Rate Limiting
+  scraperPageLoadTimeout: number; // Wait time after page navigation (ms)
+  scraperClickWaitTimeout: number; // Wait time after clicking elements (ms)
+  scraperRateLimitDelay: number; // Delay between requests to avoid rate limiting (ms)
+  scraperCaptchaCheckInterval: number; // Interval for checking CAPTCHA status (ms)
+  scraperModalWaitTimeout: number; // Wait time for modal content to load (ms)
+
   // Browser-Use Integration
   browserUseUrl: string;
   browserUseTimeout: number;
@@ -149,6 +156,28 @@ function loadConfig(): AppConfig {
     ),
     scraperInfiniteScrollMaxScrolls: parseInt(
       getEnv("SJS_SCRAPER_INFINITE_SCROLL_MAX_SCROLLS", "5"),
+      10,
+    ),
+
+    // Timing & Rate Limiting
+    scraperPageLoadTimeout: parseInt(
+      getEnv("SJS_SCRAPER_PAGE_LOAD_TIMEOUT", "3000"),
+      10,
+    ),
+    scraperClickWaitTimeout: parseInt(
+      getEnv("SJS_SCRAPER_CLICK_WAIT_TIMEOUT", "1000"),
+      10,
+    ),
+    scraperRateLimitDelay: parseInt(
+      getEnv("SJS_SCRAPER_RATE_LIMIT_DELAY", "2000"),
+      10,
+    ),
+    scraperCaptchaCheckInterval: parseInt(
+      getEnv("SJS_SCRAPER_CAPTCHA_CHECK_INTERVAL", "3000"),
+      10,
+    ),
+    scraperModalWaitTimeout: parseInt(
+      getEnv("SJS_SCRAPER_MODAL_WAIT_TIMEOUT", "500"),
       10,
     ),
 

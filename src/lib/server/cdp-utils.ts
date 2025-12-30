@@ -313,3 +313,20 @@ export async function markSemanticElements(
     throw error;
   }
 }
+
+/**
+ * Detect if a CAPTCHA is present on the page
+ * Checks for common CAPTCHA types: reCAPTCHA, hCaptcha, Turnstile, and generic iframe CAPTCHAs
+ */
+export async function detectCaptchaOnPage(page: Page): Promise<boolean> {
+  const hasCaptchaIframe = await page.locator('iframe[src*="captcha"]')
+    .isVisible().catch(() => false);
+  const hasRecaptcha = await page.locator(".g-recaptcha, #g-recaptcha")
+    .isVisible().catch(() => false);
+  const hasHcaptcha = await page.locator(".h-captcha, #h-captcha")
+    .isVisible().catch(() => false);
+  const hasTurnstile = await page.locator(".cf-turnstile")
+    .isVisible().catch(() => false);
+
+  return hasCaptchaIframe || hasRecaptcha || hasHcaptcha || hasTurnstile;
+}

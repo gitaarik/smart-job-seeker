@@ -295,10 +295,11 @@ export async function extractJobClickSelectors(
 
 /**
  * Detect if a page is a login page using LLM
+ * Currently unused but available for future login detection needs
  * @param pageHtml HTML content of the page
  * @returns Boolean indicating if it's a login page
  */
-export async function detectLoginPage(pageHtml: string): Promise<boolean> {
+async function detectLoginPage(pageHtml: string): Promise<boolean> {
   // 1. Strip HTML to minimal content
   const strippedHtml = stripHtmlForLlm(pageHtml);
 

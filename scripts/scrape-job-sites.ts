@@ -7,7 +7,9 @@
 
 import { dbDirect } from "$lib/db";
 import {
+  extractJobClickSelectors,
   extractJobData,
+  extractJobLinks,
   getPlatformIdFromUrl,
   normalizeJobUrl,
   upsertJob,
@@ -17,10 +19,25 @@ import { getSiteConfig, getSiteName } from "$lib/server/job-site-configs";
 import { config } from "$lib/server/config";
 import { BrowserUseClient } from "$lib/server/browser-use-client";
 import { parseRelativeDate } from "$lib/tools/date-utils";
-import { isJobClosed, isJobTooOld } from "$lib/server/scrape-filters";
+import {
+  checkStopConditions,
+  isJobClosed,
+  isJobTooOld,
+} from "$lib/server/scrape-filters";
 import { interpolatePrompt } from "$lib/server/ai-chat-utils";
 import { clearDirectusCache } from "$lib/server/directus";
 import { stripHtmlForLlm } from "$lib/server/html-strip";
+import {
+  detectCaptchaOnPage,
+  markClickableElementsInContainer,
+  markSemanticElements,
+} from "$lib/server/cdp-utils";
+import {
+  detectPaginationStrategy,
+  navigateToNextPage,
+  performInfiniteScroll,
+} from "$lib/server/pagination-utils";
+import { launchBrowser } from "$lib/server/browser-utils";
 import type { Page } from "playwright";
 
 interface SearchAction {
@@ -176,7 +193,7 @@ async function waitForCaptchaSolution(page: Page): Promise<boolean> {
 
   const timeoutMs = 5 * 60 * 1000; // 5 minutes
   const startTime = Date.now();
-  const checkInterval = 3000; // Check every 3 seconds
+  const checkInterval = config.scraperCaptchaCheckInterval;
 
   // Wait for CAPTCHA to be solved (check every 3 seconds, max 5 minutes)
   while (Date.now() - startTime < timeoutMs) {
@@ -188,25 +205,12 @@ async function waitForCaptchaSolution(page: Page): Promise<boolean> {
     );
 
     // Check if any CAPTCHA elements are still visible
-    const hasCaptchaIframe = await page.locator('iframe[src*="captcha"]')
-      .isVisible()
-      .catch(() => false);
-    const hasRecaptcha = await page.locator(".g-recaptcha, #g-recaptcha")
-      .isVisible()
-      .catch(() => false);
-    const hasHcaptcha = await page.locator(".h-captcha, #h-captcha")
-      .isVisible()
-      .catch(() => false);
-    const hasTurnstile = await page.locator(".cf-turnstile")
-      .isVisible()
-      .catch(() => false);
+    const hasCaptcha = await detectCaptchaOnPage(page);
 
-    if (
-      !hasCaptchaIframe && !hasRecaptcha && !hasHcaptcha && !hasTurnstile
-    ) {
+    if (!hasCaptcha) {
       console.log("✅ CAPTCHA solved! Continuing...\n");
       // Wait a moment for page to fully update after CAPTCHA
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(config.scraperRateLimitDelay);
       return true;
     }
 
@@ -270,21 +274,6 @@ async function scrapeJobsWithUrls(
 ): Promise<number> {
   console.log("\n🔗 Starting URL-based scraping (traditional navigation)");
 
-  // Import utilities
-  const {
-    detectPaginationStrategy,
-    navigateToNextPage,
-    performInfiniteScroll,
-  } = await import("$lib/server/pagination-utils");
-  const { stripHtmlForLlm } = await import("$lib/server/html-strip");
-  const { checkStopConditions, isJobTooOld, isJobClosed } = await import(
-    "$lib/server/scrape-filters"
-  );
-  const { extractJobLinks, extractJobData, upsertJob } = await import(
-    "$lib/server/job-scraper"
-  );
-  const { parseRelativeDate } = await import("$lib/tools/date-utils");
-
   // Track processing state
   const baseUrl = new URL(searchUrl);
   const seenJobUrls = new Set<string>(); // For deduplication (especially infinite scroll)
@@ -294,7 +283,7 @@ async function scrapeJobsWithUrls(
 
   // Wait for page content to be fully loaded (important for SPAs)
   console.log("⏳ Waiting for page content to load...");
-  await page.waitForTimeout(3000); // 3 seconds for initial content load
+  await page.waitForTimeout(config.scraperPageLoadTimeout);
 
   while (currentPage <= config.scraperPaginationMaxPages) {
     console.log(`\n📄 Page ${currentPage}...`);
@@ -303,16 +292,9 @@ async function scrapeJobsWithUrls(
     const htmlSize = (html.length / 1024).toFixed(1);
 
     // Check for CAPTCHA before attempting extraction
-    const hasCaptchaIframe = await page.locator('iframe[src*="captcha"]')
-      .isVisible().catch(() => false);
-    const hasRecaptcha = await page.locator(".g-recaptcha, #g-recaptcha")
-      .isVisible().catch(() => false);
-    const hasHcaptcha = await page.locator(".h-captcha, #h-captcha")
-      .isVisible().catch(() => false);
-    const hasTurnstile = await page.locator(".cf-turnstile")
-      .isVisible().catch(() => false);
+    const hasCaptcha = await detectCaptchaOnPage(page);
 
-    if (hasCaptchaIframe || hasRecaptcha || hasHcaptcha || hasTurnstile) {
+    if (hasCaptcha) {
       const captchaSolved = await waitForCaptchaSolution(page);
 
       if (!captchaSolved) {
@@ -322,7 +304,7 @@ async function scrapeJobsWithUrls(
 
       console.log("🔄 Reloading page after CAPTCHA solution...");
       await page.reload({ waitUntil: "load", timeout: 30000 });
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(config.scraperRateLimitDelay);
       continue;
     }
 
@@ -452,7 +434,7 @@ async function scrapeJobsWithUrls(
         );
 
         // Delay to avoid rate limiting
-        await page.waitForTimeout(2000);
+        await page.waitForTimeout(config.scraperRateLimitDelay);
       } catch (error) {
         console.error(
           `   ✗ Failed to process ${jobUrl}:`,
@@ -497,7 +479,7 @@ async function scrapeJobsWithUrls(
     }
 
     currentPage++;
-    await page.waitForTimeout(2000); // Rate limiting
+    await page.waitForTimeout(config.scraperRateLimitDelay); // Rate limiting
   }
 
   console.log(
@@ -520,20 +502,6 @@ async function scrapeJobsWithClicks(
 ): Promise<number> {
 
   console.log("\n🔄 Starting SPA scraping mode (click-based navigation)");
-
-  // Import utilities dynamically
-  const { markClickableElementsInContainer } = await import(
-    "$lib/server/cdp-utils"
-  );
-  const { extractJobClickSelectors } = await import("$lib/server/job-scraper");
-  const { checkStopConditions, isJobTooOld, isJobClosed } = await import(
-    "$lib/server/scrape-filters"
-  );
-  const {
-    detectPaginationStrategy,
-    navigateToNextPage,
-    performInfiniteScroll,
-  } = await import("$lib/server/pagination-utils");
 
   // Initialize stats
   const stats = {
@@ -685,7 +653,7 @@ async function scrapeJobsWithClicks(
           () => {},
         );
         await page.keyboard.press("Escape").catch(() => {});
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(config.scraperModalWaitTimeout);
 
         // Capture page state before click for comparison
         const beforeClick = await page.evaluate(() =>
@@ -696,7 +664,7 @@ async function scrapeJobsWithClicks(
 
         // Wait for SPA to update - look for common modal/dialog/panel containers
         // This is a generic approach that works across different SPA frameworks
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(config.scraperClickWaitTimeout);
 
         // Check if page content changed after click
         const afterClick = await page.evaluate(() =>
@@ -762,7 +730,7 @@ async function scrapeJobsWithClicks(
                 );
                 break;
               }
-              await page.waitForTimeout(500);
+              await page.waitForTimeout(config.scraperModalWaitTimeout);
               attempts++;
             }
 
@@ -775,9 +743,6 @@ async function scrapeJobsWithClicks(
         // Mark semantic elements in modal if configured
         if (modalContent && siteConfig.semanticSelectors?.modal) {
           console.log("      🏷️  Marking semantic elements in modal...");
-          const { markSemanticElements } = await import(
-            "$lib/server/cdp-utils"
-          );
           const markResult = await markSemanticElements(
             page,
             siteConfig.semanticSelectors.modal,
@@ -899,7 +864,7 @@ async function scrapeJobsWithClicks(
         break;
       }
 
-      await page.waitForTimeout(2000); // Rate limiting
+      await page.waitForTimeout(config.scraperRateLimitDelay); // Rate limiting
     } else {
       console.log("      No pagination detected, stopping");
       break;
@@ -951,7 +916,6 @@ async function scrapeJobSite(
   try {
     if (config.scraperMethod === "playwright") {
       // Launch Playwright browser
-      const { launchBrowser } = await import("$lib/server/browser-utils");
       const context = await launchBrowser("/tmp/scraper-profile", {
         headless: config.isDevelopment ? false : true,
       });
