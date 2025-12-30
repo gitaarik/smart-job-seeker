@@ -83,7 +83,7 @@ export async function getPlatformIdFromUrl(
 
 /**
  * Create or update job in database
- * @param jobData Job data extracted from HTML
+ * @param jobData Job data extracted by Browser-Use
  * @param sourceUrl URL where the job was found
  * @param platformId ID of the job platform (from job_platforms table)
  * @returns Object with job ID and whether it was created or updated
@@ -105,7 +105,6 @@ export async function upsertJob(
     salary_period: string | null;
     skills: string[] | null;
     status: string | null;
-    strippedHtml: string;
   },
   sourceUrl: string,
   platformId: number | null,
@@ -149,7 +148,6 @@ export async function upsertJob(
     job_type,
     experience_level,
     skills,
-    strippedHtml,
     job_poster: _,
     status: __,
     ...baseJobData
@@ -184,7 +182,6 @@ export async function upsertJob(
         job_poster: effectiveJobPoster,
         status: effectiveStatus,
         skills,
-        source_html_stripped: strippedHtml,
         import_error: null,
         last_scraped: currentDate,
         scrape_count: (existing.scrape_count || 0) + 1,
@@ -202,7 +199,6 @@ export async function upsertJob(
         job_poster: effectiveJobPoster,
         status: effectiveStatus,
         skills,
-        source_html_stripped: strippedHtml,
         source_url: normalizedUrl, // Use normalized URL
         job_platform: platformId,
         last_scraped: currentDate,

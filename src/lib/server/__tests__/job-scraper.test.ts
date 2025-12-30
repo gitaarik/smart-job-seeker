@@ -103,7 +103,6 @@ describe("upsertJob", () => {
       salary_period: "year",
       skills: ["JavaScript", "React", "Node.js"],
       status: "hiring",
-      strippedHtml: "<p>Job content</p>",
     };
 
     const sourceUrl = "https://example.com/job/123";
@@ -156,7 +155,6 @@ describe("upsertJob", () => {
       salary_period: "year",
       skills: ["JavaScript", "React", "Node.js"],
       status: "hiring",
-      strippedHtml: "<p>Job content</p>",
     };
 
     const sourceUrl = "https://example.com/job/123";
@@ -211,7 +209,6 @@ describe("upsertJob", () => {
       salary_period: null,
       skills: null,
       status: null,
-      strippedHtml: "",
     };
 
     mockDb.jobs.findFirst.mockResolvedValueOnce({
@@ -247,7 +244,6 @@ describe("upsertJob", () => {
       salary_period: null,
       skills: null,
       status: null,
-      strippedHtml: "",
     };
 
     mockDb.jobs.findFirst.mockResolvedValueOnce({
@@ -283,7 +279,6 @@ describe("upsertJob", () => {
       salary_period: null,
       skills: null,
       status: null,
-      strippedHtml: "",
     };
 
     mockDb.jobs.findFirst.mockResolvedValueOnce(null);
@@ -324,7 +319,6 @@ describe("upsertJob", () => {
       salary_period: null,
       skills: null,
       status: null,
-      strippedHtml: "",
     };
 
     mockDb.jobs.findFirst.mockResolvedValueOnce(null);
@@ -360,7 +354,6 @@ describe("upsertJob", () => {
       salary_period: null,
       skills: null,
       status: null,
-      strippedHtml: "",
     };
 
     mockDb.jobs.findFirst.mockResolvedValueOnce(null);
@@ -396,7 +389,6 @@ describe("upsertJob", () => {
       salary_period: null,
       skills: null,
       status: null,
-      strippedHtml: "",
     };
 
     mockDb.jobs.findFirst.mockResolvedValueOnce(null);
@@ -432,7 +424,6 @@ describe("upsertJob", () => {
       salary_period: null,
       skills: null,
       status: null,
-      strippedHtml: "",
     };
 
     mockDb.jobs.findFirst.mockResolvedValueOnce(null);
@@ -468,7 +459,6 @@ describe("upsertJob", () => {
       salary_period: null,
       skills: null,
       status: null,
-      strippedHtml: "",
     };
 
     mockDb.jobs.findFirst.mockResolvedValueOnce({
@@ -512,7 +502,6 @@ describe("upsertJob", () => {
       salary_period: null,
       skills: null,
       status: null,
-      strippedHtml: "",
     };
 
     mockDb.jobs.findFirst.mockResolvedValueOnce(null);
@@ -544,7 +533,6 @@ describe("upsertJob", () => {
       salary_period: null,
       skills: null,
       status: "closed",
-      strippedHtml: "",
     };
 
     mockDb.jobs.findFirst.mockResolvedValueOnce({

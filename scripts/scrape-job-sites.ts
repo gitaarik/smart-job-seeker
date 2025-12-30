@@ -315,7 +315,6 @@ async function rescrapeJobById(
       {
         ...jobData,
         date_posted: datePosted,
-        strippedHtml: "", // No HTML available from Browser-Use
       },
       job.source_url,
       platformId,
