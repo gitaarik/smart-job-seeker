@@ -29,6 +29,16 @@ class BrowserController:
             )
             # GPT-4o supports vision
             self.use_vision = True
+        elif provider == "openrouter":
+            # Use OpenRouter
+            self.llm = ChatOpenAI(
+                model="anthropic/claude-3.5-sonnet",
+                base_url="https://openrouter.ai/api/v1",
+                api_key=os.getenv("SJS_OPENROUTER_API_KEY"),
+                temperature=0.3,
+            )
+            # OpenRouter vision support depends on model, disabled for safety
+            self.use_vision = False
         else:
             # Default to Groq
             self.llm = ChatGroq(
