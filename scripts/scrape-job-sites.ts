@@ -6,7 +6,12 @@
  */
 
 import { dbDirect } from "$lib/db";
-import { getPlatformIdFromUrl, upsertJob } from "$lib/server/job-scraper";
+import {
+  extractJobData,
+  getPlatformIdFromUrl,
+  normalizeJobUrl,
+  upsertJob,
+} from "$lib/server/job-scraper";
 import { Command } from "commander";
 import { getSiteConfig, getSiteName } from "$lib/server/job-site-configs";
 import { config } from "$lib/server/config";
@@ -15,6 +20,8 @@ import { parseRelativeDate } from "$lib/tools/date-utils";
 import { isJobClosed, isJobTooOld } from "$lib/server/scrape-filters";
 import { interpolatePrompt } from "$lib/server/ai-chat-utils";
 import { clearDirectusCache } from "$lib/server/directus";
+import { stripHtmlForLlm } from "$lib/server/html-strip";
+import type { Page } from "playwright";
 
 interface SearchAction {
   id: number;
@@ -154,6 +161,764 @@ async function scrapeJobsWithBrowserUse(
 }
 
 /**
+ * Wait for user to manually solve CAPTCHA
+ * @param page Playwright page with CAPTCHA challenge
+ * @returns true if solved, false if timeout
+ */
+async function waitForCaptchaSolution(page: Page): Promise<boolean> {
+  console.log("\n" + "=".repeat(60));
+  console.log("🤖 CAPTCHA Challenge Detected");
+  console.log("=".repeat(60));
+  console.log("Please solve the CAPTCHA in the browser window.");
+  console.log("You have 5 minutes to complete the challenge.");
+  console.log("The script will automatically continue once solved.");
+  console.log("=".repeat(60) + "\n");
+
+  const timeoutMs = 5 * 60 * 1000; // 5 minutes
+  const startTime = Date.now();
+  const checkInterval = 3000; // Check every 3 seconds
+
+  // Wait for CAPTCHA to be solved (check every 3 seconds, max 5 minutes)
+  while (Date.now() - startTime < timeoutMs) {
+    const remainingSeconds = Math.floor(
+      (timeoutMs - (Date.now() - startTime)) / 1000,
+    );
+    console.log(
+      `⏱️  Waiting for CAPTCHA solution... (${remainingSeconds}s remaining)`,
+    );
+
+    // Check if any CAPTCHA elements are still visible
+    const hasCaptchaIframe = await page.locator('iframe[src*="captcha"]')
+      .isVisible()
+      .catch(() => false);
+    const hasRecaptcha = await page.locator(".g-recaptcha, #g-recaptcha")
+      .isVisible()
+      .catch(() => false);
+    const hasHcaptcha = await page.locator(".h-captcha, #h-captcha")
+      .isVisible()
+      .catch(() => false);
+    const hasTurnstile = await page.locator(".cf-turnstile")
+      .isVisible()
+      .catch(() => false);
+
+    if (
+      !hasCaptchaIframe && !hasRecaptcha && !hasHcaptcha && !hasTurnstile
+    ) {
+      console.log("✅ CAPTCHA solved! Continuing...\n");
+      // Wait a moment for page to fully update after CAPTCHA
+      await page.waitForTimeout(2000);
+      return true;
+    }
+
+    await page.waitForTimeout(checkInterval);
+  }
+
+  console.log("❌ CAPTCHA timeout (5 minutes elapsed)");
+  return false;
+}
+
+/**
+ * Check if job HTML has changed since last scrape
+ * @param sourceUrl Job URL to check
+ * @param newStrippedHtml New stripped HTML content
+ * @param force If true, always return true (skip comparison)
+ * @returns true if HTML changed or job is new
+ */
+async function hasHtmlChanged(
+  sourceUrl: string,
+  newStrippedHtml: string,
+  force = false,
+): Promise<boolean> {
+  // If force flag is set, always consider HTML as changed
+  if (force) {
+    return true;
+  }
+
+  const normalizedUrl = normalizeJobUrl(sourceUrl);
+
+  const existingJob = await dbDirect.jobs.findFirst({
+    where: { source_url: normalizedUrl },
+    select: { id: true, source_html_stripped: true },
+  });
+
+  // If job doesn't exist, HTML is "new"
+  if (!existingJob) {
+    return true;
+  }
+
+  // If no existing HTML stored, consider it changed
+  if (!existingJob.source_html_stripped) {
+    return true;
+  }
+
+  // Compare HTML content
+  return existingJob.source_html_stripped !== newStrippedHtml;
+}
+
+/**
+ * Scrape jobs using URL-based navigation with Playwright + LLM
+ * Traditional scraping: extract job URLs from search results, visit each job page, extract data
+ * @param page Playwright page instance
+ * @param searchUrl Job search results URL
+ * @param platformId Job platform ID
+ * @returns Number of jobs successfully processed
+ */
+async function scrapeJobsWithUrls(
+  page: Page,
+  searchUrl: string,
+  platformId: number,
+): Promise<number> {
+  console.log("\n🔗 Starting URL-based scraping (traditional navigation)");
+
+  // Import utilities
+  const {
+    detectPaginationStrategy,
+    navigateToNextPage,
+    performInfiniteScroll,
+  } = await import("$lib/server/pagination-utils");
+  const { stripHtmlForLlm } = await import("$lib/server/html-strip");
+  const { checkStopConditions, isJobTooOld, isJobClosed } = await import(
+    "$lib/server/scrape-filters"
+  );
+  const { extractJobLinks, extractJobData, upsertJob } = await import(
+    "$lib/server/job-scraper"
+  );
+  const { parseRelativeDate } = await import("$lib/tools/date-utils");
+
+  // Track processing state
+  const baseUrl = new URL(searchUrl);
+  const seenJobUrls = new Set<string>(); // For deduplication (especially infinite scroll)
+  let processedCount = 0;
+  let consecutiveClosed = 0;
+  let currentPage = 1;
+
+  // Wait for page content to be fully loaded (important for SPAs)
+  console.log("⏳ Waiting for page content to load...");
+  await page.waitForTimeout(3000); // 3 seconds for initial content load
+
+  while (currentPage <= config.scraperPaginationMaxPages) {
+    console.log(`\n📄 Page ${currentPage}...`);
+
+    const html = await page.content();
+    const htmlSize = (html.length / 1024).toFixed(1);
+
+    // Check for CAPTCHA before attempting extraction
+    const hasCaptchaIframe = await page.locator('iframe[src*="captcha"]')
+      .isVisible().catch(() => false);
+    const hasRecaptcha = await page.locator(".g-recaptcha, #g-recaptcha")
+      .isVisible().catch(() => false);
+    const hasHcaptcha = await page.locator(".h-captcha, #h-captcha")
+      .isVisible().catch(() => false);
+    const hasTurnstile = await page.locator(".cf-turnstile")
+      .isVisible().catch(() => false);
+
+    if (hasCaptchaIframe || hasRecaptcha || hasHcaptcha || hasTurnstile) {
+      const captchaSolved = await waitForCaptchaSolution(page);
+
+      if (!captchaSolved) {
+        console.log("⚠️  Skipping this search due to CAPTCHA timeout");
+        break;
+      }
+
+      console.log("🔄 Reloading page after CAPTCHA solution...");
+      await page.reload({ waitUntil: "load", timeout: 30000 });
+      await page.waitForTimeout(2000);
+      continue;
+    }
+
+    console.log(`   Extracting job links (${htmlSize} KB)...`);
+    let pageUrls = await extractJobLinks(html);
+
+    if (!pageUrls || pageUrls.length === 0) {
+      if (currentPage === 1) {
+        console.log("   ⚠️  No job links found.");
+
+        const hasLoginForm = await page.locator('form[action*="login"]')
+          .isVisible().catch(() => false);
+
+        if (hasLoginForm) {
+          console.log("   Reason: Login page detected");
+          console.log(
+            "   Action: Run script again and complete login when prompted",
+          );
+        } else {
+          console.log("   Possible reasons:");
+          console.log("   - Search returned no results (legitimate)");
+          console.log("   - Page structure changed (update selectors)");
+          console.log("   - Content still loading (increase timeout)");
+        }
+      } else {
+        console.log("   No jobs found, stopping pagination");
+      }
+      break;
+    }
+
+    // Convert relative URLs to absolute URLs
+    pageUrls = pageUrls.map((url) => {
+      if (url.startsWith("/")) {
+        return `${baseUrl.origin}${url}`;
+      }
+      return url;
+    });
+
+    // Filter out already-seen jobs (for infinite scroll deduplication)
+    const newJobUrls = pageUrls.filter((url) => !seenJobUrls.has(url));
+
+    if (newJobUrls.length === 0) {
+      console.log("   All jobs already seen, stopping");
+      break;
+    }
+
+    console.log(
+      `   Found ${pageUrls.length} job(s) (${newJobUrls.length} new)`,
+    );
+
+    // Process each new job immediately
+    for (const jobUrl of newJobUrls) {
+      seenJobUrls.add(jobUrl);
+
+      // Check early exit conditions
+      if (processedCount >= config.scraperMaxJobsPerSearch) {
+        console.log(
+          `\n✅ Reached max jobs limit (${config.scraperMaxJobsPerSearch})`,
+        );
+        return processedCount;
+      }
+
+      if (consecutiveClosed >= config.scraperConsecutiveClosedLimit) {
+        console.log(
+          `\n⏹️  Too many consecutive closed jobs (${consecutiveClosed})`,
+        );
+        return processedCount;
+      }
+
+      try {
+        console.log(`\n   Processing: ${jobUrl}`);
+
+        // Navigate to job page
+        await page.goto(jobUrl, {
+          waitUntil: "load",
+          timeout: config.scraperDefaultTimeout,
+        });
+
+        const jobHtml = await page.content();
+        const strippedHtml = stripHtmlForLlm(jobHtml);
+
+        // Check if HTML changed (skip if unchanged and not forced)
+        const htmlChanged = await hasHtmlChanged(jobUrl, strippedHtml, false);
+        if (!htmlChanged) {
+          console.log(`   ⏭️  Skipping - HTML unchanged`);
+          continue;
+        }
+
+        // Extract job data
+        console.log("   Extracting job data...");
+        const jobData = await extractJobData(jobHtml, jobUrl);
+
+        // Apply filters
+        const datePosted = jobData.date_posted
+          ? parseRelativeDate(jobData.date_posted)
+          : null;
+
+        if (isJobTooOld(datePosted, config.scraperMaxJobAge)) {
+          console.log(
+            `   ⏭️  Skipping - Posted ${datePosted?.toLocaleDateString()} (too old)`,
+          );
+          consecutiveClosed = 0; // Reset (not a closed job)
+          continue;
+        }
+
+        if (isJobClosed(jobData.status)) {
+          console.log(`   ⏭️  Skipping - Status: ${jobData.status}`);
+          consecutiveClosed++;
+          continue;
+        }
+
+        // Reset consecutive closed counter
+        consecutiveClosed = 0;
+
+        // Save job
+        const result = await upsertJob(
+          { ...jobData, date_posted: datePosted },
+          jobUrl,
+          platformId,
+        );
+        processedCount++;
+
+        console.log(
+          `   ✅ ${
+            result.created ? "Created" : "Updated"
+          } job #${result.id} (${processedCount} total)`,
+        );
+
+        // Delay to avoid rate limiting
+        await page.waitForTimeout(2000);
+      } catch (error) {
+        console.error(
+          `   ✗ Failed to process ${jobUrl}:`,
+          error instanceof Error ? error.message : String(error),
+        );
+        consecutiveClosed = 0; // Reset on error
+      }
+    }
+
+    // Detect pagination/scroll
+    const strippedHtml = stripHtmlForLlm(html);
+    const paginationInfo = await detectPaginationStrategy(page, strippedHtml);
+
+    if (!paginationInfo.hasPagination && !paginationInfo.hasInfiniteScroll) {
+      console.log("   No pagination detected, stopping");
+      break;
+    }
+
+    // Handle infinite scroll
+    if (paginationInfo.hasInfiniteScroll && !paginationInfo.hasPagination) {
+      console.log("   Infinite scroll detected, scrolling...");
+      const newContent = await performInfiniteScroll(page, {
+        maxScrolls: config.scraperInfiniteScrollMaxScrolls,
+      });
+
+      if (newContent === 0) {
+        console.log("   No new content after scroll, stopping");
+        break;
+      }
+
+      // Continue loop to re-extract after scroll
+      continue;
+    }
+
+    // Navigate to next page (pagination)
+    console.log("   Navigating to next page...");
+    const hasNext = await navigateToNextPage(page, paginationInfo);
+
+    if (!hasNext) {
+      console.log("   No more pages available");
+      break;
+    }
+
+    currentPage++;
+    await page.waitForTimeout(2000); // Rate limiting
+  }
+
+  console.log(
+    `\n✅ Processed ${processedCount} job(s) across ${currentPage} page(s)`,
+  );
+  return processedCount;
+}
+
+/**
+ * Scrape jobs using click-based navigation (SPAs)
+ * Marks clickable elements with CDP, uses LLM to identify job cards, then clicks each
+ * Extracts and saves jobs immediately during clicking for real-time feedback
+ * @returns Number of successfully processed jobs
+ */
+async function scrapeJobsWithClicks(
+  page: Page,
+  siteConfig: ReturnType<typeof getSiteConfig>,
+  searchUrl: string,
+  platformId: string,
+): Promise<number> {
+
+  console.log("\n🔄 Starting SPA scraping mode (click-based navigation)");
+
+  // Import utilities dynamically
+  const { markClickableElementsInContainer } = await import(
+    "$lib/server/cdp-utils"
+  );
+  const { extractJobClickSelectors } = await import("$lib/server/job-scraper");
+  const { checkStopConditions, isJobTooOld, isJobClosed } = await import(
+    "$lib/server/scrape-filters"
+  );
+  const {
+    detectPaginationStrategy,
+    navigateToNextPage,
+    performInfiniteScroll,
+  } = await import("$lib/server/pagination-utils");
+
+  // Initialize stats
+  const stats = {
+    jobsProcessed: 0,
+    consecutiveClosedJobs: 0,
+    jobsSkippedOld: 0,
+    jobsSkippedClosed: 0,
+  };
+
+  let pageNumber = 1;
+
+  // Pagination loop
+  while (pageNumber <= config.scraperPaginationMaxPages) {
+    console.log(`\n📄 Page ${pageNumber}...`);
+
+    // Mark all clickable elements using CDP
+    console.log("   📍 Step 1/3: Detecting click handlers via CDP...");
+    const container = siteConfig.selectors.jobListContainer || "body";
+    console.log(`      Scanning container: ${container}`);
+    const startCdp = Date.now();
+
+    const clickableCount = await markClickableElementsInContainer(
+      page,
+      container,
+    );
+
+    const cdpDuration = ((Date.now() - startCdp) / 1000).toFixed(2);
+    console.log(
+      `      ✓ Found ${clickableCount} elements with click listeners (${cdpDuration}s)`,
+    );
+
+    if (clickableCount === 0) {
+      console.log(
+        "      ⚠️  No clickable elements found - page may not be loaded",
+      );
+      break;
+    }
+
+    // Get marked HTML
+    const markedHtml = await page.content();
+    const htmlSize = (markedHtml.length / 1024).toFixed(1);
+    console.log(`      HTML size: ${htmlSize} KB`);
+
+    // Check if we have job-detail-button markers (high-confidence job buttons)
+    const jobDetailButtonMatches = markedHtml.matchAll(
+      /data-extract-clickable-id="(\d+)" data-extract-click-text="job-detail-button"/g,
+    );
+    const jobDetailButtonIds = Array.from(jobDetailButtonMatches).map((
+      match,
+    ) => parseInt(match[1]));
+
+    let clickableIds: number[];
+    let pattern: string;
+    let jobCount: number;
+
+    if (jobDetailButtonIds.length > 0) {
+      // We found job-detail buttons - use them directly without LLM validation
+      console.log("\n   ✓ Step 2/3: Using detected job-detail buttons...");
+      clickableIds = jobDetailButtonIds;
+      pattern = "job-detail buttons detected by CDP";
+      jobCount = jobDetailButtonIds.length;
+      console.log(
+        `      Found ${jobCount} job-detail buttons: [${
+          clickableIds.join(", ")
+        }]`,
+      );
+    } else {
+      // No job-detail buttons found - fall back to LLM analysis
+      console.log(
+        "\n   🤖 Step 2/3: Asking LLM to identify job card pattern...",
+      );
+      const startLlm = Date.now();
+
+      const result = await extractJobClickSelectors(markedHtml);
+      clickableIds = result.clickableIds;
+      pattern = result.pattern;
+      jobCount = result.jobCount;
+
+      const llmDuration = ((Date.now() - startLlm) / 1000).toFixed(2);
+      console.log(`      ✓ LLM analysis complete (${llmDuration}s)`);
+      console.log(`      Pattern: ${pattern}`);
+      console.log(`      Job cards found: ${jobCount}`);
+      console.log(`      Clickable IDs: [${clickableIds.join(", ")}]`);
+    }
+
+    if (clickableIds.length === 0) {
+      console.log("      ⚠️  No job cards found in the page");
+      break;
+    }
+
+    // Click each identified job card and process immediately
+    console.log(
+      `\n   👆 Step 3/3: Clicking and processing ${clickableIds.length} job cards...\n`,
+    );
+    for (let i = 0; i < clickableIds.length; i++) {
+      const id = clickableIds[i];
+      const jobNumber = i + 1;
+      const pseudoUrl = `${searchUrl}#spa-job-${jobNumber}`;
+
+      // Visual separator for each job
+      console.log(`\n   [${"─".repeat(56)}]`);
+      console.log(`   Job ${jobNumber}/${clickableIds.length}`);
+      console.log(`   [${"─".repeat(56)}]`);
+
+      // Extract context from search page before clicking
+      let searchPageTitle: string | null = null;
+      try {
+        const clickableElement = page.locator(
+          `[data-extract-clickable-id="${id}"]`,
+        ).first();
+        const elementText = await clickableElement.textContent({
+          timeout: 2000,
+        });
+
+        if (elementText) {
+          // Extract first non-empty line as title (simple heuristic)
+          const lines = elementText.trim().split("\n").map((l) => l.trim())
+            .filter((l) => l.length > 0);
+          searchPageTitle = lines[0] || null;
+
+          if (searchPageTitle) {
+            console.log(
+              `      📋 Search page title: "${
+                searchPageTitle.substring(
+                  0,
+                  60,
+                )
+              }${searchPageTitle.length > 60 ? "..." : ""}"`,
+            );
+          }
+        }
+      } catch (error) {
+        console.debug(
+          `      ⚠️  Could not extract search page title:`,
+          error instanceof Error ? error.message : String(error),
+        );
+        // Continue without fallback title - not a critical error
+      }
+
+      try {
+        console.log(
+          `      👆 Clicking data-extract-clickable-id="${id}"...`,
+        );
+
+        // Close any open modals first (SPAs often have close buttons or backdrop clicks)
+        // Try common modal close patterns
+        await page.locator('[class*="close"]').first().click().catch(() => {});
+        await page.locator('[aria-label*="close" i]').first().click().catch(
+          () => {},
+        );
+        await page.keyboard.press("Escape").catch(() => {});
+        await page.waitForTimeout(500);
+
+        // Capture page state before click for comparison
+        const beforeClick = await page.evaluate(() =>
+          document.body.innerText.length
+        );
+
+        await page.locator(`[data-extract-clickable-id="${id}"]`).click();
+
+        // Wait for SPA to update - look for common modal/dialog/panel containers
+        // This is a generic approach that works across different SPA frameworks
+        await page.waitForTimeout(1000);
+
+        // Check if page content changed after click
+        const afterClick = await page.evaluate(() =>
+          document.body.innerText.length
+        );
+        const contentChanged = Math.abs(afterClick - beforeClick) > 100;
+
+        if (!contentChanged) {
+          console.warn(
+            `      ⚠️  Page content didn't change after click (before: ${beforeClick}, after: ${afterClick})`,
+          );
+        }
+
+        // Try to find a modal/dialog/panel that appeared after the click
+        // Check common modal selectors used by various UI frameworks
+        const modalSelectors = [
+          '[role="dialog"]', // ARIA standard
+          '[role="alertdialog"]',
+          ".modal", // Bootstrap
+          ".modal-content",
+          ".ant-modal", // Ant Design
+          ".MuiDialog-root", // Material-UI
+          ".dialog", // Generic
+          '[class*="modal"]', // Any class containing "modal"
+          '[class*="dialog"]',
+          '[class*="drawer"]',
+          '[class*="panel"][class*="detail"]',
+        ];
+
+        let modalContent = null;
+        let modalSelector = null;
+
+        // Try each selector to find the modal
+        for (const selector of modalSelectors) {
+          const modal = page.locator(selector).first();
+          if (await modal.isVisible().catch(() => false)) {
+            // Wait for modal to have substantial content (retry for up to 3 seconds)
+            let attempts = 0;
+            while (attempts < 6) {
+              modalContent = await modal.innerHTML().catch(() => null);
+              if (modalContent && modalContent.length > 1000) {
+                // Check if this is a navigation/menu drawer (not job details)
+                const lowerContent = modalContent.toLowerCase();
+                const isNavDrawer = lowerContent.includes("dashboard") &&
+                  (lowerContent.includes("log out") ||
+                    lowerContent.includes("logout") ||
+                    lowerContent.includes("settings"));
+
+                if (isNavDrawer) {
+                  console.log(
+                    `      ⚠️  Skipping navigation drawer (${selector})`,
+                  );
+                  modalContent = null; // Reset to keep looking
+                  break;
+                }
+
+                // Found substantial non-nav modal content
+                modalSelector = selector;
+                console.log(
+                  `      ✓ Found modal: ${selector} (${
+                    (modalContent.length / 1024).toFixed(1)
+                  } KB)`,
+                );
+                break;
+              }
+              await page.waitForTimeout(500);
+              attempts++;
+            }
+
+            if (modalContent && modalContent.length > 1000) {
+              break;
+            }
+          }
+        }
+
+        // Mark semantic elements in modal if configured
+        if (modalContent && siteConfig.semanticSelectors?.modal) {
+          console.log("      🏷️  Marking semantic elements in modal...");
+          const { markSemanticElements } = await import(
+            "$lib/server/cdp-utils"
+          );
+          const markResult = await markSemanticElements(
+            page,
+            siteConfig.semanticSelectors.modal,
+          );
+          console.log(`      Marked ${markResult.total} elements`);
+        }
+
+        // If we found modal content, use it; otherwise fall back to full page
+        const jobHtml = modalContent
+          ? `<div class="job-detail-modal">${modalContent}</div>`
+          : await page.content();
+
+        if (!modalContent) {
+          console.warn(
+            "      ⚠️  No modal found, using full page HTML (may extract wrong job)",
+          );
+        }
+
+        // Log captured HTML size
+        console.log(`      ✓ Captured job HTML (${jobHtml.length} chars)`);
+
+        // Debug: Log first 500 chars of captured HTML
+        if (config.scraperDebugMode) {
+          const preview = stripHtmlForLlm(jobHtml).substring(0, 500);
+          console.log(`      [DEBUG] HTML preview: ${preview}...`);
+        }
+
+        // Strip HTML for LLM processing
+        const strippedHtml = stripHtmlForLlm(jobHtml);
+
+        // Extract job data
+        console.log(`      🔍 Extracting job data...`);
+        const jobData = await extractJobData(strippedHtml, pseudoUrl, {
+          fallbackTitle: searchPageTitle,
+        });
+
+        // Age filter
+        if (isJobTooOld(jobData.date_posted, config.scraperMaxJobAge)) {
+          console.log(
+            `      ⏭️  Skipping - Posted ${jobData.date_posted?.toLocaleDateString()} (too old)`,
+          );
+          stats.jobsSkippedOld++;
+          stats.consecutiveClosedJobs = 0; // Reset (not a closed job)
+          continue;
+        }
+
+        // Status filter
+        const isClosed = isJobClosed(jobData.status);
+        if (isClosed) {
+          console.log(`      ⏭️  Skipping - Status: ${jobData.status}`);
+          stats.jobsSkippedClosed++;
+          stats.consecutiveClosedJobs++;
+
+          // Check stop condition
+          const stopCheck = checkStopConditions(stats, {
+            maxJobsPerSearch: config.scraperMaxJobsPerSearch,
+            consecutiveClosedLimit: config.scraperConsecutiveClosedLimit,
+          });
+          if (stopCheck.shouldStop) {
+            console.log(`\n      🛑 ${stopCheck.reason}`);
+            return stats.jobsProcessed;
+          }
+          continue;
+        }
+
+        // Reset consecutive closed counter
+        stats.consecutiveClosedJobs = 0;
+
+        // Save job
+        console.log(`      💾 Saving to database...`);
+        const result = await upsertJob(jobData, pseudoUrl, platformId);
+
+        const action = result.created ? "Created" : "Updated";
+        console.log(`      ✅ ${action} job #${result.id}`);
+
+        stats.jobsProcessed++;
+
+        // Check hard limit
+        const stopCheck = checkStopConditions(stats, {
+          maxJobsPerSearch: config.scraperMaxJobsPerSearch,
+          consecutiveClosedLimit: config.scraperConsecutiveClosedLimit,
+        });
+        if (stopCheck.shouldStop) {
+          console.log(`\n      🛑 ${stopCheck.reason}`);
+          return stats.jobsProcessed;
+        }
+      } catch (error) {
+        console.error(
+          `      ❌ Error processing job ${jobNumber}:`,
+          error instanceof Error ? error.message : String(error),
+        );
+        stats.consecutiveClosedJobs = 0; // Reset on error
+        // Continue to next job - don't break entire scrape
+      }
+    }
+
+    // After processing all jobs on current page, try to load more
+    console.log("\n   🔍 Checking for more pages...");
+    const paginationInfo = await detectPaginationStrategy(page);
+
+    if (paginationInfo.hasInfiniteScroll || paginationInfo.loadMoreSelector) {
+      console.log("      Infinite scroll detected, scrolling...");
+      const newContent = await performInfiniteScroll(page, {
+        maxScrolls: config.scraperInfiniteScrollMaxScrolls,
+      });
+
+      if (newContent === 0) {
+        console.log("      No new content after scroll, stopping");
+        break;
+      }
+
+      // Continue to next iteration to re-detect clickables after scroll
+    } else if (paginationInfo.hasPagination) {
+      console.log("      Pagination detected, navigating to next page...");
+      const hasNext = await navigateToNextPage(page, paginationInfo);
+
+      if (!hasNext) {
+        console.log("      No more pages");
+        break;
+      }
+
+      await page.waitForTimeout(2000); // Rate limiting
+    } else {
+      console.log("      No pagination detected, stopping");
+      break;
+    }
+
+    pageNumber++;
+  }
+
+  // Final stats
+  console.log(`\n${"═".repeat(60)}`);
+  console.log(`✅ SPA scraping complete:`);
+  console.log(`   Jobs saved: ${stats.jobsProcessed}`);
+  console.log(`   Skipped (old): ${stats.jobsSkippedOld}`);
+  console.log(`   Skipped (closed): ${stats.jobsSkippedClosed}`);
+  console.log(`${"═".repeat(60)}\n`);
+  return stats.jobsProcessed;
+}
+
+/**
  * Generic scraping logic for any job site
  */
 async function scrapeJobSite(
@@ -179,22 +944,58 @@ async function scrapeJobSite(
     getSiteConfig(searchUrl).navigationType || "url";
 
   console.log(`📍 Navigation type: ${navigationType}`);
+  console.log(`🔧 Scraper method: ${config.scraperMethod}`);
+
+  let processedCount: number;
 
   try {
-    const processedCount = await scrapeJobsWithBrowserUse(
-      searchUrl,
-      navigationType,
-      platformId,
-    );
+    if (config.scraperMethod === "playwright") {
+      // Launch Playwright browser
+      const { launchBrowser } = await import("$lib/server/browser-utils");
+      const context = await launchBrowser("/tmp/scraper-profile", {
+        headless: config.isDevelopment ? false : true,
+      });
+
+      try {
+        const page = await context.newPage();
+        await page.goto(searchUrl, { waitUntil: "load", timeout: 30000 });
+
+        // Route by navigation type
+        if (navigationType === "click") {
+          const siteConfig = getSiteConfig(searchUrl);
+          processedCount = await scrapeJobsWithClicks(
+            page,
+            siteConfig,
+            searchUrl,
+            platformId,
+          );
+        } else {
+          processedCount = await scrapeJobsWithUrls(page, searchUrl, platformId);
+        }
+      } finally {
+        await context.close(); // Always cleanup
+      }
+    } else {
+      // Default: Browser-Use
+      processedCount = await scrapeJobsWithBrowserUse(
+        searchUrl,
+        navigationType,
+        platformId,
+      );
+    }
 
     console.log(`\n✅ Successfully processed ${processedCount} job(s)\n`);
   } catch (error) {
     console.error(
-      "❌ Browser-Use scraping failed:",
+      `❌ ${config.scraperMethod} scraping failed:`,
       error instanceof Error ? error.message : String(error),
     );
 
-    if (error instanceof Error && error.message.includes("not found")) {
+    if (
+      config.scraperMethod === "browser-use" &&
+      error instanceof Error &&
+      error.message.includes("not found")
+    ) {
       console.log(
         "\n💡 Tip: Make sure the 'extract_job_browser_use' prompt exists in the ai_chat_prompts table",
       );

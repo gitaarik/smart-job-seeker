@@ -55,6 +55,9 @@ export interface AppConfig {
   browserUseUrl: string;
   browserUseTimeout: number;
   browserUseFallbackEnabled: boolean;
+
+  // Scraper Method Selection
+  scraperMethod: "browser-use" | "playwright";
 }
 
 /**
@@ -157,6 +160,12 @@ function loadConfig(): AppConfig {
     ),
     browserUseFallbackEnabled:
       getEnv("SJS_BROWSER_USE_FALLBACK_ENABLED", "true") === "true",
+
+    // Scraper Method Selection
+    scraperMethod: (getEnv(
+      "SJS_SCRAPER_METHOD",
+      "browser-use",
+    ) as "browser-use" | "playwright"),
   };
 
   return config;
