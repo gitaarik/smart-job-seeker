@@ -23,7 +23,7 @@ export interface AppConfig {
   // LLM
   llmProvider: "groq" | "gemini";
   groqApiKey: string;
-  googleApiKey: string;
+  geminiApiKey: string;
 
   // LLM Configuration
   llmCacheTTL: number; // milliseconds
@@ -78,7 +78,7 @@ function loadConfig(): AppConfig {
     // LLM
     llmProvider: (getEnv("LLM_PROVIDER", "groq") as "groq" | "gemini"),
     groqApiKey: getEnv("SJS_GROQ_API_KEY", ""),
-    googleApiKey: getEnv("GOOGLE_API_KEY", ""),
+    geminiApiKey: getEnv("GEMINI_API_KEY", ""),
 
     // Caching (1 hour default)
     llmCacheTTL: parseInt(
