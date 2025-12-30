@@ -48,7 +48,7 @@
     "host:clear-directus-cache": "npx vite-node scripts/clear-directus-cache.ts",
     "host:build-json-resume": "npx vite-node scripts/build-json-resume.ts",
     "host:login:jobs": "npx vite-node scripts/login-to-job-sites.ts",
-    "host:scrape:jobs": "npx vite-node scripts/scrape-job-sites.ts",
+    "host:scrape:jobs": "dotenvx run -- npx vite-node scripts/scrape-job-sites.ts",
     "host:match:jobs": "dotenvx run -- npx vite-node scripts/match-jobs.ts",
     "prepare": "svelte-kit sync || echo ''",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
