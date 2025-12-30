@@ -1,10 +1,11 @@
 /**
  * Generic LLM utilities for chat completions
- * Supports multiple providers: Groq and Gemini (Google Generative AI)
+ * Supports multiple providers: Groq, Gemini (Google Generative AI), OpenAI, and OpenRouter
  */
 
 import Groq from "groq-sdk";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 import { getEnv } from "$lib/tools/get-env";
 import { llmCache } from "./cache/llm-cache";
 import { isRetryableError, withRetry } from "./utils/retry";
@@ -142,8 +143,71 @@ async function generateWithGemini(
 }
 
 /**
+ * Generate chat completion using OpenAI
+ */
+async function generateWithOpenAI(
+  messages: ChatMessage[],
+  model: string,
+  maxTokens: number,
+  temperature: number,
+  responseFormat?: ResponseFormat,
+): Promise<string> {
+  const client = new OpenAI({
+    apiKey: config.openaiApiKey || getEnv("SJS_OPENAI_API_KEY", ""),
+  });
+
+  const completion = await client.chat.completions.create({
+    model,
+    messages,
+    max_tokens: maxTokens,
+    temperature,
+    ...(responseFormat && { response_format: responseFormat }),
+  });
+
+  const responseContent = completion.choices[0]?.message?.content;
+
+  if (!responseContent) {
+    throw new Error("No content returned from OpenAI");
+  }
+
+  return responseContent;
+}
+
+/**
+ * Generate chat completion using OpenRouter
+ */
+async function generateWithOpenRouter(
+  messages: ChatMessage[],
+  model: string,
+  maxTokens: number,
+  temperature: number,
+  responseFormat?: ResponseFormat,
+): Promise<string> {
+  const client = new OpenAI({
+    apiKey: config.openrouterApiKey || getEnv("SJS_OPENROUTER_API_KEY", ""),
+    baseURL: "https://openrouter.ai/api/v1",
+  });
+
+  const completion = await client.chat.completions.create({
+    model,
+    messages,
+    max_tokens: maxTokens,
+    temperature,
+    ...(responseFormat && { response_format: responseFormat }),
+  });
+
+  const responseContent = completion.choices[0]?.message?.content;
+
+  if (!responseContent) {
+    throw new Error("No content returned from OpenRouter");
+  }
+
+  return responseContent;
+}
+
+/**
  * Generate a chat completion using the configured LLM provider
- * Supports Groq and Gemini (Google Generative AI)
+ * Supports Groq, Gemini (Google Generative AI), OpenAI, and OpenRouter
  *
  * Includes caching and retry logic for reliability
  *
@@ -156,10 +220,24 @@ export async function generateChatCompletion(
   messages: ChatMessage[],
   options: ChatCompletionOptions = {},
 ): Promise<string> {
+  // Select default model based on provider
+  let defaultModel: string;
+  switch (config.llmProvider) {
+    case "gemini":
+      defaultModel = "gemini-1.5-flash";
+      break;
+    case "openai":
+      defaultModel = "gpt-4o";
+      break;
+    case "openrouter":
+      defaultModel = "anthropic/claude-3.5-sonnet";
+      break;
+    default: // groq
+      defaultModel = "meta-llama/llama-4-scout-17b-16e-instruct";
+  }
+
   const {
-    model = config.llmProvider === "gemini"
-      ? "gemini-1.5-flash"
-      : "meta-llama/llama-4-scout-17b-16e-instruct",
+    model = defaultModel,
     maxTokens = 2048,
     temperature = 0.7,
     responseFormat,
@@ -181,22 +259,39 @@ export async function generateChatCompletion(
   const content = await withRetry(
     async () => {
       // Choose provider based on config
-      if (config.llmProvider === "gemini") {
-        return await generateWithGemini(
-          messages,
-          model,
-          maxTokens,
-          temperature,
-          responseFormat,
-        );
-      } else {
-        return await generateWithGroq(
-          messages,
-          model,
-          maxTokens,
-          temperature,
-          responseFormat,
-        );
+      switch (config.llmProvider) {
+        case "gemini":
+          return await generateWithGemini(
+            messages,
+            model,
+            maxTokens,
+            temperature,
+            responseFormat,
+          );
+        case "openai":
+          return await generateWithOpenAI(
+            messages,
+            model,
+            maxTokens,
+            temperature,
+            responseFormat,
+          );
+        case "openrouter":
+          return await generateWithOpenRouter(
+            messages,
+            model,
+            maxTokens,
+            temperature,
+            responseFormat,
+          );
+        default: // groq
+          return await generateWithGroq(
+            messages,
+            model,
+            maxTokens,
+            temperature,
+            responseFormat,
+          );
       }
     },
     {

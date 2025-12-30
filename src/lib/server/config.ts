@@ -21,9 +21,11 @@ export interface AppConfig {
   directusWebhookSecret: string;
 
   // LLM
-  llmProvider: "groq" | "gemini";
+  llmProvider: "groq" | "gemini" | "openai" | "openrouter";
   groqApiKey: string;
   geminiApiKey: string;
+  openaiApiKey: string;
+  openrouterApiKey: string;
 
   // LLM Configuration
   llmCacheTTL: number; // milliseconds
@@ -75,9 +77,15 @@ function loadConfig(): AppConfig {
     directusWebhookSecret: getEnv("SJS_WEBHOOK_SECRET"),
 
     // LLM
-    llmProvider: (getEnv("SJS_LLM_PROVIDER", "groq") as "groq" | "gemini"),
+    llmProvider: (getEnv("SJS_LLM_PROVIDER", "groq") as
+      | "groq"
+      | "gemini"
+      | "openai"
+      | "openrouter"),
     groqApiKey: getEnv("SJS_GROQ_API_KEY", ""),
     geminiApiKey: getEnv("SJS_GEMINI_API_KEY", ""),
+    openaiApiKey: getEnv("SJS_OPENAI_API_KEY", ""),
+    openrouterApiKey: getEnv("SJS_OPENROUTER_API_KEY", ""),
 
     // Caching (1 hour default)
     llmCacheTTL: parseInt(
