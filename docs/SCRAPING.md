@@ -1,227 +1,187 @@
 # Job Scraping Architecture
 
-This document describes the job scraping system, including both traditional
-URL-based navigation and modern click-based navigation for Single Page
-Applications (SPAs).
+This document describes the job scraping system using Browser-Use, an AI-powered
+browser automation framework.
 
 ## Overview
 
-The job scraper supports two navigation modes:
+The job scraper uses **Browser-Use** for autonomous navigation and data
+extraction:
 
-1. **URL-based navigation** - Traditional sites with direct job URLs
-2. **Click-based navigation** - SPAs without direct job URLs
+- **AI Agent Navigation** - Natural language instructions guide the browser
+- **Unified Approach** - Same method for both URL-based and click-based sites
+- **Automatic Extraction** - AI extracts structured data directly from pages
+- **No Manual Selectors** - Agent finds elements intelligently
 
-Both modes use Playwright for browser automation and LLMs for data extraction.
+Browser-Use replaces the previous Playwright + CDP-based approach with a fully
+autonomous AI agent.
 
 ## Architecture
 
 ### Core Components
 
 ```
-scripts/scrape-job-sites.ts       - Main scraping orchestration
-├── scrapeJobSite()               - Dual-mode router
-│   ├── scrapeJobsWithUrls()      - URL-based navigation
-│   └── scrapeJobsWithClicks()    - Click-based navigation (SPA)
+scripts/scrape-job-sites.ts          - Main scraping orchestration
+├── scrapeJobsWithBrowserUse()       - AI-powered scraping (unified)
 │
 src/lib/server/
-├── browser-utils.ts              - Playwright browser launch & context
-├── cdp-utils.ts                  - Chrome DevTools Protocol utilities
-├── job-scraper.ts                - LLM extraction functions
-├── job-site-configs.ts           - Site-specific configurations
-└── html-strip.ts                 - HTML stripping for LLM
+├── browser-use-client.ts            - Browser-Use API client
+├── job-scraper.ts                   - Job upsert & validation
+├── job-site-configs.ts              - Site-specific configurations
+└── ai-chat-utils.ts                 - Prompt interpolation
+│
+browser-use/                         - Python service (Docker)
+├── browser_controller.py            - Browser-Use agent controller
+├── main.py                          - FastAPI service
+└── Dockerfile                       - Browser-Use container
 ```
 
-### Navigation Mode Selection
+## Browser-Use Integration
 
-The scraper automatically selects the navigation mode based on site
-configuration:
+### How It Works
+
+Browser-Use is a Python library that provides an AI agent capable of:
+
+- Interpreting natural language instructions
+- Navigating web pages autonomously
+- Finding and clicking elements
+- Extracting structured data
+- Handling pagination and scrolling
+
+The scraper sends a task description to the Browser-Use service:
 
 ```typescript
-const siteConfig = getSiteConfig(searchUrl);
-const navigationType = siteConfig.navigationType || "url"; // default: "url"
+const task = `
+Navigate to ${searchUrl} and extract job listings.
+For each job:
+- Extract title, company, location, salary, description, etc.
+- Return structured JSON data
 
-if (navigationType === "click") {
-  // SPA mode: Click through job cards
-} else {
-  // Traditional mode: Navigate to job URLs
-}
-```
+${navigationInstructions}
+`;
 
-## URL-Based Navigation (Traditional)
-
-**Used for:** LinkedIn, Indeed, Glassdoor, most traditional job boards
-
-### Flow
-
-1. Navigate to search results page
-2. Extract HTML and send to LLM
-3. LLM identifies job URLs from HTML
-4. Navigate to each job URL
-5. Extract job data from each page
-6. Save to database
-
-### Example Configuration
-
-```typescript
-"linkedin.com": {
-  timeout: 45000,
-  selectors: {
-    jobListContainer: ".jobs-search__results-list",
-    jobListItem: ".job-card-container",
-    jobDescription: ".jobs-description",
-  },
-  navigationType: "url", // Traditional navigation
-  validator: async (page) => {
-    const hasJobs = await page.locator(".job-card-container").isVisible();
-    const hasLoginWall = await page.locator(".authwall-join-form").isVisible();
-    return hasJobs && !hasLoginWall;
-  },
-}
-```
-
-### LLM Prompts
-
-**Prompt:** `extract_job_links`
-
-- **Input:** Stripped HTML from search results
-- **Output:** Array of job URLs
-
-**Prompt:** `extract_job_data`
-
-- **Input:** Stripped HTML from job page
-- **Output:** Structured job data (title, company, location, etc.)
-
-## Click-Based Navigation (SPAs)
-
-**Used for:** Modern SPAs where jobs don't have unique URLs
-
-### Flow
-
-1. Navigate to search results page
-2. **Use CDP to detect clickable elements** (Chrome DevTools Protocol)
-3. Mark elements with `data-clickable-id` attributes
-4. Extract HTML (markers survive stripping)
-5. **LLM identifies job card pattern** from marked elements
-6. Click each identified job card
-7. Extract job data from detail panel
-8. Save to database with synthetic URLs (`#job-1`, `#job-2`, etc.)
-
-### Example Configuration
-
-```typescript
-"example-spa-job-site.com": {
-  timeout: 30000,
-  selectors: {
-    jobListContainer: ".job-search-results",
-    jobDescription: ".job-detail-panel",
-  },
-  navigationType: "click", // SPA click-based navigation
-  validator: async (page) => {
-    const hasResults = await page.locator(".job-search-results").isVisible();
-    return hasResults;
-  },
-}
-```
-
-### CDP Click Detection
-
-The scraper uses Chrome DevTools Protocol to find elements with actual event
-listeners:
-
-```typescript
-// Mark all clickable elements in container
-const clickableCount = await markClickableElementsInContainer(
-  page,
-  ".job-search-results",
-);
-
-// Results in HTML like:
-// <div data-clickable-id="0" data-click-text="Software Engineer">...</div>
-// <div data-clickable-id="1" data-click-text="Product Manager">...</div>
-```
-
-**Why CDP?**
-
-- Detects `addEventListener('click', ...)` handlers
-- Finds elements with `cursor: pointer` style
-- Works with React, Vue, Angular, any framework
-- More reliable than guessing from HTML attributes
-
-### LLM Prompts
-
-**Prompt:** `extract_job_click_selectors`
-
-- **Input:** Stripped HTML with `data-clickable-id` markers
-- **Output:** Array of clickable IDs that are job cards
-- **Purpose:** Identifies repeating job card pattern (excludes pagination,
-  filters, etc.)
-
-**Prompt:** `extract_job_data`
-
-- **Input:** Stripped HTML from job detail panel
-- **Output:** Structured job data (same as URL mode)
-
-### Synthetic URLs
-
-Since SPAs don't have unique job URLs, the scraper generates synthetic URLs:
-
-```
-https://example-spa-job-site.com/jobs?search=engineer#job-1
-https://example-spa-job-site.com/jobs?search=engineer#job-2
-https://example-spa-job-site.com/jobs?search=engineer#job-3
-```
-
-These URLs are used for:
-
-- Job deduplication (same URL = same job)
-- HTML change detection (skip if unchanged)
-- Database source_url field
-
-## Playwright Benefits
-
-The migration from Puppeteer to Playwright provides:
-
-### Auto-Waiting
-
-Playwright automatically waits for elements to be actionable:
-
-```typescript
-// Old Puppeteer approach - custom wait logic required
-await smartWait(page, siteConfig.searchPage);
-await validateContentLoaded(page, [".job-card"]);
-
-// New Playwright approach - auto-waits built-in
-await page.locator(".job-card").click(); // Waits until clickable
-await page.locator(".job-description").waitFor({ state: "visible" });
-```
-
-### Better Selectors
-
-```typescript
-// CSS selectors
-page.locator(".job-card");
-
-// Text selectors
-page.getByText("Apply Now");
-
-// Role selectors
-page.getByRole("button", { name: "Apply" });
-
-// Combined
-page.locator(".job-list").getByRole("link");
-```
-
-### CDP Access
-
-Direct access to Chrome DevTools Protocol for advanced features:
-
-```typescript
-const client = await page.context().newCDPSession(page);
-await client.send("DOM.enable");
-const { listeners } = await client.send("DOMDebugger.getEventListeners", {
-  objectId: object.objectId,
+const response = await browserUse.executeTask({
+  task,
+  startUrl: searchUrl,
+  maxTime: 180, // 3 minutes max
 });
 ```
+
+### Navigation Modes
+
+Both modes use the same Browser-Use approach with different instructions:
+
+**URL Mode** (Traditional Sites):
+
+```
+Navigate through pagination links/buttons to find more jobs.
+Stop after finding 20 jobs or 5 pages.
+```
+
+**Click Mode** (SPAs):
+
+```
+Click on each job card to view details.
+Stop after finding 20 jobs.
+```
+
+### AI Prompt Configuration
+
+The Browser-Use prompt is stored in Directus (`ai_chat_prompts` collection):
+
+**Prompt:** `extract_job_browser_use`
+
+```
+System: You are a job scraper agent. Navigate the page and extract job listings.
+
+User: Navigate to the job search page and find all job postings.
+For each job, extract:
+- title (string)
+- job_description (string)
+- company_description (string)
+- job_poster (string)
+- date_posted (ISO date string)
+- location (string)
+- remote (string: "yes", "no", "hybrid")
+- experience_level (string)
+- job_type (string)
+- salary information
+- skills (array)
+
+Return as JSON array of jobs.
+
+{navigationInstructions}
+```
+
+The `{navigationInstructions}` variable is interpolated based on navigation
+mode.
+
+### Configuration Example
+
+Site configuration in `job-site-configs.ts`:
+
+```typescript
+export const SITE_CONFIGS: Record<string, SiteConfig> = {
+  "linkedin.com": {
+    timeout: 45000,
+    navigationType: "url", // or "click" for SPAs
+  },
+};
+```
+
+Much simpler than before - no selectors needed, Browser-Use finds everything!
+
+## Browser-Use Benefits
+
+The migration to Browser-Use provides significant advantages:
+
+### No Manual Selector Configuration
+
+**Before** (Playwright + CDP):
+
+```typescript
+selectors: {
+  jobListContainer: ".jobs-search__results-list",
+  jobListItem: ".job-card-container",
+  jobDescription: ".jobs-description",
+  pagination: ".pagination-next",
+}
+```
+
+**After** (Browser-Use):
+
+```typescript
+// No selectors needed - AI finds everything!
+timeout: 45000,
+navigationType: "url"
+```
+
+### Autonomous Navigation
+
+The AI agent:
+
+- Finds job cards automatically
+- Handles pagination intelligently
+- Adapts to layout changes
+- Works with any framework (React, Vue, Angular, vanilla JS)
+
+### Single Prompt for Everything
+
+One prompt template handles:
+
+- Navigation (clicking, scrolling, pagination)
+- Data extraction (titles, descriptions, salaries)
+- Error handling (login walls, CAPTCHAs)
+- Site-specific quirks
+
+### Built on Playwright
+
+Browser-Use uses Playwright internally, so you get:
+
+- Auto-waiting for elements
+- Reliable CDP access
+- Cross-browser support
+- Vision capabilities (with supported LLMs)
 
 ## Usage
 
@@ -264,97 +224,132 @@ Add new sites in `src/lib/server/job-site-configs.ts`:
 ```typescript
 export const SITE_CONFIGS: Record<string, SiteConfig> = {
   "mysite.com": {
-    timeout: 30000, // Network idle timeout
+    timeout: 30000,
     navigationType: "url", // "url" | "click"
-    selectors: {
-      jobListContainer: ".jobs-list", // Optional: container selector
-      jobDescription: ".job-details", // Optional: job detail selector
-    },
-    validator: async (page) => { // Optional: custom validation
-      return await page.locator(".jobs-list").isVisible();
-    },
   },
 };
 ```
 
+That's it! Browser-Use handles everything else automatically.
+
 ### AI Prompts
 
-Prompts are managed in Directus (`ai_chat_prompts` collection):
+The main prompt in Directus (`ai_chat_prompts` collection):
 
-1. **extract_job_links** - Extract URLs from search results (URL mode)
-2. **extract_job_click_selectors** - Identify job cards from markers (click
-   mode)
-3. **extract_job_data** - Extract structured data from job page (both modes)
-4. **detect_login_page** - Detect if page requires login (both modes)
+**extract_job_browser_use** - Complete navigation and extraction prompt
+
+- Handles both URL and click modes
+- Uses `{navigationInstructions}` variable for mode-specific guidance
+- Returns structured JSON array of jobs
+
+### Browser-Use Service Configuration
+
+The Python service runs in Docker and accepts these environment variables:
+
+```bash
+# .env in browser-use/
+GROQ_API_KEY=your_groq_api_key_here
+BROWSER_HEADLESS=true  # Set to false for debugging
+```
+
+Service configuration in TypeScript:
+
+```typescript
+// src/lib/server/config.ts
+export const config = {
+  browserUseUrl: process.env.BROWSER_USE_URL || "http://localhost:8000",
+  browserUseTimeout: 180000, // 3 minutes
+  browserUseEnabled: true,
+};
+```
 
 ## Debugging
 
-### Enable Debug Screenshots
+### Enable Headful Mode
 
-```typescript
-// In config
-scraperSaveDebugScreenshots: true;
+To see what Browser-Use is doing:
+
+```bash
+# In browser-use/.env
+BROWSER_HEADLESS=false
 ```
 
-Screenshots saved to `debug-screenshots/` directory.
+The browser window will be visible during scraping.
 
-### Check HTML Stripping
+### Check Browser-Use Logs
 
-The HTML stripper preserves certain attributes:
+```bash
+# View Python service logs
+docker compose logs -f browser-use
 
-```typescript
-// Preserved attributes
-data-*              // All data attributes (includes data-clickable-id)
-href                // For link extraction
-aria-*              // Accessibility attributes
+# Or check execution history
+# Browser-Use saves action history as animated GIFs
+ls browser-use/agent_history.gif
+```
 
-// Removed
-class, id, style    // Visual styling
-onclick, onload     // Inline handlers (use CDP instead)
+### Test the Python Service Directly
+
+```bash
+# Test if service is running
+curl http://localhost:8000/health
+
+# Execute a simple task
+curl -X POST http://localhost:8000/execute \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task": "Navigate to google.com and search for jobs",
+    "start_url": "https://google.com",
+    "max_time": 60
+  }'
 ```
 
 ### Common Issues
 
-**No job links found:**
+**Browser-Use service not responding:**
 
+- Check if container is running: `docker compose ps`
+- View logs: `docker compose logs browser-use`
+- Verify Groq API key is set in `browser-use/.env`
+
+**No jobs extracted:**
+
+- Check prompt template exists in Directus: `extract_job_browser_use`
+- Verify navigation mode is set correctly
+- Try headful mode to see what's happening
 - Check if site requires login
-- Verify selectors in config
-- Check for CAPTCHA
-- Inspect debug screenshot
 
-**Click-based navigation not working:**
+**Extraction timeout:**
 
-- Verify `navigationType: "click"` in config
-- Check if `jobListContainer` selector is correct
-- Ensure CDP can access event listeners (Chromium only)
-- Verify LLM prompt `extract_job_click_selectors` exists
+- Increase `maxTime` in `scrapeJobsWithBrowserUse()`
+- Reduce `scraperMaxJobsPerSearch` for faster completion
+- Check for slow-loading sites
 
-**Jobs not updating:**
+**Vision mode disabled warning:**
 
-- HTML change detection prevents re-extraction
-- Use `--force` flag to override
-- Check `source_html_stripped` field in database
+- Expected behavior - Groq doesn't support vision
+- `use_vision=False` is set in `browser_controller.py`
+- Agent still works using DOM-based navigation
 
 ## Performance
 
-### Metrics
+### Browser-Use vs Previous Approach
 
-From Phase 1-3 migration:
-
-| Metric            | Before (Puppeteer)    | After (Playwright)  |
-| ----------------- | --------------------- | ------------------- |
-| Lines of code     | ~1,389                | ~1,286 (-103 lines) |
-| Custom wait logic | ~160 lines            | ~53 lines (-67%)    |
-| Dependencies      | 3 packages            | 2 packages          |
-| Auto-waiting      | Custom implementation | Built-in            |
-| SPA support       | Limited               | Full (click mode)   |
+| Metric                  | Playwright + CDP | Browser-Use        |
+| ----------------------- | ---------------- | ------------------ |
+| Configuration required  | Extensive        | Minimal            |
+| Selector maintenance    | High             | None (AI finds it) |
+| Adaptation to changes   | Manual           | Automatic          |
+| Multi-framework support | Limited          | Universal          |
+| Vision capabilities     | No               | Yes (with GPT-4o)  |
 
 ### Optimization Tips
 
-1. **Container scoping** - Use `jobListContainer` to limit CDP search
-2. **Parallel searches** - Run multiple searches in separate browser contexts
-3. **HTML change detection** - Skip unchanged jobs automatically
-4. **Rate limiting** - 2-second delay between jobs (configurable)
+1. **Batch processing** - Run multiple searches sequentially (Browser-Use uses
+   one browser instance)
+2. **Max time limits** - Set appropriate `maxTime` based on site complexity
+3. **Job limits** - Use `scraperMaxJobsPerSearch` to control extraction depth
+4. **Headless mode** - Keep `BROWSER_HEADLESS=true` in production for
+   performance
 
 ## Testing
 
@@ -394,38 +389,51 @@ Possible enhancements:
 
 ### Stack
 
-- **Browser:** Playwright (Chromium)
-- **Language:** TypeScript
+- **AI Agent:** Browser-Use (Python)
+- **Browser:** Playwright (Chromium) via Browser-Use
+- **Language:** TypeScript (Node.js) + Python (Browser-Use service)
 - **LLM:** Groq API (Llama models)
 - **Database:** PostgreSQL (via Prisma)
 - **CMS:** Directus (for prompts and config)
+- **Service Communication:** FastAPI (Python) ↔ HTTP Client (TypeScript)
 
 ### Key Libraries
 
+**TypeScript:**
+
 ```json
 {
-  "playwright": "^1.49.1",
-  "@playwright/test": "^1.49.1",
-  "cheerio": "^1.0.0", // HTML parsing
   "commander": "^12.1.0" // CLI
 }
+```
+
+**Python (Browser-Use service):**
+
+```txt
+browser-use>=0.1.0
+playwright>=1.40.0
+groq>=0.4.0
+fastapi>=0.100.0
+uvicorn>=0.20.0
 ```
 
 ### File Structure
 
 ```
 scripts/
-  scrape-job-sites.ts           - Main scraper
-  login-to-job-sites.ts         - Manual login helper
-  export-profiles-pdf.ts        - PDF export (uses Playwright)
+  scrape-job-sites.ts              - Main scraper orchestration
 
 src/lib/server/
-  browser-utils.ts              - Playwright browser management
-  cdp-utils.ts                  - CDP click detection
-  job-scraper.ts                - LLM extraction
-  job-site-configs.ts           - Site configurations
-  html-strip.ts                 - HTML preprocessing
-  page-wait-utils.ts            - Advanced wait utilities
+  browser-use-client.ts            - Browser-Use API client
+  job-scraper.ts                   - Job upsert & validation
+  job-site-configs.ts              - Site configurations
+  ai-chat-utils.ts                 - Prompt interpolation
+
+browser-use/                       - Python service
+  browser_controller.py            - Browser-Use agent controller
+  main.py                          - FastAPI endpoints
+  Dockerfile                       - Service containerization
+  requirements.txt                 - Python dependencies
 ```
 
 ## License
