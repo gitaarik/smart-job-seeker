@@ -30,6 +30,10 @@ Look at the scripts in `package.json` for help executing things in containers.
 - Use `npx tsx` for running TypeScript scripts (instead of `node`)
 - When creating scripts, use ES Modules `import` instead of CommonJS `require`
 - When removing a file, use `rm -f` instead of `rm`
+- **Path Aliases**: The `$lib/` alias is configured for use in scripts directory
+  - TypeScript: Configured in `tsconfig.json` with paths mapping and includes
+  - Deno: Configured in `deno.json` with imports mapping
+  - Use `$lib/` imports in scripts for consistency with SvelteKit code
 
 ## Code Quality
 
