@@ -5,6 +5,9 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
 import os
 import time
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class BrowserController:
@@ -15,7 +18,10 @@ class BrowserController:
             os.getenv("SJS_LLM_PROVIDER", "groq")
         ).lower()
 
-        # Default models per provider
+        logger.info(f"[Browser-Use] Initializing with provider: {provider}")
+        print(f"[Browser-Use] Initializing with provider: {provider}", flush=True)
+
+        # Default models per provider (browseruse uses its own optimized model)
         default_models = {
             "groq": "llama-3.3-70b-versatile",
             "gemini": "gemini-2.0-flash-exp",
@@ -28,6 +34,9 @@ class BrowserController:
             "SJS_LLM_MODEL_BROWSER_USE",
             os.getenv("SJS_LLM_MODEL", default_models.get(provider, default_models["groq"]))
         )
+
+        logger.info(f"[Browser-Use] Using model: {model}")
+        print(f"[Browser-Use] Using model: {model}", flush=True)
 
         if provider == "gemini":
             # Use Google Gemini
@@ -58,6 +67,16 @@ class BrowserController:
             # OpenRouter vision support depends on model
             # Claude 3.5 Sonnet and other vision models support it
             self.use_vision = "claude" in model or "gpt-4" in model or "gemini" in model or "qvq" in model
+        elif provider == "browseruse":
+            # Use Browser Use Cloud via OpenAI-compatible API
+            self.llm = ChatOpenAI(
+                model="gpt-4o",  # Browser Use Cloud's optimized model
+                base_url="https://cloud.browser-use.com/v1",
+                api_key=os.getenv("SJS_BROWSERUSE_API_KEY"),
+                temperature=0.3,
+            )
+            # Browser Use Cloud supports vision
+            self.use_vision = True
         else:
             # Default to Groq
             self.llm = ChatGroq(
