@@ -2,6 +2,11 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from browser_controller import BrowserController
 from typing import Optional, Any
+import traceback
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Browser-Use API")
 
@@ -45,4 +50,6 @@ async def execute_task(request: ExecuteTaskRequest):
         )
         return result
     except Exception as e:
+        logger.error(f"Error executing task: {str(e)}")
+        logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
