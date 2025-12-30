@@ -37,6 +37,39 @@ export interface JobData {
   application_url?: string; // Optional, used as source URL
 }
 
+/**
+ * Sanitize response object by removing screenshot data for logging
+ */
+function sanitizeForLogging(obj: any, maxDepth = 3, currentDepth = 0): any {
+  if (currentDepth > maxDepth) return "[Max depth reached]";
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj !== "object") return obj;
+
+  if (Array.isArray(obj)) {
+    return obj.map((item) =>
+      sanitizeForLogging(item, maxDepth, currentDepth + 1)
+    );
+  }
+
+  const sanitized: any = {};
+  for (const [key, value] of Object.entries(obj)) {
+    // Skip screenshot fields
+    if (key === "screenshot" || key === "screenshots") {
+      sanitized[key] = "[Screenshot data removed]";
+      continue;
+    }
+
+    // Truncate very long strings (likely base64 encoded data)
+    if (typeof value === "string" && value.length > 1000) {
+      sanitized[key] = `[Long string truncated: ${value.length} chars]`;
+      continue;
+    }
+
+    sanitized[key] = sanitizeForLogging(value, maxDepth, currentDepth + 1);
+  }
+  return sanitized;
+}
+
 export class BrowserUseClient {
   private config: BrowserUseConfig;
 
@@ -104,8 +137,32 @@ export class BrowserUseClient {
 
         // If it has 'history' property, it means Browser-Use failed
         if (resultObj.history || resultObj.error) {
+          // Check for rate limit errors
+          const isRateLimit =
+            JSON.stringify(resultObj).includes("Rate limit") ||
+            JSON.stringify(resultObj).includes("rate limit") ||
+            JSON.stringify(resultObj).includes("429");
+
+          if (isRateLimit) {
+            console.error("❌ Browser-Use hit LLM API rate limit");
+            console.log(
+              "💡 Tip: Check your LLM provider API key and rate limits",
+            );
+            console.log(
+              "Current provider:",
+              process.env.SJS_LLM_PROVIDER_BROWSER_USE ||
+                process.env.SJS_LLM_PROVIDER || "groq",
+            );
+            throw new Error(
+              "Browser-Use hit rate limit - check API key and provider limits",
+            );
+          }
+
           console.error("❌ Browser-Use failed to extract job data");
-          console.log("Error details:", JSON.stringify(resultObj, null, 2));
+          console.log(
+            "Error details:",
+            JSON.stringify(sanitizeForLogging(resultObj), null, 2),
+          );
           throw new Error("Browser-Use agent failed to extract job data");
         }
 
@@ -130,7 +187,10 @@ export class BrowserUseClient {
       }
     } catch (error) {
       console.error("❌ Failed to parse Browser-Use response:", error);
-      console.log("Raw response:", JSON.stringify(response.result, null, 2).substring(0, 500));
+      console.log(
+        "Raw response:",
+        JSON.stringify(sanitizeForLogging(response.result), null, 2),
+      );
       throw new Error("Browser-Use returned invalid or failed response");
     }
   }
