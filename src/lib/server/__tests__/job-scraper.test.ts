@@ -1,660 +1,79 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  extractJobData,
-  extractJobLinks,
+  getPlatformIdFromUrl,
   normalizeJobUrl,
   upsertJob,
 } from "../job-scraper";
 
 // Mock dependencies
-vi.mock("../llm", () => ({
-  generateChatCompletion: vi.fn(),
-}));
-
-vi.mock("../html-strip", () => ({
-  stripHtmlForLlm: vi.fn((html) => html),
-}));
-
-vi.mock("../ai-chat-utils", () => ({
-  interpolatePrompt: vi.fn((template, vars) => {
-    return template.replace(/\{\{(\w+)\}\}/g, (_, key) => vars[key] || "");
-  }),
-}));
-
 vi.mock("$lib/db", () => ({
   dbDirect: {
-    ai_chat_prompts: {
-      findUnique: vi.fn(),
-    },
     jobs: {
       findFirst: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
     },
     job_platforms: {
+      findFirst: vi.fn(),
       findUnique: vi.fn(),
     },
   },
 }));
 
-describe("extractJobLinks", () => {
-  let mockGenerateChatCompletion: any;
+describe("getPlatformIdFromUrl", () => {
   let mockDb: any;
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    const llmModule = await import("../llm");
-    mockGenerateChatCompletion = vi.mocked(llmModule).generateChatCompletion;
     const dbModule = await import("$lib/db");
     mockDb = vi.mocked(dbModule).dbDirect;
   });
 
-  it("should extract job links from HTML", async () => {
-    const html = "<html>Job listings</html>";
+  it("should find platform by hostname", async () => {
+    mockDb.job_platforms.findFirst.mockResolvedValueOnce({ id: 1 });
 
-    mockDb.ai_chat_prompts.findUnique.mockResolvedValueOnce({
-      request: "extract_job_links",
-      system_prompt: "Extract job links",
-      user_prompt: "HTML: {{html}}",
-      format: null,
-    });
+    const result = await getPlatformIdFromUrl("https://example.com/job/123");
 
-    mockGenerateChatCompletion.mockResolvedValueOnce(
-      JSON.stringify({
-        urls: [
-          "https://example.com/job/123",
-          "https://example.com/job/456",
+    expect(result).toBe(1);
+    expect(mockDb.job_platforms.findFirst).toHaveBeenCalledWith({
+      where: {
+        OR: [
+          { url: { contains: "example.com" } },
+          { url: { contains: "example.com" } },
         ],
-      }),
-    );
-
-    const links = await extractJobLinks(html);
-
-    expect(links).toEqual([
-      "https://example.com/job/123",
-      "https://example.com/job/456",
-    ]);
-  });
-
-  it("should use structured output if format is provided", async () => {
-    const html = "<html>Job listings</html>";
-
-    const format = {
-      type: "array",
-      items: { type: "string" },
-    };
-
-    mockDb.ai_chat_prompts.findUnique.mockResolvedValueOnce({
-      request: "extract_job_links",
-      system_prompt: "Extract job links",
-      user_prompt: "HTML: {{html}}",
-      format,
+      },
     });
-
-    mockGenerateChatCompletion.mockResolvedValueOnce(
-      JSON.stringify({ urls: ["https://example.com/job/123"] }),
-    );
-
-    await extractJobLinks(html);
-
-    expect(mockGenerateChatCompletion).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({
-        temperature: 0.3,
-        responseFormat: {
-          type: "json_schema",
-          json_schema: {
-            name: "job_links",
-            strict: true,
-            schema: format,
-          },
-        },
-      }),
-    );
   });
 
-  it("should throw error if prompt template not found", async () => {
-    mockDb.ai_chat_prompts.findUnique.mockResolvedValueOnce(null);
+  it("should strip www from hostname", async () => {
+    mockDb.job_platforms.findFirst.mockResolvedValueOnce({ id: 2 });
 
-    await expect(extractJobLinks("<html></html>")).rejects.toThrow(
-      "Prompt template 'extract_job_links' not found",
-    );
-  });
+    const result = await getPlatformIdFromUrl("https://www.linkedin.com/jobs");
 
-  it("should throw error if LLM response is not an array", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-
-    try {
-      mockDb.ai_chat_prompts.findUnique.mockResolvedValueOnce({
-        request: "extract_job_links",
-        system_prompt: "Extract job links",
-        user_prompt: "HTML: {{html}}",
-        format: null,
-      });
-
-      mockGenerateChatCompletion.mockResolvedValueOnce(
-        JSON.stringify({ links: [] }),
-      );
-
-      await expect(extractJobLinks("<html></html>")).rejects.toThrow(
-        "Failed to extract job links: LLM response.urls is not an array",
-      );
-    } finally {
-      consoleSpy.mockRestore();
-    }
-  });
-
-  it("should throw error if JSON parsing fails", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-
-    try {
-      mockDb.ai_chat_prompts.findUnique.mockResolvedValueOnce({
-        request: "extract_job_links",
-        system_prompt: "Extract job links",
-        user_prompt: "HTML: {{html}}",
-        format: null,
-      });
-
-      mockGenerateChatCompletion.mockResolvedValueOnce("invalid json");
-
-      await expect(extractJobLinks("<html></html>")).rejects.toThrow(
-        /Failed to extract job links:/,
-      );
-    } finally {
-      consoleSpy.mockRestore();
-    }
-  });
-});
-
-describe("extractJobData", () => {
-  let mockGenerateChatCompletion: any;
-  let mockDb: any;
-
-  beforeEach(async () => {
-    vi.clearAllMocks();
-    const llmModule = await import("../llm");
-    mockGenerateChatCompletion = vi.mocked(llmModule).generateChatCompletion;
-    const dbModule = await import("$lib/db");
-    mockDb = vi.mocked(dbModule).dbDirect;
-  });
-
-  it("should extract job data from HTML", async () => {
-    const html = "<html>Job posting</html>";
-    const sourceUrl = "https://example.com/job/123";
-
-    mockDb.ai_chat_prompts.findUnique.mockResolvedValueOnce({
-      request: "extract_job_data",
-      system_prompt: "Extract job data",
-      user_prompt: "HTML: {{html}}",
-      format: null,
+    expect(result).toBe(2);
+    expect(mockDb.job_platforms.findFirst).toHaveBeenCalledWith({
+      where: {
+        OR: [
+          { url: { contains: "www.linkedin.com" } },
+          { url: { contains: "linkedin.com" } },
+        ],
+      },
     });
-
-    const jobData = {
-      title: "Software Engineer",
-      job_description: "Great job",
-      company_description: "Great company",
-      job_poster: "Company Inc",
-      date_posted: "2025-12-20",
-      location: "Remote",
-      remote: "yes",
-      experience_level: "Senior",
-      job_type: "Full-time",
-      salary_min: 100000,
-      salary_max: 150000,
-      salary_currency: "USD",
-      salary_period: "year",
-      skills: ["JavaScript", "React", "Node.js"],
-      status: "hiring",
-    };
-
-    mockGenerateChatCompletion.mockResolvedValueOnce(JSON.stringify(jobData));
-
-    const result = await extractJobData(html, sourceUrl);
-
-    expect(result.title).toBe("Software Engineer");
-    expect(result.job_description).toBe("Great job");
-    expect(result.date_posted).toBeInstanceOf(Date);
   });
 
-  it("should handle null date_posted", async () => {
-    const html = "<html>Job posting</html>";
-    const sourceUrl = "https://example.com/job/123";
+  it("should return null when platform not found", async () => {
+    mockDb.job_platforms.findFirst.mockResolvedValueOnce(null);
 
-    mockDb.ai_chat_prompts.findUnique.mockResolvedValueOnce({
-      request: "extract_job_data",
-      system_prompt: "Extract job data",
-      user_prompt: "HTML: {{html}}",
-      format: null,
-    });
+    const result = await getPlatformIdFromUrl("https://unknown.com/job");
 
-    const jobData = {
-      title: "Software Engineer",
-      job_description: "Great job",
-      company_description: null,
-      job_poster: null,
-      date_posted: null,
-      location: null,
-      remote: null,
-      experience_level: null,
-      job_type: null,
-      salary_min: null,
-      salary_max: null,
-      salary_currency: null,
-      salary_period: null,
-      skills: null,
-      status: null,
-    };
-
-    mockGenerateChatCompletion.mockResolvedValueOnce(JSON.stringify(jobData));
-
-    const result = await extractJobData(html, sourceUrl);
-
-    expect(result.date_posted).toBeNull();
+    expect(result).toBeNull();
   });
 
-  it("should parse relative date '3 days ago'", async () => {
-    const html = "<html>Job posting</html>";
-    const sourceUrl = "https://example.com/job/123";
+  it("should return null for invalid URLs", async () => {
+    const result = await getPlatformIdFromUrl("not-a-url");
 
-    mockDb.ai_chat_prompts.findUnique.mockResolvedValueOnce({
-      request: "extract_job_data",
-      system_prompt: "Extract job data",
-      user_prompt: "HTML: {{html}}",
-      format: null,
-    });
-
-    const jobData = {
-      title: "Software Engineer",
-      job_description: "Great job",
-      company_description: null,
-      job_poster: null,
-      date_posted: "3 days ago",
-      location: null,
-      remote: null,
-      experience_level: null,
-      job_type: null,
-      salary_min: null,
-      salary_max: null,
-      salary_currency: null,
-      salary_period: null,
-      skills: null,
-      status: null,
-    };
-
-    mockGenerateChatCompletion.mockResolvedValueOnce(JSON.stringify(jobData));
-
-    const result = await extractJobData(html, sourceUrl);
-
-    // Should be a valid Date, approximately 3 days ago
-    expect(result.date_posted).toBeInstanceOf(Date);
-    if (result.date_posted) {
-      const now = new Date();
-      const daysDiff = Math.floor(
-        (now.getTime() - result.date_posted.getTime()) / (1000 * 60 * 60 * 24),
-      );
-      expect(daysDiff).toBeGreaterThanOrEqual(2);
-      expect(daysDiff).toBeLessThanOrEqual(4);
-    }
-  });
-
-  it("should parse relative date 'yesterday'", async () => {
-    const html = "<html>Job posting</html>";
-    const sourceUrl = "https://example.com/job/123";
-
-    mockDb.ai_chat_prompts.findUnique.mockResolvedValueOnce({
-      request: "extract_job_data",
-      system_prompt: "Extract job data",
-      user_prompt: "HTML: {{html}}",
-      format: null,
-    });
-
-    const jobData = {
-      title: "Software Engineer",
-      job_description: "Great job",
-      company_description: null,
-      job_poster: null,
-      date_posted: "posted yesterday",
-      location: null,
-      remote: null,
-      experience_level: null,
-      job_type: null,
-      salary_min: null,
-      salary_max: null,
-      salary_currency: null,
-      salary_period: null,
-      skills: null,
-      status: null,
-    };
-
-    mockGenerateChatCompletion.mockResolvedValueOnce(JSON.stringify(jobData));
-
-    const result = await extractJobData(html, sourceUrl);
-
-    // Should be start of yesterday
-    expect(result.date_posted).toBeInstanceOf(Date);
-    if (result.date_posted) {
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      yesterday.setHours(0, 0, 0, 0);
-
-      expect(result.date_posted.getDate()).toBe(yesterday.getDate());
-      expect(result.date_posted.getMonth()).toBe(yesterday.getMonth());
-      expect(result.date_posted.getFullYear()).toBe(yesterday.getFullYear());
-    }
-  });
-
-  it("should set date to null for invalid date strings", async () => {
-    const html = "<html>Job posting</html>";
-    const sourceUrl = "https://example.com/job/123";
-    const consoleWarnSpy = vi
-      .spyOn(console, "warn")
-      .mockImplementation(() => {});
-
-    try {
-      mockDb.ai_chat_prompts.findUnique.mockResolvedValueOnce({
-        request: "extract_job_data",
-        system_prompt: "Extract job data",
-        user_prompt: "HTML: {{html}}",
-        format: null,
-      });
-
-      const jobData = {
-        title: "Software Engineer",
-        job_description: "Great job",
-        company_description: null,
-        job_poster: null,
-        date_posted: "not a valid date",
-        location: null,
-        remote: null,
-        experience_level: null,
-        job_type: null,
-        salary_min: null,
-        salary_max: null,
-        salary_currency: null,
-        salary_period: null,
-        skills: null,
-        status: null,
-      };
-
-      mockGenerateChatCompletion.mockResolvedValueOnce(JSON.stringify(jobData));
-
-      const result = await extractJobData(html, sourceUrl);
-
-      expect(result.date_posted).toBeNull();
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining("Invalid date_posted"),
-      );
-    } finally {
-      consoleWarnSpy.mockRestore();
-    }
-  });
-
-  it("should set date to null for future dates", async () => {
-    const html = "<html>Job posting</html>";
-    const sourceUrl = "https://example.com/job/123";
-    const consoleWarnSpy = vi
-      .spyOn(console, "warn")
-      .mockImplementation(() => {});
-
-    try {
-      mockDb.ai_chat_prompts.findUnique.mockResolvedValueOnce({
-        request: "extract_job_data",
-        system_prompt: "Extract job data",
-        user_prompt: "HTML: {{html}}",
-        format: null,
-      });
-
-      const jobData = {
-        title: "Software Engineer",
-        job_description: "Great job",
-        company_description: null,
-        job_poster: null,
-        date_posted: "2030-12-20",
-        location: null,
-        remote: null,
-        experience_level: null,
-        job_type: null,
-        salary_min: null,
-        salary_max: null,
-        salary_currency: null,
-        salary_period: null,
-        skills: null,
-        status: null,
-      };
-
-      mockGenerateChatCompletion.mockResolvedValueOnce(JSON.stringify(jobData));
-
-      const result = await extractJobData(html, sourceUrl);
-
-      expect(result.date_posted).toBeNull();
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        expect.stringContaining("Invalid date_posted"),
-      );
-    } finally {
-      consoleWarnSpy.mockRestore();
-    }
-  });
-
-  it("should parse absolute ISO dates", async () => {
-    const html = "<html>Job posting</html>";
-    const sourceUrl = "https://example.com/job/123";
-
-    mockDb.ai_chat_prompts.findUnique.mockResolvedValueOnce({
-      request: "extract_job_data",
-      system_prompt: "Extract job data",
-      user_prompt: "HTML: {{html}}",
-      format: null,
-    });
-
-    const jobData = {
-      title: "Software Engineer",
-      job_description: "Great job",
-      company_description: null,
-      job_poster: null,
-      date_posted: "2025-12-20",
-      location: null,
-      remote: null,
-      experience_level: null,
-      job_type: null,
-      salary_min: null,
-      salary_max: null,
-      salary_currency: null,
-      salary_period: null,
-      skills: null,
-      status: null,
-    };
-
-    mockGenerateChatCompletion.mockResolvedValueOnce(JSON.stringify(jobData));
-
-    const result = await extractJobData(html, sourceUrl);
-
-    expect(result.date_posted).toBeInstanceOf(Date);
-    if (result.date_posted) {
-      expect(result.date_posted.getFullYear()).toBe(2025);
-      expect(result.date_posted.getMonth()).toBe(11); // December
-      expect(result.date_posted.getDate()).toBe(20);
-    }
-  });
-
-  it("should throw error if prompt template not found", async () => {
-    mockDb.ai_chat_prompts.findUnique.mockResolvedValueOnce(null);
-
-    await expect(
-      extractJobData("<html></html>", "https://example.com"),
-    ).rejects.toThrow("Prompt template 'extract_job_data' not found");
-  });
-
-  it("should throw error if JSON parsing fails", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-
-    try {
-      mockDb.ai_chat_prompts.findUnique.mockResolvedValueOnce({
-        request: "extract_job_data",
-        system_prompt: "Extract job data",
-        user_prompt: "HTML: {{html}}",
-        format: null,
-      });
-
-      mockGenerateChatCompletion.mockResolvedValueOnce("invalid json");
-
-      await expect(
-        extractJobData("<html></html>", "https://example.com/job/123"),
-      ).rejects.toThrow(/Failed to extract job data from/);
-    } finally {
-      consoleSpy.mockRestore();
-    }
-  });
-
-  it("should use fallback title when LLM extraction returns null", async () => {
-    const html = "<html><body><p>Job description here</p></body></html>";
-    const fallbackTitle = "Senior Software Engineer (from search page)";
-
-    mockDb.ai_chat_prompts.findUnique.mockResolvedValueOnce({
-      request: "extract_job_data",
-      system_prompt: "Extract job data",
-      user_prompt: "HTML: {{html}}",
-      format: null,
-    });
-
-    const jobData = {
-      title: null,
-      job_description: "Great job description",
-      company_description: null,
-      job_poster: null,
-      date_posted: null,
-      location: null,
-      remote: null,
-      experience_level: null,
-      job_type: null,
-      salary_min: null,
-      salary_max: null,
-      salary_currency: null,
-      salary_period: null,
-      skills: null,
-      status: null,
-    };
-
-    mockGenerateChatCompletion.mockResolvedValueOnce(JSON.stringify(jobData));
-
-    const result = await extractJobData(html, "https://example.com", {
-      fallbackTitle,
-    });
-
-    expect(result.title).toBe(fallbackTitle);
-  });
-
-  it("should use fallback title when LLM extraction returns empty string", async () => {
-    const html = "<html><body><h1></h1><p>Description</p></body></html>";
-    const fallbackTitle = "Backend Developer";
-
-    mockDb.ai_chat_prompts.findUnique.mockResolvedValueOnce({
-      request: "extract_job_data",
-      system_prompt: "Extract job data",
-      user_prompt: "HTML: {{html}}",
-      format: null,
-    });
-
-    const jobData = {
-      title: "",
-      job_description: "Job description",
-      company_description: null,
-      job_poster: null,
-      date_posted: null,
-      location: null,
-      remote: null,
-      experience_level: null,
-      job_type: null,
-      salary_min: null,
-      salary_max: null,
-      salary_currency: null,
-      salary_period: null,
-      skills: null,
-      status: null,
-    };
-
-    mockGenerateChatCompletion.mockResolvedValueOnce(JSON.stringify(jobData));
-
-    const result = await extractJobData(html, "https://example.com", {
-      fallbackTitle,
-    });
-
-    expect(result.title).toBe(fallbackTitle);
-  });
-
-  it("should prefer LLM-extracted title over fallback", async () => {
-    const html = "<html><body><h1>Full Stack Engineer</h1></body></html>";
-    const fallbackTitle = "Software Developer";
-
-    mockDb.ai_chat_prompts.findUnique.mockResolvedValueOnce({
-      request: "extract_job_data",
-      system_prompt: "Extract job data",
-      user_prompt: "HTML: {{html}}",
-      format: null,
-    });
-
-    const jobData = {
-      title: "Full Stack Engineer",
-      job_description: "Great job",
-      company_description: null,
-      job_poster: null,
-      date_posted: null,
-      location: null,
-      remote: null,
-      experience_level: null,
-      job_type: null,
-      salary_min: null,
-      salary_max: null,
-      salary_currency: null,
-      salary_period: null,
-      skills: null,
-      status: null,
-    };
-
-    mockGenerateChatCompletion.mockResolvedValueOnce(JSON.stringify(jobData));
-
-    const result = await extractJobData(html, "https://example.com", {
-      fallbackTitle,
-    });
-
-    // LLM should extract "Full Stack Engineer" and it should be used
-    expect(result.title).toBe("Full Stack Engineer");
-    expect(result.title).not.toBe(fallbackTitle);
-  });
-
-  it("should work without fallback options (backwards compatibility)", async () => {
-    const html = "<html><body><h1>Data Scientist</h1></body></html>";
-
-    mockDb.ai_chat_prompts.findUnique.mockResolvedValueOnce({
-      request: "extract_job_data",
-      system_prompt: "Extract job data",
-      user_prompt: "HTML: {{html}}",
-      format: null,
-    });
-
-    const jobData = {
-      title: "Data Scientist",
-      job_description: "Great job",
-      company_description: null,
-      job_poster: null,
-      date_posted: null,
-      location: null,
-      remote: null,
-      experience_level: null,
-      job_type: null,
-      salary_min: null,
-      salary_max: null,
-      salary_currency: null,
-      salary_period: null,
-      skills: null,
-      status: null,
-    };
-
-    mockGenerateChatCompletion.mockResolvedValueOnce(JSON.stringify(jobData));
-
-    // Call without options parameter
-    const result = await extractJobData(html, "https://example.com");
-
-    expect(result.title).toBe("Data Scientist");
+    expect(result).toBeNull();
+    expect(mockDb.job_platforms.findFirst).not.toHaveBeenCalled();
   });
 });
 
@@ -684,6 +103,7 @@ describe("upsertJob", () => {
       salary_period: "year",
       skills: ["JavaScript", "React", "Node.js"],
       status: "hiring",
+      strippedHtml: "<p>Job content</p>",
     };
 
     const sourceUrl = "https://example.com/job/123";
@@ -736,6 +156,7 @@ describe("upsertJob", () => {
       salary_period: "year",
       skills: ["JavaScript", "React", "Node.js"],
       status: "hiring",
+      strippedHtml: "<p>Job content</p>",
     };
 
     const sourceUrl = "https://example.com/job/123";
@@ -790,6 +211,7 @@ describe("upsertJob", () => {
       salary_period: null,
       skills: null,
       status: null,
+      strippedHtml: "",
     };
 
     mockDb.jobs.findFirst.mockResolvedValueOnce({
@@ -825,6 +247,7 @@ describe("upsertJob", () => {
       salary_period: null,
       skills: null,
       status: null,
+      strippedHtml: "",
     };
 
     mockDb.jobs.findFirst.mockResolvedValueOnce({
@@ -860,6 +283,7 @@ describe("upsertJob", () => {
       salary_period: null,
       skills: null,
       status: null,
+      strippedHtml: "",
     };
 
     mockDb.jobs.findFirst.mockResolvedValueOnce(null);
@@ -900,6 +324,7 @@ describe("upsertJob", () => {
       salary_period: null,
       skills: null,
       status: null,
+      strippedHtml: "",
     };
 
     mockDb.jobs.findFirst.mockResolvedValueOnce(null);
@@ -935,6 +360,7 @@ describe("upsertJob", () => {
       salary_period: null,
       skills: null,
       status: null,
+      strippedHtml: "",
     };
 
     mockDb.jobs.findFirst.mockResolvedValueOnce(null);
@@ -970,6 +396,7 @@ describe("upsertJob", () => {
       salary_period: null,
       skills: null,
       status: null,
+      strippedHtml: "",
     };
 
     mockDb.jobs.findFirst.mockResolvedValueOnce(null);
@@ -1005,6 +432,7 @@ describe("upsertJob", () => {
       salary_period: null,
       skills: null,
       status: null,
+      strippedHtml: "",
     };
 
     mockDb.jobs.findFirst.mockResolvedValueOnce(null);
@@ -1040,6 +468,7 @@ describe("upsertJob", () => {
       salary_period: null,
       skills: null,
       status: null,
+      strippedHtml: "",
     };
 
     mockDb.jobs.findFirst.mockResolvedValueOnce({
@@ -1083,6 +512,7 @@ describe("upsertJob", () => {
       salary_period: null,
       skills: null,
       status: null,
+      strippedHtml: "",
     };
 
     mockDb.jobs.findFirst.mockResolvedValueOnce(null);
@@ -1114,6 +544,7 @@ describe("upsertJob", () => {
       salary_period: null,
       skills: null,
       status: "closed",
+      strippedHtml: "",
     };
 
     mockDb.jobs.findFirst.mockResolvedValueOnce({
