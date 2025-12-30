@@ -64,6 +64,7 @@
       "WebFetch(domain:dotenvx.com)",
       "WebFetch(domain:jsonresume.org)",
       "WebFetch(domain:localhost)",
+      "WebFetch(domain:openrouter.ai)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebFetch(domain:www.npmjs.com)",
       "WebFetch(domain:www.prisma.io)",
