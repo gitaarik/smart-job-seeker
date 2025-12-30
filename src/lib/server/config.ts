@@ -197,7 +197,83 @@ function loadConfig(): AppConfig {
     ) as "browser-use" | "playwright"),
   };
 
+  // Validate configuration
+  validateConfig(config);
+
   return config;
+}
+
+/**
+ * Validate configuration values are sensible
+ * Throws error if validation fails
+ */
+function validateConfig(config: AppConfig): void {
+  const errors: string[] = [];
+
+  // Validate positive numbers
+  if (config.scraperMaxJobsPerSearch <= 0) {
+    errors.push("scraperMaxJobsPerSearch must be > 0");
+  }
+  if (config.scraperMaxJobAge <= 0) {
+    errors.push("scraperMaxJobAge must be > 0");
+  }
+  if (config.scraperConsecutiveClosedLimit <= 0) {
+    errors.push("scraperConsecutiveClosedLimit must be > 0");
+  }
+  if (config.scraperPaginationMaxPages <= 0) {
+    errors.push("scraperPaginationMaxPages must be > 0");
+  }
+  if (config.scraperInfiniteScrollMaxScrolls <= 0) {
+    errors.push("scraperInfiniteScrollMaxScrolls must be > 0");
+  }
+
+  // Validate timeouts are positive
+  if (config.scraperDefaultTimeout <= 0) {
+    errors.push("scraperDefaultTimeout must be > 0");
+  }
+  if (config.scraperNetworkIdleTimeout <= 0) {
+    errors.push("scraperNetworkIdleTimeout must be > 0");
+  }
+  if (config.scraperPageLoadTimeout <= 0) {
+    errors.push("scraperPageLoadTimeout must be > 0");
+  }
+  if (config.scraperClickWaitTimeout <= 0) {
+    errors.push("scraperClickWaitTimeout must be > 0");
+  }
+  if (config.scraperRateLimitDelay <= 0) {
+    errors.push("scraperRateLimitDelay must be > 0");
+  }
+  if (config.scraperCaptchaCheckInterval <= 0) {
+    errors.push("scraperCaptchaCheckInterval must be > 0");
+  }
+  if (config.scraperModalWaitTimeout <= 0) {
+    errors.push("scraperModalWaitTimeout must be > 0");
+  }
+  if (config.browserUseTimeout <= 0) {
+    errors.push("browserUseTimeout must be > 0");
+  }
+
+  // Validate scraper method
+  if (!["browser-use", "playwright"].includes(config.scraperMethod)) {
+    errors.push(
+      `scraperMethod must be 'browser-use' or 'playwright', got '${config.scraperMethod}'`,
+    );
+  }
+
+  // Validate required URLs
+  if (!config.directusUrl) {
+    errors.push("directusUrl is required");
+  }
+  if (config.scraperMethod === "browser-use" && !config.browserUseUrl) {
+    errors.push("browserUseUrl is required when using browser-use scraper");
+  }
+
+  // Throw if any validation errors
+  if (errors.length > 0) {
+    throw new Error(
+      `Configuration validation failed:\n  - ${errors.join("\n  - ")}`,
+    );
+  }
 }
 
 // Export singleton config

@@ -51,6 +51,161 @@ interface SearchAction {
   } | null;
 }
 
+/**
+ * Common modal/dialog/panel selectors used across various UI frameworks
+ * Ordered by specificity (more specific selectors first)
+ */
+const MODAL_SELECTORS = [
+  '[role="dialog"]', // ARIA standard
+  '[role="alertdialog"]',
+  ".modal", // Bootstrap
+  ".modal-content",
+  ".ant-modal", // Ant Design
+  ".MuiDialog-root", // Material-UI
+  ".dialog", // Generic
+  '[class*="modal"]', // Any class containing "modal"
+  '[class*="dialog"]',
+  '[class*="drawer"]',
+  '[class*="panel"][class*="detail"]',
+] as const;
+
+/**
+ * Detect and extract modal content after clicking a job card
+ * @returns Object with modalContent (HTML string) and modalSelector (CSS selector used)
+ */
+async function detectModalContent(
+  page: Page,
+): Promise<{ modalContent: string | null; modalSelector: string | null }> {
+  let modalContent = null;
+  let modalSelector = null;
+
+  // Try each selector to find the modal
+  for (const selector of MODAL_SELECTORS) {
+    const modal = page.locator(selector).first();
+    if (await modal.isVisible().catch(() => false)) {
+      // Wait for modal to have substantial content (retry for up to 3 seconds)
+      let attempts = 0;
+      while (attempts < 6) {
+        modalContent = await modal.innerHTML().catch(() => null);
+        if (modalContent && modalContent.length > 1000) {
+          // Check if this is a navigation/menu drawer (not job details)
+          const lowerContent = modalContent.toLowerCase();
+          const isNavDrawer = lowerContent.includes("dashboard") &&
+            (lowerContent.includes("log out") ||
+              lowerContent.includes("logout") ||
+              lowerContent.includes("settings"));
+
+          if (isNavDrawer) {
+            console.log(
+              `      ⚠️  Skipping navigation drawer (${selector})`,
+            );
+            modalContent = null; // Reset to keep looking
+            break;
+          }
+
+          // Found substantial non-nav modal content
+          modalSelector = selector;
+          console.log(
+            `      ✓ Found modal: ${selector} (${
+              (modalContent.length / 1024).toFixed(1)
+            } KB)`,
+          );
+          break;
+        }
+        await page.waitForTimeout(config.scraperModalWaitTimeout);
+        attempts++;
+      }
+
+      if (modalContent && modalContent.length > 1000) {
+        break;
+      }
+    }
+  }
+
+  return { modalContent, modalSelector };
+}
+
+/**
+ * Parse Browser-Use response with multiple fallback strategies
+ * Tries direct parsing, regex extraction, and JSON repair
+ */
+function parseBrowserUseResponse(result: any): any[] {
+  // Strategy 1: Already an array (direct response)
+  if (Array.isArray(result)) {
+    return result;
+  }
+
+  // Strategy 2: Already parsed object with jobs property
+  if (typeof result === "object" && result !== null) {
+    if (Array.isArray(result.jobs)) {
+      return result.jobs;
+    }
+    if (Array.isArray(result.data)) {
+      return result.data;
+    }
+  }
+
+  // Strategy 3: String that needs parsing
+  const resultStr = typeof result === "string"
+    ? result
+    : JSON.stringify(result);
+
+  // Strategy 3a: Try direct JSON parse
+  try {
+    const parsed = JSON.parse(resultStr);
+    if (Array.isArray(parsed)) {
+      return parsed;
+    }
+    if (parsed.jobs && Array.isArray(parsed.jobs)) {
+      return parsed.jobs;
+    }
+    if (parsed.data && Array.isArray(parsed.data)) {
+      return parsed.data;
+    }
+  } catch {
+    // Continue to regex extraction
+  }
+
+  // Strategy 3b: Extract JSON array using regex
+  const jsonArrayMatch = resultStr.match(/\[[\s\S]*\]/);
+  if (jsonArrayMatch) {
+    try {
+      const parsed = JSON.parse(jsonArrayMatch[0]);
+      if (Array.isArray(parsed)) {
+        return parsed;
+      }
+    } catch (error) {
+      throw new Error(
+        `Found JSON array pattern but failed to parse: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
+  // Strategy 3c: Extract JSON object with jobs property
+  const jsonObjectMatch = resultStr.match(/\{[\s\S]*\}/);
+  if (jsonObjectMatch) {
+    try {
+      const parsed = JSON.parse(jsonObjectMatch[0]);
+      if (Array.isArray(parsed.jobs)) {
+        return parsed.jobs;
+      }
+      if (Array.isArray(parsed.data)) {
+        return parsed.data;
+      }
+    } catch {
+      // Continue to error
+    }
+  }
+
+  // All strategies failed
+  throw new Error(
+    `Could not extract job array from Browser-Use response. Response type: ${typeof result}, ` +
+      `preview: ${resultStr.substring(0, 200)}...`,
+  );
+}
+
 // CLI Program
 const program = new Command();
 
@@ -121,25 +276,21 @@ async function scrapeJobsWithBrowserUse(
     maxTime: 180, // 3 minutes max
   });
 
-  // Parse the JSON result
+  // Parse the JSON result with multiple fallback strategies
   let jobs: any[];
   try {
-    // The result might be a string containing JSON or already parsed
-    const resultStr = typeof response.result === "string"
-      ? response.result
-      : JSON.stringify(response.result);
-
-    // Try to extract JSON from the result
-    const jsonMatch = resultStr.match(/\[[\s\S]*\]/);
-    if (jsonMatch) {
-      jobs = JSON.parse(jsonMatch[0]);
-    } else {
-      throw new Error("No JSON array found in response");
-    }
+    jobs = parseBrowserUseResponse(response.result);
   } catch (error) {
     console.error("❌ Failed to parse Browser-Use response:", error);
-    console.log("Raw response:", response.result);
-    throw new Error("Browser-Use returned invalid JSON");
+    console.log("Raw response:", JSON.stringify(response.result).substring(0, 500));
+    throw error;
+  }
+
+  // Validate job structure
+  if (!Array.isArray(jobs)) {
+    throw new Error(
+      `Browser-Use response is not an array, got: ${typeof jobs}`,
+    );
   }
 
   console.log(`✅ Browser-Use extracted ${jobs.length} jobs`);
@@ -679,66 +830,7 @@ async function scrapeJobsWithClicks(
         }
 
         // Try to find a modal/dialog/panel that appeared after the click
-        // Check common modal selectors used by various UI frameworks
-        const modalSelectors = [
-          '[role="dialog"]', // ARIA standard
-          '[role="alertdialog"]',
-          ".modal", // Bootstrap
-          ".modal-content",
-          ".ant-modal", // Ant Design
-          ".MuiDialog-root", // Material-UI
-          ".dialog", // Generic
-          '[class*="modal"]', // Any class containing "modal"
-          '[class*="dialog"]',
-          '[class*="drawer"]',
-          '[class*="panel"][class*="detail"]',
-        ];
-
-        let modalContent = null;
-        let modalSelector = null;
-
-        // Try each selector to find the modal
-        for (const selector of modalSelectors) {
-          const modal = page.locator(selector).first();
-          if (await modal.isVisible().catch(() => false)) {
-            // Wait for modal to have substantial content (retry for up to 3 seconds)
-            let attempts = 0;
-            while (attempts < 6) {
-              modalContent = await modal.innerHTML().catch(() => null);
-              if (modalContent && modalContent.length > 1000) {
-                // Check if this is a navigation/menu drawer (not job details)
-                const lowerContent = modalContent.toLowerCase();
-                const isNavDrawer = lowerContent.includes("dashboard") &&
-                  (lowerContent.includes("log out") ||
-                    lowerContent.includes("logout") ||
-                    lowerContent.includes("settings"));
-
-                if (isNavDrawer) {
-                  console.log(
-                    `      ⚠️  Skipping navigation drawer (${selector})`,
-                  );
-                  modalContent = null; // Reset to keep looking
-                  break;
-                }
-
-                // Found substantial non-nav modal content
-                modalSelector = selector;
-                console.log(
-                  `      ✓ Found modal: ${selector} (${
-                    (modalContent.length / 1024).toFixed(1)
-                  } KB)`,
-                );
-                break;
-              }
-              await page.waitForTimeout(config.scraperModalWaitTimeout);
-              attempts++;
-            }
-
-            if (modalContent && modalContent.length > 1000) {
-              break;
-            }
-          }
-        }
+        const { modalContent, modalSelector } = await detectModalContent(page);
 
         // Mark semantic elements in modal if configured
         if (modalContent && siteConfig.semanticSelectors?.modal) {
