@@ -157,40 +157,6 @@ async function scrapeJobsWithBrowserUse(
 }
 
 /**
- * Scrape jobs using URL-based navigation (Browser-Use)
- * @returns Number of jobs successfully processed and saved
- */
-async function scrapeJobsWithUrls(
-  searchUrl: string,
-  platformId: string,
-): Promise<number> {
-  console.log("\n🤖 Using Browser-Use for URL-based scraping...");
-
-  return await scrapeJobsWithBrowserUse(
-    searchUrl,
-    "url",
-    platformId,
-  );
-}
-
-/**
- * Scrape jobs using click-based navigation (Browser-Use)
- * @returns Number of successfully processed jobs
- */
-async function scrapeJobsWithClicks(
-  searchUrl: string,
-  platformId: string,
-): Promise<number> {
-  console.log("\n🤖 Using Browser-Use for click-based scraping...");
-
-  return await scrapeJobsWithBrowserUse(
-    searchUrl,
-    "click",
-    platformId,
-  );
-}
-
-/**
  * Generic scraping logic for any job site
  */
 async function scrapeJobSite(
@@ -238,21 +204,6 @@ async function scrapeJobSite(
     }
 
     throw error;
-  }
-}
-
-/**
- * Determine import source from search URL hostname
- */
-function getImportSource(url: string): string {
-  try {
-    const hostname = new URL(url).hostname;
-    if (hostname.includes("linkedin.com")) return "LinkedIn";
-    if (hostname.includes("indeed.com")) return "Indeed";
-    if (hostname.includes("glassdoor.com")) return "Glassdoor";
-    return hostname; // Fallback to hostname
-  } catch {
-    return "Unknown";
   }
 }
 
