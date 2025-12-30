@@ -157,7 +157,7 @@ describe("generateChatCompletion", () => {
     });
 
     await expect(generateChatCompletion(messages)).rejects.toThrow(
-      "No content returned from LLM",
+      "No content returned from Groq",
     );
   });
 
@@ -171,7 +171,7 @@ describe("generateChatCompletion", () => {
     });
 
     await expect(generateChatCompletion(messages)).rejects.toThrow(
-      "No content returned from LLM",
+      "No content returned from Groq",
     );
   });
 
