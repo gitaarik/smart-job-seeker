@@ -60,6 +60,7 @@
       "Bash(y)",
       "WebFetch(domain:console.groq.com)",
       "WebFetch(domain:directus.io)",
+      "WebFetch(domain:docs.browser-use.com)",
       "WebFetch(domain:docs.directus.io)",
       "WebFetch(domain:dotenvx.com)",
       "WebFetch(domain:jsonresume.org)",
