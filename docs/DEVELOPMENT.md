@@ -90,6 +90,10 @@ npm run test:ui                 # Test UI dashboard
 - **Strict mode enabled** - Type everything properly
 - Use `npx tsx` for running TypeScript scripts (not `node`)
 - Use ES Modules (`import`) instead of CommonJS (`require`)
+- **Path Aliases** - `$lib` alias is configured for both SvelteKit and scripts:
+  - In SvelteKit: Works automatically via `kit.alias` configuration
+  - In scripts: Configured via `tsconfig.json` paths and `deno.json` imports
+  - Use `$lib/` imports in scripts directory for better maintainability
 
 ### Svelte 5
 
