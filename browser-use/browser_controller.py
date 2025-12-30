@@ -1,17 +1,33 @@
 from browser_use import Agent, Browser
 from browser_use.browser.browser import BrowserConfig
 from langchain_groq import ChatGroq
+from langchain_google_genai import ChatGoogleGenerativeAI
 import os
 import time
 
 
 class BrowserController:
     def __init__(self):
-        self.llm = ChatGroq(
-            model="llama-3.3-70b-versatile",
-            api_key=os.getenv("GROQ_API_KEY"),
-            temperature=0.3,
-        )
+        provider = os.getenv("LLM_PROVIDER", "groq").lower()
+
+        if provider == "gemini":
+            # Use Google Gemini
+            self.llm = ChatGoogleGenerativeAI(
+                model="gemini-2.0-flash-exp",
+                api_key=os.getenv("GOOGLE_API_KEY"),
+                temperature=0.3,
+            )
+            # Gemini supports vision
+            self.use_vision = True
+        else:
+            # Default to Groq
+            self.llm = ChatGroq(
+                model="llama-3.3-70b-versatile",
+                api_key=os.getenv("GROQ_API_KEY"),
+                temperature=0.3,
+            )
+            # Groq doesn't support vision
+            self.use_vision = False
 
     async def execute_task(self, task: str, start_url: str, max_time: int = 120):
         """
@@ -28,7 +44,7 @@ class BrowserController:
         start_time = time.time()
 
         # Create the agent
-        # Note: use_vision=False because Groq doesn't support multimodal/vision content
+        # Note: use_vision depends on LLM provider (Gemini supports it, Groq doesn't)
         agent = Agent(
             task=task,
             llm=self.llm,
@@ -37,7 +53,7 @@ class BrowserController:
                     headless=os.getenv("BROWSER_HEADLESS", "true") == "true"
                 )
             ),
-            use_vision=False,
+            use_vision=self.use_vision,
         )
 
         # Run the task
