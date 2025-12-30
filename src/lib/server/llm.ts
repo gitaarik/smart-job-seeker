@@ -93,7 +93,7 @@ async function generateWithGemini(
   responseFormat?: ResponseFormat,
 ): Promise<string> {
   const genAI = new GoogleGenerativeAI(
-    config.geminiApiKey || getEnv("GEMINI_API_KEY", ""),
+    config.geminiApiKey || getEnv("SJS_GEMINI_API_KEY", ""),
   );
 
   // Map Groq model names to Google model names if needed

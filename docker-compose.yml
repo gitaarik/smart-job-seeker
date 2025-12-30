@@ -89,12 +89,13 @@ services:
       - ./browser-use:/app
       - browser_use_data:/app/data
     environment:
-      LLM_PROVIDER: ${LLM_PROVIDER:-groq}
-      GROQ_API_KEY: ${SJS_GROQ_API_KEY}
-      GEMINI_API_KEY: ${GEMINI_API_KEY}
-      BROWSER_HEADLESS: ${BROWSER_USE_HEADLESS:-true}
-      BROWSER_TIMEOUT: ${BROWSER_USE_TIMEOUT:-30000}
-      LOG_LEVEL: ${BROWSER_USE_LOG_LEVEL:-INFO}
+      SJS_LLM_PROVIDER: ${SJS_LLM_PROVIDER:-groq}
+      SJS_GROQ_API_KEY: ${SJS_GROQ_API_KEY}
+      SJS_GEMINI_API_KEY: ${SJS_GEMINI_API_KEY}
+      SJS_OPENAI_API_KEY: ${SJS_OPENAI_API_KEY}
+      SJS_BROWSER_USE_HEADLESS: ${SJS_BROWSER_USE_HEADLESS:-true}
+      SJS_BROWSER_USE_TIMEOUT: ${SJS_BROWSER_USE_TIMEOUT:-30000}
+      SJS_LOG_LEVEL: ${SJS_BROWSER_USE_LOG_LEVEL:-INFO}
     depends_on:
       - database
     healthcheck:

@@ -8,13 +8,13 @@ import time
 
 class BrowserController:
     def __init__(self):
-        provider = os.getenv("LLM_PROVIDER", "groq").lower()
+        provider = os.getenv("SJS_LLM_PROVIDER", "groq").lower()
 
         if provider == "gemini":
             # Use Google Gemini
             self.llm = ChatGoogleGenerativeAI(
                 model="gemini-2.0-flash-exp",
-                api_key=os.getenv("GEMINI_API_KEY"),
+                api_key=os.getenv("SJS_GEMINI_API_KEY"),
                 temperature=0.3,
             )
             # Gemini supports vision
@@ -23,7 +23,7 @@ class BrowserController:
             # Default to Groq
             self.llm = ChatGroq(
                 model="llama-3.3-70b-versatile",
-                api_key=os.getenv("GROQ_API_KEY"),
+                api_key=os.getenv("SJS_GROQ_API_KEY"),
                 temperature=0.3,
             )
             # Groq doesn't support vision
@@ -50,7 +50,7 @@ class BrowserController:
             llm=self.llm,
             browser=Browser(
                 config=BrowserConfig(
-                    headless=os.getenv("BROWSER_HEADLESS", "true") == "true"
+                    headless=os.getenv("SJS_BROWSER_USE_HEADLESS") == "true"
                 )
             ),
             use_vision=self.use_vision,

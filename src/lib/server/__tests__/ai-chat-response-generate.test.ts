@@ -17,7 +17,7 @@ vi.mock("$lib/db", () => ({
 vi.mock("$lib/tools/get-env", () => ({
   getEnv: vi.fn((key: string, defaultValue = "") => {
     const envVars: Record<string, string> = {
-      GROQ_API_KEY: "test-groq-api-key-12345",
+      SJS_GROQ_API_KEY: "test-groq-api-key-12345",
     };
     return envVars[key] ?? defaultValue;
   }),

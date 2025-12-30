@@ -248,8 +248,8 @@ The Python service runs in Docker and accepts these environment variables:
 
 ```bash
 # .env in browser-use/
-GROQ_API_KEY=your_groq_api_key_here
-BROWSER_HEADLESS=true  # Set to false for debugging
+SJS_GROQ_API_KEY=your_groq_api_key_here
+SJS_BROWSER_HEADLESS=true  # Set to false for debugging
 ```
 
 Service configuration in TypeScript:
@@ -257,9 +257,8 @@ Service configuration in TypeScript:
 ```typescript
 // src/lib/server/config.ts
 export const config = {
-  browserUseUrl: process.env.BROWSER_USE_URL || "http://localhost:8000",
+  browserUseUrl: process.env.SJS_BROWSER_USE_URL || "http://localhost:8000",
   browserUseTimeout: 180000, // 3 minutes
-  browserUseEnabled: true,
 };
 ```
 
@@ -271,7 +270,7 @@ To see what Browser-Use is doing:
 
 ```bash
 # In browser-use/.env
-BROWSER_HEADLESS=false
+SJS_BROWSER_HEADLESS=false
 ```
 
 The browser window will be visible during scraping.
@@ -348,7 +347,7 @@ curl -X POST http://localhost:8000/execute \
    one browser instance)
 2. **Max time limits** - Set appropriate `maxTime` based on site complexity
 3. **Job limits** - Use `scraperMaxJobsPerSearch` to control extraction depth
-4. **Headless mode** - Keep `BROWSER_HEADLESS=true` in production for
+4. **Headless mode** - Keep `SJS_BROWSER_HEADLESS=true` in production for
    performance
 
 ## Testing

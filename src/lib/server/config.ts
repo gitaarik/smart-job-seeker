@@ -49,7 +49,6 @@ export interface AppConfig {
   scraperInfiniteScrollMaxScrolls: number; // Safety limit for scrolling
 
   // Browser-Use Integration
-  browserUseEnabled: boolean;
   browserUseUrl: string;
   browserUseTimeout: number;
   browserUseFallbackEnabled: boolean;
@@ -76,9 +75,9 @@ function loadConfig(): AppConfig {
     directusWebhookSecret: getEnv("SJS_WEBHOOK_SECRET"),
 
     // LLM
-    llmProvider: (getEnv("LLM_PROVIDER", "groq") as "groq" | "gemini"),
+    llmProvider: (getEnv("SJS_LLM_PROVIDER", "groq") as "groq" | "gemini"),
     groqApiKey: getEnv("SJS_GROQ_API_KEY", ""),
-    geminiApiKey: getEnv("GEMINI_API_KEY", ""),
+    geminiApiKey: getEnv("SJS_GEMINI_API_KEY", ""),
 
     // Caching (1 hour default)
     llmCacheTTL: parseInt(
@@ -93,49 +92,48 @@ function loadConfig(): AppConfig {
 
     // Scraper
     scraperDefaultTimeout: parseInt(
-      getEnv("SCRAPER_DEFAULT_TIMEOUT", "30000"),
+      getEnv("SJS_SCRAPER_DEFAULT_TIMEOUT", "30000"),
       10,
     ),
     scraperNetworkIdleTimeout: parseInt(
-      getEnv("SCRAPER_NETWORK_IDLE_TIMEOUT", "45000"),
+      getEnv("SJS_SCRAPER_NETWORK_IDLE_TIMEOUT", "45000"),
       10,
     ),
-    scraperMaxRetries: parseInt(getEnv("SCRAPER_MAX_RETRIES", "2"), 10),
+    scraperMaxRetries: parseInt(getEnv("SJS_SCRAPER_MAX_RETRIES", "2"), 10),
     scraperDebugMode: getEnv("SCRAPER_DEBUG_MODE", "false") === "true",
     scraperScrollMaxIterations: parseInt(
-      getEnv("SCRAPER_SCROLL_MAX_ITERATIONS", "3"),
+      getEnv("SJS_SCRAPER_SCROLL_MAX_ITERATIONS", "3"),
       10,
     ),
     scraperSaveDebugScreenshots: getEnv(
-      "SCRAPER_SAVE_DEBUG_SCREENSHOTS",
+      "SJS_SCRAPER_SAVE_DEBUG_SCREENSHOTS",
       "false",
     ) === "true",
 
     // Pagination & Filtering
     scraperMaxJobsPerSearch: parseInt(
-      getEnv("SCRAPER_MAX_JOBS_PER_SEARCH", "100"),
+      getEnv("SJS_SCRAPER_MAX_JOBS_PER_SEARCH", "100"),
       10,
     ),
-    scraperMaxJobAge: parseInt(getEnv("SCRAPER_MAX_JOB_AGE", "60"), 10),
+    scraperMaxJobAge: parseInt(getEnv("SJS_SCRAPER_MAX_JOB_AGE", "60"), 10),
     scraperConsecutiveClosedLimit: parseInt(
-      getEnv("SCRAPER_CONSECUTIVE_CLOSED_LIMIT", "5"),
+      getEnv("SJS_SCRAPER_CONSECUTIVE_CLOSED_LIMIT", "5"),
       10,
     ),
     scraperPaginationMaxPages: parseInt(
-      getEnv("SCRAPER_PAGINATION_MAX_PAGES", "10"),
+      getEnv("SJS_SCRAPER_PAGINATION_MAX_PAGES", "10"),
       10,
     ),
     scraperInfiniteScrollMaxScrolls: parseInt(
-      getEnv("SCRAPER_INFINITE_SCROLL_MAX_SCROLLS", "5"),
+      getEnv("SJS_SCRAPER_INFINITE_SCROLL_MAX_SCROLLS", "5"),
       10,
     ),
 
     // Browser-Use Integration
-    browserUseEnabled: getEnv("BROWSER_USE_ENABLED", "false") === "true",
-    browserUseUrl: getEnv("BROWSER_USE_URL", "http://browser-use:8000"),
-    browserUseTimeout: parseInt(getEnv("BROWSER_USE_TIMEOUT", "120000"), 10),
+    browserUseUrl: getEnv("SJS_BROWSER_USE_URL", "http://browser-use:8000"),
+    browserUseTimeout: parseInt(getEnv("SJS_BROWSER_USE_TIMEOUT", "120000"), 10),
     browserUseFallbackEnabled:
-      getEnv("BROWSER_USE_FALLBACK_ENABLED", "true") === "true",
+      getEnv("SJS_BROWSER_USE_FALLBACK_ENABLED", "true") === "true",
   };
 }
 

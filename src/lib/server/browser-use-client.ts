@@ -4,7 +4,6 @@ import { dbDirect } from "$lib/db";
 export interface BrowserUseConfig {
   baseUrl: string;
   timeout: number;
-  enabled: boolean;
 }
 
 export interface ExecuteTaskParams {
@@ -46,7 +45,6 @@ export class BrowserUseClient {
     this.config = {
       baseUrl: customConfig?.baseUrl ?? config.browserUseUrl,
       timeout: customConfig?.timeout ?? config.browserUseTimeout,
-      enabled: customConfig?.enabled ?? config.browserUseEnabled,
     };
   }
 
