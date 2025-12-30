@@ -2,6 +2,7 @@ from browser_use import Agent, Browser
 from browser_use.browser.browser import BrowserConfig
 from langchain_groq import ChatGroq
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 import os
 import time
 
@@ -18,6 +19,15 @@ class BrowserController:
                 temperature=0.3,
             )
             # Gemini supports vision
+            self.use_vision = True
+        elif provider == "openai":
+            # Use OpenAI
+            self.llm = ChatOpenAI(
+                model="gpt-4o",
+                api_key=os.getenv("SJS_OPENAI_API_KEY"),
+                temperature=0.3,
+            )
+            # GPT-4o supports vision
             self.use_vision = True
         else:
             # Default to Groq
