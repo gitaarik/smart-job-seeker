@@ -32,7 +32,7 @@ class BrowserController:
         elif provider == "openrouter":
             # Use OpenRouter
             self.llm = ChatOpenAI(
-                model="anthropic/claude-3.5-sonnet",
+                model="google/gemini-2.0-flash-exp:free",
                 base_url="https://openrouter.ai/api/v1",
                 api_key=os.getenv("SJS_OPENROUTER_API_KEY"),
                 temperature=0.3,
