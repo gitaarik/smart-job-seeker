@@ -1,4 +1,7 @@
 {
+  "imports": {
+    "$lib/": "./src/lib/"
+  },
   "fmt": {
     "exclude": [
       "generated/",
