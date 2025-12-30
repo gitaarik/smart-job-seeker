@@ -108,7 +108,7 @@ function loadConfig(): AppConfig {
       10,
     ),
     scraperMaxRetries: parseInt(getEnv("SJS_SCRAPER_MAX_RETRIES", "2"), 10),
-    scraperDebugMode: getEnv("SCRAPER_DEBUG_MODE", "false") === "true",
+    scraperDebugMode: getEnv("SJS_SCRAPER_DEBUG_MODE", "false") === "true",
     scraperScrollMaxIterations: parseInt(
       getEnv("SJS_SCRAPER_SCROLL_MAX_ITERATIONS", "3"),
       10,

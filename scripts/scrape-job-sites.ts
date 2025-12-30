@@ -8,16 +8,13 @@
 import { dbDirect } from "$lib/db";
 import { getPlatformIdFromUrl, upsertJob } from "$lib/server/job-scraper";
 import { Command } from "commander";
-import { exec } from "child_process";
-import { promisify } from "util";
 import { getSiteConfig, getSiteName } from "$lib/server/job-site-configs";
 import { config } from "$lib/server/config";
 import { BrowserUseClient } from "$lib/server/browser-use-client";
 import { parseRelativeDate } from "$lib/tools/date-utils";
 import { isJobClosed, isJobTooOld } from "$lib/server/scrape-filters";
 import { interpolatePrompt } from "$lib/server/ai-chat-utils";
-
-const execAsync = promisify(exec);
+import { clearDirectusCache } from "$lib/server/directus";
 
 interface SearchAction {
   id: number;
@@ -275,22 +272,6 @@ async function rescrapeJobById(
   } catch (error) {
     console.error(
       `❌ Error scraping job #${jobId}:`,
-      error instanceof Error ? error.message : String(error),
-    );
-  }
-}
-
-/**
- * Clear Directus cache
- */
-async function clearDirectusCache(): Promise<void> {
-  try {
-    console.log("\n🧹 Clearing Directus cache...");
-    await execAsync("npm run docker:clear-directus-cache");
-    console.log("✅ Directus cache cleared");
-  } catch (error) {
-    console.error(
-      "⚠️  Failed to clear Directus cache:",
       error instanceof Error ? error.message : String(error),
     );
   }
