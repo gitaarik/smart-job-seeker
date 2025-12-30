@@ -20,8 +20,9 @@ export interface AppConfig {
   directusToken: string;
   directusWebhookSecret: string;
 
-  // LLM
+  // LLM (for TypeScript/SvelteKit app)
   llmProvider: "groq" | "gemini" | "openai" | "openrouter";
+  llmModel: string; // Configurable model name, with smart defaults per provider
   groqApiKey: string;
   geminiApiKey: string;
   openaiApiKey: string;
@@ -57,12 +58,26 @@ export interface AppConfig {
 }
 
 /**
+ * Get default model for a given provider
+ */
+function getDefaultModel(provider: string): string {
+  const defaults: Record<string, string> = {
+    groq: "llama-3.3-70b-versatile",
+    gemini: "gemini-2.0-flash-exp",
+    openai: "gpt-4o",
+    openrouter: "anthropic/claude-3.5-sonnet",
+  };
+  return defaults[provider] || defaults.groq;
+}
+
+/**
  * Load and validate configuration
  */
 function loadConfig(): AppConfig {
   const nodeEnv = getEnv("NODE_ENV", "development");
+  const llmProvider = getEnv("SJS_LLM_PROVIDER", "groq");
 
-  return {
+  const config = {
     // Environment
     nodeEnv,
     isDevelopment: nodeEnv === "development",
@@ -76,12 +91,9 @@ function loadConfig(): AppConfig {
     directusToken: getEnv("SJS_ADMIN_TOKEN"),
     directusWebhookSecret: getEnv("SJS_WEBHOOK_SECRET"),
 
-    // LLM
-    llmProvider: (getEnv("SJS_LLM_PROVIDER", "groq") as
-      | "groq"
-      | "gemini"
-      | "openai"
-      | "openrouter"),
+    // LLM (for TypeScript/SvelteKit app)
+    llmProvider: (llmProvider as "groq" | "gemini" | "openai" | "openrouter"),
+    llmModel: getEnv("SJS_LLM_MODEL", getDefaultModel(llmProvider)),
     groqApiKey: getEnv("SJS_GROQ_API_KEY", ""),
     geminiApiKey: getEnv("SJS_GEMINI_API_KEY", ""),
     openaiApiKey: getEnv("SJS_OPENAI_API_KEY", ""),
@@ -139,10 +151,15 @@ function loadConfig(): AppConfig {
 
     // Browser-Use Integration
     browserUseUrl: getEnv("SJS_BROWSER_USE_URL", "http://browser-use:8000"),
-    browserUseTimeout: parseInt(getEnv("SJS_BROWSER_USE_TIMEOUT", "120000"), 10),
+    browserUseTimeout: parseInt(
+      getEnv("SJS_BROWSER_USE_TIMEOUT", "120000"),
+      10,
+    ),
     browserUseFallbackEnabled:
       getEnv("SJS_BROWSER_USE_FALLBACK_ENABLED", "true") === "true",
   };
+
+  return config;
 }
 
 // Export singleton config

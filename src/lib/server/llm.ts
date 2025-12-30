@@ -66,7 +66,7 @@ async function generateWithGroq(
   });
 
   const completion = await client.chat.completions.create({
-    model: "meta-llama/llama-4-scout-17b-16e-instruct",
+    model: config.llmModel,
     messages,
     max_tokens: maxTokens,
     temperature,
@@ -96,7 +96,7 @@ async function generateWithGemini(
   );
 
   const genModel = genAI.getGenerativeModel({
-    model: "gemini-1.5-flash",
+    model: config.llmModel,
     generationConfig: {
       maxOutputTokens: maxTokens,
       temperature,
@@ -151,7 +151,7 @@ async function generateWithOpenAI(
   });
 
   const completion = await client.chat.completions.create({
-    model: "gpt-4o",
+    model: config.llmModel,
     messages,
     max_tokens: maxTokens,
     temperature,
@@ -182,7 +182,7 @@ async function generateWithOpenRouter(
   });
 
   const completion = await client.chat.completions.create({
-    model: "anthropic/claude-3.5-sonnet",
+    model: config.llmModel,
     messages,
     max_tokens: maxTokens,
     temperature,

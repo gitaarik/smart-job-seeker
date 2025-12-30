@@ -9,12 +9,30 @@ import time
 
 class BrowserController:
     def __init__(self):
-        provider = os.getenv("SJS_LLM_PROVIDER", "groq").lower()
+        # Browser-use specific settings with fallback to main LLM settings
+        provider = os.getenv(
+            "SJS_LLM_PROVIDER_BROWSER_USE",
+            os.getenv("SJS_LLM_PROVIDER", "groq")
+        ).lower()
+
+        # Default models per provider
+        default_models = {
+            "groq": "llama-3.3-70b-versatile",
+            "gemini": "gemini-2.0-flash-exp",
+            "openai": "gpt-4o",
+            "openrouter": "anthropic/claude-3.5-sonnet",
+        }
+
+        # Get model with fallback to provider default
+        model = os.getenv(
+            "SJS_LLM_MODEL_BROWSER_USE",
+            os.getenv("SJS_LLM_MODEL", default_models.get(provider, default_models["groq"]))
+        )
 
         if provider == "gemini":
             # Use Google Gemini
             self.llm = ChatGoogleGenerativeAI(
-                model="gemini-2.0-flash-exp",
+                model=model,
                 api_key=os.getenv("SJS_GEMINI_API_KEY"),
                 temperature=0.3,
             )
@@ -23,7 +41,7 @@ class BrowserController:
         elif provider == "openai":
             # Use OpenAI
             self.llm = ChatOpenAI(
-                model="gpt-4o",
+                model=model,
                 api_key=os.getenv("SJS_OPENAI_API_KEY"),
                 temperature=0.3,
             )
@@ -32,17 +50,18 @@ class BrowserController:
         elif provider == "openrouter":
             # Use OpenRouter
             self.llm = ChatOpenAI(
-                model="google/gemini-2.0-flash-exp:free",
+                model=model,
                 base_url="https://openrouter.ai/api/v1",
                 api_key=os.getenv("SJS_OPENROUTER_API_KEY"),
                 temperature=0.3,
             )
-            # OpenRouter vision support depends on model, disabled for safety
-            self.use_vision = False
+            # OpenRouter vision support depends on model
+            # Claude 3.5 Sonnet and other vision models support it
+            self.use_vision = "claude" in model or "gpt-4" in model or "gemini" in model or "qvq" in model
         else:
             # Default to Groq
             self.llm = ChatGroq(
-                model="llama-3.3-70b-versatile",
+                model=model,
                 api_key=os.getenv("SJS_GROQ_API_KEY"),
                 temperature=0.3,
             )
