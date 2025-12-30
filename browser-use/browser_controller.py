@@ -1,4 +1,5 @@
 from browser_use import Agent, Browser
+from browser_use.browser.browser import BrowserConfig
 from langchain_groq import ChatGroq
 import os
 import time
@@ -9,7 +10,7 @@ class BrowserController:
         self.llm = ChatGroq(
             model="llama-3.3-70b-versatile",
             api_key=os.getenv("GROQ_API_KEY"),
-            temperature=0,
+            temperature=0.3,
         )
 
     async def execute_task(self, task: str, start_url: str, max_time: int = 120):
@@ -31,7 +32,9 @@ class BrowserController:
             task=task,
             llm=self.llm,
             browser=Browser(
-                headless=os.getenv("BROWSER_HEADLESS", "true") == "true"
+                config=BrowserConfig(
+                    headless=os.getenv("BROWSER_HEADLESS", "true") == "true"
+                )
             ),
         )
 

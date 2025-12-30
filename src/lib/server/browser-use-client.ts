@@ -100,7 +100,24 @@ export class BrowserUseClient {
 
     // Parse the JSON result
     try {
-      // The result might be a string containing JSON or already parsed
+      // Check if Browser-Use returned an error/history object instead of job data
+      if (typeof response.result === "object" && response.result !== null) {
+        const resultObj = response.result as any;
+
+        // If it has 'history' property, it means Browser-Use failed
+        if (resultObj.history || resultObj.error) {
+          console.error("❌ Browser-Use failed to extract job data");
+          console.log("Error details:", JSON.stringify(resultObj, null, 2));
+          throw new Error("Browser-Use agent failed to extract job data");
+        }
+
+        // If it's already a valid job data object, return it
+        if (resultObj.title || resultObj.job_description) {
+          return resultObj as JobData;
+        }
+      }
+
+      // Otherwise, try to parse as JSON string
       const resultStr = typeof response.result === "string"
         ? response.result
         : JSON.stringify(response.result);
@@ -115,8 +132,8 @@ export class BrowserUseClient {
       }
     } catch (error) {
       console.error("❌ Failed to parse Browser-Use response:", error);
-      console.log("Raw response:", response.result);
-      throw new Error("Browser-Use returned invalid JSON");
+      console.log("Raw response:", JSON.stringify(response.result, null, 2).substring(0, 500));
+      throw new Error("Browser-Use returned invalid or failed response");
     }
   }
 }
