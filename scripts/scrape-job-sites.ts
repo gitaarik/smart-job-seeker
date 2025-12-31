@@ -1099,10 +1099,34 @@ async function rescrapeJobById(
   console.log(`🔧 Platform ID: ${platformId}`);
 
   try {
-    // 3. Use Browser-Use to extract job data
-    console.log(`\n🤖 Using Browser-Use to extract job data...`);
-    const browserUse = new BrowserUseClient();
-    const jobData = await browserUse.extractSingleJob(job.source_url);
+    // 3. Extract job data using configured scraper method
+    console.log(`🔧 Scraper method: ${config.scraperMethod}`);
+
+    let jobData: any;
+
+    if (config.scraperMethod === "playwright") {
+      console.log(`\n🤖 Using Playwright to extract job data...`);
+
+      // Launch Playwright browser
+      const context = await launchBrowser("/tmp/scraper-profile", {
+        headless: config.isDevelopment ? false : true,
+      });
+
+      try {
+        const page = await context.newPage();
+        await page.goto(job.source_url, { waitUntil: "load", timeout: 30000 });
+
+        // Extract job data from the page
+        jobData = await extractJobData(page, job.source_url);
+      } finally {
+        await context.close(); // Always cleanup
+      }
+    } else {
+      // Default: Browser-Use
+      console.log(`\n🤖 Using Browser-Use to extract job data...`);
+      const browserUse = new BrowserUseClient();
+      jobData = await browserUse.extractSingleJob(job.source_url);
+    }
 
     if (!jobData) {
       console.error(`❌ Failed to extract job data`);
