@@ -1236,7 +1236,14 @@ async function scrapeJobSites(): Promise<void> {
     );
     process.exit(1);
   } finally {
-    await clearDirectusCache();
+    // Clear Directus cache (ignore errors when running on host)
+    try {
+      await clearDirectusCache();
+    } catch (error) {
+      console.log(
+        "⚠️  Note: Could not clear Directus cache (this is expected when running on host)",
+      );
+    }
   }
 }
 
@@ -1248,7 +1255,14 @@ async function handleExit(signal: string) {
   isExiting = true;
 
   console.log(`\n\n⚠️  Received ${signal}, cleaning up...`);
-  await clearDirectusCache();
+
+  // Clear Directus cache (ignore errors when running on host)
+  try {
+    await clearDirectusCache();
+  } catch (error) {
+    // Silently ignore - cache clearing is best-effort
+  }
+
   process.exit(0);
 }
 

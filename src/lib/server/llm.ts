@@ -122,13 +122,25 @@ async function generateWithGemini(
     throw new Error("Last message must be from user");
   }
 
-  // Start chat with system instruction if present
+  // Gemini has a ~1000 character limit on systemInstruction
+  // For longer prompts, prepend to user message instead
+  const SYSTEM_INSTRUCTION_LIMIT = 1000;
+  const useSystemInstruction = systemMessage &&
+    systemMessage.content.length <= SYSTEM_INSTRUCTION_LIMIT;
+
+  let finalUserMessage = lastMessage.content;
+  if (systemMessage && !useSystemInstruction) {
+    // Prepend system prompt to user message for long prompts
+    finalUserMessage = `${systemMessage.content}\n\n${lastMessage.content}`;
+  }
+
+  // Start chat with system instruction only for short prompts
   const chat = genModel.startChat({
     history,
-    ...(systemMessage && { systemInstruction: systemMessage.content }),
+    ...(useSystemInstruction && { systemInstruction: systemMessage.content }),
   });
 
-  const result = await chat.sendMessage(lastMessage.content);
+  const result = await chat.sendMessage(finalUserMessage);
   const response = result.response;
   const responseContent = response.text();
 
