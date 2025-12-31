@@ -409,7 +409,7 @@ export async function extractJobData(
   salary_period: string | null;
   skills: string[] | null;
   status: string | null;
-  strippedHtml: string;
+  source_html_stripped: string;
 }> {
   // 1. Strip HTML to minimal content
   const strippedHtml = stripHtmlForLlm(jobHtml);
@@ -501,11 +501,11 @@ export async function extractJobData(
       ? data.title
       : (options?.fallbackTitle || data.title);
 
-    // 9. Include stripped HTML in return value
+    // 9. Include stripped HTML in return value for database storage
     return {
       ...data,
       title: effectiveTitle,
-      strippedHtml,
+      source_html_stripped: strippedHtml,
     };
   } catch (error) {
     console.error("Failed to parse job data from LLM response:", error);
@@ -587,9 +587,8 @@ export async function upsertJob(
     skills,
     job_poster: _,
     status: __,
-    strippedHtml: ___,
     ...baseJobData
-  } = jobData as typeof jobData & { strippedHtml?: string };
+  } = jobData as typeof jobData & { source_html_stripped?: string };
 
   const multiSelectData = {
     remote_options: remote ? [remote] : null,
