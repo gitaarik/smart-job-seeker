@@ -70,5 +70,35 @@ export async function directusRequest(
 }
 
 export async function clearDirectusCache(): Promise<void> {
-  await directusRequest("POST", "/utils/cache/clear");
+  // Detect if running on host or in Docker by checking if admin hostname resolves
+  const isRunningInDocker = await (async () => {
+    try {
+      const dns = await import("dns/promises");
+      await dns.lookup("admin");
+      return true; // Successfully resolved, we're in Docker
+    } catch {
+      return false; // Failed to resolve, we're on host
+    }
+  })();
+
+  if (isRunningInDocker) {
+    // Running in Docker - use direct API call
+    await directusRequest("POST", "/utils/cache/clear");
+  } else {
+    // Running on host - use Docker CLI
+    const { execSync } = await import("child_process");
+    const token = getDirectusToken();
+
+    try {
+      execSync(
+        `docker compose exec -T admin curl -s -X POST http://localhost:8085/utils/cache/clear -H "Authorization: Bearer ${token}"`,
+        { stdio: "ignore" },
+      );
+    } catch (error) {
+      // Ignore errors - cache clearing is best-effort
+      console.warn(
+        "⚠️  Could not clear Directus cache via Docker CLI (this is OK)",
+      );
+    }
+  }
 }
