@@ -197,18 +197,32 @@ function loadConfig(): AppConfig {
     ) as "browser-use" | "playwright"),
   };
 
-  // Validate configuration
-  validateConfig(config);
-
   return config;
 }
 
+// Export singleton config
+export const config = loadConfig();
+
 /**
- * Validate configuration values are sensible
- * Throws error if validation fails
+ * Validate required configuration and value constraints
+ * Checks both required fields and validates numeric values are sensible
  */
-function validateConfig(config: AppConfig): void {
+export function validateConfig(): void {
   const errors: string[] = [];
+
+  // Check required fields
+  const required: (keyof AppConfig)[] = [
+    "databaseUrl",
+    "directusUrl",
+    "directusToken",
+    "directusWebhookSecret",
+    "groqApiKey",
+  ];
+
+  const missing = required.filter((key) => !config[key]);
+  if (missing.length > 0) {
+    errors.push(`Missing required configuration: ${missing.join(", ")}`);
+  }
 
   // Validate positive numbers
   if (config.scraperMaxJobsPerSearch <= 0) {
@@ -260,10 +274,7 @@ function validateConfig(config: AppConfig): void {
     );
   }
 
-  // Validate required URLs
-  if (!config.directusUrl) {
-    errors.push("directusUrl is required");
-  }
+  // Validate scraper-specific requirements
   if (config.scraperMethod === "browser-use" && !config.browserUseUrl) {
     errors.push("browserUseUrl is required when using browser-use scraper");
   }
@@ -272,30 +283,6 @@ function validateConfig(config: AppConfig): void {
   if (errors.length > 0) {
     throw new Error(
       `Configuration validation failed:\n  - ${errors.join("\n  - ")}`,
-    );
-  }
-}
-
-// Export singleton config
-export const config = loadConfig();
-
-/**
- * Validate required configuration
- */
-export function validateConfig(): void {
-  const required: (keyof AppConfig)[] = [
-    "databaseUrl",
-    "directusUrl",
-    "directusToken",
-    "directusWebhookSecret",
-    "groqApiKey",
-  ];
-
-  const missing = required.filter((key) => !config[key]);
-
-  if (missing.length > 0) {
-    throw new Error(
-      `Missing required configuration: ${missing.join(", ")}`,
     );
   }
 }

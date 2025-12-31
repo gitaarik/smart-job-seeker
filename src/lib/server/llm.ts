@@ -57,6 +57,7 @@ function generateCacheKey(
  */
 async function generateWithGroq(
   messages: ChatMessage[],
+  model: string,
   maxTokens: number,
   temperature: number,
   responseFormat?: ResponseFormat,
@@ -66,7 +67,7 @@ async function generateWithGroq(
   });
 
   const completion = await client.chat.completions.create({
-    model: config.llmModel,
+    model,
     messages,
     max_tokens: maxTokens,
     temperature,
@@ -87,6 +88,7 @@ async function generateWithGroq(
  */
 async function generateWithGemini(
   messages: ChatMessage[],
+  model: string,
   maxTokens: number,
   temperature: number,
   responseFormat?: ResponseFormat,
@@ -96,7 +98,7 @@ async function generateWithGemini(
   );
 
   const genModel = genAI.getGenerativeModel({
-    model: config.llmModel,
+    model,
     generationConfig: {
       maxOutputTokens: maxTokens,
       temperature,
@@ -142,6 +144,7 @@ async function generateWithGemini(
  */
 async function generateWithOpenAI(
   messages: ChatMessage[],
+  model: string,
   maxTokens: number,
   temperature: number,
   responseFormat?: ResponseFormat,
@@ -151,7 +154,7 @@ async function generateWithOpenAI(
   });
 
   const completion = await client.chat.completions.create({
-    model: config.llmModel,
+    model,
     messages,
     max_tokens: maxTokens,
     temperature,
@@ -172,6 +175,7 @@ async function generateWithOpenAI(
  */
 async function generateWithOpenRouter(
   messages: ChatMessage[],
+  model: string,
   maxTokens: number,
   temperature: number,
   responseFormat?: ResponseFormat,
@@ -182,7 +186,7 @@ async function generateWithOpenRouter(
   });
 
   const completion = await client.chat.completions.create({
-    model: config.llmModel,
+    model,
     messages,
     max_tokens: maxTokens,
     temperature,
@@ -214,7 +218,7 @@ export async function generateChatCompletion(
   options: ChatCompletionOptions = {},
 ): Promise<string> {
   const {
-    model = config.llmProvider, // Use provider name for cache/metadata
+    model = config.llmModel, // Use custom model or default from config
     maxTokens = 2048,
     temperature = 0.7,
     responseFormat,
@@ -240,6 +244,7 @@ export async function generateChatCompletion(
         case "gemini":
           return await generateWithGemini(
             messages,
+            model,
             maxTokens,
             temperature,
             responseFormat,
@@ -247,6 +252,7 @@ export async function generateChatCompletion(
         case "openai":
           return await generateWithOpenAI(
             messages,
+            model,
             maxTokens,
             temperature,
             responseFormat,
@@ -254,6 +260,7 @@ export async function generateChatCompletion(
         case "openrouter":
           return await generateWithOpenRouter(
             messages,
+            model,
             maxTokens,
             temperature,
             responseFormat,
@@ -261,6 +268,7 @@ export async function generateChatCompletion(
         default: // groq
           return await generateWithGroq(
             messages,
+            model,
             maxTokens,
             temperature,
             responseFormat,
