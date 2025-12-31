@@ -587,8 +587,9 @@ export async function upsertJob(
     skills,
     job_poster: _,
     status: __,
+    strippedHtml: ___,
     ...baseJobData
-  } = jobData;
+  } = jobData as typeof jobData & { strippedHtml?: string };
 
   const multiSelectData = {
     remote_options: remote ? [remote] : null,
