@@ -549,11 +549,14 @@ async function scrapeJobsWithUrls(
         const jobData = await extractJobData(jobHtml, jobUrl);
 
         // Skip if no meaningful data was extracted (invalid/expired page)
-        if (
-          jobData.title === "Unknown Position" &&
-          !jobData.job_description &&
-          !jobData.company_description
-        ) {
+        // Check if most critical fields are null/empty
+        const hasTitle = jobData.title && jobData.title.trim() !== "";
+        const hasDescription = jobData.job_description &&
+          jobData.job_description.trim() !== "";
+        const hasCompanyDesc = jobData.company_description &&
+          jobData.company_description.trim() !== "";
+
+        if (!hasTitle && !hasDescription && !hasCompanyDesc) {
           console.log(
             `   ⏭️  Skipping - Invalid/expired job page (no data extracted)`,
           );
@@ -885,11 +888,14 @@ async function scrapeJobsWithClicks(
         });
 
         // Skip if no meaningful data was extracted (invalid/expired page)
-        if (
-          jobData.title === "Unknown Position" &&
-          !jobData.job_description &&
-          !jobData.company_description
-        ) {
+        // Check if most critical fields are null/empty
+        const hasTitle = jobData.title && jobData.title.trim() !== "";
+        const hasDescription = jobData.job_description &&
+          jobData.job_description.trim() !== "";
+        const hasCompanyDesc = jobData.company_description &&
+          jobData.company_description.trim() !== "";
+
+        if (!hasTitle && !hasDescription && !hasCompanyDesc) {
           console.log(
             `      ⏭️  Skipping - Invalid/expired job page (no data extracted)`,
           );

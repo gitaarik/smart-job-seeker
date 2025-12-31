@@ -499,7 +499,7 @@ export async function extractJobData(
     // 8. Apply fallback for title if LLM extraction failed or returned empty
     const effectiveTitle = (data.title && data.title.trim() !== "")
       ? data.title
-      : (options?.fallbackTitle || data.title);
+      : (options?.fallbackTitle || "Untitled Position");
 
     // 9. Include stripped HTML in return value for database storage
     return {
