@@ -70,17 +70,36 @@ async function generateWithGroq(
   // Models that support structured outputs: llama-3.1-70b-versatile, llama-3.1-8b-instant
   // Fall back to simpler json_object format for other models
   let finalResponseFormat = responseFormat;
+  let finalMessages = messages;
+
   if (responseFormat?.type === "json_schema") {
     const supportsJsonSchema = model.includes("llama-3.1");
     if (!supportsJsonSchema) {
       // Fall back to simple JSON mode
       finalResponseFormat = { type: "json_object" } as any;
+
+      // Groq requires the word "json" in messages when using json_object format
+      // Add instruction to first message if not already present
+      const hasJsonMention = messages.some((m) =>
+        m.content.toLowerCase().includes("json")
+      );
+      if (!hasJsonMention) {
+        finalMessages = messages.map((m, i) =>
+          i === 0
+            ? {
+              ...m,
+              content: m.content +
+                "\n\nIMPORTANT: Return your response as valid JSON.",
+            }
+            : m
+        );
+      }
     }
   }
 
   const completion = await client.chat.completions.create({
     model,
-    messages,
+    messages: finalMessages,
     max_tokens: maxTokens,
     temperature,
     ...(finalResponseFormat && { response_format: finalResponseFormat }),

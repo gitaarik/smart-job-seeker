@@ -72,7 +72,7 @@ export interface AppConfig {
  */
 function getDefaultModel(provider: string): string {
   const defaults: Record<string, string> = {
-    groq: "llama-3.3-70b-versatile",
+    groq: "meta-llama/llama-4-scout-17b-16e-instruct",
     gemini: "gemini-2.0-flash-exp",
     openai: "gpt-4o",
     openrouter: "anthropic/claude-3.5-sonnet",
