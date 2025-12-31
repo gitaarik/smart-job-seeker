@@ -85,19 +85,18 @@ export async function clearDirectusCache(): Promise<void> {
     // Running in Docker - use direct API call
     await directusRequest("POST", "/utils/cache/clear");
   } else {
-    // Running on host - use Docker CLI
+    // Running on host - use npm script that handles Docker CLI
     const { execSync } = await import("child_process");
-    const token = getDirectusToken();
 
     try {
-      execSync(
-        `docker compose exec -T admin curl -s -X POST http://localhost:8085/utils/cache/clear -H "Authorization: Bearer ${token}"`,
-        { stdio: "ignore" },
-      );
+      execSync("npm run docker:clear-directus-cache", {
+        stdio: "inherit",
+        cwd: process.cwd(),
+      });
     } catch (error) {
       // Ignore errors - cache clearing is best-effort
       console.warn(
-        "⚠️  Could not clear Directus cache via Docker CLI (this is OK)",
+        "⚠️  Could not clear Directus cache via npm script (this is OK)",
       );
     }
   }
