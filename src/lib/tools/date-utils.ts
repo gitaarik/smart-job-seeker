@@ -15,15 +15,22 @@ import {
  * @returns Parsed Date object or null if invalid/unparseable
  */
 export function parseRelativeDate(
-  dateString: string | null,
+  dateString: string | null | undefined | Date,
   referenceDate: Date = new Date(),
 ): Date | null {
   if (!dateString) return null;
 
-  const cleaned = dateString.toLowerCase().trim();
+  // Handle Date objects directly
+  if (dateString instanceof Date) {
+    return dateString;
+  }
+
+  // Convert to string if not already
+  const strValue = String(dateString);
+  const cleaned = strValue.toLowerCase().trim();
 
   // Try absolute date first (ISO, standard formats)
-  const absoluteDate = new Date(dateString);
+  const absoluteDate = new Date(strValue);
   if (!isNaN(absoluteDate.getTime())) {
     // Check if it looks like a relative expression before accepting
     if (
