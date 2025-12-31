@@ -548,6 +548,19 @@ async function scrapeJobsWithUrls(
         console.log("   Extracting job data...");
         const jobData = await extractJobData(jobHtml, jobUrl);
 
+        // Skip if no meaningful data was extracted (invalid/expired page)
+        if (
+          jobData.title === "Unknown Position" &&
+          !jobData.job_description &&
+          !jobData.company_description
+        ) {
+          console.log(
+            `   ⏭️  Skipping - Invalid/expired job page (no data extracted)`,
+          );
+          consecutiveClosedCount = 0; // Reset counter for invalid pages
+          continue;
+        }
+
         // Apply filters
         const datePosted = jobData.date_posted
           ? parseRelativeDate(jobData.date_posted)
@@ -870,6 +883,19 @@ async function scrapeJobsWithClicks(
         const jobData = await extractJobData(strippedHtml, pseudoUrl, {
           fallbackTitle: searchPageTitle,
         });
+
+        // Skip if no meaningful data was extracted (invalid/expired page)
+        if (
+          jobData.title === "Unknown Position" &&
+          !jobData.job_description &&
+          !jobData.company_description
+        ) {
+          console.log(
+            `      ⏭️  Skipping - Invalid/expired job page (no data extracted)`,
+          );
+          stats.consecutiveClosedJobs = 0; // Reset counter for invalid pages
+          continue;
+        }
 
         // Age filter
         if (isJobTooOld(jobData.date_posted, config.scraperMaxJobAge)) {
