@@ -69,17 +69,34 @@ export interface AppConfig {
 }
 
 /**
- * Get default model for a given provider
+ * Get model for a given provider
+ * Priority: Provider-specific env var → Generic SJS_LLM_MODEL → Hardcoded default
  */
-function getDefaultModel(provider: string): string {
-  const defaults: Record<string, string> = {
+function getModelForProvider(provider: string): string {
+  const hardcodedDefaults: Record<string, string> = {
     groq: "meta-llama/llama-4-scout-17b-16e-instruct",
     gemini: "gemini-2.0-flash-exp",
     openai: "gpt-4o",
     openrouter: "anthropic/claude-3.5-sonnet",
     deepseek: "deepseek-chat",
   };
-  return defaults[provider] || defaults.groq;
+
+  // Provider-specific env var names
+  const providerEnvVars: Record<string, string> = {
+    groq: "SJS_LLM_MODEL_GROQ",
+    gemini: "SJS_LLM_MODEL_GEMINI",
+    openai: "SJS_LLM_MODEL_OPENAI",
+    openrouter: "SJS_LLM_MODEL_OPENROUTER",
+    deepseek: "SJS_LLM_MODEL_DEEPSEEK",
+  };
+
+  const hardcodedDefault = hardcodedDefaults[provider] ||
+    hardcodedDefaults.groq;
+  const genericModel = getEnv("SJS_LLM_MODEL", hardcodedDefault);
+  const providerEnvVar = providerEnvVars[provider];
+
+  // Priority: provider-specific → generic → hardcoded default
+  return providerEnvVar ? getEnv(providerEnvVar, genericModel) : genericModel;
 }
 
 /**
@@ -110,7 +127,7 @@ function loadConfig(): AppConfig {
       | "openai"
       | "openrouter"
       | "deepseek"),
-    llmModel: getEnv("SJS_LLM_MODEL", getDefaultModel(llmProvider)),
+    llmModel: getModelForProvider(llmProvider),
     groqApiKey: getEnv("SJS_GROQ_API_KEY", ""),
     geminiApiKey: getEnv("SJS_GEMINI_API_KEY", ""),
     openaiApiKey: getEnv("SJS_OPENAI_API_KEY", ""),

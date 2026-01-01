@@ -21,20 +21,31 @@ class BrowserController:
         logger.info(f"[Browser-Use] Initializing with provider: {provider}")
         print(f"[Browser-Use] Initializing with provider: {provider}", flush=True)
 
-        # Default models per provider (browseruse uses its own optimized model)
+        # Default models per provider (hardcoded fallbacks)
         default_models = {
             "groq": "llama-3.3-70b-versatile",
             "gemini": "gemini-2.0-flash-exp",
             "openai": "gpt-4o",
             "openrouter": "anthropic/claude-3.5-sonnet",
             "deepseek": "deepseek-chat",
+            "browseruse": "gpt-4o",
         }
 
-        # Get model with fallback to provider default
-        model = os.getenv(
-            "SJS_LLM_MODEL_BROWSER_USE",
-            os.getenv("SJS_LLM_MODEL", default_models.get(provider, default_models["groq"]))
-        )
+        # Provider-specific env var names
+        provider_env_vars = {
+            "groq": "SJS_LLM_MODEL_GROQ",
+            "gemini": "SJS_LLM_MODEL_GEMINI",
+            "openai": "SJS_LLM_MODEL_OPENAI",
+            "openrouter": "SJS_LLM_MODEL_OPENROUTER",
+            "deepseek": "SJS_LLM_MODEL_DEEPSEEK",
+            "browseruse": "SJS_LLM_MODEL_BROWSER_USE",
+        }
+
+        # Get model with priority: provider-specific → generic → hardcoded default
+        hardcoded_default = default_models.get(provider, default_models["groq"])
+        generic_model = os.getenv("SJS_LLM_MODEL", hardcoded_default)
+        provider_env_var = provider_env_vars.get(provider)
+        model = os.getenv(provider_env_var, generic_model) if provider_env_var else generic_model
 
         logger.info(f"[Browser-Use] Using model: {model}")
         print(f"[Browser-Use] Using model: {model}", flush=True)
