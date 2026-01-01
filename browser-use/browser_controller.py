@@ -44,12 +44,10 @@ class BrowserController:
         # Get model with priority:
         # 1. SJS_LLM_MODEL_BROWSER_USE (Browser-Use specific override)
         # 2. Provider-specific env var (e.g., SJS_LLM_MODEL_GROQ if provider is groq)
-        # 3. SJS_LLM_MODEL (generic fallback)
-        # 4. Hardcoded default
+        # 3. Hardcoded default
         hardcoded_default = default_models.get(provider, default_models["groq"])
-        generic_model = os.getenv("SJS_LLM_MODEL", hardcoded_default)
         provider_env_var = provider_env_vars.get(provider)
-        provider_specific_model = os.getenv(provider_env_var, generic_model) if provider_env_var else generic_model
+        provider_specific_model = os.getenv(provider_env_var, hardcoded_default) if provider_env_var else hardcoded_default
         model = os.getenv("SJS_LLM_MODEL_BROWSER_USE", provider_specific_model)
 
         logger.info(f"[Browser-Use] Using model: {model}")

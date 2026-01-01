@@ -70,7 +70,7 @@ export interface AppConfig {
 
 /**
  * Get model for a given provider
- * Priority: Provider-specific env var → Generic SJS_LLM_MODEL → Hardcoded default
+ * Priority: Provider-specific env var → Hardcoded default
  */
 function getModelForProvider(provider: string): string {
   const hardcodedDefaults: Record<string, string> = {
@@ -92,11 +92,12 @@ function getModelForProvider(provider: string): string {
 
   const hardcodedDefault = hardcodedDefaults[provider] ||
     hardcodedDefaults.groq;
-  const genericModel = getEnv("SJS_LLM_MODEL", hardcodedDefault);
   const providerEnvVar = providerEnvVars[provider];
 
-  // Priority: provider-specific → generic → hardcoded default
-  return providerEnvVar ? getEnv(providerEnvVar, genericModel) : genericModel;
+  // Priority: provider-specific → hardcoded default
+  return providerEnvVar
+    ? getEnv(providerEnvVar, hardcodedDefault)
+    : hardcodedDefault;
 }
 
 /**
