@@ -282,7 +282,10 @@ async function scrapeJobsWithBrowserUse(
     jobs = parseBrowserUseResponse(response.result);
   } catch (error) {
     console.error("❌ Failed to parse Browser-Use response:", error);
-    console.log("Raw response:", JSON.stringify(response.result).substring(0, 500));
+    console.log(
+      "Raw response:",
+      JSON.stringify(response.result).substring(0, 500),
+    );
     throw error;
   }
 
@@ -613,7 +616,15 @@ async function scrapeJobsWithUrls(
 
     // Detect pagination/scroll
     const strippedHtml = stripHtmlForLlm(html);
+    console.log("   Detecting pagination strategy...");
     const paginationInfo = await detectPaginationStrategy(page, strippedHtml);
+    console.log(
+      `   Pagination info: type=${paginationInfo.paginationType}, ` +
+        `hasPagination=${paginationInfo.hasPagination}, ` +
+        `hasInfiniteScroll=${paginationInfo.hasInfiniteScroll}, ` +
+        `nextButton=${paginationInfo.nextButtonSelector || "none"}, ` +
+        `nextUrl=${paginationInfo.nextPageUrl || "none"}`,
+    );
 
     if (!paginationInfo.hasPagination && !paginationInfo.hasInfiniteScroll) {
       console.log("   No pagination detected, stopping");
@@ -639,6 +650,7 @@ async function scrapeJobsWithUrls(
     // Navigate to next page (pagination)
     console.log("   Navigating to next page...");
     const hasNext = await navigateToNextPage(page, paginationInfo);
+    console.log(`   Navigation result: ${hasNext ? "SUCCESS" : "FAILED"}`);
 
     if (!hasNext) {
       console.log("   No more pages available");
@@ -646,6 +658,7 @@ async function scrapeJobsWithUrls(
     }
 
     currentPage++;
+    console.log(`   ✓ Now on page ${currentPage}`);
     await page.waitForTimeout(config.scraperRateLimitDelay); // Rate limiting
   }
 
@@ -667,8 +680,12 @@ async function scrapeJobsWithClicks(
   searchUrl: string,
   platformId: string,
 ): Promise<number> {
-
   console.log("\n🔄 Starting SPA scraping mode (click-based navigation)");
+
+  // Wait for page to fully render (SPAs need time)
+  console.log("⏳ Waiting for SPA to fully render...");
+  await page.waitForTimeout(3000);
+  console.log(`📍 Current URL: ${page.url()}`);
 
   // Initialize stats
   const stats = {
@@ -752,6 +769,36 @@ async function scrapeJobsWithClicks(
       console.log(`      Pattern: ${pattern}`);
       console.log(`      Job cards found: ${jobCount}`);
       console.log(`      Clickable IDs: [${clickableIds.join(", ")}]`);
+    }
+
+    // Check for login/signup page
+    const pageText = await page.textContent("body") || "";
+    const lowerText = pageText.toLowerCase();
+
+    // More specific login detection: look for login forms, not just text
+    const hasLoginForm = await page.locator('form[action*="login"]').count() >
+        0 ||
+      await page.locator('input[type="password"]').count() > 0;
+
+    const hasLoginKeywords = lowerText.includes("sign in to continue") ||
+      lowerText.includes("log in to continue") ||
+      lowerText.includes("create an account") ||
+      (lowerText.includes("email") && lowerText.includes("password") &&
+        lowerText.includes("submit"));
+
+    const isLoginPage = hasLoginForm || hasLoginKeywords;
+
+    if (isLoginPage && clickableIds.length < 5) {
+      console.log(
+        "\n   🚫 Login/signup page detected - stopping scrape",
+      );
+      console.log(
+        `   Reason: hasLoginForm=${hasLoginForm}, hasLoginKeywords=${hasLoginKeywords}, clickableIds=${clickableIds.length}`,
+      );
+      console.log(
+        "   💡 Please log in manually in the browser and run the scraper again",
+      );
+      break;
     }
 
     if (clickableIds.length === 0) {
@@ -888,18 +935,27 @@ async function scrapeJobsWithClicks(
         });
 
         // Skip if no meaningful data was extracted (invalid/expired page)
-        // Check if most critical fields are null/empty
+        // Check if critical fields are null/empty
         const hasTitle = jobData.title && jobData.title.trim() !== "";
+        const hasCompany = jobData.company && jobData.company.trim() !== "";
         const hasDescription = jobData.job_description &&
           jobData.job_description.trim() !== "";
-        const hasCompanyDesc = jobData.company_description &&
-          jobData.company_description.trim() !== "";
 
-        if (!hasTitle && !hasDescription && !hasCompanyDesc) {
+        // If we don't have at least a title OR company, it's probably not a real job
+        if (!hasTitle && !hasCompany) {
           console.log(
-            `      ⏭️  Skipping - Invalid/expired job page (no data extracted)`,
+            `      ⏭️  Skipping - No title or company (likely login/error page)`,
           );
           stats.consecutiveClosedJobs = 0; // Reset counter for invalid pages
+          continue;
+        }
+
+        // If we have neither title nor description, also skip
+        if (!hasTitle && !hasDescription) {
+          console.log(
+            `      ⏭️  Skipping - No title or description (incomplete data)`,
+          );
+          stats.consecutiveClosedJobs = 0;
           continue;
         }
 
@@ -1039,14 +1095,20 @@ async function scrapeJobSite(
 
   try {
     if (config.scraperMethod === "playwright") {
-      // Launch Playwright browser
+      // Launch Playwright browser - force visible for manual login
+      const headless = false; // Always visible so user can log in
+      console.log(`🖥️  Browser mode: ${headless ? "headless" : "visible"}`);
       const context = await launchBrowser("/tmp/scraper-profile", {
-        headless: config.isDevelopment ? false : true,
+        headless,
       });
 
       try {
         const page = await context.newPage();
-        await page.goto(searchUrl, { waitUntil: "load", timeout: 30000 });
+        // Use domcontentloaded for SPAs (faster and more reliable than "load")
+        await page.goto(searchUrl, {
+          waitUntil: "domcontentloaded",
+          timeout: 60000,
+        });
 
         // Route by navigation type
         if (navigationType === "click") {
@@ -1058,7 +1120,11 @@ async function scrapeJobSite(
             platformId,
           );
         } else {
-          processedCount = await scrapeJobsWithUrls(page, searchUrl, platformId);
+          processedCount = await scrapeJobsWithUrls(
+            page,
+            searchUrl,
+            platformId,
+          );
         }
       } finally {
         await context.close(); // Always cleanup

@@ -231,6 +231,26 @@ export async function extractJobClickSelectors(
   // 1. Strip HTML to minimal content (data-clickable-id attributes survive)
   const strippedHtml = stripHtmlForLlm(searchResultsHtml);
 
+  // Extract all data-extract-clickable-id values with regex
+  const clickableIdMatches = strippedHtml.match(
+    /data-extract-clickable-id="(\d+)"/g,
+  );
+
+  let allClickableIds: number[] = [];
+  if (clickableIdMatches) {
+    allClickableIds = clickableIdMatches
+      .map((m) => parseInt(m.match(/\d+/)?.[0] || "0"))
+      .filter((id) => id > 0);
+    console.log(
+      `      Found ${allClickableIds.length} data-extract-clickable-id attributes in stripped HTML`,
+    );
+    console.log(`      All IDs: [${allClickableIds.join(", ")}]`);
+  } else {
+    console.warn(
+      "      ⚠️  No data-extract-clickable-id attributes found in stripped HTML!",
+    );
+  }
+
   // 2. Get prompt template
   const template = await db.ai_chat_prompts.findUnique({
     where: { request: "extract_job_click_selectors" },
@@ -240,57 +260,42 @@ export async function extractJobClickSelectors(
     throw new Error("Prompt template 'extract_job_click_selectors' not found");
   }
 
-  // 3. Interpolate variables
+  // 3. Interpolate variables - include pre-extracted IDs
   const systemPrompt = template.system_prompt || "";
   const userPrompt = interpolatePrompt(template.user_prompt || "", {
     html: strippedHtml,
+    clickable_ids: JSON.stringify(allClickableIds),
   });
 
-  // 4. Call LLM using generic utility with optional structured output
-  const responseFormat = template.format
-    ? {
-      type: "json_schema" as const,
-      json_schema: {
-        name: "job_click_selectors",
-        strict: true,
-        schema: template.format as Record<string, any>,
-      },
-    }
-    : undefined;
-
-  const response = await generateChatCompletion(
-    [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt },
-    ],
-    { temperature: 0.3, responseFormat },
+  // 4. Skip LLM filtering - just use all clickable IDs
+  // The LLM keeps hallucinating fake IDs, so we'll use all of them
+  // and filter based on successful extraction downstream
+  console.log(
+    `      ⚠️  Skipping LLM filtering (unreliable), using all ${allClickableIds.length} IDs`,
   );
 
-  // 5. Parse JSON response
-  try {
-    const result = JSON.parse(response);
+  // Simple heuristic: Most job listing pages show 10-20 jobs per page
+  // If we have way more IDs than that, they're probably mostly non-job elements
+  // Try to filter to a reasonable subset
+  let filteredIds = allClickableIds;
 
-    if (!Array.isArray(result.clickableIds)) {
-      throw new Error("LLM response.clickableIds is not an array");
-    }
-
-    return {
-      clickableIds: result.clickableIds,
-      pattern: result.pattern || "Job cards pattern",
-      jobCount: result.jobCount || result.clickableIds.length,
-    };
-  } catch (error) {
-    console.error(
-      "Failed to parse click selectors from LLM response:",
-      error,
-    );
-    console.error("Response was:", response);
-    throw new Error(
-      `Failed to extract click selectors: ${
-        error instanceof Error ? error.message : "Unknown error"
-      }`,
+  // If we have a lot of IDs, assume the job cards are in a contiguous range
+  // (usually the main content area, excluding header/footer navigation)
+  if (allClickableIds.length > 20) {
+    // Take IDs from the middle range, skip very low and very high IDs
+    // which are often navigation elements
+    const skip = Math.floor(allClickableIds.length * 0.1);
+    filteredIds = allClickableIds.slice(skip, allClickableIds.length - skip);
+    console.log(
+      `      → Filtered to ${filteredIds.length} IDs (excluded ${skip} from each end)`,
     );
   }
+
+  return {
+    clickableIds: filteredIds,
+    pattern: "All clickable elements (LLM filtering skipped)",
+    jobCount: filteredIds.length,
+  };
 }
 
 /**
