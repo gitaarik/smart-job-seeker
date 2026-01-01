@@ -376,6 +376,48 @@ async function waitForCaptchaSolution(page: Page): Promise<boolean> {
 }
 
 /**
+ * Wait for user to manually log in
+ * @param page Playwright page with login required
+ * @returns true if logged in, false if timeout
+ */
+async function waitForLoginSolution(page: Page): Promise<boolean> {
+  console.log("\n" + "=".repeat(60));
+  console.log("🔐 Login Required");
+  console.log("=".repeat(60));
+  console.log("Please log in to the website in the browser window.");
+  console.log(
+    "Once you're logged in, press ENTER in this terminal to continue.",
+  );
+  console.log("You have 10 minutes to complete the login.");
+  console.log("=".repeat(60) + "\n");
+
+  const timeoutMs = 10 * 60 * 1000; // 10 minutes
+  const startTime = Date.now();
+
+  // Wait for user to press Enter
+  const readline = await import("readline");
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  return new Promise((resolve) => {
+    const timeoutId = setTimeout(() => {
+      rl.close();
+      console.log("❌ Login timeout (10 minutes elapsed)");
+      resolve(false);
+    }, timeoutMs);
+
+    rl.question("Press ENTER when you've completed the login: ", () => {
+      clearTimeout(timeoutId);
+      rl.close();
+      console.log("✅ Login confirmed! Continuing...\n");
+      resolve(true);
+    });
+  });
+}
+
+/**
  * Check if job HTML has changed since last scrape
  * @param sourceUrl Job URL to check
  * @param newStrippedHtml New stripped HTML content
@@ -463,26 +505,40 @@ async function scrapeJobsWithUrls(
     }
 
     console.log(`   Extracting job links (${htmlSize} KB)...`);
-    let pageUrls = await extractJobLinks(html);
+    let pageUrls: string[];
+
+    try {
+      pageUrls = await extractJobLinks(html);
+    } catch (error) {
+      // Check if this is a login error
+      if (
+        error instanceof Error &&
+        error.message.includes("Login/authentication page detected")
+      ) {
+        const loginCompleted = await waitForLoginSolution(page);
+
+        if (!loginCompleted) {
+          console.log("⚠️  Skipping this search due to login timeout");
+          break;
+        }
+
+        console.log("🔄 Reloading page after login...");
+        await page.reload({ waitUntil: "load", timeout: 30000 });
+        await page.waitForTimeout(config.scraperRateLimitDelay);
+        continue;
+      }
+
+      // Re-throw if it's a different error
+      throw error;
+    }
 
     if (!pageUrls || pageUrls.length === 0) {
       if (currentPage === 1) {
         console.log("   ⚠️  No job links found.");
-
-        const hasLoginForm = await page.locator('form[action*="login"]')
-          .isVisible().catch(() => false);
-
-        if (hasLoginForm) {
-          console.log("   Reason: Login page detected");
-          console.log(
-            "   Action: Run script again and complete login when prompted",
-          );
-        } else {
-          console.log("   Possible reasons:");
-          console.log("   - Search returned no results (legitimate)");
-          console.log("   - Page structure changed (update selectors)");
-          console.log("   - Content still loading (increase timeout)");
-        }
+        console.log("   Possible reasons:");
+        console.log("   - Search returned no results (legitimate)");
+        console.log("   - Page structure changed (update selectors)");
+        console.log("   - Content still loading (increase timeout)");
       } else {
         console.log("   No jobs found, stopping pagination");
       }
