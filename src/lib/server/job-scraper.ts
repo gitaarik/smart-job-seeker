@@ -485,7 +485,26 @@ export async function extractJobData(
       status: data.status,
     });
 
-    // 7. Parse and validate date_posted
+    // 7. If LLM didn't extract date, try fallback regex extraction
+    if (!data.date_posted) {
+      // Look for "Posted X ago" patterns in the stripped HTML
+      // Match: "Posted 3 months ago", "Posted a month ago", "Posted yesterday", etc.
+      const datePattern =
+        /Posted\s+(?:a\s+)?(?:\d+\s+)?(?:month|day|week|year|hour|minute)s?\s+ago/gi;
+      const matches = strippedHtml.match(datePattern);
+
+      if (matches && matches.length > 0) {
+        // For Mercor jobs, the main job's date typically appears last (after similar jobs)
+        // Take the last match
+        const lastMatch = matches[matches.length - 1];
+        console.log(
+          `  Fallback: Found ${matches.length} date(s), using last one: "${lastMatch}"`,
+        );
+        data.date_posted = lastMatch;
+      }
+    }
+
+    // 8. Parse and validate date_posted
     const parsedDate = parseRelativeDate(data.date_posted);
 
     // Validate the parsed date
@@ -501,12 +520,12 @@ export async function extractJobData(
       data.date_posted = null;
     }
 
-    // 8. Apply fallback for title if LLM extraction failed or returned empty
+    // 9. Apply fallback for title if LLM extraction failed or returned empty
     const effectiveTitle = (data.title && data.title.trim() !== "")
       ? data.title
       : (options?.fallbackTitle || "Untitled Position");
 
-    // 9. Include stripped HTML in return value for database storage
+    // 10. Include stripped HTML in return value for database storage
     return {
       ...data,
       title: effectiveTitle,
