@@ -6574,7 +6574,8 @@ export const Job_platformsScalarFieldEnum = {
   name: 'name',
   url: 'url',
   type: 'type',
-  navigation_type: 'navigation_type'
+  navigation_type: 'navigation_type',
+  key: 'key'
 } as const
 
 export type Job_platformsScalarFieldEnum = (typeof Job_platformsScalarFieldEnum)[keyof typeof Job_platformsScalarFieldEnum]
