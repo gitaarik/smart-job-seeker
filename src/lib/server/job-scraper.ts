@@ -151,7 +151,20 @@ export async function extractJobLinks(
 
   if (!validation.isValid) {
     console.warn("⚠️  HTML validation warnings:", validation.warnings);
-    // Continue anyway - might still extract something useful
+
+    // Check for login page - this is a hard stop
+    const hasLoginWarning = validation.warnings.some((w) =>
+      w.toLowerCase().includes("login") ||
+      w.toLowerCase().includes("authentication")
+    );
+
+    if (hasLoginWarning) {
+      throw new Error(
+        "Login/authentication page detected. Please log in manually in the browser and run the scraper again.",
+      );
+    }
+
+    // Continue anyway for other warnings - might still extract something useful
   }
 
   // 1. Strip HTML to minimal content
@@ -197,10 +210,15 @@ export async function extractJobLinks(
     const result = JSON.parse(response);
 
     // Extract urls array from the structured response
-    const links = result.urls;
+    // Try multiple possible field names for compatibility
+    const links = result.urls || result.job_urls || result.links;
 
     if (!Array.isArray(links)) {
-      throw new Error("LLM response.urls is not an array");
+      throw new Error(
+        `LLM response doesn't contain a valid array. Expected 'urls', 'job_urls', or 'links' field. Got: ${
+          JSON.stringify(result)
+        }`,
+      );
     }
 
     return links;
