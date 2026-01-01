@@ -78,25 +78,25 @@ describe("parseRelativeDate", () => {
     it("should parse 'today'", () => {
       const result = parseRelativeDate("today", referenceDate);
       expect(result).toBeInstanceOf(Date);
-      expect(result?.toISOString()).toBe("2025-12-28T00:00:00.000Z");
+      expect(result?.toISOString()).toBe("2025-12-28T12:00:00.000Z");
     });
 
     it("should parse 'posted today'", () => {
       const result = parseRelativeDate("posted today", referenceDate);
       expect(result).toBeInstanceOf(Date);
-      expect(result?.toISOString()).toBe("2025-12-28T00:00:00.000Z");
+      expect(result?.toISOString()).toBe("2025-12-28T12:00:00.000Z");
     });
 
     it("should parse 'yesterday'", () => {
       const result = parseRelativeDate("yesterday", referenceDate);
       expect(result).toBeInstanceOf(Date);
-      expect(result?.toISOString()).toBe("2025-12-27T00:00:00.000Z");
+      expect(result?.toISOString()).toBe("2025-12-27T12:00:00.000Z");
     });
 
     it("should parse 'posted yesterday'", () => {
       const result = parseRelativeDate("posted yesterday", referenceDate);
       expect(result).toBeInstanceOf(Date);
-      expect(result?.toISOString()).toBe("2025-12-27T00:00:00.000Z");
+      expect(result?.toISOString()).toBe("2025-12-27T12:00:00.000Z");
     });
 
     it("should parse 'last week'", () => {

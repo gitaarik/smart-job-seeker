@@ -134,12 +134,19 @@ describe("generateChatCompletion", () => {
     const result = await generateChatCompletion(messages, { responseFormat });
 
     expect(result).toBe('{"name": "test"}');
+    // For non-Llama-3.1 models, Groq transforms json_schema to json_object
+    // and adds JSON instruction to the first message
     expect(mockCreate).toHaveBeenCalledWith({
       model: "meta-llama/llama-4-scout-17b-16e-instruct",
-      messages,
+      messages: [
+        {
+          role: "user",
+          content: "Extract data\n\nIMPORTANT: Return your response as valid JSON.",
+        },
+      ],
       max_tokens: 2048,
       temperature: 0.7,
-      response_format: responseFormat,
+      response_format: { type: "json_object" },
     });
   });
 
