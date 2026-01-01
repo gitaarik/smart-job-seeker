@@ -31,7 +31,7 @@ class BrowserController:
             "browseruse": "gpt-4o",
         }
 
-        # Provider-specific env var names
+        # Provider-specific env var names (for main providers, not browser-use override)
         provider_env_vars = {
             "groq": "SJS_LLM_MODEL_GROQ",
             "gemini": "SJS_LLM_MODEL_GEMINI",
@@ -41,11 +41,16 @@ class BrowserController:
             "browseruse": "SJS_LLM_MODEL_BROWSER_USE",
         }
 
-        # Get model with priority: provider-specific → generic → hardcoded default
+        # Get model with priority:
+        # 1. SJS_LLM_MODEL_BROWSER_USE (Browser-Use specific override)
+        # 2. Provider-specific env var (e.g., SJS_LLM_MODEL_GROQ if provider is groq)
+        # 3. SJS_LLM_MODEL (generic fallback)
+        # 4. Hardcoded default
         hardcoded_default = default_models.get(provider, default_models["groq"])
         generic_model = os.getenv("SJS_LLM_MODEL", hardcoded_default)
         provider_env_var = provider_env_vars.get(provider)
-        model = os.getenv(provider_env_var, generic_model) if provider_env_var else generic_model
+        provider_specific_model = os.getenv(provider_env_var, generic_model) if provider_env_var else generic_model
+        model = os.getenv("SJS_LLM_MODEL_BROWSER_USE", provider_specific_model)
 
         logger.info(f"[Browser-Use] Using model: {model}")
         print(f"[Browser-Use] Using model: {model}", flush=True)
