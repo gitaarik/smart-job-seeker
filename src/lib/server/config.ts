@@ -21,12 +21,13 @@ export interface AppConfig {
   directusWebhookSecret: string;
 
   // LLM (for TypeScript/SvelteKit app)
-  llmProvider: "groq" | "gemini" | "openai" | "openrouter";
+  llmProvider: "groq" | "gemini" | "openai" | "openrouter" | "deepseek";
   llmModel: string; // Configurable model name, with smart defaults per provider
   groqApiKey: string;
   geminiApiKey: string;
   openaiApiKey: string;
   openrouterApiKey: string;
+  deepseekApiKey: string;
 
   // LLM Configuration
   llmCacheTTL: number; // milliseconds
@@ -76,6 +77,7 @@ function getDefaultModel(provider: string): string {
     gemini: "gemini-2.0-flash-exp",
     openai: "gpt-4o",
     openrouter: "anthropic/claude-3.5-sonnet",
+    deepseek: "deepseek-chat",
   };
   return defaults[provider] || defaults.groq;
 }
@@ -102,12 +104,18 @@ function loadConfig(): AppConfig {
     directusWebhookSecret: getEnv("SJS_WEBHOOK_SECRET"),
 
     // LLM (for TypeScript/SvelteKit app)
-    llmProvider: (llmProvider as "groq" | "gemini" | "openai" | "openrouter"),
+    llmProvider: (llmProvider as
+      | "groq"
+      | "gemini"
+      | "openai"
+      | "openrouter"
+      | "deepseek"),
     llmModel: getEnv("SJS_LLM_MODEL", getDefaultModel(llmProvider)),
     groqApiKey: getEnv("SJS_GROQ_API_KEY", ""),
     geminiApiKey: getEnv("SJS_GEMINI_API_KEY", ""),
     openaiApiKey: getEnv("SJS_OPENAI_API_KEY", ""),
     openrouterApiKey: getEnv("SJS_OPENROUTER_API_KEY", ""),
+    deepseekApiKey: getEnv("SJS_DEEPSEEK_API_KEY", ""),
 
     // Caching (1 hour default)
     llmCacheTTL: parseInt(

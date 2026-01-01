@@ -246,8 +246,40 @@ async function generateWithOpenRouter(
 }
 
 /**
+ * Generate chat completion using DeepSeek
+ */
+async function generateWithDeepSeek(
+  messages: ChatMessage[],
+  model: string,
+  maxTokens: number,
+  temperature: number,
+  responseFormat?: ResponseFormat,
+): Promise<string> {
+  const client = new OpenAI({
+    apiKey: config.deepseekApiKey || getEnv("SJS_DEEPSEEK_API_KEY", ""),
+    baseURL: "https://api.deepseek.com",
+  });
+
+  const completion = await client.chat.completions.create({
+    model,
+    messages,
+    max_tokens: maxTokens,
+    temperature,
+    ...(responseFormat && { response_format: responseFormat }),
+  });
+
+  const responseContent = completion.choices[0]?.message?.content;
+
+  if (!responseContent) {
+    throw new Error("No content returned from DeepSeek");
+  }
+
+  return responseContent;
+}
+
+/**
  * Generate a chat completion using the configured LLM provider
- * Supports Groq, Gemini (Google Generative AI), OpenAI, and OpenRouter
+ * Supports Groq, Gemini (Google Generative AI), OpenAI, OpenRouter, and DeepSeek
  *
  * Includes caching and retry logic for reliability
  *
@@ -302,6 +334,14 @@ export async function generateChatCompletion(
           );
         case "openrouter":
           return await generateWithOpenRouter(
+            messages,
+            model,
+            maxTokens,
+            temperature,
+            responseFormat,
+          );
+        case "deepseek":
+          return await generateWithDeepSeek(
             messages,
             model,
             maxTokens,

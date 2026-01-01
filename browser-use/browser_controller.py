@@ -27,6 +27,7 @@ class BrowserController:
             "gemini": "gemini-2.0-flash-exp",
             "openai": "gpt-4o",
             "openrouter": "anthropic/claude-3.5-sonnet",
+            "deepseek": "deepseek-chat",
         }
 
         # Get model with fallback to provider default
@@ -67,6 +68,16 @@ class BrowserController:
             # OpenRouter vision support depends on model
             # Claude 3.5 Sonnet and other vision models support it
             self.use_vision = "claude" in model or "gpt-4" in model or "gemini" in model or "qvq" in model
+        elif provider == "deepseek":
+            # Use DeepSeek
+            self.llm = ChatOpenAI(
+                model=model,
+                base_url="https://api.deepseek.com",
+                api_key=os.getenv("SJS_DEEPSEEK_API_KEY"),
+                temperature=0.3,
+            )
+            # DeepSeek v3 supports vision
+            self.use_vision = "v3" in model
         elif provider == "browseruse":
             # Use Browser Use Cloud via OpenAI-compatible API
             self.llm = ChatOpenAI(
