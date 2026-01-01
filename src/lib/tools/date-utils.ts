@@ -1,15 +1,9 @@
-import {
-  subDays,
-  subHours,
-  subMinutes,
-  subMonths,
-  subWeeks,
-  subYears,
-} from "date-fns";
+import * as chrono from "chrono-node";
 
 /**
  * Parse relative date strings into actual Date objects
- * Handles expressions like "3 days ago", "2 weeks ago", "posted yesterday"
+ * Handles expressions like "3 days ago", "a month ago", "posted yesterday", "submitted two weeks ago"
+ * Uses Chrono library for natural language date parsing
  * @param dateString - Raw date string from job posting
  * @param referenceDate - Reference date (typically scrape time), defaults to now
  * @returns Parsed Date object or null if invalid/unparseable
@@ -27,85 +21,19 @@ export function parseRelativeDate(
 
   // Convert to string if not already
   const strValue = String(dateString);
-  const cleaned = strValue.toLowerCase().trim();
 
-  // Try absolute date first (ISO, standard formats)
-  const absoluteDate = new Date(strValue);
-  if (!isNaN(absoluteDate.getTime())) {
-    // Check if it looks like a relative expression before accepting
-    if (
-      !cleaned.includes("ago") &&
-      !cleaned.includes("yesterday") &&
-      !cleaned.includes("today")
-    ) {
-      return absoluteDate;
-    }
-  }
+  // Use Chrono to parse the date string
+  // Chrono handles many natural language formats:
+  // - "a month ago", "2 days ago", "three weeks ago"
+  // - "posted yesterday", "submitted last week"
+  // - "publicized 5 hours ago"
+  // - Absolute dates like "2024-01-15" or "Jan 15, 2024"
+  const parsed = chrono.parseDate(strValue, referenceDate, {
+    forwardDate: false, // Don't interpret ambiguous dates as future dates
+  });
 
-  // Pattern: "X days/weeks/months/years/hours/minutes ago"
-  const relativeMatch = cleaned.match(
-    /(\d+)\s*(day|week|month|year|hour|minute)s?\s*ago/,
-  );
-  if (relativeMatch) {
-    const amount = parseInt(relativeMatch[1], 10);
-    const unit = relativeMatch[2];
-
-    switch (unit) {
-      case "minute":
-        return subMinutes(referenceDate, amount);
-      case "hour":
-        return subHours(referenceDate, amount);
-      case "day":
-        return subDays(referenceDate, amount);
-      case "week":
-        return subWeeks(referenceDate, amount);
-      case "month":
-        return subMonths(referenceDate, amount);
-      case "year":
-        return subYears(referenceDate, amount);
-    }
-  }
-
-  // Abbreviated patterns: "3d ago", "2w ago", "1mo ago"
-  const shortMatch = cleaned.match(/(\d+)\s*([dwmy]|mo)\s*ago/);
-  if (shortMatch) {
-    const amount = parseInt(shortMatch[1], 10);
-    const unit = shortMatch[2];
-
-    switch (unit) {
-      case "d":
-        return subDays(referenceDate, amount);
-      case "w":
-        return subWeeks(referenceDate, amount);
-      case "mo":
-      case "m":
-        return subMonths(referenceDate, amount);
-      case "y":
-        return subYears(referenceDate, amount);
-    }
-  }
-
-  // Named relative dates
-  if (cleaned.includes("today")) {
-    const today = new Date(referenceDate);
-    today.setUTCHours(0, 0, 0, 0);
-    return today;
-  }
-  if (cleaned.includes("yesterday")) {
-    const yesterday = subDays(referenceDate, 1);
-    yesterday.setUTCHours(0, 0, 0, 0);
-    return yesterday;
-  }
-  if (cleaned.includes("last week")) {
-    return subWeeks(referenceDate, 1);
-  }
-  if (cleaned.includes("last month")) {
-    return subMonths(referenceDate, 1);
-  }
-
-  // If we got here and the absolute date was valid, return it
-  if (!isNaN(absoluteDate.getTime())) {
-    return absoluteDate;
+  if (parsed && !isNaN(parsed.getTime())) {
+    return parsed;
   }
 
   // Unparseable
