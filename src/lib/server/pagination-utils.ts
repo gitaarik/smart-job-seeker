@@ -218,18 +218,54 @@ export async function performInfiniteScroll(
   page: Page,
   options: { maxScrolls: number },
 ): Promise<number> {
-  const initialHeight = await page.evaluate(() => document.body.scrollHeight);
+  // Get initial content to detect changes (more reliable than scroll height for SPAs)
+  const initialContent = await page.content();
+  const initialLength = initialContent.length;
 
-  // Use existing scroll utility
-  await waitWithScrollDetection(page, {
-    maxIterations: options.maxScrolls,
-    scrollDelay: 2000,
+  console.log(`      Initial content: ${(initialLength / 1024).toFixed(1)} KB`);
+
+  // Scroll multiple times to trigger lazy loading
+  const maxIterations = options.maxScrolls;
+  const scrollDelay = 2000;
+
+  for (let i = 0; i < maxIterations; i++) {
+    console.log(`      Scroll iteration ${i + 1}/${maxIterations}...`);
+
+    // Scroll to bottom
+    await page.evaluate(() => {
+      window.scrollTo(0, document.body.scrollHeight);
+    });
+
+    // Wait for new content to load
+    await page.waitForTimeout(scrollDelay);
+
+    // Check if content changed (new jobs loaded)
+    const currentContent = await page.content();
+    const currentLength = currentContent.length;
+
+    if (currentLength > initialLength) {
+      console.log(
+        `      ✓ New content detected: ${
+          ((currentLength - initialLength) / 1024).toFixed(1)
+        } KB added`,
+      );
+      // Return immediately when new content is found
+      return 1;
+    }
+
+    console.log(
+      `      No new content yet (${(currentLength / 1024).toFixed(1)} KB)`,
+    );
+  }
+
+  console.log(`      ✗ No new content after ${maxIterations} scroll(s)`);
+
+  // Scroll back to top for next extraction
+  await page.evaluate(() => {
+    window.scrollTo(0, 0);
   });
 
-  const finalHeight = await page.evaluate(() => document.body.scrollHeight);
-
-  // Return 1 if new content loaded, 0 if not
-  return finalHeight > initialHeight ? 1 : 0;
+  return 0; // No new content loaded
 }
 
 /**

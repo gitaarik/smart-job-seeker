@@ -2,7 +2,8 @@
 
 ## Overview
 
-This feature allows you to delete all jobs from a specific job platform using either the platform ID or a unique key.
+This feature allows you to delete all jobs from a specific job platform using
+either the platform ID or a unique key.
 
 ## Setup Steps
 
@@ -24,7 +25,8 @@ This feature allows you to delete all jobs from a specific job platform using ei
      - Trim: `Yes`
      - Slug: `Yes` (optional)
    - **Validation** (optional): Pattern `^[a-z0-9-_]+$`
-   - **Note**: "Unique key for identifying platform (e.g., 'linkedin', 'mercor')"
+   - **Note**: "Unique key for identifying platform (e.g., 'linkedin',
+     'mercor')"
 5. Click **Save**
 
 ### 2. Update Prisma Schema
@@ -39,15 +41,16 @@ This will pull the new field definition from Directus into the Prisma schema.
 
 Go to **Content → job_platforms** and add unique keys:
 
-| Platform | Suggested Key |
-|----------|--------------|
-| LinkedIn | `linkedin` |
-| Mercor | `mercor` |
-| Indeed | `indeed` |
-| Glassdoor | `glassdoor` |
-| Turing | `turing` |
+| Platform  | Suggested Key |
+| --------- | ------------- |
+| LinkedIn  | `linkedin`    |
+| Mercor    | `mercor`      |
+| Indeed    | `indeed`      |
+| Glassdoor | `glassdoor`   |
+| Turing    | `turing`      |
 
 Keys should be:
+
 - Lowercase
 - URL-friendly (alphanumeric, hyphens, underscores only)
 - Memorable and intuitive
