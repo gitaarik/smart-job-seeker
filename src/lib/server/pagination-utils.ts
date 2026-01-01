@@ -30,6 +30,19 @@ export async function detectPaginationStrategy(
   page: Page,
   html?: string,
 ): Promise<PaginationInfo> {
+  // Site-specific heuristics (highest priority)
+  const currentUrl = page.url();
+
+  // LinkedIn always uses infinite scroll for job listings
+  if (currentUrl.includes("linkedin.com/jobs")) {
+    console.log("   ✓ LinkedIn detected - using infinite scroll");
+    return {
+      hasPagination: false,
+      hasInfiniteScroll: true,
+      paginationType: "infinite_scroll",
+    };
+  }
+
   // Heuristic check first (fast) - common pagination patterns
   // Check for "Next" buttons with various patterns
   const nextSelectors = [
