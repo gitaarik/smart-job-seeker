@@ -30,6 +30,7 @@ interface SearchAction {
   platform: number | null;
   job_platforms: {
     navigation_type: "url" | "click" | null;
+    pagination_type: string | null;
   } | null;
 }
 
@@ -82,7 +83,13 @@ async function scrapeJobSite(
     searchAction.job_platforms?.navigation_type ||
     getSiteConfig(searchUrl).navigationType || "url";
 
+  // Get pagination type from platform config
+  const paginationType = searchAction.job_platforms?.pagination_type || null;
+
   console.log(`📍 Navigation type: ${navigationType}`);
+  if (paginationType) {
+    console.log(`📄 Pagination type: ${paginationType}`);
+  }
   console.log(`🔧 Scraper method: ${config.scraperMethod}`);
 
   let processedCount: number;
@@ -118,6 +125,7 @@ async function scrapeJobSite(
             page,
             searchUrl,
             platformId,
+            paginationType,
           );
         }
       } finally {
@@ -292,6 +300,7 @@ async function scrapeJobSites(): Promise<void> {
         job_platforms: {
           select: {
             navigation_type: true,
+            pagination_type: true,
           },
         },
       },

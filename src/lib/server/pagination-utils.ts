@@ -25,22 +25,54 @@ export interface PaginationInfo {
 /**
  * Detect pagination strategy using heuristics + LLM fallback
  * Fast heuristic checks first, then LLM for complex cases
+ * @param page Playwright page instance
+ * @param html Optional HTML content (uses page.content() if not provided)
+ * @param platformPaginationType Optional pagination type from platform config (overrides auto-detection)
  */
 export async function detectPaginationStrategy(
   page: Page,
   html?: string,
+  platformPaginationType?: string | null,
 ): Promise<PaginationInfo> {
-  // Site-specific heuristics (highest priority)
-  const currentUrl = page.url();
+  // Platform configuration takes highest priority
+  if (platformPaginationType) {
+    console.log(
+      `   ✓ Using platform pagination config: ${platformPaginationType}`,
+    );
 
-  // LinkedIn always uses infinite scroll for job listings
-  if (currentUrl.includes("linkedin.com/jobs")) {
-    console.log("   ✓ LinkedIn detected - using infinite scroll");
-    return {
-      hasPagination: false,
-      hasInfiniteScroll: true,
-      paginationType: "infinite_scroll",
-    };
+    // Map the platform config to PaginationInfo
+    switch (platformPaginationType) {
+      case "infinite_scroll":
+        return {
+          hasPagination: false,
+          hasInfiniteScroll: true,
+          paginationType: "infinite_scroll",
+        };
+      case "next_prev":
+        return {
+          hasPagination: true,
+          hasInfiniteScroll: false,
+          paginationType: "next_prev",
+        };
+      case "numbered":
+        return {
+          hasPagination: true,
+          hasInfiniteScroll: false,
+          paginationType: "numbered",
+        };
+      case "load_more":
+        return {
+          hasPagination: false,
+          hasInfiniteScroll: true,
+          paginationType: "load_more",
+        };
+      case "none":
+        return {
+          hasPagination: false,
+          hasInfiniteScroll: false,
+          paginationType: "none",
+        };
+    }
   }
 
   // Heuristic check first (fast) - common pagination patterns

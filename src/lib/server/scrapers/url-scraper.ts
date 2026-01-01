@@ -70,12 +70,14 @@ async function hasHtmlChanged(
  * @param page Playwright page instance
  * @param searchUrl Job search results URL
  * @param platformId Job platform ID
+ * @param platformPaginationType Optional pagination type from platform config
  * @returns Number of jobs successfully processed
  */
 export async function scrapeJobsWithUrls(
   page: Page,
   searchUrl: string,
   platformId: number,
+  platformPaginationType?: string | null,
 ): Promise<number> {
   console.log("\n🔗 Starting URL-based scraping (traditional navigation)");
 
@@ -282,7 +284,11 @@ export async function scrapeJobsWithUrls(
     // Detect pagination/scroll
     const strippedHtml = stripHtmlForLlm(html);
     console.log("   Detecting pagination strategy...");
-    const paginationInfo = await detectPaginationStrategy(page, strippedHtml);
+    const paginationInfo = await detectPaginationStrategy(
+      page,
+      strippedHtml,
+      platformPaginationType,
+    );
     console.log(
       `   Pagination info: type=${paginationInfo.paginationType}, ` +
         `hasPagination=${paginationInfo.hasPagination}, ` +
