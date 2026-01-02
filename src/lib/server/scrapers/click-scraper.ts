@@ -6,9 +6,10 @@
 import type { Page } from "playwright";
 import { config } from "$lib/server/config";
 import {
-  extractJobClickSelectors,
+  extractJobsFromSearchPage,
   extractJobData,
   upsertJob,
+  mergeJobData,
 } from "$lib/server/job-scraper";
 import { stripHtmlForLlm } from "$lib/server/html-strip";
 import {
@@ -33,14 +34,14 @@ import type { getSiteConfig } from "$lib/server/job-site-configs";
  * Scrape jobs using click-based navigation (SPAs)
  * Marks clickable elements with CDP, uses LLM to identify job cards, then clicks each
  * Extracts and saves jobs immediately during clicking for real-time feedback
- * @returns Number of successfully processed jobs
+ * @returns Object with jobsProcessed count and strippedHtml for debugging
  */
 export async function scrapeJobsWithClicks(
   page: Page,
   siteConfig: ReturnType<typeof getSiteConfig>,
   searchUrl: string,
   platformId: string,
-): Promise<number> {
+): Promise<{ jobsProcessed: number; strippedHtml: string }> {
   console.log("\n🔄 Starting SPA scraping mode (click-based navigation)");
 
   // Wait for page to fully render (SPAs need time)
@@ -57,6 +58,7 @@ export async function scrapeJobsWithClicks(
   };
 
   let pageNumber = 1;
+  let savedStrippedHtml = ""; // Store stripped HTML from first page for debugging
 
   // Pagination loop
   while (pageNumber <= config.scraperPaginationMaxPages) {
@@ -98,39 +100,52 @@ export async function scrapeJobsWithClicks(
       match,
     ) => parseInt(match[1]));
 
-    let clickableIds: number[];
-    let pattern: string;
-    let jobCount: number;
+    // Always use LLM to extract jobs with titles (even when CDP detects job-detail buttons)
+    console.log(
+      "\n   🤖 Step 2/3: Asking LLM to extract job cards with titles...",
+    );
+    const startLlm = Date.now();
 
-    if (jobDetailButtonIds.length > 0) {
-      // We found job-detail buttons - use them directly without LLM validation
-      console.log("\n   ✓ Step 2/3: Using detected job-detail buttons...");
-      clickableIds = jobDetailButtonIds;
-      pattern = "job-detail buttons detected by CDP";
-      jobCount = jobDetailButtonIds.length;
-      console.log(
-        `      Found ${jobCount} job-detail buttons: [${
-          clickableIds.join(", ")
-        }]`,
-      );
-    } else {
-      // No job-detail buttons found - fall back to LLM analysis
-      console.log(
-        "\n   🤖 Step 2/3: Asking LLM to identify job card pattern...",
-      );
-      const startLlm = Date.now();
+    const result = await extractJobsFromSearchPage(markedHtml);
+    let jobs = result.jobs;
+    let pattern = result.pattern;
+    let jobCount = result.jobCount;
 
-      const result = await extractJobClickSelectors(markedHtml);
-      clickableIds = result.clickableIds;
-      pattern = result.pattern;
-      jobCount = result.jobCount;
-
-      const llmDuration = ((Date.now() - startLlm) / 1000).toFixed(2);
-      console.log(`      ✓ LLM analysis complete (${llmDuration}s)`);
-      console.log(`      Pattern: ${pattern}`);
-      console.log(`      Job cards found: ${jobCount}`);
-      console.log(`      Clickable IDs: [${clickableIds.join(", ")}]`);
+    // Capture stripped HTML from first page for debugging
+    if (pageNumber === 1) {
+      savedStrippedHtml = result.strippedHtml;
     }
+
+    const llmDuration = ((Date.now() - startLlm) / 1000).toFixed(2);
+    console.log(`      ✓ LLM analysis complete (${llmDuration}s)`);
+    console.log(`      Pattern: ${pattern}`);
+    console.log(`      Job cards found: ${jobCount}`);
+
+    // If we also detected job-detail buttons via CDP, verify consistency
+    if (jobDetailButtonIds.length > 0) {
+      console.log(
+        `      ℹ️  CDP also detected ${jobDetailButtonIds.length} job-detail buttons`,
+      );
+
+      // Use CDP IDs as fallback if LLM extraction failed
+      if (jobs.length === 0) {
+        console.log(
+          "      ⚠️  LLM found 0 jobs, falling back to CDP-detected buttons",
+        );
+        jobs = jobDetailButtonIds.map((id) => ({
+          clickableId: id,
+          title: null,
+        }));
+        pattern = "CDP job-detail buttons (LLM fallback)";
+        jobCount = jobs.length;
+      }
+    }
+
+    console.log(
+      `      Jobs: [${
+        jobs.map((j) => `${j.clickableId}:${j.title || "?"}`).join(", ")
+      }]`,
+    );
 
     // Check for login/signup page
     const pageText = await page.textContent("body") || "";
@@ -149,12 +164,12 @@ export async function scrapeJobsWithClicks(
 
     const isLoginPage = hasLoginForm || hasLoginKeywords;
 
-    if (isLoginPage && clickableIds.length < 5) {
+    if (isLoginPage && jobs.length < 5) {
       console.log(
         "\n   🚫 Login/signup page detected - stopping scrape",
       );
       console.log(
-        `   Reason: hasLoginForm=${hasLoginForm}, hasLoginKeywords=${hasLoginKeywords}, clickableIds=${clickableIds.length}`,
+        `   Reason: hasLoginForm=${hasLoginForm}, hasLoginKeywords=${hasLoginKeywords}, jobs=${jobs.length}`,
       );
       console.log(
         "   💡 Please log in manually in the browser and run the scraper again",
@@ -162,63 +177,51 @@ export async function scrapeJobsWithClicks(
       break;
     }
 
-    if (clickableIds.length === 0) {
+    if (jobs.length === 0) {
       console.log("      ⚠️  No job cards found in the page");
       break;
     }
 
     // Click each identified job card and process immediately
     console.log(
-      `\n   👆 Step 3/3: Clicking and processing ${clickableIds.length} job cards...\n`,
+      `\n   👆 Step 3/3: Clicking and processing ${jobs.length} job cards...\n`,
     );
-    for (let i = 0; i < clickableIds.length; i++) {
-      const id = clickableIds[i];
+    for (let i = 0; i < jobs.length; i++) {
+      const searchJobData = jobs[i];
+      const { clickableId } = searchJobData;
       const jobNumber = i + 1;
       const pseudoUrl = `${searchUrl}#spa-job-${jobNumber}`;
 
       // Visual separator for each job
       console.log(`\n   [${"─".repeat(56)}]`);
-      console.log(`   Job ${jobNumber}/${clickableIds.length}`);
+      console.log(`   Job ${jobNumber}/${jobs.length}`);
       console.log(`   [${"─".repeat(56)}]`);
 
-      // Extract context from search page before clicking
-      let searchPageTitle: string | null = null;
-      try {
-        const clickableElement = page.locator(
-          `[data-extract-clickable-id="${id}"]`,
-        ).first();
-        const elementText = await clickableElement.textContent({
-          timeout: 2000,
-        });
-
-        if (elementText) {
-          // Extract first non-empty line as title (simple heuristic)
-          const lines = elementText.trim().split("\n").map((l) => l.trim())
-            .filter((l) => l.length > 0);
-          searchPageTitle = lines[0] || null;
-
-          if (searchPageTitle) {
-            console.log(
-              `      📋 Search page title: "${
-                searchPageTitle.substring(
-                  0,
-                  60,
-                )
-              }${searchPageTitle.length > 60 ? "..." : ""}"`,
-            );
-          }
-        }
-      } catch (error) {
-        console.debug(
-          `      ⚠️  Could not extract search page title:`,
-          error instanceof Error ? error.message : String(error),
-        );
-        // Continue without fallback title - not a critical error
+      // Log search page data if available
+      if (searchJobData.title) {
+        console.log(`      📋 Title: "${searchJobData.title}"`);
+      }
+      if (searchJobData.company) {
+        console.log(`      🏢 Company: "${searchJobData.company}"`);
+      }
+      if (searchJobData.location) {
+        console.log(`      📍 Location: "${searchJobData.location}"`);
+      }
+      if (searchJobData.salary_min || searchJobData.salary_max) {
+        const salaryStr = [
+          searchJobData.salary_currency || "",
+          searchJobData.salary_min?.toLocaleString() || "",
+          searchJobData.salary_max
+            ? `-${searchJobData.salary_max.toLocaleString()}`
+            : "",
+          searchJobData.salary_period ? `per ${searchJobData.salary_period}` : "",
+        ].filter(Boolean).join(" ");
+        console.log(`      💰 Salary: ${salaryStr}`);
       }
 
       try {
         console.log(
-          `      👆 Clicking data-extract-clickable-id="${id}"...`,
+          `      👆 Clicking data-extract-clickable-id="${clickableId}"...`,
         );
 
         // Close any open modals first (SPAs often have close buttons or backdrop clicks)
@@ -235,7 +238,8 @@ export async function scrapeJobsWithClicks(
           document.body.innerText.length
         );
 
-        await page.locator(`[data-extract-clickable-id="${id}"]`).click();
+        await page.locator(`[data-extract-clickable-id="${clickableId}"]`)
+          .click();
 
         // Wait for SPA to update - look for common modal/dialog/panel containers
         // This is a generic approach that works across different SPA frameworks
@@ -289,11 +293,13 @@ export async function scrapeJobsWithClicks(
         // Strip HTML for LLM processing
         const strippedHtml = stripHtmlForLlm(jobHtml);
 
-        // Extract job data
-        console.log(`      🔍 Extracting job data...`);
-        const jobData = await extractJobData(strippedHtml, pseudoUrl, {
-          fallbackTitle: searchPageTitle,
-        });
+        // Extract job data from detail page
+        console.log(`      🔍 Extracting job data from detail page...`);
+        const detailJobData = await extractJobData(strippedHtml, pseudoUrl);
+
+        // Merge search page data with detail page data
+        console.log(`      🔀 Merging search and detail page data...`);
+        const jobData = mergeJobData(searchJobData, detailJobData);
 
         // Skip if no meaningful data was extracted (invalid/expired page)
         // Check if critical fields are null/empty
@@ -344,7 +350,10 @@ export async function scrapeJobsWithClicks(
           });
           if (stopCheck.shouldStop) {
             console.log(`\n      🛑 ${stopCheck.reason}`);
-            return stats.jobsProcessed;
+            return {
+              jobsProcessed: stats.jobsProcessed,
+              strippedHtml: savedStrippedHtml,
+            };
           }
           continue;
         }
@@ -368,7 +377,10 @@ export async function scrapeJobsWithClicks(
         });
         if (stopCheck.shouldStop) {
           console.log(`\n      🛑 ${stopCheck.reason}`);
-          return stats.jobsProcessed;
+          return {
+            jobsProcessed: stats.jobsProcessed,
+            strippedHtml: savedStrippedHtml,
+          };
         }
       } catch (error) {
         const err = error instanceof Error ? error : new Error(String(error));
@@ -382,7 +394,10 @@ export async function scrapeJobsWithClicks(
           console.error(
             `\n🛑 Fatal error encountered - stopping scraper: ${err.message}`,
           );
-          return stats.jobsProcessed;
+          return {
+            jobsProcessed: stats.jobsProcessed,
+            strippedHtml: savedStrippedHtml,
+          };
         }
 
         stats.consecutiveClosedJobs = 0; // Reset on error
@@ -431,5 +446,8 @@ export async function scrapeJobsWithClicks(
   console.log(`   Skipped (old): ${stats.jobsSkippedOld}`);
   console.log(`   Skipped (closed): ${stats.jobsSkippedClosed}`);
   console.log(`${"═".repeat(60)}\n`);
-  return stats.jobsProcessed;
+  return {
+    jobsProcessed: stats.jobsProcessed,
+    strippedHtml: savedStrippedHtml,
+  };
 }

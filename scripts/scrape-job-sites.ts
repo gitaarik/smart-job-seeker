@@ -63,10 +63,10 @@ const options = program.opts();
  */
 async function scrapeJobSite(
   searchAction: SearchAction,
-): Promise<void> {
+): Promise<{ strippedHtml: string | null }> {
   if (!searchAction.search_url) {
     console.log("⚠ No search URL configured for this search action");
-    return;
+    return { strippedHtml: null };
   }
 
   const searchUrl = searchAction.search_url;
@@ -93,6 +93,7 @@ async function scrapeJobSite(
   console.log(`🔧 Scraper method: ${config.scraperMethod}`);
 
   let processedCount: number;
+  let strippedHtml: string | null = null;
 
   try {
     if (config.scraperMethod === "playwright") {
@@ -114,12 +115,14 @@ async function scrapeJobSite(
         // Route by navigation type
         if (navigationType === "click") {
           const siteConfig = getSiteConfig(searchUrl);
-          processedCount = await scrapeJobsWithClicks(
+          const result = await scrapeJobsWithClicks(
             page,
             siteConfig,
             searchUrl,
             platformId,
           );
+          processedCount = result.jobsProcessed;
+          strippedHtml = result.strippedHtml;
         } else {
           processedCount = await scrapeJobsWithUrls(
             page,
@@ -141,6 +144,8 @@ async function scrapeJobSite(
     }
 
     console.log(`\n✅ Successfully processed ${processedCount} job(s)\n`);
+
+    return { strippedHtml };
   } catch (error) {
     console.error(
       `❌ ${config.scraperMethod} scraping failed:`,
@@ -323,12 +328,15 @@ async function scrapeJobSites(): Promise<void> {
       console.log(`Search: ${searchAction.name}`);
       console.log(`========================================\n`);
 
-      await scrapeJobSite(searchAction);
+      const scrapeResult = await scrapeJobSite(searchAction);
 
-      // Update last_run timestamp
+      // Update last_run timestamp and stripped HTML
       await dbDirect.job_searches.update({
         where: { id: searchAction.id },
-        data: { last_run: new Date() },
+        data: {
+          last_run: new Date(),
+          stripped_html: scrapeResult.strippedHtml,
+        },
       });
     }
 
