@@ -248,7 +248,7 @@ The Python service runs in Docker and accepts these environment variables:
 
 ```bash
 # .env in browser-use/
-SJS_GROQ_API_KEY=your_groq_api_key_here
+SJS_LLM_API_KEY_GROQ=your_groq_api_key_here
 SJS_BROWSER_HEADLESS=true  # Set to false for debugging
 ```
 
@@ -269,8 +269,8 @@ export const config = {
 To see what Browser-Use is doing:
 
 ```bash
-# In browser-use/.env
-SJS_BROWSER_HEADLESS=false
+# In .env
+SJS_BROWSER_USE_HEADLESS=false
 ```
 
 The browser window will be visible during scraping.
@@ -308,7 +308,7 @@ curl -X POST http://localhost:8000/execute \
 
 - Check if container is running: `docker compose ps`
 - View logs: `docker compose logs browser-use`
-- Verify Groq API key is set in `browser-use/.env`
+- Verify LLM API key is set in `.env` (e.g., `SJS_LLM_API_KEY_GROQ`)
 
 **No jobs extracted:**
 

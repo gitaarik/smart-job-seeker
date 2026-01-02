@@ -129,11 +129,11 @@ function loadConfig(): AppConfig {
       | "openrouter"
       | "deepseek"),
     llmModel: getModelForProvider(llmProvider),
-    groqApiKey: getEnv("SJS_GROQ_API_KEY", ""),
-    geminiApiKey: getEnv("SJS_GEMINI_API_KEY", ""),
-    openaiApiKey: getEnv("SJS_OPENAI_API_KEY", ""),
-    openrouterApiKey: getEnv("SJS_OPENROUTER_API_KEY", ""),
-    deepseekApiKey: getEnv("SJS_DEEPSEEK_API_KEY", ""),
+    groqApiKey: getEnv("SJS_LLM_API_KEY_GROQ", ""),
+    geminiApiKey: getEnv("SJS_LLM_API_KEY_GEMINI", ""),
+    openaiApiKey: getEnv("SJS_LLM_API_KEY_OPENAI", ""),
+    openrouterApiKey: getEnv("SJS_LLM_API_KEY_OPENROUTER", ""),
+    deepseekApiKey: getEnv("SJS_LLM_API_KEY_DEEPSEEK", ""),
 
     // Caching (1 hour default)
     llmCacheTTL: parseInt(

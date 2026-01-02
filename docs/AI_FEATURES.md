@@ -96,13 +96,13 @@ Before using AI features, ensure your profile is complete and detailed:
 
 ### Environment Setup
 
-Ensure the `SJS_GROQ_API_KEY` environment variable is configured. This key
+Ensure the `SJS_LLM_API_KEY_GROQ` environment variable is configured. This key
 enables AI response generation.
 
 If you're a system administrator, add to your `.env` file:
 
 ```bash
-SJS_GROQ_API_KEY=your_groq_api_key_here
+SJS_LLM_API_KEY_GROQ=your_groq_api_key_here
 ```
 
 Users of a deployed system don't need to worry about this - it's handled by the
@@ -1102,7 +1102,7 @@ Use these patterns in your own writing.
 
 **Common Causes & Solutions:**
 
-**1. Missing SJS_GROQ_API_KEY**
+**1. Missing SJS_LLM_API_KEY_GROQ**
 
 - Check environment variables
 - Contact system administrator
@@ -1289,7 +1289,7 @@ In Directus:
 
 **3. Verify Configuration**
 
-- Confirm SJS_GROQ_API_KEY is set
+- Confirm SJS_LLM_API_KEY_GROQ is set
 - Check webhook endpoint is accessible
 - Verify Directus permissions
 

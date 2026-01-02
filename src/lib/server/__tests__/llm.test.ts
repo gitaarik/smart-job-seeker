@@ -141,7 +141,8 @@ describe("generateChatCompletion", () => {
       messages: [
         {
           role: "user",
-          content: "Extract data\n\nIMPORTANT: Return your response as valid JSON.",
+          content:
+            "Extract data\n\nIMPORTANT: Return your response as valid JSON.",
         },
       ],
       max_tokens: 2048,

@@ -55,7 +55,7 @@ class BrowserController:
             # Use Google Gemini
             self.llm = ChatGoogleGenerativeAI(
                 model=model,
-                api_key=os.getenv("SJS_GEMINI_API_KEY"),
+                api_key=os.getenv("SJS_LLM_API_KEY_GEMINI"),
                 temperature=0.3,
             )
             # Gemini supports vision
@@ -64,7 +64,7 @@ class BrowserController:
             # Use OpenAI
             self.llm = ChatOpenAI(
                 model=model,
-                api_key=os.getenv("SJS_OPENAI_API_KEY"),
+                api_key=os.getenv("SJS_LLM_API_KEY_OPENAI"),
                 temperature=0.3,
             )
             # GPT-4o supports vision
@@ -74,7 +74,7 @@ class BrowserController:
             self.llm = ChatOpenAI(
                 model=model,
                 base_url="https://openrouter.ai/api/v1",
-                api_key=os.getenv("SJS_OPENROUTER_API_KEY"),
+                api_key=os.getenv("SJS_LLM_API_KEY_OPENROUTER"),
                 temperature=0.3,
             )
             # OpenRouter vision support depends on model
@@ -85,7 +85,7 @@ class BrowserController:
             self.llm = ChatOpenAI(
                 model=model,
                 base_url="https://api.deepseek.com",
-                api_key=os.getenv("SJS_DEEPSEEK_API_KEY"),
+                api_key=os.getenv("SJS_LLM_API_KEY_DEEPSEEK"),
                 temperature=0.3,
             )
             # DeepSeek v3 supports vision
@@ -95,7 +95,7 @@ class BrowserController:
             self.llm = ChatOpenAI(
                 model="gpt-4o",  # Browser Use Cloud's optimized model
                 base_url="https://cloud.browser-use.com/v1",
-                api_key=os.getenv("SJS_BROWSERUSE_API_KEY"),
+                api_key=os.getenv("SJS_LLM_API_KEY_BROWSERUSE"),
                 temperature=0.3,
             )
             # Browser Use Cloud supports vision
@@ -104,7 +104,7 @@ class BrowserController:
             # Default to Groq
             self.llm = ChatGroq(
                 model=model,
-                api_key=os.getenv("SJS_GROQ_API_KEY"),
+                api_key=os.getenv("SJS_LLM_API_KEY_GROQ"),
                 temperature=0.3,
             )
             # Groq doesn't support vision

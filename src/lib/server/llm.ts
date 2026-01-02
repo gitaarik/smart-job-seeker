@@ -63,7 +63,7 @@ async function generateWithGroq(
   responseFormat?: ResponseFormat,
 ): Promise<string> {
   const client = new Groq({
-    apiKey: config.groqApiKey || getEnv("SJS_GROQ_API_KEY", ""),
+    apiKey: config.groqApiKey || getEnv("SJS_LLM_API_KEY_GROQ", ""),
   });
 
   // Groq has limited support for json_schema - only certain models support it
@@ -125,7 +125,7 @@ async function generateWithGemini(
   responseFormat?: ResponseFormat,
 ): Promise<string> {
   const genAI = new GoogleGenerativeAI(
-    config.geminiApiKey || getEnv("SJS_GEMINI_API_KEY", ""),
+    config.geminiApiKey || getEnv("SJS_LLM_API_KEY_GEMINI", ""),
   );
 
   const genModel = genAI.getGenerativeModel({
@@ -193,7 +193,7 @@ async function generateWithOpenAI(
   responseFormat?: ResponseFormat,
 ): Promise<string> {
   const client = new OpenAI({
-    apiKey: config.openaiApiKey || getEnv("SJS_OPENAI_API_KEY", ""),
+    apiKey: config.openaiApiKey || getEnv("SJS_LLM_API_KEY_OPENAI", ""),
   });
 
   const completion = await client.chat.completions.create({
@@ -224,7 +224,7 @@ async function generateWithOpenRouter(
   responseFormat?: ResponseFormat,
 ): Promise<string> {
   const client = new OpenAI({
-    apiKey: config.openrouterApiKey || getEnv("SJS_OPENROUTER_API_KEY", ""),
+    apiKey: config.openrouterApiKey || getEnv("SJS_LLM_API_KEY_OPENROUTER", ""),
     baseURL: "https://openrouter.ai/api/v1",
   });
 
@@ -256,7 +256,7 @@ async function generateWithDeepSeek(
   responseFormat?: ResponseFormat,
 ): Promise<string> {
   const client = new OpenAI({
-    apiKey: config.deepseekApiKey || getEnv("SJS_DEEPSEEK_API_KEY", ""),
+    apiKey: config.deepseekApiKey || getEnv("SJS_LLM_API_KEY_DEEPSEEK", ""),
     baseURL: "https://api.deepseek.com",
   });
 

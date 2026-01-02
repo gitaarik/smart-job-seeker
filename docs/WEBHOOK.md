@@ -348,7 +348,7 @@ instances from templates. The generated `full_prompt` is then used by the
 ### ai_chat.generate_response
 
 Generates AI responses using the Groq API based on the `full_prompt` field.
-Requires `SJS_GROQ_API_KEY` environment variable to be set.
+Requires `SJS_LLM_API_KEY_GROQ` environment variable to be set.
 
 **Request:**
 
@@ -406,7 +406,7 @@ workflow.
 
 - AI chat must have `full_prompt` populated (use `ai_chat.generate_full_prompt`
   first)
-- `SJS_GROQ_API_KEY` environment variable must be configured
+- `SJS_LLM_API_KEY_GROQ` environment variable must be configured
 
 **Handler Location:** `src/routes/api/webhook/+server.ts` →
 `handleAiChatGenerateResponse()`

@@ -20,10 +20,10 @@ async function importPdfResume(
 ): Promise<void> {
   try {
     // Check for API key
-    const apiKey = getEnv("SJS_GROQ_API_KEY", "");
+    const apiKey = getEnv("SJS_LLM_API_KEY_GROQ", "");
     if (!apiKey) {
       console.error(
-        "❌ Error: SJS_GROQ_API_KEY environment variable is required",
+        "❌ Error: SJS_LLM_API_KEY_GROQ environment variable is required",
       );
       console.error("   Set it in your .env file to use the LLM extraction");
       process.exit(1);
@@ -120,7 +120,7 @@ Examples:
     npm run host:import-pdf-resume ./resume.pdf --show-extracted --validate-only
 
 Requirements:
-  - SJS_GROQ_API_KEY environment variable must be set
+  - SJS_LLM_API_KEY_GROQ environment variable must be set
   - PDF must be text-based (not scanned images)
   - Best results with standard resume formats
 
