@@ -87,16 +87,51 @@ export function stripHtmlForLlm(html: string): string {
     }
   });
 
-  // 3. Unwrap unnecessary container elements (divs/spans with no attributes)
-  $("div, span").each((_: number, elem: cheerio.Element) => {
-    const element = $(elem);
-    const attrs = element.attr();
+  // 3. Remove completely empty elements and flatten unnecessary nesting
+  // Run repeatedly until no more changes (handles multiple levels of nesting)
+  let changesMade = true;
+  let flattenIterations = 0;
+  const flattenMaxIterations = 10; // Prevent infinite loops
 
-    // If element has no attributes, unwrap it (keep children, remove wrapper)
-    if (!attrs || Object.keys(attrs).length === 0) {
-      element.replaceWith(element.contents());
-    }
-  });
+  while (changesMade && flattenIterations < flattenMaxIterations) {
+    changesMade = false;
+    flattenIterations++;
+
+    $("div, span").each((_: number, elem: cheerio.Element) => {
+      const element = $(elem);
+      const attrs = element.attr();
+      const hasAttrs = attrs && Object.keys(attrs).length > 0;
+
+      // Remove if completely empty (no attributes, no text, no children)
+      if (!hasAttrs && element.contents().length === 0) {
+        element.remove();
+        changesMade = true;
+        return;
+      }
+
+      // Flatten unnecessary nesting: if this has no attributes and contains only
+      // a single element child (also with no attributes), unwrap this container
+      if (!hasAttrs) {
+        const children = element.children();
+        if (children.length === 1) {
+          const child = $(children[0]);
+          const childAttrs = child.attr();
+          const childHasAttrs = childAttrs &&
+            Object.keys(childAttrs).length > 0;
+
+          // Only flatten if child also has no attributes (both are purely structural)
+          if (
+            !childHasAttrs &&
+            (child.prop("tagName") === "DIV" ||
+              child.prop("tagName") === "SPAN")
+          ) {
+            element.replaceWith(element.contents());
+            changesMade = true;
+          }
+        }
+      }
+    });
+  }
 
   // 4. Remove empty elements (except self-closing tags)
   const selfClosingTags = new Set([
@@ -128,6 +163,14 @@ export function stripHtmlForLlm(html: string): string {
       const tagName = (elem as any).tagName?.toLowerCase();
 
       if (selfClosingTags.has(tagName)) return;
+
+      // Check if element has any preserved attributes
+      const attrs = element.attr();
+      const hasPreservedAttrs = attrs &&
+        Object.keys(attrs).some((attr) => keepAttributes.has(attr));
+
+      // Don't remove elements with preserved attributes (even if empty)
+      if (hasPreservedAttrs) return;
 
       const text = element.text().trim();
       const hasContentChildren =
