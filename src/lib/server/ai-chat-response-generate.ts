@@ -5,7 +5,12 @@
 
 import { db } from "$lib/db";
 import { getInterpolatedPrompts } from "./ai-chat-utils";
-import { generateChatCompletion } from "./llm";
+import {
+  generateChatCompletion,
+  LLMAuthenticationError,
+  LLMQuotaExceededError,
+  LLMRateLimitError,
+} from "./llm";
 
 /**
  * Generate response for a single AI chat using LLM provider
@@ -43,6 +48,32 @@ export async function generateAiChatResponse(aiChatId: number): Promise<{
       message: `Response generated for AI chat ID ${aiChatId}`,
     };
   } catch (error) {
+    // Provide specific error messages for LLM errors
+    if (error instanceof LLMQuotaExceededError) {
+      return {
+        success: false,
+        message:
+          `LLM quota exceeded (${error.provider}). Please add more credits or switch providers.`,
+      };
+    }
+
+    if (error instanceof LLMAuthenticationError) {
+      return {
+        success: false,
+        message:
+          `LLM authentication failed (${error.provider}). Please check your API key configuration.`,
+      };
+    }
+
+    if (error instanceof LLMRateLimitError) {
+      return {
+        success: false,
+        message:
+          `LLM rate limit exceeded (${error.provider}). Please try again later.`,
+      };
+    }
+
+    // Generic error handling
     const errorMessage = error instanceof Error
       ? error.message
       : "Unknown error";

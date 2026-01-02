@@ -13,6 +13,7 @@ import {
 import { stripHtmlForLlm } from "$lib/server/html-strip";
 import {
   checkStopConditions,
+  isFatalScraperError,
   isJobClosed,
   isJobTooOld,
 } from "$lib/server/scrape-filters";
@@ -370,10 +371,20 @@ export async function scrapeJobsWithClicks(
           return stats.jobsProcessed;
         }
       } catch (error) {
+        const err = error instanceof Error ? error : new Error(String(error));
         console.error(
           `      ❌ Error processing job ${jobNumber}:`,
-          error instanceof Error ? error.message : String(error),
+          err.message,
         );
+
+        // Check if this is a fatal error that should stop all scraping
+        if (isFatalScraperError(err)) {
+          console.error(
+            `\n🛑 Fatal error encountered - stopping scraper: ${err.message}`,
+          );
+          return stats.jobsProcessed;
+        }
+
         stats.consecutiveClosedJobs = 0; // Reset on error
         // Continue to next job - don't break entire scrape
       }

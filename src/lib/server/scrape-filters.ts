@@ -3,6 +3,8 @@
  * Centralized logic for filtering jobs and determining when to stop scraping
  */
 
+import { LLMAuthenticationError, LLMQuotaExceededError } from "./llm";
+
 export interface ScrapingStats {
   jobsProcessed: number;
   consecutiveClosedJobs: number;
@@ -72,4 +74,28 @@ export function isJobClosed(status: string | null): boolean {
   ];
 
   return closedStatuses.some((closed) => status.toLowerCase().includes(closed));
+}
+
+/**
+ * Check if an error is fatal and should stop all scraping immediately
+ * Fatal errors indicate permanent failures that won't resolve by retrying other jobs
+ */
+export function isFatalScraperError(error: Error): boolean {
+  // Check for LLM-specific error types
+  if (
+    error instanceof LLMQuotaExceededError ||
+    error instanceof LLMAuthenticationError
+  ) {
+    return true;
+  }
+
+  // Fallback: check error message for other fatal patterns
+  const message = error.message.toLowerCase();
+
+  // Permission errors
+  if (message.includes("403") || message.includes("forbidden")) {
+    return true;
+  }
+
+  return false;
 }

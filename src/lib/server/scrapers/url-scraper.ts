@@ -13,7 +13,12 @@ import {
 } from "$lib/server/job-scraper";
 import { stripHtmlForLlm } from "$lib/server/html-strip";
 import { parseRelativeDate } from "$lib/tools/date-utils";
-import { isJobClosed, isJobTooOld } from "$lib/server/scrape-filters";
+import {
+  checkStopConditions,
+  isFatalScraperError,
+  isJobClosed,
+  isJobTooOld,
+} from "$lib/server/scrape-filters";
 import { detectCaptchaOnPage } from "$lib/server/cdp-utils";
 import {
   detectPaginationStrategy,
@@ -273,10 +278,17 @@ export async function scrapeJobsWithUrls(
         // Delay to avoid rate limiting
         await page.waitForTimeout(config.scraperRateLimitDelay);
       } catch (error) {
-        console.error(
-          `   ✗ Failed to process ${jobUrl}:`,
-          error instanceof Error ? error.message : String(error),
-        );
+        const err = error instanceof Error ? error : new Error(String(error));
+        console.error(`   ✗ Failed to process ${jobUrl}:`, err.message);
+
+        // Check if this is a fatal error that should stop all scraping
+        if (isFatalScraperError(err)) {
+          console.error(
+            `\n🛑 Fatal error encountered - stopping scraper: ${err.message}`,
+          );
+          return processedCount;
+        }
+
         consecutiveClosed = 0; // Reset on error
       }
     }

@@ -37,8 +37,8 @@ Look at the scripts in `package.json` for help executing things in containers.
 
 ## Code Quality
 
-- Ensure clean, properly formatted code
-- Use modern Svelte 5 APIs: `import { page } from '$app/state'` (not the legacy
-  `'$app/stores'`)
-- After making code changes, run `npx deno fmt` to format all code consistently
+- Ensure unit-tested and clean, properly formatted code
+- After making code changes:
+  - Run `npm run test` to check if all unit tests still pass
+  - Run `npx deno fmt` to format all code consistently
 - For `.svelte` files, use `npx deno fmt --unstable-component`

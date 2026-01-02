@@ -4,6 +4,7 @@
  */
 
 import { generateAiChatResponse } from "$lib/server/ai-chat-response-generate";
+import { LLMAuthenticationError, LLMQuotaExceededError } from "$lib/server/llm";
 import type { WebhookHandler, WebhookHandlerResult } from "../types";
 
 export const aiChatGenerateResponseHandler: WebhookHandler = {
@@ -30,39 +31,85 @@ export const aiChatGenerateResponseHandler: WebhookHandler = {
     }
 
     try {
-      const results = await Promise.allSettled(
-        aiChatIds.map((aiChatId) =>
-          generateAiChatResponse(aiChatId)
-            .then((result) => ({
+      const results: Array<{
+        aiChatId: number;
+        success: boolean;
+        message: string;
+      }> = [];
+      let fatalErrorEncountered = false;
+
+      // Process AI chats sequentially to detect fatal errors early
+      for (const aiChatId of aiChatIds) {
+        if (fatalErrorEncountered) {
+          // Skip remaining chats after fatal error
+          results.push({
+            aiChatId,
+            success: false,
+            message: "Skipped due to fatal error in previous chat",
+          });
+          continue;
+        }
+
+        try {
+          const result = await generateAiChatResponse(aiChatId);
+          results.push({
+            aiChatId,
+            success: result.success,
+            message: result.message,
+          });
+
+          // Check if result message indicates a fatal error
+          if (
+            !result.success &&
+            (result.message.includes("quota exceeded") ||
+              result.message.includes("authentication failed"))
+          ) {
+            fatalErrorEncountered = true;
+            console.error(
+              `[Webhook] Fatal LLM error detected, stopping processing: ${result.message}`,
+            );
+          }
+        } catch (error) {
+          // Check for fatal LLM errors
+          if (
+            error instanceof LLMQuotaExceededError ||
+            error instanceof LLMAuthenticationError
+          ) {
+            fatalErrorEncountered = true;
+            const message = error instanceof Error
+              ? error.message
+              : "Unknown error";
+            results.push({
               aiChatId,
-              success: result.success,
-              message: result.message,
-            }))
-            .catch((error) => ({
+              success: false,
+              message,
+            });
+            console.error(
+              `[Webhook] Fatal LLM error detected, stopping processing: ${message}`,
+            );
+          } else {
+            results.push({
               aiChatId,
               success: false,
               message: error instanceof Error ? error.message : "Unknown error",
-            }))
-        ),
-      );
+            });
+          }
+        }
+      }
 
-      const successful = results.filter(
-        (r) => r.status === "fulfilled" && (r.value as any).success !== false,
-      );
-      const failed = results.filter(
-        (r) =>
-          r.status === "rejected" ||
-          (r.status === "fulfilled" && (r.value as any).success === false),
-      );
+      const successful = results.filter((r) => r.success);
+      const failed = results.filter((r) => !r.success);
 
       return {
         processed: successful.length > 0,
         aiChatCount: aiChatIds.length,
         successCount: successful.length,
-        results: results.map((r) =>
-          r.status === "fulfilled" ? r.value : r.reason
-        ),
+        results,
         ...(failed.length > 0 && { failureCount: failed.length }),
+        ...(fatalErrorEncountered && {
+          fatalError:
+            "Processing stopped due to LLM quota or authentication error",
+        }),
       };
     } catch (error) {
       const errorMessage = error instanceof Error

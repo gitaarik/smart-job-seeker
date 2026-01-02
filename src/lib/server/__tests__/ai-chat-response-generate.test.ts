@@ -169,8 +169,8 @@ describe("generateAiChatResponse", () => {
     const result = await generateAiChatResponse(1);
 
     expect(result.success).toBe(false);
-    expect(result.message).toContain("Error generating response");
-    expect(result.message).toContain("Rate limit exceeded");
+    expect(result.message).toContain("LLM rate limit exceeded");
+    expect(result.message).toContain("groq");
   });
 
   it("should handle response with no content", async () => {
