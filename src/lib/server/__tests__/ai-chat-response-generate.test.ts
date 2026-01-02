@@ -170,7 +170,7 @@ describe("generateAiChatResponse", () => {
 
     expect(result.success).toBe(false);
     expect(result.message).toContain("LLM rate limit exceeded");
-    expect(result.message).toContain("groq");
+    expect(result.message).toContain("groq/meta-llama");
   });
 
   it("should handle response with no content", async () => {

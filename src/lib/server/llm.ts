@@ -16,7 +16,11 @@ import { config } from "./config";
  * Base class for LLM errors
  */
 export class LLMError extends Error {
-  constructor(message: string, public readonly provider: string) {
+  constructor(
+    message: string,
+    public readonly provider: string,
+    public readonly model: string,
+  ) {
     super(message);
     this.name = "LLMError";
   }
@@ -27,8 +31,8 @@ export class LLMError extends Error {
  * This is a permanent error - scraping should stop immediately
  */
 export class LLMQuotaExceededError extends LLMError {
-  constructor(message: string, provider: string) {
-    super(message, provider);
+  constructor(message: string, provider: string, model: string) {
+    super(message, provider, model);
     this.name = "LLMQuotaExceededError";
   }
 }
@@ -38,8 +42,8 @@ export class LLMQuotaExceededError extends LLMError {
  * This is a permanent error - scraping should stop immediately
  */
 export class LLMAuthenticationError extends LLMError {
-  constructor(message: string, provider: string) {
-    super(message, provider);
+  constructor(message: string, provider: string, model: string) {
+    super(message, provider, model);
     this.name = "LLMAuthenticationError";
   }
 }
@@ -52,9 +56,10 @@ export class LLMRateLimitError extends LLMError {
   constructor(
     message: string,
     provider: string,
+    model: string,
     public readonly retryAfter?: number,
   ) {
-    super(message, provider);
+    super(message, provider, model);
     this.name = "LLMRateLimitError";
   }
 }
@@ -62,7 +67,11 @@ export class LLMRateLimitError extends LLMError {
 /**
  * Parse API errors and throw appropriate LLM error types
  */
-function handleLLMError(error: unknown, provider: string): never {
+function handleLLMError(
+  error: unknown,
+  provider: string,
+  model: string,
+): never {
   const message = error instanceof Error ? error.message : String(error);
   const messageLower = message.toLowerCase();
 
@@ -73,7 +82,7 @@ function handleLLMError(error: unknown, provider: string): never {
     messageLower.includes("quota exceeded") ||
     messageLower.includes("out of credits")
   ) {
-    throw new LLMQuotaExceededError(message, provider);
+    throw new LLMQuotaExceededError(message, provider, model);
   }
 
   // Check for authentication errors (401, unauthorized, invalid API key)
@@ -84,7 +93,7 @@ function handleLLMError(error: unknown, provider: string): never {
     messageLower.includes("invalid api key") ||
     messageLower.includes("incorrect api key")
   ) {
-    throw new LLMAuthenticationError(message, provider);
+    throw new LLMAuthenticationError(message, provider, model);
   }
 
   // Check for rate limit errors (429)
@@ -93,7 +102,7 @@ function handleLLMError(error: unknown, provider: string): never {
     messageLower.includes("429") ||
     messageLower.includes("too many requests")
   ) {
-    throw new LLMRateLimitError(message, provider);
+    throw new LLMRateLimitError(message, provider, model);
   }
 
   // Re-throw original error if not recognized
@@ -205,7 +214,7 @@ async function generateWithGroq(
 
     return responseContent;
   } catch (error) {
-    handleLLMError(error, "groq");
+    handleLLMError(error, "groq", model);
   }
 }
 
@@ -277,7 +286,7 @@ async function generateWithGemini(
 
     return responseContent;
   } catch (error) {
-    handleLLMError(error, "gemini");
+    handleLLMError(error, "gemini", model);
   }
 }
 
@@ -312,7 +321,7 @@ async function generateWithOpenAI(
 
     return responseContent;
   } catch (error) {
-    handleLLMError(error, "openai");
+    handleLLMError(error, "openai", model);
   }
 }
 
@@ -349,7 +358,7 @@ async function generateWithOpenRouter(
 
     return responseContent;
   } catch (error) {
-    handleLLMError(error, "openrouter");
+    handleLLMError(error, "openrouter", model);
   }
 }
 
@@ -385,7 +394,7 @@ async function generateWithDeepSeek(
 
     return responseContent;
   } catch (error) {
-    handleLLMError(error, "deepseek");
+    handleLLMError(error, "deepseek", model);
   }
 }
 

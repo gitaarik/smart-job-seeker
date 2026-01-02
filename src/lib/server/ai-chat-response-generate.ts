@@ -53,7 +53,7 @@ export async function generateAiChatResponse(aiChatId: number): Promise<{
       return {
         success: false,
         message:
-          `LLM quota exceeded (${error.provider}). Please add more credits or switch providers.`,
+          `LLM quota exceeded (${error.provider}/${error.model}). Please add more credits or switch providers.`,
       };
     }
 
@@ -61,7 +61,7 @@ export async function generateAiChatResponse(aiChatId: number): Promise<{
       return {
         success: false,
         message:
-          `LLM authentication failed (${error.provider}). Please check your API key configuration.`,
+          `LLM authentication failed (${error.provider}/${error.model}). Please check your API key configuration.`,
       };
     }
 
@@ -69,7 +69,7 @@ export async function generateAiChatResponse(aiChatId: number): Promise<{
       return {
         success: false,
         message:
-          `LLM rate limit exceeded (${error.provider}). Please try again later.`,
+          `LLM rate limit exceeded (${error.provider}/${error.model}). Please try again later.`,
       };
     }
 
