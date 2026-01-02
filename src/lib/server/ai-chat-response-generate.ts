@@ -53,23 +53,21 @@ export async function generateAiChatResponse(aiChatId: number): Promise<{
       return {
         success: false,
         message:
-          `LLM quota exceeded (${error.provider}/${error.model}). Please add more credits or switch providers.`,
+          `${error.message}. Please add more credits or switch providers.`,
       };
     }
 
     if (error instanceof LLMAuthenticationError) {
       return {
         success: false,
-        message:
-          `LLM authentication failed (${error.provider}/${error.model}). Please check your API key configuration.`,
+        message: `${error.message}. Please check your API key configuration.`,
       };
     }
 
     if (error instanceof LLMRateLimitError) {
       return {
         success: false,
-        message:
-          `LLM rate limit exceeded (${error.provider}/${error.model}). Please try again later.`,
+        message: `${error.message}. Please try again later.`,
       };
     }
 

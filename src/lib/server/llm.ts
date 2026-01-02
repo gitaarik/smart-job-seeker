@@ -72,8 +72,10 @@ function handleLLMError(
   provider: string,
   model: string,
 ): never {
-  const message = error instanceof Error ? error.message : String(error);
-  const messageLower = message.toLowerCase();
+  const originalMessage = error instanceof Error
+    ? error.message
+    : String(error);
+  const messageLower = originalMessage.toLowerCase();
 
   // Check for quota/balance errors (402, insufficient balance, quota exceeded)
   if (
@@ -82,7 +84,9 @@ function handleLLMError(
     messageLower.includes("quota exceeded") ||
     messageLower.includes("out of credits")
   ) {
-    throw new LLMQuotaExceededError(message, provider, model);
+    const enhancedMessage =
+      `LLM quota exceeded (${provider}/${model}): ${originalMessage}`;
+    throw new LLMQuotaExceededError(enhancedMessage, provider, model);
   }
 
   // Check for authentication errors (401, unauthorized, invalid API key)
@@ -93,7 +97,9 @@ function handleLLMError(
     messageLower.includes("invalid api key") ||
     messageLower.includes("incorrect api key")
   ) {
-    throw new LLMAuthenticationError(message, provider, model);
+    const enhancedMessage =
+      `LLM authentication failed (${provider}/${model}): ${originalMessage}`;
+    throw new LLMAuthenticationError(enhancedMessage, provider, model);
   }
 
   // Check for rate limit errors (429)
@@ -102,14 +108,16 @@ function handleLLMError(
     messageLower.includes("429") ||
     messageLower.includes("too many requests")
   ) {
-    throw new LLMRateLimitError(message, provider, model);
+    const enhancedMessage =
+      `LLM rate limit exceeded (${provider}/${model}): ${originalMessage}`;
+    throw new LLMRateLimitError(enhancedMessage, provider, model);
   }
 
   // Re-throw original error if not recognized
   if (error instanceof Error) {
     throw error;
   }
-  throw new Error(message);
+  throw new Error(originalMessage);
 }
 
 /**
