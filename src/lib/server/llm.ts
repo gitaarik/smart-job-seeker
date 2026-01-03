@@ -176,13 +176,13 @@ async function generateWithGroq(
     });
 
     // Groq has limited support for json_schema - only certain models support it
-    // Models that support structured outputs: llama-3.1-70b-versatile, llama-3.1-8b-instant
+    // Models that support structured outputs: llama-3.1-*, llama-4-*
     // Fall back to simpler json_object format for other models
     let finalResponseFormat = responseFormat;
     let finalMessages = messages;
 
     if (responseFormat?.type === "json_schema") {
-      const supportsJsonSchema = model.includes("llama-3.1");
+      const supportsJsonSchema = model.includes("llama-3.1") || model.includes("llama-4");
       if (!supportsJsonSchema) {
         // Fall back to simple JSON mode
         finalResponseFormat = { type: "json_object" } as any;
