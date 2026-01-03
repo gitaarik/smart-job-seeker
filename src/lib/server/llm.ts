@@ -417,6 +417,24 @@ async function generateWithDeepSeek(
  * @returns The generated text response
  * @throws Error if no content is returned from the LLM
  */
+/**
+ * Generate chat completion with structured JSON output
+ * When responseFormat is provided, automatically parses the JSON response
+ */
+export async function generateChatCompletion<T = any>(
+  messages: ChatMessage[],
+  options: ChatCompletionOptions & { responseFormat: ResponseFormat },
+): Promise<T>;
+
+/**
+ * Generate chat completion with text output
+ * When responseFormat is not provided, returns raw string
+ */
+export async function generateChatCompletion(
+  messages: ChatMessage[],
+  options?: ChatCompletionOptions,
+): Promise<string>;
+
 export async function generateChatCompletion(
   messages: ChatMessage[],
   options: ChatCompletionOptions = {},
@@ -494,6 +512,34 @@ export async function generateChatCompletion(
       shouldRetry: isRetryableError,
     },
   );
+
+  // Parse JSON if responseFormat was provided
+  if (responseFormat) {
+    try {
+      const parsed = JSON.parse(content);
+      
+      // Cache the raw response
+      llmCache.set(cacheKey, content, model, config.llmCacheTTL);
+      
+      errorTracker.logDebug("LLM JSON response parsed and cached", {
+        operation: "generateChatCompletion",
+        metadata: {
+          model,
+          provider: config.llmProvider,
+          contentLength: content.length,
+        },
+      });
+      
+      return parsed;
+    } catch (error) {
+      const parseError = new Error(
+        `Failed to parse JSON response from LLM (${config.llmProvider}/${model}): ${
+          error instanceof Error ? error.message : String(error)
+        }\nResponse was: ${content.substring(0, 500)}${content.length > 500 ? '...' : ''}`,
+      );
+      throw parseError;
+    }
+  }
 
   // Cache the successful response
   llmCache.set(cacheKey, content, model, config.llmCacheTTL);

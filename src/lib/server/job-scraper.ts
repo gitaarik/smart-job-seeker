@@ -198,7 +198,12 @@ export async function extractJobLinks(
     }
     : undefined;
 
-  const response = await generateChatCompletion(
+  // 5. Call LLM with structured output
+  const result = await generateChatCompletion<{
+    urls?: string[];
+    job_urls?: string[];
+    links?: string[];
+  }>(
     [
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt },
@@ -206,32 +211,19 @@ export async function extractJobLinks(
     { temperature: 0.3, responseFormat },
   );
 
-  // 5. Parse JSON response
-  try {
-    const result = JSON.parse(response);
+  // Extract urls array from the structured response
+  // Try multiple possible field names for compatibility
+  const links = result.urls || result.job_urls || result.links;
 
-    // Extract urls array from the structured response
-    // Try multiple possible field names for compatibility
-    const links = result.urls || result.job_urls || result.links;
-
-    if (!Array.isArray(links)) {
-      throw new Error(
-        `LLM response doesn't contain a valid array. Expected 'urls', 'job_urls', or 'links' field. Got: ${
-          JSON.stringify(result)
-        }`,
-      );
-    }
-
-    return links;
-  } catch (error) {
-    console.error("Failed to parse job links from LLM response:", error);
-    console.error("Response was:", response);
+  if (!Array.isArray(links)) {
     throw new Error(
-      `Failed to extract job links: ${
-        error instanceof Error ? error.message : "Unknown error"
+      `LLM response doesn't contain a valid array. Expected 'urls', 'job_urls', or 'links' field. Got: ${
+        JSON.stringify(result)
       }`,
     );
   }
+
+  return links;
 }
 
 /**
@@ -509,8 +501,11 @@ async function detectLoginPage(pageHtml: string): Promise<boolean> {
     }
     : undefined;
 
-  // 5. Call LLM
-  const response = await generateChatCompletion(
+  // 5. Call LLM with structured output
+  const result = await generateChatCompletion<{
+    isLoginPage: boolean;
+    reasoning: string;
+  }>(
     [
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt },
@@ -518,19 +513,7 @@ async function detectLoginPage(pageHtml: string): Promise<boolean> {
     { temperature: 0.3, responseFormat },
   );
 
-  // 6. Parse response
-  try {
-    const result = JSON.parse(response);
-    return result.isLoginPage === true;
-  } catch (error) {
-    console.error("Failed to parse login detection from LLM response:", error);
-    console.error("Response was:", response);
-    throw new Error(
-      `Failed to detect login page: ${
-        error instanceof Error ? error.message : "Unknown error"
-      }`,
-    );
-  }
+  return result.isLoginPage === true;
 }
 
 /**
@@ -630,7 +613,24 @@ export async function extractJobData(
     }
     : undefined;
 
-  const response = await generateChatCompletion(
+  // 6. Call LLM with structured output  
+  const data = await generateChatCompletion<{
+    title?: string;
+    job_description?: string | null;
+    company_description?: string | null;
+    job_poster?: string | null;
+    date_posted?: string | null;
+    location?: string | null;
+    remote?: string | null;
+    experience_level?: string | null;
+    job_type?: string | null;
+    salary_min?: number | null;
+    salary_max?: number | null;
+    salary_currency?: string | null;
+    salary_period?: string | null;
+    skills?: string[] | null;
+    status?: string | null;
+  }>(
     [
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt },
@@ -638,9 +638,7 @@ export async function extractJobData(
     { temperature: 0.3, responseFormat },
   );
 
-  // 6. Parse JSON response
   try {
-    const data = JSON.parse(response);
 
     // Debug: Log extracted data
     console.log("Extracted job data:", {

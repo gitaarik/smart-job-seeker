@@ -240,8 +240,15 @@ export async function calculateMatch(
     }
     : undefined;
 
-  // Call LLM
-  const response = await generateChatCompletion(
+  // Call LLM with structured output
+  const result = await generateChatCompletion<{
+    score: number;
+    reasoning: string;
+    skill_match_percentage: number;
+    strengths: string[];
+    gaps: string[];
+    recommendation: string;
+  }>(
     [
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt },
@@ -249,31 +256,18 @@ export async function calculateMatch(
     { temperature: 0.3, responseFormat },
   );
 
-  // Parse response
-  try {
-    const result = JSON.parse(response);
-
-    return {
-      profileId,
-      jobId: job.id,
-      score: result.score,
-      reasoning: result.reasoning,
-      skill_match_percentage: result.skill_match_percentage,
-      strengths: result.strengths,
-      gaps: result.gaps,
-      recommendation: result.recommendation,
-      jobDateUpdated: job.date_updated,
-      llmPrompt: fullPrompt,
-    };
-  } catch (error) {
-    console.error("Failed to parse match score from LLM:", error);
-    console.error("Response was:", response);
-    throw new Error(
-      `Failed to calculate match score for job ${job.id}: ${
-        error instanceof Error ? error.message : "Unknown error"
-      }`,
-    );
-  }
+  return {
+    profileId,
+    jobId: job.id,
+    score: result.score,
+    reasoning: result.reasoning,
+    skill_match_percentage: result.skill_match_percentage,
+    strengths: result.strengths,
+    gaps: result.gaps,
+    recommendation: result.recommendation,
+    jobDateUpdated: job.date_updated,
+    llmPrompt: fullPrompt,
+  };
 }
 
 /**

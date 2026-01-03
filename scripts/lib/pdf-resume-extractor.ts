@@ -210,9 +210,9 @@ ${resumeText}`;
       },
     };
 
-    // Call LLM with structured output
+    // Call LLM with structured output (automatically parses JSON)
     console.log("🤖 Calling LLM to extract structured data...");
-    const response = await generateChatCompletion(messages, {
+    const resumeData = await generateChatCompletion<ResumeData>(messages, {
       model: "meta-llama/llama-4-scout-17b-16e-instruct",
       maxTokens: 4096,
       temperature: 0.1, // Low temperature for more consistent extraction
@@ -220,9 +220,6 @@ ${resumeText}`;
     });
 
     console.log("✅ LLM extraction complete\n");
-
-    // Parse the JSON response
-    const resumeData = JSON.parse(response) as ResumeData;
 
     // Validate that we got at least a name
     if (!resumeData.basics || !resumeData.basics.name) {

@@ -133,7 +133,8 @@ describe("generateChatCompletion", () => {
 
     const result = await generateChatCompletion(messages, { responseFormat });
 
-    expect(result).toBe('{"name": "test"}');
+    // Should return parsed JSON object, not string
+    expect(result).toEqual({ name: "test" });
     // For non-Llama-3.1 models, Groq transforms json_schema to json_object
     // and adds JSON instruction to the first message
     expect(mockCreate).toHaveBeenCalledWith({
@@ -251,5 +252,38 @@ describe("generateChatCompletion", () => {
     const result = await generateChatCompletion(messages);
 
     expect(result).toBe("Please provide a message.");
+  });
+
+  it("should throw descriptive error for invalid JSON when responseFormat provided", async () => {
+    const messages: ChatMessage[] = [
+      { role: "user", content: "Extract data" },
+    ];
+
+    const responseFormat: ResponseFormat = {
+      type: "json_schema",
+      json_schema: {
+        name: "test",
+        strict: true,
+        schema: {
+          type: "object",
+          properties: { name: { type: "string" } },
+        },
+      },
+    };
+
+    // Mock LLM returning invalid JSON
+    mockCreate.mockResolvedValueOnce({
+      choices: [
+        {
+          message: {
+            content: "Not valid JSON {bad}",
+          },
+        },
+      ],
+    });
+
+    await expect(
+      generateChatCompletion(messages, { responseFormat }),
+    ).rejects.toThrow(/Failed to parse JSON response[\s\S]*Response was:/);
   });
 });
