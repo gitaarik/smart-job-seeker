@@ -6,10 +6,10 @@
 import type { Page } from "playwright";
 import { config } from "$lib/server/config";
 import {
-  extractJobsFromSearchPage,
   extractJobData,
-  upsertJob,
+  extractJobsFromSearchPage,
   mergeJobData,
+  upsertJob,
 } from "$lib/server/job-scraper";
 import { stripHtmlForLlm } from "$lib/server/html-strip";
 import {
@@ -100,26 +100,55 @@ export async function scrapeJobsWithClicks(
       match,
     ) => parseInt(match[1]));
 
+    // Strip HTML for LLM processing (data-extract-clickable-id attributes survive)
+    const strippedHtml = stripHtmlForLlm(markedHtml);
+
+    // Capture stripped HTML from first page BEFORE LLM extraction (so we save it even if LLM fails)
+    if (pageNumber === 1) {
+      savedStrippedHtml = strippedHtml;
+    }
+
     // Always use LLM to extract jobs with titles (even when CDP detects job-detail buttons)
     console.log(
       "\n   🤖 Step 2/3: Asking LLM to extract job cards with titles...",
     );
     const startLlm = Date.now();
 
-    const result = await extractJobsFromSearchPage(markedHtml);
-    let jobs = result.jobs;
-    let pattern = result.pattern;
-    let jobCount = result.jobCount;
+    let jobs: Array<
+      {
+        clickableId: number;
+        title: string | null;
+        company?: string | null;
+        location?: string | null;
+        salary_min?: number | null;
+        salary_max?: number | null;
+        salary_currency?: string | null;
+        salary_period?: string | null;
+      }
+    >;
 
-    // Capture stripped HTML from first page for debugging
-    if (pageNumber === 1) {
-      savedStrippedHtml = result.strippedHtml;
+    try {
+      const result = await extractJobsFromSearchPage(strippedHtml);
+      jobs = result.jobs;
+
+      const llmDuration = ((Date.now() - startLlm) / 1000).toFixed(2);
+      console.log(`      ✓ LLM analysis complete (${llmDuration}s)`);
+      console.log(`      Job cards found: ${jobs.length}`);
+    } catch (error) {
+      console.error(
+        `      ❌ LLM extraction failed: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+      console.log(
+        `      ℹ️  Returning stripped HTML for debugging (${savedStrippedHtml.length} chars)`,
+      );
+      // Return early with stripped HTML so it gets saved to database
+      return {
+        jobsProcessed: stats.jobsProcessed,
+        strippedHtml: savedStrippedHtml,
+      };
     }
-
-    const llmDuration = ((Date.now() - startLlm) / 1000).toFixed(2);
-    console.log(`      ✓ LLM analysis complete (${llmDuration}s)`);
-    console.log(`      Pattern: ${pattern}`);
-    console.log(`      Job cards found: ${jobCount}`);
 
     // If we also detected job-detail buttons via CDP, verify consistency
     if (jobDetailButtonIds.length > 0) {
@@ -136,8 +165,6 @@ export async function scrapeJobsWithClicks(
           clickableId: id,
           title: null,
         }));
-        pattern = "CDP job-detail buttons (LLM fallback)";
-        jobCount = jobs.length;
       }
     }
 
@@ -214,7 +241,9 @@ export async function scrapeJobsWithClicks(
           searchJobData.salary_max
             ? `-${searchJobData.salary_max.toLocaleString()}`
             : "",
-          searchJobData.salary_period ? `per ${searchJobData.salary_period}` : "",
+          searchJobData.salary_period
+            ? `per ${searchJobData.salary_period}`
+            : "",
         ].filter(Boolean).join(" ");
         console.log(`      💰 Salary: ${salaryStr}`);
       }

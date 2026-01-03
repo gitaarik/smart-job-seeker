@@ -97,5 +97,10 @@ export function isFatalScraperError(error: Error): boolean {
     return true;
   }
 
+  // Bad request errors (usually code bugs, not retryable)
+  if (message.includes("400") || message.includes("bad request")) {
+    return true;
+  }
+
   return false;
 }

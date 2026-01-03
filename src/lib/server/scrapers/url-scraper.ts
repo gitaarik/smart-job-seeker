@@ -83,7 +83,7 @@ export async function scrapeJobsWithUrls(
   searchUrl: string,
   platformId: number,
   platformPaginationType?: string | null,
-): Promise<number> {
+): Promise<{ jobsProcessed: number; strippedHtml: string }> {
   console.log("\n🔗 Starting URL-based scraping (traditional navigation)");
 
   // Track processing state
@@ -92,6 +92,7 @@ export async function scrapeJobsWithUrls(
   let processedCount = 0;
   let consecutiveClosed = 0;
   let currentPage = 1;
+  let savedStrippedHtml = ""; // Store stripped HTML from first page for debugging
 
   // Wait for page content to be fully loaded (important for SPAs)
   console.log("⏳ Waiting for page content to load...");
@@ -102,6 +103,11 @@ export async function scrapeJobsWithUrls(
 
     const html = await page.content();
     const htmlSize = (html.length / 1024).toFixed(1);
+
+    // Capture stripped HTML from first page for debugging
+    if (currentPage === 1) {
+      savedStrippedHtml = stripHtmlForLlm(html);
+    }
 
     // Check for CAPTCHA before attempting extraction
     const hasCaptcha = await detectCaptchaOnPage(page);
@@ -190,14 +196,20 @@ export async function scrapeJobsWithUrls(
         console.log(
           `\n✅ Reached max jobs limit (${config.scraperMaxJobsPerSearch})`,
         );
-        return processedCount;
+        return {
+          jobsProcessed: processedCount,
+          strippedHtml: savedStrippedHtml,
+        };
       }
 
       if (consecutiveClosed >= config.scraperConsecutiveClosedLimit) {
         console.log(
           `\n⏹️  Too many consecutive closed jobs (${consecutiveClosed})`,
         );
-        return processedCount;
+        return {
+          jobsProcessed: processedCount,
+          strippedHtml: savedStrippedHtml,
+        };
       }
 
       try {
@@ -286,7 +298,10 @@ export async function scrapeJobsWithUrls(
           console.error(
             `\n🛑 Fatal error encountered - stopping scraper: ${err.message}`,
           );
-          return processedCount;
+          return {
+            jobsProcessed: processedCount,
+            strippedHtml: savedStrippedHtml,
+          };
         }
 
         consecutiveClosed = 0; // Reset on error
@@ -348,5 +363,5 @@ export async function scrapeJobsWithUrls(
   console.log(
     `\n✅ Processed ${processedCount} job(s) across ${currentPage} page(s)`,
   );
-  return processedCount;
+  return { jobsProcessed: processedCount, strippedHtml: savedStrippedHtml };
 }

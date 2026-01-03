@@ -124,12 +124,14 @@ async function scrapeJobSite(
           processedCount = result.jobsProcessed;
           strippedHtml = result.strippedHtml;
         } else {
-          processedCount = await scrapeJobsWithUrls(
+          const result = await scrapeJobsWithUrls(
             page,
             searchUrl,
             platformId,
             paginationType,
           );
+          processedCount = result.jobsProcessed;
+          strippedHtml = result.strippedHtml;
         }
       } finally {
         await context.close(); // Always cleanup

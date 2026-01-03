@@ -235,174 +235,14 @@ export async function extractJobLinks(
 }
 
 /**
- * Extract clickable element IDs and job titles from search results HTML using LLM
- * Used for SPA sites where jobs don't have direct URLs
- * @param searchResultsHtml HTML with data-clickable-id markers already injected
- * @returns Object with jobs array (clickableId + title), pattern description, and job count
- */
-export async function extractJobClickSelectors(
-  searchResultsHtml: string,
-): Promise<{
-  jobs: Array<{ clickableId: number; title: string | null }>;
-  pattern: string;
-  jobCount: number;
-  strippedHtml: string;
-}> {
-  console.warn(
-    "⚠️  extractJobClickSelectors is deprecated, use extractJobsFromSearchPage instead",
-  );
-
-  // Debug: Save marked HTML BEFORE stripping
-  if (config.scraperDebugMode) {
-    const fs = await import("fs");
-    const markedPath = "/tmp/marked-html-before-strip.html";
-    fs.writeFileSync(markedPath, searchResultsHtml);
-    console.log(`\n📝 Saved marked HTML (before strip) to: ${markedPath}`);
-  }
-
-  // 1. Strip HTML to minimal content (data-clickable-id attributes survive)
-  const strippedHtml = stripHtmlForLlm(searchResultsHtml);
-
-  // Debug: Log stripped HTML for analysis
-  if (config.scraperDebugMode) {
-    const fs = await import("fs");
-    const debugPath = "/tmp/stripped-html-debug.html";
-    fs.writeFileSync(debugPath, strippedHtml);
-    console.log(`📝 Saved stripped HTML (after strip) to: ${debugPath}\n`);
-  }
-
-  // Extract all data-extract-clickable-id values with regex
-  const clickableIdMatches = strippedHtml.match(
-    /data-extract-clickable-id="(\d+)"/g,
-  );
-
-  let allClickableIds: number[] = [];
-  if (clickableIdMatches) {
-    allClickableIds = clickableIdMatches
-      .map((m) => parseInt(m.match(/\d+/)?.[0] || "0"))
-      .filter((id) => id > 0);
-    console.log(
-      `      Found ${allClickableIds.length} data-extract-clickable-id attributes in stripped HTML`,
-    );
-    console.log(`      All IDs: [${allClickableIds.join(", ")}]`);
-  } else {
-    console.warn(
-      "      ⚠️  No data-extract-clickable-id attributes found in stripped HTML!",
-    );
-  }
-
-  // 2. Get prompt template
-  const template = await db.ai_chat_prompts.findUnique({
-    where: { request: "extract_job_click_selectors" },
-  });
-
-  if (!template) {
-    throw new Error("Prompt template 'extract_job_click_selectors' not found");
-  }
-
-  // 3. Interpolate variables
-  const systemPrompt = template.system_prompt || "";
-  const userPrompt = interpolatePrompt(template.user_prompt || "", {
-    html: strippedHtml,
-  });
-
-  // 4. Call LLM to extract jobs with titles
-  const responseFormat = template.format
-    ? {
-      type: "json_schema" as const,
-      json_schema: {
-        name: "job_click_selectors",
-        strict: true,
-        schema: template.format as Record<string, any>,
-      },
-    }
-    : undefined;
-
-  try {
-    const response = await generateChatCompletion(
-      [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-      { temperature: 0.3, responseFormat },
-    );
-
-    const result = JSON.parse(response);
-
-    // Validate and return LLM result
-    if (result.jobs && Array.isArray(result.jobs)) {
-      // CRITICAL: Validate that LLM IDs actually exist in the page
-      // The LLM sometimes hallucinates IDs that don't exist
-      const validJobs = result.jobs.filter((job: any) => {
-        const idExists = allClickableIds.includes(job.clickableId);
-        if (!idExists) {
-          console.warn(
-            `      ⚠️  LLM hallucinated ID ${job.clickableId} (title: "${job.title}") - not in page`,
-          );
-        }
-        return idExists;
-      });
-
-      console.log(
-        `      ✓ LLM extracted ${validJobs.length} jobs with titles (${
-          result.jobs.length - validJobs.length
-        } hallucinated IDs filtered out)`,
-      );
-      console.log(`      Pattern: ${result.pattern || "Not specified"}`);
-
-      // If all IDs were hallucinated, throw error to trigger fallback
-      if (validJobs.length === 0 && result.jobs.length > 0) {
-        throw new Error(
-          `All ${result.jobs.length} LLM-extracted IDs were hallucinated (not found in page)`,
-        );
-      }
-
-      return {
-        jobs: validJobs,
-        pattern: result.pattern || "LLM extraction",
-        jobCount: validJobs.length,
-        strippedHtml,
-      };
-    } else {
-      throw new Error("LLM response missing 'jobs' array");
-    }
-  } catch (error) {
-    // Fallback: Use regex extraction with null titles
-    console.warn(
-      `      ⚠️  LLM extraction failed, falling back to regex: ${
-        error instanceof Error ? error.message : String(error)
-      }`,
-    );
-
-    // Simple heuristic filtering for fallback
-    let filteredIds = allClickableIds;
-
-    if (allClickableIds.length > 20) {
-      const skip = Math.floor(allClickableIds.length * 0.1);
-      filteredIds = allClickableIds.slice(skip, allClickableIds.length - skip);
-      console.log(
-        `      → Filtered to ${filteredIds.length} IDs (excluded ${skip} from each end)`,
-      );
-    }
-
-    return {
-      jobs: filteredIds.map((id) => ({ clickableId: id, title: null })),
-      pattern: "Regex fallback (LLM extraction failed)",
-      jobCount: filteredIds.length,
-      strippedHtml,
-    };
-  }
-}
-
-/**
  * Extract comprehensive job data from search results page (SPA sites)
  * Extracts core fields: title, company, location, salary, skills, remote, date_posted + clickableId
  * Replaces extractJobClickSelectors with richer data extraction
- * @param searchResultsHtml HTML with data-clickable-id markers already injected
- * @returns Object with jobs array (11 fields per job), pattern description, and job count
+ * @param strippedSearchResultsHtml Already-stripped HTML with data-clickable-id markers
+ * @returns Object with jobs array (11 fields per job)
  */
 export async function extractJobsFromSearchPage(
-  searchResultsHtml: string,
+  strippedSearchResultsHtml: string,
 ): Promise<{
   jobs: Array<{
     clickableId: number;
@@ -417,31 +257,17 @@ export async function extractJobsFromSearchPage(
     remote: string | null;
     date_posted: string | null;
   }>;
-  pattern: string;
-  jobCount: number;
-  strippedHtml: string;
 }> {
-  // Debug: Save marked HTML BEFORE stripping
-  if (config.scraperDebugMode) {
-    const fs = await import("fs");
-    const markedPath = "/tmp/marked-html-before-strip.html";
-    fs.writeFileSync(markedPath, searchResultsHtml);
-    console.log(`\n📝 Saved marked HTML (before strip) to: ${markedPath}`);
-  }
-
-  // 1. Strip HTML to minimal content (data-clickable-id attributes survive)
-  const strippedHtml = stripHtmlForLlm(searchResultsHtml);
-
-  // Debug: Log stripped HTML for analysis
+  // Debug: Save stripped HTML for analysis
   if (config.scraperDebugMode) {
     const fs = await import("fs");
     const debugPath = "/tmp/stripped-html-debug.html";
-    fs.writeFileSync(debugPath, strippedHtml);
-    console.log(`📝 Saved stripped HTML (after strip) to: ${debugPath}\n`);
+    fs.writeFileSync(debugPath, strippedSearchResultsHtml);
+    console.log(`\n📝 Saved stripped HTML to: ${debugPath}\n`);
   }
 
   // Extract all data-extract-clickable-id values with regex
-  const clickableIdMatches = strippedHtml.match(
+  const clickableIdMatches = strippedSearchResultsHtml.match(
     /data-extract-clickable-id="(\d+)"/g,
   );
 
@@ -475,24 +301,36 @@ export async function extractJobsFromSearchPage(
   try {
     const systemPrompt = interpolatePrompt(template.system_prompt, {});
     const userPrompt = interpolatePrompt(template.user_prompt, {
-      html: strippedHtml,
+      html: strippedSearchResultsHtml,
     });
 
     console.log("      🤖 Running LLM to extract job data from search page...");
 
-    const result = await generateChatCompletion({
-      systemPrompt,
-      userPrompt,
-      format: template.format as any,
-      temperature: 0.3,
-    });
+    const result = await generateChatCompletion(
+      [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+      {
+        temperature: 0.3,
+        responseFormat: template.format
+          ? {
+            type: "json_schema" as const,
+            json_schema: {
+              name: "job_extraction",
+              strict: true,
+              schema: template.format as Record<string, any>,
+            },
+          }
+          : undefined,
+      },
+    );
 
     // Validate LLM response structure
     if (result && Array.isArray(result.jobs)) {
       console.log(
         `      ✓ LLM extracted ${result.jobs.length} jobs from search page`,
       );
-      console.log(`      Pattern: ${result.pattern || "Not specified"}`);
 
       // CRITICAL: Validate that LLM IDs actually exist in the page
       const validJobs = result.jobs.filter((job: any) => {
@@ -511,7 +349,7 @@ export async function extractJobsFromSearchPage(
         } hallucinated)`,
       );
 
-      // If all IDs were hallucinated, throw error to trigger fallback
+      // If all IDs were hallucinated, throw error
       if (validJobs.length === 0 && result.jobs.length > 0) {
         throw new Error(
           `All ${result.jobs.length} LLM-extracted IDs were hallucinated (not found in page)`,
@@ -520,50 +358,18 @@ export async function extractJobsFromSearchPage(
 
       return {
         jobs: validJobs,
-        pattern: result.pattern || "LLM extraction",
-        jobCount: validJobs.length,
-        strippedHtml,
       };
     } else {
       throw new Error("LLM response missing 'jobs' array");
     }
   } catch (error) {
-    // Fallback: Use regex extraction with null fields
-    console.warn(
-      `      ⚠️  LLM extraction failed, falling back to regex: ${
+    // Log the error and abort the import
+    console.error(
+      `      ❌ LLM extraction failed: ${
         error instanceof Error ? error.message : String(error)
       }`,
     );
-
-    // Simple heuristic filtering for fallback
-    let filteredIds = allClickableIds;
-
-    if (allClickableIds.length > 20) {
-      const skip = Math.floor(allClickableIds.length * 0.1);
-      filteredIds = allClickableIds.slice(skip, allClickableIds.length - skip);
-      console.log(
-        `      → Filtered to ${filteredIds.length} IDs (excluded ${skip} from each end)`,
-      );
-    }
-
-    return {
-      jobs: filteredIds.map((id) => ({
-        clickableId: id,
-        title: null,
-        company: null,
-        location: null,
-        salary_min: null,
-        salary_max: null,
-        salary_currency: null,
-        salary_period: null,
-        skills: null,
-        remote: null,
-        date_posted: null,
-      })),
-      pattern: "Regex fallback (LLM extraction failed)",
-      jobCount: filteredIds.length,
-      strippedHtml,
-    };
+    throw error;
   }
 }
 
@@ -650,7 +456,9 @@ export function mergeJobData(
 
     // Date: Detail wins, or parse search date if detail is null
     date_posted: detailData.date_posted ||
-      (searchData.date_posted ? parseRelativeDate(searchData.date_posted) : null),
+      (searchData.date_posted
+        ? parseRelativeDate(searchData.date_posted)
+        : null),
 
     // Salary: Detail wins, search fallback (use ?? to preserve 0 values)
     salary_min: detailData.salary_min ?? searchData.salary_min ?? null,

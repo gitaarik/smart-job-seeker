@@ -77,7 +77,9 @@ describe("mergeJobData", () => {
     const searchData = {}; // Search page doesn't have descriptions
     const merged = mergeJobData(searchData, detailData);
 
-    expect(merged.job_description).toBe("Full job description from detail page");
+    expect(merged.job_description).toBe(
+      "Full job description from detail page",
+    );
     expect(merged.company_description).toBe("Company info from detail page");
   });
 
@@ -226,7 +228,9 @@ describe("mergeJobData", () => {
 
     const merged = mergeJobData(searchData, detailData);
 
-    expect(merged.job_description).toBe("Full job description from detail page");
+    expect(merged.job_description).toBe(
+      "Full job description from detail page",
+    );
     expect(merged.company_description).toBe("Company info from detail page");
     expect(merged.experience_level).toBe("senior");
     expect(merged.job_type).toBe("full_time");

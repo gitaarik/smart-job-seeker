@@ -71,7 +71,11 @@
       "mcp__directus__operations",
       "mcp__directus__relations",
       "mcp__directus__schema",
-      "mcp__directus__system-prompt"
+      "mcp__directus__system-prompt",
+      "mcp__plugin_serena_serena__search_for_pattern",
+      "mcp__plugin_serena_serena__read_file",
+      "mcp__plugin_serena_serena__find_symbol",
+      "mcp__plugin_serena_serena__replace_content"
     ],
     "deny": [],
     "ask": []
