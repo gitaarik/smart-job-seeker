@@ -18,8 +18,11 @@ export function interpolatePrompt(
 ): string {
   let result = text;
   for (const [key, value] of Object.entries(variables)) {
-    const regex = new RegExp(`\\$\\{${key}\\}`, "g");
-    result = result.replace(regex, value);
+    // Support both ${variable} and {{variable}} syntax
+    const dollarRegex = new RegExp(`\\$\\{${key}\\}`, "g");
+    const mustacheRegex = new RegExp(`\\{\\{${key}\\}\\}`, "g");
+    result = result.replace(dollarRegex, value);
+    result = result.replace(mustacheRegex, value);
   }
   return result;
 }
