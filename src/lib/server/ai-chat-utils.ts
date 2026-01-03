@@ -254,7 +254,7 @@ export async function createAndGenerateAiChat(
         { role: "system", content: interpolatedSystemPrompt },
         { role: "user", content: interpolatedUserPrompt },
       ],
-      responseFormat,
+      { responseFormat },
     );
 
     // Step 8: Save response
