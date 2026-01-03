@@ -247,7 +247,17 @@ export async function createAndGenerateAiChat(
     // Step 7: Generate AI response using generic LLM function
     // Use format if available to enforce JSON structured output
     // Note: Prisma auto-parses JSON fields, so format is already an object
-    const responseFormat = promptTemplate.format || undefined;
+    // The format field contains the JSON schema, which needs to be wrapped for Groq
+    const responseFormat = promptTemplate.format
+      ? {
+          type: "json_schema" as const,
+          json_schema: {
+            name: promptRequest.replace(/[^a-zA-Z0-9_]/g, "_"),
+            strict: true,
+            schema: promptTemplate.format,
+          },
+        }
+      : undefined;
 
     const responseContent = await generateChatCompletion(
       [
