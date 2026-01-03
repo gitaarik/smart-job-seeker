@@ -100,10 +100,8 @@ describe("extractResumeFromPdf", () => {
       info: {},
     });
 
-    // Mock LLM response
-    (generateChatCompletion as any).mockResolvedValue(
-      JSON.stringify(mockResumeData),
-    );
+    // Mock LLM response (returns parsed object after refactoring)
+    (generateChatCompletion as any).mockResolvedValue(mockResumeData);
 
     const result = await extractResumeFromPdf("/path/to/resume.pdf");
 
@@ -145,9 +143,7 @@ describe("extractResumeFromPdf", () => {
       numpages: 1,
       info: {},
     });
-    (generateChatCompletion as any).mockResolvedValue(
-      JSON.stringify(mockIncompleteData),
-    );
+    (generateChatCompletion as any).mockResolvedValue(mockIncompleteData);
 
     await expect(extractResumeFromPdf("/path/to/resume.pdf")).rejects.toThrow(
       "Failed to extract profile name from resume",
@@ -169,9 +165,7 @@ describe("extractResumeFromPdf", () => {
       numpages: 1,
       info: {},
     });
-    (generateChatCompletion as any).mockResolvedValue(
-      JSON.stringify(mockResumeData),
-    );
+    (generateChatCompletion as any).mockResolvedValue(mockResumeData);
 
     await extractResumeFromPdf("/path/to/resume.pdf");
 
@@ -301,9 +295,7 @@ describe("extractResumeFromPdf", () => {
       numpages: 2,
       info: {},
     });
-    (generateChatCompletion as any).mockResolvedValue(
-      JSON.stringify(mockCompleteData),
-    );
+    (generateChatCompletion as any).mockResolvedValue(mockCompleteData);
 
     const result = await extractResumeFromPdf("/path/to/resume.pdf");
 
