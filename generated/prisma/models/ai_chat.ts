@@ -265,6 +265,8 @@ export type ai_chatWhereInput = {
   profiles?: Prisma.XOR<Prisma.ProfilesScalarRelationFilter, Prisma.profilesWhereInput>
   application_letters_application_letters_ai_chatToai_chat?: Prisma.Application_lettersListRelationFilter
   application_questions_application_questions_ai_chatToai_chat?: Prisma.Application_questionsListRelationFilter
+  job_matches_scored?: Prisma.Job_matchesListRelationFilter
+  jobs_extracted?: Prisma.JobsListRelationFilter
 }
 
 export type ai_chatOrderByWithRelationInput = {
@@ -283,6 +285,8 @@ export type ai_chatOrderByWithRelationInput = {
   profiles?: Prisma.profilesOrderByWithRelationInput
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersOrderByRelationAggregateInput
   application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsOrderByRelationAggregateInput
+  job_matches_scored?: Prisma.job_matchesOrderByRelationAggregateInput
+  jobs_extracted?: Prisma.jobsOrderByRelationAggregateInput
 }
 
 export type ai_chatWhereUniqueInput = Prisma.AtLeast<{
@@ -304,6 +308,8 @@ export type ai_chatWhereUniqueInput = Prisma.AtLeast<{
   profiles?: Prisma.XOR<Prisma.ProfilesScalarRelationFilter, Prisma.profilesWhereInput>
   application_letters_application_letters_ai_chatToai_chat?: Prisma.Application_lettersListRelationFilter
   application_questions_application_questions_ai_chatToai_chat?: Prisma.Application_questionsListRelationFilter
+  job_matches_scored?: Prisma.Job_matchesListRelationFilter
+  jobs_extracted?: Prisma.JobsListRelationFilter
 }, "id">
 
 export type ai_chatOrderByWithAggregationInput = {
@@ -353,6 +359,8 @@ export type ai_chatCreateInput = {
   profiles: Prisma.profilesCreateNestedOneWithoutAi_chatInput
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersCreateNestedManyWithoutAi_chat_application_letters_ai_chatToai_chatInput
   application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsCreateNestedManyWithoutAi_chat_application_questions_ai_chatToai_chatInput
+  job_matches_scored?: Prisma.job_matchesCreateNestedManyWithoutAi_chatInput
+  jobs_extracted?: Prisma.jobsCreateNestedManyWithoutAi_chatInput
 }
 
 export type ai_chatUncheckedCreateInput = {
@@ -369,6 +377,8 @@ export type ai_chatUncheckedCreateInput = {
   other_ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutAi_chatInput
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUncheckedCreateNestedManyWithoutAi_chat_application_letters_ai_chatToai_chatInput
   application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsUncheckedCreateNestedManyWithoutAi_chat_application_questions_ai_chatToai_chatInput
+  job_matches_scored?: Prisma.job_matchesUncheckedCreateNestedManyWithoutAi_chatInput
+  jobs_extracted?: Prisma.jobsUncheckedCreateNestedManyWithoutAi_chatInput
 }
 
 export type ai_chatUpdateInput = {
@@ -384,6 +394,8 @@ export type ai_chatUpdateInput = {
   profiles?: Prisma.profilesUpdateOneRequiredWithoutAi_chatNestedInput
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUpdateManyWithoutAi_chat_application_letters_ai_chatToai_chatNestedInput
   application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsUpdateManyWithoutAi_chat_application_questions_ai_chatToai_chatNestedInput
+  job_matches_scored?: Prisma.job_matchesUpdateManyWithoutAi_chatNestedInput
+  jobs_extracted?: Prisma.jobsUpdateManyWithoutAi_chatNestedInput
 }
 
 export type ai_chatUncheckedUpdateInput = {
@@ -400,6 +412,8 @@ export type ai_chatUncheckedUpdateInput = {
   other_ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutAi_chatNestedInput
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUncheckedUpdateManyWithoutAi_chat_application_letters_ai_chatToai_chatNestedInput
   application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsUncheckedUpdateManyWithoutAi_chat_application_questions_ai_chatToai_chatNestedInput
+  job_matches_scored?: Prisma.job_matchesUncheckedUpdateManyWithoutAi_chatNestedInput
+  jobs_extracted?: Prisma.jobsUncheckedUpdateManyWithoutAi_chatNestedInput
 }
 
 export type ai_chatCreateManyInput = {
@@ -634,6 +648,38 @@ export type ai_chatUpdateOneWithoutApplication_letters_application_letters_ai_ch
   update?: Prisma.XOR<Prisma.XOR<Prisma.ai_chatUpdateToOneWithWhereWithoutApplication_letters_application_letters_ai_chatToai_chatInput, Prisma.ai_chatUpdateWithoutApplication_letters_application_letters_ai_chatToai_chatInput>, Prisma.ai_chatUncheckedUpdateWithoutApplication_letters_application_letters_ai_chatToai_chatInput>
 }
 
+export type ai_chatCreateNestedOneWithoutJobs_extractedInput = {
+  create?: Prisma.XOR<Prisma.ai_chatCreateWithoutJobs_extractedInput, Prisma.ai_chatUncheckedCreateWithoutJobs_extractedInput>
+  connectOrCreate?: Prisma.ai_chatCreateOrConnectWithoutJobs_extractedInput
+  connect?: Prisma.ai_chatWhereUniqueInput
+}
+
+export type ai_chatUpdateOneWithoutJobs_extractedNestedInput = {
+  create?: Prisma.XOR<Prisma.ai_chatCreateWithoutJobs_extractedInput, Prisma.ai_chatUncheckedCreateWithoutJobs_extractedInput>
+  connectOrCreate?: Prisma.ai_chatCreateOrConnectWithoutJobs_extractedInput
+  upsert?: Prisma.ai_chatUpsertWithoutJobs_extractedInput
+  disconnect?: Prisma.ai_chatWhereInput | boolean
+  delete?: Prisma.ai_chatWhereInput | boolean
+  connect?: Prisma.ai_chatWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ai_chatUpdateToOneWithWhereWithoutJobs_extractedInput, Prisma.ai_chatUpdateWithoutJobs_extractedInput>, Prisma.ai_chatUncheckedUpdateWithoutJobs_extractedInput>
+}
+
+export type ai_chatCreateNestedOneWithoutJob_matches_scoredInput = {
+  create?: Prisma.XOR<Prisma.ai_chatCreateWithoutJob_matches_scoredInput, Prisma.ai_chatUncheckedCreateWithoutJob_matches_scoredInput>
+  connectOrCreate?: Prisma.ai_chatCreateOrConnectWithoutJob_matches_scoredInput
+  connect?: Prisma.ai_chatWhereUniqueInput
+}
+
+export type ai_chatUpdateOneWithoutJob_matches_scoredNestedInput = {
+  create?: Prisma.XOR<Prisma.ai_chatCreateWithoutJob_matches_scoredInput, Prisma.ai_chatUncheckedCreateWithoutJob_matches_scoredInput>
+  connectOrCreate?: Prisma.ai_chatCreateOrConnectWithoutJob_matches_scoredInput
+  upsert?: Prisma.ai_chatUpsertWithoutJob_matches_scoredInput
+  disconnect?: Prisma.ai_chatWhereInput | boolean
+  delete?: Prisma.ai_chatWhereInput | boolean
+  connect?: Prisma.ai_chatWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ai_chatUpdateToOneWithWhereWithoutJob_matches_scoredInput, Prisma.ai_chatUpdateWithoutJob_matches_scoredInput>, Prisma.ai_chatUncheckedUpdateWithoutJob_matches_scoredInput>
+}
+
 export type ai_chatCreateWithoutProfilesInput = {
   date_created?: Date | string | null
   date_updated?: Date | string | null
@@ -646,6 +692,8 @@ export type ai_chatCreateWithoutProfilesInput = {
   other_ai_chat?: Prisma.ai_chatCreateNestedManyWithoutAi_chatInput
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersCreateNestedManyWithoutAi_chat_application_letters_ai_chatToai_chatInput
   application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsCreateNestedManyWithoutAi_chat_application_questions_ai_chatToai_chatInput
+  job_matches_scored?: Prisma.job_matchesCreateNestedManyWithoutAi_chatInput
+  jobs_extracted?: Prisma.jobsCreateNestedManyWithoutAi_chatInput
 }
 
 export type ai_chatUncheckedCreateWithoutProfilesInput = {
@@ -661,6 +709,8 @@ export type ai_chatUncheckedCreateWithoutProfilesInput = {
   other_ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutAi_chatInput
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUncheckedCreateNestedManyWithoutAi_chat_application_letters_ai_chatToai_chatInput
   application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsUncheckedCreateNestedManyWithoutAi_chat_application_questions_ai_chatToai_chatInput
+  job_matches_scored?: Prisma.job_matchesUncheckedCreateNestedManyWithoutAi_chatInput
+  jobs_extracted?: Prisma.jobsUncheckedCreateNestedManyWithoutAi_chatInput
 }
 
 export type ai_chatCreateOrConnectWithoutProfilesInput = {
@@ -717,6 +767,8 @@ export type ai_chatCreateWithoutOther_ai_chatInput = {
   profiles: Prisma.profilesCreateNestedOneWithoutAi_chatInput
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersCreateNestedManyWithoutAi_chat_application_letters_ai_chatToai_chatInput
   application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsCreateNestedManyWithoutAi_chat_application_questions_ai_chatToai_chatInput
+  job_matches_scored?: Prisma.job_matchesCreateNestedManyWithoutAi_chatInput
+  jobs_extracted?: Prisma.jobsCreateNestedManyWithoutAi_chatInput
 }
 
 export type ai_chatUncheckedCreateWithoutOther_ai_chatInput = {
@@ -732,6 +784,8 @@ export type ai_chatUncheckedCreateWithoutOther_ai_chatInput = {
   followup_to?: number | null
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUncheckedCreateNestedManyWithoutAi_chat_application_letters_ai_chatToai_chatInput
   application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsUncheckedCreateNestedManyWithoutAi_chat_application_questions_ai_chatToai_chatInput
+  job_matches_scored?: Prisma.job_matchesUncheckedCreateNestedManyWithoutAi_chatInput
+  jobs_extracted?: Prisma.jobsUncheckedCreateNestedManyWithoutAi_chatInput
 }
 
 export type ai_chatCreateOrConnectWithoutOther_ai_chatInput = {
@@ -751,6 +805,8 @@ export type ai_chatCreateWithoutAi_chatInput = {
   profiles: Prisma.profilesCreateNestedOneWithoutAi_chatInput
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersCreateNestedManyWithoutAi_chat_application_letters_ai_chatToai_chatInput
   application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsCreateNestedManyWithoutAi_chat_application_questions_ai_chatToai_chatInput
+  job_matches_scored?: Prisma.job_matchesCreateNestedManyWithoutAi_chatInput
+  jobs_extracted?: Prisma.jobsCreateNestedManyWithoutAi_chatInput
 }
 
 export type ai_chatUncheckedCreateWithoutAi_chatInput = {
@@ -766,6 +822,8 @@ export type ai_chatUncheckedCreateWithoutAi_chatInput = {
   other_ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutAi_chatInput
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUncheckedCreateNestedManyWithoutAi_chat_application_letters_ai_chatToai_chatInput
   application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsUncheckedCreateNestedManyWithoutAi_chat_application_questions_ai_chatToai_chatInput
+  job_matches_scored?: Prisma.job_matchesUncheckedCreateNestedManyWithoutAi_chatInput
+  jobs_extracted?: Prisma.jobsUncheckedCreateNestedManyWithoutAi_chatInput
 }
 
 export type ai_chatCreateOrConnectWithoutAi_chatInput = {
@@ -801,6 +859,8 @@ export type ai_chatUpdateWithoutOther_ai_chatInput = {
   profiles?: Prisma.profilesUpdateOneRequiredWithoutAi_chatNestedInput
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUpdateManyWithoutAi_chat_application_letters_ai_chatToai_chatNestedInput
   application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsUpdateManyWithoutAi_chat_application_questions_ai_chatToai_chatNestedInput
+  job_matches_scored?: Prisma.job_matchesUpdateManyWithoutAi_chatNestedInput
+  jobs_extracted?: Prisma.jobsUpdateManyWithoutAi_chatNestedInput
 }
 
 export type ai_chatUncheckedUpdateWithoutOther_ai_chatInput = {
@@ -816,6 +876,8 @@ export type ai_chatUncheckedUpdateWithoutOther_ai_chatInput = {
   followup_to?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUncheckedUpdateManyWithoutAi_chat_application_letters_ai_chatToai_chatNestedInput
   application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsUncheckedUpdateManyWithoutAi_chat_application_questions_ai_chatToai_chatNestedInput
+  job_matches_scored?: Prisma.job_matchesUncheckedUpdateManyWithoutAi_chatNestedInput
+  jobs_extracted?: Prisma.jobsUncheckedUpdateManyWithoutAi_chatNestedInput
 }
 
 export type ai_chatUpsertWithWhereUniqueWithoutAi_chatInput = {
@@ -846,6 +908,8 @@ export type ai_chatCreateWithoutApplication_questions_application_questions_ai_c
   other_ai_chat?: Prisma.ai_chatCreateNestedManyWithoutAi_chatInput
   profiles: Prisma.profilesCreateNestedOneWithoutAi_chatInput
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersCreateNestedManyWithoutAi_chat_application_letters_ai_chatToai_chatInput
+  job_matches_scored?: Prisma.job_matchesCreateNestedManyWithoutAi_chatInput
+  jobs_extracted?: Prisma.jobsCreateNestedManyWithoutAi_chatInput
 }
 
 export type ai_chatUncheckedCreateWithoutApplication_questions_application_questions_ai_chatToai_chatInput = {
@@ -861,6 +925,8 @@ export type ai_chatUncheckedCreateWithoutApplication_questions_application_quest
   followup_to?: number | null
   other_ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutAi_chatInput
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUncheckedCreateNestedManyWithoutAi_chat_application_letters_ai_chatToai_chatInput
+  job_matches_scored?: Prisma.job_matchesUncheckedCreateNestedManyWithoutAi_chatInput
+  jobs_extracted?: Prisma.jobsUncheckedCreateNestedManyWithoutAi_chatInput
 }
 
 export type ai_chatCreateOrConnectWithoutApplication_questions_application_questions_ai_chatToai_chatInput = {
@@ -891,6 +957,8 @@ export type ai_chatUpdateWithoutApplication_questions_application_questions_ai_c
   other_ai_chat?: Prisma.ai_chatUpdateManyWithoutAi_chatNestedInput
   profiles?: Prisma.profilesUpdateOneRequiredWithoutAi_chatNestedInput
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUpdateManyWithoutAi_chat_application_letters_ai_chatToai_chatNestedInput
+  job_matches_scored?: Prisma.job_matchesUpdateManyWithoutAi_chatNestedInput
+  jobs_extracted?: Prisma.jobsUpdateManyWithoutAi_chatNestedInput
 }
 
 export type ai_chatUncheckedUpdateWithoutApplication_questions_application_questions_ai_chatToai_chatInput = {
@@ -906,6 +974,8 @@ export type ai_chatUncheckedUpdateWithoutApplication_questions_application_quest
   followup_to?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   other_ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutAi_chatNestedInput
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUncheckedUpdateManyWithoutAi_chat_application_letters_ai_chatToai_chatNestedInput
+  job_matches_scored?: Prisma.job_matchesUncheckedUpdateManyWithoutAi_chatNestedInput
+  jobs_extracted?: Prisma.jobsUncheckedUpdateManyWithoutAi_chatNestedInput
 }
 
 export type ai_chatCreateWithoutApplication_letters_application_letters_ai_chatToai_chatInput = {
@@ -920,6 +990,8 @@ export type ai_chatCreateWithoutApplication_letters_application_letters_ai_chatT
   other_ai_chat?: Prisma.ai_chatCreateNestedManyWithoutAi_chatInput
   profiles: Prisma.profilesCreateNestedOneWithoutAi_chatInput
   application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsCreateNestedManyWithoutAi_chat_application_questions_ai_chatToai_chatInput
+  job_matches_scored?: Prisma.job_matchesCreateNestedManyWithoutAi_chatInput
+  jobs_extracted?: Prisma.jobsCreateNestedManyWithoutAi_chatInput
 }
 
 export type ai_chatUncheckedCreateWithoutApplication_letters_application_letters_ai_chatToai_chatInput = {
@@ -935,6 +1007,8 @@ export type ai_chatUncheckedCreateWithoutApplication_letters_application_letters
   followup_to?: number | null
   other_ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutAi_chatInput
   application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsUncheckedCreateNestedManyWithoutAi_chat_application_questions_ai_chatToai_chatInput
+  job_matches_scored?: Prisma.job_matchesUncheckedCreateNestedManyWithoutAi_chatInput
+  jobs_extracted?: Prisma.jobsUncheckedCreateNestedManyWithoutAi_chatInput
 }
 
 export type ai_chatCreateOrConnectWithoutApplication_letters_application_letters_ai_chatToai_chatInput = {
@@ -965,6 +1039,8 @@ export type ai_chatUpdateWithoutApplication_letters_application_letters_ai_chatT
   other_ai_chat?: Prisma.ai_chatUpdateManyWithoutAi_chatNestedInput
   profiles?: Prisma.profilesUpdateOneRequiredWithoutAi_chatNestedInput
   application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsUpdateManyWithoutAi_chat_application_questions_ai_chatToai_chatNestedInput
+  job_matches_scored?: Prisma.job_matchesUpdateManyWithoutAi_chatNestedInput
+  jobs_extracted?: Prisma.jobsUpdateManyWithoutAi_chatNestedInput
 }
 
 export type ai_chatUncheckedUpdateWithoutApplication_letters_application_letters_ai_chatToai_chatInput = {
@@ -980,6 +1056,172 @@ export type ai_chatUncheckedUpdateWithoutApplication_letters_application_letters
   followup_to?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   other_ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutAi_chatNestedInput
   application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsUncheckedUpdateManyWithoutAi_chat_application_questions_ai_chatToai_chatNestedInput
+  job_matches_scored?: Prisma.job_matchesUncheckedUpdateManyWithoutAi_chatNestedInput
+  jobs_extracted?: Prisma.jobsUncheckedUpdateManyWithoutAi_chatNestedInput
+}
+
+export type ai_chatCreateWithoutJobs_extractedInput = {
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  system_prompt?: string
+  user_prompt: string
+  full_prompt?: string | null
+  response?: string | null
+  context?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_chat?: Prisma.ai_chatCreateNestedOneWithoutOther_ai_chatInput
+  other_ai_chat?: Prisma.ai_chatCreateNestedManyWithoutAi_chatInput
+  profiles: Prisma.profilesCreateNestedOneWithoutAi_chatInput
+  application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersCreateNestedManyWithoutAi_chat_application_letters_ai_chatToai_chatInput
+  application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsCreateNestedManyWithoutAi_chat_application_questions_ai_chatToai_chatInput
+  job_matches_scored?: Prisma.job_matchesCreateNestedManyWithoutAi_chatInput
+}
+
+export type ai_chatUncheckedCreateWithoutJobs_extractedInput = {
+  id?: number
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  profile: number
+  system_prompt?: string
+  user_prompt: string
+  full_prompt?: string | null
+  response?: string | null
+  context?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  followup_to?: number | null
+  other_ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutAi_chatInput
+  application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUncheckedCreateNestedManyWithoutAi_chat_application_letters_ai_chatToai_chatInput
+  application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsUncheckedCreateNestedManyWithoutAi_chat_application_questions_ai_chatToai_chatInput
+  job_matches_scored?: Prisma.job_matchesUncheckedCreateNestedManyWithoutAi_chatInput
+}
+
+export type ai_chatCreateOrConnectWithoutJobs_extractedInput = {
+  where: Prisma.ai_chatWhereUniqueInput
+  create: Prisma.XOR<Prisma.ai_chatCreateWithoutJobs_extractedInput, Prisma.ai_chatUncheckedCreateWithoutJobs_extractedInput>
+}
+
+export type ai_chatUpsertWithoutJobs_extractedInput = {
+  update: Prisma.XOR<Prisma.ai_chatUpdateWithoutJobs_extractedInput, Prisma.ai_chatUncheckedUpdateWithoutJobs_extractedInput>
+  create: Prisma.XOR<Prisma.ai_chatCreateWithoutJobs_extractedInput, Prisma.ai_chatUncheckedCreateWithoutJobs_extractedInput>
+  where?: Prisma.ai_chatWhereInput
+}
+
+export type ai_chatUpdateToOneWithWhereWithoutJobs_extractedInput = {
+  where?: Prisma.ai_chatWhereInput
+  data: Prisma.XOR<Prisma.ai_chatUpdateWithoutJobs_extractedInput, Prisma.ai_chatUncheckedUpdateWithoutJobs_extractedInput>
+}
+
+export type ai_chatUpdateWithoutJobs_extractedInput = {
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  system_prompt?: Prisma.StringFieldUpdateOperationsInput | string
+  user_prompt?: Prisma.StringFieldUpdateOperationsInput | string
+  full_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  response?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  context?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_chat?: Prisma.ai_chatUpdateOneWithoutOther_ai_chatNestedInput
+  other_ai_chat?: Prisma.ai_chatUpdateManyWithoutAi_chatNestedInput
+  profiles?: Prisma.profilesUpdateOneRequiredWithoutAi_chatNestedInput
+  application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUpdateManyWithoutAi_chat_application_letters_ai_chatToai_chatNestedInput
+  application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsUpdateManyWithoutAi_chat_application_questions_ai_chatToai_chatNestedInput
+  job_matches_scored?: Prisma.job_matchesUpdateManyWithoutAi_chatNestedInput
+}
+
+export type ai_chatUncheckedUpdateWithoutJobs_extractedInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profile?: Prisma.IntFieldUpdateOperationsInput | number
+  system_prompt?: Prisma.StringFieldUpdateOperationsInput | string
+  user_prompt?: Prisma.StringFieldUpdateOperationsInput | string
+  full_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  response?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  context?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  followup_to?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  other_ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutAi_chatNestedInput
+  application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUncheckedUpdateManyWithoutAi_chat_application_letters_ai_chatToai_chatNestedInput
+  application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsUncheckedUpdateManyWithoutAi_chat_application_questions_ai_chatToai_chatNestedInput
+  job_matches_scored?: Prisma.job_matchesUncheckedUpdateManyWithoutAi_chatNestedInput
+}
+
+export type ai_chatCreateWithoutJob_matches_scoredInput = {
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  system_prompt?: string
+  user_prompt: string
+  full_prompt?: string | null
+  response?: string | null
+  context?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_chat?: Prisma.ai_chatCreateNestedOneWithoutOther_ai_chatInput
+  other_ai_chat?: Prisma.ai_chatCreateNestedManyWithoutAi_chatInput
+  profiles: Prisma.profilesCreateNestedOneWithoutAi_chatInput
+  application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersCreateNestedManyWithoutAi_chat_application_letters_ai_chatToai_chatInput
+  application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsCreateNestedManyWithoutAi_chat_application_questions_ai_chatToai_chatInput
+  jobs_extracted?: Prisma.jobsCreateNestedManyWithoutAi_chatInput
+}
+
+export type ai_chatUncheckedCreateWithoutJob_matches_scoredInput = {
+  id?: number
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  profile: number
+  system_prompt?: string
+  user_prompt: string
+  full_prompt?: string | null
+  response?: string | null
+  context?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  followup_to?: number | null
+  other_ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutAi_chatInput
+  application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUncheckedCreateNestedManyWithoutAi_chat_application_letters_ai_chatToai_chatInput
+  application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsUncheckedCreateNestedManyWithoutAi_chat_application_questions_ai_chatToai_chatInput
+  jobs_extracted?: Prisma.jobsUncheckedCreateNestedManyWithoutAi_chatInput
+}
+
+export type ai_chatCreateOrConnectWithoutJob_matches_scoredInput = {
+  where: Prisma.ai_chatWhereUniqueInput
+  create: Prisma.XOR<Prisma.ai_chatCreateWithoutJob_matches_scoredInput, Prisma.ai_chatUncheckedCreateWithoutJob_matches_scoredInput>
+}
+
+export type ai_chatUpsertWithoutJob_matches_scoredInput = {
+  update: Prisma.XOR<Prisma.ai_chatUpdateWithoutJob_matches_scoredInput, Prisma.ai_chatUncheckedUpdateWithoutJob_matches_scoredInput>
+  create: Prisma.XOR<Prisma.ai_chatCreateWithoutJob_matches_scoredInput, Prisma.ai_chatUncheckedCreateWithoutJob_matches_scoredInput>
+  where?: Prisma.ai_chatWhereInput
+}
+
+export type ai_chatUpdateToOneWithWhereWithoutJob_matches_scoredInput = {
+  where?: Prisma.ai_chatWhereInput
+  data: Prisma.XOR<Prisma.ai_chatUpdateWithoutJob_matches_scoredInput, Prisma.ai_chatUncheckedUpdateWithoutJob_matches_scoredInput>
+}
+
+export type ai_chatUpdateWithoutJob_matches_scoredInput = {
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  system_prompt?: Prisma.StringFieldUpdateOperationsInput | string
+  user_prompt?: Prisma.StringFieldUpdateOperationsInput | string
+  full_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  response?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  context?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_chat?: Prisma.ai_chatUpdateOneWithoutOther_ai_chatNestedInput
+  other_ai_chat?: Prisma.ai_chatUpdateManyWithoutAi_chatNestedInput
+  profiles?: Prisma.profilesUpdateOneRequiredWithoutAi_chatNestedInput
+  application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUpdateManyWithoutAi_chat_application_letters_ai_chatToai_chatNestedInput
+  application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsUpdateManyWithoutAi_chat_application_questions_ai_chatToai_chatNestedInput
+  jobs_extracted?: Prisma.jobsUpdateManyWithoutAi_chatNestedInput
+}
+
+export type ai_chatUncheckedUpdateWithoutJob_matches_scoredInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profile?: Prisma.IntFieldUpdateOperationsInput | number
+  system_prompt?: Prisma.StringFieldUpdateOperationsInput | string
+  user_prompt?: Prisma.StringFieldUpdateOperationsInput | string
+  full_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  response?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  context?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  followup_to?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  other_ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutAi_chatNestedInput
+  application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUncheckedUpdateManyWithoutAi_chat_application_letters_ai_chatToai_chatNestedInput
+  application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsUncheckedUpdateManyWithoutAi_chat_application_questions_ai_chatToai_chatNestedInput
+  jobs_extracted?: Prisma.jobsUncheckedUpdateManyWithoutAi_chatNestedInput
 }
 
 export type ai_chatCreateManyProfilesInput = {
@@ -1006,6 +1248,8 @@ export type ai_chatUpdateWithoutProfilesInput = {
   other_ai_chat?: Prisma.ai_chatUpdateManyWithoutAi_chatNestedInput
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUpdateManyWithoutAi_chat_application_letters_ai_chatToai_chatNestedInput
   application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsUpdateManyWithoutAi_chat_application_questions_ai_chatToai_chatNestedInput
+  job_matches_scored?: Prisma.job_matchesUpdateManyWithoutAi_chatNestedInput
+  jobs_extracted?: Prisma.jobsUpdateManyWithoutAi_chatNestedInput
 }
 
 export type ai_chatUncheckedUpdateWithoutProfilesInput = {
@@ -1021,6 +1265,8 @@ export type ai_chatUncheckedUpdateWithoutProfilesInput = {
   other_ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutAi_chatNestedInput
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUncheckedUpdateManyWithoutAi_chat_application_letters_ai_chatToai_chatNestedInput
   application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsUncheckedUpdateManyWithoutAi_chat_application_questions_ai_chatToai_chatNestedInput
+  job_matches_scored?: Prisma.job_matchesUncheckedUpdateManyWithoutAi_chatNestedInput
+  jobs_extracted?: Prisma.jobsUncheckedUpdateManyWithoutAi_chatNestedInput
 }
 
 export type ai_chatUncheckedUpdateManyWithoutProfilesInput = {
@@ -1059,6 +1305,8 @@ export type ai_chatUpdateWithoutAi_chatInput = {
   profiles?: Prisma.profilesUpdateOneRequiredWithoutAi_chatNestedInput
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUpdateManyWithoutAi_chat_application_letters_ai_chatToai_chatNestedInput
   application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsUpdateManyWithoutAi_chat_application_questions_ai_chatToai_chatNestedInput
+  job_matches_scored?: Prisma.job_matchesUpdateManyWithoutAi_chatNestedInput
+  jobs_extracted?: Prisma.jobsUpdateManyWithoutAi_chatNestedInput
 }
 
 export type ai_chatUncheckedUpdateWithoutAi_chatInput = {
@@ -1074,6 +1322,8 @@ export type ai_chatUncheckedUpdateWithoutAi_chatInput = {
   other_ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutAi_chatNestedInput
   application_letters_application_letters_ai_chatToai_chat?: Prisma.application_lettersUncheckedUpdateManyWithoutAi_chat_application_letters_ai_chatToai_chatNestedInput
   application_questions_application_questions_ai_chatToai_chat?: Prisma.application_questionsUncheckedUpdateManyWithoutAi_chat_application_questions_ai_chatToai_chatNestedInput
+  job_matches_scored?: Prisma.job_matchesUncheckedUpdateManyWithoutAi_chatNestedInput
+  jobs_extracted?: Prisma.jobsUncheckedUpdateManyWithoutAi_chatNestedInput
 }
 
 export type ai_chatUncheckedUpdateManyWithoutAi_chatInput = {
@@ -1097,12 +1347,16 @@ export type Ai_chatCountOutputType = {
   other_ai_chat: number
   application_letters_application_letters_ai_chatToai_chat: number
   application_questions_application_questions_ai_chatToai_chat: number
+  job_matches_scored: number
+  jobs_extracted: number
 }
 
 export type Ai_chatCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   other_ai_chat?: boolean | Ai_chatCountOutputTypeCountOther_ai_chatArgs
   application_letters_application_letters_ai_chatToai_chat?: boolean | Ai_chatCountOutputTypeCountApplication_letters_application_letters_ai_chatToai_chatArgs
   application_questions_application_questions_ai_chatToai_chat?: boolean | Ai_chatCountOutputTypeCountApplication_questions_application_questions_ai_chatToai_chatArgs
+  job_matches_scored?: boolean | Ai_chatCountOutputTypeCountJob_matches_scoredArgs
+  jobs_extracted?: boolean | Ai_chatCountOutputTypeCountJobs_extractedArgs
 }
 
 /**
@@ -1136,6 +1390,20 @@ export type Ai_chatCountOutputTypeCountApplication_questions_application_questio
   where?: Prisma.application_questionsWhereInput
 }
 
+/**
+ * Ai_chatCountOutputType without action
+ */
+export type Ai_chatCountOutputTypeCountJob_matches_scoredArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.job_matchesWhereInput
+}
+
+/**
+ * Ai_chatCountOutputType without action
+ */
+export type Ai_chatCountOutputTypeCountJobs_extractedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.jobsWhereInput
+}
+
 
 export type ai_chatSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1153,6 +1421,8 @@ export type ai_chatSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
   application_letters_application_letters_ai_chatToai_chat?: boolean | Prisma.ai_chat$application_letters_application_letters_ai_chatToai_chatArgs<ExtArgs>
   application_questions_application_questions_ai_chatToai_chat?: boolean | Prisma.ai_chat$application_questions_application_questions_ai_chatToai_chatArgs<ExtArgs>
+  job_matches_scored?: boolean | Prisma.ai_chat$job_matches_scoredArgs<ExtArgs>
+  jobs_extracted?: boolean | Prisma.ai_chat$jobs_extractedArgs<ExtArgs>
   _count?: boolean | Prisma.Ai_chatCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["ai_chat"]>
 
@@ -1206,6 +1476,8 @@ export type ai_chatInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
   application_letters_application_letters_ai_chatToai_chat?: boolean | Prisma.ai_chat$application_letters_application_letters_ai_chatToai_chatArgs<ExtArgs>
   application_questions_application_questions_ai_chatToai_chat?: boolean | Prisma.ai_chat$application_questions_application_questions_ai_chatToai_chatArgs<ExtArgs>
+  job_matches_scored?: boolean | Prisma.ai_chat$job_matches_scoredArgs<ExtArgs>
+  jobs_extracted?: boolean | Prisma.ai_chat$jobs_extractedArgs<ExtArgs>
   _count?: boolean | Prisma.Ai_chatCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type ai_chatIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1225,6 +1497,8 @@ export type $ai_chatPayload<ExtArgs extends runtime.Types.Extensions.InternalArg
     profiles: Prisma.$profilesPayload<ExtArgs>
     application_letters_application_letters_ai_chatToai_chat: Prisma.$application_lettersPayload<ExtArgs>[]
     application_questions_application_questions_ai_chatToai_chat: Prisma.$application_questionsPayload<ExtArgs>[]
+    job_matches_scored: Prisma.$job_matchesPayload<ExtArgs>[]
+    jobs_extracted: Prisma.$jobsPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
@@ -1636,6 +1910,8 @@ export interface Prisma__ai_chatClient<T, Null = never, ExtArgs extends runtime.
   profiles<T extends Prisma.profilesDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.profilesDefaultArgs<ExtArgs>>): Prisma.Prisma__profilesClient<runtime.Types.Result.GetResult<Prisma.$profilesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   application_letters_application_letters_ai_chatToai_chat<T extends Prisma.ai_chat$application_letters_application_letters_ai_chatToai_chatArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ai_chat$application_letters_application_letters_ai_chatToai_chatArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$application_lettersPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   application_questions_application_questions_ai_chatToai_chat<T extends Prisma.ai_chat$application_questions_application_questions_ai_chatToai_chatArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ai_chat$application_questions_application_questions_ai_chatToai_chatArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$application_questionsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  job_matches_scored<T extends Prisma.ai_chat$job_matches_scoredArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ai_chat$job_matches_scoredArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$job_matchesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  jobs_extracted<T extends Prisma.ai_chat$jobs_extractedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ai_chat$jobs_extractedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$jobsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2159,6 +2435,54 @@ export type ai_chat$application_questions_application_questions_ai_chatToai_chat
   take?: number
   skip?: number
   distinct?: Prisma.Application_questionsScalarFieldEnum | Prisma.Application_questionsScalarFieldEnum[]
+}
+
+/**
+ * ai_chat.job_matches_scored
+ */
+export type ai_chat$job_matches_scoredArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the job_matches
+   */
+  select?: Prisma.job_matchesSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the job_matches
+   */
+  omit?: Prisma.job_matchesOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.job_matchesInclude<ExtArgs> | null
+  where?: Prisma.job_matchesWhereInput
+  orderBy?: Prisma.job_matchesOrderByWithRelationInput | Prisma.job_matchesOrderByWithRelationInput[]
+  cursor?: Prisma.job_matchesWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.Job_matchesScalarFieldEnum | Prisma.Job_matchesScalarFieldEnum[]
+}
+
+/**
+ * ai_chat.jobs_extracted
+ */
+export type ai_chat$jobs_extractedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the jobs
+   */
+  select?: Prisma.jobsSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the jobs
+   */
+  omit?: Prisma.jobsOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.jobsInclude<ExtArgs> | null
+  where?: Prisma.jobsWhereInput
+  orderBy?: Prisma.jobsOrderByWithRelationInput | Prisma.jobsOrderByWithRelationInput[]
+  cursor?: Prisma.jobsWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.JobsScalarFieldEnum | Prisma.JobsScalarFieldEnum[]
 }
 
 /**

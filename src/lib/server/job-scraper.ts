@@ -3,9 +3,8 @@
  */
 
 import { dbDirect as db } from "$lib/db";
-import { generateChatCompletion } from "./llm";
 import { stripHtmlForLlm } from "./html-strip";
-import { interpolatePrompt } from "./ai-chat-utils";
+import { createJobScrapingAiChat } from "./ai-chat-job-utils";
 import {
   isValidJobPostingDate,
   parseRelativeDate,
@@ -171,54 +170,25 @@ export async function extractJobLinks(
   // 1. Strip HTML to minimal content
   const strippedHtml = stripHtmlForLlm(searchResultsHtml);
 
-  // 2. Get prompt template
-  const template = await db.ai_chat_prompts.findUnique({
-    where: { request: "extract_job_links" },
-  });
-
-  if (!template) {
-    throw new Error("Prompt template 'extract_job_links' not found");
-  }
-
-  // 3. Interpolate variables
-  const systemPrompt = template.system_prompt || "";
-  const userPrompt = interpolatePrompt(template.user_prompt || "", {
-    html: strippedHtml,
-  });
-
-  // 4. Call LLM using generic utility with optional structured output
-  const responseFormat = template.format
-    ? {
-      type: "json_schema" as const,
-      json_schema: {
-        name: "job_links",
-        strict: true,
-        schema: template.format as Record<string, any>,
-      },
-    }
-    : undefined;
-
-  // 5. Call LLM with structured output
-  const result = await generateChatCompletion<{
+  // 2. Call AI chat with system profile for job scraping
+  const aiResult = await createJobScrapingAiChat<{
     urls?: string[];
     job_urls?: string[];
     links?: string[];
-  }>(
-    [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt },
-    ],
-    { temperature: 0.3, responseFormat },
-  );
+  }>("extract_job_links", { html: strippedHtml });
+
+  if (!aiResult.success || !aiResult.response) {
+    throw new Error(`Failed to extract job links: ${aiResult.message}`);
+  }
 
   // Extract urls array from the structured response
   // Try multiple possible field names for compatibility
-  const links = result.urls || result.job_urls || result.links;
+  const links = aiResult.response.urls || aiResult.response.job_urls || aiResult.response.links;
 
   if (!Array.isArray(links)) {
     throw new Error(
       `LLM response doesn't contain a valid array. Expected 'urls', 'job_urls', or 'links' field. Got: ${
-        JSON.stringify(result)
+        JSON.stringify(aiResult.response)
       }`,
     );
   }
@@ -278,91 +248,66 @@ export async function extractJobsFromSearchPage(
     );
   }
 
-  // 2. Get prompt template
-  const template = await db.ai_chat_prompts.findUnique({
-    where: { request: "extract_jobs_from_search_page" },
+  // 2. Call AI chat with system profile for job scraping
+  console.log("      🤖 Running LLM to extract job data from search page...");
+
+  const aiResult = await createJobScrapingAiChat<{
+    jobs: Array<{
+      clickableId: number;
+      title: string;
+      company: string;
+      location: string | null;
+      salary_min: number | null;
+      salary_max: number | null;
+      salary_currency: string | null;
+      salary_period: string | null;
+      skills: string[] | null;
+      remote: string | null;
+      date_posted: string | null;
+    }>;
+  }>("extract_jobs_from_search_page", { html: strippedSearchResultsHtml });
+
+  if (!aiResult.success || !aiResult.response) {
+    console.error(`      ❌ LLM extraction failed: ${aiResult.message}`);
+    throw new Error(`Failed to extract jobs from search page: ${aiResult.message}`);
+  }
+
+  // Validate LLM response structure
+  if (!Array.isArray(aiResult.response.jobs)) {
+    throw new Error("LLM response missing 'jobs' array");
+  }
+
+  console.log(
+    `      ✓ LLM extracted ${aiResult.response.jobs.length} jobs from search page`,
+  );
+
+  // CRITICAL: Validate that LLM IDs actually exist in the page
+  const validJobs = aiResult.response.jobs.filter((job: any) => {
+    const idExists = allClickableIds.includes(job.clickableId);
+    if (!idExists) {
+      console.warn(
+        `      ⚠️  LLM hallucinated ID ${job.clickableId} (title: "${job.title}") - not in page`,
+      );
+    }
+    return idExists;
   });
 
-  if (!template) {
+  console.log(
+    `      → ${validJobs.length} jobs with valid IDs (filtered ${
+      aiResult.response.jobs.length - validJobs.length
+    } hallucinated)`,
+  );
+
+  // If all IDs were hallucinated, throw error
+  if (validJobs.length === 0 && aiResult.response.jobs.length > 0) {
     throw new Error(
-      "Prompt template 'extract_jobs_from_search_page' not found in database",
+      `All ${aiResult.response.jobs.length} LLM-extracted IDs were hallucinated (not found in page)`,
     );
   }
 
-  // 3. Run LLM extraction
-  try {
-    const systemPrompt = interpolatePrompt(template.system_prompt, {});
-    const userPrompt = interpolatePrompt(template.user_prompt, {
-      html: strippedSearchResultsHtml,
-    });
-
-    console.log("      🤖 Running LLM to extract job data from search page...");
-
-    const result = await generateChatCompletion(
-      [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-      {
-        temperature: 0.3,
-        responseFormat: template.format
-          ? {
-            type: "json_schema" as const,
-            json_schema: {
-              name: "job_extraction",
-              strict: true,
-              schema: template.format as Record<string, any>,
-            },
-          }
-          : undefined,
-      },
-    );
-
-    // Validate LLM response structure
-    if (result && Array.isArray(result.jobs)) {
-      console.log(
-        `      ✓ LLM extracted ${result.jobs.length} jobs from search page`,
-      );
-
-      // CRITICAL: Validate that LLM IDs actually exist in the page
-      const validJobs = result.jobs.filter((job: any) => {
-        const idExists = allClickableIds.includes(job.clickableId);
-        if (!idExists) {
-          console.warn(
-            `      ⚠️  LLM hallucinated ID ${job.clickableId} (title: "${job.title}") - not in page`,
-          );
-        }
-        return idExists;
-      });
-
-      console.log(
-        `      → ${validJobs.length} jobs with valid IDs (filtered ${
-          result.jobs.length - validJobs.length
-        } hallucinated)`,
-      );
-
-      // If all IDs were hallucinated, throw error
-      if (validJobs.length === 0 && result.jobs.length > 0) {
-        throw new Error(
-          `All ${result.jobs.length} LLM-extracted IDs were hallucinated (not found in page)`,
-        );
-      }
-
-      return {
-        jobs: validJobs,
-      };
-    } else {
-      throw new Error("LLM response missing 'jobs' array");
-    }
-  } catch (error) {
-    // Log the error and abort the import
-    console.error(
-      `      ❌ LLM extraction failed: ${
-        error instanceof Error ? error.message : String(error)
-      }`,
-    );
-    throw error;
-  }
+  return {
+    jobs: validJobs,
+  };
 }
 
 /**
@@ -429,6 +374,7 @@ export function mergeJobData(
     skills: string[] | null;
     status: string | null;
     source_html_stripped: string;
+    ai_chat_extraction: number | null;
   },
 ): typeof detailData {
   return {
@@ -439,6 +385,7 @@ export function mergeJobData(
     job_type: detailData.job_type,
     status: detailData.status,
     source_html_stripped: detailData.source_html_stripped,
+    ai_chat_extraction: detailData.ai_chat_extraction,
 
     // Detail wins, search fallback (using || for strings, ?? for numbers)
     title: detailData.title || searchData.title || "Untitled Position",
@@ -474,46 +421,17 @@ async function detectLoginPage(pageHtml: string): Promise<boolean> {
   // 1. Strip HTML to minimal content
   const strippedHtml = stripHtmlForLlm(pageHtml);
 
-  // 2. Get prompt template
-  const template = await db.ai_chat_prompts.findUnique({
-    where: { request: "detect_login_page" },
-  });
-
-  if (!template) {
-    throw new Error("Prompt template 'detect_login_page' not found");
-  }
-
-  // 3. Interpolate variables
-  const systemPrompt = template.system_prompt || "";
-  const userPrompt = interpolatePrompt(template.user_prompt || "", {
-    html: strippedHtml,
-  });
-
-  // 4. Prepare structured output format
-  const responseFormat = template.format
-    ? {
-      type: "json_schema" as const,
-      json_schema: {
-        name: "login_detection",
-        strict: true,
-        schema: template.format as Record<string, any>,
-      },
-    }
-    : undefined;
-
-  // 5. Call LLM with structured output
-  const result = await generateChatCompletion<{
+  // 2. Call AI chat with system profile for job scraping
+  const result = await createJobScrapingAiChat<{
     isLoginPage: boolean;
     reasoning: string;
-  }>(
-    [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt },
-    ],
-    { temperature: 0.3, responseFormat },
-  );
+  }>("detect_login_page", { html: strippedHtml });
 
-  return result.isLoginPage === true;
+  if (!result.success || !result.response) {
+    throw new Error(`Failed to detect login page: ${result.message}`);
+  }
+
+  return result.response.isLoginPage === true;
 }
 
 /**
@@ -569,6 +487,7 @@ export async function extractJobData(
   skills: string[] | null;
   status: string | null;
   source_html_stripped: string;
+  ai_chat_extraction: number | null;
 }> {
   // 1. Strip HTML to minimal content
   const strippedHtml = stripHtmlForLlm(jobHtml);
@@ -586,35 +505,8 @@ export async function extractJobData(
     );
   }
 
-  // 3. Get prompt template
-  const template = await db.ai_chat_prompts.findUnique({
-    where: { request: "extract_job_data" },
-  });
-
-  if (!template) {
-    throw new Error("Prompt template 'extract_job_data' not found");
-  }
-
-  // 4. Interpolate variables
-  const systemPrompt = template.system_prompt || "";
-  const userPrompt = interpolatePrompt(template.user_prompt || "", {
-    html: strippedHtml,
-  });
-
-  // 5. Call LLM using generic utility with optional structured output
-  const responseFormat = template.format
-    ? {
-      type: "json_schema" as const,
-      json_schema: {
-        name: "job_data",
-        strict: true,
-        schema: template.format as Record<string, any>,
-      },
-    }
-    : undefined;
-
-  // 6. Call LLM with structured output  
-  const data = await generateChatCompletion<{
+  // 3. Call AI chat utility to extract job data
+  const aiResult = await createJobScrapingAiChat<{
     title?: string;
     job_description?: string | null;
     company_description?: string | null;
@@ -630,13 +522,16 @@ export async function extractJobData(
     salary_period?: string | null;
     skills?: string[] | null;
     status?: string | null;
-  }>(
-    [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt },
-    ],
-    { temperature: 0.3, responseFormat },
-  );
+  }>("extract_job_data", {
+    html: strippedHtml,
+    sourceUrl: sourceUrl,
+  });
+
+  if (!aiResult.success || !aiResult.response) {
+    throw new Error(`Failed to extract job data: ${aiResult.message}`);
+  }
+
+  const data = aiResult.response;
 
   try {
 
@@ -694,15 +589,15 @@ export async function extractJobData(
       ? data.title
       : "Untitled Position";
 
-    // 10. Include stripped HTML in return value for database storage
+    // 10. Include stripped HTML and AI chat ID in return value for database storage
     return {
       ...data,
       title: effectiveTitle,
       source_html_stripped: strippedHtml,
+      ai_chat_extraction: aiResult.aiChatId,
     };
   } catch (error) {
     console.error("Failed to parse job data from LLM response:", error);
-    console.error("Response was:", response);
     throw new Error(
       `Failed to extract job data from ${sourceUrl}: ${
         error instanceof Error ? error.message : "Unknown error"
@@ -735,6 +630,7 @@ export async function upsertJob(
     salary_period: string | null;
     skills: string[] | null;
     status: string | null;
+    ai_chat_extraction?: number | null;
   },
   sourceUrl: string,
   platformId: number | null,
@@ -812,6 +708,7 @@ export async function upsertJob(
         job_poster: effectiveJobPoster,
         status: effectiveStatus,
         skills,
+        ai_chat_extraction: jobData.ai_chat_extraction,
         import_error: null,
         last_scraped: currentDate,
         scrape_count: (existing.scrape_count || 0) + 1,
@@ -829,6 +726,7 @@ export async function upsertJob(
         job_poster: effectiveJobPoster,
         status: effectiveStatus,
         skills,
+        ai_chat_extraction: jobData.ai_chat_extraction,
         source_url: normalizedUrl, // Use normalized URL
         job_platform: platformId,
         last_scraped: currentDate,

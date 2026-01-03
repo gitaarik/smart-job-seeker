@@ -5,8 +5,7 @@
 
 import { Prisma } from "../../../generated/prisma/client";
 import { dbDirect as db } from "$lib/db";
-import { generateChatCompletion } from "./llm";
-import { interpolatePrompt } from "./ai-chat-utils";
+import { createJobMatchingAiChat } from "./ai-chat-job-utils";
 import { hasArrayOverlap, matchesLocation } from "./job-match-utils";
 import type {
   job_match_preferences,
@@ -39,6 +38,7 @@ export interface MatchResult {
   recommendation: string;
   jobDateUpdated: Date | null;
   llmPrompt: string;
+  ai_chat_scoring: number | null;
 }
 
 /**
@@ -167,39 +167,19 @@ export async function calculateMatch(
     );
   }
 
-  // Get prompt template
-  const template = await db.ai_chat_prompts.findUnique({
-    where: { request: "score_job_match" },
-  });
-
-  if (!template) {
-    throw new Error("Prompt template 'score_job_match' not found");
-  }
-
-  // Prepare job data for prompt
-  const jobData = {
-    title: job.title || "Unknown",
-    job_poster: job.job_poster || "Unknown",
-    location: job.location || "Remote/Not specified",
-    job_types: job.job_types ? JSON.stringify(job.job_types) : "Not specified",
-    experience_levels: job.experience_levels
-      ? JSON.stringify(job.experience_levels)
-      : "Not specified",
-    remote_options: job.remote_options
-      ? JSON.stringify(job.remote_options)
-      : "Not specified",
-    skills: job.skills ? JSON.stringify(job.skills) : "Not specified",
-    job_description: job.job_description || "No description provided",
-    company_description: job.company_description || "",
-  };
-
-  // Interpolate prompts with flattened variables
-  const systemPrompt = template.system_prompt || "";
-  const userPrompt = interpolatePrompt(template.user_prompt || "", {
+  // Call AI chat utility to calculate job match score
+  const aiResult = await createJobMatchingAiChat<{
+    score: number;
+    reasoning: string;
+    skill_match_percentage: number;
+    strengths: string[];
+    gaps: string[];
+    recommendation: string;
+  }>(profileId, "score_job_match", {
     schema: collectedData.schema || "",
     data: collectedData.data || "",
 
-    // Flatten preferences.* variables
+    // Preferences variables
     "preferences.job_types": preferences.job_types
       ? JSON.stringify(preferences.job_types)
       : "Any",
@@ -213,48 +193,29 @@ export async function calculateMatch(
       ? JSON.stringify(preferences.locations)
       : "Any",
 
-    // Flatten job.* variables
-    "job.title": jobData.title,
-    "job.job_poster": jobData.job_poster,
-    "job.location": jobData.location,
-    "job.job_types": jobData.job_types,
-    "job.experience_levels": jobData.experience_levels,
-    "job.remote_options": jobData.remote_options,
-    "job.skills": jobData.skills,
-    "job.job_description": jobData.job_description,
-    "job.company_description": jobData.company_description,
+    // Job variables
+    "job.title": job.title || "Unknown",
+    "job.job_poster": job.job_poster || "Unknown",
+    "job.location": job.location || "Remote/Not specified",
+    "job.job_types": job.job_types
+      ? JSON.stringify(job.job_types)
+      : "Not specified",
+    "job.experience_levels": job.experience_levels
+      ? JSON.stringify(job.experience_levels)
+      : "Not specified",
+    "job.remote_options": job.remote_options
+      ? JSON.stringify(job.remote_options)
+      : "Not specified",
+    "job.skills": job.skills ? JSON.stringify(job.skills) : "Not specified",
+    "job.job_description": job.job_description || "No description provided",
+    "job.company_description": job.company_description || "",
   });
 
-  // Build full prompt for storage
-  const fullPrompt = `SYSTEM:\n${systemPrompt}\n\nUSER:\n${userPrompt}`;
+  if (!aiResult.success || !aiResult.response) {
+    throw new Error(`Failed to calculate match score: ${aiResult.message}`);
+  }
 
-  // Prepare structured output format
-  const responseFormat = template.format
-    ? {
-      type: "json_schema" as const,
-      json_schema: {
-        name: "job_match_score",
-        strict: true,
-        schema: template.format as Record<string, any>,
-      },
-    }
-    : undefined;
-
-  // Call LLM with structured output
-  const result = await generateChatCompletion<{
-    score: number;
-    reasoning: string;
-    skill_match_percentage: number;
-    strengths: string[];
-    gaps: string[];
-    recommendation: string;
-  }>(
-    [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt },
-    ],
-    { temperature: 0.3, responseFormat },
-  );
+  const result = aiResult.response;
 
   return {
     profileId,
@@ -266,7 +227,8 @@ export async function calculateMatch(
     gaps: result.gaps,
     recommendation: result.recommendation,
     jobDateUpdated: job.date_updated,
-    llmPrompt: fullPrompt,
+    llmPrompt: "", // Prompt is stored in ai_chat table via ai_chat_scoring link
+    ai_chat_scoring: aiResult.aiChatId,
   };
 }
 
@@ -299,6 +261,7 @@ export async function upsertJobMatch(
     profile: match.profileId,
     date_updated: currentDate,
     llm_prompt: match.llmPrompt,
+    ai_chat_scoring: match.ai_chat_scoring,
   };
 
   if (existing) {

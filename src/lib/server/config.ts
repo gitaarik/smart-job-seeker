@@ -66,6 +66,9 @@ export interface AppConfig {
 
   // Scraper Method Selection
   scraperMethod: "browser-use" | "playwright";
+
+  // System Profile
+  systemScraperProfileId: number;
 }
 
 /**
@@ -221,6 +224,12 @@ function loadConfig(): AppConfig {
       "SJS_SCRAPER_METHOD",
       "browser-use",
     ) as "browser-use" | "playwright"),
+
+    // System Profile
+    systemScraperProfileId: parseInt(
+      getEnv("SJS_SYSTEM_SCRAPER_PROFILE_ID"),
+      10,
+    ),
   };
 
   return config;
@@ -243,6 +252,7 @@ export function validateConfig(): void {
     "directusToken",
     "directusWebhookSecret",
     "groqApiKey",
+    "systemScraperProfileId",
   ];
 
   const missing = required.filter((key) => !config[key]);
@@ -303,6 +313,11 @@ export function validateConfig(): void {
   // Validate scraper-specific requirements
   if (config.scraperMethod === "browser-use" && !config.browserUseUrl) {
     errors.push("browserUseUrl is required when using browser-use scraper");
+  }
+
+  // Validate system profile ID
+  if (!Number.isInteger(config.systemScraperProfileId) || config.systemScraperProfileId <= 0) {
+    errors.push("systemScraperProfileId must be a positive integer");
   }
 
   // Throw if any validation errors

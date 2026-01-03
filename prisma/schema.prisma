@@ -875,6 +875,8 @@ model ai_chat {
   profiles                                                     profiles                @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "ai_chat_profile_foreign")
   application_letters_application_letters_ai_chatToai_chat     application_letters[]   @relation("application_letters_ai_chatToai_chat")
   application_questions_application_questions_ai_chatToai_chat application_questions[] @relation("application_questions_ai_chatToai_chat")
+  job_matches_scored                                           job_matches[]           @relation("job_match_scoring")
+  jobs_extracted                                               jobs[]                  @relation("job_extraction")
 }
 
 model os_contributions {
@@ -1041,9 +1043,11 @@ model jobs {
   skills               Json?           @db.Json
   source_html_stripped String?
   job_platform         Int?
+  ai_chat_extraction   Int?
   applications         applications[]
   job_matches          job_matches[]
   job_resources        job_resources[]
+  ai_chat              ai_chat?        @relation("job_extraction", fields: [ai_chat_extraction], references: [id], onUpdate: NoAction, map: "jobs_ai_chat_extraction_foreign")
   job_platforms        job_platforms?  @relation(fields: [job_platform], references: [id], onUpdate: NoAction, map: "jobs_job_platform_foreign")
 }
 
@@ -1098,6 +1102,8 @@ model job_matches {
   job                           Int
   profile                       Int
   llm_prompt                    String?
+  ai_chat_scoring               Int?
+  ai_chat                       ai_chat?  @relation("job_match_scoring", fields: [ai_chat_scoring], references: [id], onUpdate: NoAction, map: "job_matches_ai_chat_scoring_foreign")
   jobs                          jobs      @relation(fields: [job], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_matches_job_foreign")
   profiles                      profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_matches_profile_foreign")
 }

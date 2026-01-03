@@ -6500,7 +6500,8 @@ export const JobsScalarFieldEnum = {
   remote_options: 'remote_options',
   skills: 'skills',
   source_html_stripped: 'source_html_stripped',
-  job_platform: 'job_platform'
+  job_platform: 'job_platform',
+  ai_chat_extraction: 'ai_chat_extraction'
 } as const
 
 export type JobsScalarFieldEnum = (typeof JobsScalarFieldEnum)[keyof typeof JobsScalarFieldEnum]
@@ -6560,7 +6561,8 @@ export const Job_matchesScalarFieldEnum = {
   date_updated: 'date_updated',
   job: 'job',
   profile: 'profile',
-  llm_prompt: 'llm_prompt'
+  llm_prompt: 'llm_prompt',
+  ai_chat_scoring: 'ai_chat_scoring'
 } as const
 
 export type Job_matchesScalarFieldEnum = (typeof Job_matchesScalarFieldEnum)[keyof typeof Job_matchesScalarFieldEnum]
