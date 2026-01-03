@@ -60,6 +60,7 @@ async function fetchPromptTemplate(
   {
     system_prompt: string;
     user_prompt: string;
+    format: string | null;
   } | null
 > {
   const template = await db.ai_chat_prompts.findUnique({
@@ -67,6 +68,7 @@ async function fetchPromptTemplate(
     select: {
       system_prompt: true,
       user_prompt: true,
+      format: true,
     },
   });
 
@@ -77,6 +79,7 @@ async function fetchPromptTemplate(
   return {
     system_prompt: template.system_prompt,
     user_prompt: template.user_prompt,
+    format: template.format,
   };
 }
 
@@ -239,10 +242,18 @@ export async function createAndGenerateAiChat(
     });
 
     // Step 7: Generate AI response using generic LLM function
-    const responseContent = await generateChatCompletion([
-      { role: "system", content: interpolatedSystemPrompt },
-      { role: "user", content: interpolatedUserPrompt },
-    ]);
+    // Parse format if available to enforce JSON structured output
+    const responseFormat = promptTemplate.format
+      ? JSON.parse(promptTemplate.format)
+      : undefined;
+
+    const responseContent = await generateChatCompletion(
+      [
+        { role: "system", content: interpolatedSystemPrompt },
+        { role: "user", content: interpolatedUserPrompt },
+      ],
+      responseFormat,
+    );
 
     // Step 8: Save response
     await db.ai_chat.update({
