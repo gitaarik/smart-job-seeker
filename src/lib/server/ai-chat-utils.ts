@@ -267,10 +267,14 @@ export async function createAndGenerateAiChat(
       { responseFormat },
     );
 
-    // Step 8: Save response
+    // Step 8: Save response (stringify if it's an object from JSON parsing)
+    const responseToSave = typeof responseContent === 'string' 
+      ? responseContent 
+      : JSON.stringify(responseContent);
+    
     await db.ai_chat.update({
       where: { id: aiChat.id },
-      data: { response: responseContent },
+      data: { response: responseToSave },
     });
 
     // Step 9: Fetch and return the complete ai_chat record
