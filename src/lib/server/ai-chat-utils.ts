@@ -242,10 +242,9 @@ export async function createAndGenerateAiChat(
     });
 
     // Step 7: Generate AI response using generic LLM function
-    // Parse format if available to enforce JSON structured output
-    const responseFormat = promptTemplate.format
-      ? JSON.parse(promptTemplate.format)
-      : undefined;
+    // Use format if available to enforce JSON structured output
+    // Note: Prisma auto-parses JSON fields, so format is already an object
+    const responseFormat = promptTemplate.format || undefined;
 
     const responseContent = await generateChatCompletion(
       [
