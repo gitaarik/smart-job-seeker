@@ -237,7 +237,7 @@ export async function extractJobsFromSearchPage(
   if (clickableIdMatches) {
     allClickableIds = clickableIdMatches
       .map((m) => parseInt(m.match(/\d+/)?.[0] || "0"))
-      .filter((id) => id > 0);
+      .filter((id) => !isNaN(id)); // Allow ID 0, just filter out NaN
     console.log(
       `      Found ${allClickableIds.length} data-extract-clickable-id attributes in stripped HTML`,
     );
