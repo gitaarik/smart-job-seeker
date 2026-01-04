@@ -20,9 +20,9 @@ export function normalizeJobUrl(url: string): string {
   try {
     const urlObj = new URL(url);
 
-    // For SPA pseudoUrls (e.g., #job-1, #job-2), preserve the hash fragment
+    // For SPA pseudoUrls (e.g., #job-1, #spa-job-1), preserve the hash fragment
     // This allows us to uniquely identify jobs that appear in modals without real URLs
-    const isPseudoUrl = urlObj.hash.match(/^#job-\d+$/);
+    const isPseudoUrl = urlObj.hash.match(/^#(?:spa-)?job-\d+$/);
 
     if (isPseudoUrl) {
       // Keep the hash for synthetic job identifiers
@@ -183,7 +183,8 @@ export async function extractJobLinks(
 
   // Extract urls array from the structured response
   // Try multiple possible field names for compatibility
-  const links = aiResult.response.urls || aiResult.response.job_urls || aiResult.response.links;
+  const links = aiResult.response.urls || aiResult.response.job_urls ||
+    aiResult.response.links;
 
   if (!Array.isArray(links)) {
     throw new Error(
@@ -269,7 +270,9 @@ export async function extractJobsFromSearchPage(
 
   if (!aiResult.success || !aiResult.response) {
     console.error(`      ❌ LLM extraction failed: ${aiResult.message}`);
-    throw new Error(`Failed to extract jobs from search page: ${aiResult.message}`);
+    throw new Error(
+      `Failed to extract jobs from search page: ${aiResult.message}`,
+    );
   }
 
   // Validate LLM response structure
@@ -358,7 +361,7 @@ export function mergeJobData(
     date_posted: string | null;
   }>,
   detailData: {
-    title: string;
+    title: string | null;
     job_description: string | null;
     company_description: string | null;
     job_poster: string | null;
@@ -471,7 +474,7 @@ export async function extractJobData(
   jobHtml: string,
   sourceUrl: string,
 ): Promise<{
-  title: string;
+  title: string | null;
   job_description: string | null;
   company_description: string | null;
   job_poster: string | null;
@@ -534,7 +537,6 @@ export async function extractJobData(
   const data = aiResult.response;
 
   try {
-
     // Debug: Log extracted data
     console.log("Extracted job data:", {
       title: data.title,
@@ -584,15 +586,15 @@ export async function extractJobData(
       data.date_posted = null;
     }
 
-    // 9. Apply fallback for title if LLM extraction failed or returned empty
-    const effectiveTitle = (data.title && data.title.trim() !== "")
+    // 9. Normalize title: convert empty strings to null, keep valid titles as-is
+    const normalizedTitle = (data.title && data.title.trim() !== "")
       ? data.title
-      : "Untitled Position";
+      : null;
 
     // 10. Include stripped HTML and AI chat ID in return value for database storage
     return {
       ...data,
-      title: effectiveTitle,
+      title: normalizedTitle,
       source_html_stripped: strippedHtml,
       ai_chat_extraction: aiResult.aiChatId,
     };

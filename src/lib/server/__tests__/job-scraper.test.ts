@@ -564,6 +564,18 @@ describe("normalizeJobUrl", () => {
     expect(normalized).toBe("https://example.com/jobs#job-123");
   });
 
+  it("should preserve SPA-specific pseudoURL hash fragments", () => {
+    const url = "https://developers.turing.com/jobs#spa-job-1";
+    const normalized = normalizeJobUrl(url);
+    expect(normalized).toBe("https://developers.turing.com/jobs#spa-job-1");
+  });
+
+  it("should preserve SPA pseudoURL with multiple digits", () => {
+    const url = "https://example.com/jobs#spa-job-123";
+    const normalized = normalizeJobUrl(url);
+    expect(normalized).toBe("https://example.com/jobs#spa-job-123");
+  });
+
   it("should remove tracking params but keep job identifiers", () => {
     const url = "https://example.com/job/123?utm_source=twitter&ref=abc";
     const normalized = normalizeJobUrl(url);

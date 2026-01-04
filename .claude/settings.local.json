@@ -79,7 +79,8 @@
       "mcp__plugin_serena_serena__activate_project",
       "mcp__plugin_serena_serena__insert_before_symbol",
       "Bash(docker ps:*)",
-      "mcp__plugin_serena_serena__replace_symbol_body"
+      "mcp__plugin_serena_serena__replace_symbol_body",
+      "mcp__plugin_serena_serena__insert_after_symbol"
     ],
     "deny": [],
     "ask": []
