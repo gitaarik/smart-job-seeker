@@ -26,7 +26,6 @@ async function exportProfileData(profileId: string): Promise<void> {
       select: {
         name: true,
         title: true,
-        location: true,
         phone_number: true,
         email_address: true,
         personal_website: true,
