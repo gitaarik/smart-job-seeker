@@ -507,7 +507,7 @@ export async function extractJobData(
 
   // 3. Call AI chat utility to extract job data
   const aiResult = await createJobScrapingAiChat<{
-    title?: string;
+    title?: string | null;
     job_description?: string | null;
     company_description?: string | null;
     job_poster?: string | null;
