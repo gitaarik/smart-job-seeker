@@ -59,6 +59,7 @@ export async function scrapeJobsWithClicks(
 
   let pageNumber = 1;
   let savedStrippedHtml = ""; // Store stripped HTML from first page for debugging
+  let previousPageJobIds: number[] = []; // Track job IDs from previous page to detect duplicates
 
   // Pagination loop
   while (pageNumber <= config.scraperPaginationMaxPages) {
@@ -173,6 +174,31 @@ export async function scrapeJobsWithClicks(
         jobs.map((j) => `${j.clickableId}:${j.title || "?"}`).join(", ")
       }]`,
     );
+
+    // Detect duplicate pages (SPA pagination false positives)
+    if (pageNumber > 1 && previousPageJobIds.length > 0) {
+      const currentJobIds = jobs.map((j) => j.clickableId);
+      const duplicateCount = currentJobIds.filter((id) =>
+        previousPageJobIds.includes(id)
+      ).length;
+      const duplicatePercentage = (duplicateCount / currentJobIds.length) *
+        100;
+
+      if (duplicatePercentage > 80) {
+        console.log(
+          `\n   ⏭️  Stopping: ${
+            duplicatePercentage.toFixed(0)
+          }% duplicate jobs (${duplicateCount}/${currentJobIds.length})`,
+        );
+        console.log(
+          "   This page has the same jobs as the previous page (SPA pagination artifact)",
+        );
+        break;
+      }
+    }
+
+    // Store current page job IDs for next iteration
+    previousPageJobIds = jobs.map((j) => j.clickableId);
 
     // Check for login/signup page
     const pageText = await page.textContent("body") || "";
