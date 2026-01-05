@@ -73,7 +73,7 @@
       id: number;
       name: string;
       toggles: string[];
-      profile_version_extensions_profile_version_extensions_extendedToprofile_versions:
+      profile_version_extensions_profile_version_extensions_extenderToprofile_versions:
         number[];
     }>;
   }
@@ -103,16 +103,15 @@
       if (
         versionObj &&
         versionObj
-          .profile_version_extensions_profile_version_extensions_extendedToprofile_versions
+          .profile_version_extensions_profile_version_extensions_extenderToprofile_versions
       ) {
         for (
           const junctionObj of versionObj
-            .profile_version_extensions_profile_version_extensions_extendedToprofile_versions
+            .profile_version_extensions_profile_version_extensions_extenderToprofile_versions
         ) {
           const extObj = getVersion(
-            junctionObj.related_profile_versions_id,
+            junctionObj.extended,
           );
-          console.log("add ob", extObj);
           versionObjs.push(extObj);
           addVersionObjs(extObj);
         }
@@ -125,7 +124,6 @@
   }
 
   const versionObjs = getAllVersionObjs(versionObj);
-  console.log("all objs", versionObjs);
 
   // while (versionObj && versionObj.extends_from) {
   //   versionObj = getVersion(versionObj.extends_from);

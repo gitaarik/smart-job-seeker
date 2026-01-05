@@ -36,7 +36,7 @@ const PROFILE_INCLUDE = {
   references: { orderBy: { sort: "asc" as const } },
   profile_versions: {
     include: {
-      profile_version_extensions_profile_version_extensions_extendedToprofile_versions:
+      profile_version_extensions_profile_version_extensions_extenderToprofile_versions:
         {},
     },
     orderBy: { sort: "asc" as const },
