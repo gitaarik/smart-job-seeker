@@ -182,7 +182,8 @@ async function generateWithGroq(
     let finalMessages = messages;
 
     if (responseFormat?.type === "json_schema") {
-      const supportsJsonSchema = model.includes("llama-3.1") || model.includes("llama-4");
+      const supportsJsonSchema = model.includes("llama-3.1") ||
+        model.includes("llama-4");
       if (!supportsJsonSchema) {
         // Fall back to simple JSON mode
         finalResponseFormat = { type: "json_object" } as any;
@@ -517,10 +518,10 @@ export async function generateChatCompletion(
   if (responseFormat) {
     try {
       const parsed = JSON.parse(content);
-      
+
       // Cache the raw response
       llmCache.set(cacheKey, content, model, config.llmCacheTTL);
-      
+
       errorTracker.logDebug("LLM JSON response parsed and cached", {
         operation: "generateChatCompletion",
         metadata: {
@@ -529,13 +530,15 @@ export async function generateChatCompletion(
           contentLength: content.length,
         },
       });
-      
+
       return parsed;
     } catch (error) {
       const parseError = new Error(
         `Failed to parse JSON response from LLM (${config.llmProvider}/${model}): ${
           error instanceof Error ? error.message : String(error)
-        }\nResponse was: ${content.substring(0, 500)}${content.length > 500 ? '...' : ''}`,
+        }\nResponse was: ${content.substring(0, 500)}${
+          content.length > 500 ? "..." : ""
+        }`,
       );
       throw parseError;
     }

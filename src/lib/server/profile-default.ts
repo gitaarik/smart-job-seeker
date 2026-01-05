@@ -120,29 +120,28 @@ export async function getDefaultProfileId(): Promise<number | null> {
  * @returns Profile with all relations, or null if not found
  */
 export async function getProfileByIdentifier(
-	identifier?: string | number,
+  identifier?: string | number,
 ) {
-	if (identifier === undefined) {
-		return getDefaultProfile();
-	}
+  if (identifier === undefined) {
+    return getDefaultProfile();
+  }
 
-	const id =
-		typeof identifier === "number"
-			? identifier
-			: parseInt(String(identifier), 10);
+  const id = typeof identifier === "number"
+    ? identifier
+    : parseInt(String(identifier), 10);
 
-	if (!isNaN(id)) {
-		const profile = await db.profiles.findUnique({
-			where: { id },
-			include: PROFILE_INCLUDE,
-		});
-		if (profile) return profile;
-	}
+  if (!isNaN(id)) {
+    const profile = await db.profiles.findUnique({
+      where: { id },
+      include: PROFILE_INCLUDE,
+    });
+    if (profile) return profile;
+  }
 
-	return db.profiles.findFirst({
-		where: { slug: String(identifier) },
-		include: PROFILE_INCLUDE,
-	});
+  return db.profiles.findFirst({
+    where: { slug: String(identifier) },
+    include: PROFILE_INCLUDE,
+  });
 }
 
 // Export the standard include structure for use in other files
@@ -150,5 +149,5 @@ export { PROFILE_INCLUDE };
 
 // Export type for profile with all relations
 export type ProfileWithRelations = NonNullable<
-	Awaited<ReturnType<typeof getDefaultProfile>>
+  Awaited<ReturnType<typeof getDefaultProfile>>
 >;

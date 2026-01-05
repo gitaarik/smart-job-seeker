@@ -50,6 +50,7 @@ export type Profile_exportsMinAggregateOutputType = {
   export_type: string | null
   export_format: string | null
   description: string | null
+  source_url: string | null
 }
 
 export type Profile_exportsMaxAggregateOutputType = {
@@ -64,6 +65,7 @@ export type Profile_exportsMaxAggregateOutputType = {
   export_type: string | null
   export_format: string | null
   description: string | null
+  source_url: string | null
 }
 
 export type Profile_exportsCountAggregateOutputType = {
@@ -78,6 +80,7 @@ export type Profile_exportsCountAggregateOutputType = {
   export_type: number
   export_format: number
   description: number
+  source_url: number
   _all: number
 }
 
@@ -106,6 +109,7 @@ export type Profile_exportsMinAggregateInputType = {
   export_type?: true
   export_format?: true
   description?: true
+  source_url?: true
 }
 
 export type Profile_exportsMaxAggregateInputType = {
@@ -120,6 +124,7 @@ export type Profile_exportsMaxAggregateInputType = {
   export_type?: true
   export_format?: true
   description?: true
+  source_url?: true
 }
 
 export type Profile_exportsCountAggregateInputType = {
@@ -134,6 +139,7 @@ export type Profile_exportsCountAggregateInputType = {
   export_type?: true
   export_format?: true
   description?: true
+  source_url?: true
   _all?: true
 }
 
@@ -235,6 +241,7 @@ export type Profile_exportsGroupByOutputType = {
   export_type: string
   export_format: string | null
   description: string | null
+  source_url: string | null
   _count: Profile_exportsCountAggregateOutputType | null
   _avg: Profile_exportsAvgAggregateOutputType | null
   _sum: Profile_exportsSumAggregateOutputType | null
@@ -272,6 +279,7 @@ export type profile_exportsWhereInput = {
   export_type?: Prisma.StringFilter<"profile_exports"> | string
   export_format?: Prisma.StringNullableFilter<"profile_exports"> | string | null
   description?: Prisma.StringNullableFilter<"profile_exports"> | string | null
+  source_url?: Prisma.StringNullableFilter<"profile_exports"> | string | null
   directus_files?: Prisma.XOR<Prisma.Directus_filesScalarRelationFilter, Prisma.directus_filesWhereInput>
   profiles?: Prisma.XOR<Prisma.ProfilesScalarRelationFilter, Prisma.profilesWhereInput>
 }
@@ -288,6 +296,7 @@ export type profile_exportsOrderByWithRelationInput = {
   export_type?: Prisma.SortOrder
   export_format?: Prisma.SortOrderInput | Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
+  source_url?: Prisma.SortOrderInput | Prisma.SortOrder
   directus_files?: Prisma.directus_filesOrderByWithRelationInput
   profiles?: Prisma.profilesOrderByWithRelationInput
 }
@@ -307,6 +316,7 @@ export type profile_exportsWhereUniqueInput = Prisma.AtLeast<{
   export_type?: Prisma.StringFilter<"profile_exports"> | string
   export_format?: Prisma.StringNullableFilter<"profile_exports"> | string | null
   description?: Prisma.StringNullableFilter<"profile_exports"> | string | null
+  source_url?: Prisma.StringNullableFilter<"profile_exports"> | string | null
   directus_files?: Prisma.XOR<Prisma.Directus_filesScalarRelationFilter, Prisma.directus_filesWhereInput>
   profiles?: Prisma.XOR<Prisma.ProfilesScalarRelationFilter, Prisma.profilesWhereInput>
 }, "id">
@@ -323,6 +333,7 @@ export type profile_exportsOrderByWithAggregationInput = {
   export_type?: Prisma.SortOrder
   export_format?: Prisma.SortOrderInput | Prisma.SortOrder
   description?: Prisma.SortOrderInput | Prisma.SortOrder
+  source_url?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.profile_exportsCountOrderByAggregateInput
   _avg?: Prisma.profile_exportsAvgOrderByAggregateInput
   _max?: Prisma.profile_exportsMaxOrderByAggregateInput
@@ -345,6 +356,7 @@ export type profile_exportsScalarWhereWithAggregatesInput = {
   export_type?: Prisma.StringWithAggregatesFilter<"profile_exports"> | string
   export_format?: Prisma.StringNullableWithAggregatesFilter<"profile_exports"> | string | null
   description?: Prisma.StringNullableWithAggregatesFilter<"profile_exports"> | string | null
+  source_url?: Prisma.StringNullableWithAggregatesFilter<"profile_exports"> | string | null
 }
 
 export type profile_exportsCreateInput = {
@@ -356,6 +368,7 @@ export type profile_exportsCreateInput = {
   export_type: string
   export_format?: string | null
   description?: string | null
+  source_url?: string | null
   directus_files: Prisma.directus_filesCreateNestedOneWithoutProfile_exportsInput
   profiles: Prisma.profilesCreateNestedOneWithoutProfile_exportsInput
 }
@@ -372,6 +385,7 @@ export type profile_exportsUncheckedCreateInput = {
   export_type: string
   export_format?: string | null
   description?: string | null
+  source_url?: string | null
 }
 
 export type profile_exportsUpdateInput = {
@@ -383,6 +397,7 @@ export type profile_exportsUpdateInput = {
   export_type?: Prisma.StringFieldUpdateOperationsInput | string
   export_format?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  source_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   directus_files?: Prisma.directus_filesUpdateOneRequiredWithoutProfile_exportsNestedInput
   profiles?: Prisma.profilesUpdateOneRequiredWithoutProfile_exportsNestedInput
 }
@@ -399,6 +414,7 @@ export type profile_exportsUncheckedUpdateInput = {
   export_type?: Prisma.StringFieldUpdateOperationsInput | string
   export_format?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  source_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type profile_exportsCreateManyInput = {
@@ -413,6 +429,7 @@ export type profile_exportsCreateManyInput = {
   export_type: string
   export_format?: string | null
   description?: string | null
+  source_url?: string | null
 }
 
 export type profile_exportsUpdateManyMutationInput = {
@@ -424,6 +441,7 @@ export type profile_exportsUpdateManyMutationInput = {
   export_type?: Prisma.StringFieldUpdateOperationsInput | string
   export_format?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  source_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type profile_exportsUncheckedUpdateManyInput = {
@@ -438,6 +456,7 @@ export type profile_exportsUncheckedUpdateManyInput = {
   export_type?: Prisma.StringFieldUpdateOperationsInput | string
   export_format?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  source_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type Profile_exportsListRelationFilter = {
@@ -462,6 +481,7 @@ export type profile_exportsCountOrderByAggregateInput = {
   export_type?: Prisma.SortOrder
   export_format?: Prisma.SortOrder
   description?: Prisma.SortOrder
+  source_url?: Prisma.SortOrder
 }
 
 export type profile_exportsAvgOrderByAggregateInput = {
@@ -482,6 +502,7 @@ export type profile_exportsMaxOrderByAggregateInput = {
   export_type?: Prisma.SortOrder
   export_format?: Prisma.SortOrder
   description?: Prisma.SortOrder
+  source_url?: Prisma.SortOrder
 }
 
 export type profile_exportsMinOrderByAggregateInput = {
@@ -496,6 +517,7 @@ export type profile_exportsMinOrderByAggregateInput = {
   export_type?: Prisma.SortOrder
   export_format?: Prisma.SortOrder
   description?: Prisma.SortOrder
+  source_url?: Prisma.SortOrder
 }
 
 export type profile_exportsSumOrderByAggregateInput = {
@@ -597,6 +619,7 @@ export type profile_exportsCreateWithoutDirectus_filesInput = {
   export_type: string
   export_format?: string | null
   description?: string | null
+  source_url?: string | null
   profiles: Prisma.profilesCreateNestedOneWithoutProfile_exportsInput
 }
 
@@ -611,6 +634,7 @@ export type profile_exportsUncheckedCreateWithoutDirectus_filesInput = {
   export_type: string
   export_format?: string | null
   description?: string | null
+  source_url?: string | null
 }
 
 export type profile_exportsCreateOrConnectWithoutDirectus_filesInput = {
@@ -654,6 +678,7 @@ export type profile_exportsScalarWhereInput = {
   export_type?: Prisma.StringFilter<"profile_exports"> | string
   export_format?: Prisma.StringNullableFilter<"profile_exports"> | string | null
   description?: Prisma.StringNullableFilter<"profile_exports"> | string | null
+  source_url?: Prisma.StringNullableFilter<"profile_exports"> | string | null
 }
 
 export type profile_exportsCreateWithoutProfilesInput = {
@@ -665,6 +690,7 @@ export type profile_exportsCreateWithoutProfilesInput = {
   export_type: string
   export_format?: string | null
   description?: string | null
+  source_url?: string | null
   directus_files: Prisma.directus_filesCreateNestedOneWithoutProfile_exportsInput
 }
 
@@ -679,6 +705,7 @@ export type profile_exportsUncheckedCreateWithoutProfilesInput = {
   export_type: string
   export_format?: string | null
   description?: string | null
+  source_url?: string | null
 }
 
 export type profile_exportsCreateOrConnectWithoutProfilesInput = {
@@ -718,6 +745,7 @@ export type profile_exportsCreateManyDirectus_filesInput = {
   export_type: string
   export_format?: string | null
   description?: string | null
+  source_url?: string | null
 }
 
 export type profile_exportsUpdateWithoutDirectus_filesInput = {
@@ -729,6 +757,7 @@ export type profile_exportsUpdateWithoutDirectus_filesInput = {
   export_type?: Prisma.StringFieldUpdateOperationsInput | string
   export_format?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  source_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profiles?: Prisma.profilesUpdateOneRequiredWithoutProfile_exportsNestedInput
 }
 
@@ -743,6 +772,7 @@ export type profile_exportsUncheckedUpdateWithoutDirectus_filesInput = {
   export_type?: Prisma.StringFieldUpdateOperationsInput | string
   export_format?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  source_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type profile_exportsUncheckedUpdateManyWithoutDirectus_filesInput = {
@@ -756,6 +786,7 @@ export type profile_exportsUncheckedUpdateManyWithoutDirectus_filesInput = {
   export_type?: Prisma.StringFieldUpdateOperationsInput | string
   export_format?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  source_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type profile_exportsCreateManyProfilesInput = {
@@ -769,6 +800,7 @@ export type profile_exportsCreateManyProfilesInput = {
   export_type: string
   export_format?: string | null
   description?: string | null
+  source_url?: string | null
 }
 
 export type profile_exportsUpdateWithoutProfilesInput = {
@@ -780,6 +812,7 @@ export type profile_exportsUpdateWithoutProfilesInput = {
   export_type?: Prisma.StringFieldUpdateOperationsInput | string
   export_format?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  source_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   directus_files?: Prisma.directus_filesUpdateOneRequiredWithoutProfile_exportsNestedInput
 }
 
@@ -794,6 +827,7 @@ export type profile_exportsUncheckedUpdateWithoutProfilesInput = {
   export_type?: Prisma.StringFieldUpdateOperationsInput | string
   export_format?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  source_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type profile_exportsUncheckedUpdateManyWithoutProfilesInput = {
@@ -807,6 +841,7 @@ export type profile_exportsUncheckedUpdateManyWithoutProfilesInput = {
   export_type?: Prisma.StringFieldUpdateOperationsInput | string
   export_format?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  source_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 
@@ -823,6 +858,7 @@ export type profile_exportsSelect<ExtArgs extends runtime.Types.Extensions.Inter
   export_type?: boolean
   export_format?: boolean
   description?: boolean
+  source_url?: boolean
   directus_files?: boolean | Prisma.directus_filesDefaultArgs<ExtArgs>
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["profile_exports"]>
@@ -839,6 +875,7 @@ export type profile_exportsSelectCreateManyAndReturn<ExtArgs extends runtime.Typ
   export_type?: boolean
   export_format?: boolean
   description?: boolean
+  source_url?: boolean
   directus_files?: boolean | Prisma.directus_filesDefaultArgs<ExtArgs>
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["profile_exports"]>
@@ -855,6 +892,7 @@ export type profile_exportsSelectUpdateManyAndReturn<ExtArgs extends runtime.Typ
   export_type?: boolean
   export_format?: boolean
   description?: boolean
+  source_url?: boolean
   directus_files?: boolean | Prisma.directus_filesDefaultArgs<ExtArgs>
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["profile_exports"]>
@@ -871,9 +909,10 @@ export type profile_exportsSelectScalar = {
   export_type?: boolean
   export_format?: boolean
   description?: boolean
+  source_url?: boolean
 }
 
-export type profile_exportsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "sort" | "date_created" | "date_updated" | "profile" | "file" | "file_type" | "export_type" | "export_format" | "description", ExtArgs["result"]["profile_exports"]>
+export type profile_exportsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "sort" | "date_created" | "date_updated" | "profile" | "file" | "file_type" | "export_type" | "export_format" | "description" | "source_url", ExtArgs["result"]["profile_exports"]>
 export type profile_exportsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   directus_files?: boolean | Prisma.directus_filesDefaultArgs<ExtArgs>
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
@@ -905,6 +944,7 @@ export type $profile_exportsPayload<ExtArgs extends runtime.Types.Extensions.Int
     export_type: string
     export_format: string | null
     description: string | null
+    source_url: string | null
   }, ExtArgs["result"]["profile_exports"]>
   composites: {}
 }
@@ -1341,6 +1381,7 @@ export interface profile_exportsFieldRefs {
   readonly export_type: Prisma.FieldRef<"profile_exports", 'String'>
   readonly export_format: Prisma.FieldRef<"profile_exports", 'String'>
   readonly description: Prisma.FieldRef<"profile_exports", 'String'>
+  readonly source_url: Prisma.FieldRef<"profile_exports", 'String'>
 }
     
 

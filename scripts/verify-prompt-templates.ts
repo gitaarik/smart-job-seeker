@@ -35,7 +35,9 @@ async function main() {
   const noFormat = templates.filter((t) => !t.format);
   if (noFormat.length > 0) {
     console.log(
-      `\n⚠️  Templates without format: ${noFormat.map((t) => t.request).join(", ")}`,
+      `\n⚠️  Templates without format: ${
+        noFormat.map((t) => t.request).join(", ")
+      }`,
     );
   }
 

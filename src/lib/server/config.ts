@@ -316,7 +316,10 @@ export function validateConfig(): void {
   }
 
   // Validate system profile ID
-  if (!Number.isInteger(config.systemScraperProfileId) || config.systemScraperProfileId <= 0) {
+  if (
+    !Number.isInteger(config.systemScraperProfileId) ||
+    config.systemScraperProfileId <= 0
+  ) {
     errors.push("systemScraperProfileId must be a positive integer");
   }
 

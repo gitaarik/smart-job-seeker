@@ -6680,7 +6680,8 @@ export const Profile_exportsScalarFieldEnum = {
   file_type: 'file_type',
   export_type: 'export_type',
   export_format: 'export_format',
-  description: 'description'
+  description: 'description',
+  source_url: 'source_url'
 } as const
 
 export type Profile_exportsScalarFieldEnum = (typeof Profile_exportsScalarFieldEnum)[keyof typeof Profile_exportsScalarFieldEnum]

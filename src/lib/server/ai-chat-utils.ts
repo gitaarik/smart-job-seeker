@@ -250,13 +250,13 @@ export async function createAndGenerateAiChat(
     // The format field contains the JSON schema, which needs to be wrapped for Groq
     const responseFormat = promptTemplate.format
       ? {
-          type: "json_schema" as const,
-          json_schema: {
-            name: promptRequest.replace(/[^a-zA-Z0-9_]/g, "_"),
-            strict: true,
-            schema: promptTemplate.format,
-          },
-        }
+        type: "json_schema" as const,
+        json_schema: {
+          name: promptRequest.replace(/[^a-zA-Z0-9_]/g, "_"),
+          strict: true,
+          schema: promptTemplate.format,
+        },
+      }
       : undefined;
 
     const responseContent = await generateChatCompletion(
@@ -268,10 +268,10 @@ export async function createAndGenerateAiChat(
     );
 
     // Step 8: Save response (stringify if it's an object from JSON parsing)
-    const responseToSave = typeof responseContent === 'string' 
-      ? responseContent 
+    const responseToSave = typeof responseContent === "string"
+      ? responseContent
       : JSON.stringify(responseContent);
-    
+
     await db.ai_chat.update({
       where: { id: aiChat.id },
       data: { response: responseToSave },

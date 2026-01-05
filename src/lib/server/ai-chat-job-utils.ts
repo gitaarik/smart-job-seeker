@@ -48,7 +48,8 @@ export async function createJobScrapingAiChat<T>(
   if (!config.systemScraperProfileId) {
     return {
       success: false,
-      message: "System scraper profile ID not configured. Please set SJS_SYSTEM_SCRAPER_PROFILE_ID in .env",
+      message:
+        "System scraper profile ID not configured. Please set SJS_SYSTEM_SCRAPER_PROFILE_ID in .env",
       response: null,
       aiChatId: null,
     };
@@ -79,7 +80,11 @@ export async function createJobScrapingAiChat<T>(
       } catch (parseError) {
         return {
           success: false,
-          message: `Failed to parse AI response as JSON: ${parseError instanceof Error ? parseError.message : String(parseError)}`,
+          message: `Failed to parse AI response as JSON: ${
+            parseError instanceof Error
+              ? parseError.message
+              : String(parseError)
+          }`,
           response: null,
           aiChatId: result.aiChat.id,
         };
@@ -95,7 +100,9 @@ export async function createJobScrapingAiChat<T>(
   } catch (error) {
     return {
       success: false,
-      message: `AI chat creation failed: ${error instanceof Error ? error.message : String(error)}`,
+      message: `AI chat creation failed: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
       response: null,
       aiChatId: null,
     };
@@ -165,7 +172,11 @@ export async function createJobMatchingAiChat<T>(
       } catch (parseError) {
         return {
           success: false,
-          message: `Failed to parse AI response as JSON: ${parseError instanceof Error ? parseError.message : String(parseError)}`,
+          message: `Failed to parse AI response as JSON: ${
+            parseError instanceof Error
+              ? parseError.message
+              : String(parseError)
+          }`,
           response: null,
           aiChatId: result.aiChat.id,
         };
@@ -181,7 +192,9 @@ export async function createJobMatchingAiChat<T>(
   } catch (error) {
     return {
       success: false,
-      message: `AI chat creation failed: ${error instanceof Error ? error.message : String(error)}`,
+      message: `AI chat creation failed: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
       response: null,
       aiChatId: null,
     };
