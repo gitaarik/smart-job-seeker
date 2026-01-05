@@ -1,20 +1,10 @@
-/**
- * Profile export utilities
- * Handles exporting profile schema and data to collected_data collection
- */
+#!/usr/bin/env node
 
-import { db } from "$lib/db";
+import { dbDirect } from "$lib/db";
+import { getDefaultProfileId } from "$lib/server/profile-default";
 import removeMd from "remove-markdown";
 
-interface SchemaNode {
-  note?: string;
-  fields?: Record<string, string>;
-  relations?: Record<string, SchemaNode>;
-}
-
-/**
- * Mapping of ExportedProfile structure to Directus collections and fields
- */
+// Mapping of ExportedProfile structure to Directus collections and fields
 const PROFILE_SCHEMA_MAPPING = {
   profiles: {
     fields: [
@@ -60,7 +50,9 @@ const PROFILE_SCHEMA_MAPPING = {
         ],
         relations: {
           work_experience_achievements: {
-            fields: ["title", "description"],
+            fields: [
+              "description",
+            ],
           },
           work_experience_technologies: {
             fields: ["name"],
@@ -94,7 +86,9 @@ const PROFILE_SCHEMA_MAPPING = {
         ],
         relations: {
           side_project_achievements: {
-            fields: ["description"],
+            fields: [
+              "description",
+            ],
           },
           side_project_technologies: {
             fields: ["name"],
@@ -151,19 +145,23 @@ const PROFILE_SCHEMA_MAPPING = {
   },
 };
 
+interface SchemaNode {
+  note?: string;
+  fields?: Record<string, string>;
+  relations?: Record<string, SchemaNode>;
+}
+
 /**
- * Build a schema node with field notes
+ * Build a schema node recursively for a collection
+ * Exported for reusability and testing
  */
-async function buildSchemaNode(
+export async function buildSchemaNode(
   collection: string,
   fieldNames: string[],
-  relations?: Record<
-    string,
-    { fields: string[]; relations?: Record<string, unknown> }
-  >,
+  relations?: Record<string, { fields: string[]; relations?: any }>,
 ): Promise<SchemaNode> {
   // Fetch collection note
-  const collectionMeta = await db.directus_collections.findUnique({
+  const collectionMeta = await dbDirect.directus_collections.findUnique({
     where: { collection },
     select: { note: true },
   });
@@ -174,7 +172,7 @@ async function buildSchemaNode(
   };
 
   // Fetch field notes
-  const fieldMetas = await db.directus_fields.findMany({
+  const fieldMetas = await dbDirect.directus_fields.findMany({
     where: {
       collection,
       field: { in: fieldNames },
@@ -197,7 +195,7 @@ async function buildSchemaNode(
       node.relations[relationName] = await buildSchemaNode(
         relationName,
         relationConfig.fields,
-        relationConfig.relations as Record<string, { fields: string[] }>,
+        relationConfig.relations,
       );
     }
   }
@@ -207,15 +205,13 @@ async function buildSchemaNode(
 
 /**
  * Fetch complete profile data with all relations
- * Internal helper function used by exportProfile
  */
-async function fetchProfileData(profileId: number) {
-  return await db.profiles.findUnique({
-    where: { id: profileId },
+async function fetchProfileData(id: number) {
+  return await dbDirect.profiles.findUnique({
+    where: { id },
     select: {
       name: true,
       title: true,
-      location: true,
       phone_number: true,
       email_address: true,
       personal_website: true,
@@ -259,7 +255,6 @@ async function fetchProfileData(profileId: number) {
           website: true,
           work_experience_achievements: {
             select: {
-              title: true,
               description: true,
             },
             orderBy: { sort: "asc" },
@@ -380,45 +375,45 @@ async function fetchProfileData(profileId: number) {
 }
 
 /**
- * Export both profile schema and data
- * Uses parallel execution and single atomic database operation for better performance
+ * Export both profile schema and data to collected_data collection
  */
-export async function exportProfile(profileId: number): Promise<{
-  success: boolean;
-  message: string;
-}> {
+async function exportCollectedData(profileId: string): Promise<void> {
   try {
+    console.log(`Exporting collected data for profile ID: ${profileId}`);
+    const id = parseInt(profileId, 10);
+
     // Verify profile exists
-    const profile = await db.profiles.findUnique({
-      where: { id: profileId },
+    const profile = await dbDirect.profiles.findUnique({
+      where: { id },
       select: { id: true },
     });
 
     if (!profile) {
-      return {
-        success: false,
-        message: `Profile with ID ${profileId} not found`,
-      };
+      console.error(`Profile with ID ${id} not found`);
+      return;
     }
 
     // PARALLEL EXECUTION - Fetch schema and data simultaneously
+    console.log("Building schema and fetching data...");
     const profilesConfig = PROFILE_SCHEMA_MAPPING.profiles;
     const [schema, data] = await Promise.all([
       buildSchemaNode(
         "profiles",
         profilesConfig.fields,
-        profilesConfig.relations as Record<string, { fields: string[] }>,
+        profilesConfig.relations,
       ),
-      fetchProfileData(profileId),
+      fetchProfileData(id),
     ]);
+    console.log("✓ Schema built");
+    console.log("✓ Data fetched");
 
     // SINGLE DATABASE OPERATION - Update both fields atomically
-    const existingCollectedData = await db.collected_data.findFirst({
-      where: { profile: profileId },
+    const existingCollectedData = await dbDirect.collected_data.findFirst({
+      where: { profile: id },
     });
 
     if (existingCollectedData) {
-      await db.collected_data.update({
+      await dbDirect.collected_data.update({
         where: { id: existingCollectedData.id },
         data: {
           schema: JSON.stringify(schema, null, 2),
@@ -426,28 +421,52 @@ export async function exportProfile(profileId: number): Promise<{
           date_updated: new Date(),
         },
       });
+      console.log(`✅ Collected data updated for profile ID ${id}`);
     } else {
-      await db.collected_data.create({
+      await dbDirect.collected_data.create({
         data: {
-          profile: profileId,
+          profile: id,
           schema: JSON.stringify(schema, null, 2),
           data: JSON.stringify(data, null, 2),
           date_updated: new Date(),
         },
       });
+      console.log(`✅ Collected data created for profile ID ${id}`);
     }
 
-    return {
-      success: true,
-      message: `Profile schema and data exported for profile ID ${profileId}`,
-    };
+    console.log(`📁 Schema and data stored in collected_data collection`);
   } catch (error) {
-    const errorMessage = error instanceof Error
-      ? error.message
-      : "Unknown error";
-    return {
-      success: false,
-      message: `Error exporting profile: ${errorMessage}`,
-    };
+    console.error("Error exporting collected data:", error);
+    process.exit(1);
   }
 }
+
+// Main execution with default profile support
+async function main() {
+  let profileId = process.argv[2];
+
+  if (!profileId) {
+    const defaultId = await getDefaultProfileId();
+    if (!defaultId) {
+      console.error(
+        "❌ Error: No profile ID provided and no default profile is set",
+      );
+      console.error(
+        "\nUsage: npm run host:export-collected-data [profileId]",
+      );
+      console.error(
+        "\nSet a default profile in Directus or provide a profile ID",
+      );
+      process.exit(1);
+    }
+    profileId = defaultId.toString();
+    console.log(`Using default profile: ${profileId}`);
+  }
+
+  await exportCollectedData(profileId);
+}
+
+main().catch((error) => {
+  console.error("Export failed:", error);
+  process.exit(1);
+});
