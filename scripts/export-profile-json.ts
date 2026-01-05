@@ -3,7 +3,8 @@
 import { dbDirect } from "$lib/db";
 import { getDefaultProfileId } from "$lib/server/profile-default";
 import { createProfileExport } from "$lib/server/profile-exports";
-import { existsSync, mkdirSync, writeFileSync, readFileSync } from "fs";
+import { buildExportUrl } from "$lib/server/export-url-builder";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 
 interface ExportedProfile {
   profile: {
@@ -473,11 +474,11 @@ async function exportProfile(
           name: pv.name || undefined,
           description: pv.description || undefined,
           toggles: pv.toggles,
-          extends_from:
-            pv
-              .profile_version_extensions_profile_version_extensions_extenderToprofile_versions?.[0]
-              ?.profile_versions_profile_version_extensions_extendedToprofile_versions
-              ?.name,
+          extends_from: pv
+            .profile_version_extensions_profile_version_extensions_extenderToprofile_versions
+            ?.[0]
+            ?.profile_versions_profile_version_extensions_extendedToprofile_versions
+            ?.name,
         })),
         highlights: baseProfile.highlights,
         tech_skill_categories: baseProfile.tech_skill_categories.map((cat) => ({
@@ -562,19 +563,27 @@ async function exportProfile(
       const jsonString = JSON.stringify(exportData, null, 2);
       const buffer = Buffer.from(jsonString, "utf-8");
 
+      // Build source URL for the API route
+      const sourceUrl = buildExportUrl({
+        route: `api/profile/${id}/export.json`,
+      });
+
       await createProfileExport({
         profileId: id,
         fileBuffer: buffer,
         filename: `${profileName}.json`,
         fileType: "json",
-        exportType: "structured_format",
+        exportType: "structured_data",
         exportFormat: "profile_json",
         description: `Profile data export for ${profileName}`,
+        sourceUrl: sourceUrl,
       });
       console.log(`✅ Export saved to profile_exports collection`);
     } catch (error) {
       console.error(
-        `❌ Failed to save to database: ${error instanceof Error ? error.message : String(error)}`,
+        `❌ Failed to save to database: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
       );
       if (!exportToFile) {
         // If we didn't export to file and DB save failed, this is a failure

@@ -11,11 +11,12 @@
  *   npm run docker:export-to-json-resume 12 ./custom-resume.json
  */
 
-import { mkdirSync, writeFileSync, readFileSync } from "fs";
+import { mkdirSync, readFileSync, writeFileSync } from "fs";
 import { dirname } from "path";
 import { dbDirect } from "../src/lib/db";
 import { getDefaultProfileId } from "../src/lib/server/profile-default";
 import { createProfileExport } from "../src/lib/server/profile-exports";
+import { buildExportUrl } from "../src/lib/server/export-url-builder";
 import { exportProfileToJsonResume } from "./lib/json-resume-exporter";
 
 async function main() {
@@ -187,19 +188,27 @@ async function main() {
     const jsonString = JSON.stringify(jsonResume, null, 2);
     const buffer = Buffer.from(jsonString, "utf-8");
 
+    // Build source URL for the JSON Resume route
+    const sourceUrl = buildExportUrl({
+      route: "resume.json",
+    });
+
     await createProfileExport({
       profileId,
       fileBuffer: buffer,
       filename: `resume-${profileId}.json`,
       fileType: "json",
-      exportType: "structured_format",
+      exportType: "structured_data",
       exportFormat: "json_resume",
       description: `JSON Resume format export for profile ${profileId}`,
+      sourceUrl: sourceUrl,
     });
     console.log(`✅ Export saved to profile_exports collection`);
   } catch (error) {
     console.error(
-      `❌ Failed to save to database: ${error instanceof Error ? error.message : String(error)}`,
+      `❌ Failed to save to database: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
     );
     if (!exportToFile) {
       // If we didn't export to file and DB save failed, this is a failure

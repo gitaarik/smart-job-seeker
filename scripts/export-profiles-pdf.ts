@@ -13,6 +13,7 @@ import { dbDirect } from "$lib/db";
 import { getEnv } from "$lib/tools/get-env";
 import { getDefaultProfileId } from "$lib/server/profile-default";
 import { createProfileExport } from "$lib/server/profile-exports";
+import { buildExportUrl } from "$lib/server/export-url-builder";
 
 const appPort = getEnv("SJS_APP_PORT");
 
@@ -31,7 +32,7 @@ async function exportProfilesToPDF(profileId?: number) {
 
   // Track if profile ID was explicitly provided
   const isExplicitProfileId = profileId !== undefined;
-  
+
   // Get target profile ID
   const targetProfileId = profileId ?? (await getDefaultProfileId());
 
@@ -63,14 +64,18 @@ async function exportProfilesToPDF(profileId?: number) {
   }
 
   console.log(`\n📋 Profile: ${profile.name || `ID ${profile.id}`}`);
-  console.log(`📍 Export Mode: ${isExplicitProfileId ? 'Directus only' : 'Filesystem + Directus'}`);
+  console.log(
+    `📍 Export Mode: ${
+      isExplicitProfileId ? "Directus only" : "Filesystem + Directus"
+    }`,
+  );
   console.log(`📦 Profile Versions: ${profile.profile_versions.length}`);
 
   // Define the versions to create for both resume and cv
   const profileVersions = profile.profile_versions.map((v) => v.name || "");
   const documentTypes = [
-    { type: 'resume', display: 'Resume' },
-    { type: 'cv', display: 'CV' }
+    { type: "resume", display: "Resume" },
+    { type: "cv", display: "CV" },
   ] as const;
 
   const versions = documentTypes.flatMap((doc) =>
@@ -88,9 +93,11 @@ async function exportProfilesToPDF(profileId?: number) {
   );
 
   console.log(`\n📄 Export Formats (${versions.length} total):`);
-  documentTypes.forEach(doc => {
+  documentTypes.forEach((doc) => {
     const count = profileVersions.length;
-    console.log(`   • ${doc.display}: ${count} version${count !== 1 ? 's' : ''} (PDF)`);
+    console.log(
+      `   • ${doc.display}: ${count} version${count !== 1 ? "s" : ""} (PDF)`,
+    );
   });
 
   try {
@@ -113,7 +120,7 @@ async function exportProfilesToPDF(profileId?: number) {
 
     // Process each version
     for (const version of versions) {
-      console.log(`\n${'='.repeat(60)}`);
+      console.log(`\n${"=".repeat(60)}`);
       console.log(`📄 Export: ${version.description}`);
       console.log(`   Profile: ${profile.name || `ID ${profile.id}`}`);
       console.log(`   Format: ${version.displayType}`);
@@ -160,9 +167,9 @@ async function exportProfilesToPDF(profileId?: number) {
 
       // Generate PDF
       console.log(`\n   🔄 Generating PDF...`);
-      
+
       let buffer: Buffer;
-      
+
       if (isExplicitProfileId) {
         // Generate PDF to buffer only (no filesystem export)
         const pdfBuffer = await page.pdf({
@@ -178,7 +185,11 @@ async function exportProfilesToPDF(profileId?: number) {
           preferCSSPageSize: false,
         });
         buffer = Buffer.from(pdfBuffer);
-        console.log(`   ✅ Generated ${version.displayType} PDF (${(buffer.length / 1024).toFixed(1)} KB)`);
+        console.log(
+          `   ✅ Generated ${version.displayType} PDF (${
+            (buffer.length / 1024).toFixed(1)
+          } KB)`,
+        );
       } else {
         // Generate PDF to filesystem
         if (!versionDir) {
@@ -206,6 +217,12 @@ async function exportProfilesToPDF(profileId?: number) {
       // Save to profile_exports collection
       try {
         console.log(`   🔄 Saving to Directus...`);
+
+        // Build source URL from the route used for rendering
+        const sourceUrl = buildExportUrl({
+          route: version.route,
+        });
+
         await createProfileExport({
           profileId: profile.id,
           fileBuffer: buffer,
@@ -213,13 +230,20 @@ async function exportProfilesToPDF(profileId?: number) {
           fileType: "pdf",
           exportType: version.docType as "resume" | "cv",
           exportFormat: version.description,
-          description: `${version.description} - Generated ${new Date().toISOString()}`,
+          description: `${version.description} - Generated ${
+            new Date().toISOString()
+          }`,
+          sourceUrl: sourceUrl,
         });
         console.log(`   ✅ Saved to Directus (profile_exports)`);
-        console.log(`   📝 Metadata: ${version.displayType} | PDF | ${version.description}`);
+        console.log(
+          `   📝 Metadata: ${version.displayType} | PDF | ${version.description}`,
+        );
       } catch (error) {
         console.error(
-          `   ❌ Failed to save to Directus: ${error instanceof Error ? error.message : String(error)}`,
+          `   ❌ Failed to save to Directus: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
         );
         if (isExplicitProfileId) {
           // For explicit profile ID, database save is critical
@@ -229,13 +253,19 @@ async function exportProfilesToPDF(profileId?: number) {
       }
     }
 
-    console.log(`\n${'='.repeat(60)}`);
+    console.log(`\n${"=".repeat(60)}`);
     console.log(`\n🎉 Export Complete!`);
     console.log(`   Profile: ${profile.name || `ID ${profile.id}`}`);
     console.log(`   Exports Created: ${versions.length}`);
-    console.log(`   Formats: ${documentTypes.map(d => d.display).join(', ')}`);
+    console.log(
+      `   Formats: ${documentTypes.map((d) => d.display).join(", ")}`,
+    );
     console.log(`   File Type: PDF`);
-    console.log(`   Storage: ${isExplicitProfileId ? 'Directus only' : 'Filesystem + Directus'}`);
+    console.log(
+      `   Storage: ${
+        isExplicitProfileId ? "Directus only" : "Filesystem + Directus"
+      }`,
+    );
   } catch (error) {
     console.error("❌ Error exporting resume to PDF:", error);
     process.exit(1);
@@ -284,7 +314,7 @@ async function main() {
 }
 
 // Run if this is the main module (works with both node and vite-node)
-if (import.meta.url.startsWith('file://')) {
+if (import.meta.url.startsWith("file://")) {
   main();
 }
 
