@@ -15,6 +15,8 @@
 - Exports:
   - The export scripts should take a profile ID, and export for that profile,
     and the exports should end up in a new Directus collection `profile_exports`
+    - The default profile should still be used when you don't specify a specific
+      profile
   - This `profile_exports` collection should have a field for the type of file
     (pdf, html, json, txt, docx) and a field for whether it's a resume or a CV
     or a structured data export file
