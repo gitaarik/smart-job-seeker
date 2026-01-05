@@ -1,5 +1,6 @@
-import { authentication, createDirectus, rest } from "@directus/sdk";
+import { createDirectus, rest, staticToken } from "@directus/sdk";
 import { getEnv } from "$lib/tools/get-env";
+import { isRunningInDocker } from "$lib/server/utils/docker";
 
 // Define your Directus schema here (customize based on your collections)
 export interface DirectusSchema {
@@ -9,12 +10,17 @@ export interface DirectusSchema {
 }
 
 function getDirectusUrl(): string {
-  const url = getEnv("SJS_ADMIN_URL");
+  // When running in Docker: use 'admin' as hostname (Docker service name)
+  // When running on host: use 'localhost' to connect to the exposed port
+  const url = isRunningInDocker()
+    ? getEnv("SJS_ADMIN_URL")
+    : getEnv("SJS_ADMIN_PUBLIC_URL");
 
   if (!url) {
-    throw new Error(
-      "SJS_ADMIN_URL environment variable is not set",
-    );
+    const envVar = isRunningInDocker()
+      ? "SJS_ADMIN_URL"
+      : "SJS_ADMIN_PUBLIC_URL";
+    throw new Error(`${envVar} environment variable is not set`);
   }
 
   return url;
@@ -38,8 +44,7 @@ export function createDirectusClient() {
 
   return createDirectus<DirectusSchema>(directusUrl)
     .with(rest())
-    .with(authentication("json"))
-    .setToken(token);
+    .with(staticToken(token));
 }
 
 export async function directusRequest(

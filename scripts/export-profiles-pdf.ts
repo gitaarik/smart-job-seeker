@@ -29,6 +29,9 @@ async function exportProfilesToPDF(profileId?: number) {
     headless: true,
   });
 
+  // Track if profile ID was explicitly provided
+  const isExplicitProfileId = profileId !== undefined;
+  
   // Get target profile ID
   const targetProfileId = profileId ?? (await getDefaultProfileId());
 
@@ -59,22 +62,36 @@ async function exportProfilesToPDF(profileId?: number) {
     process.exit(1);
   }
 
+  console.log(`\n📋 Profile: ${profile.name || `ID ${profile.id}`}`);
+  console.log(`📍 Export Mode: ${isExplicitProfileId ? 'Directus only' : 'Filesystem + Directus'}`);
+  console.log(`📦 Profile Versions: ${profile.profile_versions.length}`);
+
   // Define the versions to create for both resume and cv
   const profileVersions = profile.profile_versions.map((v) => v.name || "");
-  const documentTypes = ["resume", "cv"];
+  const documentTypes = [
+    { type: 'resume', display: 'Resume' },
+    { type: 'cv', display: 'CV' }
+  ] as const;
 
-  const versions = documentTypes.flatMap((docType) =>
+  const versions = documentTypes.flatMap((doc) =>
     profileVersions.map((version) => ({
-      route: `${docType}?version=${version}`,
-      dirName: `${docType}/${version || "full"}`,
-      docType,
-      description: `${docType.toUpperCase()} (${
+      route: `${doc.type}?version=${version}`,
+      dirName: `${doc.type}/${version || "full"}`,
+      docType: doc.type,
+      displayType: doc.display,
+      description: `${doc.display} (${
         version
           ? version.replace("-", " ").replace(/\b\w/g, (l) => l.toUpperCase())
           : "Full"
       })`,
     }))
   );
+
+  console.log(`\n📄 Export Formats (${versions.length} total):`);
+  documentTypes.forEach(doc => {
+    const count = profileVersions.length;
+    console.log(`   • ${doc.display}: ${count} version${count !== 1 ? 's' : ''} (PDF)`);
+  });
 
   try {
     const page = await context.newPage();
@@ -85,25 +102,35 @@ async function exportProfilesToPDF(profileId?: number) {
       height: 1600,
     });
 
-    // Create base output directory if it doesn't exist
-    const baseOutputDir = path.join(process.cwd(), "src", "lib", "exports");
-    if (!fs.existsSync(baseOutputDir)) {
-      fs.mkdirSync(baseOutputDir, { recursive: true });
+    // Create base output directory if it doesn't exist (only for filesystem exports)
+    let baseOutputDir: string | undefined;
+    if (!isExplicitProfileId) {
+      baseOutputDir = path.join(process.cwd(), "src", "lib", "exports");
+      if (!fs.existsSync(baseOutputDir)) {
+        fs.mkdirSync(baseOutputDir, { recursive: true });
+      }
     }
 
     // Process each version
     for (const version of versions) {
-      console.log(`\n📄 Processing ${version.description}...`);
+      console.log(`\n${'='.repeat(60)}`);
+      console.log(`📄 Export: ${version.description}`);
+      console.log(`   Profile: ${profile.name || `ID ${profile.id}`}`);
+      console.log(`   Format: ${version.displayType}`);
+      console.log(`   File Type: PDF`);
 
-      // Create version-specific directory
-      const versionDir = path.join(baseOutputDir, version.dirName);
-      if (!fs.existsSync(versionDir)) {
-        fs.mkdirSync(versionDir, { recursive: true });
+      // Create version-specific directory (only for filesystem exports)
+      let versionDir: string | undefined;
+      if (!isExplicitProfileId && baseOutputDir) {
+        versionDir = path.join(baseOutputDir, version.dirName);
+        if (!fs.existsSync(versionDir)) {
+          fs.mkdirSync(versionDir, { recursive: true });
+        }
       }
 
       // Load resume page
       const resumeUrl = `http://localhost:${appPort}/${version.route}`;
-      console.log(`🔗 Loading resume from: ${resumeUrl}`);
+      console.log(`   URL: ${resumeUrl}`);
 
       await page.goto(resumeUrl, {
         waitUntil: "networkidle",
@@ -130,29 +157,55 @@ async function exportProfilesToPDF(profileId?: number) {
       const versionName = version.docType === "cv" ? "CV" : "Resume";
       const filename =
         `Rik Wanders - Senior Full Stack Developer - ${versionName}.pdf`;
-      const outputPath = path.join(versionDir, filename);
 
       // Generate PDF
-      console.log("📝 Generating PDF...");
-      await page.pdf({
-        path: outputPath,
-        format: "A4",
-        waitForFonts: true,
-        margin: {
-          top: "0.4in",
-          right: "0.5in",
-          bottom: "0.4in",
-          left: "0.5in",
-        },
-        printBackground: true,
-        preferCSSPageSize: false,
-      });
+      console.log(`\n   🔄 Generating PDF...`);
+      
+      let buffer: Buffer;
+      
+      if (isExplicitProfileId) {
+        // Generate PDF to buffer only (no filesystem export)
+        const pdfBuffer = await page.pdf({
+          format: "A4",
+          waitForFonts: true,
+          margin: {
+            top: "0.4in",
+            right: "0.5in",
+            bottom: "0.4in",
+            left: "0.5in",
+          },
+          printBackground: true,
+          preferCSSPageSize: false,
+        });
+        buffer = Buffer.from(pdfBuffer);
+        console.log(`   ✅ Generated ${version.displayType} PDF (${(buffer.length / 1024).toFixed(1)} KB)`);
+      } else {
+        // Generate PDF to filesystem
+        if (!versionDir) {
+          throw new Error("Version directory not set for filesystem export");
+        }
+        const outputPath = path.join(versionDir, filename);
+        await page.pdf({
+          path: outputPath,
+          format: "A4",
+          waitForFonts: true,
+          margin: {
+            top: "0.4in",
+            right: "0.5in",
+            bottom: "0.4in",
+            left: "0.5in",
+          },
+          printBackground: true,
+          preferCSSPageSize: false,
+        });
+        buffer = fs.readFileSync(outputPath);
+        console.log(`   ✅ Saved to filesystem: ${outputPath}`);
+        console.log(`   📦 File size: ${(buffer.length / 1024).toFixed(1)} KB`);
+      }
 
-      console.log(`✅ ${version.description} exported to: ${outputPath}`);
-
-      // Also save to profile_exports collection
+      // Save to profile_exports collection
       try {
-        const buffer = fs.readFileSync(outputPath);
+        console.log(`   🔄 Saving to Directus...`);
         await createProfileExport({
           profileId: profile.id,
           fileBuffer: buffer,
@@ -162,16 +215,27 @@ async function exportProfilesToPDF(profileId?: number) {
           exportFormat: version.description,
           description: `${version.description} - Generated ${new Date().toISOString()}`,
         });
-        console.log(`✅ Also saved to profile_exports collection`);
+        console.log(`   ✅ Saved to Directus (profile_exports)`);
+        console.log(`   📝 Metadata: ${version.displayType} | PDF | ${version.description}`);
       } catch (error) {
-        console.warn(
-          `⚠️  Failed to save to database: ${error instanceof Error ? error.message : String(error)}`,
+        console.error(
+          `   ❌ Failed to save to Directus: ${error instanceof Error ? error.message : String(error)}`,
         );
-        // Continue - filesystem export succeeded
+        if (isExplicitProfileId) {
+          // For explicit profile ID, database save is critical
+          throw error;
+        }
+        // For default profile, continue - filesystem export succeeded
       }
     }
 
-    console.log("\n🎉 All resume versions exported successfully!");
+    console.log(`\n${'='.repeat(60)}`);
+    console.log(`\n🎉 Export Complete!`);
+    console.log(`   Profile: ${profile.name || `ID ${profile.id}`}`);
+    console.log(`   Exports Created: ${versions.length}`);
+    console.log(`   Formats: ${documentTypes.map(d => d.display).join(', ')}`);
+    console.log(`   File Type: PDF`);
+    console.log(`   Storage: ${isExplicitProfileId ? 'Directus only' : 'Filesystem + Directus'}`);
   } catch (error) {
     console.error("❌ Error exporting resume to PDF:", error);
     process.exit(1);
@@ -219,8 +283,8 @@ async function main() {
   }
 }
 
-// Run if this is the main module
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Run if this is the main module (works with both node and vite-node)
+if (import.meta.url.startsWith('file://')) {
   main();
 }
 
