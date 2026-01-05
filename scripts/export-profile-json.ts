@@ -178,7 +178,10 @@ interface ExportedProfile {
   };
 }
 
-async function exportProfile(profileId: string): Promise<void> {
+async function exportProfile(
+  profileId: string,
+  exportToFile: boolean = true,
+): Promise<void> {
   try {
     console.log(`Exporting profile: ${profileId}`);
 
@@ -195,7 +198,17 @@ async function exportProfile(profileId: string): Promise<void> {
             name: true,
             description: true,
             toggles: true,
-            other_profile_versions: { select: { name: true } },
+            profile_version_extensions_profile_version_extensions_extenderToprofile_versions:
+              {
+                select: {
+                  profile_versions_profile_version_extensions_extendedToprofile_versions:
+                    {
+                      select: {
+                        name: true,
+                      },
+                    },
+                },
+              },
           },
           orderBy: { sort: "asc" },
         },
@@ -460,7 +473,11 @@ async function exportProfile(profileId: string): Promise<void> {
           name: pv.name || undefined,
           description: pv.description || undefined,
           toggles: pv.toggles,
-          extends_from: pv.other_profile_versions?.name,
+          extends_from:
+            pv
+              .profile_version_extensions_profile_version_extensions_extenderToprofile_versions?.[0]
+              ?.profile_versions_profile_version_extensions_extendedToprofile_versions
+              ?.name,
         })),
         highlights: baseProfile.highlights,
         tech_skill_categories: baseProfile.tech_skill_categories.map((cat) => ({
@@ -517,44 +534,56 @@ async function exportProfile(profileId: string): Promise<void> {
       },
     };
 
-    // Ensure output directory exists
-    const outputDir = "./exports";
-    if (!existsSync(outputDir)) {
-      mkdirSync(outputDir, { recursive: true });
-    }
-
-    // Generate filename with timestamp and profile name
+    // Generate profile name for file/export
     const profileName = baseProfile.name
       ?.replace(/\s+/g, "-")
       .toLowerCase() || "profile";
-    const timestamp = new Date().toISOString().split("T")[0];
-    const filename = `${outputDir}/${profileName}.json`;
 
-    // Write to file
-    writeFileSync(filename, JSON.stringify(exportData, null, 2));
+    let filename: string | undefined;
 
-    // Also save to profile_exports collection
+    // Conditionally export to file
+    if (exportToFile) {
+      const outputDir = "./exports";
+      if (!existsSync(outputDir)) {
+        mkdirSync(outputDir, { recursive: true });
+      }
+
+      const timestamp = new Date().toISOString().split("T")[0];
+      filename = `${outputDir}/${profileName}.json`;
+
+      // Write to file
+      writeFileSync(filename, JSON.stringify(exportData, null, 2));
+      console.log(`📁 File: ${filename}`);
+    }
+
+    // Save to profile_exports collection
     try {
-      const buffer = readFileSync(filename);
+      // Create buffer from export data
+      const jsonString = JSON.stringify(exportData, null, 2);
+      const buffer = Buffer.from(jsonString, "utf-8");
+
       await createProfileExport({
         profileId: id,
         fileBuffer: buffer,
         filename: `${profileName}.json`,
         fileType: "json",
-        exportType: "structured_data",
+        exportType: "structured_format",
         exportFormat: "profile_json",
         description: `Profile data export for ${profileName}`,
       });
-      console.log(`✅ Export also saved to profile_exports collection`);
+      console.log(`✅ Export saved to profile_exports collection`);
     } catch (error) {
-      console.warn(
-        `⚠️  Failed to save to database: ${error instanceof Error ? error.message : String(error)}`,
+      console.error(
+        `❌ Failed to save to database: ${error instanceof Error ? error.message : String(error)}`,
       );
-      // Continue - filesystem export succeeded
+      if (!exportToFile) {
+        // If we didn't export to file and DB save failed, this is a failure
+        throw error;
+      }
+      // If we exported to file, continue with success message
     }
 
     console.log(`✅ Profile exported successfully`);
-    console.log(`📁 File: ${filename}`);
     console.log(`📊 Exported data summary:`);
     console.log(
       `   - Profile versions: ${exportData.profile.profile_versions.length}`,
@@ -584,9 +613,12 @@ async function exportProfile(profileId: string): Promise<void> {
 
 // Main execution
 async function main() {
-  let profileId = process.argv[2];
+  const providedProfileId = process.argv[2];
+  let profileId: string;
+  let exportToFile: boolean;
 
-  if (!profileId) {
+  if (!providedProfileId) {
+    // No profile ID provided - use default and export to file
     const defaultId = await getDefaultProfileId();
     if (!defaultId) {
       console.error(
@@ -599,10 +631,15 @@ async function main() {
       process.exit(1);
     }
     profileId = defaultId.toString();
+    exportToFile = true;
     console.log(`Using default profile: ${profileId}`);
+  } else {
+    // Profile ID provided as argument - only save to Directus
+    profileId = providedProfileId;
+    exportToFile = false;
   }
 
-  await exportProfile(profileId);
+  await exportProfile(profileId, exportToFile);
 }
 
 main().catch((error) => {

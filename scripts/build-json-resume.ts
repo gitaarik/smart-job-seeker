@@ -68,7 +68,7 @@ function convertToJsonResume(data) {
 // Convert and output
 try {
   const jsonResumeData = convertToJsonResume(resume);
-  const outputPath = "./dist/resume.json";
+  const outputPath = "./exports/resume.json";
 
   writeFileSync(outputPath, JSON.stringify(jsonResumeData, null, 2));
   console.log(`✅ JSON Resume successfully generated at: ${outputPath}`);

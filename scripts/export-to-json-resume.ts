@@ -22,9 +22,10 @@ async function main() {
   const args = process.argv.slice(2);
 
   let profileId: number;
+  let exportToFile: boolean;
 
   if (args.length === 0 || !args[0]) {
-    // No profile ID provided, use default
+    // No profile ID provided, use default and export to file
     const defaultId = await getDefaultProfileId();
     if (!defaultId) {
       console.error(
@@ -46,17 +47,20 @@ async function main() {
       process.exit(1);
     }
     profileId = defaultId;
+    exportToFile = true;
     console.log(`Using default profile: ${profileId}`);
   } else {
+    // Profile ID provided as argument - only save to Directus
     profileId = parseInt(args[0], 10);
     if (isNaN(profileId)) {
       console.error(`❌ Error: Invalid profile ID "${args[0]}"`);
       console.error("Profile ID must be a number");
       process.exit(1);
     }
+    exportToFile = false;
   }
 
-  const outputPath = args[1] || `./dist/resume-${profileId}.json`;
+  const outputPath = args[1] || `./exports/resume-${profileId}.json`;
 
   console.log(`🔄 Exporting profile ${profileId} to JSON Resume format...\n`);
 
@@ -167,33 +171,44 @@ async function main() {
   // Export to JSON Resume format
   const jsonResume = exportProfileToJsonResume(profile);
 
-  // Ensure output directory exists
-  mkdirSync(dirname(outputPath), { recursive: true });
+  // Conditionally export to file
+  if (exportToFile) {
+    // Ensure output directory exists
+    mkdirSync(dirname(outputPath), { recursive: true });
 
-  // Write to file
-  writeFileSync(outputPath, JSON.stringify(jsonResume, null, 2), "utf-8");
+    // Write to file
+    writeFileSync(outputPath, JSON.stringify(jsonResume, null, 2), "utf-8");
+    console.log(`📁 File: ${outputPath}`);
+  }
 
-  // Also save to profile_exports collection
+  // Save to profile_exports collection
   try {
-    const buffer = readFileSync(outputPath);
+    // Create buffer from JSON data
+    const jsonString = JSON.stringify(jsonResume, null, 2);
+    const buffer = Buffer.from(jsonString, "utf-8");
+
     await createProfileExport({
       profileId,
       fileBuffer: buffer,
       filename: `resume-${profileId}.json`,
       fileType: "json",
-      exportType: "resume",
+      exportType: "structured_format",
       exportFormat: "json_resume",
       description: `JSON Resume format export for profile ${profileId}`,
     });
-    console.log(`✅ Export also saved to profile_exports collection`);
+    console.log(`✅ Export saved to profile_exports collection`);
   } catch (error) {
-    console.warn(
-      `⚠️  Failed to save to database: ${error instanceof Error ? error.message : String(error)}`,
+    console.error(
+      `❌ Failed to save to database: ${error instanceof Error ? error.message : String(error)}`,
     );
-    // Continue - filesystem export succeeded
+    if (!exportToFile) {
+      // If we didn't export to file and DB save failed, this is a failure
+      throw error;
+    }
+    // If we exported to file, continue with success message
   }
 
-  console.log(`✅ JSON Resume successfully exported to: ${outputPath}\n`);
+  console.log(`✅ JSON Resume successfully exported\n`);
 
   // Print summary statistics
   console.log("📊 Export Summary:");

@@ -1,0 +1,413 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jsonresume/resume-schema/v1.0.0/schema.json",
+  "basics": {
+    "name": "Rik Wanders",
+    "label": "Senior Full-Stack Developer",
+    "email": "rik@rikwanders.tech",
+    "phone": "+31649118511",
+    "url": "https://www.rikwanders.tech/",
+    "summary": "Dutch Senior Full-Stack Developer residing in Spain. 10+ years Python & Node.js experience, scaling complex, high-traffic & data heavy applications with Django & React, and leading development teams. Additional skills in DevOps, CI/CD & UXD. Current with industry trends, AI & security. Thrives in agile teams / startup environments. 5+ years remote work experience.",
+    "location": {
+      "city": "Málaga",
+      "countryCode": "Spain"
+    },
+    "profiles": [
+      {
+        "network": "LinkedIn",
+        "username": "in",
+        "url": "https://www.linkedin.com/in/rik-wanders-software"
+      },
+      {
+        "network": "GitHub",
+        "username": "gitaarik",
+        "url": "https://github.com/gitaarik"
+      },
+      {
+        "network": "Stack Overflow",
+        "username": "users",
+        "url": "https://stackoverflow.com/users/1248175/gitaarik"
+      }
+    ]
+  },
+  "work": [
+    {
+      "name": "Chipta",
+      "position": "Lead Developer",
+      "location": "Amsterdam, NL",
+      "url": "https://chipta.com/",
+      "startDate": "2015-09-06",
+      "endDate": "2025-03-07",
+      "summary": "Led teams of 3-5 developers at innovative ticketing platform for over 10 years, scaling the platform from concept to processing thousands of orders per minute. Optimized platform performance by 30-60%, implemented comprehensive testing suites, and orchestrated CI/CD systems. Built React Native mobile apps that contributed to a 40% revenue increase, modernized frontend interfaces with React, increasing user engagement by 30%. And integrated critical payment systems processing tens of millions in transactions.",
+      "description": "Ticketing company",
+      "highlights": [
+        "Led distributed development team (3-5 devs) with agile methods and strict code review processes, optimizing team output",
+        "Ensured uptime and performance of critical services (infra, apps, deployment) on platform with 10,000+ monthly active users",
+        "Scaled platform to handle thousands of orders per minute, by caching & optimizating SQL & Python/Django process up to 60%",
+        "Increased user engagement by +30%, by modernizing frontend UX using React, responsive design & web components",
+        "Contributed to scalability & 40% revenue growth by leading ticket scan app development with React Native & WebSockets",
+        "Decreased regression with 90%, by establishing TDD with quality testing suite using Django & Selenium (+80% coverage)",
+        "Reduced deploy time -80% & enabled regular releases, by orchestrating CI/CD systems on Linode using Ansible & Python",
+        "Streamlined onboarding, by coordinating development environment setup of 4 Docker microservices in Docker Compose",
+        "Maintained backward compatibility with legacy PHP system & database, by customizing Django codebase",
+        "Enabled clients to organize automatically managed online events with Zoom, by integrating Zoom with OAuth in Django",
+        "Allowed users to validate authenticity of 2nd hand tickets, by implementing TicketSwap REST APIs using DRF",
+        "Processed tens of millions in payment transactions, by building payment service integrations (Mollie, Pay.nl, Paypal)",
+        "Facilitated market expansion to eurozone, by implementing Django i18n features (language, country & timezone)"
+      ]
+    },
+    {
+      "name": "Tender-it",
+      "position": "Lead Developer",
+      "location": "Amsterdam, NL",
+      "url": null,
+      "startDate": "2014-06-15",
+      "endDate": "2015-06-26",
+      "summary": "Built comprehensive tender discovery platform from scratch as Lead Developer, designing complete platform using agile methodology in consultation with non-technical founders. Developed industry-first Elasticsearch-powered search engine filtering hundreds of thousands of tenders, engineered automated web crawling systems importing thousands of tenders daily, and implemented subscription-based revenue model with recurring payments and automated notification systems.",
+      "description": "Tender platform",
+      "highlights": [
+        "Delivered complete platform with Python, Django & React in consultation with non-technical founders",
+        "Transformed thousands of tenders daily into structured data, by making web crawlers & importers with Django & Celery",
+        "Developed industry-first Elasticsearch-powered search engine for filtering & scoring hundreds of thousands of tenders",
+        "Enabled market entry via subscription system with monthly/yearly recurring payments, using Django, Celery & Adyen",
+        "Supported user retention by developing automatic notification mailing system for user preferences & saved searches",
+        "Provided professional platform aesthetics by enhancing frontend in coordination with frontend developer using Vue.js"
+      ]
+    },
+    {
+      "name": "TravelBird",
+      "position": "Senior Full-Stack Developer",
+      "location": "Amsterdam, NL",
+      "url": "https://www.travelbird.com/",
+      "startDate": "2013-03-17",
+      "endDate": "2014-08-08",
+      "summary": "Contributed to mobile app development during time of travel industry mobile adoption, shipping native iPhone and Android booking apps in scrum team that handled 15%+ of bookings within first 3 months. Designed REST API using Django REST Framework deployed on AWS to accommodate new iOS & Android apps and mobile website.",
+      "description": "Online Travel Agent",
+      "highlights": [
+        "Shipped iPhone & Android booking apps in scrum team (4) within 5 months, handling 15%+ of bookings in 3 months",
+        "Designed REST API with JWT auth using DRF, deployed on AWS, accommodating iOS & Android apps and mobile website",
+        "Supported acquisition by sending thousands of emails with marketing system using Python, Django, Celery & SendGrid"
+      ]
+    },
+    {
+      "name": "SWIS",
+      "position": "Mid-level Web Developer",
+      "location": "Leiden, NL",
+      "url": "https://www.swis.nl/",
+      "startDate": "2011-08-14",
+      "endDate": "2013-02-15",
+      "summary": "Delivered web projects for major clients including Bol.com and Gemeente Amsterdam as part of company's best performing Scrum team out of 5 teams. Cultivated advanced frontend & UX skills with jQuery & CSS3, significantly increasing user product engagement and client satisfaction while maintaining agency's reputation for quality delivery.",
+      "description": "Web Development Agency",
+      "highlights": [
+        "Delivered web projects for major clients (Bol.com) as part of company's best of 5 Scrum teams using custom PHP CMS",
+        "Cultivated advanced frontend & UX skills with jQuery & CSS3, increasing user product engagement & client satisfaction"
+      ]
+    },
+    {
+      "name": "Gamepoint",
+      "position": "Junior / Mid-level Web Developer",
+      "location": "The Hague, NL",
+      "url": "https://www.gamepoint.biz/",
+      "startDate": "2007-08-12",
+      "endDate": "2011-06-17",
+      "summary": "Progressed from junior to mid-level developer within a 10+ developer team at established gaming community platform serving hundreds of thousands of users. Implemented payment integrations and internationalization features, optimized MySQL database structures & queries, and maintained large-scale PHP codebase & Linux server setup while contributing to platform stability and feature development.",
+      "description": "Casual Gaming Community",
+      "highlights": [
+        "Implemented payment integrations, internationalization, and optimized MySQL database structures & queries",
+        "Promoted to mid-level developer in 10+ developer team, maintaining large-scale PHP codebase & Linux servers setup"
+      ]
+    },
+    {
+      "name": "Budget Advies Groep",
+      "position": "Junior Web developer",
+      "location": "Cruquius, NL",
+      "url": "https://www.budgetadviesgroep.nl/",
+      "startDate": "2006-09-10",
+      "endDate": "2007-06-08",
+      "summary": "Helped with the acquisition of new clients, by creating several website portals that were of interest for different types of clients. Attractive designs and search engine optimization (SEO) were an important aspect in this.",
+      "description": "Intermediary",
+      "highlights": []
+    },
+    {
+      "name": "Festivalinfo",
+      "position": "Internship Web Developer",
+      "location": "Amsterdam, NL",
+      "url": "https://www.festivalinfo.nl",
+      "startDate": "2006-03-05",
+      "endDate": "2006-08-25",
+      "summary": "Contributed to the stability and expansion of the platforms festivalinfo.nl, podiuminfo.nl, cabaretinfo.nl and agendainfo.nl, by fixing bugs and creating various new features.",
+      "description": "Festival / event information website",
+      "highlights": []
+    }
+  ],
+  "education": [
+    {
+      "institution": "Nova College",
+      "url": "https://www.novacollege.nl/",
+      "area": "Software Development",
+      "studyType": "Dutch Vocational Education (MBO)",
+      "startDate": "2004-08-01",
+      "endDate": "2007-06-15"
+    },
+    {
+      "institution": "Mediacollege Amsterdam",
+      "url": "https://www.ma-web.nl/",
+      "area": "Audio technician",
+      "studyType": "Dutch Vocational Education (MBO)",
+      "startDate": "2003-08-03",
+      "endDate": "2004-06-11"
+    },
+    {
+      "institution": "Kaj Munk College",
+      "url": "https://kajmunk.nl/",
+      "area": "Pre-vocational education",
+      "studyType": "Dutch VMBO-t education",
+      "startDate": "1999-08-01",
+      "endDate": "2003-06-13"
+    },
+    {
+      "institution": "Valkenburgschool",
+      "url": null,
+      "area": "Primary education",
+      "studyType": "Dutch primary education",
+      "startDate": "1991-08-04",
+      "endDate": "1999-06-04"
+    }
+  ],
+  "skills": [
+    {
+      "name": "Backend",
+      "level": "Master",
+      "keywords": [
+        "Python",
+        "Django",
+        "Django REST Framework (DRF)",
+        "Flask",
+        "FastAPI",
+        "RESTful APIs",
+        "LLM integrations",
+        "pytest"
+      ]
+    },
+    {
+      "name": "Frontend",
+      "level": "Master",
+      "keywords": [
+        "JavaScript",
+        "Node.js",
+        "TypeScript",
+        "React Native",
+        "React",
+        "Svelte",
+        "Tailwind CSS",
+        "Jest"
+      ]
+    },
+    {
+      "name": "Databases",
+      "level": "Master",
+      "keywords": [
+        "PostgreSQL",
+        "MySQL",
+        "MariaDB",
+        "SQLite",
+        "SQL optimization",
+        "Elasticsearch",
+        "MongoDB",
+        "Redis"
+      ]
+    },
+    {
+      "name": "Development Tools",
+      "level": "Master",
+      "keywords": [
+        "Git",
+        "GitHub",
+        "Git Flow",
+        "Claude Code",
+        "Cursor",
+        "Neovim",
+        "tmux"
+      ]
+    },
+    {
+      "name": "DevOps",
+      "level": "Master",
+      "keywords": [
+        "Docker",
+        "Docker Compose",
+        "GitLab CI/CD",
+        "GitHub Actions",
+        "Ansible",
+        "Python Fabric",
+        "Caching strategies"
+      ]
+    },
+    {
+      "name": "Cloud Platforms",
+      "level": "Advanced",
+      "keywords": [
+        "Amazon Web Services",
+        "AWS EC2",
+        "AWS S3",
+        "AWS Lambda",
+        "Vercel",
+        "Linode"
+      ]
+    },
+    {
+      "name": "Dev Methodologies",
+      "level": "Master",
+      "keywords": [
+        "Agile",
+        "Scrum",
+        "XP",
+        "AI-Assisted Development",
+        "Secure by design",
+        "TDD",
+        "UXD"
+      ]
+    }
+  ],
+  "languages": [
+    {
+      "language": "Dutch",
+      "fluency": "Native speaker"
+    },
+    {
+      "language": "English",
+      "fluency": "Fluent"
+    }
+  ],
+  "projects": [
+    {
+      "name": "Smart Job Seeker",
+      "description": "An intelligent job search and application management platform that helps you create a detailed profile, discover matching opportunities, and optimize your job application process with AI assistance. Built with TypeScript, Sveltekit, Prisma ORM, Directus CMS, PostgreSQL, Docker Compose and Tailwind CSS.",
+      "url": "https://github.com/gitaarik/smart-job-seeker",
+      "startDate": "2025-08-01",
+      "highlights": [],
+      "keywords": [
+        "Node.js",
+        "JavaScript",
+        "SvelteKit",
+        "LLM integrations",
+        "REST APIs"
+      ]
+    },
+    {
+      "name": "LitState",
+      "description": "Reactive state management library for Lit Web Components, open-sourced on GitHub & NPM. Used in production at Chipta (ticket shop). Lit + LitState is a simpler, lightweight and browser-native alternative to React + Redux.",
+      "url": "https://github.com/gitaarik/lit-state",
+      "startDate": "2020-11-15",
+      "endDate": "2023-01-18",
+      "highlights": [
+        "Created Open-Source NPM package providing reactive state management for Lit Web Components library",
+        "Received appreciation in community with 152 GitHub stars during time of Lit & Web Components popularity",
+        "Engaged with users handling GitHub Issues and Pull Requests",
+        "Employed library succesfully in projects at Chipta",
+        "⭐ 155 GitHub stars"
+      ],
+      "keywords": [
+        "Node.js",
+        "JavaScript",
+        "Lit",
+        "Web Components"
+      ]
+    },
+    {
+      "name": "Django Admin Relation Links",
+      "description": "Django Admin navigation enhancement, simplifying navigation between related database objects. Open-sourced on GitHub and PyPi. Used in production at Chipta & Tender-it.",
+      "url": "https://github.com/gitaarik/django-admin-relation-links",
+      "startDate": "2014-01-15",
+      "endDate": "2020-12-03",
+      "highlights": [
+        "Conceived Open-Source Python package providing navigation enhancements in Django Admin",
+        "Received appreciation in community with 108 GitHub stars",
+        "Engaged with users handling GitHub Issues and Pull Requests",
+        "Employed library succesfully in projects at Chipta and Tender-it",
+        "⭐ 108 GitHub stars"
+      ],
+      "keywords": [
+        "Python",
+        "Django"
+      ]
+    },
+    {
+      "name": "Git Submodules Guide",
+      "description": "Popular GitHub Gist explaining Git submodules fundamentals. Helped many developers understand submodules effectively.",
+      "url": "https://gist.github.com/gitaarik/8735255",
+      "startDate": "2014-01-15",
+      "endDate": "2014-01-15",
+      "highlights": [
+        "⭐ 1028 GitHub stars"
+      ],
+      "keywords": [
+        "Git",
+        "Git Submodules",
+        "Bash / Shell scripting"
+      ]
+    },
+    {
+      "name": "Jazzchords",
+      "description": "Web application for creating and printing professional chord charts using Python/Django and modern frontend technologies.",
+      "url": "https://github.com/gitaarik/jazzchords",
+      "startDate": "2013-06-24",
+      "endDate": "2017-12-08",
+      "highlights": [
+        "Succesfully employed self-created tool to create chord charts and print them for musical projects",
+        "⭐ 12 GitHub stars"
+      ],
+      "keywords": [
+        "Python",
+        "Django",
+        "Django Rest Framework (DRF)",
+        "Node.js",
+        "Ember.js",
+        "HTML/CSS",
+        "JavaScript",
+        "PostgreSQL",
+        "Elasticsearch"
+      ]
+    },
+    {
+      "name": "Adyengo",
+      "description": "Open-source Django package for Adyen payment integration with recurring payment support. Used in production at Tender-it.",
+      "url": "https://github.com/gitaarik/adyengo",
+      "startDate": "2013-08-06",
+      "endDate": "2020-05-07",
+      "highlights": [
+        "Conceived Open-Source Python package providing Adyen payment integrations for Django",
+        "⭐ 10 GitHub stars"
+      ],
+      "keywords": [
+        "Python",
+        "HTML"
+      ]
+    },
+    {
+      "name": "Monkful",
+      "description": "Python package to easily create RESTful API's for MongoEngine documents used for MongoDB database. Inspired by Django REST framework. Used in production at Travelbird.",
+      "url": "https://github.com/gitaarik/monkful",
+      "startDate": "2013-09-03",
+      "endDate": "2014-10-04",
+      "highlights": [
+        "⭐ 10 GitHub stars"
+      ],
+      "keywords": [
+        "Python",
+        "MongoDB",
+        "MongoEngine",
+        "Flask"
+      ]
+    }
+  ],
+  "references": [
+    {
+      "name": "Elmar Krack",
+      "reference": "Rik demonstrated exceptional technical leadership by designing and developing our entire platform from the ground up, handling both backend and frontend development with impressive skill."
+    },
+    {
+      "name": "Michaël de Groot",
+      "reference": "Rik modernized our client-facing interfaces and implemented backend optimizations that delivered substantial performance improvements. His work enabled us to process thousands of tickets rapidly during our busiest periods."
+    }
+  ]
+}

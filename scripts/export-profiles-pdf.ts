@@ -105,7 +105,7 @@ async function exportProfilesToPDF(profileId?: number) {
     // Create base output directory if it doesn't exist (only for filesystem exports)
     let baseOutputDir: string | undefined;
     if (!isExplicitProfileId) {
-      baseOutputDir = path.join(process.cwd(), "src", "lib", "exports");
+      baseOutputDir = path.join(process.cwd(), "exports");
       if (!fs.existsSync(baseOutputDir)) {
         fs.mkdirSync(baseOutputDir, { recursive: true });
       }
