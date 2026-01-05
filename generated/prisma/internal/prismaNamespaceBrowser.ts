@@ -117,7 +117,8 @@ export const ModelName = {
   job_match_preferences: 'job_match_preferences',
   job_matches: 'job_matches',
   job_platforms: 'job_platforms',
-  config: 'config'
+  config: 'config',
+  profile_exports: 'profile_exports'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -778,7 +779,8 @@ export const ProfilesScalarFieldEnum = {
   location_city: 'location_city',
   location_region: 'location_region',
   location_country_code: 'location_country_code',
-  is_default: 'is_default'
+  is_default: 'is_default',
+  slug: 'slug'
 } as const
 
 export type ProfilesScalarFieldEnum = (typeof ProfilesScalarFieldEnum)[keyof typeof ProfilesScalarFieldEnum]
@@ -1260,6 +1262,23 @@ export const ConfigScalarFieldEnum = {
 } as const
 
 export type ConfigScalarFieldEnum = (typeof ConfigScalarFieldEnum)[keyof typeof ConfigScalarFieldEnum]
+
+
+export const Profile_exportsScalarFieldEnum = {
+  id: 'id',
+  status: 'status',
+  sort: 'sort',
+  date_created: 'date_created',
+  date_updated: 'date_updated',
+  profile: 'profile',
+  file: 'file',
+  file_type: 'file_type',
+  export_type: 'export_type',
+  export_format: 'export_format',
+  description: 'description'
+} as const
+
+export type Profile_exportsScalarFieldEnum = (typeof Profile_exportsScalarFieldEnum)[keyof typeof Profile_exportsScalarFieldEnum]
 
 
 export const SortOrder = {

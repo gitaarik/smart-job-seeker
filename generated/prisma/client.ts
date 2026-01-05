@@ -374,3 +374,8 @@ export type job_platforms = Prisma.job_platformsModel
  * 
  */
 export type config = Prisma.configModel
+/**
+ * Model profile_exports
+ * 
+ */
+export type profile_exports = Prisma.profile_exportsModel
