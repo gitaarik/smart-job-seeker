@@ -2,7 +2,8 @@
 
 import { dbDirect } from "$lib/db";
 import { getDefaultProfileId } from "$lib/server/profile-default";
-import { existsSync, mkdirSync, writeFileSync } from "fs";
+import { createProfileExport } from "$lib/server/profile-exports";
+import { existsSync, mkdirSync, writeFileSync, readFileSync } from "fs";
 
 interface ExportedProfile {
   profile: {
@@ -531,6 +532,26 @@ async function exportProfile(profileId: string): Promise<void> {
 
     // Write to file
     writeFileSync(filename, JSON.stringify(exportData, null, 2));
+
+    // Also save to profile_exports collection
+    try {
+      const buffer = readFileSync(filename);
+      await createProfileExport({
+        profileId: id,
+        fileBuffer: buffer,
+        filename: `${profileName}.json`,
+        fileType: "json",
+        exportType: "structured_data",
+        exportFormat: "profile_json",
+        description: `Profile data export for ${profileName}`,
+      });
+      console.log(`✅ Export also saved to profile_exports collection`);
+    } catch (error) {
+      console.warn(
+        `⚠️  Failed to save to database: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      // Continue - filesystem export succeeded
+    }
 
     console.log(`✅ Profile exported successfully`);
     console.log(`📁 File: ${filename}`);

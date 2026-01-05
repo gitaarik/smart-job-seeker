@@ -11,10 +11,12 @@ import path from "path";
 import fs from "fs";
 import { dbDirect } from "$lib/db";
 import { getEnv } from "$lib/tools/get-env";
+import { getDefaultProfileId } from "$lib/server/profile-default";
+import { createProfileExport } from "$lib/server/profile-exports";
 
 const appPort = getEnv("SJS_APP_PORT");
 
-async function exportProfilesToPDF() {
+async function exportProfilesToPDF(profileId?: number) {
   console.log("🚀 Starting profile PDF export (Resume & CV)...");
 
   // Use persistent context for consistent rendering
@@ -27,10 +29,22 @@ async function exportProfilesToPDF() {
     headless: true,
   });
 
-  // Fetch the first profile with its versions
-  const profile = await dbDirect.profiles.findFirst({
+  // Get target profile ID
+  const targetProfileId = profileId ?? (await getDefaultProfileId());
+
+  if (!targetProfileId) {
+    console.error("❌ No profile ID provided and no default profile set");
+    process.exit(1);
+  }
+
+  // Fetch the profile with its versions
+  const profile = await dbDirect.profiles.findUnique({
+    where: { id: targetProfileId },
     include: {
       profile_versions: {
+        where: {
+          status: { equals: "published" },
+        },
         orderBy: {
           sort: "asc",
         },
@@ -39,7 +53,9 @@ async function exportProfilesToPDF() {
   });
 
   if (!profile) {
-    console.error("❌ No profile found in database");
+    console.error(
+      `❌ Profile with ID ${targetProfileId} not found in database`,
+    );
     process.exit(1);
   }
 
@@ -133,6 +149,26 @@ async function exportProfilesToPDF() {
       });
 
       console.log(`✅ ${version.description} exported to: ${outputPath}`);
+
+      // Also save to profile_exports collection
+      try {
+        const buffer = fs.readFileSync(outputPath);
+        await createProfileExport({
+          profileId: profile.id,
+          fileBuffer: buffer,
+          filename,
+          fileType: "pdf",
+          exportType: version.docType as "resume" | "cv",
+          exportFormat: version.description,
+          description: `${version.description} - Generated ${new Date().toISOString()}`,
+        });
+        console.log(`✅ Also saved to profile_exports collection`);
+      } catch (error) {
+        console.warn(
+          `⚠️  Failed to save to database: ${error instanceof Error ? error.message : String(error)}`,
+        );
+        // Continue - filesystem export succeeded
+      }
     }
 
     console.log("\n🎉 All resume versions exported successfully!");
@@ -166,7 +202,17 @@ async function main() {
       process.exit(1);
     }
 
-    await exportProfilesToPDF();
+    // Parse profile ID from command line
+    const profileId = process.argv[2]
+      ? parseInt(process.argv[2], 10)
+      : undefined;
+
+    if (process.argv[2] && isNaN(profileId!)) {
+      console.error(`❌ Invalid profile ID: ${process.argv[2]}`);
+      process.exit(1);
+    }
+
+    await exportProfilesToPDF(profileId);
   } catch (error) {
     console.error("❌ Fatal error:", error);
     process.exit(1);
