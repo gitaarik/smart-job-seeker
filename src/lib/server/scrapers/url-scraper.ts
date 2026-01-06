@@ -148,7 +148,7 @@ export async function scrapeJobsWithUrls(
     }
 
     console.log(`   Extracting job links (${htmlSize} KB)...`);
-    const pageUrls = await extractJobLinks(html);
+    let pageUrls = await extractJobLinks(html);
 
     if (!pageUrls || pageUrls.length === 0) {
       if (currentPage === 1) {
