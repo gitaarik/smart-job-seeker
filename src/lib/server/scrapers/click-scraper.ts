@@ -3,7 +3,7 @@
  * SPA scraping: marks clickable elements with CDP, uses LLM to identify job cards, then clicks each
  */
 
-import type { Page } from "playwright";
+import type { Page } from "patchright";
 import { config } from "$lib/server/config";
 import {
   extractJobData,

@@ -37,6 +37,8 @@ Look at the scripts in `package.json` for help executing things in containers.
 
 ## Code Quality
 
+- Keep try blocks as small as possible, so it only contains code that could
+  throw the catched exception
 - Ensure unit-tested and clean, properly formatted code
 - After making code changes:
   - Run `npm run test` to check if all unit tests still pass

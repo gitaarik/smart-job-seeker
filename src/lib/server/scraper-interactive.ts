@@ -3,7 +3,7 @@
  * Handles user interactions during scraping (login, CAPTCHA)
  */
 
-import type { Page } from "playwright";
+import type { Page } from "patchright";
 import { config } from "./config";
 import { detectCaptchaOnPage } from "./cdp-utils";
 

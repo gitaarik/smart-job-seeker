@@ -29,11 +29,7 @@ async function openBrowserForLogin(): Promise<void> {
   console.log("=".repeat(70) + "\n");
 
   // Launch browser with persistent profile (saves cookies, localStorage, etc.)
-  const context = await launchBrowser(userDataDir, {
-    headless: false,
-    args: ["--start-maximized"],
-    viewport: null, // No viewport = maximized window
-  });
+  const context = await launchBrowser(userDataDir, { headless: false });
 
   try {
     console.log("✅ Chrome opened with persistent profile");

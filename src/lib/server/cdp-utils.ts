@@ -3,7 +3,7 @@
  * Provides advanced DOM inspection capabilities
  */
 
-import type { Page } from "playwright";
+import type { Page } from "patchright";
 
 /**
  * Mark all elements with click event listeners within a container
