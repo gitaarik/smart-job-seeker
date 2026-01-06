@@ -103,20 +103,6 @@ export function validateJobSearchHtml(html: string): {
     warnings.push("HTML content suspiciously short (< 1000 chars)");
   }
 
-  // Check for login/auth indicators
-  const loginIndicators = [
-    "sign in",
-    "log in",
-    "authwall",
-    "join now",
-    "create account",
-  ];
-  if (
-    loginIndicators.some((indicator) => html.toLowerCase().includes(indicator))
-  ) {
-    warnings.push("Login/authentication page detected");
-  }
-
   // Check for error pages
   if (html.includes("404") || html.toLowerCase().includes("not found")) {
     warnings.push("Error page (404) detected");
@@ -151,20 +137,7 @@ export async function extractJobLinks(
 
   if (!validation.isValid) {
     console.warn("⚠️  HTML validation warnings:", validation.warnings);
-
-    // Check for login page - this is a hard stop
-    const hasLoginWarning = validation.warnings.some((w) =>
-      w.toLowerCase().includes("login") ||
-      w.toLowerCase().includes("authentication")
-    );
-
-    if (hasLoginWarning) {
-      throw new Error(
-        "Login/authentication page detected. Please log in manually in the browser and run the scraper again.",
-      );
-    }
-
-    // Continue anyway for other warnings - might still extract something useful
+    // Continue anyway - warnings are informational, not blocking
   }
 
   // 1. Strip HTML to minimal content
@@ -420,7 +393,7 @@ export function mergeJobData(
  * @param pageHtml HTML content of the page
  * @returns Boolean indicating if it's a login page
  */
-async function detectLoginPage(pageHtml: string): Promise<boolean> {
+export async function detectLoginPage(pageHtml: string): Promise<boolean> {
   // 1. Strip HTML to minimal content
   const strippedHtml = stripHtmlForLlm(pageHtml);
 

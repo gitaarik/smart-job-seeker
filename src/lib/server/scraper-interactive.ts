@@ -17,22 +17,14 @@ export async function waitForCaptchaSolution(page: Page): Promise<boolean> {
   console.log("🤖 CAPTCHA Challenge Detected");
   console.log("=".repeat(60));
   console.log("Please solve the CAPTCHA in the browser window.");
-  console.log("You have 5 minutes to complete the challenge.");
   console.log("The script will automatically continue once solved.");
   console.log("=".repeat(60) + "\n");
 
-  const timeoutMs = 5 * 60 * 1000; // 5 minutes
-  const startTime = Date.now();
   const checkInterval = config.scraperCaptchaCheckInterval;
 
-  // Wait for CAPTCHA to be solved (check every 3 seconds, max 5 minutes)
-  while (Date.now() - startTime < timeoutMs) {
-    const remainingSeconds = Math.floor(
-      (timeoutMs - (Date.now() - startTime)) / 1000,
-    );
-    console.log(
-      `⏱️  Waiting for CAPTCHA solution... (${remainingSeconds}s remaining)`,
-    );
+  // Wait indefinitely for CAPTCHA to be solved (check every 3 seconds)
+  while (true) {
+    console.log("⏱️  Waiting for CAPTCHA solution...");
 
     // Check if any CAPTCHA elements are still visible
     const hasCaptcha = await detectCaptchaOnPage(page);
@@ -46,9 +38,6 @@ export async function waitForCaptchaSolution(page: Page): Promise<boolean> {
 
     await page.waitForTimeout(checkInterval);
   }
-
-  console.log("❌ CAPTCHA timeout (5 minutes elapsed)");
-  return false;
 }
 
 /**
@@ -64,12 +53,9 @@ export async function waitForLoginSolution(page: Page): Promise<boolean> {
   console.log(
     "Once you're logged in, press ENTER in this terminal to continue.",
   );
-  console.log("You have 10 minutes to complete the login.");
   console.log("=".repeat(60) + "\n");
 
-  const timeoutMs = 10 * 60 * 1000; // 10 minutes
-
-  // Wait for user to press Enter
+  // Wait for user to press Enter (no timeout)
   const readline = await import("readline");
   const rl = readline.createInterface({
     input: process.stdin,
@@ -77,14 +63,7 @@ export async function waitForLoginSolution(page: Page): Promise<boolean> {
   });
 
   return new Promise((resolve) => {
-    const timeoutId = setTimeout(() => {
-      rl.close();
-      console.log("❌ Login timeout (10 minutes elapsed)");
-      resolve(false);
-    }, timeoutMs);
-
     rl.question("Press ENTER when you've completed the login: ", () => {
-      clearTimeout(timeoutId);
       rl.close();
       console.log("✅ Login confirmed! Continuing...\n");
       resolve(true);
