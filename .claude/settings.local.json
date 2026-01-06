@@ -82,9 +82,10 @@
       "mcp__plugin_serena_serena__replace_content",
       "mcp__plugin_serena_serena__replace_symbol_body",
       "mcp__plugin_serena_serena__search_for_pattern",
-      "Bash(git restore:*)",
       "Bash(docker logs:*)",
+      "Bash(git restore:*)",
       "Bash(git show:*)",
+      "Bash(tee:*)",
       "Bash(wc:*)"
     ],
     "deny": [],
