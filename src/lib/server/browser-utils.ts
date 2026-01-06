@@ -4,7 +4,7 @@
  */
 
 import { existsSync } from "fs";
-import { type BrowserContext, chromium } from "playwright";
+import { type BrowserContext, chromium } from "patchright";
 
 // Chrome installation paths to check (Linux)
 const CHROME_PATHS = [
@@ -71,33 +71,34 @@ export async function launchBrowser(
   const executablePath = findChromeExecutable();
 
   // Base anti-detection arguments
-  const baseArgs = [
-    "--no-sandbox",
-    "--disable-setuid-sandbox",
-    "--disable-dev-shm-usage",
-    "--disable-blink-features=AutomationControlled",
-    "--disable-features=IsolateOrigins,site-per-process",
-    "--disable-process-singleton-lock", // Allow multiple instances with same profile
-  ];
+  // const args = [
+  //   "--no-sandbox",
+  //   "--disable-setuid-sandbox",
+  //   "--disable-dev-shm-usage",
+  //   "--disable-blink-features=AutomationControlled",
+  //   "--disable-features=IsolateOrigins,site-per-process",
+  //   "--disable-process-singleton-lock", // Allow multiple instances with same profile
+  // ];
 
-  // Merge with user-provided args
-  const args = [...baseArgs, ...(options.args || [])];
+  console.log(`🚀 Launching persistent browser context...`);
+  console.log(`📂 Profile directory: ${userDataDir}`);
+
+  const viewport = options.headless ? { width: 1920, height: 1080 } : null;
+
+  // if (options.headless) {
+  //   args.push("--start-maximized");
+  // }
 
   try {
-    console.log(`🚀 Launching persistent browser context...`);
-    console.log(`📂 Profile directory: ${userDataDir}`);
-
     const context = await chromium.launchPersistentContext(userDataDir, {
       executablePath,
-      headless: options.headless ?? false,
-      args,
-      viewport: options.viewport !== undefined
-        ? options.viewport
-        : { width: 1920, height: 1080 },
-      userAgent:
-        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-      locale: "en-US",
-      timezoneId: "America/New_York",
+      headless: !!options.headless,
+      // args,
+      viewport,
+      // userAgent:
+      //   "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      // locale: "en-US",
+      // timezoneId: "America/New_York",
     });
 
     console.log("✅ Persistent context created successfully");
@@ -108,5 +109,28 @@ export async function launchBrowser(
       error instanceof Error ? error.message : String(error),
     );
     throw error;
+  }
+}
+
+/**
+ * Wait for dynamic job content to load on LinkedIn and similar sites
+ * Waits for "Loading job details" text to disappear, indicating content has loaded
+ * @param page Playwright page instance
+ * @param timeout Maximum time to wait in milliseconds (default: 10000)
+ */
+export async function waitForJobContentToLoad(
+  page: Page,
+  timeout = 10000,
+): Promise<void> {
+  try {
+    await page.waitForFunction(
+      () => !document.body.textContent?.includes("Loading job details"),
+      { timeout },
+    );
+    // Give it a bit more time for content to render
+    await page.waitForTimeout(1000);
+  } catch (e) {
+    // Timeout is not critical - proceed anyway
+    // Silently continue (caller can log if needed)
   }
 }

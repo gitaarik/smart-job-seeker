@@ -549,6 +549,8 @@ export async function extractJobData(
       experience_level: data.experience_level,
       skills: data.skills,
       status: data.status,
+      job_description: data.job_description ? `${data.job_description.substring(0, 100)}...` : null,
+      company_description: data.company_description ? `${data.company_description.substring(0, 100)}...` : null,
     });
 
     // 7. If LLM didn't extract date, try fallback regex extraction

@@ -17,7 +17,10 @@ import { config } from "$lib/server/config";
 import { BrowserUseClient } from "$lib/server/browser-use-client";
 import { parseRelativeDate } from "$lib/tools/date-utils";
 import { clearDirectusCache } from "$lib/server/directus";
-import { launchBrowser } from "$lib/server/browser-utils";
+import {
+  launchBrowser,
+  waitForJobContentToLoad,
+} from "$lib/server/browser-utils";
 import { scrapeJobsWithUrls } from "$lib/server/scrapers/url-scraper";
 import { scrapeJobsWithClicks } from "$lib/server/scrapers/click-scraper";
 import { scrapeJobsWithBrowserUse } from "$lib/server/scrapers/browser-use-scraper";
@@ -222,6 +225,9 @@ async function rescrapeJobById(
       try {
         const page = await context.newPage();
         await page.goto(job.source_url, { waitUntil: "load", timeout: 30000 });
+
+        // Wait for dynamic job content to load (e.g., LinkedIn's async-loaded descriptions)
+        await waitForJobContentToLoad(page);
 
         // Get HTML content from the page
         const html = await page.content();

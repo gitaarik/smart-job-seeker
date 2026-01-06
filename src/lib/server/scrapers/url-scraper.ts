@@ -3,7 +3,7 @@
  * Traditional scraping: extract job URLs from search results, visit each job page, extract data
  */
 
-import type { Page } from "playwright";
+import type { Page } from "patchright";
 import { config } from "$lib/server/config";
 import {
   extractJobData,
@@ -30,6 +30,7 @@ import {
   waitForLoginSolution,
 } from "$lib/server/scraper-interactive";
 import { dbDirect } from "$lib/db";
+import { waitForJobContentToLoad } from "$lib/server/browser-utils";
 
 /**
  * Check if job HTML has changed since last scrape
@@ -220,6 +221,9 @@ export async function scrapeJobsWithUrls(
           waitUntil: "load",
           timeout: config.scraperDefaultTimeout,
         });
+
+        // Wait for dynamic job content to load (e.g., LinkedIn's async-loaded descriptions)
+        await waitForJobContentToLoad(page);
 
         const jobHtml = await page.content();
         const strippedHtml = stripHtmlForLlm(jobHtml);
