@@ -442,7 +442,7 @@ export async function generateChatCompletion(
 ): Promise<string> {
   const {
     model = config.llmModel, // Use custom model or default from config
-    maxTokens = 2048,
+    maxTokens = 8192, // Increased from 2048 to handle larger responses (e.g., many job links)
     temperature = 0.7,
     responseFormat,
   } = options;
