@@ -148,7 +148,34 @@ export async function scrapeJobsWithUrls(
     }
 
     console.log(`   Extracting job links (${htmlSize} KB)...`);
-    let pageUrls = await extractJobLinks(html);
+    let pageUrls: string[];
+    
+    try {
+      pageUrls = await extractJobLinks(html);
+    } catch (error) {
+      // extractJobLinks has its own login detection that might disagree with our LLM check
+      // If it throws a login error, handle it here as a fallback
+      if (
+        error instanceof Error &&
+        error.message.includes("Login/authentication page detected")
+      ) {
+        console.log("   ⚠️  extractJobLinks detected login (fallback check)");
+        const loginCompleted = await waitForLoginSolution(page);
+
+        if (!loginCompleted) {
+          console.log("⚠️  Skipping this search due to login timeout");
+          break;
+        }
+
+        console.log("🔄 Reloading page after login...");
+        await page.reload({ waitUntil: "load", timeout: 30000 });
+        await page.waitForTimeout(config.scraperRateLimitDelay);
+        continue;
+      }
+
+      // Re-throw if it's a different error
+      throw error;
+    }
 
     if (!pageUrls || pageUrls.length === 0) {
       if (currentPage === 1) {
