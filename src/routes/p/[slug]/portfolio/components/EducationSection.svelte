@@ -10,7 +10,6 @@
     faLink,
     faMapMarkerAlt,
   } from "@fortawesome/free-solid-svg-icons";
-  import { resume } from "$lib/data/resume";
 
   import { formatDateRangeVerbose } from "$lib/tools/date-utils";
   import { getImg } from "$lib/tools/get-img";

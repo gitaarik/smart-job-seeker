@@ -1,14 +1,13 @@
 <script lang="ts">
   import type { PageData } from "./$types";
-  import HeaderSection from "./sections/HeaderSection.svelte";
-  import OverviewSection from "./sections/OverviewSection.svelte";
-  import TechnicalExpertiseSection from "./sections/TechnicalExpertiseSection.svelte";
-  import ProfessionalExperience from "./components/ProfessionalExperience.svelte";
-  import ReferencesSection from "./sections/ReferencesSection.svelte";
-  import EducationSection from "./sections/EducationSection.svelte";
-  import ProjectsSection from "./sections/ProjectsSection.svelte";
-  import HobbiesInterestsSection from "./sections/HobbiesInterestsSection.svelte";
   import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
+  import HeaderSection from "./components/HeaderSection.svelte";
+  import ProfileSection from "./components/ProfileSection.svelte";
+  import HobbiesInterestsSection from "./components/HobbiesInterestsSection.svelte";
+  import ProfessionalExperience from "./components/ProfessionalExperience.svelte";
+  import ReferencesSection from "./components/ReferencesSection.svelte";
+  import SummarySection from "./components/SummarySection.svelte";
+  import TechnicalExpertiseSection from "./components/TechnicalExpertiseSection.svelte";
 
   let { data }: { data: PageData } = $props();
 </script>
@@ -17,7 +16,7 @@
   {#if data.profile}
     <title>{data.profile.name} - {data.profile.title}</title>
   {:else}
-    <title>Portfolio page</title>
+    <title>Home</title>
   {/if}
   <meta
     name="viewport"
@@ -36,11 +35,11 @@
     class="flex flex-col gap-10 print:gap-7 py-6 px-4 print:p-0 max-w-[800px] mx-auto"
   >
     <HeaderSection profile={data.profile} />
-    <OverviewSection profile={data.profile} />
+    <ProfileSection profile={data.profile} />
+    <SummarySection profile={data.profile} />
     <TechnicalExpertiseSection profile={data.profile} />
     <ProfessionalExperience profile={data.profile} />
-    <EducationSection profile={data.profile} />
-    <ProjectsSection profile={data.profile} />
     <ReferencesSection />
+    <HobbiesInterestsSection profile={data.profile} />
   </div>
 </div>

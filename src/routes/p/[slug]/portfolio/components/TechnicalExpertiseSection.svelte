@@ -1,6 +1,6 @@
 <script lang="ts">
   import InfoSection from "./InfoSection.svelte";
-  import InfoBoxes from "../components/InfoBoxes.svelte";
+  import InfoBoxes from "./InfoBoxes.svelte";
   import { faCode } from "@fortawesome/free-solid-svg-icons";
 
   interface Skill {

@@ -1,14 +1,44 @@
+import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
-import { json } from "@sveltejs/kit";
+import { getProfileByIdentifier } from "$lib/server/profile-default";
+import { getLatestExportWithFile } from "$lib/server/profile-export-files";
 import { dbDirect } from "$lib/db";
-import { exportProfileToJsonResume } from "../../../scripts/lib/json-resume-exporter";
+import { exportProfileToJsonResume } from "../../../../../scripts/lib/json-resume-exporter";
 
-export const GET: RequestHandler = async ({ url }) => {
-  const version = url.searchParams.get("version");
+export const GET: RequestHandler = async ({ params }) => {
+  const { slug } = params;
 
-  // Get default profile with full relations
-  const profile = await dbDirect.profiles.findFirst({
-    where: { is_default: true },
+  // Get profile by slug
+  const profile = await getProfileByIdentifier(slug);
+
+  if (!profile) {
+    throw error(404, `Profile not found: ${slug}`);
+  }
+
+  // Try to get pre-generated JSON Resume export from profile_exports
+  const exportWithFile = await getLatestExportWithFile({
+    profileId: profile.id,
+    exportType: "resume",
+    fileType: "json",
+    exportFormat: "json_resume", // Specifically look for JSON Resume format
+  });
+
+  // If we found a pre-generated export, serve it
+  if (exportWithFile) {
+    const jsonContent = JSON.parse(exportWithFile.buffer.toString("utf-8"));
+    return json(jsonContent, {
+      headers: {
+        "Content-Type": "application/json",
+        "Content-Disposition": `attachment; filename="${slug}-resume.json"`,
+        "Cache-Control": "public, max-age=3600",
+      },
+    });
+  }
+
+  // No pre-generated export found, generate on-the-fly
+  // Fetch full profile with all relations needed for JSON Resume export
+  const fullProfile = await dbDirect.profiles.findUnique({
+    where: { id: profile.id },
     select: {
       id: true,
       name: true,
@@ -102,17 +132,17 @@ export const GET: RequestHandler = async ({ url }) => {
     },
   });
 
-  if (!profile) {
-    return json({ error: "Default profile not found" }, { status: 404 });
+  if (!fullProfile) {
+    throw error(500, "Failed to load profile for JSON export");
   }
 
-  const jsonResume = exportProfileToJsonResume(profile);
+  const jsonResume = exportProfileToJsonResume(fullProfile);
 
   return json(jsonResume, {
     headers: {
       "Content-Type": "application/json",
-      "Content-Disposition": `attachment; filename="resume-${profile.id}.json"`,
-      "Cache-Control": "no-cache",
+      "Content-Disposition": `attachment; filename="${slug}-resume.json"`,
+      "Cache-Control": "no-cache", // Don't cache on-the-fly generation
     },
   });
 };

@@ -1,7 +1,7 @@
 <script lang="ts">
-  import TechTag from "../components/TechTag.svelte";
-  import InfoBoxes from "../components/InfoBoxes.svelte";
-  import SectionHeader from "../components/SectionHeader.svelte";
+  import TechTag from "./TechTag.svelte";
+  import InfoBoxes from "./InfoBoxes.svelte";
+  import SectionHeader from "./SectionHeader.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faBuilding,

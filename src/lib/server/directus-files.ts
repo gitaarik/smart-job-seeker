@@ -1,6 +1,6 @@
-import { deleteFile, uploadFiles } from "@directus/sdk";
+import { deleteFile, readAssetRaw, uploadFiles } from "@directus/sdk";
 import { createDirectusClient } from "./directus";
-import type { Buffer } from "buffer";
+import { Buffer } from "buffer";
 
 interface UploadFileOptions {
   filename: string;
@@ -42,4 +42,35 @@ export async function uploadFileToDirectus(
 export async function deleteFileFromDirectus(fileId: string): Promise<void> {
   const client = createDirectusClient();
   await client.request(deleteFile(fileId));
+}
+
+/**
+ * Retrieve a file from Directus by UUID
+ * @param fileUuid - The UUID of the file in Directus
+ * @returns Buffer containing the file data
+ */
+export async function getFileFromDirectus(fileUuid: string): Promise<Buffer> {
+  const client = createDirectusClient();
+  const fileData = await client.request(readAssetRaw(fileUuid));
+
+  // Convert ReadableStream to Buffer
+  const reader = fileData.getReader();
+  const chunks: Uint8Array[] = [];
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+  }
+
+  // Concatenate all chunks
+  const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
+  const result = new Uint8Array(totalLength);
+  let offset = 0;
+  for (const chunk of chunks) {
+    result.set(chunk, offset);
+    offset += chunk.length;
+  }
+
+  return Buffer.from(result);
 }

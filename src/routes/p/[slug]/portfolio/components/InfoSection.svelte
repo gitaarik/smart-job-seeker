@@ -1,5 +1,5 @@
 <script lang="ts">
-  import SectionHeader from "../components/SectionHeader.svelte";
+  import SectionHeader from "./SectionHeader.svelte";
   import type { IconProp } from "@fortawesome/fontawesome-svg-core";
 
   interface Props {
