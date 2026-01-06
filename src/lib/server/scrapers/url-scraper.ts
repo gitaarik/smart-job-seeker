@@ -6,6 +6,7 @@
 import type { Page } from "patchright";
 import { config } from "$lib/server/config";
 import {
+  detectLoginPage,
   extractJobData,
   extractJobLinks,
   normalizeJobUrl,
@@ -127,33 +128,27 @@ export async function scrapeJobsWithUrls(
       continue;
     }
 
-    console.log(`   Extracting job links (${htmlSize} KB)...`);
-    let pageUrls: string[];
+    // Check for login page BEFORE extracting job links
+    console.log(`   Checking for login requirement...`);
+    const isLoginPage = await detectLoginPage(html);
 
-    try {
-      pageUrls = await extractJobLinks(html);
-    } catch (error) {
-      // Check if this is a login error
-      if (
-        error instanceof Error &&
-        error.message.includes("Login/authentication page detected")
-      ) {
-        const loginCompleted = await waitForLoginSolution(page);
+    if (isLoginPage) {
+      console.log("   🔐 Login page detected");
+      const loginCompleted = await waitForLoginSolution(page);
 
-        if (!loginCompleted) {
-          console.log("⚠️  Skipping this search due to login timeout");
-          break;
-        }
-
-        console.log("🔄 Reloading page after login...");
-        await page.reload({ waitUntil: "load", timeout: 30000 });
-        await page.waitForTimeout(config.scraperRateLimitDelay);
-        continue;
+      if (!loginCompleted) {
+        console.log("⚠️  Skipping this search due to login timeout");
+        break;
       }
 
-      // Re-throw if it's a different error
-      throw error;
+      console.log("🔄 Reloading page after login...");
+      await page.reload({ waitUntil: "load", timeout: 30000 });
+      await page.waitForTimeout(config.scraperRateLimitDelay);
+      continue;
     }
+
+    console.log(`   Extracting job links (${htmlSize} KB)...`);
+    let pageUrls = await extractJobLinks(html);
 
     if (!pageUrls || pageUrls.length === 0) {
       if (currentPage === 1) {
