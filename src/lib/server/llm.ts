@@ -85,7 +85,7 @@ function handleLLMError(
     messageLower.includes("out of credits")
   ) {
     const enhancedMessage =
-      `LLM quota exceeded (${provider}/${model}): ${originalMessage}`;
+      `💳 Quota/balance exceeded for ${provider}/${model}. Please check your API credits and billing.`;
     throw new LLMQuotaExceededError(enhancedMessage, provider, model);
   }
 
@@ -98,7 +98,7 @@ function handleLLMError(
     messageLower.includes("incorrect api key")
   ) {
     const enhancedMessage =
-      `LLM authentication failed (${provider}/${model}): ${originalMessage}`;
+      `🔐 Authentication failed for ${provider}/${model}. Please check your API key is valid and has the correct permissions.`;
     throw new LLMAuthenticationError(enhancedMessage, provider, model);
   }
 
@@ -108,9 +108,54 @@ function handleLLMError(
     messageLower.includes("429") ||
     messageLower.includes("too many requests")
   ) {
+    // Try to extract retry time from error message
+    // Groq format: "Please try again in 5m19.3344s"
+    // OpenAI format: might include "Please try again in X seconds"
+    let retryAfter: number | undefined;
+    let retryMessage = "";
+
+    // Match patterns like "5m19.3344s", "24m40.2048s", "30s", "2h15m"
+    const retryMatch = originalMessage.match(
+      /try again in (\d+h)?(\d+m)?(\d+(?:\.\d+)?s)/i,
+    );
+    if (retryMatch) {
+      const hours = retryMatch[1] ? parseInt(retryMatch[1]) : 0;
+      const minutes = retryMatch[2] ? parseInt(retryMatch[2]) : 0;
+      const seconds = retryMatch[3] ? parseFloat(retryMatch[3]) : 0;
+
+      // Convert to total seconds
+      retryAfter = Math.ceil(hours * 3600 + minutes * 60 + seconds);
+
+      // Format user-friendly message
+      if (hours > 0) {
+        retryMessage = ` Retry in ${hours}h ${minutes}m.`;
+      } else if (minutes > 0) {
+        retryMessage = ` Retry in ${minutes}m ${Math.ceil(seconds)}s.`;
+      } else {
+        retryMessage = ` Retry in ${Math.ceil(seconds)}s.`;
+      }
+    }
+
+    // Try to extract usage info (Groq format)
+    // "Limit 500000, Used 489308, Requested 12540"
+    const usageMatch = originalMessage.match(
+      /Limit (\d+),\s*Used (\d+),\s*Requested (\d+)/i,
+    );
+    let usageInfo = "";
+    if (usageMatch) {
+      const limit = parseInt(usageMatch[1]);
+      const used = parseInt(usageMatch[2]);
+      const requested = parseInt(usageMatch[3]);
+      const remaining = limit - used;
+      const percentUsed = ((used / limit) * 100).toFixed(1);
+
+      usageInfo =
+        ` Used ${used.toLocaleString()}/${limit.toLocaleString()} tokens (${percentUsed}%, ${remaining.toLocaleString()} remaining).`;
+    }
+
     const enhancedMessage =
-      `LLM rate limit exceeded (${provider}/${model}): ${originalMessage}`;
-    throw new LLMRateLimitError(enhancedMessage, provider, model);
+      `🚫 Rate limit exceeded for ${provider}/${model}.${usageInfo}${retryMessage}`;
+    throw new LLMRateLimitError(enhancedMessage, provider, model, retryAfter);
   }
 
   // Re-throw original error if not recognized
