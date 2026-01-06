@@ -217,6 +217,12 @@ export async function scrapeJobsWithUrls(
           timeout: config.scraperDefaultTimeout,
         });
 
+        // Capture the actual URL after redirects (e.g., Indeed redirects /rc/clk to actual job page)
+        const actualJobUrl = page.url();
+        if (actualJobUrl !== jobUrl) {
+          console.log(`   ↪ Redirected to: ${actualJobUrl}`);
+        }
+
         // Wait for dynamic job content to load (e.g., LinkedIn's async-loaded descriptions)
         await waitForJobContentToLoad(page);
 
@@ -224,7 +230,11 @@ export async function scrapeJobsWithUrls(
         const strippedHtml = stripHtmlForLlm(jobHtml);
 
         // Check if HTML changed (skip if unchanged and not forced)
-        const htmlChanged = await hasHtmlChanged(jobUrl, strippedHtml, false);
+        const htmlChanged = await hasHtmlChanged(
+          actualJobUrl,
+          strippedHtml,
+          false,
+        );
         if (!htmlChanged) {
           console.log(`   ⏭️  Skipping - HTML unchanged`);
           continue;
@@ -232,7 +242,7 @@ export async function scrapeJobsWithUrls(
 
         // Extract job data
         console.log("   Extracting job data...");
-        const jobData = await extractJobData(jobHtml, jobUrl);
+        const jobData = await extractJobData(jobHtml, actualJobUrl);
 
         // Skip if no meaningful data was extracted (invalid/expired page)
         // Check if most critical fields are null/empty
@@ -275,7 +285,7 @@ export async function scrapeJobsWithUrls(
         // Save job
         const result = await upsertJob(
           { ...jobData, date_posted: datePosted },
-          jobUrl,
+          actualJobUrl,
           platformId,
         );
         processedCount++;
