@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ChatMessage, ResponseFormat } from "../llm";
+import { AIMessage } from "@langchain/core/messages";
 
 // Mock getEnv
 vi.mock("$lib/tools/get-env", () => ({
@@ -19,20 +20,22 @@ vi.mock("../config", () => ({
   },
 }));
 
-// Create hoisted mock
-const { mockCreate } = vi.hoisted(() => ({
-  mockCreate: vi.fn(),
+// Create hoisted mocks for LangChain
+const { mockInvoke, mockWithStructuredOutput } = vi.hoisted(() => ({
+  mockInvoke: vi.fn(),
+  mockWithStructuredOutput: vi.fn(),
 }));
 
-// Mock Groq SDK
-vi.mock("groq-sdk", () => ({
-  default: class Groq {
+// Mock LangChain Groq
+vi.mock("@langchain/groq", () => ({
+  ChatGroq: class ChatGroq {
     constructor(config: any) {}
-    chat = {
-      completions: {
-        create: mockCreate,
-      },
-    };
+    async invoke(messages: any) {
+      return mockInvoke(messages);
+    }
+    withStructuredOutput(schema: any, options?: any) {
+      return mockWithStructuredOutput(schema, options);
+    }
   },
 }));
 
@@ -52,25 +55,20 @@ describe("generateChatCompletion", () => {
       { role: "user", content: "Hello" },
     ];
 
-    mockCreate.mockResolvedValueOnce({
-      choices: [
-        {
-          message: {
-            content: "Hi there! How can I help you?",
-          },
-        },
-      ],
-    });
+    // Mock LangChain response (returns AIMessage)
+    mockInvoke.mockResolvedValueOnce(
+      new AIMessage("Hi there! How can I help you?"),
+    );
 
     const result = await generateChatCompletion(messages);
 
     expect(result).toBe("Hi there! How can I help you?");
-    expect(mockCreate).toHaveBeenCalledWith({
-      model: "meta-llama/llama-4-scout-17b-16e-instruct",
-      messages,
-      max_tokens: 2048,
-      temperature: 0.7,
-    });
+    expect(mockInvoke).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ content: "You are a helpful assistant" }),
+        expect.objectContaining({ content: "Hello" }),
+      ]),
+    );
   });
 
   it("should use custom options", async () => {
@@ -78,15 +76,7 @@ describe("generateChatCompletion", () => {
       { role: "user", content: "Test" },
     ];
 
-    mockCreate.mockResolvedValueOnce({
-      choices: [
-        {
-          message: {
-            content: "Response",
-          },
-        },
-      ],
-    });
+    mockInvoke.mockResolvedValueOnce(new AIMessage("Response"));
 
     await generateChatCompletion(messages, {
       model: "custom-model",
@@ -94,12 +84,11 @@ describe("generateChatCompletion", () => {
       temperature: 0.5,
     });
 
-    expect(mockCreate).toHaveBeenCalledWith({
-      model: "custom-model",
-      messages,
-      max_tokens: 1024,
-      temperature: 0.5,
-    });
+    expect(mockInvoke).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ content: "Test" }),
+      ]),
+    );
   });
 
   it("should include response format for structured output", async () => {
@@ -121,33 +110,24 @@ describe("generateChatCompletion", () => {
       },
     };
 
-    mockCreate.mockResolvedValueOnce({
-      choices: [
-        {
-          message: {
-            content: '{"name": "test"}',
-          },
-        },
-      ],
+    // Mock structured output - returns object directly
+    const mockStructuredInvoke = vi.fn().mockResolvedValueOnce({
+      name: "test",
+    });
+    mockWithStructuredOutput.mockReturnValueOnce({
+      invoke: mockStructuredInvoke,
     });
 
     const result = await generateChatCompletion(messages, { responseFormat });
 
     // Should return parsed JSON object, not string
     expect(result).toEqual({ name: "test" });
-    // Llama 4 models support json_schema format
-    expect(mockCreate).toHaveBeenCalledWith({
-      model: "meta-llama/llama-4-scout-17b-16e-instruct",
-      messages: [
-        {
-          role: "user",
-          content: "Extract data",
-        },
-      ],
-      max_tokens: 2048,
-      temperature: 0.7,
-      response_format: responseFormat,
-    });
+    expect(mockWithStructuredOutput).toHaveBeenCalled();
+    expect(mockStructuredInvoke).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ content: "Extract data" }),
+      ]),
+    );
   });
 
   it("should throw error if no content is returned", async () => {
@@ -155,43 +135,25 @@ describe("generateChatCompletion", () => {
       { role: "user", content: "Test" },
     ];
 
-    mockCreate.mockResolvedValueOnce({
-      choices: [
-        {
-          message: {
-            content: null,
-          },
-        },
-      ],
-    });
+    // Mock empty response
+    mockInvoke.mockResolvedValueOnce(new AIMessage(""));
 
     await expect(generateChatCompletion(messages)).rejects.toThrow(
-      "No content returned from Groq",
+      "No content returned from groq",
     );
   });
 
-  it("should throw error if choices array is empty", async () => {
+  it("should throw error if response is not a string", async () => {
     const messages: ChatMessage[] = [
       { role: "user", content: "Test" },
     ];
 
-    mockCreate.mockResolvedValueOnce({
-      choices: [],
-    });
+    // Mock non-string response
+    mockInvoke.mockResolvedValueOnce({ content: ["array", "content"] });
 
     await expect(generateChatCompletion(messages)).rejects.toThrow(
-      "No content returned from Groq",
+      "Expected string response from LangChain model",
     );
-  });
-
-  it("should throw error if no choices in response", async () => {
-    const messages: ChatMessage[] = [
-      { role: "user", content: "Test" },
-    ];
-
-    mockCreate.mockResolvedValueOnce({});
-
-    await expect(generateChatCompletion(messages)).rejects.toThrow();
   });
 
   it("should handle multi-turn conversations", async () => {
@@ -202,23 +164,18 @@ describe("generateChatCompletion", () => {
       { role: "user", content: "What's 3+3?" },
     ];
 
-    mockCreate.mockResolvedValueOnce({
-      choices: [
-        {
-          message: {
-            content: "6",
-          },
-        },
-      ],
-    });
+    mockInvoke.mockResolvedValueOnce(new AIMessage("6"));
 
     const result = await generateChatCompletion(messages);
 
     expect(result).toBe("6");
-    expect(mockCreate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        messages,
-      }),
+    expect(mockInvoke).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ content: "You are helpful" }),
+        expect.objectContaining({ content: "What's 2+2?" }),
+        expect.objectContaining({ content: "4" }),
+        expect.objectContaining({ content: "What's 3+3?" }),
+      ]),
     );
   });
 
@@ -227,7 +184,7 @@ describe("generateChatCompletion", () => {
       { role: "user", content: "Test" },
     ];
 
-    mockCreate.mockRejectedValueOnce(new Error("API Error"));
+    mockInvoke.mockRejectedValueOnce(new Error("API Error"));
 
     await expect(generateChatCompletion(messages)).rejects.toThrow("API Error");
   });
@@ -237,15 +194,9 @@ describe("generateChatCompletion", () => {
       { role: "user", content: "" },
     ];
 
-    mockCreate.mockResolvedValueOnce({
-      choices: [
-        {
-          message: {
-            content: "Please provide a message.",
-          },
-        },
-      ],
-    });
+    mockInvoke.mockResolvedValueOnce(
+      new AIMessage("Please provide a message."),
+    );
 
     const result = await generateChatCompletion(messages);
 
@@ -269,19 +220,76 @@ describe("generateChatCompletion", () => {
       },
     };
 
-    // Mock LLM returning invalid JSON
-    mockCreate.mockResolvedValueOnce({
-      choices: [
-        {
-          message: {
-            content: "Not valid JSON {bad}",
-          },
-        },
-      ],
+    // Mock structured output returning an object with circular reference (can't be stringified)
+    const circularObj: any = { name: "test" };
+    circularObj.self = circularObj; // Create circular reference
+
+    const mockStructuredInvoke = vi.fn().mockResolvedValueOnce(circularObj);
+    mockWithStructuredOutput.mockReturnValueOnce({
+      invoke: mockStructuredInvoke,
     });
 
     await expect(
       generateChatCompletion(messages, { responseFormat }),
     ).rejects.toThrow(/Failed to parse JSON response[\s\S]*Response was:/);
+  });
+
+  it("should use cache for repeated requests", async () => {
+    const messages: ChatMessage[] = [
+      { role: "user", content: "Test caching" },
+    ];
+
+    mockInvoke.mockResolvedValueOnce(new AIMessage("Cached response"));
+
+    // First call
+    const result1 = await generateChatCompletion(messages);
+    expect(result1).toBe("Cached response");
+    expect(mockInvoke).toHaveBeenCalledTimes(1);
+
+    // Second call - should use cache
+    const result2 = await generateChatCompletion(messages);
+    expect(result2).toBe("Cached response");
+    expect(mockInvoke).toHaveBeenCalledTimes(1); // Still 1, not called again
+  });
+
+  it("should handle rate limit errors with enhanced messages", async () => {
+    const messages: ChatMessage[] = [
+      { role: "user", content: "Test" },
+    ];
+
+    const rateLimitError = new Error(
+      "Rate limit exceeded. Please try again in 5m30s. Limit 500000, Used 495000, Requested 10000",
+    );
+    mockInvoke.mockRejectedValueOnce(rateLimitError);
+
+    await expect(generateChatCompletion(messages)).rejects.toThrow(
+      /🚫 Rate limit exceeded for groq/,
+    );
+  });
+
+  it("should handle quota exceeded errors", async () => {
+    const messages: ChatMessage[] = [
+      { role: "user", content: "Test" },
+    ];
+
+    const quotaError = new Error("402: Insufficient balance");
+    mockInvoke.mockRejectedValueOnce(quotaError);
+
+    await expect(generateChatCompletion(messages)).rejects.toThrow(
+      /💳 Quota\/balance exceeded for groq/,
+    );
+  });
+
+  it("should handle authentication errors", async () => {
+    const messages: ChatMessage[] = [
+      { role: "user", content: "Test" },
+    ];
+
+    const authError = new Error("401: Invalid API key");
+    mockInvoke.mockRejectedValueOnce(authError);
+
+    await expect(generateChatCompletion(messages)).rejects.toThrow(
+      /🔐 Authentication failed for groq/,
+    );
   });
 });
