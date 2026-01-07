@@ -85,6 +85,15 @@ function handleLLMError(
     : String(error);
   const messageLower = originalMessage.toLowerCase();
 
+  // Log full error object for debugging
+  console.error("[LLM Error Debug]", {
+    provider,
+    model,
+    errorType: error?.constructor?.name,
+    message: originalMessage,
+    fullError: error,
+  });
+
   // Check for quota/balance errors (402, insufficient balance, quota exceeded)
   if (
     messageLower.includes("insufficient balance") ||
@@ -116,6 +125,36 @@ function handleLLMError(
     messageLower.includes("429") ||
     messageLower.includes("too many requests")
   ) {
+    // Try to extract status code and additional error details
+    let statusCode = "";
+    let apiErrorDetails = "";
+
+    // Check if error object has additional properties (from LangChain/API)
+    if (error && typeof error === "object") {
+      const errorObj = error as any;
+
+      // Try to get status code
+      if (errorObj.status) {
+        statusCode = ` (HTTP ${errorObj.status})`;
+      } else if (errorObj.statusCode) {
+        statusCode = ` (HTTP ${errorObj.statusCode})`;
+      }
+
+      // Try to get response body or additional error info
+      if (errorObj.response?.data) {
+        try {
+          const responseData = typeof errorObj.response.data === "string"
+            ? errorObj.response.data
+            : JSON.stringify(errorObj.response.data);
+          apiErrorDetails = ` API response: ${responseData.substring(0, 200)}`;
+        } catch {
+          // Ignore JSON stringify errors
+        }
+      } else if (errorObj.error?.message) {
+        apiErrorDetails = ` Details: ${errorObj.error.message}`;
+      }
+    }
+
     // Try to extract retry time from error message
     // Groq format: "Please try again in 5m19.3344s"
     // OpenAI format: might include "Please try again in X seconds"
@@ -162,7 +201,9 @@ function handleLLMError(
     }
 
     const enhancedMessage =
-      `🚫 Rate limit exceeded for ${provider}/${model}.${usageInfo}${retryMessage}`;
+      `🚫 Rate limit exceeded for ${provider}/${model}${statusCode}.${usageInfo}${retryMessage}${
+        apiErrorDetails ? "\n" + apiErrorDetails : ""
+      }\n\nOriginal error: ${originalMessage}`;
     throw new LLMRateLimitError(enhancedMessage, provider, model, retryAfter);
   }
 
@@ -449,7 +490,50 @@ async function generateWithLangChain(
       // Convert JSON schema to Zod schema
       const zodSchema = jsonSchemaToZod(responseFormat.json_schema.schema);
 
-      // Use withStructuredOutput for structured responses
+      // For Groq, use JSON mode instead of structured output (tool calling)
+      // Groq's tool calling has strict validation that conflicts with our schemas
+      if (provider === "groq") {
+        // Add JSON mode instruction to the last user message
+        const lastMessage = langChainMessages[langChainMessages.length - 1];
+        if (lastMessage instanceof HumanMessage) {
+          lastMessage.content = lastMessage.content +
+            "\n\nRespond with valid JSON only, no other text.";
+        }
+
+        // Invoke without structured output
+        const result = await chatModel.invoke(langChainMessages);
+        const responseContent = typeof result.content === "string"
+          ? result.content
+          : String(result.content);
+
+        // Parse and validate JSON response
+        // Strip markdown code blocks if present (```json ... ``` or ``` ... ```)
+        let jsonContent = responseContent.trim();
+        const codeBlockMatch = jsonContent.match(
+          /```(?:json)?\s*\n([\s\S]*?)\n```/,
+        );
+        if (codeBlockMatch) {
+          jsonContent = codeBlockMatch[1].trim();
+        }
+
+        try {
+          const parsed = JSON.parse(jsonContent);
+          // Validate against Zod schema
+          const validated = zodSchema.parse(parsed);
+          return JSON.stringify(validated);
+        } catch (parseError) {
+          const errorMsg = parseError instanceof Error
+            ? parseError.message
+            : String(parseError);
+          throw new Error(
+            `Failed to parse JSON response from Groq: ${errorMsg}\nResponse was: ${
+              responseContent.substring(0, 500)
+            }`,
+          );
+        }
+      }
+
+      // For other providers, use withStructuredOutput
       const structuredModel = chatModel.withStructuredOutput(zodSchema, {
         name: responseFormat.json_schema.name,
       });

@@ -253,7 +253,7 @@ export async function createAndGenerateAiChat(
         type: "json_schema" as const,
         json_schema: {
           name: promptRequest.replace(/[^a-zA-Z0-9_]/g, "_"),
-          strict: true,
+          strict: false,
           schema: promptTemplate.format,
         },
       }

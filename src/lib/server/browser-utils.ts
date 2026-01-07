@@ -4,7 +4,7 @@
  */
 
 import { existsSync } from "fs";
-import { type BrowserContext, chromium } from "patchright";
+import { type BrowserContext, chromium, type Page } from "patchright";
 
 // Chrome installation paths to check (Linux)
 const CHROME_PATHS = [
@@ -70,35 +70,17 @@ export async function launchBrowser(
 ): Promise<BrowserContext> {
   const executablePath = findChromeExecutable();
 
-  // Base anti-detection arguments
-  // const args = [
-  //   "--no-sandbox",
-  //   "--disable-setuid-sandbox",
-  //   "--disable-dev-shm-usage",
-  //   "--disable-blink-features=AutomationControlled",
-  //   "--disable-features=IsolateOrigins,site-per-process",
-  //   "--disable-process-singleton-lock", // Allow multiple instances with same profile
-  // ];
-
   console.log(`🚀 Launching persistent browser context...`);
   console.log(`📂 Profile directory: ${userDataDir}`);
 
   const viewport = options.headless ? { width: 1920, height: 1080 } : null;
 
-  // if (options.headless) {
-  //   args.push("--start-maximized");
-  // }
-
   try {
+    // Patchright handles anti-detection internally, so we keep config minimal
     const context = await chromium.launchPersistentContext(userDataDir, {
       executablePath,
       headless: !!options.headless,
-      // args,
       viewport,
-      // userAgent:
-      //   "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-      // locale: "en-US",
-      // timezoneId: "America/New_York",
     });
 
     console.log("✅ Persistent context created successfully");
@@ -114,23 +96,52 @@ export async function launchBrowser(
 
 /**
  * Wait for dynamic job content to load on LinkedIn and similar sites
- * Waits for "Loading job details" text to disappear, indicating content has loaded
+ * Handles lazy loading by scrolling and waiting for loading indicators to disappear
  * @param page Playwright page instance
- * @param timeout Maximum time to wait in milliseconds (default: 10000)
+ * @param timeout Maximum time to wait in milliseconds (default: 15000)
  */
 export async function waitForJobContentToLoad(
   page: Page,
-  timeout = 10000,
+  timeout = 15000,
 ): Promise<void> {
   try {
+    // Scroll down to trigger lazy loading of company info and other sections
+    await page.evaluate(() => {
+      window.scrollTo(0, document.body.scrollHeight / 2);
+    });
+    await page.waitForTimeout(500);
+
+    // Scroll to bottom to ensure all lazy-loaded content triggers
+    await page.evaluate(() => {
+      window.scrollTo(0, document.body.scrollHeight);
+    });
+    await page.waitForTimeout(500);
+
+    // Wait for common loading indicators to disappear
     await page.waitForFunction(
-      () => !document.body.textContent?.includes("Loading job details"),
+      () => {
+        const text = document.body.textContent || "";
+        // Check for various loading indicators
+        return (
+          !text.includes("Loading job details") &&
+          !text.includes("Loading...") &&
+          // Check for LinkedIn skeleton loaders
+          document.querySelectorAll(
+              ".jobs-details__main-content .artdeco-loader",
+            )
+              .length === 0
+        );
+      },
       { timeout },
     );
-    // Give it a bit more time for content to render
+
+    // Scroll back to top
+    await page.evaluate(() => window.scrollTo(0, 0));
+
+    // Give content extra time to render after scrolling
     await page.waitForTimeout(1000);
   } catch (e) {
-    // Timeout is not critical - proceed anyway
+    // Timeout is not critical - proceed anyway with what we have
     // Silently continue (caller can log if needed)
   }
 }
