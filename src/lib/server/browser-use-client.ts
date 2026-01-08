@@ -4,12 +4,14 @@ import { dbDirect } from "$lib/db";
 export interface BrowserUseConfig {
   baseUrl: string;
   timeout: number;
+  sendScreenshots: boolean;
 }
 
 export interface ExecuteTaskParams {
   task: string; // Natural language task description
   startUrl: string; // URL to start from
   maxTime?: number; // Optional max execution time in seconds
+  sendScreenshots?: boolean; // Optional screenshot configuration
 }
 
 export interface ExecuteTaskResponse {
@@ -78,6 +80,7 @@ export class BrowserUseClient {
     this.config = {
       baseUrl: customConfig?.baseUrl ?? config.browserUseUrl,
       timeout: customConfig?.timeout ?? config.browserUseTimeout,
+      sendScreenshots: customConfig?.sendScreenshots ?? config.browserUseSendScreenshots,
     };
   }
 
@@ -89,6 +92,7 @@ export class BrowserUseClient {
         task: params.task,
         start_url: params.startUrl,
         max_time: params.maxTime,
+        send_screenshots: params.sendScreenshots ?? this.config.sendScreenshots,
       }),
       signal: AbortSignal.timeout(this.config.timeout),
     });
@@ -127,6 +131,7 @@ export class BrowserUseClient {
       task,
       startUrl: jobUrl,
       maxTime: 60, // 1 minute max for single job
+      sendScreenshots: this.config.sendScreenshots,
     });
 
     // Parse the JSON result

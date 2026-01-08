@@ -57,6 +57,14 @@ program
     "-f, --force",
     "Force re-import even if HTML hasn't changed (useful for testing new prompts)",
   )
+  .option(
+    "--screenshots",
+    "Enable sending screenshots to Browser-Use (increases token usage, helpful for debugging)",
+  )
+  .option(
+    "--no-screenshots",
+    "Disable sending screenshots to Browser-Use (default, reduces token usage)",
+  )
   .helpOption("-h, --help", "Display help for command");
 
 program.parse();
@@ -148,6 +156,7 @@ async function scrapeJobSite(
         navigationType,
         platformId,
         config.systemScraperProfileId, // Pass profile ID for credentials
+        options.screenshots,
       );
     }
 
@@ -244,7 +253,11 @@ async function rescrapeJobById(
     } else {
       // Default: Browser-Use
       console.log(`\n🤖 Using Browser-Use to extract job data...`);
-      const browserUse = new BrowserUseClient();
+      const browserUse = new BrowserUseClient(
+        options.screenshots !== undefined
+          ? { sendScreenshots: options.screenshots }
+          : undefined,
+      );
       jobData = await browserUse.extractSingleJob(job.source_url);
     }
 

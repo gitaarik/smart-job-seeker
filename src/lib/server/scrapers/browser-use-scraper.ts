@@ -101,11 +101,16 @@ export async function scrapeJobsWithBrowserUse(
   navigationType: "url" | "click",
   platformId: string,
   profileId?: number,
+  sendScreenshots?: boolean,
 ): Promise<number> {
   console.log(`\n🤖 Using Browser-Use (${navigationType} mode)...`);
 
   // Use default config automatically
-  const browserUse = new BrowserUseClient();
+  const browserUse = new BrowserUseClient(
+    sendScreenshots !== undefined
+      ? { sendScreenshots }
+      : undefined,
+  );
 
   // Check for credentials if profileId is provided
   let loginInstructions = "";

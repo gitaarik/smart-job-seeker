@@ -63,6 +63,7 @@ export interface AppConfig {
   browserUseUrl: string;
   browserUseTimeout: number;
   browserUseFallbackEnabled: boolean;
+  browserUseSendScreenshots: boolean;
 
   // Scraper Method Selection
   scraperMethod: "browser-use" | "playwright";
@@ -218,6 +219,8 @@ function loadConfig(): AppConfig {
     ),
     browserUseFallbackEnabled:
       getEnv("SJS_BROWSER_USE_FALLBACK_ENABLED", "true") === "true",
+    browserUseSendScreenshots:
+      getEnv("SJS_BROWSER_USE_SEND_SCREENSHOTS", "false") === "true",
 
     // Scraper Method Selection
     scraperMethod: (getEnv(
