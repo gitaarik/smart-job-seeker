@@ -14,6 +14,7 @@ import {
   SystemMessage,
 } from "@langchain/core/messages";
 import { z } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
 import { getEnv } from "$lib/tools/get-env";
 import { llmCache } from "./cache/llm-cache";
 import { isRetryableError, withRetry } from "./utils/retry";
@@ -442,11 +443,19 @@ async function generateWithLangChain(
       // For Groq, use JSON mode instead of structured output (tool calling)
       // Groq's tool calling has strict validation that conflicts with our schemas
       if (provider === "groq") {
-        // Add JSON mode instruction to the last user message
+        // Convert Zod schema to JSON Schema for the prompt
+        const jsonSchema = zodToJsonSchema(zodSchema, {
+          name: structuredOutput.name,
+          $refStrategy: "none", // Inline all definitions
+        });
+
+        // Add JSON mode instruction with schema to the last user message
         const lastMessage = langChainMessages[langChainMessages.length - 1];
         if (lastMessage instanceof HumanMessage) {
           lastMessage.content = lastMessage.content +
-            "\n\nRespond with valid JSON only, no other text.";
+            "\n\nRespond with valid JSON only that matches this exact schema. Use the exact field names as specified:\n\n" +
+            JSON.stringify(jsonSchema, null, 2) +
+            "\n\nIMPORTANT: Use the exact field names from the schema (e.g., 'isLoginPage', not 'is_login_page').";
         }
 
         // Invoke without structured output
