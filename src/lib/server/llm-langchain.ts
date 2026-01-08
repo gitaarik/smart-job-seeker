@@ -225,13 +225,12 @@ export interface ChatMessage {
 /**
  * JSON schema for structured output
  */
-export interface ResponseFormat {
-  type: "json_schema";
-  json_schema: {
-    name: string;
-    strict?: boolean;
-    schema: Record<string, any>;
-  };
+/**
+ * Structured output configuration using Zod schema
+ */
+export interface StructuredOutputConfig {
+  name: string;
+  schema: z.ZodType<any>;
 }
 
 /**
@@ -241,7 +240,20 @@ export interface ChatCompletionOptions {
   model?: string;
   maxTokens?: number;
   temperature?: number;
-  responseFormat?: ResponseFormat;
+  structuredOutput?: StructuredOutputConfig;
+}
+
+/**
+ * @deprecated Use StructuredOutputConfig instead
+ * Legacy interface for backward compatibility
+ */
+export interface ResponseFormat {
+  type: "json_schema";
+  json_schema: {
+    name: string;
+    strict?: boolean;
+    schema: Record<string, any>;
+  };
 }
 
 /**
@@ -338,72 +350,9 @@ function createLangChainModel(
 }
 
 /**
- * Convert ResponseFormat JSON schema to Zod schema
- * This is a simplified conversion that handles basic types
+ * Note: jsonSchemaToZod() function has been removed.
+ * Zod schemas are now defined directly in code at src/lib/server/schemas/ai-prompt-schemas.ts
  */
-function jsonSchemaToZod(schema: Record<string, any>): z.ZodType<any> {
-  if (schema.type === "object" && schema.properties) {
-    const shape: Record<string, z.ZodType<any>> = {};
-
-    for (
-      const [key, value] of Object.entries(
-        schema.properties as Record<string, any>,
-      )
-    ) {
-      let zodType: z.ZodType<any>;
-
-      // Handle different types
-      switch (value.type) {
-        case "string":
-          zodType = z.string();
-          if (value.description) {
-            zodType = zodType.describe(value.description);
-          }
-          break;
-        case "number":
-          zodType = z.number();
-          if (value.description) {
-            zodType = zodType.describe(value.description);
-          }
-          break;
-        case "boolean":
-          zodType = z.boolean();
-          if (value.description) {
-            zodType = zodType.describe(value.description);
-          }
-          break;
-        case "array":
-          if (value.items) {
-            const itemSchema = jsonSchemaToZod(value.items);
-            zodType = z.array(itemSchema);
-          } else {
-            zodType = z.array(z.any());
-          }
-          if (value.description) {
-            zodType = zodType.describe(value.description);
-          }
-          break;
-        case "object":
-          zodType = jsonSchemaToZod(value);
-          break;
-        default:
-          zodType = z.any();
-      }
-
-      // Handle optional fields
-      if (schema.required && !schema.required.includes(key)) {
-        zodType = zodType.optional();
-      }
-
-      shape[key] = zodType;
-    }
-
-    return z.object(shape);
-  }
-
-  // Fallback for non-object schemas
-  return z.any();
-}
 
 /**
  * Generate a cache key from messages and options
@@ -463,7 +412,7 @@ async function generateWithLangChain(
   model: string,
   maxTokens: number,
   temperature: number,
-  responseFormat?: ResponseFormat,
+  structuredOutput?: StructuredOutputConfig,
 ): Promise<string> {
   const provider = config.llmProvider;
 
@@ -485,10 +434,10 @@ async function generateWithLangChain(
     // Convert messages to LangChain format
     const langChainMessages = convertMessages(finalMessages);
 
-    // Handle structured output if responseFormat is provided
-    if (responseFormat) {
-      // Convert JSON schema to Zod schema
-      const zodSchema = jsonSchemaToZod(responseFormat.json_schema.schema);
+    // Handle structured output if structuredOutput is provided
+    if (structuredOutput) {
+      // Use Zod schema directly (no conversion needed)
+      const zodSchema = structuredOutput.schema;
 
       // For Groq, use JSON mode instead of structured output (tool calling)
       // Groq's tool calling has strict validation that conflicts with our schemas
@@ -535,7 +484,7 @@ async function generateWithLangChain(
 
       // For other providers, use withStructuredOutput
       const structuredModel = chatModel.withStructuredOutput(zodSchema, {
-        name: responseFormat.json_schema.name,
+        name: structuredOutput.name,
       });
 
       const result = await structuredModel.invoke(langChainMessages);
@@ -578,16 +527,16 @@ async function generateWithLangChain(
 
 /**
  * Generate chat completion with structured JSON output
- * When responseFormat is provided, automatically parses the JSON response
+ * When structuredOutput is provided, automatically parses the JSON response
  */
 export async function generateChatCompletion<T = any>(
   messages: ChatMessage[],
-  options: ChatCompletionOptions & { responseFormat: ResponseFormat },
+  options: ChatCompletionOptions & { structuredOutput: StructuredOutputConfig },
 ): Promise<T>;
 
 /**
  * Generate chat completion with text output
- * When responseFormat is not provided, returns raw string
+ * When structuredOutput is not provided, returns raw string
  */
 export async function generateChatCompletion(
   messages: ChatMessage[],
@@ -602,7 +551,7 @@ export async function generateChatCompletion(
     model = config.llmModel,
     maxTokens = 8192,
     temperature = 0.7,
-    responseFormat,
+    structuredOutput,
   } = options;
 
   // Check cache first
@@ -625,7 +574,7 @@ export async function generateChatCompletion(
         model,
         maxTokens,
         temperature,
-        responseFormat,
+        structuredOutput,
       );
     },
     {
@@ -636,8 +585,8 @@ export async function generateChatCompletion(
     },
   );
 
-  // Parse JSON if responseFormat was provided
-  if (responseFormat) {
+  // Parse JSON if structuredOutput was provided
+  if (structuredOutput) {
     try {
       const parsed = JSON.parse(content);
 

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { ChatMessage, ResponseFormat } from "../llm";
+import type { ChatMessage, StructuredOutputConfig } from "../llm";
 import { AIMessage } from "@langchain/core/messages";
+import { z } from "zod";
 
 // Mock getEnv
 vi.mock("$lib/tools/get-env", () => ({
@@ -91,43 +92,28 @@ describe("generateChatCompletion", () => {
     );
   });
 
-  it("should include response format for structured output", async () => {
+  it("should include structured output using Zod schema", async () => {
     const messages: ChatMessage[] = [
       { role: "user", content: "Extract data" },
     ];
 
-    const responseFormat: ResponseFormat = {
-      type: "json_schema",
-      json_schema: {
-        name: "test_schema",
-        strict: true,
-        schema: {
-          type: "object",
-          properties: {
-            name: { type: "string" },
-          },
-        },
-      },
+    const structuredOutput: StructuredOutputConfig = {
+      name: "test_schema",
+      schema: z.object({
+        name: z.string(),
+      }),
     };
 
-    // Mock structured output - returns object directly
-    const mockStructuredInvoke = vi.fn().mockResolvedValueOnce({
-      name: "test",
-    });
-    mockWithStructuredOutput.mockReturnValueOnce({
-      invoke: mockStructuredInvoke,
-    });
+    // For Groq provider, structured output uses JSON mode (invoke returns JSON string)
+    mockInvoke.mockResolvedValueOnce(
+      new AIMessage('{"name": "test"}'),
+    );
 
-    const result = await generateChatCompletion(messages, { responseFormat });
+    const result = await generateChatCompletion(messages, { structuredOutput });
 
     // Should return parsed JSON object, not string
     expect(result).toEqual({ name: "test" });
-    expect(mockWithStructuredOutput).toHaveBeenCalled();
-    expect(mockStructuredInvoke).toHaveBeenCalledWith(
-      expect.arrayContaining([
-        expect.objectContaining({ content: "Extract data" }),
-      ]),
-    );
+    expect(mockInvoke).toHaveBeenCalled();
   });
 
   it("should throw error if no content is returned", async () => {
@@ -203,34 +189,25 @@ describe("generateChatCompletion", () => {
     expect(result).toBe("Please provide a message.");
   });
 
-  it("should throw descriptive error for invalid JSON when responseFormat provided", async () => {
+  it("should throw descriptive error for invalid JSON when structuredOutput provided", async () => {
     const messages: ChatMessage[] = [
       { role: "user", content: "Extract data" },
     ];
 
-    const responseFormat: ResponseFormat = {
-      type: "json_schema",
-      json_schema: {
-        name: "test",
-        strict: true,
-        schema: {
-          type: "object",
-          properties: { name: { type: "string" } },
-        },
-      },
+    const structuredOutput: StructuredOutputConfig = {
+      name: "test",
+      schema: z.object({
+        name: z.string(),
+      }),
     };
 
-    // Mock structured output returning an object with circular reference (can't be stringified)
-    const circularObj: any = { name: "test" };
-    circularObj.self = circularObj; // Create circular reference
-
-    const mockStructuredInvoke = vi.fn().mockResolvedValueOnce(circularObj);
-    mockWithStructuredOutput.mockReturnValueOnce({
-      invoke: mockStructuredInvoke,
-    });
+    // For Groq provider, mock invalid JSON response
+    mockInvoke.mockResolvedValueOnce(
+      new AIMessage("This is not valid JSON"),
+    );
 
     await expect(
-      generateChatCompletion(messages, { responseFormat }),
+      generateChatCompletion(messages, { structuredOutput }),
     ).rejects.toThrow(/Failed to parse JSON response[\s\S]*Response was:/);
   });
 

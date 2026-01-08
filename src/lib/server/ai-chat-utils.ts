@@ -6,6 +6,7 @@ import { db } from "$lib/db";
 import { generateAiChatFullPrompt } from "./ai-chat-full-prompt-generate";
 import { generateAiChatResponse } from "./ai-chat-response-generate";
 import { generateChatCompletion } from "./llm";
+import { getSchemaForPrompt } from "./schemas/ai-prompt-schemas";
 
 /**
  * Interpolate variables in a prompt string
@@ -245,17 +246,12 @@ export async function createAndGenerateAiChat(
     });
 
     // Step 7: Generate AI response using generic LLM function
-    // Use format if available to enforce JSON structured output
-    // Note: Prisma auto-parses JSON fields, so format is already an object
-    // The format field contains the JSON schema, which needs to be wrapped for Groq
-    const responseFormat = promptTemplate.format
+    // Look up Zod schema from code registry (no longer using database format field)
+    const zodSchema = getSchemaForPrompt(promptRequest);
+    const structuredOutput = zodSchema
       ? {
-        type: "json_schema" as const,
-        json_schema: {
-          name: promptRequest.replace(/[^a-zA-Z0-9_]/g, "_"),
-          strict: false,
-          schema: promptTemplate.format,
-        },
+        name: promptRequest.replace(/[^a-zA-Z0-9_]/g, "_"),
+        schema: zodSchema,
       }
       : undefined;
 
@@ -264,7 +260,7 @@ export async function createAndGenerateAiChat(
         { role: "system", content: interpolatedSystemPrompt },
         { role: "user", content: interpolatedUserPrompt },
       ],
-      { responseFormat },
+      { structuredOutput },
     );
 
     // Step 8: Save response (stringify if it's an object from JSON parsing)
