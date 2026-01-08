@@ -147,6 +147,7 @@ async function scrapeJobSite(
         searchUrl,
         navigationType,
         platformId,
+        config.systemScraperProfileId, // Pass profile ID for credentials
       );
     }
 

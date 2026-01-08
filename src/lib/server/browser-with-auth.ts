@@ -5,7 +5,6 @@
 
 import type { BrowserContext } from "patchright";
 import { type BrowserLaunchOptions, launchBrowser } from "./browser-utils";
-import { loadPlatformCookies } from "./platform-auth";
 import { dbDirect } from "$lib/db";
 
 export interface AuthenticatedBrowserOptions extends BrowserLaunchOptions {
@@ -46,34 +45,17 @@ export async function launchAuthenticatedBrowser(
     profileId = config?.default_profile ?? undefined;
   }
 
-  // Load cookies from database if platform and profile are specified
-  let cookies = options.cookies;
+  // Note: Cookie/fingerprint loading removed - now using Browser-Use for authentication
+  // This function now just launches a basic browser for Playwright-based scraping
+  // For authenticated scraping, use Browser-Use with credentials from the database
 
-  if (
-    options.platformId &&
-    profileId &&
-    options.loadCookies !== false
-  ) {
-    console.log(
-      `🔐 Loading saved cookies for profile ${profileId}, platform ${options.platformId}...`,
-    );
-    const savedCookies = await loadPlatformCookies(
-      profileId,
-      options.platformId,
-    );
+  console.log("⚠️  Launching browser without authentication");
+  console.log(
+    "   For authenticated scraping, use Browser-Use with credentials",
+  );
 
-    if (savedCookies && savedCookies.length > 0) {
-      cookies = savedCookies;
-      console.log(`✅ Loaded ${savedCookies.length} saved cookies`);
-    } else {
-      console.log("ℹ️  No saved cookies found");
-    }
-  }
-
-  // Launch browser with cookies
   const context = await launchBrowser({
     ...options,
-    cookies,
   });
 
   return context;

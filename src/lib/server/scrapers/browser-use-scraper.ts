@@ -100,11 +100,50 @@ export async function scrapeJobsWithBrowserUse(
   searchUrl: string,
   navigationType: "url" | "click",
   platformId: string,
+  profileId?: number,
 ): Promise<number> {
   console.log(`\n🤖 Using Browser-Use (${navigationType} mode)...`);
 
   // Use default config automatically
   const browserUse = new BrowserUseClient();
+
+  // Check for credentials if profileId is provided
+  let loginInstructions = "";
+  if (profileId && platformId) {
+    const { getPlatformCredentials } = await import("../platform-auth");
+    const credentials = await getPlatformCredentials(
+      profileId,
+      Number(platformId),
+    );
+
+    if (credentials?.username && credentials?.password) {
+      console.log(
+        `🔐 Credentials found for platform - will login automatically`,
+      );
+
+      // Get platform URL for login
+      const platform = await dbDirect.job_platforms.findUnique({
+        where: { id: Number(platformId) },
+      });
+
+      if (platform) {
+        loginInstructions = `
+IMPORTANT: Before scraping, you must first log in:
+1. Navigate to ${platform.url}
+2. Look for the login/sign-in button or link
+3. Click it to go to the login page
+4. Fill in the login form with:
+   - Username/Email: ${credentials.username}
+   - Password: ${credentials.password}
+5. Submit the form and wait for successful login
+6. Once logged in, then proceed to navigate to the search URL: ${searchUrl}
+
+`;
+      }
+    } else {
+      console.log(`ℹ️  No credentials found - will scrape without login`);
+    }
+  }
 
   // Fetch prompt template from Directus
   const template = await dbDirect.ai_chat_prompts.findUnique({
@@ -129,7 +168,8 @@ export async function scrapeJobsWithBrowserUse(
   });
 
   // Combine system and user prompts for the Browser-Use task
-  const task = `${systemPrompt}\n\n${userPrompt}`.trim();
+  // Include login instructions if available
+  const task = `${systemPrompt}\n\n${loginInstructions}${userPrompt}`.trim();
 
   // Execute the task
   const response = await browserUse.executeTask({

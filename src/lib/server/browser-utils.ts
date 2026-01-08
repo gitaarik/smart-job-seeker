@@ -71,9 +71,9 @@ export function findChromeExecutable(): string | undefined {
 }
 
 /**
- * Launch browser with randomized fingerprint (NO persistent context)
- * This creates a fresh browser context on each run with a new fingerprint to avoid detection.
- * Cookies and session data should be stored separately and restored as needed.
+ * Launch browser with random fingerprint (NO persistent context)
+ * This creates a fresh browser context with a new random fingerprint each time.
+ * Use Browser-Use with credentials for authenticated scraping.
  */
 export async function launchBrowser(
   options: BrowserLaunchOptions = {},
@@ -85,14 +85,6 @@ export async function launchBrowser(
   const viewport = options.headless ? { width: 1920, height: 1080 } : null;
 
   try {
-    // Generate fingerprint options
-    const fingerprintOptions = generateFingerprintOptions({
-      browserName: "chrome",
-      deviceCategory: "desktop",
-      operatingSystems: ["windows", "linux", "macos"],
-      locales: ["en-US", "en-GB", "en"],
-    });
-
     // Launch browser
     const browser = await chromium.launch({
       executablePath,
@@ -100,7 +92,15 @@ export async function launchBrowser(
       args: options.args,
     });
 
-    // Create context with injected fingerprint
+    // Generate new random fingerprint
+    console.log("🎲 Generating new random fingerprint");
+    const fingerprintOptions = generateFingerprintOptions({
+      browserName: "chrome",
+      deviceCategory: "desktop",
+      operatingSystems: ["windows", "linux", "macos"],
+      locales: ["en-US", "en-GB", "en"],
+    });
+
     const context = await newInjectedContext(browser, {
       fingerprintOptions,
       newContextOptions: {
@@ -114,7 +114,7 @@ export async function launchBrowser(
       console.log(`🍪 Restored ${options.cookies.length} cookies`);
     }
 
-    console.log("✅ Browser context created with randomized fingerprint");
+    console.log("✅ Browser context created successfully");
     return context;
   } catch (error) {
     console.error(

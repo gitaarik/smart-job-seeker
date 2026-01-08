@@ -17,6 +17,7 @@ export interface PlatformCredentials {
 
 /**
  * Load saved cookies for a platform profile from the database
+ * Note: Fingerprint support removed - now using Browser-Use with credentials
  * @param profileId Profile ID
  * @param platformId Platform ID
  * @returns Cookie array or null if not found

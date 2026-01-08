@@ -1,7 +1,9 @@
 /**
  * Browser fingerprint utilities using Apify fingerprint-suite
- * Provides fingerprint generation options for bot detection avoidance
+ * Provides fingerprint generation and persistence for bot detection avoidance
  */
+
+import { FingerprintGenerator } from "fingerprint-generator";
 
 export interface FingerprintOptions {
   /**
@@ -30,7 +32,38 @@ export interface FingerprintOptions {
 }
 
 /**
- * Generate fingerprint options for newInjectedContext
+ * Generate a complete browser fingerprint
+ * This fingerprint can be saved and reused later
+ *
+ * @param options Fingerprint generation options
+ * @returns Generated fingerprint object
+ */
+export function generateFingerprint(options: FingerprintOptions = {}) {
+  const generator = new FingerprintGenerator({
+    devices: [options.deviceCategory || "desktop"],
+    operatingSystems: options.operatingSystems || ["windows", "linux", "macos"],
+    locales: options.locales || ["en-US", "en-GB", "en"],
+    browsers: [
+      {
+        name: options.browserName || "chrome",
+        minVersion: 120,
+      },
+    ],
+  });
+
+  const fingerprint = generator.getFingerprint();
+
+  console.log("🔐 Generated browser fingerprint:");
+  console.log(`   User Agent: ${fingerprint.fingerprint.navigator.userAgent}`);
+  console.log(
+    `   Screen: ${fingerprint.fingerprint.screen.width}x${fingerprint.fingerprint.screen.height}`,
+  );
+
+  return fingerprint;
+}
+
+/**
+ * Generate fingerprint options for newInjectedContext (for when we don't need to save it)
  * Returns configuration compatible with fingerprint-injector
  *
  * @param options Fingerprint generation options
