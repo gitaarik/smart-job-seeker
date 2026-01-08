@@ -20,13 +20,8 @@ const appPort = getEnv("SJS_APP_PORT");
 async function exportProfilesToPDF(profileId?: number) {
   console.log("🚀 Starting profile PDF export (Resume & CV)...");
 
-  // Use persistent context for consistent rendering
-  const profileDir = path.join(process.cwd(), "chrome-profiles", "pdf-export");
-  if (!fs.existsSync(profileDir)) {
-    fs.mkdirSync(profileDir, { recursive: true });
-  }
-
-  const context = await launchBrowser(profileDir, {
+  // Launch browser with randomized fingerprint
+  const context = await launchBrowser({
     headless: true,
   });
 

@@ -11,34 +11,89 @@ import { existsSync, mkdirSync } from "fs";
 import { join } from "path";
 
 async function openBrowserForLogin(): Promise<void> {
-  // Ensure chrome profile directory exists (same as scraper)
-  const profileDir = join(process.cwd(), "chrome-profiles");
-  if (!existsSync(profileDir)) {
-    mkdirSync(profileDir, { recursive: true });
+  const { dbDirect } = await import("$lib/db");
+  const {
+    saveCookiesFromContext,
+    getPlatformCredentials,
+  } = await import("$lib/server/platform-auth");
+
+  // Get default profile
+  const defaultConfig = await dbDirect.config.findFirst();
+  if (!defaultConfig?.default_profile) {
+    console.error("❌ No default profile configured");
+    process.exit(1);
   }
 
-  const userDataDir = join(profileDir, "default");
+  const profileId = defaultConfig.default_profile;
+
+  // Get all job platforms
+  const platforms = await dbDirect.job_platforms.findMany({
+    where: { status: "published" },
+    orderBy: { name: "asc" },
+  });
+
+  if (platforms.length === 0) {
+    console.error("❌ No job platforms configured");
+    process.exit(1);
+  }
 
   console.log("\n" + "=".repeat(70));
   console.log("🌐  Job Site Login Preparation");
   console.log("=".repeat(70));
-  console.log("Opening Chrome with persistent profile...");
-  console.log("Navigate to job sites and log in as needed.");
-  console.log("Your login sessions will be saved for future scraping.");
-  console.log("\n📌 Press Ctrl+C when you're done logging in.");
+  console.log("Available platforms:");
+  platforms.forEach((p, i) => {
+    console.log(`  ${i + 1}. ${p.name} (${p.url})`);
+  });
   console.log("=".repeat(70) + "\n");
 
-  // Launch browser with persistent profile (saves cookies, localStorage, etc.)
-  const context = await launchBrowser(userDataDir, { headless: false });
+  // For now, open browser for user to login manually to all sites
+  // In the future, we can prompt which platform to login to
+  console.log("Opening Chrome to log in to job sites...");
+  console.log("Navigate to job sites and log in as needed.");
+  console.log("\n📌 Press Ctrl+C when you're done logging in.");
+  console.log("Your cookies will be saved to the database.\n");
+
+  const context = await launchBrowser({ headless: false });
 
   try {
-    console.log("✅ Chrome opened with persistent profile");
+    console.log("✅ Chrome opened with randomized fingerprint");
     console.log("👉 Navigate to job sites and log in");
     console.log("📌 Press Ctrl+C when finished\n");
 
     // Create a new page with a helpful starting point
     const page = await context.newPage();
-    await page.goto("about:blank");
+
+    // Show links to all platforms
+    const platformLinks = platforms
+      .map((p) => `<li><a href="${p.url}" target="_blank">${p.name}</a></li>`)
+      .join("");
+
+    await page.setContent(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Job Site Login</title>
+          <style>
+            body {
+              font-family: system-ui, -apple-system, sans-serif;
+              max-width: 800px;
+              margin: 40px auto;
+              padding: 20px;
+            }
+            h1 { color: #333; }
+            ul { line-height: 2; }
+            a { color: #0066cc; text-decoration: none; }
+            a:hover { text-decoration: underline; }
+          </style>
+        </head>
+        <body>
+          <h1>🌐 Job Site Login</h1>
+          <p>Click on a platform below to log in. Your session will be saved.</p>
+          <ul>${platformLinks}</ul>
+          <p><strong>When finished, press Ctrl+C in the terminal.</strong></p>
+        </body>
+      </html>
+    `);
 
     // Keep browser open until user terminates
     await new Promise(() => {}); // Never resolves, waits for SIGINT
@@ -48,6 +103,21 @@ async function openBrowserForLogin(): Promise<void> {
       error instanceof Error ? error.message : String(error),
     );
   } finally {
+    // Save cookies for all platforms before closing
+    console.log("\n💾 Saving cookies...");
+
+    for (const platform of platforms) {
+      try {
+        await saveCookiesFromContext(context, profileId, platform.id);
+        console.log(`   ✅ Saved cookies for ${platform.name}`);
+      } catch (error) {
+        console.error(
+          `   ❌ Failed to save cookies for ${platform.name}:`,
+          error,
+        );
+      }
+    }
+
     await context.close();
   }
 }

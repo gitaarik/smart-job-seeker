@@ -21,6 +21,7 @@ import {
   launchBrowser,
   waitForJobContentToLoad,
 } from "$lib/server/browser-utils";
+import { launchAuthenticatedBrowser } from "$lib/server/browser-with-auth";
 import { scrapeJobsWithUrls } from "$lib/server/scrapers/url-scraper";
 import { scrapeJobsWithClicks } from "$lib/server/scrapers/click-scraper";
 import { scrapeJobsWithBrowserUse } from "$lib/server/scrapers/browser-use-scraper";
@@ -100,11 +101,12 @@ async function scrapeJobSite(
 
   try {
     if (config.scraperMethod === "playwright") {
-      // Launch Playwright browser - force visible for manual login
+      // Launch Playwright browser with saved cookies
       const headless = false; // Always visible so user can log in
       console.log(`🖥️  Browser mode: ${headless ? "headless" : "visible"}`);
-      const context = await launchBrowser("/tmp/scraper-profile", {
+      const context = await launchAuthenticatedBrowser({
         headless,
+        platformId: platformId ?? undefined,
       });
 
       try {
@@ -217,9 +219,10 @@ async function rescrapeJobById(
     if (config.scraperMethod === "playwright") {
       console.log(`\n🤖 Using Playwright to extract job data...`);
 
-      // Launch Playwright browser
-      const context = await launchBrowser("/tmp/scraper-profile", {
+      // Launch Playwright browser with saved cookies
+      const context = await launchAuthenticatedBrowser({
         headless: config.isDevelopment ? false : true,
+        platformId: platformId ?? undefined,
       });
 
       try {

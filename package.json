@@ -125,6 +125,8 @@
     "commander": "^14.0.2",
     "date-fns": "^4.1.0",
     "deno": "^2.4.0",
+    "fingerprint-generator": "^2.1.79",
+    "fingerprint-injector": "^2.1.79",
     "groq-sdk": "^0.34.0",
     "jsonwebtoken": "^9.0.2",
     "langchain": "^0.3.0",

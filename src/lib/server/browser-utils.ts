@@ -5,6 +5,8 @@
 
 import { existsSync } from "fs";
 import { type BrowserContext, chromium, type Page } from "patchright";
+import { newInjectedContext } from "fingerprint-injector";
+import { generateFingerprintOptions } from "./fingerprint-utils";
 
 // Chrome installation paths to check (Linux)
 const CHROME_PATHS = [
@@ -17,9 +19,18 @@ const CHROME_PATHS = [
 
 export interface BrowserLaunchOptions {
   headless?: boolean;
-  userDataDir?: string;
   args?: string[];
   viewport?: { width: number; height: number } | null;
+  cookies?: Array<{
+    name: string;
+    value: string;
+    domain: string;
+    path?: string;
+    expires?: number;
+    httpOnly?: boolean;
+    secure?: boolean;
+    sameSite?: "Strict" | "Lax" | "None";
+  }>;
 }
 
 /**
@@ -60,34 +71,54 @@ export function findChromeExecutable(): string | undefined {
 }
 
 /**
- * Launch browser with persistent context (saved cookies, localStorage, etc.)
- * This is the primary browser launch method for maintaining sessions across runs.
- * Uses Playwright's launchPersistentContext which is equivalent to Puppeteer's userDataDir.
+ * Launch browser with randomized fingerprint (NO persistent context)
+ * This creates a fresh browser context on each run with a new fingerprint to avoid detection.
+ * Cookies and session data should be stored separately and restored as needed.
  */
 export async function launchBrowser(
-  userDataDir: string,
   options: BrowserLaunchOptions = {},
 ): Promise<BrowserContext> {
   const executablePath = findChromeExecutable();
 
-  console.log(`🚀 Launching persistent browser context...`);
-  console.log(`📂 Profile directory: ${userDataDir}`);
+  console.log(`🚀 Launching browser with randomized fingerprint...`);
 
   const viewport = options.headless ? { width: 1920, height: 1080 } : null;
 
   try {
-    // Patchright handles anti-detection internally, so we keep config minimal
-    const context = await chromium.launchPersistentContext(userDataDir, {
-      executablePath,
-      headless: !!options.headless,
-      viewport,
+    // Generate fingerprint options
+    const fingerprintOptions = generateFingerprintOptions({
+      browserName: "chrome",
+      deviceCategory: "desktop",
+      operatingSystems: ["windows", "linux", "macos"],
+      locales: ["en-US", "en-GB", "en"],
     });
 
-    console.log("✅ Persistent context created successfully");
+    // Launch browser
+    const browser = await chromium.launch({
+      executablePath,
+      headless: !!options.headless,
+      args: options.args,
+    });
+
+    // Create context with injected fingerprint
+    const context = await newInjectedContext(browser, {
+      fingerprintOptions,
+      newContextOptions: {
+        viewport,
+      },
+    });
+
+    // Restore cookies if provided
+    if (options.cookies && options.cookies.length > 0) {
+      await context.addCookies(options.cookies);
+      console.log(`🍪 Restored ${options.cookies.length} cookies`);
+    }
+
+    console.log("✅ Browser context created with randomized fingerprint");
     return context;
   } catch (error) {
     console.error(
-      "❌ Failed to launch persistent context:",
+      "❌ Failed to launch browser context:",
       error instanceof Error ? error.message : String(error),
     );
     throw error;
