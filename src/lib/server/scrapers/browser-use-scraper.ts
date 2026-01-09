@@ -112,43 +112,68 @@ export async function scrapeJobsWithBrowserUse(
       : undefined,
   );
 
+  // Get platform information
+  const platform = await dbDirect.job_platforms.findUnique({
+    where: { id: Number(platformId) },
+  });
+
+  if (!platform) {
+    throw new Error(`Platform with ID ${platformId} not found`);
+  }
+
   // Check for credentials if profileId is provided
-  let loginInstructions = "";
+  let credentials: { username: string; password: string } | null = null;
   if (profileId && platformId) {
     const { getPlatformCredentials } = await import("../platform-auth");
-    const credentials = await getPlatformCredentials(
+    const creds = await getPlatformCredentials(
       profileId,
       Number(platformId),
     );
 
-    if (credentials?.username && credentials?.password) {
+    if (creds?.username && creds?.password) {
       console.log(
         `🔐 Credentials found for platform - will login automatically`,
       );
-
-      // Get platform URL for login
-      const platform = await dbDirect.job_platforms.findUnique({
-        where: { id: Number(platformId) },
-      });
-
-      if (platform) {
-        loginInstructions = `
-IMPORTANT: Before scraping, you must first log in:
-1. Navigate to ${platform.url}
-2. Look for the login/sign-in button or link
-3. Click it to go to the login page
-4. Fill in the login form with:
-   - Username/Email: ${credentials.username}
-   - Password: ${credentials.password}
-5. Submit the form and wait for successful login
-6. Once logged in, then proceed to navigate to the search URL: ${searchUrl}
-
-`;
-      }
+      credentials = creds;
     } else {
       console.log(`ℹ️  No credentials found - will scrape without login`);
     }
   }
+
+  // STEP 1: Navigate to the platform website manually (let Browser-Use open the browser)
+  console.log(`\n📍 Step 1: Opening platform website: ${platform.url}`);
+  await browserUse.executeTask({
+    task: `Navigate to ${platform.url} and wait for the page to load.`,
+    startUrl: platform.url,
+    maxTime: 30, // 30 seconds
+  });
+
+  // STEP 2: Navigate to login page (if credentials are available)
+  if (credentials) {
+    console.log(`\n🔑 Step 2: Navigating to login page`);
+    await browserUse.executeTask({
+      task: `Find and click the login or sign-in button/link to navigate to the login page or open the login popup. Common locations: top-right corner of the page, navigation menu, or prominent button on homepage.`,
+      startUrl: platform.url, // Stay on current page
+      maxTime: 30, // 30 seconds
+    });
+
+    // STEP 3: Login with credentials
+    console.log(`\n🔐 Step 3: Logging in with credentials`);
+    await browserUse.executeTask({
+      task: `Fill in the login form and submit it:
+1. Find the username/email input field and enter: ${credentials.username}
+2. Find the password input field and enter: ${credentials.password}
+3. Find and click the submit/login button
+4. Wait for successful login (look for profile menu, logout button, or redirect to dashboard)`,
+      startUrl: platform.url, // Stay on current page
+      maxTime: 60, // 1 minute
+    });
+
+    console.log(`✅ Login successful, now navigating to job search...`);
+  }
+
+  // STEP 4: Navigate to job search page and extract jobs
+  console.log(`\n🔍 Step 4: Extracting jobs from search page`);
 
   // Fetch prompt template from Directus
   const template = await dbDirect.ai_chat_prompts.findUnique({
@@ -173,10 +198,11 @@ IMPORTANT: Before scraping, you must first log in:
   });
 
   // Combine system and user prompts for the Browser-Use task
-  // Include login instructions if available
-  const task = `${systemPrompt}\n\n${loginInstructions}${userPrompt}`.trim();
+  const task = `${systemPrompt}\n\n${userPrompt}`.trim();
 
-  // Execute the task
+  console.log("Executing extraction task:\n\n", task);
+
+  // Execute the extraction task
   const response = await browserUse.executeTask({
     task,
     startUrl: searchUrl,

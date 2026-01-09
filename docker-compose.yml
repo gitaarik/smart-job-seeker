@@ -85,10 +85,12 @@ services:
     restart: unless-stopped
     ports:
       - ${SJS_BROWSER_USE_PORT:-8000}:8000
+      - "5900:5900"  # VNC port for viewing browser in headed mode
     volumes:
       - ./browser-use:/app
       - browser_use_data:/app/data
     environment:
+      DISPLAY: ":99"  # Tell Playwright to use the VNC-visible display
       SJS_LLM_PROVIDER: ${SJS_LLM_PROVIDER}
       SJS_LLM_PROVIDER_BROWSER_USE: ${SJS_LLM_PROVIDER_BROWSER_USE}
       SJS_LLM_MODEL_BROWSER_USE: ${SJS_LLM_MODEL_BROWSER_USE}

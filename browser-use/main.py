@@ -17,6 +17,7 @@ class ExecuteTaskRequest(BaseModel):
     task: str  # Natural language task description
     start_url: str  # URL to start from
     max_time: Optional[int] = 120  # Maximum execution time in seconds
+    send_screenshots: Optional[bool] = True  # Whether to send screenshots to LLM
 
 
 class ExecuteTaskResponse(BaseModel):
@@ -47,6 +48,7 @@ async def execute_task(request: ExecuteTaskRequest):
             task=request.task,
             start_url=request.start_url,
             max_time=request.max_time,
+            send_screenshots=request.send_screenshots,
         )
         return result
     except Exception as e:

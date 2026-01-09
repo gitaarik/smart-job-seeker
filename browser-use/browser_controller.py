@@ -110,7 +110,13 @@ class BrowserController:
             # Groq doesn't support vision
             self.use_vision = False
 
-    async def execute_task(self, task: str, start_url: str, max_time: int = 120):
+    async def execute_task(
+        self,
+        task: str,
+        start_url: str,
+        max_time: int = 120,
+        send_screenshots: bool = True,
+    ):
         """
         Execute an arbitrary browser automation task using natural language.
 
@@ -118,23 +124,34 @@ class BrowserController:
             task: Natural language description of what to do
             start_url: URL to start from
             max_time: Maximum execution time in seconds
+            send_screenshots: Whether to send screenshots to LLM
 
         Returns:
             dict with 'result' and 'execution_time_ms'
         """
         start_time = time.time()
 
+        # Always use headless mode - browser is visible via VNC regardless
+        headless_mode = os.getenv("SJS_BROWSER_USE_HEADLESS", "true").lower() == "true"
+        
+        logger.info(f"[Browser-Use] Running in {'headless' if headless_mode else 'headed'} mode (visible via VNC)")
+        print(f"[Browser-Use] Running in {'headless' if headless_mode else 'headed'} mode (visible via VNC)", flush=True)
+
+        # Determine vision usage: send_screenshots AND LLM supports vision
+        use_vision_for_task = send_screenshots and self.use_vision
+        logger.info(f"[Browser-Use] Vision mode: {use_vision_for_task}")
+        print(f"[Browser-Use] Vision mode: {use_vision_for_task}", flush=True)
+
         # Create the agent
-        # Note: use_vision depends on LLM provider (Gemini supports it, Groq doesn't)
         agent = Agent(
             task=task,
             llm=self.llm,
             browser=Browser(
                 config=BrowserConfig(
-                    headless=os.getenv("SJS_BROWSER_USE_HEADLESS") == "true"
+                    headless=headless_mode
                 )
             ),
-            use_vision=self.use_vision,
+            use_vision=use_vision_for_task,
         )
 
         # Run the task

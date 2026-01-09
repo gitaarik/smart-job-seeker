@@ -649,21 +649,23 @@ export async function upsertJob(
   const effectiveStatus = jobData.status || "hiring";
 
   // Convert single values to arrays for multi-select JSON fields
-  // Remove the single-value fields and use multi-select fields instead
-  const {
-    remote,
-    job_type,
-    experience_level,
-    skills,
-    job_poster: _,
-    status: __,
-    ...baseJobData
-  } = jobData as typeof jobData & { source_html_stripped?: string };
+  // Explicitly whitelist allowed database fields to avoid Browser-Use metadata
+  const baseJobData = {
+    title: jobData.title,
+    job_description: jobData.job_description,
+    company_description: jobData.company_description,
+    date_posted: jobData.date_posted,
+    location: jobData.location,
+    salary_min: jobData.salary_min,
+    salary_max: jobData.salary_max,
+    salary_currency: jobData.salary_currency,
+    salary_period: jobData.salary_period,
+  };
 
   const multiSelectData = {
-    remote_options: remote ? [remote] : null,
-    job_types: job_type ? [job_type] : null,
-    experience_levels: experience_level ? [experience_level] : null,
+    remote_options: jobData.remote ? [jobData.remote] : null,
+    job_types: jobData.job_type ? [jobData.job_type] : null,
+    experience_levels: jobData.experience_level ? [jobData.experience_level] : null,
   };
 
   if (existing) {
@@ -688,7 +690,7 @@ export async function upsertJob(
         ...multiSelectData,
         job_poster: effectiveJobPoster,
         status: effectiveStatus,
-        skills,
+        skills: jobData.skills,
         ai_chat_extraction: jobData.ai_chat_extraction,
         import_error: null,
         last_scraped: currentDate,
@@ -706,7 +708,7 @@ export async function upsertJob(
         ...multiSelectData,
         job_poster: effectiveJobPoster,
         status: effectiveStatus,
-        skills,
+        skills: jobData.skills,
         ai_chat_extraction: jobData.ai_chat_extraction,
         source_url: normalizedUrl, // Use normalized URL
         job_platform: platformId,

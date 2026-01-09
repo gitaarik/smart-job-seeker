@@ -306,6 +306,16 @@ function createLangChainModel(
       });
     }
 
+    case "bedrock": {
+      const apiKey = config.groqApiKey || getEnv("SJS_LLM_API_KEY_BEDROCK", "");
+      return new ChatGroq({
+        apiKey,
+        model,
+        temperature,
+        maxTokens,
+      });
+    }
+
     case "openai": {
       const apiKey = config.openaiApiKey ||
         getEnv("SJS_LLM_API_KEY_OPENAI", "");
