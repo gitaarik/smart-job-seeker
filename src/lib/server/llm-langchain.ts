@@ -4,6 +4,7 @@
  */
 
 import { ChatGroq } from "@langchain/groq";
+import { BedrockChat } from "@langchain/community/chat_models/bedrock";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { ChatOpenAI } from "@langchain/openai";
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
@@ -296,8 +297,7 @@ function createLangChainModel(
     }
 
     case "gemini": {
-      const apiKey = config.geminiApiKey ||
-        getEnv("SJS_LLM_API_KEY_GEMINI", "");
+      const apiKey = config.geminiApiKey;
       return new ChatGoogleGenerativeAI({
         apiKey,
         model,
@@ -307,18 +307,26 @@ function createLangChainModel(
     }
 
     case "bedrock": {
-      const apiKey = config.groqApiKey || getEnv("SJS_LLM_API_KEY_BEDROCK", "");
-      return new ChatGroq({
-        apiKey,
+      // AWS Bedrock uses AWS credentials, not a simple API key
+      // The bedrockApiKey is a base64-encoded JSON with accessKeyId and secretAccessKey
+      const credentials = config.bedrockApiKey
+        ? JSON.parse(Buffer.from(config.bedrockApiKey, 'base64').toString('utf-8'))
+        : undefined;
+
+      return new BedrockChat({
         model,
+        region: "us-east-1", // Default region, can be made configurable
+        credentials: credentials ? {
+          accessKeyId: credentials.accessKeyId,
+          secretAccessKey: credentials.secretAccessKey,
+        } : undefined,
         temperature,
         maxTokens,
       });
     }
 
     case "openai": {
-      const apiKey = config.openaiApiKey ||
-        getEnv("SJS_LLM_API_KEY_OPENAI", "");
+      const apiKey = config.openaiApiKey;
       return new ChatOpenAI({
         apiKey,
         model,
@@ -328,8 +336,7 @@ function createLangChainModel(
     }
 
     case "openrouter": {
-      const apiKey = config.openrouterApiKey ||
-        getEnv("SJS_LLM_API_KEY_OPENROUTER", "");
+      const apiKey = config.openrouterApiKey;
       return new ChatOpenAI({
         apiKey,
         model,
@@ -342,8 +349,7 @@ function createLangChainModel(
     }
 
     case "deepseek": {
-      const apiKey = config.deepseekApiKey ||
-        getEnv("SJS_LLM_API_KEY_DEEPSEEK", "");
+      const apiKey = config.deepseekApiKey;
       return new ChatOpenAI({
         apiKey,
         model,
