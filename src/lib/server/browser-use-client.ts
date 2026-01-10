@@ -82,9 +82,13 @@ export class BrowserUseClient {
       timeout: customConfig?.timeout ?? config.browserUseTimeout,
       sendScreenshots: customConfig?.sendScreenshots ?? config.browserUseSendScreenshots,
     };
+    console.log(`[BrowserUseClient] Initialized with sendScreenshots: ${this.config.sendScreenshots} (custom: ${customConfig?.sendScreenshots}, env: ${config.browserUseSendScreenshots})`);
   }
 
   async executeTask(params: ExecuteTaskParams): Promise<ExecuteTaskResponse> {
+    const sendScreenshots = params.sendScreenshots ?? this.config.sendScreenshots;
+    console.log(`[BrowserUseClient] Sending request with send_screenshots: ${sendScreenshots}`);
+
     const response = await fetch(`${this.config.baseUrl}/execute`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -92,7 +96,7 @@ export class BrowserUseClient {
         task: params.task,
         start_url: params.startUrl,
         max_time: params.maxTime,
-        send_screenshots: params.sendScreenshots ?? this.config.sendScreenshots,
+        send_screenshots: sendScreenshots,
       }),
       signal: AbortSignal.timeout(this.config.timeout),
     });

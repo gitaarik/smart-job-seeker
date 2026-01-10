@@ -41,12 +41,15 @@ class BrowserController:
             "browseruse": "SJS_LLM_MODEL_BROWSER_USE",
         }
 
-        # Get model with priority:
+              # Get model with priority:
         # 1. Provider-specific env var (e.g., SJS_LLM_MODEL_GROQ if provider is groq)
         # 2. Hardcoded default
         hardcoded_default = default_models.get(provider, default_models["groq"])
         provider_env_var = provider_env_vars.get(provider)
         model = os.getenv(provider_env_var, hardcoded_default) if provider_env_var else hardcoded_default
+        # Handle empty string from environment variables
+        if not model:
+            model = hardcoded_default
 
         logger.info(f"[Browser-Use] Using model: {model}")
         print(f"[Browser-Use] Using model: {model}", flush=True)
@@ -90,16 +93,6 @@ class BrowserController:
             )
             # DeepSeek v3 supports vision
             self.use_vision = "v3" in model
-        elif provider == "browseruse":
-            # Use Browser Use Cloud via OpenAI-compatible API
-            self.llm = ChatOpenAI(
-                model="gpt-4o",  # Browser Use Cloud's optimized model
-                base_url="https://cloud.browser-use.com/v1",
-                api_key=os.getenv("SJS_LLM_API_KEY_BROWSERUSE"),
-                temperature=0.3,
-            )
-            # Browser Use Cloud supports vision
-            self.use_vision = True
         else:
             # Default to Groq
             self.llm = ChatGroq(
@@ -139,8 +132,19 @@ class BrowserController:
 
         # Determine vision usage: send_screenshots AND LLM supports vision
         use_vision_for_task = send_screenshots and self.use_vision
-        logger.info(f"[Browser-Use] Vision mode: {use_vision_for_task}")
-        print(f"[Browser-Use] Vision mode: {use_vision_for_task}", flush=True)
+        logger.info(f"[Browser-Use] send_screenshots parameter: {send_screenshots}")
+        logger.info(f"[Browser-Use] LLM supports vision: {self.use_vision}")
+        logger.info(f"[Browser-Use] Final vision mode: {use_vision_for_task}")
+        print(f"[Browser-Use] send_screenshots parameter: {send_screenshots}", flush=True)
+        print(f"[Browser-Use] LLM supports vision: {self.use_vision}", flush=True)
+        print(f"[Browser-Use] Final vision mode: {use_vision_for_task}", flush=True)
+
+        # Navigate to start_url before executing task
+        initial_actions = [
+            {'go_to_url': {'url': start_url}},
+        ]
+        logger.info(f"[Browser-Use] Will navigate to: {start_url}")
+        print(f"[Browser-Use] Will navigate to: {start_url}", flush=True)
 
         # Create the agent
         agent = Agent(
@@ -152,6 +156,7 @@ class BrowserController:
                 )
             ),
             use_vision=use_vision_for_task,
+            initial_actions=initial_actions,
         )
 
         # Run the task
