@@ -39,14 +39,15 @@ function extractBrowserUseError(result: any): string | null {
 function parseBrowserUseResponse(result: any): any[] {
   // Check if Browser-Use returned an error/history object
   if (typeof result === "object" && result !== null) {
-    // Detect Browser-Use failure response
-    if (result.history || result.error) {
+    // Browser-Use always returns a history object - check if it contains an actual error
+    const errorMessage = extractBrowserUseError(result);
+
+    // Only treat as error if there's an actual error message
+    if (errorMessage) {
       console.error("❌ Browser-Use agent failed");
       console.log("Response:", JSON.stringify(result, null, 2).substring(0, 1000));
 
-      // Extract the actual error message from history
-      const errorMessage = extractBrowserUseError(result);
-      const resultStr = errorMessage || JSON.stringify(result);
+      const resultStr = errorMessage;
 
       // Check for rate limit errors with detailed message
       if (resultStr.includes("Rate limit") || resultStr.includes("rate limit") || resultStr.includes("429")) {
@@ -89,6 +90,43 @@ function parseBrowserUseResponse(result: any): any[] {
       }
 
       throw new Error("Browser-Use agent returned error/history instead of job data");
+    }
+
+    // Check if this is a successful browser-use response with history
+    // Browser-Use returns the final result in the top-level 'result' field
+    if (result.history && result.result !== undefined) {
+      console.log("✅ Browser-Use task completed");
+
+      // The result is the final extracted content
+      const finalResult = result.result;
+
+      // If result is already parsed, use it
+      if (Array.isArray(finalResult)) {
+        return finalResult;
+      }
+      if (typeof finalResult === 'object' && finalResult !== null) {
+        if (Array.isArray(finalResult.jobs)) {
+          return finalResult.jobs;
+        }
+        if (Array.isArray(finalResult.data)) {
+          return finalResult.data;
+        }
+      }
+
+      // Otherwise try to parse it as JSON
+      if (typeof finalResult === 'string') {
+        try {
+          const parsed = JSON.parse(finalResult);
+          if (Array.isArray(parsed)) {
+            return parsed;
+          }
+          if (parsed.jobs && Array.isArray(parsed.jobs)) {
+            return parsed.jobs;
+          }
+        } catch (e) {
+          // Continue to other parsing strategies
+        }
+      }
     }
   }
 
