@@ -12,12 +12,92 @@ import { interpolatePrompt } from "$lib/server/ai-chat-utils";
 import { dbDirect } from "$lib/db";
 
 /**
+ * Extract error message from Browser-Use history response
+ */
+function extractBrowserUseError(result: any): string | null {
+  try {
+    // Navigate to the error in the history structure
+    if (result.history && Array.isArray(result.history) && result.history.length > 0) {
+      const firstHistory = result.history[0];
+      if (firstHistory.result && Array.isArray(firstHistory.result) && firstHistory.result.length > 0) {
+        const firstResult = firstHistory.result[0];
+        if (firstResult.error) {
+          return firstResult.error;
+        }
+      }
+    }
+  } catch (e) {
+    // Fallback to string search
+  }
+  return null;
+}
+
+/**
  * Parse Browser-Use response with multiple fallback strategies
  * Tries direct parsing, regex extraction, and JSON repair
  */
 function parseBrowserUseResponse(result: any): any[] {
+  // Check if Browser-Use returned an error/history object
+  if (typeof result === "object" && result !== null) {
+    // Detect Browser-Use failure response
+    if (result.history || result.error) {
+      console.error("❌ Browser-Use agent failed");
+      console.log("Response:", JSON.stringify(result, null, 2).substring(0, 1000));
+
+      // Extract the actual error message from history
+      const errorMessage = extractBrowserUseError(result);
+      const resultStr = errorMessage || JSON.stringify(result);
+
+      // Check for rate limit errors with detailed message
+      if (resultStr.includes("Rate limit") || resultStr.includes("rate limit") || resultStr.includes("429")) {
+        // Try to extract the actual rate limit message
+        if (errorMessage) {
+          // Parse error messages like: "Error code: 429 - {'error': {'message': '...'}}"
+          const match = errorMessage.match(/Error code: (\d+) - (.+)/);
+          if (match) {
+            const errorCode = match[1];
+            const errorBody = match[2];
+
+            // Try to extract the actual message from Python dict format or JSON
+            // Handle nested quotes by finding the message between 'message': ' and the next ', 'type'
+            const messageMatch = errorBody.match(/'message':\s*'(.+?)',\s*'type'/);
+            if (messageMatch) {
+              const actualMessage = messageMatch[1];
+              console.error(`\n❌ LLM Rate Limit Error (${errorCode}):`);
+              console.error(actualMessage);
+              throw new Error(`Browser-Use LLM rate limit: ${actualMessage}`);
+            }
+          }
+
+          // Fallback: show the raw error
+          console.error(`\n❌ Rate Limit Error:\n${errorMessage}`);
+          throw new Error(`Browser-Use hit LLM API rate limit: ${errorMessage.substring(0, 200)}`);
+        }
+
+        throw new Error("Browser-Use hit LLM API rate limit - check provider and API key");
+      }
+
+      // Check for 404/error pages
+      if (resultStr.includes("404") || resultStr.includes("This page could not be found")) {
+        throw new Error("Browser-Use navigated to 404 error page - likely login or navigation failed");
+      }
+
+      // Show the actual error if available
+      if (errorMessage) {
+        console.error(`\n❌ Browser-Use Error:\n${errorMessage.substring(0, 500)}`);
+        throw new Error(`Browser-Use agent error: ${errorMessage.substring(0, 200)}`);
+      }
+
+      throw new Error("Browser-Use agent returned error/history instead of job data");
+    }
+  }
+
   // Strategy 1: Already an array (direct response)
   if (Array.isArray(result)) {
+    // Validate it's not a history/error array
+    if (result.length > 0 && result[0].hasOwnProperty("is_done")) {
+      throw new Error("Browser-Use returned history array instead of job data - agent likely failed");
+    }
     return result;
   }
 
@@ -132,48 +212,13 @@ export async function scrapeJobsWithBrowserUse(
 
     if (creds?.username && creds?.password) {
       console.log(
-        `🔐 Credentials found for platform - will login automatically`,
+        `🔐 Credentials found - will login before scraping`,
       );
       credentials = creds;
     } else {
       console.log(`ℹ️  No credentials found - will scrape without login`);
     }
   }
-
-  // STEP 1: Navigate to the platform website manually (let Browser-Use open the browser)
-  console.log(`\n📍 Step 1: Opening platform website: ${platform.url}`);
-  await browserUse.executeTask({
-    task: `Navigate to ${platform.url} and wait for the page to load.`,
-    startUrl: platform.url,
-    maxTime: 30, // 30 seconds
-  });
-
-  // STEP 2: Navigate to login page (if credentials are available)
-  if (credentials) {
-    console.log(`\n🔑 Step 2: Navigating to login page`);
-    await browserUse.executeTask({
-      task: `Find and click the login or sign-in button/link to navigate to the login page or open the login popup. Common locations: top-right corner of the page, navigation menu, or prominent button on homepage.`,
-      startUrl: platform.url, // Stay on current page
-      maxTime: 30, // 30 seconds
-    });
-
-    // STEP 3: Login with credentials
-    console.log(`\n🔐 Step 3: Logging in with credentials`);
-    await browserUse.executeTask({
-      task: `Fill in the login form and submit it:
-1. Find the username/email input field and enter: ${credentials.username}
-2. Find the password input field and enter: ${credentials.password}
-3. Find and click the submit/login button
-4. Wait for successful login (look for profile menu, logout button, or redirect to dashboard)`,
-      startUrl: platform.url, // Stay on current page
-      maxTime: 60, // 1 minute
-    });
-
-    console.log(`✅ Login successful, now navigating to job search...`);
-  }
-
-  // STEP 4: Navigate to job search page and extract jobs
-  console.log(`\n🔍 Step 4: Extracting jobs from search page`);
 
   // Fetch prompt template from Directus
   const template = await dbDirect.ai_chat_prompts.findUnique({
@@ -191,23 +236,62 @@ export async function scrapeJobsWithBrowserUse(
     ? `Navigate through pagination links/buttons to find more jobs. Stop after finding ${config.scraperMaxJobsPerSearch} jobs or ${config.scraperPaginationMaxPages} pages.`
     : `Click on each job card to view details. Stop after finding ${config.scraperMaxJobsPerSearch} jobs.`;
 
-  // Interpolate variables in the user prompt
+  // Interpolate variables in the extraction prompt
   const systemPrompt = template.system_prompt || "";
   const userPrompt = interpolatePrompt(template.user_prompt || "", {
     navigationInstructions,
   });
 
-  // Combine system and user prompts for the Browser-Use task
-  const task = `${systemPrompt}\n\n${userPrompt}`.trim();
+  // Build the complete task with login if needed
+  let completeTask = "";
+  const startUrl = credentials ? platform.url : searchUrl;
 
-  console.log("Executing extraction task:\n\n", task);
+  if (credentials) {
+    completeTask = `Complete these steps in order:
 
-  // Execute the extraction task
+STEP 1: Login to ${platform.name}
+1. You are starting at: ${platform.url}
+2. Find and click the "Sign in", "Login", or similar button/link
+3. Wait for the login form to appear (it may be a popup or a new page)
+4. Fill in the login form:
+   - Email/Username field: ${credentials.username}
+   - Password field: ${credentials.password}
+5. Click the "Sign in", "Login", or "Submit" button
+6. Wait for successful login - look for:
+   - Profile menu or avatar appearing
+   - URL change to dashboard/feed
+   - Logout/Sign out button becoming visible
+   - Disappearance of login button
+
+STEP 2: Navigate to job search results
+1. Navigate to: ${searchUrl}
+2. Wait for the job search results page to fully load
+3. Verify you can see job listings
+
+STEP 3: Extract job listings
+${systemPrompt}
+
+${userPrompt}
+`;
+  } else {
+    // No login needed, just extract
+    completeTask = `${systemPrompt}\n\n${userPrompt}`.trim();
+  }
+
+  console.log(`\n📋 Task instructions:\n${completeTask.substring(0, 500)}...\n`);
+
+  // Execute the complete task in ONE Browser-Use call
+  console.log(`🚀 Executing Browser-Use task...`);
   const response = await browserUse.executeTask({
-    task,
-    startUrl: searchUrl,
-    maxTime: 180, // 3 minutes max
+    task: completeTask,
+    startUrl,
+    maxTime: credentials ? 240 : 180, // 4 min with login, 3 min without
   });
+
+  // DEBUG: Log raw response
+  console.log("\n🔍 DEBUG: Raw Browser-Use response:");
+  console.log(JSON.stringify(response.result, null, 2).substring(0, 2000));
+  console.log("\n");
 
   // Parse the JSON result with multiple fallback strategies
   let jobs: any[];
