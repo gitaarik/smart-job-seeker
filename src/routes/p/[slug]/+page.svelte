@@ -7,6 +7,7 @@
   import {
     faGithub,
     faLinkedin,
+    faNodeJs,
     faNpm,
     faPython,
     faStackOverflow,
@@ -18,7 +19,6 @@
     faCode,
     faDatabase,
     faGears,
-    faNodeJs,
     faUsers,
     faUserTie,
   } from "@fortawesome/free-solid-svg-icons";
