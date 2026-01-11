@@ -79,6 +79,7 @@ async function exportProfilesToPDF(profileId?: number) {
       dirName: `${doc.type}/${version || "full"}`,
       docType: doc.type,
       displayType: doc.display,
+      versionName: version, // Raw version name for export_format
       description: `${doc.display} (${
         version
           ? version.replace("-", " ").replace(/\b\w/g, (l) => l.toUpperCase())
@@ -224,7 +225,7 @@ async function exportProfilesToPDF(profileId?: number) {
           filename,
           fileType: "pdf",
           exportType: version.docType as "resume" | "cv",
-          exportFormat: version.description,
+          exportFormat: version.versionName, // Use raw version name for consistency with URL parameters
           description: `${version.description} - Generated ${
             new Date().toISOString()
           }`,
