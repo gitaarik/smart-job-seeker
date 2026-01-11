@@ -21,7 +21,13 @@ export interface AppConfig {
   directusWebhookSecret: string;
 
   // LLM (for TypeScript/SvelteKit app)
-  llmProvider: "groq" | "bedrock" | "gemini" | "openai" | "openrouter" | "deepseek";
+  llmProvider:
+    | "groq"
+    | "bedrock"
+    | "gemini"
+    | "openai"
+    | "openrouter"
+    | "deepseek";
   llmModel: string; // Configurable model name, with smart defaults per provider
   groqApiKey: string;
   bedrockApiKey: string;
@@ -65,9 +71,6 @@ export interface AppConfig {
   browserUseTimeout: number;
   browserUseFallbackEnabled: boolean;
   browserUseSendScreenshots: boolean;
-
-  // Scraper Method Selection
-  scraperMethod: "browser-use" | "playwright";
 
   // System Profile
   systemScraperProfileId: number;
@@ -227,12 +230,6 @@ function loadConfig(): AppConfig {
     browserUseSendScreenshots:
       getEnv("SJS_BROWSER_USE_SEND_SCREENSHOTS", "false") === "true",
 
-    // Scraper Method Selection
-    scraperMethod: (getEnv(
-      "SJS_SCRAPER_METHOD",
-      "browser-use",
-    ) as "browser-use" | "playwright"),
-
     // System Profile
     systemScraperProfileId: parseInt(
       getEnv("SJS_SYSTEM_SCRAPER_PROFILE_ID"),
@@ -310,16 +307,9 @@ export function validateConfig(): void {
     errors.push("browserUseTimeout must be > 0");
   }
 
-  // Validate scraper method
-  if (!["browser-use", "playwright"].includes(config.scraperMethod)) {
-    errors.push(
-      `scraperMethod must be 'browser-use' or 'playwright', got '${config.scraperMethod}'`,
-    );
-  }
-
-  // Validate scraper-specific requirements
-  if (config.scraperMethod === "browser-use" && !config.browserUseUrl) {
-    errors.push("browserUseUrl is required when using browser-use scraper");
+  // Browser-Use is always required now
+  if (!config.browserUseUrl) {
+    errors.push("browserUseUrl is required");
   }
 
   // Validate system profile ID

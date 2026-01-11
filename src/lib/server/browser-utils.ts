@@ -21,16 +21,6 @@ export interface BrowserLaunchOptions {
   headless?: boolean;
   args?: string[];
   viewport?: { width: number; height: number } | null;
-  cookies?: Array<{
-    name: string;
-    value: string;
-    domain: string;
-    path?: string;
-    expires?: number;
-    httpOnly?: boolean;
-    secure?: boolean;
-    sameSite?: "Strict" | "Lax" | "None";
-  }>;
 }
 
 /**
@@ -107,12 +97,6 @@ export async function launchBrowser(
         viewport,
       },
     });
-
-    // Restore cookies if provided
-    if (options.cookies && options.cookies.length > 0) {
-      await context.addCookies(options.cookies);
-      console.log(`🍪 Restored ${options.cookies.length} cookies`);
-    }
 
     console.log("✅ Browser context created successfully");
     return context;

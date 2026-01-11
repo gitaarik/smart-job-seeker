@@ -665,7 +665,9 @@ export async function upsertJob(
   const multiSelectData = {
     remote_options: jobData.remote ? [jobData.remote] : null,
     job_types: jobData.job_type ? [jobData.job_type] : null,
-    experience_levels: jobData.experience_level ? [jobData.experience_level] : null,
+    experience_levels: jobData.experience_level
+      ? [jobData.experience_level]
+      : null,
   };
 
   if (existing) {

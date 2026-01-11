@@ -310,16 +310,20 @@ function createLangChainModel(
       // AWS Bedrock uses AWS credentials, not a simple API key
       // The bedrockApiKey is a base64-encoded JSON with accessKeyId and secretAccessKey
       const credentials = config.bedrockApiKey
-        ? JSON.parse(Buffer.from(config.bedrockApiKey, 'base64').toString('utf-8'))
+        ? JSON.parse(
+          Buffer.from(config.bedrockApiKey, "base64").toString("utf-8"),
+        )
         : undefined;
 
       return new BedrockChat({
         model,
         region: "us-east-1", // Default region, can be made configurable
-        credentials: credentials ? {
-          accessKeyId: credentials.accessKeyId,
-          secretAccessKey: credentials.secretAccessKey,
-        } : undefined,
+        credentials: credentials
+          ? {
+            accessKeyId: credentials.accessKeyId,
+            secretAccessKey: credentials.secretAccessKey,
+          }
+          : undefined,
         temperature,
         maxTokens,
       });

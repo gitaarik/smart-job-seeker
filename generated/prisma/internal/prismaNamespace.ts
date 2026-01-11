@@ -6140,10 +6140,8 @@ export const Platform_profilesScalarFieldEnum = {
   username: 'username',
   password: 'password',
   api_token: 'api_token',
-  cookies: 'cookies',
   last_login_at: 'last_login_at',
-  login_error: 'login_error',
-  fingerprint: 'fingerprint'
+  login_error: 'login_error'
 } as const
 
 export type Platform_profilesScalarFieldEnum = (typeof Platform_profilesScalarFieldEnum)[keyof typeof Platform_profilesScalarFieldEnum]

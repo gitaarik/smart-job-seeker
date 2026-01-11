@@ -81,10 +81,8 @@ export type Platform_profilesCountAggregateOutputType = {
   username: number
   password: number
   api_token: number
-  cookies: number
   last_login_at: number
   login_error: number
-  fingerprint: number
   _all: number
 }
 
@@ -144,10 +142,8 @@ export type Platform_profilesCountAggregateInputType = {
   username?: true
   password?: true
   api_token?: true
-  cookies?: true
   last_login_at?: true
   login_error?: true
-  fingerprint?: true
   _all?: true
 }
 
@@ -248,10 +244,8 @@ export type Platform_profilesGroupByOutputType = {
   username: string | null
   password: string | null
   api_token: string | null
-  cookies: runtime.JsonValue | null
   last_login_at: Date | null
   login_error: string | null
-  fingerprint: runtime.JsonValue | null
   _count: Platform_profilesCountAggregateOutputType | null
   _avg: Platform_profilesAvgAggregateOutputType | null
   _sum: Platform_profilesSumAggregateOutputType | null
@@ -288,10 +282,8 @@ export type platform_profilesWhereInput = {
   username?: Prisma.StringNullableFilter<"platform_profiles"> | string | null
   password?: Prisma.StringNullableFilter<"platform_profiles"> | string | null
   api_token?: Prisma.StringNullableFilter<"platform_profiles"> | string | null
-  cookies?: Prisma.JsonNullableFilter<"platform_profiles">
   last_login_at?: Prisma.DateTimeNullableFilter<"platform_profiles"> | Date | string | null
   login_error?: Prisma.StringNullableFilter<"platform_profiles"> | string | null
-  fingerprint?: Prisma.JsonNullableFilter<"platform_profiles">
   job_platforms?: Prisma.XOR<Prisma.Job_platformsNullableScalarRelationFilter, Prisma.job_platformsWhereInput> | null
   profiles?: Prisma.XOR<Prisma.ProfilesNullableScalarRelationFilter, Prisma.profilesWhereInput> | null
 }
@@ -307,10 +299,8 @@ export type platform_profilesOrderByWithRelationInput = {
   username?: Prisma.SortOrderInput | Prisma.SortOrder
   password?: Prisma.SortOrderInput | Prisma.SortOrder
   api_token?: Prisma.SortOrderInput | Prisma.SortOrder
-  cookies?: Prisma.SortOrderInput | Prisma.SortOrder
   last_login_at?: Prisma.SortOrderInput | Prisma.SortOrder
   login_error?: Prisma.SortOrderInput | Prisma.SortOrder
-  fingerprint?: Prisma.SortOrderInput | Prisma.SortOrder
   job_platforms?: Prisma.job_platformsOrderByWithRelationInput
   profiles?: Prisma.profilesOrderByWithRelationInput
 }
@@ -329,10 +319,8 @@ export type platform_profilesWhereUniqueInput = Prisma.AtLeast<{
   username?: Prisma.StringNullableFilter<"platform_profiles"> | string | null
   password?: Prisma.StringNullableFilter<"platform_profiles"> | string | null
   api_token?: Prisma.StringNullableFilter<"platform_profiles"> | string | null
-  cookies?: Prisma.JsonNullableFilter<"platform_profiles">
   last_login_at?: Prisma.DateTimeNullableFilter<"platform_profiles"> | Date | string | null
   login_error?: Prisma.StringNullableFilter<"platform_profiles"> | string | null
-  fingerprint?: Prisma.JsonNullableFilter<"platform_profiles">
   job_platforms?: Prisma.XOR<Prisma.Job_platformsNullableScalarRelationFilter, Prisma.job_platformsWhereInput> | null
   profiles?: Prisma.XOR<Prisma.ProfilesNullableScalarRelationFilter, Prisma.profilesWhereInput> | null
 }, "id">
@@ -348,10 +336,8 @@ export type platform_profilesOrderByWithAggregationInput = {
   username?: Prisma.SortOrderInput | Prisma.SortOrder
   password?: Prisma.SortOrderInput | Prisma.SortOrder
   api_token?: Prisma.SortOrderInput | Prisma.SortOrder
-  cookies?: Prisma.SortOrderInput | Prisma.SortOrder
   last_login_at?: Prisma.SortOrderInput | Prisma.SortOrder
   login_error?: Prisma.SortOrderInput | Prisma.SortOrder
-  fingerprint?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.platform_profilesCountOrderByAggregateInput
   _avg?: Prisma.platform_profilesAvgOrderByAggregateInput
   _max?: Prisma.platform_profilesMaxOrderByAggregateInput
@@ -373,10 +359,8 @@ export type platform_profilesScalarWhereWithAggregatesInput = {
   username?: Prisma.StringNullableWithAggregatesFilter<"platform_profiles"> | string | null
   password?: Prisma.StringNullableWithAggregatesFilter<"platform_profiles"> | string | null
   api_token?: Prisma.StringNullableWithAggregatesFilter<"platform_profiles"> | string | null
-  cookies?: Prisma.JsonNullableWithAggregatesFilter<"platform_profiles">
   last_login_at?: Prisma.DateTimeNullableWithAggregatesFilter<"platform_profiles"> | Date | string | null
   login_error?: Prisma.StringNullableWithAggregatesFilter<"platform_profiles"> | string | null
-  fingerprint?: Prisma.JsonNullableWithAggregatesFilter<"platform_profiles">
 }
 
 export type platform_profilesCreateInput = {
@@ -387,10 +371,8 @@ export type platform_profilesCreateInput = {
   username?: string | null
   password?: string | null
   api_token?: string | null
-  cookies?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   last_login_at?: Date | string | null
   login_error?: string | null
-  fingerprint?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   job_platforms?: Prisma.job_platformsCreateNestedOneWithoutPlatform_profilesInput
   profiles?: Prisma.profilesCreateNestedOneWithoutPlatform_profilesInput
 }
@@ -406,10 +388,8 @@ export type platform_profilesUncheckedCreateInput = {
   username?: string | null
   password?: string | null
   api_token?: string | null
-  cookies?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   last_login_at?: Date | string | null
   login_error?: string | null
-  fingerprint?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type platform_profilesUpdateInput = {
@@ -420,10 +400,8 @@ export type platform_profilesUpdateInput = {
   username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   api_token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  cookies?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   last_login_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   login_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fingerprint?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   job_platforms?: Prisma.job_platformsUpdateOneWithoutPlatform_profilesNestedInput
   profiles?: Prisma.profilesUpdateOneWithoutPlatform_profilesNestedInput
 }
@@ -439,10 +417,8 @@ export type platform_profilesUncheckedUpdateInput = {
   username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   api_token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  cookies?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   last_login_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   login_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fingerprint?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type platform_profilesCreateManyInput = {
@@ -456,10 +432,8 @@ export type platform_profilesCreateManyInput = {
   username?: string | null
   password?: string | null
   api_token?: string | null
-  cookies?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   last_login_at?: Date | string | null
   login_error?: string | null
-  fingerprint?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type platform_profilesUpdateManyMutationInput = {
@@ -470,10 +444,8 @@ export type platform_profilesUpdateManyMutationInput = {
   username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   api_token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  cookies?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   last_login_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   login_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fingerprint?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type platform_profilesUncheckedUpdateManyInput = {
@@ -487,10 +459,8 @@ export type platform_profilesUncheckedUpdateManyInput = {
   username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   api_token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  cookies?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   last_login_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   login_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fingerprint?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type platform_profilesCountOrderByAggregateInput = {
@@ -504,10 +474,8 @@ export type platform_profilesCountOrderByAggregateInput = {
   username?: Prisma.SortOrder
   password?: Prisma.SortOrder
   api_token?: Prisma.SortOrder
-  cookies?: Prisma.SortOrder
   last_login_at?: Prisma.SortOrder
   login_error?: Prisma.SortOrder
-  fingerprint?: Prisma.SortOrder
 }
 
 export type platform_profilesAvgOrderByAggregateInput = {
@@ -656,10 +624,8 @@ export type platform_profilesCreateWithoutProfilesInput = {
   username?: string | null
   password?: string | null
   api_token?: string | null
-  cookies?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   last_login_at?: Date | string | null
   login_error?: string | null
-  fingerprint?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   job_platforms?: Prisma.job_platformsCreateNestedOneWithoutPlatform_profilesInput
 }
 
@@ -673,10 +639,8 @@ export type platform_profilesUncheckedCreateWithoutProfilesInput = {
   username?: string | null
   password?: string | null
   api_token?: string | null
-  cookies?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   last_login_at?: Date | string | null
   login_error?: string | null
-  fingerprint?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type platform_profilesCreateOrConnectWithoutProfilesInput = {
@@ -719,10 +683,8 @@ export type platform_profilesScalarWhereInput = {
   username?: Prisma.StringNullableFilter<"platform_profiles"> | string | null
   password?: Prisma.StringNullableFilter<"platform_profiles"> | string | null
   api_token?: Prisma.StringNullableFilter<"platform_profiles"> | string | null
-  cookies?: Prisma.JsonNullableFilter<"platform_profiles">
   last_login_at?: Prisma.DateTimeNullableFilter<"platform_profiles"> | Date | string | null
   login_error?: Prisma.StringNullableFilter<"platform_profiles"> | string | null
-  fingerprint?: Prisma.JsonNullableFilter<"platform_profiles">
 }
 
 export type platform_profilesCreateWithoutJob_platformsInput = {
@@ -733,10 +695,8 @@ export type platform_profilesCreateWithoutJob_platformsInput = {
   username?: string | null
   password?: string | null
   api_token?: string | null
-  cookies?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   last_login_at?: Date | string | null
   login_error?: string | null
-  fingerprint?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   profiles?: Prisma.profilesCreateNestedOneWithoutPlatform_profilesInput
 }
 
@@ -750,10 +710,8 @@ export type platform_profilesUncheckedCreateWithoutJob_platformsInput = {
   username?: string | null
   password?: string | null
   api_token?: string | null
-  cookies?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   last_login_at?: Date | string | null
   login_error?: string | null
-  fingerprint?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type platform_profilesCreateOrConnectWithoutJob_platformsInput = {
@@ -792,10 +750,8 @@ export type platform_profilesCreateManyProfilesInput = {
   username?: string | null
   password?: string | null
   api_token?: string | null
-  cookies?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   last_login_at?: Date | string | null
   login_error?: string | null
-  fingerprint?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type platform_profilesUpdateWithoutProfilesInput = {
@@ -806,10 +762,8 @@ export type platform_profilesUpdateWithoutProfilesInput = {
   username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   api_token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  cookies?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   last_login_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   login_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fingerprint?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   job_platforms?: Prisma.job_platformsUpdateOneWithoutPlatform_profilesNestedInput
 }
 
@@ -823,10 +777,8 @@ export type platform_profilesUncheckedUpdateWithoutProfilesInput = {
   username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   api_token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  cookies?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   last_login_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   login_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fingerprint?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type platform_profilesUncheckedUpdateManyWithoutProfilesInput = {
@@ -839,10 +791,8 @@ export type platform_profilesUncheckedUpdateManyWithoutProfilesInput = {
   username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   api_token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  cookies?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   last_login_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   login_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fingerprint?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type platform_profilesCreateManyJob_platformsInput = {
@@ -855,10 +805,8 @@ export type platform_profilesCreateManyJob_platformsInput = {
   username?: string | null
   password?: string | null
   api_token?: string | null
-  cookies?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   last_login_at?: Date | string | null
   login_error?: string | null
-  fingerprint?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type platform_profilesUpdateWithoutJob_platformsInput = {
@@ -869,10 +817,8 @@ export type platform_profilesUpdateWithoutJob_platformsInput = {
   username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   api_token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  cookies?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   last_login_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   login_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fingerprint?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   profiles?: Prisma.profilesUpdateOneWithoutPlatform_profilesNestedInput
 }
 
@@ -886,10 +832,8 @@ export type platform_profilesUncheckedUpdateWithoutJob_platformsInput = {
   username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   api_token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  cookies?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   last_login_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   login_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fingerprint?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type platform_profilesUncheckedUpdateManyWithoutJob_platformsInput = {
@@ -902,10 +846,8 @@ export type platform_profilesUncheckedUpdateManyWithoutJob_platformsInput = {
   username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   api_token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  cookies?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   last_login_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   login_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  fingerprint?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 
@@ -921,10 +863,8 @@ export type platform_profilesSelect<ExtArgs extends runtime.Types.Extensions.Int
   username?: boolean
   password?: boolean
   api_token?: boolean
-  cookies?: boolean
   last_login_at?: boolean
   login_error?: boolean
-  fingerprint?: boolean
   job_platforms?: boolean | Prisma.platform_profiles$job_platformsArgs<ExtArgs>
   profiles?: boolean | Prisma.platform_profiles$profilesArgs<ExtArgs>
 }, ExtArgs["result"]["platform_profiles"]>
@@ -940,10 +880,8 @@ export type platform_profilesSelectCreateManyAndReturn<ExtArgs extends runtime.T
   username?: boolean
   password?: boolean
   api_token?: boolean
-  cookies?: boolean
   last_login_at?: boolean
   login_error?: boolean
-  fingerprint?: boolean
   job_platforms?: boolean | Prisma.platform_profiles$job_platformsArgs<ExtArgs>
   profiles?: boolean | Prisma.platform_profiles$profilesArgs<ExtArgs>
 }, ExtArgs["result"]["platform_profiles"]>
@@ -959,10 +897,8 @@ export type platform_profilesSelectUpdateManyAndReturn<ExtArgs extends runtime.T
   username?: boolean
   password?: boolean
   api_token?: boolean
-  cookies?: boolean
   last_login_at?: boolean
   login_error?: boolean
-  fingerprint?: boolean
   job_platforms?: boolean | Prisma.platform_profiles$job_platformsArgs<ExtArgs>
   profiles?: boolean | Prisma.platform_profiles$profilesArgs<ExtArgs>
 }, ExtArgs["result"]["platform_profiles"]>
@@ -978,13 +914,11 @@ export type platform_profilesSelectScalar = {
   username?: boolean
   password?: boolean
   api_token?: boolean
-  cookies?: boolean
   last_login_at?: boolean
   login_error?: boolean
-  fingerprint?: boolean
 }
 
-export type platform_profilesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "sort" | "date_created" | "date_updated" | "profile" | "platform" | "username" | "password" | "api_token" | "cookies" | "last_login_at" | "login_error" | "fingerprint", ExtArgs["result"]["platform_profiles"]>
+export type platform_profilesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "sort" | "date_created" | "date_updated" | "profile" | "platform" | "username" | "password" | "api_token" | "last_login_at" | "login_error", ExtArgs["result"]["platform_profiles"]>
 export type platform_profilesInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   job_platforms?: boolean | Prisma.platform_profiles$job_platformsArgs<ExtArgs>
   profiles?: boolean | Prisma.platform_profiles$profilesArgs<ExtArgs>
@@ -1015,10 +949,8 @@ export type $platform_profilesPayload<ExtArgs extends runtime.Types.Extensions.I
     username: string | null
     password: string | null
     api_token: string | null
-    cookies: runtime.JsonValue | null
     last_login_at: Date | null
     login_error: string | null
-    fingerprint: runtime.JsonValue | null
   }, ExtArgs["result"]["platform_profiles"]>
   composites: {}
 }
@@ -1454,10 +1386,8 @@ export interface platform_profilesFieldRefs {
   readonly username: Prisma.FieldRef<"platform_profiles", 'String'>
   readonly password: Prisma.FieldRef<"platform_profiles", 'String'>
   readonly api_token: Prisma.FieldRef<"platform_profiles", 'String'>
-  readonly cookies: Prisma.FieldRef<"platform_profiles", 'Json'>
   readonly last_login_at: Prisma.FieldRef<"platform_profiles", 'DateTime'>
   readonly login_error: Prisma.FieldRef<"platform_profiles", 'String'>
-  readonly fingerprint: Prisma.FieldRef<"platform_profiles", 'Json'>
 }
     
 

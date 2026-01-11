@@ -1,53 +1,38 @@
 /**
  * Browser utilities with authentication support
- * Combines browser launching with cookie restoration and fingerprint randomization
+ * Note: Authentication is now handled by Browser-Use. This provides basic browser launching.
  */
 
 import type { BrowserContext } from "patchright";
 import { type BrowserLaunchOptions, launchBrowser } from "./browser-utils";
-import { dbDirect } from "$lib/db";
+import { dbDirect } from "$lib/db"; // Still used in getPlatformIdFromUrl
 
 export interface AuthenticatedBrowserOptions extends BrowserLaunchOptions {
   /**
-   * Profile ID for cookie restoration
-   * If not provided, will try to use default profile
+   * Profile ID (legacy - no longer used)
+   * @deprecated Use Browser-Use for authenticated scraping
    */
   profileId?: number;
 
   /**
-   * Platform ID for cookie restoration
-   * If not provided, cookies won't be restored
+   * Platform ID (legacy - no longer used)
+   * @deprecated Use Browser-Use for authenticated scraping
    */
   platformId?: number;
-
-  /**
-   * Whether to load cookies from database
-   * @default true if platformId is provided
-   */
-  loadCookies?: boolean;
 }
 
 /**
- * Launch browser with authentication (cookies restored from database)
- * This is the recommended way to launch browsers for job scraping
+ * Launch browser without authentication
+ * @deprecated Use Browser-Use for authenticated scraping
  *
- * @param options Browser and authentication options
- * @returns Browser context with cookies restored
+ * @param options Browser launch options
+ * @returns Browser context
  */
 export async function launchAuthenticatedBrowser(
   options: AuthenticatedBrowserOptions = {},
 ): Promise<BrowserContext> {
-  let profileId = options.profileId;
-
-  // If no profile ID provided, try to get default
-  if (!profileId) {
-    const config = await dbDirect.config.findFirst();
-    profileId = config?.default_profile ?? undefined;
-  }
-
-  // Note: Cookie/fingerprint loading removed - now using Browser-Use for authentication
-  // This function now just launches a basic browser for Playwright-based scraping
-  // For authenticated scraping, use Browser-Use with credentials from the database
+  // This launches a browser without authentication.
+  // For authenticated scraping, use Browser-Use with credentials from the database.
 
   console.log("⚠️  Launching browser without authentication");
   console.log(

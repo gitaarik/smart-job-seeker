@@ -17,9 +17,15 @@ import { dbDirect } from "$lib/db";
 function extractBrowserUseError(result: any): string | null {
   try {
     // Navigate to the error in the history structure
-    if (result.history && Array.isArray(result.history) && result.history.length > 0) {
+    if (
+      result.history && Array.isArray(result.history) &&
+      result.history.length > 0
+    ) {
       const firstHistory = result.history[0];
-      if (firstHistory.result && Array.isArray(firstHistory.result) && firstHistory.result.length > 0) {
+      if (
+        firstHistory.result && Array.isArray(firstHistory.result) &&
+        firstHistory.result.length > 0
+      ) {
         const firstResult = firstHistory.result[0];
         if (firstResult.error) {
           return firstResult.error;
@@ -45,12 +51,18 @@ function parseBrowserUseResponse(result: any): any[] {
     // Only treat as error if there's an actual error message
     if (errorMessage) {
       console.error("❌ Browser-Use agent failed");
-      console.log("Response:", JSON.stringify(result, null, 2).substring(0, 1000));
+      console.log(
+        "Response:",
+        JSON.stringify(result, null, 2).substring(0, 1000),
+      );
 
       const resultStr = errorMessage;
 
       // Check for rate limit errors with detailed message
-      if (resultStr.includes("Rate limit") || resultStr.includes("rate limit") || resultStr.includes("429")) {
+      if (
+        resultStr.includes("Rate limit") || resultStr.includes("rate limit") ||
+        resultStr.includes("429")
+      ) {
         // Try to extract the actual rate limit message
         if (errorMessage) {
           // Parse error messages like: "Error code: 429 - {'error': {'message': '...'}}"
@@ -61,7 +73,9 @@ function parseBrowserUseResponse(result: any): any[] {
 
             // Try to extract the actual message from Python dict format or JSON
             // Handle nested quotes by finding the message between 'message': ' and the next ', 'type'
-            const messageMatch = errorBody.match(/'message':\s*'(.+?)',\s*'type'/);
+            const messageMatch = errorBody.match(
+              /'message':\s*'(.+?)',\s*'type'/,
+            );
             if (messageMatch) {
               const actualMessage = messageMatch[1];
               console.error(`\n❌ LLM Rate Limit Error (${errorCode}):`);
@@ -72,24 +86,41 @@ function parseBrowserUseResponse(result: any): any[] {
 
           // Fallback: show the raw error
           console.error(`\n❌ Rate Limit Error:\n${errorMessage}`);
-          throw new Error(`Browser-Use hit LLM API rate limit: ${errorMessage.substring(0, 200)}`);
+          throw new Error(
+            `Browser-Use hit LLM API rate limit: ${
+              errorMessage.substring(0, 200)
+            }`,
+          );
         }
 
-        throw new Error("Browser-Use hit LLM API rate limit - check provider and API key");
+        throw new Error(
+          "Browser-Use hit LLM API rate limit - check provider and API key",
+        );
       }
 
       // Check for 404/error pages
-      if (resultStr.includes("404") || resultStr.includes("This page could not be found")) {
-        throw new Error("Browser-Use navigated to 404 error page - likely login or navigation failed");
+      if (
+        resultStr.includes("404") ||
+        resultStr.includes("This page could not be found")
+      ) {
+        throw new Error(
+          "Browser-Use navigated to 404 error page - likely login or navigation failed",
+        );
       }
 
       // Show the actual error if available
       if (errorMessage) {
-        console.error(`\n❌ Browser-Use Error:\n${errorMessage.substring(0, 500)}`);
-        throw new Error(`Browser-Use agent error: ${errorMessage.substring(0, 200)}`);
+        console.error(
+          `\n❌ Browser-Use Error:\n${errorMessage.substring(0, 500)}`,
+        );
+        throw new Error(
+          `Browser-Use agent error: ${errorMessage.substring(0, 200)}`,
+        );
       }
 
-      throw new Error("Browser-Use agent returned error/history instead of job data");
+      throw new Error(
+        "Browser-Use agent returned error/history instead of job data",
+      );
     }
 
     // Check if this is a successful browser-use response with history
@@ -104,7 +135,7 @@ function parseBrowserUseResponse(result: any): any[] {
       if (Array.isArray(finalResult)) {
         return finalResult;
       }
-      if (typeof finalResult === 'object' && finalResult !== null) {
+      if (typeof finalResult === "object" && finalResult !== null) {
         if (Array.isArray(finalResult.jobs)) {
           return finalResult.jobs;
         }
@@ -114,7 +145,7 @@ function parseBrowserUseResponse(result: any): any[] {
       }
 
       // Otherwise try to parse it as JSON
-      if (typeof finalResult === 'string') {
+      if (typeof finalResult === "string") {
         try {
           const parsed = JSON.parse(finalResult);
           if (Array.isArray(parsed)) {
@@ -134,7 +165,9 @@ function parseBrowserUseResponse(result: any): any[] {
   if (Array.isArray(result)) {
     // Validate it's not a history/error array
     if (result.length > 0 && result[0].hasOwnProperty("is_done")) {
-      throw new Error("Browser-Use returned history array instead of job data - agent likely failed");
+      throw new Error(
+        "Browser-Use returned history array instead of job data - agent likely failed",
+      );
     }
     return result;
   }
@@ -225,9 +258,7 @@ export async function scrapeJobsWithBrowserUse(
 
   // Use default config automatically
   const browserUse = new BrowserUseClient(
-    sendScreenshots !== undefined
-      ? { sendScreenshots }
-      : undefined,
+    sendScreenshots !== undefined ? { sendScreenshots } : undefined,
   );
 
   // Get platform information
@@ -316,7 +347,9 @@ ${userPrompt}
     completeTask = `${systemPrompt}\n\n${userPrompt}`.trim();
   }
 
-  console.log(`\n📋 Task instructions:\n${completeTask.substring(0, 500)}...\n`);
+  console.log(
+    `\n📋 Task instructions:\n${completeTask.substring(0, 500)}...\n`,
+  );
 
   // Execute the complete task in ONE Browser-Use call
   console.log(`🚀 Executing Browser-Use task...`);

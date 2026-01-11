@@ -80,14 +80,20 @@ export class BrowserUseClient {
     this.config = {
       baseUrl: customConfig?.baseUrl ?? config.browserUseUrl,
       timeout: customConfig?.timeout ?? config.browserUseTimeout,
-      sendScreenshots: customConfig?.sendScreenshots ?? config.browserUseSendScreenshots,
+      sendScreenshots: customConfig?.sendScreenshots ??
+        config.browserUseSendScreenshots,
     };
-    console.log(`[BrowserUseClient] Initialized with sendScreenshots: ${this.config.sendScreenshots} (custom: ${customConfig?.sendScreenshots}, env: ${config.browserUseSendScreenshots})`);
+    console.log(
+      `[BrowserUseClient] Initialized with sendScreenshots: ${this.config.sendScreenshots} (custom: ${customConfig?.sendScreenshots}, env: ${config.browserUseSendScreenshots})`,
+    );
   }
 
   async executeTask(params: ExecuteTaskParams): Promise<ExecuteTaskResponse> {
-    const sendScreenshots = params.sendScreenshots ?? this.config.sendScreenshots;
-    console.log(`[BrowserUseClient] Sending request with send_screenshots: ${sendScreenshots}`);
+    const sendScreenshots = params.sendScreenshots ??
+      this.config.sendScreenshots;
+    console.log(
+      `[BrowserUseClient] Sending request with send_screenshots: ${sendScreenshots}`,
+    );
 
     const response = await fetch(`${this.config.baseUrl}/execute`, {
       method: "POST",

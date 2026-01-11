@@ -6,24 +6,13 @@
  */
 
 import { dbDirect } from "$lib/db";
-import {
-  extractJobData,
-  getPlatformIdFromUrl,
-  upsertJob,
-} from "$lib/server/job-scraper";
+import { getPlatformIdFromUrl, upsertJob } from "$lib/server/job-scraper";
 import { Command } from "commander";
-import { getSiteConfig, getSiteName } from "$lib/server/job-site-configs";
+import { getSiteName } from "$lib/server/job-site-configs";
 import { config } from "$lib/server/config";
 import { BrowserUseClient } from "$lib/server/browser-use-client";
 import { parseRelativeDate } from "$lib/tools/date-utils";
 import { clearDirectusCache } from "$lib/server/directus";
-import {
-  launchBrowser,
-  waitForJobContentToLoad,
-} from "$lib/server/browser-utils";
-import { launchAuthenticatedBrowser } from "$lib/server/browser-with-auth";
-import { scrapeJobsWithUrls } from "$lib/server/scrapers/url-scraper";
-import { scrapeJobsWithClicks } from "$lib/server/scrapers/click-scraper";
 import { scrapeJobsWithBrowserUse } from "$lib/server/scrapers/browser-use-scraper";
 
 interface SearchAction {
@@ -102,75 +91,31 @@ async function scrapeJobSite(
   if (paginationType) {
     console.log(`📄 Pagination type: ${paginationType}`);
   }
-  console.log(`🔧 Scraper method: ${config.scraperMethod}`);
+  console.log(`🔧 Scraper method: Browser-Use`);
 
   let processedCount: number;
   let strippedHtml: string | null = null;
 
   try {
-    if (config.scraperMethod === "playwright") {
-      // Launch Playwright browser with saved cookies
-      const headless = false; // Always visible so user can log in
-      console.log(`🖥️  Browser mode: ${headless ? "headless" : "visible"}`);
-      const context = await launchAuthenticatedBrowser({
-        headless,
-        platformId: platformId ?? undefined,
-      });
-
-      try {
-        const page = await context.newPage();
-        // Use domcontentloaded for SPAs (faster and more reliable than "load")
-        await page.goto(searchUrl, {
-          waitUntil: "domcontentloaded",
-          timeout: 60000,
-        });
-
-        // Route by navigation type
-        if (navigationType === "click") {
-          const siteConfig = getSiteConfig(searchUrl);
-          const result = await scrapeJobsWithClicks(
-            page,
-            siteConfig,
-            searchUrl,
-            platformId,
-          );
-          processedCount = result.jobsProcessed;
-          strippedHtml = result.strippedHtml;
-        } else {
-          const result = await scrapeJobsWithUrls(
-            page,
-            searchUrl,
-            platformId,
-            paginationType,
-          );
-          processedCount = result.jobsProcessed;
-          strippedHtml = result.strippedHtml;
-        }
-      } finally {
-        await context.close(); // Always cleanup
-      }
-    } else {
-      // Default: Browser-Use
-      processedCount = await scrapeJobsWithBrowserUse(
-        searchUrl,
-        navigationType,
-        platformId,
-        config.systemScraperProfileId, // Pass profile ID for credentials
-        options.screenshots,
-      );
-    }
+    // Always use Browser-Use
+    processedCount = await scrapeJobsWithBrowserUse(
+      searchUrl,
+      navigationType,
+      platformId,
+      config.systemScraperProfileId, // Pass profile ID for credentials
+      options.screenshots,
+    );
 
     console.log(`\n✅ Successfully processed ${processedCount} job(s)\n`);
 
     return { strippedHtml };
   } catch (error) {
     console.error(
-      `❌ ${config.scraperMethod} scraping failed:`,
+      `❌ Browser-Use scraping failed:`,
       error instanceof Error ? error.message : String(error),
     );
 
     if (
-      config.scraperMethod === "browser-use" &&
       error instanceof Error &&
       error.message.includes("not found")
     ) {
@@ -221,45 +166,19 @@ async function rescrapeJobById(
   console.log(`🔧 Platform ID: ${platformId}`);
 
   try {
-    // 3. Extract job data using configured scraper method
-    console.log(`🔧 Scraper method: ${config.scraperMethod}`);
+    // 3. Extract job data using Browser-Use
+    console.log(`🔧 Scraper method: Browser-Use`);
 
     let jobData: any;
 
-    if (config.scraperMethod === "playwright") {
-      console.log(`\n🤖 Using Playwright to extract job data...`);
-
-      // Launch Playwright browser with saved cookies
-      const context = await launchAuthenticatedBrowser({
-        headless: config.isDevelopment ? false : true,
-        platformId: platformId ?? undefined,
-      });
-
-      try {
-        const page = await context.newPage();
-        await page.goto(job.source_url, { waitUntil: "load", timeout: 30000 });
-
-        // Wait for dynamic job content to load (e.g., LinkedIn's async-loaded descriptions)
-        await waitForJobContentToLoad(page);
-
-        // Get HTML content from the page
-        const html = await page.content();
-
-        // Extract job data from the HTML
-        jobData = await extractJobData(html, job.source_url);
-      } finally {
-        await context.close(); // Always cleanup
-      }
-    } else {
-      // Default: Browser-Use
-      console.log(`\n🤖 Using Browser-Use to extract job data...`);
-      const browserUse = new BrowserUseClient(
-        options.screenshots !== undefined
-          ? { sendScreenshots: options.screenshots }
-          : undefined,
-      );
-      jobData = await browserUse.extractSingleJob(job.source_url);
-    }
+    // Always use Browser-Use
+    console.log(`\n🤖 Using Browser-Use to extract job data...`);
+    const browserUse = new BrowserUseClient(
+      options.screenshots !== undefined
+        ? { sendScreenshots: options.screenshots }
+        : undefined,
+    );
+    jobData = await browserUse.extractSingleJob(job.source_url);
 
     if (!jobData) {
       console.error(`❌ Failed to extract job data`);
