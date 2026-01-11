@@ -246,19 +246,6 @@ export interface ChatCompletionOptions {
 }
 
 /**
- * @deprecated Use StructuredOutputConfig instead
- * Legacy interface for backward compatibility
- */
-export interface ResponseFormat {
-  type: "json_schema";
-  json_schema: {
-    name: string;
-    strict?: boolean;
-    schema: Record<string, any>;
-  };
-}
-
-/**
  * Convert our ChatMessage format to LangChain BaseMessage format
  */
 function convertMessages(messages: ChatMessage[]): BaseMessage[] {

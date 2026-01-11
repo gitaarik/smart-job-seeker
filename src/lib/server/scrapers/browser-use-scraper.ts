@@ -359,11 +359,6 @@ ${userPrompt}
     maxTime: credentials ? 240 : 180, // 4 min with login, 3 min without
   });
 
-  // DEBUG: Log raw response
-  console.log("\n🔍 DEBUG: Raw Browser-Use response:");
-  console.log(JSON.stringify(response.result, null, 2).substring(0, 2000));
-  console.log("\n");
-
   // Parse the JSON result with multiple fallback strategies
   let jobs: any[];
   try {

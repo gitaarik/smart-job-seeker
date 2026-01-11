@@ -3,48 +3,7 @@
  * Note: Authentication is now handled by Browser-Use. This provides basic browser launching.
  */
 
-import type { BrowserContext } from "patchright";
-import { type BrowserLaunchOptions, launchBrowser } from "./browser-utils";
 import { dbDirect } from "$lib/db"; // Still used in getPlatformIdFromUrl
-
-export interface AuthenticatedBrowserOptions extends BrowserLaunchOptions {
-  /**
-   * Profile ID (legacy - no longer used)
-   * @deprecated Use Browser-Use for authenticated scraping
-   */
-  profileId?: number;
-
-  /**
-   * Platform ID (legacy - no longer used)
-   * @deprecated Use Browser-Use for authenticated scraping
-   */
-  platformId?: number;
-}
-
-/**
- * Launch browser without authentication
- * @deprecated Use Browser-Use for authenticated scraping
- *
- * @param options Browser launch options
- * @returns Browser context
- */
-export async function launchAuthenticatedBrowser(
-  options: AuthenticatedBrowserOptions = {},
-): Promise<BrowserContext> {
-  // This launches a browser without authentication.
-  // For authenticated scraping, use Browser-Use with credentials from the database.
-
-  console.log("⚠️  Launching browser without authentication");
-  console.log(
-    "   For authenticated scraping, use Browser-Use with credentials",
-  );
-
-  const context = await launchBrowser({
-    ...options,
-  });
-
-  return context;
-}
 
 /**
  * Get platform ID from URL by matching against job_platforms table
