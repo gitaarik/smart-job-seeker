@@ -29,8 +29,10 @@ export const aiChatGeneratePromptHandler: WebhookHandler = {
       };
     }
 
+    // Try block contains ONLY the async operation
+    let results;
     try {
-      const results = await Promise.allSettled(
+      results = await Promise.allSettled(
         aiChatIds.map((aiChatId) =>
           generateAiChatFullPrompt(aiChatId)
             .then((result) => ({
@@ -45,25 +47,6 @@ export const aiChatGeneratePromptHandler: WebhookHandler = {
             }))
         ),
       );
-
-      const successful = results.filter(
-        (r) => r.status === "fulfilled" && (r.value as any).success !== false,
-      );
-      const failed = results.filter(
-        (r) =>
-          r.status === "rejected" ||
-          (r.status === "fulfilled" && (r.value as any).success === false),
-      );
-
-      return {
-        processed: successful.length > 0,
-        aiChatCount: aiChatIds.length,
-        successCount: successful.length,
-        results: results.map((r) =>
-          r.status === "fulfilled" ? r.value : r.reason
-        ),
-        ...(failed.length > 0 && { failureCount: failed.length }),
-      };
     } catch (error) {
       const errorMessage = error instanceof Error
         ? error.message
@@ -78,5 +61,25 @@ export const aiChatGeneratePromptHandler: WebhookHandler = {
         error: errorMessage,
       };
     }
+
+    // Result processing outside try block
+    const successful = results.filter(
+      (r) => r.status === "fulfilled" && (r.value as any).success !== false,
+    );
+    const failed = results.filter(
+      (r) =>
+        r.status === "rejected" ||
+        (r.status === "fulfilled" && (r.value as any).success === false),
+    );
+
+    return {
+      processed: successful.length > 0,
+      aiChatCount: aiChatIds.length,
+      successCount: successful.length,
+      results: results.map((r) =>
+        r.status === "fulfilled" ? r.value : r.reason
+      ),
+      ...(failed.length > 0 && { failureCount: failed.length }),
+    };
   },
 };

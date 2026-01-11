@@ -39,59 +39,16 @@ export async function createApplicationQuestionFollowup(
     date_updated: Date | null;
   };
 }> {
+  // Step 1: Fetch application_questions (try block for database query)
+  let question;
   try {
-    // Step 1: Fetch application_questions with ai_chat reference
-    const question = await db.application_questions.findUnique({
+    question = await db.application_questions.findUnique({
       where: { id: questionId },
       select: {
         id: true,
         ai_chat: true,
       },
     });
-
-    if (!question) {
-      return {
-        success: false,
-        message: `Application question with ID ${questionId} not found`,
-      };
-    }
-
-    // Step 2: Validate that ai_chat exists
-    if (!question.ai_chat) {
-      return {
-        success: false,
-        message:
-          `Application question ${questionId} does not have an ai_chat yet. Generate the initial answer first.`,
-      };
-    }
-
-    // Step 3: Call createFollowupAiChat to create the follow-up
-    const result = await createFollowupAiChat(
-      question.ai_chat,
-      followupRequest,
-      { includeOriginalContext },
-    );
-
-    if (!result.success || !result.aiChat) {
-      return result;
-    }
-
-    // Step 4: Update application_questions with new ai_chat reference
-    // This flow owns this update logic (separation of concerns)
-    await db.application_questions.update({
-      where: { id: questionId },
-      data: {
-        ai_chat: result.aiChat.id,
-        ai_chat_response: result.aiChat.response,
-      },
-    });
-
-    return {
-      success: true,
-      message:
-        `Follow-up AI chat created successfully (ID: ${result.aiChat.id}). Application question ${questionId} has been updated.`,
-      aiChat: result.aiChat,
-    };
   } catch (error) {
     const errorMessage = error instanceof Error
       ? error.message
@@ -101,4 +58,70 @@ export async function createApplicationQuestionFollowup(
       message: `Error creating application question follow-up: ${errorMessage}`,
     };
   }
+
+  // Step 2: Validation outside try block
+  if (!question) {
+    return {
+      success: false,
+      message: `Application question with ID ${questionId} not found`,
+    };
+  }
+
+  if (!question.ai_chat) {
+    return {
+      success: false,
+      message:
+        `Application question ${questionId} does not have an ai_chat yet. Generate the initial answer first.`,
+    };
+  }
+
+  // Step 3: Create follow-up (try block for async operation)
+  let result;
+  try {
+    result = await createFollowupAiChat(
+      question.ai_chat,
+      followupRequest,
+      { includeOriginalContext },
+    );
+  } catch (error) {
+    const errorMessage = error instanceof Error
+      ? error.message
+      : "Unknown error";
+    return {
+      success: false,
+      message: `Error creating followup: ${errorMessage}`,
+    };
+  }
+
+  // Validation outside try block
+  if (!result.success || !result.aiChat) {
+    return result;
+  }
+
+  // Step 4: Update application_questions (try block for database update)
+  try {
+    await db.application_questions.update({
+      where: { id: questionId },
+      data: {
+        ai_chat: result.aiChat.id,
+        ai_chat_response: result.aiChat.response,
+      },
+    });
+  } catch (error) {
+    const errorMessage = error instanceof Error
+      ? error.message
+      : "Unknown error";
+    return {
+      success: false,
+      message: `Error updating question record: ${errorMessage}`,
+    };
+  }
+
+  // Final result construction outside try block
+  return {
+    success: true,
+    message:
+      `Follow-up AI chat created successfully (ID: ${result.aiChat.id}). Application question ${questionId} has been updated.`,
+    aiChat: result.aiChat,
+  };
 }

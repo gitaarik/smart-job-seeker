@@ -21,9 +21,10 @@ export async function generateApplicationQuestionAnswer(
   success: boolean;
   message: string;
 }> {
+  // Fetch the question (try block for database query)
+  let question;
   try {
-    // Fetch the question with application and job details
-    const question = await db.application_questions.findUnique({
+    question = await db.application_questions.findUnique({
       where: { id: questionId },
       include: {
         applications: {
@@ -33,22 +34,31 @@ export async function generateApplicationQuestionAnswer(
         },
       },
     });
+  } catch (error) {
+    const errorMessage = error instanceof Error
+      ? error.message
+      : "Unknown error";
+    return {
+      success: false,
+      message: `Database error fetching question: ${errorMessage}`,
+    };
+  }
 
-    if (!question) {
-      return {
-        success: false,
-        message: `Application question with ID ${questionId} not found`,
-      };
-    }
+  // Validation outside try block
+  if (!question) {
+    return {
+      success: false,
+      message: `Application question with ID ${questionId} not found`,
+    };
+  }
 
-    const profileId = question.applications.profile;
+  const profileId = question.applications.profile;
+  const jobDescription = question.applications.jobs?.job_description || "";
 
-    // Fetch the job description from the job
-    const jobDescription = question.applications.jobs?.job_description ||
-      "";
-
-    // Create and generate the ai_chat record using the answer_application_question prompt template
-    const aiChatResult = await createAndGenerateAiChat(
+  // Generate AI chat (try block for async operation)
+  let aiChatResult;
+  try {
+    aiChatResult = await createAndGenerateAiChat(
       profileId,
       "answer_application_question",
       {
@@ -56,36 +66,48 @@ export async function generateApplicationQuestionAnswer(
         question: question.question,
       },
     );
-
-    if (!aiChatResult.success || !aiChatResult.aiChat) {
-      return {
-        success: false,
-        message: aiChatResult.message,
-      };
-    }
-
-    const aiChat = aiChatResult.aiChat;
-
-    // Update the application_questions record with the ai_chat reference
-    await db.application_questions.update({
-      where: { id: questionId },
-      data: {
-        ai_chat: aiChat.id,
-        ai_chat_response: aiChat.response, // Show AI suggestion as reference
-      },
-    });
-
-    return {
-      success: true,
-      message: `Answer generated for question ID ${questionId}`,
-    };
   } catch (error) {
     const errorMessage = error instanceof Error
       ? error.message
       : "Unknown error";
     return {
       success: false,
-      message: `Error generating question answer: ${errorMessage}`,
+      message: `Error generating AI chat: ${errorMessage}`,
     };
   }
+
+  // Validation outside try block
+  if (!aiChatResult.success || !aiChatResult.aiChat) {
+    return {
+      success: false,
+      message: aiChatResult.message,
+    };
+  }
+
+  const aiChat = aiChatResult.aiChat;
+
+  // Update the application_questions record (try block for database update)
+  try {
+    await db.application_questions.update({
+      where: { id: questionId },
+      data: {
+        ai_chat: aiChat.id,
+        ai_chat_response: aiChat.response,
+      },
+    });
+  } catch (error) {
+    const errorMessage = error instanceof Error
+      ? error.message
+      : "Unknown error";
+    return {
+      success: false,
+      message: `Error updating question record: ${errorMessage}`,
+    };
+  }
+
+  // Final result construction outside try block
+  return {
+    success: true,
+    message: `Answer generated for question ID ${questionId}`,
+  };
 }

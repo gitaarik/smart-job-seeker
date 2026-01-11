@@ -44,37 +44,38 @@ export async function getFieldChoiceLabel(
 ): Promise<string> {
   const cacheKey = `${collection}:${field}`;
 
-  try {
-    // Check cache first
-    let choices = choicesCache.get(cacheKey);
+  // Check cache first (outside try block)
+  let choices = choicesCache.get(cacheKey);
 
-    // Fetch from Directus if not cached
-    if (!choices) {
+  // Fetch from Directus if not cached (try block for async operation)
+  if (!choices) {
+    try {
       const response = await directusRequest(
         "GET",
         `/fields/${collection}/${field}`,
       ) as DirectusFieldResponse;
 
       choices = response?.data?.meta?.options?.choices;
-
-      // Cache the choices if found
-      if (choices) {
-        choicesCache.set(cacheKey, choices);
-      }
+    } catch (error) {
+      console.error(
+        `Failed to fetch label for ${collection}.${field}[${key}] from Directus:`,
+        error,
+      );
+      return key;
     }
 
-    // Find the matching choice
+    // Cache the choices if found (outside try block)
     if (choices) {
-      const choice = choices.find((c) => c.value === key);
-      if (choice) {
-        return choice.text;
-      }
+      choicesCache.set(cacheKey, choices);
     }
-  } catch (error) {
-    console.error(
-      `Failed to fetch label for ${collection}.${field}[${key}] from Directus:`,
-      error,
-    );
+  }
+
+  // Find the matching choice (outside try block)
+  if (choices) {
+    const choice = choices.find((c) => c.value === key);
+    if (choice) {
+      return choice.text;
+    }
   }
 
   // Fallback to the key itself if label not found

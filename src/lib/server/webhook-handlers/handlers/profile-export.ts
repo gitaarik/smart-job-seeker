@@ -32,8 +32,10 @@ export const profileExportHandler: WebhookHandler = {
       };
     }
 
+    // Try block contains ONLY the async operation
+    let results;
     try {
-      const results = await Promise.allSettled(
+      results = await Promise.allSettled(
         profileIds.map((profileId) =>
           exportProfile(profileId)
             .then((result) => ({
@@ -49,25 +51,6 @@ export const profileExportHandler: WebhookHandler = {
             }))
         ),
       );
-
-      const successful = results.filter(
-        (r) => r.status === "fulfilled" && (r.value as any).success !== false,
-      );
-      const failed = results.filter(
-        (r) =>
-          r.status === "rejected" ||
-          (r.status === "fulfilled" && (r.value as any).success === false),
-      );
-
-      return {
-        processed: successful.length > 0,
-        profileCount: profileIds.length,
-        successCount: successful.length,
-        results: results.map((r) =>
-          r.status === "fulfilled" ? r.value : r.reason
-        ),
-        ...(failed.length > 0 && { failureCount: failed.length }),
-      };
     } catch (error) {
       const errorMessage = error instanceof Error
         ? error.message
@@ -79,5 +62,25 @@ export const profileExportHandler: WebhookHandler = {
         error: errorMessage,
       };
     }
+
+    // Result processing outside try block
+    const successful = results.filter(
+      (r) => r.status === "fulfilled" && (r.value as any).success !== false,
+    );
+    const failed = results.filter(
+      (r) =>
+        r.status === "rejected" ||
+        (r.status === "fulfilled" && (r.value as any).success === false),
+    );
+
+    return {
+      processed: successful.length > 0,
+      profileCount: profileIds.length,
+      successCount: successful.length,
+      results: results.map((r) =>
+        r.status === "fulfilled" ? r.value : r.reason
+      ),
+      ...(failed.length > 0 && { failureCount: failed.length }),
+    };
   },
 };

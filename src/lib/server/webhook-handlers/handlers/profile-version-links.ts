@@ -29,8 +29,10 @@ export const profileVersionLinksHandler: WebhookHandler = {
       };
     }
 
+    // Try block contains ONLY the async operation
+    let results;
     try {
-      const results = await Promise.allSettled(
+      results = await Promise.allSettled(
         profileVersionIds.map(async (profileVersionId) => {
           const profileVersion = await db.profile_versions.findUnique({
             where: { id: profileVersionId },
@@ -89,25 +91,6 @@ export const profileVersionLinksHandler: WebhookHandler = {
           };
         }),
       );
-
-      const successful = results.filter(
-        (r) => r.status === "fulfilled" && (r.value as any).success !== false,
-      );
-      const failed = results.filter(
-        (r) =>
-          r.status === "rejected" ||
-          (r.status === "fulfilled" && (r.value as any).success === false),
-      );
-
-      return {
-        processed: successful.length > 0,
-        profileVersionCount: profileVersionIds.length,
-        successCount: successful.length,
-        results: results.map((r) =>
-          r.status === "fulfilled" ? r.value : r.reason
-        ),
-        ...(failed.length > 0 && { failureCount: failed.length }),
-      };
     } catch (error) {
       const errorMessage = error instanceof Error
         ? error.message
@@ -122,5 +105,25 @@ export const profileVersionLinksHandler: WebhookHandler = {
         error: errorMessage,
       };
     }
+
+    // Result processing outside try block
+    const successful = results.filter(
+      (r) => r.status === "fulfilled" && (r.value as any).success !== false,
+    );
+    const failed = results.filter(
+      (r) =>
+        r.status === "rejected" ||
+        (r.status === "fulfilled" && (r.value as any).success === false),
+    );
+
+    return {
+      processed: successful.length > 0,
+      profileVersionCount: profileVersionIds.length,
+      successCount: successful.length,
+      results: results.map((r) =>
+        r.status === "fulfilled" ? r.value : r.reason
+      ),
+      ...(failed.length > 0 && { failureCount: failed.length }),
+    };
   },
 };

@@ -38,25 +38,14 @@ export const followupLetterHandler: WebhookHandler = {
     const includeOriginalContext = data.include_original_context === "true" ||
       data.include_original_context === true;
 
+    // Try block contains ONLY the async operation
+    let result;
     try {
-      const result = await createApplicationLetterFollowup(
+      result = await createApplicationLetterFollowup(
         letterId,
         followupRequest,
         includeOriginalContext,
       );
-
-      return {
-        processed: true,
-        success: result.success,
-        message: result.message,
-        data: result.aiChat
-          ? {
-            aiChatId: result.aiChat.id,
-            letterId: letterId,
-          }
-          : undefined,
-        ...(result.success ? {} : { error: result.message }),
-      };
     } catch (error) {
       const errorMessage = error instanceof Error
         ? error.message
@@ -71,5 +60,19 @@ export const followupLetterHandler: WebhookHandler = {
         error: errorMessage,
       };
     }
+
+    // Result processing outside try block
+    return {
+      processed: true,
+      success: result.success,
+      message: result.message,
+      data: result.aiChat
+        ? {
+          aiChatId: result.aiChat.id,
+          letterId: letterId,
+        }
+        : undefined,
+      ...(result.success ? {} : { error: result.message }),
+    };
   },
 };
