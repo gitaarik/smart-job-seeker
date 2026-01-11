@@ -34,7 +34,12 @@ export const profileVersionLinksHandler: WebhookHandler = {
         profileVersionIds.map(async (profileVersionId) => {
           const profileVersion = await db.profile_versions.findUnique({
             where: { id: profileVersionId },
-            select: { name: true },
+            select: {
+              name: true,
+              profiles: {
+                select: { slug: true },
+              },
+            },
           });
 
           if (!profileVersion || !profileVersion.name) {
@@ -43,33 +48,34 @@ export const profileVersionLinksHandler: WebhookHandler = {
             );
           }
 
-          // TODO: Update these URLs to use new profile-based routing /p/[slug]/
-          // Version support needs to be implemented in the new route structure
-          // For now, these links will not work with the new routing
+          if (!profileVersion.profiles?.slug) {
+            throw new Error(
+              `Profile for version ${profileVersionId} not found or has no slug`,
+            );
+          }
+
           const versionName = encodeURIComponent(profileVersion.name);
+          const profileSlug = profileVersion.profiles.slug;
+          const baseUrl = process.env.PUBLIC_SITE_URL ||
+            "http://localhost:5173";
+
           const previewHtml =
             `<div style="display: flex; gap: 32px; font-size: 16px;">` +
-            `<div style="font-weight: 600; margin-bottom: 10px; color: #f59e0b;">⚠️ Preview links temporarily unavailable</div>` +
-            `<div style="font-size: 14px; color: #6b7280;">Version-specific preview links need to be updated for new routing structure.</div>` +
+            `<div style="display: flex; flex-direction: column; gap: 8px;">` +
+            `<div style="font-weight: 600; margin-bottom: 10px;">📄 Resume</div>` +
+            `<div style="display: flex; gap: 12px;">` +
+            `<a href="${baseUrl}/p/${profileSlug}/resume?version=${versionName}" target="_blank">HTML</a>` +
+            `<a href="${baseUrl}/p/${profileSlug}/resume.pdf?version=${versionName}" target="_blank">PDF</a>` +
+            `</div>` +
+            `</div>` +
+            `<div style="display: flex; flex-direction: column; gap: 8px;">` +
+            `<div style="font-weight: 600; margin-bottom: 10px;">📋 CV</div>` +
+            `<div style="display: flex; gap: 12px;">` +
+            `<a href="${baseUrl}/p/${profileSlug}/cv?version=${versionName}" target="_blank">HTML</a>` +
+            `<a href="${baseUrl}/p/${profileSlug}/cv.pdf?version=${versionName}" target="_blank">PDF</a>` +
+            `</div>` +
+            `</div>` +
             `</div>`;
-
-          // Old code (commented out until version support is added to /p/[slug]/ routes):
-          // `<div style="display: flex; gap: 32px; font-size: 16px;">` +
-          // `<div style="display: flex; flex-direction: column; gap: 8px;">` +
-          // `<div style="font-weight: 600; margin-bottom: 10px;">📄 Resume</div>` +
-          // `<div style="display: flex; gap: 12px;">` +
-          // `<a href="http://localhost:5173/resume?version=${versionName}" target="_blank">HTML</a>` +
-          // `<a href="http://localhost:5173/resume.pdf?version=${versionName}" target="_blank">PDF</a>` +
-          // `</div>` +
-          // `</div>` +
-          // `<div style="display: flex; flex-direction: column; gap: 8px;">` +
-          // `<div style="font-weight: 600; margin-bottom: 10px;">📋 CV</div>` +
-          // `<div style="display: flex; gap: 12px;">` +
-          // `<a href="http://localhost:5173/cv?version=${versionName}" target="_blank">HTML</a>` +
-          // `<a href="http://localhost:5173/cv.pdf?version=${versionName}" target="_blank">PDF</a>` +
-          // `</div>` +
-          // `</div>` +
-          // `</div>`;
 
           await db.profile_versions.update({
             where: { id: profileVersionId },
