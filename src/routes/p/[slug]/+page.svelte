@@ -185,15 +185,7 @@
         data-aos="fade"
         class="mt-15 md:mt-20 px-4 flex justify-center w-full"
       >
-        <GetInTouchButton
-          contentClass="bg-snow"
-          email={profile.email_address}
-          phone={profile.phone_number}
-          timezone={profile.location_timezone}
-          signalProfile={profile.signal_profile}
-          whatsappNumber={profile.whatsapp_number}
-          telegramUsername={profile.telegram_username}
-        />
+        <GetInTouchButton contentClass="bg-snow" {profile} />
       </div>
 
       <div class="flex-grow"></div>
@@ -347,15 +339,7 @@
             data-aos="fade"
             class="flex justify-center"
           >
-            <GetInTouchButton
-              contentClass="bg-ice"
-              email={profile.email_address}
-              phone={profile.phone_number}
-              timezone={profile.location_timezone}
-              signalProfile={profile.signal_profile}
-              whatsappNumber={profile.whatsapp_number}
-              telegramUsername={profile.telegram_username}
-            />
+            <GetInTouchButton contentClass="bg-ice" {profile} />
           </div>
         </div>
       </div>

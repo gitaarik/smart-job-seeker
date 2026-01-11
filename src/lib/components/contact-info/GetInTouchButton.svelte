@@ -5,26 +5,25 @@
   import { fade, slide } from "svelte/transition";
   import ContactInfo from "./ContactInfo.svelte";
 
+  interface Profile {
+    email_address?: string | null;
+    phone_number?: string | null;
+    location_timezone?: string | null;
+    signal_profile?: string | null;
+    whatsapp_number?: string | null;
+    telegram_username?: string | null;
+  }
+
   interface Props {
     contentClass?: string;
     class?: string;
-    email?: string | null;
-    phone?: string | null;
-    timezone?: string | null;
-    signalProfile?: string | null;
-    whatsappNumber?: string | null;
-    telegramUsername?: string | null;
+    profile: Profile;
   }
 
   let {
     contentClass = "",
     class: classNames = "",
-    email = null,
-    phone = null,
-    timezone = null,
-    signalProfile = null,
-    whatsappNumber = null,
-    telegramUsername = null,
+    profile,
   }: Props = $props();
 
   const animationSpeed = 250;
@@ -119,14 +118,7 @@
         ideas to life together. Don't hesitate to reach out!
       </p>
 
-      <ContactInfo
-        {email}
-        {phone}
-        {timezone}
-        {signalProfile}
-        {whatsappNumber}
-        {telegramUsername}
-      />
+      <ContactInfo {profile} />
     </div>
   {/if}
 </div>

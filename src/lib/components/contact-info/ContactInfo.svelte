@@ -20,23 +20,20 @@
   import { themeState } from "$lib/stores/theme.svelte";
   import { getWindowVariable } from "$lib/tools/window";
 
-  interface Props {
-    email?: string | null;
-    phone?: string | null;
-    timezone?: string | null;
-    signalProfile?: string | null;
-    whatsappNumber?: string | null;
-    telegramUsername?: string | null;
+  interface Profile {
+    email_address?: string | null;
+    phone_number?: string | null;
+    location_timezone?: string | null;
+    signal_profile?: string | null;
+    whatsapp_number?: string | null;
+    telegram_username?: string | null;
   }
 
-  let {
-    email = null,
-    phone = null,
-    timezone = null,
-    signalProfile = null,
-    whatsappNumber = null,
-    telegramUsername = null,
-  }: Props = $props();
+  interface Props {
+    profile: Profile;
+  }
+
+  let { profile }: Props = $props();
 
   let isLoading = true;
   let isLoadError = false;
@@ -195,7 +192,7 @@
     <div
       class="flex max-xs:flex-col gap-6 xs:gap-4 place-content-evenly text-center w-full px-4"
     >
-      {#if phone}
+      {#if profile.phone_number}
         <div>
           <div class="mb-2 text-lg font-semibold">
             <FontAwesomeIcon icon={faPhone} class="mr-1" />
@@ -203,33 +200,34 @@
           </div>
 
           <a
-            href="tel:{phone}"
+            href="tel:{profile.phone_number}"
             class="underline hover:text-teal"
-          >{phone}</a>
+          >{profile.phone_number}</a>
 
-          {#if signalProfile || whatsappNumber || telegramUsername}
+          {#if         profile.signal_profile || profile.whatsapp_number ||
+          profile.telegram_username}
             <p class="mt-2 flex justify-center gap-4 text-xl">
-              {#if signalProfile}
+              {#if profile.signal_profile}
                 <a
-                  href={signalProfile}
+                  href={profile.signal_profile}
                   target="_blank"
                   title="Signal"
                   class="hover:text-teal"
                 ><FontAwesomeIcon icon={faSignalMessenger} /></a>
               {/if}
 
-              {#if whatsappNumber}
+              {#if profile.whatsapp_number}
                 <a
-                  href="https://wa.me/{whatsappNumber.replace(/[^0-9+]/g, '')}"
+                  href="https://wa.me/{profile.whatsapp_number.replace(/[^0-9+]/g, '')}"
                   target="_blank"
                   title="WhatsApp"
                   class="hover:text-teal"
                 ><FontAwesomeIcon icon={faWhatsapp} /></a>
               {/if}
 
-              {#if telegramUsername}
+              {#if profile.telegram_username}
                 <a
-                  href="https://t.me/{telegramUsername}"
+                  href="https://t.me/{profile.telegram_username}"
                   target="_blank"
                   title="Telegram"
                   class="hover:text-teal"
@@ -238,15 +236,15 @@
             </p>
           {/if}
 
-          {#if timezone}
+          {#if profile.location_timezone}
             <p class="mt-2 text-sm">
-              {timezone}
+              {profile.location_timezone}
             </p>
           {/if}
         </div>
       {/if}
 
-      {#if email}
+      {#if profile.email_address}
         <div>
           <div class="mb-2 text-lg font-semibold">
             <FontAwesomeIcon icon={faEnvelope} class="mr-1" />
@@ -254,9 +252,9 @@
           </div>
 
           <a
-            href="mailto:{email}"
+            href="mailto:{profile.email_address}"
             class="underline hover:text-teal"
-          >{email}</a>
+          >{profile.email_address}</a>
 
           <p class="mt-2 xs:mt-4 text-sm/6">
             You can expect a response<br />
