@@ -6,9 +6,7 @@
 
   import {
     faGithub,
-    faJs,
     faLinkedin,
-    faNodeJs,
     faNpm,
     faPython,
     faStackOverflow,
@@ -20,66 +18,83 @@
     faCode,
     faDatabase,
     faGears,
-    faLaptopCode,
-    faServer,
+    faNodeJs,
     faUsers,
     faUserTie,
   } from "@fortawesome/free-solid-svg-icons";
 
-  import { resume } from "$lib/data/resume";
-  import profilePhoto from "$lib/images/profile-pic.png?enhanced";
+  import type { PageData } from "./$types";
   import Logo from "$lib/components/Logo.svelte";
   import ProfileLink from "$lib/components/ProfileLink.svelte";
   import InfoBox from "$lib/components/InfoBox.svelte";
   import GetInTouchButton from "$lib/components/contact-info/GetInTouchButton.svelte";
   import Quote from "$lib/components/Quote.svelte";
   import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
+  import { getDirectusAssetUrl } from "$lib/utils/directus-asset-url";
 
-  const metaTitle = "Rik Wanders - Senior Full Stack Developer";
-  const metaUrl = "https://www.rikwanders.tech/";
-  const metaDescription =
-    "Dutch Senior Full Stack Developer residing in Spain, 12+ years Full Stack Python & Node.js experience, scaling complex, high-traffic & data heavy applications with Django & React, and leading agile development teams. Additional skills in DevOps, CI/CD & UX design. Always current with industry trends, AI, and security practices. Thrives in agile teams and/or startup environments. 5+ years remote work experience.";
-  const metaImg =
-    "https://www.rikwanders.tech/images/profile-pic-square.png";
+  let { data }: { data: PageData } = $props();
+
+  const {
+    profile,
+    keySkills,
+    contactFor,
+    devYearsExperience,
+    pyJsYearsExperience,
+    remoteWorkYearsExperience,
+  } = data;
+
+  // Icon mapping helper
+  const iconMap: Record<string, any> = {
+    faPython,
+    faNodeJs,
+    faDatabase,
+    faGears,
+    faCode,
+    faChartLine,
+    faUsers,
+    faUserTie,
+  };
+
+  // Meta tags from profile data
+  const metaTitle = `${profile.name} - ${profile.title}`;
+  const metaUrl = profile.personal_website ||
+    `https://www.rikwanders.tech/p/${profile.slug}`;
+  const metaDescription = profile.summary || profile.headline || "";
+  const metaImg = profile.meta_image_url ||
+    getDirectusAssetUrl(profile.profile_picture);
+
+  // Profile picture URL
+  const profilePhotoUrl = getDirectusAssetUrl(profile.profile_picture);
+
+  const currentYear = new Date().getFullYear();
 
   let elAboutSection: HTMLElement;
   let elMoreInfo: HTMLElement;
-
-  const currentYear: number = (new Date()).getFullYear();
-  const devYearsExperience: number = currentYear - 2007;
-  const pyJsYearsExperience: number = currentYear - 2013;
-  const remoteWorkYearsExperience: number = currentYear - 2020;
 
   function handleMoreInfo() {
     elAboutSection.scrollIntoView({
       behavior: "smooth",
       block: "start",
     });
-
     elMoreInfo.blur();
   }
 
   function updateMoreInfoOpacity() {
     if (!elMoreInfo) return;
-
     const moreInfoScrollTop = elMoreInfo.getBoundingClientRect().top;
     const viewportHalf = window.innerHeight / 2;
     let opacity = 0.7 - (viewportHalf - moreInfoScrollTop) / viewportHalf;
-
     opacity = Math.max(0, Math.min(1, opacity));
     elMoreInfo.style.opacity = `${opacity}`;
   }
 
   onMount(() => {
-    // Initialize AOS
     AOS.init({
       duration: 800,
       easing: "ease-out",
       once: true,
       offset: 120,
     });
-
-    // Set up scroll listener for more info button opacity
     addEventListener("scroll", () => {
       updateMoreInfoOpacity();
     });
@@ -87,7 +102,7 @@
 </script>
 
 <svelte:head>
-  <title>Rik Wanders - Senior Full Stack Developer</title>
+  <title>{metaTitle}</title>
 
   <!-- Umami Analytics -->
   <script
@@ -104,14 +119,18 @@
   <meta property="og:url" content={metaUrl}>
   <meta property="og:title" content={metaTitle}>
   <meta property="og:description" content={metaDescription}>
-  <meta property="og:image" content={metaImg}>
+  {#if metaImg}
+    <meta property="og:image" content={metaImg}>
+  {/if}
 
   <!-- X (Twitter) -->
   <meta property="twitter:card" content="summary_large_image">
   <meta property="twitter:url" content={metaUrl}>
   <meta property="twitter:title" content={metaTitle}>
   <meta property="twitter:description" content={metaDescription}>
-  <meta property="twitter:image" content={metaImg}>
+  {#if metaImg}
+    <meta property="twitter:image" content={metaImg}>
+  {/if}
 </svelte:head>
 
 <div class="fixed top-0 right-0 z-50" data-aos="fade">
@@ -138,24 +157,28 @@
             id="header-heading"
             class="text-3xl font-medium"
           >
-            {resume.basics.name}
+            {profile.name}
           </h1>
 
           <h2 class="mt-4 text-xl">
-            {resume.basics.label}
+            {profile.title}
           </h2>
 
-          <h3 class="mt-4">
-            {resume.basics.subLabel1}
-          </h3>
+          {#if profile.subtitle}
+            <h3 class="mt-4">
+              {profile.subtitle}
+            </h3>
+          {/if}
         </div>
 
-        <h4
-          data-aos="fade"
-          class="mt-10 italic"
-        >
-          {resume.basics.subLabel2}
-        </h4>
+        {#if profile.headline}
+          <h4
+            data-aos="fade"
+            class="mt-10 italic"
+          >
+            {profile.headline}
+          </h4>
+        {/if}
       </div>
 
       <div
@@ -211,82 +234,48 @@
             class="mb-15 flex gap-10 justify-center max-md:flex-col max-md:items-center"
           >
             <div class="text-base/7 tracking-[0.1px]">
-              <div
-                class="max-lg:hidden float-right w-full max-w-[265px] pl-4 pb-4"
-              >
-                <enhanced:img
-                  src={profilePhoto}
-                  alt="Rik Wanders"
-                  width="265"
-                />
-              </div>
+              {#if profilePhotoUrl}
+                <div
+                  class="max-lg:hidden float-right w-full max-w-[265px] pl-4 pb-4"
+                >
+                  <img
+                    src={profilePhotoUrl}
+                    alt={profile.name}
+                    width="265"
+                    loading="lazy"
+                  />
+                </div>
 
-              <div
-                class="max-xs:hidden lg:hidden float-right w-full max-w-[200px] pl-3 pb-3"
-              >
-                <enhanced:img
-                  src={profilePhoto}
-                  alt="Rik Wanders"
-                  width="200"
-                />
-              </div>
+                <div
+                  class="max-xs:hidden lg:hidden float-right w-full max-w-[200px] pl-3 pb-3"
+                >
+                  <img
+                    src={profilePhotoUrl}
+                    alt={profile.name}
+                    width="200"
+                    loading="lazy"
+                  />
+                </div>
+              {/if}
 
-              <p>
-                With over 12 years of Full Stack Python & Node.js development
-                experience, I specialize in building and scaling complex,
-                high-traffic and data-heavy web applications that ship together
-                with beautiful UIs. My skills cover the entire development
-                process, from initial architecture decisions to production
-                deployment and optimization.
-              </p>
+              {#if profile.about_me_text}
+                {@html profile.about_me_text}
+              {/if}
 
-              <div
-                class="xs:hidden mt-4 flex justify-center"
-              >
-                <enhanced:img
-                  src={profilePhoto}
-                  alt=""
-                  aria-hidden="true"
-                  width="200"
-                />
-              </div>
-
-              <p class="my-4">
-                I've worked with systems processing tens of millions in payment
-                transactions, handling traffic peaks of thousands of orders per
-                minute, and managed databases with millions of records. I've led
-                an agile development team of 3-5 developers in a startup
-                environment, implemented strict code review policies,
-                established TDD methodologies and architected test suites.
-              </p>
-
-              <p class="my-4">
-                My experience includes designing RESTful APIs, implementing
-                OAuth services, and building comprehensive CI/CD systems. I've
-                optimized SQL queries and Python processes, implemented caching
-                strategies, and have solid DevOps experience alongside strong
-                frontend development skills. I have deep experience with Django
-                and React while being comfortable working across the full stack
-                with different technologies.
-              </p>
-
-              <p>
-                I've worked fully remote for the last 5 years, leading and
-                collaborating with distributed agile teams across different time
-                zones. I stay current with industry developments and integrate
-                AI into my development workflow to speed up repetitive tasks and
-                focus on quality and architecture while maintaining current
-                security best practices.
-              </p>
+              {#if profilePhotoUrl}
+                <div
+                  class="xs:hidden mt-4 flex justify-center"
+                >
+                  <img
+                    src={profilePhotoUrl}
+                    alt=""
+                    aria-hidden="true"
+                    width="200"
+                    loading="lazy"
+                  />
+                </div>
+              {/if}
             </div>
-
-            <!-- <div class="max-lg:hidden w-290"> -->
-            <!--   <enhanced:img -->
-            <!--     src={profilePhoto} -->
-            <!--     alt="" -->
-            <!--     aria-hidden="true" -->
-            <!--   /> -->
-            <!-- </div> -->
           </div>
         </div>
       </div>
@@ -302,22 +291,22 @@
               class="w-full 2xs:max-w-[340px] sm:min-w-[340px]"
             >
               <ul class="p-4 sm:p-5 font-bold">
-                <li class="flex items-center gap-3">
-                  <FontAwesomeIcon icon={faPython} class="w-4 text-teal" />
-                  Python, Django, DRF, FastAPI
-                </li>
-                <li class="my-4 sm:my-5 flex items-center gap-3">
-                  <FontAwesomeIcon icon={faNodeJs} class="w-4 text-teal" />
-                  JavaScript, Node.js, React, Svelte
-                </li>
-                <li class="my-4 sm:my-5 flex items-center gap-3">
-                  <FontAwesomeIcon icon={faDatabase} class="w-4 text-teal" />
-                  SQL & NoSQL Databases
-                </li>
-                <li class="flex items-center gap-3">
-                  <FontAwesomeIcon icon={faGears} class="w-4 text-teal" />
-                  Git, CI/CD, DevOps, Docker
-                </li>
+                {#each keySkills as skill, i}
+                  <li
+                    class={i > 0
+                      ? "my-4 sm:my-5 flex items-center gap-3"
+                      : "flex items-center gap-3"}
+                  >
+                    {#if                     skill.icon_name &&
+                      iconMap[skill.icon_name]}
+                      <FontAwesomeIcon
+                        icon={iconMap[skill.icon_name]}
+                        class="w-4 text-teal"
+                      />
+                    {/if}
+                    {skill.text}
+                  </li>
+                {/each}
               </ul>
             </InfoBox>
 
@@ -326,25 +315,22 @@
               class="w-full 2xs:max-w-[340px] sm:min-w-[340px]"
             >
               <ul class="p-4 sm:p-5 font-bold">
-                <li class="flex items-center gap-3">
-                  <FontAwesomeIcon icon={faCode} class="w-4 text-teal" />
-                  Application development
-                </li>
-
-                <li class="my-4 sm:my-5 flex items-center gap-3">
-                  <FontAwesomeIcon icon={faChartLine} class="w-4 text-teal" />
-                  System optimization
-                </li>
-
-                <li class="my-4 sm:my-5-5 flex items-center gap-3">
-                  <FontAwesomeIcon icon={faUsers} class="w-4 text-teal" />
-                  Technical strategy consulting
-                </li>
-
-                <li class="flex items-center gap-3">
-                  <FontAwesomeIcon icon={faUserTie} class="w-4 text-teal" />
-                  Project &amp; team leadership
-                </li>
+                {#each contactFor as item, i}
+                  <li
+                    class={i > 0
+                      ? "my-4 sm:my-5 flex items-center gap-3"
+                      : "flex items-center gap-3"}
+                  >
+                    {#if                     item.icon_name &&
+                      iconMap[item.icon_name]}
+                      <FontAwesomeIcon
+                        icon={iconMap[item.icon_name]}
+                        class="w-4 text-teal"
+                      />
+                    {/if}
+                    {item.text}
+                  </li>
+                {/each}
               </ul>
             </InfoBox>
           </div>
@@ -372,22 +358,19 @@
             What Clients Say
           </h3>
 
-          <div data-aos="fade">
-            <Quote author="Michaël de Groot - Founder of Chipta">
-              Rik modernized our client-facing interfaces and implemented
-              optimizations that delivered substantial performance improvements.
-              His work enabled us to process thousands of tickets rapidly during
-              our busiest periods.
-            </Quote>
-          </div>
-
-          <div data-aos="fade">
-            <Quote author="Elmar Krack - Co-founder of Tender-it">
-              Rik demonstrated exceptional technical leadership by designing and
-              developing our entire platform from the ground up, handling both
-              backend and frontend development with impressive skill.
-            </Quote>
-          </div>
+          {#if profile.references && profile.references.length > 0}
+            {#each profile.references as reference}
+              <div data-aos="fade">
+                <Quote
+                  author={reference.author_position
+                    ? `${reference.author} - ${reference.author_position}`
+                    : reference.author}
+                >
+                  {reference.text}
+                </Quote>
+              </div>
+            {/each}
+          {/if}
         </div>
       </div>
     </section>
@@ -401,62 +384,84 @@
         class="flex flex-col w-full max-w-[var(--max-content-width)]"
       >
         <h4 class="font-semibold text-lg mb-2" id="footer-heading">
-          Rik Wanders Software
+          {profile.company_name || profile.name}
         </h4>
         <div
           class="flex max-[350px]:flex-col max-[350px]:gap-4 w-full justify-between"
         >
           <div>
             <div class="text-sm/6">
-              <div>Hertzogstraat 37</div>
-              <div>2021 AE&nbsp;&nbsp;Haarlem</div>
-              <div>The Netherlands</div>
-              <div class="mt-2">VAT ID: NL001792484B78</div>
-              <div>KVK: 75629801</div>
+              {#if profile.street_address}
+                <div>{profile.street_address}</div>
+              {/if}
+              {#if profile.postal_code || profile.city}
+                <div>{profile.postal_code}&nbsp;&nbsp;{profile.city}</div>
+              {/if}
+              {#if profile.country_code}
+                <div>{profile.country_code}</div>
+              {/if}
+              {#if profile.vat_id || profile.kvk_number}
+                <div class="mt-2">
+                  {#if profile.vat_id}<div>VAT ID: {profile.vat_id}</div>{/if}
+                  {#if profile.kvk_number}<div>
+                      KVK: {profile.kvk_number}
+                    </div>{/if}
+                </div>
+              {/if}
             </div>
           </div>
 
           <div class="flex flex-col items-center max-[350px]:self-end">
             <ul class="text-sm flex flex-col gap-2 text-right">
-              <li>
-                <ProfileLink
-                  href="https://www.linkedin.com/in/rik-wanders-software"
-                  icon={faLinkedin}
-                  title="LinkedIn"
-                />
-              </li>
+              {#if profile.linkedin_profile}
+                <li>
+                  <ProfileLink
+                    href={profile.linkedin_profile}
+                    icon={faLinkedin}
+                    title="LinkedIn"
+                  />
+                </li>
+              {/if}
 
-              <li>
-                <ProfileLink
-                  href="https://github.com/gitaarik"
-                  icon={faGithub}
-                  title="GitHub"
-                />
-              </li>
+              {#if profile.github_profile}
+                <li>
+                  <ProfileLink
+                    href={profile.github_profile}
+                    icon={faGithub}
+                    title="GitHub"
+                  />
+                </li>
+              {/if}
 
-              <li>
-                <ProfileLink
-                  href="https://pypi.org/user/gitaarik/"
-                  icon={faPython}
-                  title="PyPi"
-                />
-              </li>
+              {#if profile.pypi_profile}
+                <li>
+                  <ProfileLink
+                    href={profile.pypi_profile}
+                    icon={faPython}
+                    title="PyPi"
+                  />
+                </li>
+              {/if}
 
-              <li>
-                <ProfileLink
-                  href="https://www.npmjs.com/~gitaarik"
-                  icon={faNpm}
-                  title="npm"
-                />
-              </li>
+              {#if profile.npm_profile}
+                <li>
+                  <ProfileLink
+                    href={profile.npm_profile}
+                    icon={faNpm}
+                    title="npm"
+                  />
+                </li>
+              {/if}
 
-              <li>
-                <ProfileLink
-                  href="https://stackoverflow.com/users/1248175/gitaarik"
-                  icon={faStackOverflow}
-                  title="Stack Overflow"
-                />
-              </li>
+              {#if profile.stackoverflow_profile}
+                <li>
+                  <ProfileLink
+                    href={profile.stackoverflow_profile}
+                    icon={faStackOverflow}
+                    title="Stack Overflow"
+                  />
+                </li>
+              {/if}
             </ul>
           </div>
         </div>
@@ -465,7 +470,7 @@
           class="flex min-[420px]:justify-between max-[420px]:flex-col w-full text-xs opacity-70 mt-8 mb-4"
         >
           <div>
-            Copyright © {currentYear} Rik Wanders Software
+            Copyright © {currentYear} {profile.company_name || profile.name}
           </div>
 
           <div class="max-[420px]:mt-2">

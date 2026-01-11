@@ -703,7 +703,9 @@ export const HighlightsScalarFieldEnum = {
   date_updated: 'date_updated',
   profile: 'profile',
   text: 'text',
-  fa_icon: 'fa_icon'
+  fa_icon: 'fa_icon',
+  type: 'type',
+  icon_name: 'icon_name'
 } as const
 
 export type HighlightsScalarFieldEnum = (typeof HighlightsScalarFieldEnum)[keyof typeof HighlightsScalarFieldEnum]
@@ -786,7 +788,19 @@ export const ProfilesScalarFieldEnum = {
   location_region: 'location_region',
   location_country_code: 'location_country_code',
   is_default: 'is_default',
-  slug: 'slug'
+  slug: 'slug',
+  npm_profile: 'npm_profile',
+  pypi_profile: 'pypi_profile',
+  company_name: 'company_name',
+  street_address: 'street_address',
+  postal_code: 'postal_code',
+  vat_id: 'vat_id',
+  kvk_number: 'kvk_number',
+  about_me_text: 'about_me_text',
+  meta_image_url: 'meta_image_url',
+  dev_start_year: 'dev_start_year',
+  python_js_start_year: 'python_js_start_year',
+  remote_start_year: 'remote_start_year'
 } as const
 
 export type ProfilesScalarFieldEnum = (typeof ProfilesScalarFieldEnum)[keyof typeof ProfilesScalarFieldEnum]

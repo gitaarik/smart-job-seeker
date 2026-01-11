@@ -29,11 +29,17 @@ export type AggregateProfiles = {
 export type ProfilesAvgAggregateOutputType = {
   id: number | null
   sort: number | null
+  dev_start_year: number | null
+  python_js_start_year: number | null
+  remote_start_year: number | null
 }
 
 export type ProfilesSumAggregateOutputType = {
   id: number | null
   sort: number | null
+  dev_start_year: number | null
+  python_js_start_year: number | null
+  remote_start_year: number | null
 }
 
 export type ProfilesMinAggregateOutputType = {
@@ -65,6 +71,18 @@ export type ProfilesMinAggregateOutputType = {
   location_country_code: string | null
   is_default: boolean | null
   slug: string | null
+  npm_profile: string | null
+  pypi_profile: string | null
+  company_name: string | null
+  street_address: string | null
+  postal_code: string | null
+  vat_id: string | null
+  kvk_number: string | null
+  about_me_text: string | null
+  meta_image_url: string | null
+  dev_start_year: number | null
+  python_js_start_year: number | null
+  remote_start_year: number | null
 }
 
 export type ProfilesMaxAggregateOutputType = {
@@ -96,6 +114,18 @@ export type ProfilesMaxAggregateOutputType = {
   location_country_code: string | null
   is_default: boolean | null
   slug: string | null
+  npm_profile: string | null
+  pypi_profile: string | null
+  company_name: string | null
+  street_address: string | null
+  postal_code: string | null
+  vat_id: string | null
+  kvk_number: string | null
+  about_me_text: string | null
+  meta_image_url: string | null
+  dev_start_year: number | null
+  python_js_start_year: number | null
+  remote_start_year: number | null
 }
 
 export type ProfilesCountAggregateOutputType = {
@@ -127,6 +157,18 @@ export type ProfilesCountAggregateOutputType = {
   location_country_code: number
   is_default: number
   slug: number
+  npm_profile: number
+  pypi_profile: number
+  company_name: number
+  street_address: number
+  postal_code: number
+  vat_id: number
+  kvk_number: number
+  about_me_text: number
+  meta_image_url: number
+  dev_start_year: number
+  python_js_start_year: number
+  remote_start_year: number
   _all: number
 }
 
@@ -134,11 +176,17 @@ export type ProfilesCountAggregateOutputType = {
 export type ProfilesAvgAggregateInputType = {
   id?: true
   sort?: true
+  dev_start_year?: true
+  python_js_start_year?: true
+  remote_start_year?: true
 }
 
 export type ProfilesSumAggregateInputType = {
   id?: true
   sort?: true
+  dev_start_year?: true
+  python_js_start_year?: true
+  remote_start_year?: true
 }
 
 export type ProfilesMinAggregateInputType = {
@@ -170,6 +218,18 @@ export type ProfilesMinAggregateInputType = {
   location_country_code?: true
   is_default?: true
   slug?: true
+  npm_profile?: true
+  pypi_profile?: true
+  company_name?: true
+  street_address?: true
+  postal_code?: true
+  vat_id?: true
+  kvk_number?: true
+  about_me_text?: true
+  meta_image_url?: true
+  dev_start_year?: true
+  python_js_start_year?: true
+  remote_start_year?: true
 }
 
 export type ProfilesMaxAggregateInputType = {
@@ -201,6 +261,18 @@ export type ProfilesMaxAggregateInputType = {
   location_country_code?: true
   is_default?: true
   slug?: true
+  npm_profile?: true
+  pypi_profile?: true
+  company_name?: true
+  street_address?: true
+  postal_code?: true
+  vat_id?: true
+  kvk_number?: true
+  about_me_text?: true
+  meta_image_url?: true
+  dev_start_year?: true
+  python_js_start_year?: true
+  remote_start_year?: true
 }
 
 export type ProfilesCountAggregateInputType = {
@@ -232,6 +304,18 @@ export type ProfilesCountAggregateInputType = {
   location_country_code?: true
   is_default?: true
   slug?: true
+  npm_profile?: true
+  pypi_profile?: true
+  company_name?: true
+  street_address?: true
+  postal_code?: true
+  vat_id?: true
+  kvk_number?: true
+  about_me_text?: true
+  meta_image_url?: true
+  dev_start_year?: true
+  python_js_start_year?: true
+  remote_start_year?: true
   _all?: true
 }
 
@@ -350,6 +434,18 @@ export type ProfilesGroupByOutputType = {
   location_country_code: string | null
   is_default: boolean | null
   slug: string | null
+  npm_profile: string | null
+  pypi_profile: string | null
+  company_name: string | null
+  street_address: string | null
+  postal_code: string | null
+  vat_id: string | null
+  kvk_number: string | null
+  about_me_text: string | null
+  meta_image_url: string | null
+  dev_start_year: number | null
+  python_js_start_year: number | null
+  remote_start_year: number | null
   _count: ProfilesCountAggregateOutputType | null
   _avg: ProfilesAvgAggregateOutputType | null
   _sum: ProfilesSumAggregateOutputType | null
@@ -404,6 +500,18 @@ export type profilesWhereInput = {
   location_country_code?: Prisma.StringNullableFilter<"profiles"> | string | null
   is_default?: Prisma.BoolNullableFilter<"profiles"> | boolean | null
   slug?: Prisma.StringNullableFilter<"profiles"> | string | null
+  npm_profile?: Prisma.StringNullableFilter<"profiles"> | string | null
+  pypi_profile?: Prisma.StringNullableFilter<"profiles"> | string | null
+  company_name?: Prisma.StringNullableFilter<"profiles"> | string | null
+  street_address?: Prisma.StringNullableFilter<"profiles"> | string | null
+  postal_code?: Prisma.StringNullableFilter<"profiles"> | string | null
+  vat_id?: Prisma.StringNullableFilter<"profiles"> | string | null
+  kvk_number?: Prisma.StringNullableFilter<"profiles"> | string | null
+  about_me_text?: Prisma.StringNullableFilter<"profiles"> | string | null
+  meta_image_url?: Prisma.StringNullableFilter<"profiles"> | string | null
+  dev_start_year?: Prisma.IntNullableFilter<"profiles"> | number | null
+  python_js_start_year?: Prisma.IntNullableFilter<"profiles"> | number | null
+  remote_start_year?: Prisma.IntNullableFilter<"profiles"> | number | null
   ai_chat?: Prisma.Ai_chatListRelationFilter
   applications?: Prisma.ApplicationsListRelationFilter
   cheat_sheets?: Prisma.Cheat_sheetsListRelationFilter
@@ -457,6 +565,18 @@ export type profilesOrderByWithRelationInput = {
   location_country_code?: Prisma.SortOrderInput | Prisma.SortOrder
   is_default?: Prisma.SortOrderInput | Prisma.SortOrder
   slug?: Prisma.SortOrderInput | Prisma.SortOrder
+  npm_profile?: Prisma.SortOrderInput | Prisma.SortOrder
+  pypi_profile?: Prisma.SortOrderInput | Prisma.SortOrder
+  company_name?: Prisma.SortOrderInput | Prisma.SortOrder
+  street_address?: Prisma.SortOrderInput | Prisma.SortOrder
+  postal_code?: Prisma.SortOrderInput | Prisma.SortOrder
+  vat_id?: Prisma.SortOrderInput | Prisma.SortOrder
+  kvk_number?: Prisma.SortOrderInput | Prisma.SortOrder
+  about_me_text?: Prisma.SortOrderInput | Prisma.SortOrder
+  meta_image_url?: Prisma.SortOrderInput | Prisma.SortOrder
+  dev_start_year?: Prisma.SortOrderInput | Prisma.SortOrder
+  python_js_start_year?: Prisma.SortOrderInput | Prisma.SortOrder
+  remote_start_year?: Prisma.SortOrderInput | Prisma.SortOrder
   ai_chat?: Prisma.ai_chatOrderByRelationAggregateInput
   applications?: Prisma.applicationsOrderByRelationAggregateInput
   cheat_sheets?: Prisma.cheat_sheetsOrderByRelationAggregateInput
@@ -513,6 +633,18 @@ export type profilesWhereUniqueInput = Prisma.AtLeast<{
   location_region?: Prisma.StringNullableFilter<"profiles"> | string | null
   location_country_code?: Prisma.StringNullableFilter<"profiles"> | string | null
   is_default?: Prisma.BoolNullableFilter<"profiles"> | boolean | null
+  npm_profile?: Prisma.StringNullableFilter<"profiles"> | string | null
+  pypi_profile?: Prisma.StringNullableFilter<"profiles"> | string | null
+  company_name?: Prisma.StringNullableFilter<"profiles"> | string | null
+  street_address?: Prisma.StringNullableFilter<"profiles"> | string | null
+  postal_code?: Prisma.StringNullableFilter<"profiles"> | string | null
+  vat_id?: Prisma.StringNullableFilter<"profiles"> | string | null
+  kvk_number?: Prisma.StringNullableFilter<"profiles"> | string | null
+  about_me_text?: Prisma.StringNullableFilter<"profiles"> | string | null
+  meta_image_url?: Prisma.StringNullableFilter<"profiles"> | string | null
+  dev_start_year?: Prisma.IntNullableFilter<"profiles"> | number | null
+  python_js_start_year?: Prisma.IntNullableFilter<"profiles"> | number | null
+  remote_start_year?: Prisma.IntNullableFilter<"profiles"> | number | null
   ai_chat?: Prisma.Ai_chatListRelationFilter
   applications?: Prisma.ApplicationsListRelationFilter
   cheat_sheets?: Prisma.Cheat_sheetsListRelationFilter
@@ -566,6 +698,18 @@ export type profilesOrderByWithAggregationInput = {
   location_country_code?: Prisma.SortOrderInput | Prisma.SortOrder
   is_default?: Prisma.SortOrderInput | Prisma.SortOrder
   slug?: Prisma.SortOrderInput | Prisma.SortOrder
+  npm_profile?: Prisma.SortOrderInput | Prisma.SortOrder
+  pypi_profile?: Prisma.SortOrderInput | Prisma.SortOrder
+  company_name?: Prisma.SortOrderInput | Prisma.SortOrder
+  street_address?: Prisma.SortOrderInput | Prisma.SortOrder
+  postal_code?: Prisma.SortOrderInput | Prisma.SortOrder
+  vat_id?: Prisma.SortOrderInput | Prisma.SortOrder
+  kvk_number?: Prisma.SortOrderInput | Prisma.SortOrder
+  about_me_text?: Prisma.SortOrderInput | Prisma.SortOrder
+  meta_image_url?: Prisma.SortOrderInput | Prisma.SortOrder
+  dev_start_year?: Prisma.SortOrderInput | Prisma.SortOrder
+  python_js_start_year?: Prisma.SortOrderInput | Prisma.SortOrder
+  remote_start_year?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.profilesCountOrderByAggregateInput
   _avg?: Prisma.profilesAvgOrderByAggregateInput
   _max?: Prisma.profilesMaxOrderByAggregateInput
@@ -605,6 +749,18 @@ export type profilesScalarWhereWithAggregatesInput = {
   location_country_code?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
   is_default?: Prisma.BoolNullableWithAggregatesFilter<"profiles"> | boolean | null
   slug?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
+  npm_profile?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
+  pypi_profile?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
+  company_name?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
+  street_address?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
+  postal_code?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
+  vat_id?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
+  kvk_number?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
+  about_me_text?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
+  meta_image_url?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
+  dev_start_year?: Prisma.IntNullableWithAggregatesFilter<"profiles"> | number | null
+  python_js_start_year?: Prisma.IntNullableWithAggregatesFilter<"profiles"> | number | null
+  remote_start_year?: Prisma.IntNullableWithAggregatesFilter<"profiles"> | number | null
 }
 
 export type profilesCreateInput = {
@@ -634,6 +790,18 @@ export type profilesCreateInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -687,6 +855,18 @@ export type profilesUncheckedCreateInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -737,6 +917,18 @@ export type profilesUpdateInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -790,6 +982,18 @@ export type profilesUncheckedUpdateInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -842,6 +1046,18 @@ export type profilesCreateManyInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
 }
 
 export type profilesUpdateManyMutationInput = {
@@ -871,6 +1087,18 @@ export type profilesUpdateManyMutationInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type profilesUncheckedUpdateManyInput = {
@@ -902,6 +1130,18 @@ export type profilesUncheckedUpdateManyInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type ProfilesScalarRelationFilter = {
@@ -953,11 +1193,26 @@ export type profilesCountOrderByAggregateInput = {
   location_country_code?: Prisma.SortOrder
   is_default?: Prisma.SortOrder
   slug?: Prisma.SortOrder
+  npm_profile?: Prisma.SortOrder
+  pypi_profile?: Prisma.SortOrder
+  company_name?: Prisma.SortOrder
+  street_address?: Prisma.SortOrder
+  postal_code?: Prisma.SortOrder
+  vat_id?: Prisma.SortOrder
+  kvk_number?: Prisma.SortOrder
+  about_me_text?: Prisma.SortOrder
+  meta_image_url?: Prisma.SortOrder
+  dev_start_year?: Prisma.SortOrder
+  python_js_start_year?: Prisma.SortOrder
+  remote_start_year?: Prisma.SortOrder
 }
 
 export type profilesAvgOrderByAggregateInput = {
   id?: Prisma.SortOrder
   sort?: Prisma.SortOrder
+  dev_start_year?: Prisma.SortOrder
+  python_js_start_year?: Prisma.SortOrder
+  remote_start_year?: Prisma.SortOrder
 }
 
 export type profilesMaxOrderByAggregateInput = {
@@ -989,6 +1244,18 @@ export type profilesMaxOrderByAggregateInput = {
   location_country_code?: Prisma.SortOrder
   is_default?: Prisma.SortOrder
   slug?: Prisma.SortOrder
+  npm_profile?: Prisma.SortOrder
+  pypi_profile?: Prisma.SortOrder
+  company_name?: Prisma.SortOrder
+  street_address?: Prisma.SortOrder
+  postal_code?: Prisma.SortOrder
+  vat_id?: Prisma.SortOrder
+  kvk_number?: Prisma.SortOrder
+  about_me_text?: Prisma.SortOrder
+  meta_image_url?: Prisma.SortOrder
+  dev_start_year?: Prisma.SortOrder
+  python_js_start_year?: Prisma.SortOrder
+  remote_start_year?: Prisma.SortOrder
 }
 
 export type profilesMinOrderByAggregateInput = {
@@ -1020,11 +1287,26 @@ export type profilesMinOrderByAggregateInput = {
   location_country_code?: Prisma.SortOrder
   is_default?: Prisma.SortOrder
   slug?: Prisma.SortOrder
+  npm_profile?: Prisma.SortOrder
+  pypi_profile?: Prisma.SortOrder
+  company_name?: Prisma.SortOrder
+  street_address?: Prisma.SortOrder
+  postal_code?: Prisma.SortOrder
+  vat_id?: Prisma.SortOrder
+  kvk_number?: Prisma.SortOrder
+  about_me_text?: Prisma.SortOrder
+  meta_image_url?: Prisma.SortOrder
+  dev_start_year?: Prisma.SortOrder
+  python_js_start_year?: Prisma.SortOrder
+  remote_start_year?: Prisma.SortOrder
 }
 
 export type profilesSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
   sort?: Prisma.SortOrder
+  dev_start_year?: Prisma.SortOrder
+  python_js_start_year?: Prisma.SortOrder
+  remote_start_year?: Prisma.SortOrder
 }
 
 export type profilesCreateNestedOneWithoutApplicationsInput = {
@@ -1398,6 +1680,18 @@ export type profilesCreateWithoutApplicationsInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
   collected_data?: Prisma.collected_dataCreateNestedManyWithoutProfilesInput
@@ -1450,6 +1744,18 @@ export type profilesUncheckedCreateWithoutApplicationsInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
   collected_data?: Prisma.collected_dataUncheckedCreateNestedManyWithoutProfilesInput
@@ -1515,6 +1821,18 @@ export type profilesUpdateWithoutApplicationsInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
   collected_data?: Prisma.collected_dataUpdateManyWithoutProfilesNestedInput
@@ -1567,6 +1885,18 @@ export type profilesUncheckedUpdateWithoutApplicationsInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
   collected_data?: Prisma.collected_dataUncheckedUpdateManyWithoutProfilesNestedInput
@@ -1616,6 +1946,18 @@ export type profilesCreateWithoutCheat_sheetsInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   collected_data?: Prisma.collected_dataCreateNestedManyWithoutProfilesInput
@@ -1668,6 +2010,18 @@ export type profilesUncheckedCreateWithoutCheat_sheetsInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   collected_data?: Prisma.collected_dataUncheckedCreateNestedManyWithoutProfilesInput
@@ -1733,6 +2087,18 @@ export type profilesUpdateWithoutCheat_sheetsInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   collected_data?: Prisma.collected_dataUpdateManyWithoutProfilesNestedInput
@@ -1785,6 +2151,18 @@ export type profilesUncheckedUpdateWithoutCheat_sheetsInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   collected_data?: Prisma.collected_dataUncheckedUpdateManyWithoutProfilesNestedInput
@@ -1834,6 +2212,18 @@ export type profilesCreateWithoutCollected_dataInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -1886,6 +2276,18 @@ export type profilesUncheckedCreateWithoutCollected_dataInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -1951,6 +2353,18 @@ export type profilesUpdateWithoutCollected_dataInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -2003,6 +2417,18 @@ export type profilesUncheckedUpdateWithoutCollected_dataInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -2052,6 +2478,18 @@ export type profilesCreateWithoutDirectus_filesInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -2103,6 +2541,18 @@ export type profilesUncheckedCreateWithoutDirectus_filesInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -2184,6 +2634,18 @@ export type profilesScalarWhereInput = {
   location_country_code?: Prisma.StringNullableFilter<"profiles"> | string | null
   is_default?: Prisma.BoolNullableFilter<"profiles"> | boolean | null
   slug?: Prisma.StringNullableFilter<"profiles"> | string | null
+  npm_profile?: Prisma.StringNullableFilter<"profiles"> | string | null
+  pypi_profile?: Prisma.StringNullableFilter<"profiles"> | string | null
+  company_name?: Prisma.StringNullableFilter<"profiles"> | string | null
+  street_address?: Prisma.StringNullableFilter<"profiles"> | string | null
+  postal_code?: Prisma.StringNullableFilter<"profiles"> | string | null
+  vat_id?: Prisma.StringNullableFilter<"profiles"> | string | null
+  kvk_number?: Prisma.StringNullableFilter<"profiles"> | string | null
+  about_me_text?: Prisma.StringNullableFilter<"profiles"> | string | null
+  meta_image_url?: Prisma.StringNullableFilter<"profiles"> | string | null
+  dev_start_year?: Prisma.IntNullableFilter<"profiles"> | number | null
+  python_js_start_year?: Prisma.IntNullableFilter<"profiles"> | number | null
+  remote_start_year?: Prisma.IntNullableFilter<"profiles"> | number | null
 }
 
 export type profilesCreateWithoutEducationInput = {
@@ -2213,6 +2675,18 @@ export type profilesCreateWithoutEducationInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -2265,6 +2739,18 @@ export type profilesUncheckedCreateWithoutEducationInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -2330,6 +2816,18 @@ export type profilesUpdateWithoutEducationInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -2382,6 +2880,18 @@ export type profilesUncheckedUpdateWithoutEducationInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -2431,6 +2941,18 @@ export type profilesCreateWithoutHighlightsInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -2483,6 +3005,18 @@ export type profilesUncheckedCreateWithoutHighlightsInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -2548,6 +3082,18 @@ export type profilesUpdateWithoutHighlightsInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -2600,6 +3146,18 @@ export type profilesUncheckedUpdateWithoutHighlightsInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -2649,6 +3207,18 @@ export type profilesCreateWithoutLanguagesInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -2701,6 +3271,18 @@ export type profilesUncheckedCreateWithoutLanguagesInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -2766,6 +3348,18 @@ export type profilesUpdateWithoutLanguagesInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -2818,6 +3412,18 @@ export type profilesUncheckedUpdateWithoutLanguagesInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -2867,6 +3473,18 @@ export type profilesCreateWithoutPlatform_profilesInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -2919,6 +3537,18 @@ export type profilesUncheckedCreateWithoutPlatform_profilesInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -2984,6 +3614,18 @@ export type profilesUpdateWithoutPlatform_profilesInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -3036,6 +3678,18 @@ export type profilesUncheckedUpdateWithoutPlatform_profilesInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -3085,6 +3739,18 @@ export type profilesCreateWithoutProfile_versionsInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -3137,6 +3803,18 @@ export type profilesUncheckedCreateWithoutProfile_versionsInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -3202,6 +3880,18 @@ export type profilesUpdateWithoutProfile_versionsInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -3254,6 +3944,18 @@ export type profilesUncheckedUpdateWithoutProfile_versionsInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -3303,6 +4005,18 @@ export type profilesCreateWithoutProject_storiesInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -3355,6 +4069,18 @@ export type profilesUncheckedCreateWithoutProject_storiesInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -3420,6 +4146,18 @@ export type profilesUpdateWithoutProject_storiesInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -3472,6 +4210,18 @@ export type profilesUncheckedUpdateWithoutProject_storiesInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -3521,6 +4271,18 @@ export type profilesCreateWithoutReferencesInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -3573,6 +4335,18 @@ export type profilesUncheckedCreateWithoutReferencesInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -3638,6 +4412,18 @@ export type profilesUpdateWithoutReferencesInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -3690,6 +4476,18 @@ export type profilesUncheckedUpdateWithoutReferencesInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -3739,6 +4537,18 @@ export type profilesCreateWithoutSalary_expectationsInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -3791,6 +4601,18 @@ export type profilesUncheckedCreateWithoutSalary_expectationsInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -3856,6 +4678,18 @@ export type profilesUpdateWithoutSalary_expectationsInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -3908,6 +4742,18 @@ export type profilesUncheckedUpdateWithoutSalary_expectationsInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -3957,6 +4803,18 @@ export type profilesCreateWithoutSide_projectsInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -4009,6 +4867,18 @@ export type profilesUncheckedCreateWithoutSide_projectsInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -4074,6 +4944,18 @@ export type profilesUpdateWithoutSide_projectsInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -4126,6 +5008,18 @@ export type profilesUncheckedUpdateWithoutSide_projectsInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -4175,6 +5069,18 @@ export type profilesCreateWithoutTech_skill_categoriesInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -4227,6 +5133,18 @@ export type profilesUncheckedCreateWithoutTech_skill_categoriesInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -4292,6 +5210,18 @@ export type profilesUpdateWithoutTech_skill_categoriesInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -4344,6 +5274,18 @@ export type profilesUncheckedUpdateWithoutTech_skill_categoriesInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -4393,6 +5335,18 @@ export type profilesCreateWithoutWork_experiencesInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -4445,6 +5399,18 @@ export type profilesUncheckedCreateWithoutWork_experiencesInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -4510,6 +5476,18 @@ export type profilesUpdateWithoutWork_experiencesInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -4562,6 +5540,18 @@ export type profilesUncheckedUpdateWithoutWork_experiencesInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -4611,6 +5601,18 @@ export type profilesCreateWithoutAi_chatInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
   collected_data?: Prisma.collected_dataCreateNestedManyWithoutProfilesInput
@@ -4663,6 +5665,18 @@ export type profilesUncheckedCreateWithoutAi_chatInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
   collected_data?: Prisma.collected_dataUncheckedCreateNestedManyWithoutProfilesInput
@@ -4728,6 +5742,18 @@ export type profilesUpdateWithoutAi_chatInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
   collected_data?: Prisma.collected_dataUpdateManyWithoutProfilesNestedInput
@@ -4780,6 +5806,18 @@ export type profilesUncheckedUpdateWithoutAi_chatInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
   collected_data?: Prisma.collected_dataUncheckedUpdateManyWithoutProfilesNestedInput
@@ -4829,6 +5867,18 @@ export type profilesCreateWithoutOs_contributionsInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -4881,6 +5931,18 @@ export type profilesUncheckedCreateWithoutOs_contributionsInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -4946,6 +6008,18 @@ export type profilesUpdateWithoutOs_contributionsInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -4998,6 +6072,18 @@ export type profilesUncheckedUpdateWithoutOs_contributionsInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -5047,6 +6133,18 @@ export type profilesCreateWithoutJob_searchesInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -5099,6 +6197,18 @@ export type profilesUncheckedCreateWithoutJob_searchesInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -5164,6 +6274,18 @@ export type profilesUpdateWithoutJob_searchesInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -5216,6 +6338,18 @@ export type profilesUncheckedUpdateWithoutJob_searchesInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -5265,6 +6399,18 @@ export type profilesCreateWithoutJob_match_preferencesInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -5317,6 +6463,18 @@ export type profilesUncheckedCreateWithoutJob_match_preferencesInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -5382,6 +6540,18 @@ export type profilesUpdateWithoutJob_match_preferencesInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -5434,6 +6604,18 @@ export type profilesUncheckedUpdateWithoutJob_match_preferencesInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -5483,6 +6665,18 @@ export type profilesCreateWithoutJob_matchesInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -5535,6 +6729,18 @@ export type profilesUncheckedCreateWithoutJob_matchesInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -5600,6 +6806,18 @@ export type profilesUpdateWithoutJob_matchesInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -5652,6 +6870,18 @@ export type profilesUncheckedUpdateWithoutJob_matchesInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -5701,6 +6931,18 @@ export type profilesCreateWithoutConfigInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -5753,6 +6995,18 @@ export type profilesUncheckedCreateWithoutConfigInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -5818,6 +7072,18 @@ export type profilesUpdateWithoutConfigInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -5870,6 +7136,18 @@ export type profilesUncheckedUpdateWithoutConfigInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -5919,6 +7197,18 @@ export type profilesCreateWithoutProfile_exportsInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -5971,6 +7261,18 @@ export type profilesUncheckedCreateWithoutProfile_exportsInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -6036,6 +7338,18 @@ export type profilesUpdateWithoutProfile_exportsInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -6088,6 +7402,18 @@ export type profilesUncheckedUpdateWithoutProfile_exportsInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -6138,6 +7464,18 @@ export type profilesCreateManyDirectus_filesInput = {
   location_country_code?: string | null
   is_default?: boolean | null
   slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
 }
 
 export type profilesUpdateWithoutDirectus_filesInput = {
@@ -6167,6 +7505,18 @@ export type profilesUpdateWithoutDirectus_filesInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -6218,6 +7568,18 @@ export type profilesUncheckedUpdateWithoutDirectus_filesInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -6269,6 +7631,18 @@ export type profilesUncheckedUpdateManyWithoutDirectus_filesInput = {
   location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 
@@ -6511,6 +7885,18 @@ export type profilesSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   location_country_code?: boolean
   is_default?: boolean
   slug?: boolean
+  npm_profile?: boolean
+  pypi_profile?: boolean
+  company_name?: boolean
+  street_address?: boolean
+  postal_code?: boolean
+  vat_id?: boolean
+  kvk_number?: boolean
+  about_me_text?: boolean
+  meta_image_url?: boolean
+  dev_start_year?: boolean
+  python_js_start_year?: boolean
+  remote_start_year?: boolean
   ai_chat?: boolean | Prisma.profiles$ai_chatArgs<ExtArgs>
   applications?: boolean | Prisma.profiles$applicationsArgs<ExtArgs>
   cheat_sheets?: boolean | Prisma.profiles$cheat_sheetsArgs<ExtArgs>
@@ -6565,6 +7951,18 @@ export type profilesSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   location_country_code?: boolean
   is_default?: boolean
   slug?: boolean
+  npm_profile?: boolean
+  pypi_profile?: boolean
+  company_name?: boolean
+  street_address?: boolean
+  postal_code?: boolean
+  vat_id?: boolean
+  kvk_number?: boolean
+  about_me_text?: boolean
+  meta_image_url?: boolean
+  dev_start_year?: boolean
+  python_js_start_year?: boolean
+  remote_start_year?: boolean
   directus_files?: boolean | Prisma.profiles$directus_filesArgs<ExtArgs>
 }, ExtArgs["result"]["profiles"]>
 
@@ -6597,6 +7995,18 @@ export type profilesSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   location_country_code?: boolean
   is_default?: boolean
   slug?: boolean
+  npm_profile?: boolean
+  pypi_profile?: boolean
+  company_name?: boolean
+  street_address?: boolean
+  postal_code?: boolean
+  vat_id?: boolean
+  kvk_number?: boolean
+  about_me_text?: boolean
+  meta_image_url?: boolean
+  dev_start_year?: boolean
+  python_js_start_year?: boolean
+  remote_start_year?: boolean
   directus_files?: boolean | Prisma.profiles$directus_filesArgs<ExtArgs>
 }, ExtArgs["result"]["profiles"]>
 
@@ -6629,9 +8039,21 @@ export type profilesSelectScalar = {
   location_country_code?: boolean
   is_default?: boolean
   slug?: boolean
+  npm_profile?: boolean
+  pypi_profile?: boolean
+  company_name?: boolean
+  street_address?: boolean
+  postal_code?: boolean
+  vat_id?: boolean
+  kvk_number?: boolean
+  about_me_text?: boolean
+  meta_image_url?: boolean
+  dev_start_year?: boolean
+  python_js_start_year?: boolean
+  remote_start_year?: boolean
 }
 
-export type profilesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "date_created" | "date_updated" | "name" | "title" | "phone_number" | "email_address" | "personal_website" | "subtitle" | "core_stack" | "linkedin_profile" | "github_profile" | "stackoverflow_profile" | "headline" | "profile_picture" | "summary" | "nationality" | "location_url" | "location_timezone" | "sort" | "city" | "region" | "country_code" | "location_city" | "location_region" | "location_country_code" | "is_default" | "slug", ExtArgs["result"]["profiles"]>
+export type profilesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "date_created" | "date_updated" | "name" | "title" | "phone_number" | "email_address" | "personal_website" | "subtitle" | "core_stack" | "linkedin_profile" | "github_profile" | "stackoverflow_profile" | "headline" | "profile_picture" | "summary" | "nationality" | "location_url" | "location_timezone" | "sort" | "city" | "region" | "country_code" | "location_city" | "location_region" | "location_country_code" | "is_default" | "slug" | "npm_profile" | "pypi_profile" | "company_name" | "street_address" | "postal_code" | "vat_id" | "kvk_number" | "about_me_text" | "meta_image_url" | "dev_start_year" | "python_js_start_year" | "remote_start_year", ExtArgs["result"]["profiles"]>
 export type profilesInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   ai_chat?: boolean | Prisma.profiles$ai_chatArgs<ExtArgs>
   applications?: boolean | Prisma.profiles$applicationsArgs<ExtArgs>
@@ -6719,6 +8141,18 @@ export type $profilesPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     location_country_code: string | null
     is_default: boolean | null
     slug: string | null
+    npm_profile: string | null
+    pypi_profile: string | null
+    company_name: string | null
+    street_address: string | null
+    postal_code: string | null
+    vat_id: string | null
+    kvk_number: string | null
+    about_me_text: string | null
+    meta_image_url: string | null
+    dev_start_year: number | null
+    python_js_start_year: number | null
+    remote_start_year: number | null
   }, ExtArgs["result"]["profiles"]>
   composites: {}
 }
@@ -7192,6 +8626,18 @@ export interface profilesFieldRefs {
   readonly location_country_code: Prisma.FieldRef<"profiles", 'String'>
   readonly is_default: Prisma.FieldRef<"profiles", 'Boolean'>
   readonly slug: Prisma.FieldRef<"profiles", 'String'>
+  readonly npm_profile: Prisma.FieldRef<"profiles", 'String'>
+  readonly pypi_profile: Prisma.FieldRef<"profiles", 'String'>
+  readonly company_name: Prisma.FieldRef<"profiles", 'String'>
+  readonly street_address: Prisma.FieldRef<"profiles", 'String'>
+  readonly postal_code: Prisma.FieldRef<"profiles", 'String'>
+  readonly vat_id: Prisma.FieldRef<"profiles", 'String'>
+  readonly kvk_number: Prisma.FieldRef<"profiles", 'String'>
+  readonly about_me_text: Prisma.FieldRef<"profiles", 'String'>
+  readonly meta_image_url: Prisma.FieldRef<"profiles", 'String'>
+  readonly dev_start_year: Prisma.FieldRef<"profiles", 'Int'>
+  readonly python_js_start_year: Prisma.FieldRef<"profiles", 'Int'>
+  readonly remote_start_year: Prisma.FieldRef<"profiles", 'Int'>
 }
     
 

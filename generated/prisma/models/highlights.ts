@@ -47,6 +47,8 @@ export type HighlightsMinAggregateOutputType = {
   profile: number | null
   text: string | null
   fa_icon: string | null
+  type: string | null
+  icon_name: string | null
 }
 
 export type HighlightsMaxAggregateOutputType = {
@@ -58,6 +60,8 @@ export type HighlightsMaxAggregateOutputType = {
   profile: number | null
   text: string | null
   fa_icon: string | null
+  type: string | null
+  icon_name: string | null
 }
 
 export type HighlightsCountAggregateOutputType = {
@@ -69,6 +73,8 @@ export type HighlightsCountAggregateOutputType = {
   profile: number
   text: number
   fa_icon: number
+  type: number
+  icon_name: number
   _all: number
 }
 
@@ -94,6 +100,8 @@ export type HighlightsMinAggregateInputType = {
   profile?: true
   text?: true
   fa_icon?: true
+  type?: true
+  icon_name?: true
 }
 
 export type HighlightsMaxAggregateInputType = {
@@ -105,6 +113,8 @@ export type HighlightsMaxAggregateInputType = {
   profile?: true
   text?: true
   fa_icon?: true
+  type?: true
+  icon_name?: true
 }
 
 export type HighlightsCountAggregateInputType = {
@@ -116,6 +126,8 @@ export type HighlightsCountAggregateInputType = {
   profile?: true
   text?: true
   fa_icon?: true
+  type?: true
+  icon_name?: true
   _all?: true
 }
 
@@ -214,6 +226,8 @@ export type HighlightsGroupByOutputType = {
   profile: number
   text: string | null
   fa_icon: string | null
+  type: string | null
+  icon_name: string | null
   _count: HighlightsCountAggregateOutputType | null
   _avg: HighlightsAvgAggregateOutputType | null
   _sum: HighlightsSumAggregateOutputType | null
@@ -248,6 +262,8 @@ export type highlightsWhereInput = {
   profile?: Prisma.IntFilter<"highlights"> | number
   text?: Prisma.StringNullableFilter<"highlights"> | string | null
   fa_icon?: Prisma.StringNullableFilter<"highlights"> | string | null
+  type?: Prisma.StringNullableFilter<"highlights"> | string | null
+  icon_name?: Prisma.StringNullableFilter<"highlights"> | string | null
   profiles?: Prisma.XOR<Prisma.ProfilesScalarRelationFilter, Prisma.profilesWhereInput>
 }
 
@@ -260,6 +276,8 @@ export type highlightsOrderByWithRelationInput = {
   profile?: Prisma.SortOrder
   text?: Prisma.SortOrderInput | Prisma.SortOrder
   fa_icon?: Prisma.SortOrderInput | Prisma.SortOrder
+  type?: Prisma.SortOrderInput | Prisma.SortOrder
+  icon_name?: Prisma.SortOrderInput | Prisma.SortOrder
   profiles?: Prisma.profilesOrderByWithRelationInput
 }
 
@@ -275,6 +293,8 @@ export type highlightsWhereUniqueInput = Prisma.AtLeast<{
   profile?: Prisma.IntFilter<"highlights"> | number
   text?: Prisma.StringNullableFilter<"highlights"> | string | null
   fa_icon?: Prisma.StringNullableFilter<"highlights"> | string | null
+  type?: Prisma.StringNullableFilter<"highlights"> | string | null
+  icon_name?: Prisma.StringNullableFilter<"highlights"> | string | null
   profiles?: Prisma.XOR<Prisma.ProfilesScalarRelationFilter, Prisma.profilesWhereInput>
 }, "id">
 
@@ -287,6 +307,8 @@ export type highlightsOrderByWithAggregationInput = {
   profile?: Prisma.SortOrder
   text?: Prisma.SortOrderInput | Prisma.SortOrder
   fa_icon?: Prisma.SortOrderInput | Prisma.SortOrder
+  type?: Prisma.SortOrderInput | Prisma.SortOrder
+  icon_name?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.highlightsCountOrderByAggregateInput
   _avg?: Prisma.highlightsAvgOrderByAggregateInput
   _max?: Prisma.highlightsMaxOrderByAggregateInput
@@ -306,6 +328,8 @@ export type highlightsScalarWhereWithAggregatesInput = {
   profile?: Prisma.IntWithAggregatesFilter<"highlights"> | number
   text?: Prisma.StringNullableWithAggregatesFilter<"highlights"> | string | null
   fa_icon?: Prisma.StringNullableWithAggregatesFilter<"highlights"> | string | null
+  type?: Prisma.StringNullableWithAggregatesFilter<"highlights"> | string | null
+  icon_name?: Prisma.StringNullableWithAggregatesFilter<"highlights"> | string | null
 }
 
 export type highlightsCreateInput = {
@@ -315,6 +339,8 @@ export type highlightsCreateInput = {
   date_updated?: Date | string | null
   text?: string | null
   fa_icon?: string | null
+  type?: string | null
+  icon_name?: string | null
   profiles: Prisma.profilesCreateNestedOneWithoutHighlightsInput
 }
 
@@ -327,6 +353,8 @@ export type highlightsUncheckedCreateInput = {
   profile: number
   text?: string | null
   fa_icon?: string | null
+  type?: string | null
+  icon_name?: string | null
 }
 
 export type highlightsUpdateInput = {
@@ -336,6 +364,8 @@ export type highlightsUpdateInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fa_icon?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  icon_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profiles?: Prisma.profilesUpdateOneRequiredWithoutHighlightsNestedInput
 }
 
@@ -348,6 +378,8 @@ export type highlightsUncheckedUpdateInput = {
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fa_icon?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  icon_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type highlightsCreateManyInput = {
@@ -359,6 +391,8 @@ export type highlightsCreateManyInput = {
   profile: number
   text?: string | null
   fa_icon?: string | null
+  type?: string | null
+  icon_name?: string | null
 }
 
 export type highlightsUpdateManyMutationInput = {
@@ -368,6 +402,8 @@ export type highlightsUpdateManyMutationInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fa_icon?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  icon_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type highlightsUncheckedUpdateManyInput = {
@@ -379,6 +415,8 @@ export type highlightsUncheckedUpdateManyInput = {
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fa_icon?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  icon_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type highlightsCountOrderByAggregateInput = {
@@ -390,6 +428,8 @@ export type highlightsCountOrderByAggregateInput = {
   profile?: Prisma.SortOrder
   text?: Prisma.SortOrder
   fa_icon?: Prisma.SortOrder
+  type?: Prisma.SortOrder
+  icon_name?: Prisma.SortOrder
 }
 
 export type highlightsAvgOrderByAggregateInput = {
@@ -407,6 +447,8 @@ export type highlightsMaxOrderByAggregateInput = {
   profile?: Prisma.SortOrder
   text?: Prisma.SortOrder
   fa_icon?: Prisma.SortOrder
+  type?: Prisma.SortOrder
+  icon_name?: Prisma.SortOrder
 }
 
 export type highlightsMinOrderByAggregateInput = {
@@ -418,6 +460,8 @@ export type highlightsMinOrderByAggregateInput = {
   profile?: Prisma.SortOrder
   text?: Prisma.SortOrder
   fa_icon?: Prisma.SortOrder
+  type?: Prisma.SortOrder
+  icon_name?: Prisma.SortOrder
 }
 
 export type highlightsSumOrderByAggregateInput = {
@@ -485,6 +529,8 @@ export type highlightsCreateWithoutProfilesInput = {
   date_updated?: Date | string | null
   text?: string | null
   fa_icon?: string | null
+  type?: string | null
+  icon_name?: string | null
 }
 
 export type highlightsUncheckedCreateWithoutProfilesInput = {
@@ -495,6 +541,8 @@ export type highlightsUncheckedCreateWithoutProfilesInput = {
   date_updated?: Date | string | null
   text?: string | null
   fa_icon?: string | null
+  type?: string | null
+  icon_name?: string | null
 }
 
 export type highlightsCreateOrConnectWithoutProfilesInput = {
@@ -535,6 +583,8 @@ export type highlightsScalarWhereInput = {
   profile?: Prisma.IntFilter<"highlights"> | number
   text?: Prisma.StringNullableFilter<"highlights"> | string | null
   fa_icon?: Prisma.StringNullableFilter<"highlights"> | string | null
+  type?: Prisma.StringNullableFilter<"highlights"> | string | null
+  icon_name?: Prisma.StringNullableFilter<"highlights"> | string | null
 }
 
 export type highlightsCreateManyProfilesInput = {
@@ -545,6 +595,8 @@ export type highlightsCreateManyProfilesInput = {
   date_updated?: Date | string | null
   text?: string | null
   fa_icon?: string | null
+  type?: string | null
+  icon_name?: string | null
 }
 
 export type highlightsUpdateWithoutProfilesInput = {
@@ -554,6 +606,8 @@ export type highlightsUpdateWithoutProfilesInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fa_icon?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  icon_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type highlightsUncheckedUpdateWithoutProfilesInput = {
@@ -564,6 +618,8 @@ export type highlightsUncheckedUpdateWithoutProfilesInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fa_icon?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  icon_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type highlightsUncheckedUpdateManyWithoutProfilesInput = {
@@ -574,6 +630,8 @@ export type highlightsUncheckedUpdateManyWithoutProfilesInput = {
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fa_icon?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  icon_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 
@@ -587,6 +645,8 @@ export type highlightsSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   profile?: boolean
   text?: boolean
   fa_icon?: boolean
+  type?: boolean
+  icon_name?: boolean
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["highlights"]>
 
@@ -599,6 +659,8 @@ export type highlightsSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
   profile?: boolean
   text?: boolean
   fa_icon?: boolean
+  type?: boolean
+  icon_name?: boolean
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["highlights"]>
 
@@ -611,6 +673,8 @@ export type highlightsSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
   profile?: boolean
   text?: boolean
   fa_icon?: boolean
+  type?: boolean
+  icon_name?: boolean
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["highlights"]>
 
@@ -623,9 +687,11 @@ export type highlightsSelectScalar = {
   profile?: boolean
   text?: boolean
   fa_icon?: boolean
+  type?: boolean
+  icon_name?: boolean
 }
 
-export type highlightsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "sort" | "date_created" | "date_updated" | "profile" | "text" | "fa_icon", ExtArgs["result"]["highlights"]>
+export type highlightsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "sort" | "date_created" | "date_updated" | "profile" | "text" | "fa_icon" | "type" | "icon_name", ExtArgs["result"]["highlights"]>
 export type highlightsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }
@@ -650,6 +716,8 @@ export type $highlightsPayload<ExtArgs extends runtime.Types.Extensions.Internal
     profile: number
     text: string | null
     fa_icon: string | null
+    type: string | null
+    icon_name: string | null
   }, ExtArgs["result"]["highlights"]>
   composites: {}
 }
@@ -1082,6 +1150,8 @@ export interface highlightsFieldRefs {
   readonly profile: Prisma.FieldRef<"highlights", 'Int'>
   readonly text: Prisma.FieldRef<"highlights", 'String'>
   readonly fa_icon: Prisma.FieldRef<"highlights", 'String'>
+  readonly type: Prisma.FieldRef<"highlights", 'String'>
+  readonly icon_name: Prisma.FieldRef<"highlights", 'String'>
 }
     
 
