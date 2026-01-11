@@ -8,9 +8,24 @@
   interface Props {
     contentClass?: string;
     class?: string;
+    email?: string | null;
+    phone?: string | null;
+    timezone?: string | null;
+    signalProfile?: string | null;
+    whatsappNumber?: string | null;
+    telegramUsername?: string | null;
   }
 
-  let { contentClass = "", class: classNames = "" }: Props = $props();
+  let {
+    contentClass = "",
+    class: classNames = "",
+    email = null,
+    phone = null,
+    timezone = null,
+    signalProfile = null,
+    whatsappNumber = null,
+    telegramUsername = null,
+  }: Props = $props();
 
   const animationSpeed = 250;
 
@@ -104,7 +119,14 @@
         ideas to life together. Don't hesitate to reach out!
       </p>
 
-      <ContactInfo />
+      <ContactInfo
+        {email}
+        {phone}
+        {timezone}
+        {signalProfile}
+        {whatsappNumber}
+        {telegramUsername}
+      />
     </div>
   {/if}
 </div>

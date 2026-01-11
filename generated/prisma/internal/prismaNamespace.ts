@@ -6205,7 +6205,10 @@ export const ProfilesScalarFieldEnum = {
   meta_image_url: 'meta_image_url',
   dev_start_year: 'dev_start_year',
   python_js_start_year: 'python_js_start_year',
-  remote_start_year: 'remote_start_year'
+  remote_start_year: 'remote_start_year',
+  signal_profile: 'signal_profile',
+  whatsapp_number: 'whatsapp_number',
+  telegram_username: 'telegram_username'
 } as const
 
 export type ProfilesScalarFieldEnum = (typeof ProfilesScalarFieldEnum)[keyof typeof ProfilesScalarFieldEnum]

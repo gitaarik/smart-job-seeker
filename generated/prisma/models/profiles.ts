@@ -83,6 +83,9 @@ export type ProfilesMinAggregateOutputType = {
   dev_start_year: number | null
   python_js_start_year: number | null
   remote_start_year: number | null
+  signal_profile: string | null
+  whatsapp_number: string | null
+  telegram_username: string | null
 }
 
 export type ProfilesMaxAggregateOutputType = {
@@ -126,6 +129,9 @@ export type ProfilesMaxAggregateOutputType = {
   dev_start_year: number | null
   python_js_start_year: number | null
   remote_start_year: number | null
+  signal_profile: string | null
+  whatsapp_number: string | null
+  telegram_username: string | null
 }
 
 export type ProfilesCountAggregateOutputType = {
@@ -169,6 +175,9 @@ export type ProfilesCountAggregateOutputType = {
   dev_start_year: number
   python_js_start_year: number
   remote_start_year: number
+  signal_profile: number
+  whatsapp_number: number
+  telegram_username: number
   _all: number
 }
 
@@ -230,6 +239,9 @@ export type ProfilesMinAggregateInputType = {
   dev_start_year?: true
   python_js_start_year?: true
   remote_start_year?: true
+  signal_profile?: true
+  whatsapp_number?: true
+  telegram_username?: true
 }
 
 export type ProfilesMaxAggregateInputType = {
@@ -273,6 +285,9 @@ export type ProfilesMaxAggregateInputType = {
   dev_start_year?: true
   python_js_start_year?: true
   remote_start_year?: true
+  signal_profile?: true
+  whatsapp_number?: true
+  telegram_username?: true
 }
 
 export type ProfilesCountAggregateInputType = {
@@ -316,6 +331,9 @@ export type ProfilesCountAggregateInputType = {
   dev_start_year?: true
   python_js_start_year?: true
   remote_start_year?: true
+  signal_profile?: true
+  whatsapp_number?: true
+  telegram_username?: true
   _all?: true
 }
 
@@ -446,6 +464,9 @@ export type ProfilesGroupByOutputType = {
   dev_start_year: number | null
   python_js_start_year: number | null
   remote_start_year: number | null
+  signal_profile: string | null
+  whatsapp_number: string | null
+  telegram_username: string | null
   _count: ProfilesCountAggregateOutputType | null
   _avg: ProfilesAvgAggregateOutputType | null
   _sum: ProfilesSumAggregateOutputType | null
@@ -512,6 +533,9 @@ export type profilesWhereInput = {
   dev_start_year?: Prisma.IntNullableFilter<"profiles"> | number | null
   python_js_start_year?: Prisma.IntNullableFilter<"profiles"> | number | null
   remote_start_year?: Prisma.IntNullableFilter<"profiles"> | number | null
+  signal_profile?: Prisma.StringNullableFilter<"profiles"> | string | null
+  whatsapp_number?: Prisma.StringNullableFilter<"profiles"> | string | null
+  telegram_username?: Prisma.StringNullableFilter<"profiles"> | string | null
   ai_chat?: Prisma.Ai_chatListRelationFilter
   applications?: Prisma.ApplicationsListRelationFilter
   cheat_sheets?: Prisma.Cheat_sheetsListRelationFilter
@@ -577,6 +601,9 @@ export type profilesOrderByWithRelationInput = {
   dev_start_year?: Prisma.SortOrderInput | Prisma.SortOrder
   python_js_start_year?: Prisma.SortOrderInput | Prisma.SortOrder
   remote_start_year?: Prisma.SortOrderInput | Prisma.SortOrder
+  signal_profile?: Prisma.SortOrderInput | Prisma.SortOrder
+  whatsapp_number?: Prisma.SortOrderInput | Prisma.SortOrder
+  telegram_username?: Prisma.SortOrderInput | Prisma.SortOrder
   ai_chat?: Prisma.ai_chatOrderByRelationAggregateInput
   applications?: Prisma.applicationsOrderByRelationAggregateInput
   cheat_sheets?: Prisma.cheat_sheetsOrderByRelationAggregateInput
@@ -645,6 +672,9 @@ export type profilesWhereUniqueInput = Prisma.AtLeast<{
   dev_start_year?: Prisma.IntNullableFilter<"profiles"> | number | null
   python_js_start_year?: Prisma.IntNullableFilter<"profiles"> | number | null
   remote_start_year?: Prisma.IntNullableFilter<"profiles"> | number | null
+  signal_profile?: Prisma.StringNullableFilter<"profiles"> | string | null
+  whatsapp_number?: Prisma.StringNullableFilter<"profiles"> | string | null
+  telegram_username?: Prisma.StringNullableFilter<"profiles"> | string | null
   ai_chat?: Prisma.Ai_chatListRelationFilter
   applications?: Prisma.ApplicationsListRelationFilter
   cheat_sheets?: Prisma.Cheat_sheetsListRelationFilter
@@ -710,6 +740,9 @@ export type profilesOrderByWithAggregationInput = {
   dev_start_year?: Prisma.SortOrderInput | Prisma.SortOrder
   python_js_start_year?: Prisma.SortOrderInput | Prisma.SortOrder
   remote_start_year?: Prisma.SortOrderInput | Prisma.SortOrder
+  signal_profile?: Prisma.SortOrderInput | Prisma.SortOrder
+  whatsapp_number?: Prisma.SortOrderInput | Prisma.SortOrder
+  telegram_username?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.profilesCountOrderByAggregateInput
   _avg?: Prisma.profilesAvgOrderByAggregateInput
   _max?: Prisma.profilesMaxOrderByAggregateInput
@@ -761,6 +794,9 @@ export type profilesScalarWhereWithAggregatesInput = {
   dev_start_year?: Prisma.IntNullableWithAggregatesFilter<"profiles"> | number | null
   python_js_start_year?: Prisma.IntNullableWithAggregatesFilter<"profiles"> | number | null
   remote_start_year?: Prisma.IntNullableWithAggregatesFilter<"profiles"> | number | null
+  signal_profile?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
+  whatsapp_number?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
+  telegram_username?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
 }
 
 export type profilesCreateInput = {
@@ -802,6 +838,9 @@ export type profilesCreateInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -867,6 +906,9 @@ export type profilesUncheckedCreateInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -929,6 +971,9 @@ export type profilesUpdateInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -994,6 +1039,9 @@ export type profilesUncheckedUpdateInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -1058,6 +1106,9 @@ export type profilesCreateManyInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
 }
 
 export type profilesUpdateManyMutationInput = {
@@ -1099,6 +1150,9 @@ export type profilesUpdateManyMutationInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type profilesUncheckedUpdateManyInput = {
@@ -1142,6 +1196,9 @@ export type profilesUncheckedUpdateManyInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type ProfilesScalarRelationFilter = {
@@ -1205,6 +1262,9 @@ export type profilesCountOrderByAggregateInput = {
   dev_start_year?: Prisma.SortOrder
   python_js_start_year?: Prisma.SortOrder
   remote_start_year?: Prisma.SortOrder
+  signal_profile?: Prisma.SortOrder
+  whatsapp_number?: Prisma.SortOrder
+  telegram_username?: Prisma.SortOrder
 }
 
 export type profilesAvgOrderByAggregateInput = {
@@ -1256,6 +1316,9 @@ export type profilesMaxOrderByAggregateInput = {
   dev_start_year?: Prisma.SortOrder
   python_js_start_year?: Prisma.SortOrder
   remote_start_year?: Prisma.SortOrder
+  signal_profile?: Prisma.SortOrder
+  whatsapp_number?: Prisma.SortOrder
+  telegram_username?: Prisma.SortOrder
 }
 
 export type profilesMinOrderByAggregateInput = {
@@ -1299,6 +1362,9 @@ export type profilesMinOrderByAggregateInput = {
   dev_start_year?: Prisma.SortOrder
   python_js_start_year?: Prisma.SortOrder
   remote_start_year?: Prisma.SortOrder
+  signal_profile?: Prisma.SortOrder
+  whatsapp_number?: Prisma.SortOrder
+  telegram_username?: Prisma.SortOrder
 }
 
 export type profilesSumOrderByAggregateInput = {
@@ -1692,6 +1758,9 @@ export type profilesCreateWithoutApplicationsInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
   collected_data?: Prisma.collected_dataCreateNestedManyWithoutProfilesInput
@@ -1756,6 +1825,9 @@ export type profilesUncheckedCreateWithoutApplicationsInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
   collected_data?: Prisma.collected_dataUncheckedCreateNestedManyWithoutProfilesInput
@@ -1833,6 +1905,9 @@ export type profilesUpdateWithoutApplicationsInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
   collected_data?: Prisma.collected_dataUpdateManyWithoutProfilesNestedInput
@@ -1897,6 +1972,9 @@ export type profilesUncheckedUpdateWithoutApplicationsInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
   collected_data?: Prisma.collected_dataUncheckedUpdateManyWithoutProfilesNestedInput
@@ -1958,6 +2036,9 @@ export type profilesCreateWithoutCheat_sheetsInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   collected_data?: Prisma.collected_dataCreateNestedManyWithoutProfilesInput
@@ -2022,6 +2103,9 @@ export type profilesUncheckedCreateWithoutCheat_sheetsInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   collected_data?: Prisma.collected_dataUncheckedCreateNestedManyWithoutProfilesInput
@@ -2099,6 +2183,9 @@ export type profilesUpdateWithoutCheat_sheetsInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   collected_data?: Prisma.collected_dataUpdateManyWithoutProfilesNestedInput
@@ -2163,6 +2250,9 @@ export type profilesUncheckedUpdateWithoutCheat_sheetsInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   collected_data?: Prisma.collected_dataUncheckedUpdateManyWithoutProfilesNestedInput
@@ -2224,6 +2314,9 @@ export type profilesCreateWithoutCollected_dataInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -2288,6 +2381,9 @@ export type profilesUncheckedCreateWithoutCollected_dataInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -2365,6 +2461,9 @@ export type profilesUpdateWithoutCollected_dataInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -2429,6 +2528,9 @@ export type profilesUncheckedUpdateWithoutCollected_dataInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -2490,6 +2592,9 @@ export type profilesCreateWithoutDirectus_filesInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -2553,6 +2658,9 @@ export type profilesUncheckedCreateWithoutDirectus_filesInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -2646,6 +2754,9 @@ export type profilesScalarWhereInput = {
   dev_start_year?: Prisma.IntNullableFilter<"profiles"> | number | null
   python_js_start_year?: Prisma.IntNullableFilter<"profiles"> | number | null
   remote_start_year?: Prisma.IntNullableFilter<"profiles"> | number | null
+  signal_profile?: Prisma.StringNullableFilter<"profiles"> | string | null
+  whatsapp_number?: Prisma.StringNullableFilter<"profiles"> | string | null
+  telegram_username?: Prisma.StringNullableFilter<"profiles"> | string | null
 }
 
 export type profilesCreateWithoutEducationInput = {
@@ -2687,6 +2798,9 @@ export type profilesCreateWithoutEducationInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -2751,6 +2865,9 @@ export type profilesUncheckedCreateWithoutEducationInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -2828,6 +2945,9 @@ export type profilesUpdateWithoutEducationInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -2892,6 +3012,9 @@ export type profilesUncheckedUpdateWithoutEducationInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -2953,6 +3076,9 @@ export type profilesCreateWithoutHighlightsInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -3017,6 +3143,9 @@ export type profilesUncheckedCreateWithoutHighlightsInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -3094,6 +3223,9 @@ export type profilesUpdateWithoutHighlightsInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -3158,6 +3290,9 @@ export type profilesUncheckedUpdateWithoutHighlightsInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -3219,6 +3354,9 @@ export type profilesCreateWithoutLanguagesInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -3283,6 +3421,9 @@ export type profilesUncheckedCreateWithoutLanguagesInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -3360,6 +3501,9 @@ export type profilesUpdateWithoutLanguagesInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -3424,6 +3568,9 @@ export type profilesUncheckedUpdateWithoutLanguagesInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -3485,6 +3632,9 @@ export type profilesCreateWithoutPlatform_profilesInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -3549,6 +3699,9 @@ export type profilesUncheckedCreateWithoutPlatform_profilesInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -3626,6 +3779,9 @@ export type profilesUpdateWithoutPlatform_profilesInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -3690,6 +3846,9 @@ export type profilesUncheckedUpdateWithoutPlatform_profilesInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -3751,6 +3910,9 @@ export type profilesCreateWithoutProfile_versionsInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -3815,6 +3977,9 @@ export type profilesUncheckedCreateWithoutProfile_versionsInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -3892,6 +4057,9 @@ export type profilesUpdateWithoutProfile_versionsInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -3956,6 +4124,9 @@ export type profilesUncheckedUpdateWithoutProfile_versionsInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -4017,6 +4188,9 @@ export type profilesCreateWithoutProject_storiesInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -4081,6 +4255,9 @@ export type profilesUncheckedCreateWithoutProject_storiesInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -4158,6 +4335,9 @@ export type profilesUpdateWithoutProject_storiesInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -4222,6 +4402,9 @@ export type profilesUncheckedUpdateWithoutProject_storiesInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -4283,6 +4466,9 @@ export type profilesCreateWithoutReferencesInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -4347,6 +4533,9 @@ export type profilesUncheckedCreateWithoutReferencesInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -4424,6 +4613,9 @@ export type profilesUpdateWithoutReferencesInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -4488,6 +4680,9 @@ export type profilesUncheckedUpdateWithoutReferencesInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -4549,6 +4744,9 @@ export type profilesCreateWithoutSalary_expectationsInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -4613,6 +4811,9 @@ export type profilesUncheckedCreateWithoutSalary_expectationsInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -4690,6 +4891,9 @@ export type profilesUpdateWithoutSalary_expectationsInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -4754,6 +4958,9 @@ export type profilesUncheckedUpdateWithoutSalary_expectationsInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -4815,6 +5022,9 @@ export type profilesCreateWithoutSide_projectsInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -4879,6 +5089,9 @@ export type profilesUncheckedCreateWithoutSide_projectsInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -4956,6 +5169,9 @@ export type profilesUpdateWithoutSide_projectsInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -5020,6 +5236,9 @@ export type profilesUncheckedUpdateWithoutSide_projectsInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -5081,6 +5300,9 @@ export type profilesCreateWithoutTech_skill_categoriesInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -5145,6 +5367,9 @@ export type profilesUncheckedCreateWithoutTech_skill_categoriesInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -5222,6 +5447,9 @@ export type profilesUpdateWithoutTech_skill_categoriesInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -5286,6 +5514,9 @@ export type profilesUncheckedUpdateWithoutTech_skill_categoriesInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -5347,6 +5578,9 @@ export type profilesCreateWithoutWork_experiencesInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -5411,6 +5645,9 @@ export type profilesUncheckedCreateWithoutWork_experiencesInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -5488,6 +5725,9 @@ export type profilesUpdateWithoutWork_experiencesInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -5552,6 +5792,9 @@ export type profilesUncheckedUpdateWithoutWork_experiencesInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -5613,6 +5856,9 @@ export type profilesCreateWithoutAi_chatInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
   collected_data?: Prisma.collected_dataCreateNestedManyWithoutProfilesInput
@@ -5677,6 +5923,9 @@ export type profilesUncheckedCreateWithoutAi_chatInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
   collected_data?: Prisma.collected_dataUncheckedCreateNestedManyWithoutProfilesInput
@@ -5754,6 +6003,9 @@ export type profilesUpdateWithoutAi_chatInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
   collected_data?: Prisma.collected_dataUpdateManyWithoutProfilesNestedInput
@@ -5818,6 +6070,9 @@ export type profilesUncheckedUpdateWithoutAi_chatInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
   collected_data?: Prisma.collected_dataUncheckedUpdateManyWithoutProfilesNestedInput
@@ -5879,6 +6134,9 @@ export type profilesCreateWithoutOs_contributionsInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -5943,6 +6201,9 @@ export type profilesUncheckedCreateWithoutOs_contributionsInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -6020,6 +6281,9 @@ export type profilesUpdateWithoutOs_contributionsInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -6084,6 +6348,9 @@ export type profilesUncheckedUpdateWithoutOs_contributionsInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -6145,6 +6412,9 @@ export type profilesCreateWithoutJob_searchesInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -6209,6 +6479,9 @@ export type profilesUncheckedCreateWithoutJob_searchesInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -6286,6 +6559,9 @@ export type profilesUpdateWithoutJob_searchesInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -6350,6 +6626,9 @@ export type profilesUncheckedUpdateWithoutJob_searchesInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -6411,6 +6690,9 @@ export type profilesCreateWithoutJob_match_preferencesInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -6475,6 +6757,9 @@ export type profilesUncheckedCreateWithoutJob_match_preferencesInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -6552,6 +6837,9 @@ export type profilesUpdateWithoutJob_match_preferencesInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -6616,6 +6904,9 @@ export type profilesUncheckedUpdateWithoutJob_match_preferencesInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -6677,6 +6968,9 @@ export type profilesCreateWithoutJob_matchesInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -6741,6 +7035,9 @@ export type profilesUncheckedCreateWithoutJob_matchesInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -6818,6 +7115,9 @@ export type profilesUpdateWithoutJob_matchesInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -6882,6 +7182,9 @@ export type profilesUncheckedUpdateWithoutJob_matchesInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -6943,6 +7246,9 @@ export type profilesCreateWithoutConfigInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -7007,6 +7313,9 @@ export type profilesUncheckedCreateWithoutConfigInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -7084,6 +7393,9 @@ export type profilesUpdateWithoutConfigInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -7148,6 +7460,9 @@ export type profilesUncheckedUpdateWithoutConfigInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -7209,6 +7524,9 @@ export type profilesCreateWithoutProfile_exportsInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -7273,6 +7591,9 @@ export type profilesUncheckedCreateWithoutProfile_exportsInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
   ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -7350,6 +7671,9 @@ export type profilesUpdateWithoutProfile_exportsInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -7414,6 +7738,9 @@ export type profilesUncheckedUpdateWithoutProfile_exportsInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -7476,6 +7803,9 @@ export type profilesCreateManyDirectus_filesInput = {
   dev_start_year?: number | null
   python_js_start_year?: number | null
   remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
 }
 
 export type profilesUpdateWithoutDirectus_filesInput = {
@@ -7517,6 +7847,9 @@ export type profilesUpdateWithoutDirectus_filesInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -7580,6 +7913,9 @@ export type profilesUncheckedUpdateWithoutDirectus_filesInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -7643,6 +7979,9 @@ export type profilesUncheckedUpdateManyWithoutDirectus_filesInput = {
   dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 
@@ -7897,6 +8236,9 @@ export type profilesSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   dev_start_year?: boolean
   python_js_start_year?: boolean
   remote_start_year?: boolean
+  signal_profile?: boolean
+  whatsapp_number?: boolean
+  telegram_username?: boolean
   ai_chat?: boolean | Prisma.profiles$ai_chatArgs<ExtArgs>
   applications?: boolean | Prisma.profiles$applicationsArgs<ExtArgs>
   cheat_sheets?: boolean | Prisma.profiles$cheat_sheetsArgs<ExtArgs>
@@ -7963,6 +8305,9 @@ export type profilesSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   dev_start_year?: boolean
   python_js_start_year?: boolean
   remote_start_year?: boolean
+  signal_profile?: boolean
+  whatsapp_number?: boolean
+  telegram_username?: boolean
   directus_files?: boolean | Prisma.profiles$directus_filesArgs<ExtArgs>
 }, ExtArgs["result"]["profiles"]>
 
@@ -8007,6 +8352,9 @@ export type profilesSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   dev_start_year?: boolean
   python_js_start_year?: boolean
   remote_start_year?: boolean
+  signal_profile?: boolean
+  whatsapp_number?: boolean
+  telegram_username?: boolean
   directus_files?: boolean | Prisma.profiles$directus_filesArgs<ExtArgs>
 }, ExtArgs["result"]["profiles"]>
 
@@ -8051,9 +8399,12 @@ export type profilesSelectScalar = {
   dev_start_year?: boolean
   python_js_start_year?: boolean
   remote_start_year?: boolean
+  signal_profile?: boolean
+  whatsapp_number?: boolean
+  telegram_username?: boolean
 }
 
-export type profilesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "date_created" | "date_updated" | "name" | "title" | "phone_number" | "email_address" | "personal_website" | "subtitle" | "core_stack" | "linkedin_profile" | "github_profile" | "stackoverflow_profile" | "headline" | "profile_picture" | "summary" | "nationality" | "location_url" | "location_timezone" | "sort" | "city" | "region" | "country_code" | "location_city" | "location_region" | "location_country_code" | "is_default" | "slug" | "npm_profile" | "pypi_profile" | "company_name" | "street_address" | "postal_code" | "vat_id" | "kvk_number" | "about_me_text" | "meta_image_url" | "dev_start_year" | "python_js_start_year" | "remote_start_year", ExtArgs["result"]["profiles"]>
+export type profilesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "date_created" | "date_updated" | "name" | "title" | "phone_number" | "email_address" | "personal_website" | "subtitle" | "core_stack" | "linkedin_profile" | "github_profile" | "stackoverflow_profile" | "headline" | "profile_picture" | "summary" | "nationality" | "location_url" | "location_timezone" | "sort" | "city" | "region" | "country_code" | "location_city" | "location_region" | "location_country_code" | "is_default" | "slug" | "npm_profile" | "pypi_profile" | "company_name" | "street_address" | "postal_code" | "vat_id" | "kvk_number" | "about_me_text" | "meta_image_url" | "dev_start_year" | "python_js_start_year" | "remote_start_year" | "signal_profile" | "whatsapp_number" | "telegram_username", ExtArgs["result"]["profiles"]>
 export type profilesInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   ai_chat?: boolean | Prisma.profiles$ai_chatArgs<ExtArgs>
   applications?: boolean | Prisma.profiles$applicationsArgs<ExtArgs>
@@ -8153,6 +8504,9 @@ export type $profilesPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     dev_start_year: number | null
     python_js_start_year: number | null
     remote_start_year: number | null
+    signal_profile: string | null
+    whatsapp_number: string | null
+    telegram_username: string | null
   }, ExtArgs["result"]["profiles"]>
   composites: {}
 }
@@ -8638,6 +8992,9 @@ export interface profilesFieldRefs {
   readonly dev_start_year: Prisma.FieldRef<"profiles", 'Int'>
   readonly python_js_start_year: Prisma.FieldRef<"profiles", 'Int'>
   readonly remote_start_year: Prisma.FieldRef<"profiles", 'Int'>
+  readonly signal_profile: Prisma.FieldRef<"profiles", 'String'>
+  readonly whatsapp_number: Prisma.FieldRef<"profiles", 'String'>
+  readonly telegram_username: Prisma.FieldRef<"profiles", 'String'>
 }
     
 

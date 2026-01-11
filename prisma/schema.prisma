@@ -683,6 +683,9 @@ model profiles {
   dev_start_year        Int?
   python_js_start_year  Int?
   remote_start_year     Int?
+  signal_profile        String?                 @db.VarChar(500)
+  whatsapp_number       String?                 @db.VarChar(50)
+  telegram_username     String?                 @db.VarChar(100)
   ai_chat               ai_chat[]
   applications          applications[]
   cheat_sheets          cheat_sheets[]

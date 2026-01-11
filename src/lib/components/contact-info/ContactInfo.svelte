@@ -20,22 +20,30 @@
   import { themeState } from "$lib/stores/theme.svelte";
   import { getWindowVariable } from "$lib/tools/window";
 
+  interface Props {
+    email?: string | null;
+    phone?: string | null;
+    timezone?: string | null;
+    signalProfile?: string | null;
+    whatsappNumber?: string | null;
+    telegramUsername?: string | null;
+  }
+
+  let {
+    email = null,
+    phone = null,
+    timezone = null,
+    signalProfile = null,
+    whatsappNumber = null,
+    telegramUsername = null,
+  }: Props = $props();
+
   let isLoading = true;
   let isLoadError = false;
   let isVerifyError = false;
   let turnstileContainer: HTMLElement;
 
   const TURNSTILE_SITE_KEY = "0x4AAAAAABkW4tr8bO8w8Vi8";
-
-  interface ContactInfo {
-    email: string;
-    phone: string;
-  }
-
-  const contactInfo: ContactInfo = {
-    email: "rik@rikwanders.tech",
-    phone: "+31 649118511",
-  };
 
   onMount(() => {
     if (browser) {
@@ -187,61 +195,75 @@
     <div
       class="flex max-xs:flex-col gap-6 xs:gap-4 place-content-evenly text-center w-full px-4"
     >
-      <div>
-        <div class="mb-2 text-lg font-semibold">
-          <FontAwesomeIcon icon={faPhone} class="mr-1" />
-          Phone
+      {#if phone}
+        <div>
+          <div class="mb-2 text-lg font-semibold">
+            <FontAwesomeIcon icon={faPhone} class="mr-1" />
+            Phone
+          </div>
+
+          <a
+            href="tel:{phone}"
+            class="underline hover:text-teal"
+          >{phone}</a>
+
+          {#if signalProfile || whatsappNumber || telegramUsername}
+            <p class="mt-2 flex justify-center gap-4 text-xl">
+              {#if signalProfile}
+                <a
+                  href={signalProfile}
+                  target="_blank"
+                  title="Signal"
+                  class="hover:text-teal"
+                ><FontAwesomeIcon icon={faSignalMessenger} /></a>
+              {/if}
+
+              {#if whatsappNumber}
+                <a
+                  href="https://wa.me/{whatsappNumber.replace(/[^0-9+]/g, '')}"
+                  target="_blank"
+                  title="WhatsApp"
+                  class="hover:text-teal"
+                ><FontAwesomeIcon icon={faWhatsapp} /></a>
+              {/if}
+
+              {#if telegramUsername}
+                <a
+                  href="https://t.me/{telegramUsername}"
+                  target="_blank"
+                  title="Telegram"
+                  class="hover:text-teal"
+                ><FontAwesomeIcon icon={faTelegram} /></a>
+              {/if}
+            </p>
+          {/if}
+
+          {#if timezone}
+            <p class="mt-2 text-sm">
+              {timezone}
+            </p>
+          {/if}
         </div>
+      {/if}
 
-        <a
-          href="tel:{contactInfo.phone}"
-          class="underline hover:text-teal"
-        >{contactInfo.phone}</a>
-
-        <p class="mt-2 flex justify-center gap-4 text-xl">
-          <a
-            href="https://signal.me/#eu/QF8n-f_yG7oqHHgN83R1zbW8oVuBhmqOkN5W60a1vpFs-3uMvvtKaLkuUTZMqMz3"
-            target="_blank"
-            title="Signal"
-            class="hover:text-teal"
-          ><FontAwesomeIcon icon={faSignalMessenger} /></a>
+      {#if email}
+        <div>
+          <div class="mb-2 text-lg font-semibold">
+            <FontAwesomeIcon icon={faEnvelope} class="mr-1" />
+            Email
+          </div>
 
           <a
-            href="https://wa.me/+31649118511"
-            target="_blank"
-            title="WhatsApp"
-            class="hover:text-teal"
-          ><FontAwesomeIcon icon={faWhatsapp} /></a>
+            href="mailto:{email}"
+            class="underline hover:text-teal"
+          >{email}</a>
 
-          <a
-            href="https://t.me/gitaarik"
-            target="_blank"
-            title="Telegram"
-            class="hover:text-teal"
-          ><FontAwesomeIcon icon={faTelegram} /></a>
-        </p>
-
-        <p class="mt-2 text-sm">
-          Central European Timezone
-        </p>
-      </div>
-
-      <div>
-        <div class="mb-2 text-lg font-semibold">
-          <FontAwesomeIcon icon={faEnvelope} class="mr-1" />
-          Email
+          <p class="mt-2 xs:mt-4 text-sm/6">
+            You can expect a response<br />
+            within 2 business days.
+          </p>
         </div>
-
-        <a
-          href="mailto:{contactInfo.email}"
-          class="underline hover:text-teal"
-        >{contactInfo.email}</a>
-
-        <p class="mt-2 xs:mt-4 text-sm/6">
-          You can expect a response<br />
-          within 2 business days.
-        </p>
-      </div>
+      {/if}
     </div>
   {/if}
 </div>
