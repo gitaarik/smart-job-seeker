@@ -244,6 +244,88 @@ function parseBrowserUseResponse(result: any): any[] {
 }
 
 /**
+ * Execute login task on Browser-Use
+ */
+async function executeLoginTask(
+  browserUse: BrowserUseClient,
+  platformUrl: string,
+  platformName: string,
+  credentials: { username: string; password: string },
+): Promise<void> {
+  console.log(`\n🔐 Executing login task...`);
+
+  const loginTask = `Login to ${platformName}:
+1. You are starting at: ${platformUrl}
+2. Find and click the "Sign in", "Login", or similar button/link
+3. Wait for the login form to appear (it may be a popup or a new page)
+4. Fill in the login form:
+   - Email/Username field: ${credentials.username}
+   - Password field: ${credentials.password}
+5. Click the "Sign in", "Login", or "Submit" button
+6. Wait for successful login - look for:
+   - Profile menu or avatar appearing
+   - URL change to dashboard/feed
+   - Logout/Sign out button becoming visible
+   - Disappearance of login button
+
+Once logged in successfully, you're done. Do not navigate away from the page.`;
+
+  const response = await browserUse.executeTask({
+    task: loginTask,
+    startUrl: platformUrl,
+    maxTime: 120, // 2 minutes for login
+  });
+
+  console.log(`✅ Login task completed`);
+}
+
+/**
+ * Execute job extraction task on Browser-Use
+ */
+async function executeJobExtractionTask(
+  browserUse: BrowserUseClient,
+  searchUrl: string,
+  maxJobsToClick: number,
+  systemPrompt: string,
+  userPrompt: string,
+): Promise<any> {
+  console.log(
+    `\n📋 Executing job extraction task (max ${maxJobsToClick} jobs)...`,
+  );
+
+  const extractionTask = `Extract detailed job data from individual job pages:
+
+1. Navigate to: ${searchUrl}
+2. Wait for the job search results page to fully load
+3. Find all job listings on the page (job cards, tiles, or list items)
+4. For EACH job (maximum ${maxJobsToClick} jobs):
+   a. Click on the job to open its detail page or expand its details
+   b. Wait for the job details to load completely
+   c. Extract ALL available information about the job:
+      ${systemPrompt}
+   d. Store this job's data
+   e. Return to the job list (if needed for the next job)
+5. After processing all jobs, return the complete array of job data
+
+${userPrompt}`;
+
+  // Calculate timeout based on max jobs to click (roughly 30s per job)
+  const baseTimeout = 60; // Base time for navigation
+  const timePerJob = 30; // Time per job to click through
+  const calculatedTimeout = baseTimeout + (maxJobsToClick * timePerJob);
+  const maxTime = Math.max(180, calculatedTimeout); // At least 3 minutes
+
+  console.log(`🚀 Starting extraction (timeout: ${maxTime}s)...`);
+  const response = await browserUse.executeTask({
+    task: extractionTask,
+    startUrl: searchUrl,
+    maxTime,
+  });
+
+  return response;
+}
+
+/**
  * BROWSER-USE SCRAPING
  * Uses Browser-Use API to extract structured job data
  */
@@ -311,82 +393,24 @@ export async function scrapeJobsWithBrowserUse(
     navigationInstructions,
   });
 
-  // Build the complete task with login if needed
-  let completeTask = "";
-  const startUrl = credentials ? platform.url : searchUrl;
-
+  // Execute login task if credentials provided
   if (credentials) {
-    completeTask = `Complete these steps in order:
-
-STEP 1: Login to ${platform.name}
-1. You are starting at: ${platform.url}
-2. Find and click the "Sign in", "Login", or similar button/link
-3. Wait for the login form to appear (it may be a popup or a new page)
-4. Fill in the login form:
-   - Email/Username field: ${credentials.username}
-   - Password field: ${credentials.password}
-5. Click the "Sign in", "Login", or "Submit" button
-6. Wait for successful login - look for:
-   - Profile menu or avatar appearing
-   - URL change to dashboard/feed
-   - Logout/Sign out button becoming visible
-   - Disappearance of login button
-
-STEP 2: Extract detailed job data from individual job pages
-1. Navigate to: ${searchUrl}
-2. Wait for the job search results page to fully load
-3. Find all job listings on the page (job cards, tiles, or list items)
-4. For EACH job (maximum ${maxJobsToClick} jobs):
-   a. Click on the job to open its detail page or expand its details
-   b. Wait for the job details to load completely
-   c. Extract ALL available information about the job:
-      ${systemPrompt}
-   d. Store this job's data
-   e. Return to the job list (if needed for the next job)
-5. After processing all jobs, return the complete array of job data
-
-${userPrompt}
-`;
-  } else {
-    // No login needed, go directly to extraction
-    completeTask = `Extract detailed job data from individual job pages:
-
-1. You are starting at: ${searchUrl}
-2. Wait for the job search results page to fully load
-3. Find all job listings on the page (job cards, tiles, or list items)
-4. For EACH job (maximum ${maxJobsToClick} jobs):
-   a. Click on the job to open its detail page or expand its details
-   b. Wait for the job details to load completely
-   c. Extract ALL available information about the job:
-      ${systemPrompt}
-   d. Store this job's data
-   e. Return to the job list (if needed for the next job)
-5. After processing all jobs, return the complete array of job data
-
-${userPrompt}
-`;
+    await executeLoginTask(
+      browserUse,
+      platform.url,
+      platform.name,
+      credentials,
+    );
   }
 
-  console.log(
-    `\n📋 Task: Click through and extract details from up to ${maxJobsToClick} jobs`,
+  // Execute job extraction task
+  const response = await executeJobExtractionTask(
+    browserUse,
+    searchUrl,
+    maxJobsToClick,
+    systemPrompt,
+    userPrompt,
   );
-  console.log(
-    `📋 Task instructions:\n${completeTask.substring(0, 500)}...\n`,
-  );
-
-  // Execute the complete task in ONE Browser-Use call
-  // Calculate timeout based on max jobs to click (roughly 30-60s per job with login, 20-40s without)
-  const baseTimeout = credentials ? 120 : 60; // Base time for setup
-  const timePerJob = credentials ? 45 : 30; // Time per job to click through
-  const calculatedTimeout = baseTimeout + (maxJobsToClick * timePerJob);
-  const maxTime = Math.max(180, calculatedTimeout); // At least 3 minutes
-
-  console.log(`🚀 Executing Browser-Use task (timeout: ${maxTime}s)...`);
-  const response = await browserUse.executeTask({
-    task: completeTask,
-    startUrl,
-    maxTime,
-  });
 
   // Parse the JSON result with multiple fallback strategies
   let jobs: any[];
