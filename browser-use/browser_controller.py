@@ -1,11 +1,12 @@
-from browser_use import Agent, Browser
-from browser_use.browser.browser import BrowserConfig
-from langchain_groq import ChatGroq
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_openai import ChatOpenAI
 import os
 import time
 import logging
+from browser_use import Agent, Browser
+from langchain_groq import ChatGroq
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
+from langchain_aws import ChatBedrock
+from browser_use.browser.browser import BrowserConfig
 
 logger = logging.getLogger(__name__)
 
@@ -14,8 +15,7 @@ class BrowserController:
     def __init__(self):
         # Browser-use specific settings with fallback to main LLM settings
         provider = os.getenv(
-            "SJS_LLM_PROVIDER_BROWSER_USE",
-            os.getenv("SJS_LLM_PROVIDER", "groq")
+            "SJS_LLM_PROVIDER_BROWSER_USE", os.getenv("SJS_LLM_PROVIDER", "groq")
         ).lower()
 
         logger.info(f"[Browser-Use] Initializing with provider: {provider}")
@@ -29,6 +29,7 @@ class BrowserController:
             "openrouter": "anthropic/claude-3.5-sonnet",
             "deepseek": "deepseek-chat",
             "browseruse": "gpt-4o",
+            "bedrock": "amazon.nova-micro-v1:0",
         }
 
         # Provider-specific env var names
@@ -39,14 +40,19 @@ class BrowserController:
             "openrouter": "SJS_LLM_MODEL_OPENROUTER",
             "deepseek": "SJS_LLM_MODEL_DEEPSEEK",
             "browseruse": "SJS_LLM_MODEL_BROWSER_USE",
+            "bedrock": "SJS_LLM_MODEL_BEDROCK",
         }
 
-              # Get model with priority:
+        # Get model with priority:
         # 1. Provider-specific env var (e.g., SJS_LLM_MODEL_GROQ if provider is groq)
         # 2. Hardcoded default
         hardcoded_default = default_models.get(provider, default_models["groq"])
         provider_env_var = provider_env_vars.get(provider)
-        model = os.getenv(provider_env_var, hardcoded_default) if provider_env_var else hardcoded_default
+        model = (
+            os.getenv(provider_env_var, hardcoded_default)
+            if provider_env_var
+            else hardcoded_default
+        )
         # Handle empty string from environment variables
         if not model:
             model = hardcoded_default
@@ -82,7 +88,12 @@ class BrowserController:
             )
             # OpenRouter vision support depends on model
             # Claude 3.5 Sonnet and other vision models support it
-            self.use_vision = "claude" in model or "gpt-4" in model or "gemini" in model or "qvq" in model
+            self.use_vision = (
+                "claude" in model
+                or "gpt-4" in model
+                or "gemini" in model
+                or "qvq" in model
+            )
         elif provider == "deepseek":
             # Use DeepSeek
             self.llm = ChatOpenAI(
@@ -93,6 +104,24 @@ class BrowserController:
             )
             # DeepSeek v3 supports vision
             self.use_vision = "v3" in model
+        elif provider == "bedrock":
+            # Use AWS Bedrock
+            # Handle empty strings from Docker (treat "" as None)
+            aws_region = os.getenv("SJS_AWS_REGION") or "us-east-1"
+            aws_profile = os.getenv("SJS_AWS_PROFILE")
+
+            bedrock_config = {
+                "model_id": model,
+                "region_name": aws_region,
+                "model_kwargs": {"temperature": 0.3},
+            }
+            # Only use profile if explicitly set, otherwise use environment variables
+            if aws_profile:
+                bedrock_config["credentials_profile_name"] = aws_profile
+
+            self.llm = ChatBedrock(**bedrock_config)
+            # Claude and Nova models on Bedrock support vision
+            self.use_vision = "anthropic.claude" in model or "amazon.nova" in model
         else:
             # Default to Groq
             self.llm = ChatGroq(
@@ -126,37 +155,43 @@ class BrowserController:
 
         # Always use headless mode - browser is visible via VNC regardless
         headless_mode = os.getenv("SJS_BROWSER_USE_HEADLESS", "true").lower() == "true"
-        
-        logger.info(f"[Browser-Use] Running in {'headless' if headless_mode else 'headed'} mode (visible via VNC)")
-        print(f"[Browser-Use] Running in {'headless' if headless_mode else 'headed'} mode (visible via VNC)", flush=True)
+
+        logger.info(
+            f"[Browser-Use] Running in {'headless' if headless_mode else 'headed'} mode (visible via VNC)"
+        )
+        print(
+            f"[Browser-Use] Running in {'headless' if headless_mode else 'headed'} mode (visible via VNC)",
+            flush=True,
+        )
 
         # Determine vision usage: send_screenshots AND LLM supports vision
         use_vision_for_task = send_screenshots and self.use_vision
         logger.info(f"[Browser-Use] send_screenshots parameter: {send_screenshots}")
         logger.info(f"[Browser-Use] LLM supports vision: {self.use_vision}")
         logger.info(f"[Browser-Use] Final vision mode: {use_vision_for_task}")
-        print(f"[Browser-Use] send_screenshots parameter: {send_screenshots}", flush=True)
+        print(
+            f"[Browser-Use] send_screenshots parameter: {send_screenshots}", flush=True
+        )
         print(f"[Browser-Use] LLM supports vision: {self.use_vision}", flush=True)
         print(f"[Browser-Use] Final vision mode: {use_vision_for_task}", flush=True)
 
         # Navigate to start_url before executing task
         initial_actions = [
-            {'go_to_url': {'url': start_url}},
+            {"go_to_url": {"url": start_url}},
         ]
         logger.info(f"[Browser-Use] Will navigate to: {start_url}")
         print(f"[Browser-Use] Will navigate to: {start_url}", flush=True)
 
-        # Create the agent
+        # Create the agent with token optimization
         agent = Agent(
             task=task,
             llm=self.llm,
-            browser=Browser(
-                config=BrowserConfig(
-                    headless=headless_mode
-                )
-            ),
+            browser=Browser(config=BrowserConfig(headless=headless_mode)),
             use_vision=use_vision_for_task,
             initial_actions=initial_actions,
+            # Token optimization settings
+            # max_input_tokens=64000,  # Limit DOM size sent to LLM
+            # max_actions_per_step=5,  # Reduce actions considered per step
         )
 
         # Run the task
