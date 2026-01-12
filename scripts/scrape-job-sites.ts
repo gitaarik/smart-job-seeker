@@ -13,6 +13,7 @@ import { config } from "$lib/server/config";
 import { BrowserUseClient } from "$lib/server/browser-use-client";
 import { parseRelativeDate } from "$lib/tools/date-utils";
 import { clearDirectusCache } from "$lib/server/directus";
+import { getSiteConfig } from "$lib/server/job-site-configs";
 import { scrapeJobsWithBrowserUse } from "$lib/server/scrapers/browser-use-scraper";
 
 interface SearchAction {

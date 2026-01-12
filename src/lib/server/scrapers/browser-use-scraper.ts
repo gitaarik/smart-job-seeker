@@ -244,8 +244,8 @@ function parseBrowserUseResponse(result: any): any[] {
 }
 
 /**
- * BROWSER-USE SCRAPING (Unified for both URL and Click modes)
- * Uses Browser-Use API to directly extract structured job data
+ * BROWSER-USE SCRAPING
+ * Uses Browser-Use API to extract structured job data
  */
 export async function scrapeJobsWithBrowserUse(
   searchUrl: string,
