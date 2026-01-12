@@ -244,31 +244,28 @@ function parseBrowserUseResponse(result: any): any[] {
 }
 
 /**
- * Execute login task on Browser-Use
+ * Execute login task on Browser-Use using prompt from database
  */
 async function executeLoginTask(
   browserUse: BrowserUseClient,
   platformUrl: string,
   platformName: string,
   credentials: { username: string; password: string },
+  promptTemplate: { system_prompt: string | null; user_prompt: string | null },
 ): Promise<void> {
   console.log(`\n🔐 Executing login task...`);
 
-  const loginTask = `Login to ${platformName}:
-1. You are starting at: ${platformUrl}
-2. Find and click the "Sign in", "Login", or similar button/link
-3. Wait for the login form to appear (it may be a popup or a new page)
-4. Fill in the login form:
-   - Email/Username field: ${credentials.username}
-   - Password field: ${credentials.password}
-5. Click the "Sign in", "Login", or "Submit" button
-6. Wait for successful login - look for:
-   - Profile menu or avatar appearing
-   - URL change to dashboard/feed
-   - Logout/Sign out button becoming visible
-   - Disappearance of login button
+  // Interpolate variables in the login prompt
+  const systemPrompt = promptTemplate.system_prompt || "";
+  const userPrompt = interpolatePrompt(promptTemplate.user_prompt || "", {
+    platformUrl,
+    platformName,
+    username: credentials.username,
+    password: credentials.password,
+  });
 
-Once logged in successfully, you're done. Do not navigate away from the page.`;
+  // Combine system prompt and user prompt into the task
+  const loginTask = `${systemPrompt}\n\n${userPrompt}`.trim();
 
   const response = await browserUse.executeTask({
     task: loginTask,
@@ -280,34 +277,27 @@ Once logged in successfully, you're done. Do not navigate away from the page.`;
 }
 
 /**
- * Execute job extraction task on Browser-Use
+ * Execute job extraction task on Browser-Use using prompt from database
  */
 async function executeJobExtractionTask(
   browserUse: BrowserUseClient,
   searchUrl: string,
   maxJobsToClick: number,
-  systemPrompt: string,
-  userPrompt: string,
+  promptTemplate: { system_prompt: string | null; user_prompt: string | null },
 ): Promise<any> {
   console.log(
     `\n📋 Executing job extraction task (max ${maxJobsToClick} jobs)...`,
   );
 
-  const extractionTask = `Extract detailed job data from individual job pages:
+  // Interpolate variables in the extraction prompt
+  const systemPrompt = promptTemplate.system_prompt || "";
+  const userPrompt = interpolatePrompt(promptTemplate.user_prompt || "", {
+    searchUrl,
+    maxJobsToClick: maxJobsToClick.toString(),
+  });
 
-1. Navigate to: ${searchUrl}
-2. Wait for the job search results page to fully load
-3. Find all job listings on the page (job cards, tiles, or list items)
-4. For EACH job (maximum ${maxJobsToClick} jobs):
-   a. Click on the job to open its detail page or expand its details
-   b. Wait for the job details to load completely
-   c. Extract ALL available information about the job:
-      ${systemPrompt}
-   d. Store this job's data
-   e. Return to the job list (if needed for the next job)
-5. After processing all jobs, return the complete array of job data
-
-${userPrompt}`;
+  // Combine system prompt and user prompt into the task
+  const extractionTask = `${systemPrompt}\n\n${userPrompt}`.trim();
 
   // Calculate timeout based on max jobs to click (roughly 30s per job)
   const baseTimeout = 60; // Base time for navigation
@@ -371,27 +361,28 @@ export async function scrapeJobsWithBrowserUse(
     }
   }
 
-  // Fetch prompt template from Directus
-  const template = await dbDirect.ai_chat_prompts.findUnique({
-    where: { request: "extract_job_browser_use" },
+  // Fetch prompt templates from Directus
+  const loginTemplate = await dbDirect.ai_chat_prompts.findUnique({
+    where: { request: "browser_use_login" },
   });
 
-  if (!template) {
+  const extractionTemplate = await dbDirect.ai_chat_prompts.findUnique({
+    where: { request: "browser_use_extract_jobs_by_clicking" },
+  });
+
+  if (!loginTemplate) {
     throw new Error(
-      "Prompt template 'extract_job_browser_use' not found in ai_chat_prompts",
+      "Prompt template 'browser_use_login' not found in ai_chat_prompts",
     );
   }
 
-  // Build navigation instructions for extracting detailed job data
-  const maxJobsToClick = config.browserUseMaxJobsToClick;
-  const navigationInstructions =
-    `You will click through individual job listings to extract complete details. Process a maximum of ${maxJobsToClick} jobs.`;
+  if (!extractionTemplate) {
+    throw new Error(
+      "Prompt template 'browser_use_extract_jobs_by_clicking' not found in ai_chat_prompts",
+    );
+  }
 
-  // Interpolate variables in the extraction prompt
-  const systemPrompt = template.system_prompt || "";
-  const userPrompt = interpolatePrompt(template.user_prompt || "", {
-    navigationInstructions,
-  });
+  const maxJobsToClick = config.browserUseMaxJobsToClick;
 
   // Execute login task if credentials provided
   if (credentials) {
@@ -400,6 +391,7 @@ export async function scrapeJobsWithBrowserUse(
       platform.url,
       platform.name,
       credentials,
+      loginTemplate,
     );
   }
 
@@ -408,8 +400,7 @@ export async function scrapeJobsWithBrowserUse(
     browserUse,
     searchUrl,
     maxJobsToClick,
-    systemPrompt,
-    userPrompt,
+    extractionTemplate,
   );
 
   // Parse the JSON result with multiple fallback strategies
