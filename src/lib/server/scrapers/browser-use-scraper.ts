@@ -300,10 +300,10 @@ export async function scrapeJobsWithBrowserUse(
     );
   }
 
-  // Build navigation instructions based on mode
-  const navigationInstructions = navigationType === "url"
-    ? `Navigate through pagination links/buttons to find more jobs. Stop after finding ${config.scraperMaxJobsPerSearch} jobs or ${config.scraperPaginationMaxPages} pages.`
-    : `Click on each job card to view details. Stop after finding ${config.scraperMaxJobsPerSearch} jobs.`;
+  // Build navigation instructions for extracting detailed job data
+  const maxJobsToClick = config.browserUseMaxJobsToClick;
+  const navigationInstructions =
+    `You will click through individual job listings to extract complete details. Process a maximum of ${maxJobsToClick} jobs.`;
 
   // Interpolate variables in the extraction prompt
   const systemPrompt = template.system_prompt || "";
@@ -332,31 +332,60 @@ STEP 1: Login to ${platform.name}
    - Logout/Sign out button becoming visible
    - Disappearance of login button
 
-STEP 2: Navigate to job search results
+STEP 2: Extract detailed job data from individual job pages
 1. Navigate to: ${searchUrl}
 2. Wait for the job search results page to fully load
-3. Verify you can see job listings
-
-STEP 3: Extract job listings
-${systemPrompt}
+3. Find all job listings on the page (job cards, tiles, or list items)
+4. For EACH job (maximum ${maxJobsToClick} jobs):
+   a. Click on the job to open its detail page or expand its details
+   b. Wait for the job details to load completely
+   c. Extract ALL available information about the job:
+      ${systemPrompt}
+   d. Store this job's data
+   e. Return to the job list (if needed for the next job)
+5. After processing all jobs, return the complete array of job data
 
 ${userPrompt}
 `;
   } else {
-    // No login needed, just extract
-    completeTask = `${systemPrompt}\n\n${userPrompt}`.trim();
+    // No login needed, go directly to extraction
+    completeTask = `Extract detailed job data from individual job pages:
+
+1. You are starting at: ${searchUrl}
+2. Wait for the job search results page to fully load
+3. Find all job listings on the page (job cards, tiles, or list items)
+4. For EACH job (maximum ${maxJobsToClick} jobs):
+   a. Click on the job to open its detail page or expand its details
+   b. Wait for the job details to load completely
+   c. Extract ALL available information about the job:
+      ${systemPrompt}
+   d. Store this job's data
+   e. Return to the job list (if needed for the next job)
+5. After processing all jobs, return the complete array of job data
+
+${userPrompt}
+`;
   }
 
   console.log(
-    `\n📋 Task instructions:\n${completeTask.substring(0, 500)}...\n`,
+    `\n📋 Task: Click through and extract details from up to ${maxJobsToClick} jobs`,
+  );
+  console.log(
+    `📋 Task instructions:\n${completeTask.substring(0, 500)}...\n`,
   );
 
   // Execute the complete task in ONE Browser-Use call
-  console.log(`🚀 Executing Browser-Use task...`);
+  // Calculate timeout based on max jobs to click (roughly 30-60s per job with login, 20-40s without)
+  const baseTimeout = credentials ? 120 : 60; // Base time for setup
+  const timePerJob = credentials ? 45 : 30; // Time per job to click through
+  const calculatedTimeout = baseTimeout + (maxJobsToClick * timePerJob);
+  const maxTime = Math.max(180, calculatedTimeout); // At least 3 minutes
+
+  console.log(`🚀 Executing Browser-Use task (timeout: ${maxTime}s)...`);
   const response = await browserUse.executeTask({
     task: completeTask,
     startUrl,
-    maxTime: credentials ? 240 : 180, // 4 min with login, 3 min without
+    maxTime,
   });
 
   // Parse the JSON result with multiple fallback strategies

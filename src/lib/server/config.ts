@@ -71,6 +71,7 @@ export interface AppConfig {
   browserUseTimeout: number;
   browserUseFallbackEnabled: boolean;
   browserUseSendScreenshots: boolean;
+  browserUseMaxJobsToClick: number; // Max number of jobs to click through and extract details
 
   // System Profile
   systemScraperProfileId: number;
@@ -229,6 +230,10 @@ function loadConfig(): AppConfig {
       getEnv("SJS_BROWSER_USE_FALLBACK_ENABLED", "true") === "true",
     browserUseSendScreenshots:
       getEnv("SJS_BROWSER_USE_SEND_SCREENSHOTS", "false") === "true",
+    browserUseMaxJobsToClick: parseInt(
+      getEnv("SJS_BROWSER_USE_MAX_JOBS_TO_CLICK", "5"),
+      10,
+    ),
 
     // System Profile
     systemScraperProfileId: parseInt(
@@ -305,6 +310,9 @@ export function validateConfig(): void {
   }
   if (config.browserUseTimeout <= 0) {
     errors.push("browserUseTimeout must be > 0");
+  }
+  if (config.browserUseMaxJobsToClick <= 0) {
+    errors.push("browserUseMaxJobsToClick must be > 0");
   }
 
   // Browser-Use is always required now
