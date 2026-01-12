@@ -118,7 +118,8 @@ export const ModelName = {
   job_matches: 'job_matches',
   job_platforms: 'job_platforms',
   config: 'config',
-  profile_exports: 'profile_exports'
+  profile_exports: 'profile_exports',
+  profile_tokens: 'profile_tokens'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -803,7 +804,10 @@ export const ProfilesScalarFieldEnum = {
   remote_start_year: 'remote_start_year',
   signal_profile: 'signal_profile',
   whatsapp_number: 'whatsapp_number',
-  telegram_username: 'telegram_username'
+  telegram_username: 'telegram_username',
+  user_id: 'user_id',
+  public_cv_version: 'public_cv_version',
+  public_resume_version: 'public_resume_version'
 } as const
 
 export type ProfilesScalarFieldEnum = (typeof ProfilesScalarFieldEnum)[keyof typeof ProfilesScalarFieldEnum]
@@ -1303,6 +1307,27 @@ export const Profile_exportsScalarFieldEnum = {
 } as const
 
 export type Profile_exportsScalarFieldEnum = (typeof Profile_exportsScalarFieldEnum)[keyof typeof Profile_exportsScalarFieldEnum]
+
+
+export const Profile_tokensScalarFieldEnum = {
+  id: 'id',
+  status: 'status',
+  sort: 'sort',
+  date_created: 'date_created',
+  date_updated: 'date_updated',
+  token: 'token',
+  token_hash: 'token_hash',
+  profile_version: 'profile_version',
+  visit_count: 'visit_count',
+  visit_limit: 'visit_limit',
+  expires_at: 'expires_at',
+  name: 'name',
+  notes: 'notes',
+  last_accessed_at: 'last_accessed_at',
+  last_accessed_ip: 'last_accessed_ip'
+} as const
+
+export type Profile_tokensScalarFieldEnum = (typeof Profile_tokensScalarFieldEnum)[keyof typeof Profile_tokensScalarFieldEnum]
 
 
 export const SortOrder = {

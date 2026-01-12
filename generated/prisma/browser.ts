@@ -357,3 +357,8 @@ export type config = Prisma.configModel
  * 
  */
 export type profile_exports = Prisma.profile_exportsModel
+/**
+ * Model profile_tokens
+ * 
+ */
+export type profile_tokens = Prisma.profile_tokensModel

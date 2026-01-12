@@ -686,6 +686,9 @@ model profiles {
   signal_profile        String?                 @db.VarChar(500)
   whatsapp_number       String?                 @db.VarChar(50)
   telegram_username     String?                 @db.VarChar(100)
+  user_id               String?                 @db.Uuid
+  public_cv_version     Int?
+  public_resume_version Int?
   ai_chat               ai_chat[]
   applications          applications[]
   cheat_sheets          cheat_sheets[]
@@ -1173,6 +1176,24 @@ model profile_exports {
   source_url     String?        @db.VarChar(512)
   directus_files directus_files @relation(fields: [file], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "profile_exports_file_foreign")
   profiles       profiles       @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "profile_exports_profile_foreign")
+}
+
+model profile_tokens {
+  id               Int       @id @default(autoincrement())
+  status           String    @default("published") @db.VarChar(255)
+  sort             Int?
+  date_created     DateTime? @db.Timestamptz(6)
+  date_updated     DateTime? @db.Timestamptz(6)
+  token            String    @unique(map: "profile_tokens_token_unique") @db.VarChar(255)
+  token_hash       String    @unique(map: "profile_tokens_token_hash_unique") @db.VarChar(255)
+  profile_version  Int
+  visit_count      Int       @default(0)
+  visit_limit      Int?
+  expires_at       DateTime? @db.Timestamptz(6)
+  name             String?   @db.VarChar(255)
+  notes            String?
+  last_accessed_at DateTime? @db.Timestamptz(6)
+  last_accessed_ip String?   @db.VarChar(45)
 }
 
 enum Role {
