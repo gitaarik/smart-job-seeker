@@ -21,14 +21,17 @@ function extractBrowserUseError(result: any): string | null {
       result.history && Array.isArray(result.history) &&
       result.history.length > 0
     ) {
-      const firstHistory = result.history[0];
-      if (
-        firstHistory.result && Array.isArray(firstHistory.result) &&
-        firstHistory.result.length > 0
-      ) {
-        const firstResult = firstHistory.result[0];
-        if (firstResult.error) {
-          return firstResult.error;
+      // Check all history items for errors (rate limits often appear in later steps)
+      for (const historyItem of result.history) {
+        if (
+          historyItem.result && Array.isArray(historyItem.result) &&
+          historyItem.result.length > 0
+        ) {
+          for (const stepResult of historyItem.result) {
+            if (stepResult.error) {
+              return stepResult.error;
+            }
+          }
         }
       }
     }
@@ -105,6 +108,18 @@ function parseBrowserUseResponse(result: any): any[] {
       ) {
         throw new Error(
           "Browser-Use navigated to 404 error page - likely login or navigation failed",
+        );
+      }
+
+      // Check for login failures
+      if (
+        resultStr.includes("login failed") ||
+        resultStr.includes("authentication failed") ||
+        resultStr.includes("invalid credentials") ||
+        resultStr.includes("could not log in")
+      ) {
+        throw new Error(
+          "Browser-Use login failed - check credentials or platform may require CAPTCHA/2FA",
         );
       }
 
@@ -244,78 +259,6 @@ function parseBrowserUseResponse(result: any): any[] {
 }
 
 /**
- * Execute login task on Browser-Use using prompt from database
- */
-async function executeLoginTask(
-  browserUse: BrowserUseClient,
-  platformUrl: string,
-  platformName: string,
-  credentials: { username: string; password: string },
-  promptTemplate: { system_prompt: string | null; user_prompt: string | null },
-): Promise<void> {
-  console.log(`\n🔐 Executing login task...`);
-
-  // Interpolate variables in the login prompt
-  const systemPrompt = promptTemplate.system_prompt || "";
-  const userPrompt = interpolatePrompt(promptTemplate.user_prompt || "", {
-    platformUrl,
-    platformName,
-    username: credentials.username,
-    password: credentials.password,
-  });
-
-  // Combine system prompt and user prompt into the task
-  const loginTask = `${systemPrompt}\n\n${userPrompt}`.trim();
-
-  const response = await browserUse.executeTask({
-    task: loginTask,
-    startUrl: platformUrl,
-    maxTime: 120, // 2 minutes for login
-  });
-
-  console.log(`✅ Login task completed`);
-}
-
-/**
- * Execute job extraction task on Browser-Use using prompt from database
- */
-async function executeJobExtractionTask(
-  browserUse: BrowserUseClient,
-  searchUrl: string,
-  maxJobsToClick: number,
-  promptTemplate: { system_prompt: string | null; user_prompt: string | null },
-): Promise<any> {
-  console.log(
-    `\n📋 Executing job extraction task (max ${maxJobsToClick} jobs)...`,
-  );
-
-  // Interpolate variables in the extraction prompt
-  const systemPrompt = promptTemplate.system_prompt || "";
-  const userPrompt = interpolatePrompt(promptTemplate.user_prompt || "", {
-    searchUrl,
-    maxJobsToClick: maxJobsToClick.toString(),
-  });
-
-  // Combine system prompt and user prompt into the task
-  const extractionTask = `${systemPrompt}\n\n${userPrompt}`.trim();
-
-  // Calculate timeout based on max jobs to click (roughly 30s per job)
-  const baseTimeout = 60; // Base time for navigation
-  const timePerJob = 30; // Time per job to click through
-  const calculatedTimeout = baseTimeout + (maxJobsToClick * timePerJob);
-  const maxTime = Math.max(180, calculatedTimeout); // At least 3 minutes
-
-  console.log(`🚀 Starting extraction (timeout: ${maxTime}s)...`);
-  const response = await browserUse.executeTask({
-    task: extractionTask,
-    startUrl: searchUrl,
-    maxTime,
-  });
-
-  return response;
-}
-
-/**
  * BROWSER-USE SCRAPING
  * Uses Browser-Use API to extract structured job data
  */
@@ -361,52 +304,99 @@ export async function scrapeJobsWithBrowserUse(
     }
   }
 
-  // Fetch prompt templates from Directus
-  const loginTemplate = await dbDirect.ai_chat_prompts.findUnique({
-    where: { request: "browser_use_login" },
-  });
-
-  const extractionTemplate = await dbDirect.ai_chat_prompts.findUnique({
-    where: { request: "browser_use_extract_jobs_by_clicking" },
-  });
-
-  if (!loginTemplate) {
-    throw new Error(
-      "Prompt template 'browser_use_login' not found in ai_chat_prompts",
-    );
-  }
-
-  if (!extractionTemplate) {
-    throw new Error(
-      "Prompt template 'browser_use_extract_jobs_by_clicking' not found in ai_chat_prompts",
-    );
-  }
-
   const maxJobsToClick = config.browserUseMaxJobsToClick;
 
-  // Execute login task if credentials provided
+  // Choose prompt based on whether credentials are available
+  let promptTemplate;
+  let taskVariables;
+  let startUrl;
+  let maxTime;
+
   if (credentials) {
-    await executeLoginTask(
-      browserUse,
-      platform.url,
-      platform.name,
-      credentials,
-      loginTemplate,
+    // WITH CREDENTIALS: Use combined login + extraction prompt
+    console.log(
+      `\n🔐 Using combined login + extraction task (max ${maxJobsToClick} jobs)...`,
     );
+
+    promptTemplate = await dbDirect.ai_chat_prompts.findUnique({
+      where: { request: "browser_use_login_and_extract_jobs" },
+    });
+
+    if (!promptTemplate) {
+      throw new Error(
+        "Prompt template 'browser_use_login_and_extract_jobs' not found in ai_chat_prompts",
+      );
+    }
+
+    taskVariables = {
+      platformUrl: platform.url,
+      platformName: platform.name,
+      username: credentials.username,
+      password: credentials.password,
+      searchUrl,
+      maxJobsToClick: maxJobsToClick.toString(),
+    };
+
+    startUrl = platform.url; // Start at platform URL for login
+    maxTime = 120 + 60 + (maxJobsToClick * 30); // 2min login + 1min base + 30s per job
+  } else {
+    // WITHOUT CREDENTIALS: Use extraction-only prompt
+    console.log(
+      `\n📋 Using extraction-only task (max ${maxJobsToClick} jobs)...`,
+    );
+
+    promptTemplate = await dbDirect.ai_chat_prompts.findUnique({
+      where: { request: "browser_use_extract_jobs_by_clicking" },
+    });
+
+    if (!promptTemplate) {
+      throw new Error(
+        "Prompt template 'browser_use_extract_jobs_by_clicking' not found in ai_chat_prompts",
+      );
+    }
+
+    taskVariables = {
+      searchUrl,
+      maxJobsToClick: maxJobsToClick.toString(),
+    };
+
+    startUrl = searchUrl; // Start directly at search URL
+    maxTime = 60 + (maxJobsToClick * 30); // 1min base + 30s per job
   }
 
-  // Execute job extraction task
-  const response = await executeJobExtractionTask(
-    browserUse,
-    searchUrl,
-    maxJobsToClick,
-    extractionTemplate,
+  // Interpolate variables in the prompt
+  const systemPrompt = promptTemplate.system_prompt || "";
+  const userPrompt = interpolatePrompt(
+    promptTemplate.user_prompt || "",
+    taskVariables,
   );
+  const task = `${systemPrompt}\n\n${userPrompt}`.trim();
+
+  // Execute the browser-use task
+  console.log(`🚀 Starting task (timeout: ${Math.max(180, maxTime)}s)...`);
+  const response = await browserUse.executeTask({
+    task,
+    startUrl,
+    maxTime: Math.max(180, maxTime), // At least 3 minutes
+  });
 
   // Parse the JSON result with multiple fallback strategies
   let jobs: any[];
   try {
     jobs = parseBrowserUseResponse(response.result);
+
+    // Debug: Save raw response to file for inspection
+    try {
+      const fs = await import("fs/promises");
+      const debugFile = `/tmp/browser-use-response-${Date.now()}.json`;
+      await fs.writeFile(
+        debugFile,
+        JSON.stringify(response, null, 2),
+      );
+      console.log(`🐛 Debug: Raw response saved to ${debugFile}`);
+    } catch (writeError) {
+      // Ignore file write errors
+    }
   } catch (error) {
     console.error("❌ Failed to parse Browser-Use response:", error);
     console.log(
@@ -425,9 +415,25 @@ export async function scrapeJobsWithBrowserUse(
 
   console.log(`✅ Browser-Use extracted ${jobs.length} jobs`);
 
+  // Debug: Show summary of extracted jobs
+  console.log("\n📋 Extracted jobs summary:");
+  jobs.forEach((job, idx) => {
+    console.log(
+      `   ${idx + 1}. ${job.title || "[No title]"} - ${
+        job.company || "[No company]"
+      }`,
+    );
+    console.log(`      URL: ${job.application_url || "[No URL]"}`);
+  });
+  console.log("");
+
   // Apply filters and save
   let processedCount = 0;
   for (const jobData of jobs) {
+    console.log(`\n📝 Processing: ${jobData.title || "[No title]"}`);
+    console.log(`   Company: ${jobData.company || "[Not specified]"}`);
+    console.log(`   URL: ${jobData.application_url || "[No URL]"}`);
+
     // Parse date_posted if it's a string
     const datePosted = jobData.date_posted
       ? parseRelativeDate(jobData.date_posted)
