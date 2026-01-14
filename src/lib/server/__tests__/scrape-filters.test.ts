@@ -1,10 +1,16 @@
 import { describe, expect, it } from "vitest";
 import {
   checkStopConditions,
+  isFatalScraperError,
   isJobClosed,
   isJobTooOld,
   type ScrapingStats,
 } from "../scrape-filters";
+import {
+  LLMAuthenticationError,
+  LLMQuotaExceededError,
+  LLMRateLimitError,
+} from "../llm";
 
 describe("checkStopConditions", () => {
   it("should stop when hard limit reached", () => {
@@ -214,5 +220,55 @@ describe("isJobClosed", () => {
   it("should handle various mixed-case scenarios", () => {
     expect(isJobClosed("InAcTiVe")).toBe(true);
     expect(isJobClosed("ArChIvEd")).toBe(true);
+  });
+});
+
+describe("isFatalScraperError", () => {
+  it("should return true for LLMRateLimitError", () => {
+    const error = new LLMRateLimitError("Rate limit exceeded", "groq", "llama");
+    expect(isFatalScraperError(error)).toBe(true);
+  });
+
+  it("should return true for LLMQuotaExceededError", () => {
+    const error = new LLMQuotaExceededError(
+      "Quota exceeded",
+      "groq",
+      "llama",
+    );
+    expect(isFatalScraperError(error)).toBe(true);
+  });
+
+  it("should return true for LLMAuthenticationError", () => {
+    const error = new LLMAuthenticationError(
+      "Auth failed",
+      "groq",
+      "llama",
+    );
+    expect(isFatalScraperError(error)).toBe(true);
+  });
+
+  it("should return true for 403 forbidden errors", () => {
+    const error = new Error("403 Forbidden");
+    expect(isFatalScraperError(error)).toBe(true);
+  });
+
+  it("should return true for 400 bad request errors", () => {
+    const error = new Error("400 Bad Request");
+    expect(isFatalScraperError(error)).toBe(true);
+  });
+
+  it("should return false for regular errors", () => {
+    const error = new Error("Something went wrong");
+    expect(isFatalScraperError(error)).toBe(false);
+  });
+
+  it("should return false for network timeout errors", () => {
+    const error = new Error("Network timeout");
+    expect(isFatalScraperError(error)).toBe(false);
+  });
+
+  it("should return false for 500 server errors", () => {
+    const error = new Error("500 Internal Server Error");
+    expect(isFatalScraperError(error)).toBe(false);
   });
 });

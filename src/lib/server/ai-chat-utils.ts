@@ -5,7 +5,12 @@
 import { db } from "$lib/db";
 import { generateAiChatFullPrompt } from "./ai-chat-full-prompt-generate";
 import { generateAiChatResponse } from "./ai-chat-response-generate";
-import { generateChatCompletion } from "./llm";
+import {
+  generateChatCompletion,
+  LLMAuthenticationError,
+  LLMQuotaExceededError,
+  LLMRateLimitError,
+} from "./llm";
 import { getSchemaForPrompt } from "./schemas/ai-prompt-schemas";
 
 /**
@@ -302,6 +307,15 @@ export async function createAndGenerateAiChat(
       aiChat: completeAiChat,
     };
   } catch (error) {
+    // Re-throw fatal LLM errors so they can abort scraping
+    if (
+      error instanceof LLMRateLimitError ||
+      error instanceof LLMQuotaExceededError ||
+      error instanceof LLMAuthenticationError
+    ) {
+      throw error;
+    }
+
     const errorMessage = error instanceof Error
       ? error.message
       : "Unknown error";

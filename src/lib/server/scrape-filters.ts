@@ -3,7 +3,11 @@
  * Centralized logic for filtering jobs and determining when to stop scraping
  */
 
-import { LLMAuthenticationError, LLMQuotaExceededError } from "./llm";
+import {
+  LLMAuthenticationError,
+  LLMQuotaExceededError,
+  LLMRateLimitError,
+} from "./llm";
 
 export interface ScrapingStats {
   jobsProcessed: number;
@@ -84,7 +88,8 @@ export function isFatalScraperError(error: Error): boolean {
   // Check for LLM-specific error types
   if (
     error instanceof LLMQuotaExceededError ||
-    error instanceof LLMAuthenticationError
+    error instanceof LLMAuthenticationError ||
+    error instanceof LLMRateLimitError
   ) {
     return true;
   }
