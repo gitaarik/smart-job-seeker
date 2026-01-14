@@ -160,6 +160,26 @@ export const detectLoginFieldsSchema = z.object({
 });
 
 /**
+ * Schema for detect_job_detail_content prompt
+ * Identifies where job details appear after clicking a job card
+ */
+export const detectJobDetailContentSchema = z.object({
+  selector: z
+    .string()
+    .nullable()
+    .describe("CSS selector for the job detail container"),
+  confidence: z
+    .number()
+    .int()
+    .min(0)
+    .max(100)
+    .describe("Confidence score from 0 to 100"),
+  contentType: z
+    .enum(["modal", "panel", "inline", "main", "unknown"])
+    .describe("Type of container displaying job details"),
+});
+
+/**
  * Schema for detect_pagination prompt
  * Identifies pagination mechanisms on job listing pages
  */
@@ -350,6 +370,7 @@ export const aiPromptSchemas = {
   score_job_match: scoreJobMatchSchema,
   detect_login_page: detectLoginPageSchema,
   detect_login_fields: detectLoginFieldsSchema,
+  detect_job_detail_content: detectJobDetailContentSchema,
   detect_pagination: detectPaginationSchema,
   extract_resume_data: extractResumeDataSchema,
 } as const;
