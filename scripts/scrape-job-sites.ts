@@ -15,6 +15,7 @@ import { parseRelativeDate } from "$lib/tools/date-utils";
 import { clearDirectusCache } from "$lib/server/directus";
 import { getSiteConfig } from "$lib/server/job-site-configs";
 import { scrapeJobsWithBrowserUse } from "$lib/server/scrapers/browser-use-scraper";
+import { scrapeJobsWithPatchright } from "$lib/server/scrapers/patchright-scraper";
 
 interface SearchAction {
   id: number;
@@ -92,27 +93,42 @@ async function scrapeJobSite(
   if (paginationType) {
     console.log(`📄 Pagination type: ${paginationType}`);
   }
-  console.log(`🔧 Scraper method: Browser-Use`);
+
+  // Get scraper method from config
+  const scraperMethod = config.scraperMethod;
+  console.log(`🔧 Scraper method: ${scraperMethod}`);
 
   let processedCount: number;
   let strippedHtml: string | null = null;
 
   try {
-    // Always use Browser-Use
-    processedCount = await scrapeJobsWithBrowserUse(
-      searchUrl,
-      navigationType,
-      platformId,
-      config.systemScraperProfileId, // Pass profile ID for credentials
-      options.screenshots,
-    );
+    if (scraperMethod === "patchright") {
+      // Use Patchright scraper
+      console.log(`\n🎭 Using Patchright scraper...`);
+      processedCount = await scrapeJobsWithPatchright(
+        searchUrl,
+        navigationType,
+        platformId,
+        config.systemScraperProfileId,
+      );
+    } else {
+      // Use Browser-Use (default)
+      console.log(`\n🤖 Using Browser-Use...`);
+      processedCount = await scrapeJobsWithBrowserUse(
+        searchUrl,
+        navigationType,
+        platformId,
+        config.systemScraperProfileId,
+        options.screenshots,
+      );
+    }
 
     console.log(`\n✅ Successfully processed ${processedCount} job(s)\n`);
 
     return { strippedHtml };
   } catch (error) {
     console.error(
-      `❌ Browser-Use scraping failed:`,
+      `❌ Scraping failed:`,
       error instanceof Error ? error.message : String(error),
     );
 
@@ -121,7 +137,7 @@ async function scrapeJobSite(
       error.message.includes("not found")
     ) {
       console.log(
-        "\n💡 Tip: Make sure the 'extract_job_browser_use' prompt exists in the ai_chat_prompts table",
+        "\n💡 Tip: Make sure the required prompts exist in the ai_chat_prompts table",
       );
     }
 
@@ -168,11 +184,12 @@ async function rescrapeJobById(
 
   try {
     // 3. Extract job data using Browser-Use
+    // Note: Single job re-scraping always uses Browser-Use
+    // Patchright doesn't support single job extraction yet
     console.log(`🔧 Scraper method: Browser-Use`);
 
     let jobData: any;
 
-    // Always use Browser-Use
     console.log(`\n🤖 Using Browser-Use to extract job data...`);
     const browserUse = new BrowserUseClient(
       options.screenshots !== undefined

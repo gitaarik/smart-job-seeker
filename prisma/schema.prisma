@@ -1150,6 +1150,7 @@ model job_platforms {
   navigation_type   String?             @db.VarChar(255)
   key               String              @unique(map: "job_platforms_key_unique") @db.VarChar(255)
   pagination_type   String?             @db.VarChar(255)
+  login_page_url    String?             @db.VarChar(255)
   job_searches      job_searches[]
   jobs              jobs[]
   platform_profiles platform_profiles[]

@@ -73,6 +73,9 @@ export interface AppConfig {
   browserUseSendScreenshots: boolean;
   browserUseMaxJobsToClick: number; // Max number of jobs to click through and extract details
 
+  // Scraper Method Selection
+  scraperMethod: "browser-use" | "patchright";
+
   // System Profile
   systemScraperProfileId: number;
 }
@@ -234,6 +237,11 @@ function loadConfig(): AppConfig {
       getEnv("SJS_BROWSER_USE_MAX_JOBS_TO_CLICK", "5"),
       10,
     ),
+
+    // Scraper Method Selection
+    scraperMethod: (getEnv("SJS_SCRAPER_METHOD", "browser-use") as
+      | "browser-use"
+      | "patchright"),
 
     // System Profile
     systemScraperProfileId: parseInt(
