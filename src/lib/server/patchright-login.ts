@@ -121,17 +121,113 @@ export async function fillLoginForm(
   try {
     console.log("📝 Filling login form...");
 
-    // Fill username field
-    await page.fill(fieldSelectors.usernameSelector, credentials.username);
-    console.log(`   ✓ Username field filled`);
+    // Common fallback selectors for popular platforms
+    const usernameFallbacks = [
+      fieldSelectors.usernameSelector,
+      'input[name="session_key"]', // LinkedIn
+      'input[name="username"]',
+      'input[name="email"]',
+      "#username",
+      "#email",
+      'input[type="email"]',
+      'input[autocomplete="username"]',
+    ];
 
-    // Fill password field
-    await page.fill(fieldSelectors.passwordSelector, credentials.password);
-    console.log(`   ✓ Password field filled`);
+    const passwordFallbacks = [
+      fieldSelectors.passwordSelector,
+      'input[name="session_password"]', // LinkedIn
+      'input[name="password"]',
+      "#password",
+      'input[type="password"]',
+      'input[autocomplete="current-password"]',
+    ];
 
-    // Click submit button
-    await page.click(fieldSelectors.submitSelector);
-    console.log(`   ✓ Submit button clicked`);
+    const submitFallbacks = [
+      fieldSelectors.submitSelector,
+      'button[type="submit"]',
+      "button[data-litms-control-urn]", // LinkedIn specific
+      'button:has-text("Sign in")',
+      'button:has-text("Log in")',
+      'input[type="submit"]',
+    ];
+
+    // Try username field with fallbacks
+    let usernameSuccess = false;
+    for (const selector of usernameFallbacks) {
+      try {
+        await page.fill(selector, credentials.username, { timeout: 2000 });
+        console.log(`   ✓ Username field filled (${selector})`);
+        usernameSuccess = true;
+        break;
+      } catch (e) {
+        // Try next selector
+        continue;
+      }
+    }
+
+    if (!usernameSuccess) {
+      console.error("   ❌ Could not find username field");
+      return false;
+    }
+
+    // Try password field with fallbacks
+    let passwordSuccess = false;
+    for (const selector of passwordFallbacks) {
+      try {
+        await page.fill(selector, credentials.password, { timeout: 2000 });
+        console.log(`   ✓ Password field filled (${selector})`);
+        passwordSuccess = true;
+        break;
+      } catch (e) {
+        // Try next selector
+        continue;
+      }
+    }
+
+    if (!passwordSuccess) {
+      console.error("   ❌ Could not find password field");
+      return false;
+    }
+
+    // Try submit button with fallbacks
+    let submitSuccess = false;
+    for (const selector of submitFallbacks) {
+      try {
+        await page.click(selector, { timeout: 2000 });
+        console.log(`   ✓ Submit button clicked (${selector})`);
+        submitSuccess = true;
+        break;
+      } catch (e) {
+        // Try next selector
+        continue;
+      }
+    }
+
+    // If we couldn't find submit button, try pressing Enter on password field
+    if (!submitSuccess) {
+      console.log("   ⌨️  Trying Enter key as fallback...");
+      try {
+        for (const selector of passwordFallbacks) {
+          try {
+            await page.press(selector, "Enter", { timeout: 2000 });
+            console.log(`   ✓ Enter key pressed on password field`);
+            submitSuccess = true;
+            break;
+          } catch (e) {
+            continue;
+          }
+        }
+      } catch (e) {
+        // Enter key didn't work either
+      }
+    }
+
+    if (!submitSuccess) {
+      console.warn(
+        "   ⚠️  Could not find submit button, but form may have auto-submitted",
+      );
+      // Don't return false - the form might have submitted anyway
+    }
 
     // Wait for navigation or network idle (login usually triggers navigation)
     try {

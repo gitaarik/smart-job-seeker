@@ -78,8 +78,8 @@ const SITE_CONFIGS: Record<string, SiteConfig> = {
   "linkedin.com": {
     timeout: 45000, // LinkedIn is slow
     selectors: {
-      jobListContainer: ".jobs-search__results-list",
-      jobListItem: ".job-card-container",
+      jobListContainer: ".scaffold-layout__list",
+      jobListItem: ".jobs-search-results__list-item, .job-card-container",
       jobTitle: ".job-details-jobs-unified-top-card__job-title",
       jobDescription: ".jobs-description",
     },

@@ -58,7 +58,11 @@ export async function scrapeJobsWithClicks(
       Number(platformId),
       profileId,
     );
-    if (!loginSuccess) {
+    if (loginSuccess) {
+      // Navigate back to search URL after successful login
+      console.log(`🔙 Navigating back to search URL...`);
+      await page.goto(searchUrl, { waitUntil: "domcontentloaded", timeout: 60000 });
+    } else {
       console.warn(
         "⚠️  Login failed, continuing with unauthenticated scraping",
       );
@@ -106,6 +110,22 @@ export async function scrapeJobsWithClicks(
       console.log(
         "      ⚠️  No clickable elements found - page may not be loaded",
       );
+
+      // Debug: Check if basic LinkedIn selectors exist
+      console.log("      🔍 Checking if page has LinkedIn job elements...");
+      const hasContainer = await page.locator(container).count();
+      const hasJobCards = await page.locator(".job-card-container, .jobs-search-results__list-item").count();
+      const hasAnyJobs = await page.locator("[data-job-id]").count();
+      console.log(`         Container "${container}": ${hasContainer} found`);
+      console.log(`         Job cards: ${hasJobCards} found`);
+      console.log(`         Elements with data-job-id: ${hasAnyJobs} found`);
+
+      // If we found job cards but CDP didn't, might be DOMDebugger issue
+      if (hasJobCards > 0) {
+        console.log("      💡 Job cards exist but CDP didn't detect them - might be DOMDebugger compatibility issue");
+        console.log("      💡 Consider using browser-use method instead of patchright for this site");
+      }
+
       break;
     }
 

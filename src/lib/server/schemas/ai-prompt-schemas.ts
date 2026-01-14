@@ -291,6 +291,50 @@ export const extractResumeDataSchema = z.object({
 });
 
 /**
+ * Schema for extract_jobs_from_search_page prompt
+ * Extracts job information from search results page (SPA click-scraper)
+ */
+export const extractJobsFromSearchPageSchema = z.object({
+  jobs: z.array(
+    z.object({
+      clickableId: z.number().int().describe(
+        "EXACT data-extract-clickable-id from HTML - do not invent",
+      ),
+      title: z.string().nullable().describe("Job title/position name"),
+      company: z.string().nullable().describe("Company or employer name"),
+      location: z.string().nullable().describe(
+        "Job location (city, region, country)",
+      ),
+      salary_min: z.number().nullable().describe(
+        "Minimum salary as numeric value only",
+      ),
+      salary_max: z.number().nullable().describe(
+        "Maximum salary as numeric value only",
+      ),
+      salary_currency: z.string().nullable().describe(
+        "Currency code (USD, EUR, GBP, etc.)",
+      ),
+      salary_period: z.string().nullable().describe(
+        "Salary period (year, month, hour, day)",
+      ),
+      skills: z.array(z.string()).nullable().describe(
+        "Array of skills/technologies/tools mentioned",
+      ),
+      remote: z.string().nullable().describe(
+        "Work arrangement (Remote, Hybrid, On-site)",
+      ),
+      date_posted: z.string().nullable().describe(
+        "Date posted - preserve original format from HTML",
+      ),
+    }),
+  ),
+  pattern: z.string().describe(
+    "Description of the extraction pattern or strategy used",
+  ),
+  jobCount: z.number().int().describe("Total number of jobs extracted"),
+});
+
+/**
  * Schema registry mapping request identifiers to Zod schemas
  * This provides type-safe lookup of schemas by prompt request name
  *
@@ -302,6 +346,7 @@ export const aiPromptSchemas = {
   extract_job_links: extractJobLinksSchema,
   extract_job_data: extractJobDataSchema,
   extract_job_data_browser_use: extractJobDataBrowserUseSchema,
+  extract_jobs_from_search_page: extractJobsFromSearchPageSchema,
   score_job_match: scoreJobMatchSchema,
   detect_login_page: detectLoginPageSchema,
   detect_login_fields: detectLoginFieldsSchema,

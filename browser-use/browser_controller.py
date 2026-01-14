@@ -1,7 +1,7 @@
 import os
 import time
 import logging
-from browser_use import Agent, Browser
+from browser_use import Agent, Browser, ChatBrowserUse
 from langchain_groq import ChatGroq
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
@@ -23,23 +23,23 @@ class BrowserController:
 
         # Default models per provider (hardcoded fallbacks)
         default_models = {
+            "browser_use": None,
             "groq": "llama-3.3-70b-versatile",
             "gemini": "gemini-2.0-flash-exp",
             "openai": "gpt-4o",
             "openrouter": "anthropic/claude-3.5-sonnet",
             "deepseek": "deepseek-chat",
-            "browseruse": "gpt-4o",
             "bedrock": "amazon.nova-micro-v1:0",
         }
 
         # Provider-specific env var names
         provider_env_vars = {
+            "browser_use": "SJS_LLM_MODEL_BROWSER_USE",
             "groq": "SJS_LLM_MODEL_GROQ",
             "gemini": "SJS_LLM_MODEL_GEMINI",
             "openai": "SJS_LLM_MODEL_OPENAI",
             "openrouter": "SJS_LLM_MODEL_OPENROUTER",
             "deepseek": "SJS_LLM_MODEL_DEEPSEEK",
-            "browseruse": "SJS_LLM_MODEL_BROWSER_USE",
             "bedrock": "SJS_LLM_MODEL_BEDROCK",
         }
 
@@ -60,7 +60,12 @@ class BrowserController:
         logger.info(f"[Browser-Use] Using model: {model}")
         print(f"[Browser-Use] Using model: {model}", flush=True)
 
-        if provider == "gemini":
+        if provider == "browser_use":
+            self.llm = ChatBrowserUse()
+            # API key is taken from `BROWSER_USE_API_KEY` env var
+            # Browser-Use supports vision
+            self.vision_support = True
+        elif provider == "gemini":
             # Use Google Gemini
             self.llm = ChatGoogleGenerativeAI(
                 model=model,
@@ -68,7 +73,7 @@ class BrowserController:
                 temperature=0.3,
             )
             # Gemini supports vision
-            self.use_vision = True
+            self.vision_support = True
         elif provider == "openai":
             # Use OpenAI
             self.llm = ChatOpenAI(
@@ -77,7 +82,7 @@ class BrowserController:
                 temperature=0.3,
             )
             # GPT-4o supports vision
-            self.use_vision = True
+            self.vision_support = True
         elif provider == "openrouter":
             # Use OpenRouter
             self.llm = ChatOpenAI(
@@ -88,7 +93,7 @@ class BrowserController:
             )
             # OpenRouter vision support depends on model
             # Claude 3.5 Sonnet and other vision models support it
-            self.use_vision = (
+            self.vision_support = (
                 "claude" in model
                 or "gpt-4" in model
                 or "gemini" in model
@@ -103,7 +108,7 @@ class BrowserController:
                 temperature=0.3,
             )
             # DeepSeek v3 supports vision
-            self.use_vision = "v3" in model
+            self.vision_support = "v3" in model
         elif provider == "bedrock":
             # Use AWS Bedrock
             # Handle empty strings from Docker (treat "" as None)
@@ -121,7 +126,7 @@ class BrowserController:
 
             self.llm = ChatBedrock(**bedrock_config)
             # Claude and Nova models on Bedrock support vision
-            self.use_vision = "anthropic.claude" in model or "amazon.nova" in model
+            self.vision_support = "anthropic.claude" in model or "amazon.nova" in model
         else:
             # Default to Groq
             self.llm = ChatGroq(
@@ -130,7 +135,7 @@ class BrowserController:
                 temperature=0.3,
             )
             # Groq doesn't support vision
-            self.use_vision = False
+            self.vision_support = False
 
     async def execute_task(
         self,
@@ -165,14 +170,14 @@ class BrowserController:
         )
 
         # Determine vision usage: send_screenshots AND LLM supports vision
-        use_vision_for_task = send_screenshots and self.use_vision
+        use_vision_for_task = send_screenshots and self.vision_support
         logger.info(f"[Browser-Use] send_screenshots parameter: {send_screenshots}")
-        logger.info(f"[Browser-Use] LLM supports vision: {self.use_vision}")
+        logger.info(f"[Browser-Use] LLM supports vision: {self.vision_support}")
         logger.info(f"[Browser-Use] Final vision mode: {use_vision_for_task}")
         print(
             f"[Browser-Use] send_screenshots parameter: {send_screenshots}", flush=True
         )
-        print(f"[Browser-Use] LLM supports vision: {self.use_vision}", flush=True)
+        print(f"[Browser-Use] LLM supports vision: {self.vision_support}", flush=True)
         print(f"[Browser-Use] Final vision mode: {use_vision_for_task}", flush=True)
 
         # Navigate to start_url before executing task
