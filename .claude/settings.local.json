@@ -1,6 +1,7 @@
 {
   "permissions": {
     "allow": [
+      "Bash(SJS_SCRAPER_METHOD=patchright npm run host:scrape:jobs:*)",
       "Bash(bash:*)",
       "Bash(cat:*)",
       "Bash(chmod:*)",
