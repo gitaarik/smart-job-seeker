@@ -6,7 +6,6 @@ from langchain_groq import ChatGroq
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
 from langchain_aws import ChatBedrock
-from browser_use.browser.browser import BrowserConfig
 
 logger = logging.getLogger(__name__)
 
@@ -191,12 +190,9 @@ class BrowserController:
         agent = Agent(
             task=task,
             llm=self.llm,
-            browser=Browser(config=BrowserConfig(headless=headless_mode)),
+            browser=Browser(headless=headless_mode),
             use_vision=use_vision_for_task,
             initial_actions=initial_actions,
-            # Token optimization settings
-            # max_input_tokens=64000,  # Limit DOM size sent to LLM
-            # max_actions_per_step=5,  # Reduce actions considered per step
         )
 
         # Run the task

@@ -2,9 +2,9 @@ FROM vovan/browser-use:latest
 
 WORKDIR /app
 
-# Install additional dependencies for FastAPI
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Install uv and dependencies
+COPY pyproject.toml .
+RUN pip install uv && uv pip install --system .
 
 # Copy application files
 COPY . .
