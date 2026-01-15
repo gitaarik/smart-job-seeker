@@ -1,7 +1,8 @@
 import os
 import time
 import logging
-from browser_use import Agent, Browser, ChatBrowserUse
+from browser_use import Agent, Browser
+from browser_use.browser.browser import BrowserConfig
 from langchain_groq import ChatGroq
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
@@ -22,7 +23,6 @@ class BrowserController:
 
         # Default models per provider (hardcoded fallbacks)
         default_models = {
-            "browser_use": None,
             "groq": "llama-3.3-70b-versatile",
             "gemini": "gemini-2.0-flash-exp",
             "openai": "gpt-4o",
@@ -33,7 +33,6 @@ class BrowserController:
 
         # Provider-specific env var names
         provider_env_vars = {
-            "browser_use": "SJS_LLM_MODEL_BROWSER_USE",
             "groq": "SJS_LLM_MODEL_GROQ",
             "gemini": "SJS_LLM_MODEL_GEMINI",
             "openai": "SJS_LLM_MODEL_OPENAI",
@@ -59,12 +58,7 @@ class BrowserController:
         logger.info(f"[Browser-Use] Using model: {model}")
         print(f"[Browser-Use] Using model: {model}", flush=True)
 
-        if provider == "browser_use":
-            self.llm = ChatBrowserUse()
-            # API key is taken from `BROWSER_USE_API_KEY` env var
-            # Browser-Use supports vision
-            self.vision_support = True
-        elif provider == "gemini":
+        if provider == "gemini":
             # Use Google Gemini
             self.llm = ChatGoogleGenerativeAI(
                 model=model,
@@ -136,6 +130,7 @@ class BrowserController:
             # Groq doesn't support vision
             self.vision_support = False
 
+
     async def execute_task(
         self,
         task: str,
@@ -190,7 +185,7 @@ class BrowserController:
         agent = Agent(
             task=task,
             llm=self.llm,
-            browser=Browser(headless=headless_mode),
+            browser=Browser(config=BrowserConfig(headless=headless_mode)),
             use_vision=use_vision_for_task,
             initial_actions=initial_actions,
         )

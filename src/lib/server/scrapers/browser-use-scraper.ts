@@ -5,7 +5,7 @@
 
 import { config } from "$lib/server/config";
 import { BrowserUseClient } from "$lib/server/browser-use-client";
-import { upsertJob } from "$lib/server/job-scraper";
+import { normalizeJobUrl, upsertJob } from "$lib/server/job-scraper";
 import { parseRelativeDate } from "$lib/tools/date-utils";
 import { isJobClosed, isJobTooOld } from "$lib/server/scrape-filters";
 import { interpolatePrompt } from "$lib/server/ai-chat-utils";
@@ -60,6 +60,43 @@ function parseBrowserUseResponse(result: any): any[] {
       );
 
       const resultStr = errorMessage;
+
+      // Check for invalid API key / authentication errors
+      if (
+        resultStr.includes("Invalid API key") ||
+        resultStr.includes("401") ||
+        resultStr.includes("Unauthorized") ||
+        resultStr.includes("authentication") ||
+        resultStr.includes("API key")
+      ) {
+        console.error(`\n❌ Browser-Use API Authentication Error:`);
+        console.error(errorMessage);
+        console.error(
+          `\n💡 Get a valid API key at: https://cloud.browser-use.com/new-api-key`,
+        );
+        console.error(
+          `   Then set SJS_LLM_API_KEY_BROWSER_USE in your .env file\n`,
+        );
+        throw new Error(
+          `Browser-Use API key invalid or expired. Get a new key at https://cloud.browser-use.com/new-api-key`,
+        );
+      }
+
+      // Check for LLM call failures
+      if (
+        resultStr.includes("LLM call failed") ||
+        resultStr.includes("API request failed")
+      ) {
+        console.error(`\n❌ Browser-Use LLM Call Failed:`);
+        console.error(errorMessage);
+        console.error(`\n💡 Possible causes:`);
+        console.error(`   - Invalid or expired API key`);
+        console.error(`   - Network connectivity issues`);
+        console.error(`   - LLM provider service outage\n`);
+        throw new Error(
+          `Browser-Use LLM call failed: ${errorMessage.substring(0, 200)}`,
+        );
+      }
 
       // Check for rate limit errors with detailed message
       if (
@@ -141,7 +178,7 @@ function parseBrowserUseResponse(result: any): any[] {
     // Check if this is a successful browser-use response with history
     // Browser-Use returns the final result in the top-level 'result' field
     if (result.history && result.result !== undefined) {
-      console.log("✅ Browser-Use task completed");
+      console.log("✅ Browser-Use task completed (with result field)");
 
       // The result is the final extracted content
       const finalResult = result.result;
@@ -173,6 +210,61 @@ function parseBrowserUseResponse(result: any): any[] {
           // Continue to other parsing strategies
         }
       }
+    }
+
+    // New browser-use API: extract from history's last is_done step
+    if (result.history && Array.isArray(result.history)) {
+      console.log(
+        `📜 Browser-Use returned history with ${result.history.length} steps`,
+      );
+
+      // Find the last step with is_done: true and extract its content
+      for (let i = result.history.length - 1; i >= 0; i--) {
+        const step = result.history[i];
+        const stepResults = step.result || [];
+
+        for (const stepResult of stepResults) {
+          if (stepResult.is_done && stepResult.extracted_content) {
+            console.log("✅ Found completed step with extracted content");
+            const content = stepResult.extracted_content;
+
+            // Try to parse as JSON array
+            if (typeof content === "string") {
+              // Try direct parse
+              try {
+                const parsed = JSON.parse(content);
+                if (Array.isArray(parsed)) {
+                  return parsed;
+                }
+                if (parsed.jobs && Array.isArray(parsed.jobs)) {
+                  return parsed.jobs;
+                }
+              } catch {
+                // Try regex extraction for JSON array
+                const jsonMatch = content.match(/\[[\s\S]*\]/);
+                if (jsonMatch) {
+                  try {
+                    const parsed = JSON.parse(jsonMatch[0]);
+                    if (Array.isArray(parsed)) {
+                      return parsed;
+                    }
+                  } catch (e) {
+                    console.error(
+                      "Failed to parse extracted JSON array:",
+                      e,
+                    );
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      // If no is_done step found, this is likely still in progress or failed
+      console.error(
+        "❌ No completed step with job data found in history",
+      );
     }
   }
 
@@ -430,9 +522,15 @@ export async function scrapeJobsWithBrowserUse(
   // Apply filters and save
   let processedCount = 0;
   for (const jobData of jobs) {
+    const rawUrl = jobData.application_url || "[No URL]";
+    const normalizedUrl = jobData.application_url
+      ? normalizeJobUrl(jobData.application_url)
+      : "[No URL]";
+
     console.log(`\n📝 Processing: ${jobData.title || "[No title]"}`);
     console.log(`   Company: ${jobData.company || "[Not specified]"}`);
-    console.log(`   URL: ${jobData.application_url || "[No URL]"}`);
+    console.log(`   Raw URL: ${rawUrl}`);
+    console.log(`   Source URL (normalized): ${normalizedUrl}`);
 
     // Parse date_posted if it's a string
     const datePosted = jobData.date_posted
