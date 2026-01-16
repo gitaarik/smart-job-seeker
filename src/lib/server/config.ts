@@ -74,7 +74,12 @@ export interface AppConfig {
   browserUseMaxJobsToClick: number; // Max number of jobs to click through and extract details
 
   // Scraper Method Selection
-  scraperMethod: "browser-use" | "patchright";
+  scraperMethod: "browser-use" | "patchright" | "hybrid";
+
+  // Hybrid Scraper (Browser-Use login + Patchright extraction via CDP)
+  hybridCdpPort: number; // Port for Chrome debugging (default: 9222)
+  hybridLoginTimeout: number; // Max time for Browser-Use login (ms)
+  hybridHandoffDelay: number; // Delay before Patchright connects (ms)
 
   // System Profile
   systemScraperProfileId: number;
@@ -241,7 +246,19 @@ function loadConfig(): AppConfig {
     // Scraper Method Selection
     scraperMethod: (getEnv("SJS_SCRAPER_METHOD", "browser-use") as
       | "browser-use"
-      | "patchright"),
+      | "patchright"
+      | "hybrid"),
+
+    // Hybrid Scraper (Browser-Use login + Patchright extraction via CDP)
+    hybridCdpPort: parseInt(getEnv("SJS_HYBRID_CDP_PORT", "9222"), 10),
+    hybridLoginTimeout: parseInt(
+      getEnv("SJS_HYBRID_LOGIN_TIMEOUT", "120000"),
+      10,
+    ),
+    hybridHandoffDelay: parseInt(
+      getEnv("SJS_HYBRID_HANDOFF_DELAY", "1000"),
+      10,
+    ),
 
     // System Profile
     systemScraperProfileId: parseInt(

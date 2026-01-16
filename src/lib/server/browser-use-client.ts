@@ -19,6 +19,41 @@ export interface ExecuteTaskResponse {
   execution_time_ms: number;
 }
 
+// CDP task parameters for hybrid scraper (login via CDP connection)
+export interface CdpTaskParams {
+  task: string; // Natural language task description (login + navigate)
+  cdpUrl: string; // CDP endpoint URL (e.g., "http://localhost:9222")
+  maxTime?: number; // Optional max execution time in seconds
+  sendScreenshots?: boolean; // Optional screenshot configuration
+}
+
+// CDP task response with handoff information
+export interface CdpTaskResponse {
+  result: any; // Whatever the agent returns
+  execution_time_ms: number;
+  login_success: boolean; // Whether login was successful
+  current_url: string; // URL browser ended up on
+  ready_for_handoff: boolean; // Whether ready for Patchright to take over
+}
+
+// Hybrid session parameters (Browser-Use launches Chrome, keeps it open)
+export interface HybridSessionParams {
+  task: string; // Natural language login task
+  startUrl: string; // URL to start from (login page)
+  cdpPort?: number; // Port for CDP (default 9222)
+  maxTime?: number; // Max execution time in seconds
+  sendScreenshots?: boolean;
+}
+
+// Hybrid session response
+export interface HybridSessionResponse {
+  login_success: boolean;
+  current_url: string;
+  cdp_port: number;
+  execution_time_ms: number;
+  error?: string;
+}
+
 // Job data structure expected from Browser-Use extraction
 export interface JobData {
   title: string;
@@ -241,6 +276,159 @@ export class BrowserUseClient {
         JSON.stringify(sanitizeForLogging(response.result), null, 2),
       );
       throw new Error("Browser-Use returned invalid or failed response");
+    }
+  }
+
+  /**
+   * Execute a login task by connecting to an existing Chrome instance via CDP.
+   * Used by the hybrid scraper for AI-driven login before Patchright extraction.
+   * @param params CDP task parameters including cdpUrl
+   * @returns Response with login_success, current_url, and ready_for_handoff
+   */
+  async executeLoginWithCdp(params: CdpTaskParams): Promise<CdpTaskResponse> {
+    const sendScreenshots = params.sendScreenshots ??
+      this.config.sendScreenshots;
+    console.log(
+      `[BrowserUseClient] CDP login request with send_screenshots: ${sendScreenshots}`,
+    );
+    console.log(`[BrowserUseClient] CDP URL: ${params.cdpUrl}`);
+
+    let response: Response;
+    try {
+      response = await fetch(`${this.config.baseUrl}/execute-with-cdp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          task: params.task,
+          cdp_url: params.cdpUrl,
+          max_time: params.maxTime,
+          send_screenshots: sendScreenshots,
+        }),
+        signal: AbortSignal.timeout(this.config.timeout),
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+
+      console.error(`\n❌ Failed to communicate with browser-use server (CDP)`);
+      console.error(`   Error: ${errorMsg}`);
+      console.error(`\n💡 Common causes:`);
+      console.error(`   - Browser-use server not running`);
+      console.error(`   - LLM API rate limit exceeded`);
+      console.error(`   - Network timeout`);
+      console.error(`\n📋 Check browser-use container logs:`);
+      console.error(`   docker compose logs browser-use --tail=50\n`);
+
+      throw new Error(
+        `Browser-Use CDP connection failed: ${errorMsg}. Check 'docker compose logs browser-use' for details.`,
+      );
+    }
+
+    if (!response.ok) {
+      const errorBody = await response.text().catch(() => "");
+      console.error(
+        `\n❌ Browser-Use CDP API error: ${response.status} ${response.statusText}`,
+      );
+      if (errorBody) {
+        console.error(`   Response: ${errorBody.substring(0, 500)}`);
+      }
+      throw new Error(
+        `Browser-Use CDP API error: ${response.status} ${response.statusText}`,
+      );
+    }
+
+    const result: CdpTaskResponse = await response.json();
+
+    console.log(
+      `[BrowserUseClient] CDP login result: success=${result.login_success}, url=${result.current_url}, ready=${result.ready_for_handoff}`,
+    );
+
+    return result;
+  }
+
+  /**
+   * Start a hybrid session: Browser-Use launches Chrome with CDP, performs login,
+   * and keeps the browser open for Patchright to connect.
+   * @param params Hybrid session parameters
+   * @returns Response with login_success, current_url, cdp_port
+   */
+  async startHybridSession(
+    params: HybridSessionParams,
+  ): Promise<HybridSessionResponse> {
+    const sendScreenshots = params.sendScreenshots ??
+      this.config.sendScreenshots;
+    console.log(
+      `[BrowserUseClient] Starting hybrid session, CDP port: ${
+        params.cdpPort ?? 9222
+      }`,
+    );
+
+    let response: Response;
+    try {
+      response = await fetch(`${this.config.baseUrl}/hybrid/start`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          task: params.task,
+          start_url: params.startUrl,
+          cdp_port: params.cdpPort ?? 9222,
+          max_time: params.maxTime,
+          send_screenshots: sendScreenshots,
+        }),
+        signal: AbortSignal.timeout(this.config.timeout),
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.error(`\n❌ Failed to start hybrid session: ${errorMsg}`);
+      throw new Error(`Hybrid session failed: ${errorMsg}`);
+    }
+
+    if (!response.ok) {
+      const errorBody = await response.text().catch(() => "");
+      console.error(
+        `\n❌ Hybrid session API error: ${response.status} ${response.statusText}`,
+      );
+      if (errorBody) {
+        console.error(`   Response: ${errorBody.substring(0, 500)}`);
+      }
+      throw new Error(
+        `Hybrid session API error: ${response.status} ${response.statusText}`,
+      );
+    }
+
+    const result: HybridSessionResponse = await response.json();
+
+    console.log(
+      `[BrowserUseClient] Hybrid session result: success=${result.login_success}, url=${result.current_url}, port=${result.cdp_port}`,
+    );
+
+    return result;
+  }
+
+  /**
+   * Close the hybrid browser session.
+   * Call this after Patchright has finished extracting jobs.
+   */
+  async closeHybridSession(): Promise<void> {
+    console.log(`[BrowserUseClient] Closing hybrid session...`);
+
+    try {
+      const response = await fetch(`${this.config.baseUrl}/hybrid/close`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: AbortSignal.timeout(10000),
+      });
+
+      if (response.ok) {
+        console.log(`[BrowserUseClient] Hybrid session closed`);
+      } else {
+        console.warn(
+          `[BrowserUseClient] Failed to close hybrid session: ${response.status}`,
+        );
+      }
+    } catch (error) {
+      console.warn(
+        `[BrowserUseClient] Error closing hybrid session: ${error}`,
+      );
     }
   }
 }

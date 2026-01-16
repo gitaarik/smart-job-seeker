@@ -67,9 +67,12 @@ services:
   browser-use:
     build: ./browser-use
     restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - ${SJS_BROWSER_USE_PORT:-8000}:8000
       - "5900:5900" # VNC port for viewing browser in headed mode
+      - "9222:9222" # CDP port for hybrid scraper (Patchright connects here)
     volumes:
       - ./browser-use:/app
       - browser_use_data:/app/data

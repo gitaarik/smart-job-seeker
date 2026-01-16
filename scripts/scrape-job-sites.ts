@@ -16,6 +16,7 @@ import { clearDirectusCache } from "$lib/server/directus";
 import { getSiteConfig } from "$lib/server/job-site-configs";
 import { scrapeJobsWithBrowserUse } from "$lib/server/scrapers/browser-use-scraper";
 import { scrapeJobsWithPatchright } from "$lib/server/scrapers/patchright-scraper";
+import { scrapeJobsWithHybrid } from "$lib/server/scrapers/hybrid-scraper";
 
 interface SearchAction {
   id: number;
@@ -102,7 +103,17 @@ async function scrapeJobSite(
   let strippedHtml: string | null = null;
 
   try {
-    if (scraperMethod === "patchright") {
+    if (scraperMethod === "hybrid") {
+      // Use Hybrid scraper (Browser-Use login + Patchright extraction)
+      console.log(`\n🔀 Using Hybrid scraper...`);
+      processedCount = await scrapeJobsWithHybrid(
+        searchUrl,
+        navigationType,
+        platformId,
+        config.systemScraperProfileId,
+        options.screenshots,
+      );
+    } else if (scraperMethod === "patchright") {
       // Use Patchright scraper
       console.log(`\n🎭 Using Patchright scraper...`);
       processedCount = await scrapeJobsWithPatchright(

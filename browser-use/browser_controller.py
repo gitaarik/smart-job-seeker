@@ -268,3 +268,343 @@ class BrowserController:
             "result": result.model_dump() if hasattr(result, 'model_dump') else result,
             "execution_time_ms": execution_time,
         }
+
+    async def execute_task_with_cdp(
+        self,
+        task: str,
+        cdp_url: str,
+        max_time: int = 120,
+        send_screenshots: bool = True,
+    ):
+        """
+        Execute a browser automation task by connecting to an existing Chrome instance via CDP.
+        Used by the hybrid scraper for login-only tasks before handing off to Patchright.
+
+        Args:
+            task: Natural language description of what to do (login + navigate to results)
+            cdp_url: CDP WebSocket URL (e.g., "http://localhost:9222")
+            max_time: Maximum execution time in seconds
+            send_screenshots: Whether to send screenshots to LLM
+
+        Returns:
+            dict with 'result', 'execution_time_ms', 'login_success', 'current_url', 'ready_for_handoff'
+        """
+        start_time = time.time()
+
+        logger.info(f"[Browser-Use] Connecting to existing browser via CDP: {cdp_url}")
+        print(f"[Browser-Use] Connecting to existing browser via CDP: {cdp_url}", flush=True)
+
+        # Determine vision usage
+        use_vision_for_task = send_screenshots and self.vision_support
+        logger.info(f"[Browser-Use] CDP mode - vision enabled: {use_vision_for_task}")
+        print(f"[Browser-Use] CDP mode - vision enabled: {use_vision_for_task}", flush=True)
+
+        try:
+            # Connect to existing browser via CDP instead of launching new one
+            browser = Browser(
+                cdp_url=cdp_url,
+                # Don't set headless - browser already running
+            )
+
+            # Create the agent (no initial_actions - browser may already be on a page)
+            agent = Agent(
+                task=task,
+                llm=self.llm,
+                browser=browser,
+                use_vision=use_vision_for_task,
+            )
+
+            # Run the task
+            result = await agent.run()
+
+            execution_time = int((time.time() - start_time) * 1000)
+
+            # Try to get the current URL from the browser context
+            current_url = ""
+            try:
+                # Browser-use provides access to the browser context
+                if hasattr(browser, 'context') and browser.context:
+                    pages = browser.context.pages
+                    if pages:
+                        current_url = pages[0].url
+                elif hasattr(browser, 'page') and browser.page:
+                    current_url = browser.page.url
+            except Exception as url_err:
+                logger.warning(f"[Browser-Use] Could not get current URL: {url_err}")
+
+            # Determine if login was successful by checking result
+            # The agent should report success in its final message
+            login_success = False
+            ready_for_handoff = False
+
+            if hasattr(result, 'history') and result.history:
+                # Check the last history item for success indicators
+                for item in reversed(result.history[-5:]):
+                    if hasattr(item, 'result') and item.result:
+                        for step_result in item.result:
+                            if hasattr(step_result, 'extracted_content'):
+                                content = str(step_result.extracted_content).lower()
+                                if 'success' in content or 'logged in' in content or 'results' in content:
+                                    login_success = True
+                                    ready_for_handoff = True
+                                    break
+                    if login_success:
+                        break
+
+            # Also check if we're on a search results page (common patterns)
+            if current_url:
+                url_lower = current_url.lower()
+                if any(pattern in url_lower for pattern in ['/jobs', '/search', '/results', 'q=', 'query=']):
+                    ready_for_handoff = True
+                    if not login_success:
+                        login_success = True  # Assume login worked if we reached results
+
+            logger.info(f"[Browser-Use] CDP task complete - URL: {current_url}, login_success: {login_success}")
+            print(f"[Browser-Use] CDP task complete - URL: {current_url}, login_success: {login_success}", flush=True)
+
+            return {
+                "result": result.model_dump() if hasattr(result, 'model_dump') else result,
+                "execution_time_ms": execution_time,
+                "login_success": login_success,
+                "current_url": current_url,
+                "ready_for_handoff": ready_for_handoff,
+            }
+
+        except Exception as e:
+            execution_time = int((time.time() - start_time) * 1000)
+            error_str = str(e)
+
+            # Detect specific error types
+            if "rate limit" in error_str.lower() or "429" in error_str:
+                error_type = "rate_limit"
+                logger.error(f"[Browser-Use] CDP mode - LLM rate limit exceeded: {error_str}")
+            elif "context_length" in error_str.lower() or "context length" in error_str.lower():
+                error_type = "context_length"
+                logger.error(f"[Browser-Use] CDP mode - LLM context length exceeded: {error_str}")
+            elif "cdp" in error_str.lower() or "connect" in error_str.lower():
+                error_type = "cdp_connection"
+                logger.error(f"[Browser-Use] CDP connection failed: {error_str}")
+            else:
+                error_type = "agent_error"
+                logger.error(f"[Browser-Use] CDP mode - Agent error: {error_str}")
+
+            return {
+                "result": {
+                    "error": error_str,
+                    "error_type": error_type,
+                },
+                "execution_time_ms": execution_time,
+                "login_success": False,
+                "current_url": "",
+                "ready_for_handoff": False,
+            }
+
+    # Store browser/process for hybrid mode (keeps browser open between requests)
+    _hybrid_browser = None
+    _hybrid_chrome_process = None
+
+    async def start_hybrid_session(
+        self,
+        task: str,
+        start_url: str,
+        cdp_port: int = 9222,
+        max_time: int = 120,
+        send_screenshots: bool = True,
+    ):
+        """
+        Start a hybrid session: launch Chrome with CDP, perform login, keep browser open.
+        The browser stays open so Patchright can connect via CDP for extraction.
+
+        Args:
+            task: Natural language login task
+            start_url: URL to start from (login page)
+            cdp_port: Port for CDP (default 9222)
+            max_time: Maximum execution time in seconds
+            send_screenshots: Whether to send screenshots to LLM
+
+        Returns:
+            dict with 'login_success', 'current_url', 'cdp_port', 'execution_time_ms'
+        """
+        import subprocess
+        import asyncio
+
+        start_time = time.time()
+
+        logger.info(f"[Browser-Use] Starting hybrid session with CDP on port {cdp_port}")
+        print(f"[Browser-Use] Starting hybrid session with CDP on port {cdp_port}", flush=True)
+
+        # Determine vision usage
+        use_vision_for_task = send_screenshots and self.vision_support
+        logger.info(f"[Browser-Use] Hybrid mode - vision enabled: {use_vision_for_task}")
+
+        try:
+            # Close any existing hybrid session
+            await self.close_hybrid_session()
+
+            # Launch Chrome with CDP enabled using subprocess
+            # The container has chromium installed via playwright
+            chrome_path = "/root/.cache/ms-playwright/chromium-1161/chrome-linux/chrome"
+
+            # Check for alternative paths
+            import os as os_module
+            alt_paths = [
+                "/root/.cache/ms-playwright/chromium-1161/chrome-linux/chrome",
+                "/usr/bin/chromium",
+                "/usr/bin/chromium-browser",
+                "/usr/bin/google-chrome",
+            ]
+            for path in alt_paths:
+                if os_module.path.exists(path):
+                    chrome_path = path
+                    break
+
+            headless_mode = os.getenv("SJS_BROWSER_USE_HEADLESS", "true").lower() == "true"
+
+            chrome_args = [
+                chrome_path,
+                f"--remote-debugging-port={cdp_port}",
+                "--remote-debugging-address=0.0.0.0",
+                "--no-first-run",
+                "--no-default-browser-check",
+                "--disable-background-networking",
+                "--disable-sync",
+                "--disable-translate",
+                "--no-sandbox",
+                "--disable-dev-shm-usage",
+                f"--user-data-dir=/tmp/chrome-hybrid-{cdp_port}",
+                start_url,  # Open start URL directly
+            ]
+
+            if headless_mode:
+                chrome_args.insert(1, "--headless=new")
+
+            logger.info(f"[Browser-Use] Launching Chrome: {chrome_path}")
+            print(f"[Browser-Use] Launching Chrome: {chrome_path}", flush=True)
+
+            BrowserController._hybrid_chrome_process = subprocess.Popen(
+                chrome_args,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+
+            # Wait for CDP to be ready
+            cdp_url = f"http://127.0.0.1:{cdp_port}"
+            import aiohttp
+            for _ in range(30):  # 15 seconds timeout
+                try:
+                    async with aiohttp.ClientSession() as session:
+                        async with session.get(f"{cdp_url}/json/version", timeout=aiohttp.ClientTimeout(total=1)) as resp:
+                            if resp.status == 200:
+                                logger.info(f"[Browser-Use] CDP ready at {cdp_url}")
+                                print(f"[Browser-Use] CDP ready at {cdp_url}", flush=True)
+                                break
+                except:
+                    pass
+                await asyncio.sleep(0.5)
+            else:
+                raise Exception(f"CDP not ready after 15 seconds at {cdp_url}")
+
+            # Connect browser-use to the Chrome instance via CDP
+            browser = Browser(cdp_url=cdp_url)
+            BrowserController._hybrid_browser = browser
+
+            # Create the agent (no initial_actions since Chrome already opened the URL)
+            agent = Agent(
+                task=task,
+                llm=self.llm,
+                browser=browser,
+                use_vision=use_vision_for_task,
+            )
+
+            # Run the login task
+            result = await agent.run()
+
+            execution_time = int((time.time() - start_time) * 1000)
+
+            # Get the current URL
+            current_url = ""
+            try:
+                if hasattr(browser, 'context') and browser.context:
+                    pages = browser.context.pages
+                    if pages:
+                        current_url = pages[0].url
+                elif hasattr(browser, 'page') and browser.page:
+                    current_url = browser.page.url
+            except Exception as url_err:
+                logger.warning(f"[Browser-Use] Could not get current URL: {url_err}")
+
+            # Determine success based on URL patterns
+            login_success = False
+            if current_url:
+                url_lower = current_url.lower()
+                # Check if we're on a job search/results page
+                if any(pattern in url_lower for pattern in ['/jobs', '/search', '/results', 'q=', 'query=']):
+                    login_success = True
+                # Also check result for success indicators
+                if hasattr(result, 'history') and result.history:
+                    for item in reversed(result.history[-5:]):
+                        if hasattr(item, 'result') and item.result:
+                            for step_result in item.result:
+                                if hasattr(step_result, 'extracted_content'):
+                                    content = str(step_result.extracted_content).lower()
+                                    if 'success' in content or 'logged in' in content:
+                                        login_success = True
+                                        break
+
+            logger.info(f"[Browser-Use] Hybrid login complete - URL: {current_url}, success: {login_success}")
+            print(f"[Browser-Use] Hybrid login complete - URL: {current_url}, success: {login_success}", flush=True)
+            print(f"[Browser-Use] Browser kept open on CDP port {cdp_port}", flush=True)
+
+            return {
+                "login_success": login_success,
+                "current_url": current_url,
+                "cdp_port": cdp_port,
+                "execution_time_ms": execution_time,
+            }
+
+        except Exception as e:
+            execution_time = int((time.time() - start_time) * 1000)
+            error_str = str(e)
+
+            logger.error(f"[Browser-Use] Hybrid session error: {error_str}")
+
+            # Clean up on error
+            await self.close_hybrid_session()
+
+            return {
+                "login_success": False,
+                "current_url": "",
+                "cdp_port": cdp_port,
+                "execution_time_ms": execution_time,
+                "error": error_str,
+            }
+
+    async def close_hybrid_session(self):
+        """Close the hybrid browser session and Chrome process."""
+        # Close browser-use connection
+        if BrowserController._hybrid_browser:
+            try:
+                await BrowserController._hybrid_browser.close()
+                logger.info("[Browser-Use] Hybrid browser connection closed")
+            except Exception as e:
+                logger.warning(f"[Browser-Use] Error closing hybrid browser: {e}")
+            finally:
+                BrowserController._hybrid_browser = None
+
+        # Kill Chrome process
+        if BrowserController._hybrid_chrome_process:
+            try:
+                BrowserController._hybrid_chrome_process.terminate()
+                BrowserController._hybrid_chrome_process.wait(timeout=5)
+                logger.info("[Browser-Use] Chrome process terminated")
+                print("[Browser-Use] Chrome process terminated", flush=True)
+            except Exception as e:
+                logger.warning(f"[Browser-Use] Error terminating Chrome: {e}")
+                try:
+                    BrowserController._hybrid_chrome_process.kill()
+                except:
+                    pass
+            finally:
+                BrowserController._hybrid_chrome_process = None
+
+        return {"closed": True}
