@@ -1,8 +1,7 @@
 import os
 import time
 import logging
-from browser_use import Agent, Browser
-from browser_use.browser.browser import BrowserConfig
+from browser_use import Agent, Browser, ChatBrowserUse
 from langchain_groq import ChatGroq
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
@@ -22,6 +21,7 @@ class BrowserController:
         print(f"[Browser-Use] Initializing with provider: {provider}", flush=True)
 
         # Default models per provider (hardcoded fallbacks)
+        # Note: browser_use uses their own optimized model, no model selection needed
         default_models = {
             "groq": "llama-3.3-70b-versatile",
             "gemini": "gemini-2.0-flash-exp",
@@ -29,6 +29,7 @@ class BrowserController:
             "openrouter": "anthropic/claude-3.5-sonnet",
             "deepseek": "deepseek-chat",
             "bedrock": "amazon.nova-micro-v1:0",
+            "browser_use": None,  # Uses their optimized model automatically
         }
 
         # Provider-specific env var names
@@ -120,6 +121,22 @@ class BrowserController:
             self.llm = ChatBedrock(**bedrock_config)
             # Claude and Nova models on Bedrock support vision
             self.vision_support = "anthropic.claude" in model or "amazon.nova" in model
+        elif provider == "browser_use":
+            # Use Browser-Use's optimized cloud LLM
+            # API key from BROWSER_USE_API_KEY env var (their default) or our naming convention
+            api_key = os.getenv("SJS_LLM_API_KEY_BROWSER_USE") or os.getenv("BROWSER_USE_API_KEY")
+            if not api_key:
+                raise ValueError(
+                    "Browser-Use API key not found. Set SJS_LLM_API_KEY_BROWSER_USE or BROWSER_USE_API_KEY. "
+                    "Get a key at: https://cloud.browser-use.com/new-api-key"
+                )
+            # Use the Browser-Use optimized model
+            bu_model = os.getenv("SJS_LLM_MODEL_BROWSER_USE") or "browser-use/bu-30b-a3b-preview"
+            self.llm = ChatBrowserUse(model=bu_model, api_key=api_key)
+            # Browser-Use cloud supports vision
+            self.vision_support = True
+            logger.info(f"[Browser-Use] Using Browser-Use cloud LLM: {bu_model}")
+            print(f"[Browser-Use] Using Browser-Use cloud LLM: {bu_model}", flush=True)
         else:
             # Default to Groq
             self.llm = ChatGroq(
@@ -176,26 +193,78 @@ class BrowserController:
 
         # Navigate to start_url before executing task
         initial_actions = [
-            {"go_to_url": {"url": start_url}},
+            {"navigate": {"url": start_url}},
         ]
         logger.info(f"[Browser-Use] Will navigate to: {start_url}")
         print(f"[Browser-Use] Will navigate to: {start_url}", flush=True)
+
+        # Create browser with increased wait times for reliable navigation
+        # This helps with login flows that involve multiple redirects
+        browser = Browser(
+            headless=headless_mode,
+            minimum_wait_page_load_time=1.0,       # Wait at least 1s before getting page state
+            wait_for_network_idle_page_load_time=2.0,  # Wait 2s for network idle
+            wait_between_actions=2.0,              # Wait 2s between actions
+        )
 
         # Create the agent with token optimization
         agent = Agent(
             task=task,
             llm=self.llm,
-            browser=Browser(config=BrowserConfig(headless=headless_mode)),
+            browser=browser,
             use_vision=use_vision_for_task,
             initial_actions=initial_actions,
         )
 
         # Run the task
-        result = await agent.run()
+        try:
+            result = await agent.run()
+        except Exception as e:
+            execution_time = int((time.time() - start_time) * 1000)
+            error_str = str(e)
+
+            # Detect specific error types for clearer messaging
+            if "rate limit" in error_str.lower() or "429" in error_str:
+                error_type = "rate_limit"
+                logger.error(f"[Browser-Use] LLM rate limit exceeded: {error_str}")
+            elif "context_length" in error_str.lower() or "context length" in error_str.lower():
+                error_type = "context_length"
+                logger.error(f"[Browser-Use] LLM context length exceeded: {error_str}")
+            else:
+                error_type = "agent_error"
+                logger.error(f"[Browser-Use] Agent error: {error_str}")
+
+            # Return structured error instead of raising
+            return {
+                "result": {
+                    "error": error_str,
+                    "error_type": error_type,
+                },
+                "execution_time_ms": execution_time,
+            }
 
         execution_time = int((time.time() - start_time) * 1000)
 
+        # Check if result contains errors (browser-use returns errors in history)
+        if hasattr(result, 'history') and result.history:
+            # Check for errors in the last few history items
+            for item in result.history[-3:]:
+                if hasattr(item, 'result') and item.result:
+                    for step_result in item.result:
+                        if hasattr(step_result, 'error') and step_result.error:
+                            error_str = step_result.error
+                            if "rate limit" in error_str.lower() or "429" in error_str:
+                                logger.error(f"[Browser-Use] LLM rate limit in history: {error_str}")
+                                return {
+                                    "result": {
+                                        "error": error_str,
+                                        "error_type": "rate_limit",
+                                        "history": result.model_dump() if hasattr(result, 'model_dump') else str(result),
+                                    },
+                                    "execution_time_ms": execution_time,
+                                }
+
         return {
-            "result": result,
+            "result": result.model_dump() if hasattr(result, 'model_dump') else result,
             "execution_time_ms": execution_time,
         }

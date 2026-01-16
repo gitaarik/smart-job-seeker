@@ -46,6 +46,51 @@ function extractBrowserUseError(result: any): string | null {
  * Tries direct parsing, regex extraction, and JSON repair
  */
 function parseBrowserUseResponse(result: any): any[] {
+  // Check if Browser-Use returned a structured error (from our Python error handling)
+  if (typeof result === "object" && result !== null && result.error) {
+    const errorType = result.error_type || "unknown";
+    const errorMessage = result.error;
+
+    if (errorType === "rate_limit") {
+      console.error(`\n❌ LLM Rate Limit Error`);
+      console.error(
+        `   Provider: ${
+          process.env.SJS_LLM_PROVIDER_BROWSER_USE ||
+          process.env.SJS_LLM_PROVIDER || "groq"
+        }`,
+      );
+      console.error(`   ${errorMessage}`);
+      console.error(`\n💡 Solutions:`);
+      console.error(`   - Wait for rate limit to reset`);
+      console.error(
+        `   - Switch to a different LLM provider (SJS_LLM_PROVIDER_BROWSER_USE)`,
+      );
+      console.error(`   - Upgrade your API plan for higher limits\n`);
+      throw new Error(
+        `LLM rate limit exceeded: ${errorMessage.substring(0, 200)}`,
+      );
+    }
+
+    if (errorType === "context_length") {
+      console.error(`\n❌ LLM Context Length Exceeded`);
+      console.error(`   ${errorMessage}`);
+      console.error(`\n💡 Solutions:`);
+      console.error(`   - Reduce the number of jobs to extract per task`);
+      console.error(`   - Use a model with larger context window`);
+      console.error(`   - Simplify the extraction prompt\n`);
+      throw new Error(
+        `LLM context length exceeded: ${errorMessage.substring(0, 200)}`,
+      );
+    }
+
+    // Generic agent error
+    console.error(`\n❌ Browser-Use Agent Error`);
+    console.error(`   ${errorMessage}\n`);
+    throw new Error(
+      `Browser-Use agent error: ${errorMessage.substring(0, 200)}`,
+    );
+  }
+
   // Check if Browser-Use returned an error/history object
   if (typeof result === "object" && result !== null) {
     // Browser-Use always returns a history object - check if it contains an actual error
@@ -230,9 +275,25 @@ function parseBrowserUseResponse(result: any): any[] {
 
             // Try to parse as JSON array
             if (typeof content === "string") {
+              // The content may have escaped quotes - try to unescape first
+              let contentToTry = content;
+
+              // If it looks like escaped JSON (starts with [{ and has \"), unescape it
+              if (content.includes('\\"') || content.includes("\\'")) {
+                try {
+                  // Try to unescape by parsing as a JSON string first
+                  contentToTry = content
+                    .replace(/\\"/g, '"')
+                    .replace(/\\'/g, "'")
+                    .replace(/\\\\/g, "\\");
+                } catch {
+                  // Keep original if unescape fails
+                }
+              }
+
               // Try direct parse
               try {
-                const parsed = JSON.parse(content);
+                const parsed = JSON.parse(contentToTry);
                 if (Array.isArray(parsed)) {
                   return parsed;
                 }
@@ -241,7 +302,7 @@ function parseBrowserUseResponse(result: any): any[] {
                 }
               } catch {
                 // Try regex extraction for JSON array
-                const jsonMatch = content.match(/\[[\s\S]*\]/);
+                const jsonMatch = contentToTry.match(/\[[\s\S]*\]/);
                 if (jsonMatch) {
                   try {
                     const parsed = JSON.parse(jsonMatch[0]);
@@ -429,6 +490,8 @@ export async function scrapeJobsWithBrowserUse(
       maxJobsToClick: maxJobsToClick.toString(),
     };
 
+    console.log(`🔍 Debug: searchUrl = ${searchUrl}`);
+
     startUrl = platform.url; // Start at platform URL for login
     maxTime = 120 + 60 + (maxJobsToClick * 30); // 2min login + 1min base + 30s per job
   } else {
@@ -464,31 +527,31 @@ export async function scrapeJobsWithBrowserUse(
   );
   const task = `${systemPrompt}\n\n${userPrompt}`.trim();
 
+  maxTime = Math.max(180, maxTime); // At least 3 minutes
+
   // Execute the browser-use task
-  console.log(`🚀 Starting task (timeout: ${Math.max(180, maxTime)}s)...`);
+  console.log(`🚀 Starting task (timeout: ${maxTime}s)...`);
+
+  console.log("-----------------------");
+  console.log(task);
+  console.log("-----------------------");
+
   const response = await browserUse.executeTask({
     task,
     startUrl,
-    maxTime: Math.max(180, maxTime), // At least 3 minutes
+    maxTime,
   });
+
+  console.log("Browser-Use response:");
+  console.log("--------------------");
+  console.log(JSON.stringify(response));
+  console.log("--------------------");
 
   // Parse the JSON result with multiple fallback strategies
   let jobs: any[];
+
   try {
     jobs = parseBrowserUseResponse(response.result);
-
-    // Debug: Save raw response to file for inspection
-    try {
-      const fs = await import("fs/promises");
-      const debugFile = `/tmp/browser-use-response-${Date.now()}.json`;
-      await fs.writeFile(
-        debugFile,
-        JSON.stringify(response, null, 2),
-      );
-      console.log(`🐛 Debug: Raw response saved to ${debugFile}`);
-    } catch (writeError) {
-      // Ignore file write errors
-    }
   } catch (error) {
     console.error("❌ Failed to parse Browser-Use response:", error);
     console.log(
@@ -496,6 +559,19 @@ export async function scrapeJobsWithBrowserUse(
       JSON.stringify(response.result).substring(0, 500),
     );
     throw error;
+  }
+
+  // Debug: Save raw response to file for inspection
+  try {
+    const fs = await import("fs/promises");
+    const debugFile = `/tmp/browser-use-response-${Date.now()}.json`;
+    await fs.writeFile(
+      debugFile,
+      JSON.stringify(response, null, 2),
+    );
+    console.log(`🐛 Debug: Raw response saved to ${debugFile}`);
+  } catch (writeError) {
+    // Ignore file write errors
   }
 
   // Validate job structure

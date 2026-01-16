@@ -95,20 +95,54 @@ export class BrowserUseClient {
       `[BrowserUseClient] Sending request with send_screenshots: ${sendScreenshots}`,
     );
 
-    const response = await fetch(`${this.config.baseUrl}/execute`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        task: params.task,
-        start_url: params.startUrl,
-        max_time: params.maxTime,
-        send_screenshots: sendScreenshots,
-      }),
-      signal: AbortSignal.timeout(this.config.timeout),
-    });
+    let response: Response;
+    try {
+      response = await fetch(`${this.config.baseUrl}/execute`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          task: params.task,
+          start_url: params.startUrl,
+          max_time: params.maxTime,
+          send_screenshots: sendScreenshots,
+        }),
+        signal: AbortSignal.timeout(this.config.timeout),
+      });
+    } catch (error) {
+      // Network-level failure - the browser-use server likely crashed
+      const errorMsg = error instanceof Error ? error.message : String(error);
+
+      console.error(`\n❌ Failed to communicate with browser-use server`);
+      console.error(`   Error: ${errorMsg}`);
+      console.error(
+        `\n💡 The browser-use server likely crashed. Common causes:`,
+      );
+      console.error(
+        `   - LLM API rate limit exceeded (e.g., Groq daily token limit)`,
+      );
+      console.error(
+        `   - LLM context length exceeded (task accumulated too much history)`,
+      );
+      console.error(`   - Network timeout or server overload`);
+      console.error(`\n📋 Check browser-use container logs for details:`);
+      console.error(`   docker compose logs browser-use --tail=50\n`);
+
+      throw new Error(
+        `Browser-Use server connection failed: ${errorMsg}. Check 'docker compose logs browser-use' for LLM API errors.`,
+      );
+    }
 
     if (!response.ok) {
-      throw new Error(`Browser-Use API error: ${response.statusText}`);
+      const errorBody = await response.text().catch(() => "");
+      console.error(
+        `\n❌ Browser-Use API returned error: ${response.status} ${response.statusText}`,
+      );
+      if (errorBody) {
+        console.error(`   Response: ${errorBody.substring(0, 500)}`);
+      }
+      throw new Error(
+        `Browser-Use API error: ${response.status} ${response.statusText}`,
+      );
     }
 
     return await response.json();
