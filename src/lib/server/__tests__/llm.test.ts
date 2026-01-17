@@ -31,7 +31,7 @@ const { mockInvoke, mockWithStructuredOutput } = vi.hoisted(() => ({
 vi.mock("@langchain/groq", () => ({
   ChatGroq: class ChatGroq {
     constructor(config: any) {}
-    async invoke(messages: any) {
+    async invoke(messages: any, options?: any) {
       return mockInvoke(messages);
     }
     withStructuredOutput(schema: any, options?: any) {

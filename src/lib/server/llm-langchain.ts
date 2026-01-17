@@ -465,8 +465,10 @@ async function generateWithLangChain(
             "\n\nIMPORTANT: Use the exact field names from the schema (e.g., 'isLoginPage', not 'is_login_page').";
         }
 
-        // Invoke without structured output
-        const result = await chatModel.invoke(langChainMessages);
+        // Invoke with JSON mode enabled to ensure valid JSON output
+        const result = await chatModel.invoke(langChainMessages, {
+          response_format: { type: "json_object" },
+        });
         const responseContent = typeof result.content === "string"
           ? result.content
           : String(result.content);
