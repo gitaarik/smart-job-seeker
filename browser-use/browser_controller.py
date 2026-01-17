@@ -402,6 +402,7 @@ class BrowserController:
     # Store browser/process for hybrid mode (keeps browser open between requests)
     _hybrid_browser = None
     _hybrid_chrome_process = None
+    _hybrid_socat_process = None
 
     async def start_hybrid_session(
         self,
@@ -443,27 +444,50 @@ class BrowserController:
 
             # Launch Chrome with CDP enabled using subprocess
             # The container has chromium installed via playwright
-            chrome_path = "/root/.cache/ms-playwright/chromium-1161/chrome-linux/chrome"
-
-            # Check for alternative paths
             import os as os_module
-            alt_paths = [
-                "/root/.cache/ms-playwright/chromium-1161/chrome-linux/chrome",
-                "/usr/bin/chromium",
-                "/usr/bin/chromium-browser",
-                "/usr/bin/google-chrome",
+            import glob as glob_module
+
+            chrome_path = None
+
+            # First, try to find Playwright's Chromium (path includes version number)
+            playwright_patterns = [
+                "/root/.cache/ms-playwright/chromium-*/chrome-linux/chrome",
+                "/home/*/.cache/ms-playwright/chromium-*/chrome-linux/chrome",
             ]
-            for path in alt_paths:
-                if os_module.path.exists(path):
-                    chrome_path = path
+            for pattern in playwright_patterns:
+                matches = glob_module.glob(pattern)
+                if matches:
+                    # Use the most recently modified one (in case multiple versions)
+                    chrome_path = max(matches, key=os_module.path.getmtime)
                     break
+
+            # Fallback to system-installed browsers
+            if not chrome_path:
+                alt_paths = [
+                    "/usr/bin/chromium",
+                    "/usr/bin/chromium-browser",
+                    "/usr/bin/google-chrome",
+                ]
+                for path in alt_paths:
+                    if os_module.path.exists(path):
+                        chrome_path = path
+                        break
+
+            if not chrome_path:
+                raise Exception(
+                    "Chrome/Chromium not found. Run 'playwright install chromium' to install."
+                )
 
             headless_mode = os.getenv("SJS_BROWSER_USE_HEADLESS", "true").lower() == "true"
 
+            # Chrome binds to 127.0.0.1 even with --remote-debugging-address=0.0.0.0
+            # So we use an internal port and socat to forward from 0.0.0.0:cdp_port
+            internal_cdp_port = cdp_port + 1  # e.g., 9223 for internal, 9222 for external
+
             chrome_args = [
                 chrome_path,
-                f"--remote-debugging-port={cdp_port}",
-                "--remote-debugging-address=0.0.0.0",
+                f"--remote-debugging-port={internal_cdp_port}",
+                "--remote-debugging-address=0.0.0.0",  # Still try, but likely won't work
                 "--no-first-run",
                 "--no-default-browser-check",
                 "--disable-background-networking",
@@ -479,7 +503,7 @@ class BrowserController:
                 chrome_args.insert(1, "--headless=new")
 
             logger.info(f"[Browser-Use] Launching Chrome: {chrome_path}")
-            print(f"[Browser-Use] Launching Chrome: {chrome_path}", flush=True)
+            print(f"[Browser-Use] Launching Chrome on internal port {internal_cdp_port}", flush=True)
 
             BrowserController._hybrid_chrome_process = subprocess.Popen(
                 chrome_args,
@@ -487,8 +511,8 @@ class BrowserController:
                 stderr=subprocess.PIPE,
             )
 
-            # Wait for CDP to be ready
-            cdp_url = f"http://127.0.0.1:{cdp_port}"
+            # Wait for Chrome CDP to be ready on internal port
+            cdp_url = f"http://127.0.0.1:{internal_cdp_port}"
             import aiohttp
             for _ in range(30):  # 15 seconds timeout
                 try:
@@ -504,7 +528,32 @@ class BrowserController:
             else:
                 raise Exception(f"CDP not ready after 15 seconds at {cdp_url}")
 
-            # Connect browser-use to the Chrome instance via CDP
+            # Start socat to forward from 0.0.0.0:cdp_port to 127.0.0.1:internal_cdp_port
+            # This allows external connections (from host via Docker port mapping)
+            logger.info(f"[Browser-Use] Starting socat: 0.0.0.0:{cdp_port} -> 127.0.0.1:{internal_cdp_port}")
+            print(f"[Browser-Use] Starting socat: 0.0.0.0:{cdp_port} -> 127.0.0.1:{internal_cdp_port}", flush=True)
+
+            BrowserController._hybrid_socat_process = subprocess.Popen(
+                [
+                    "socat",
+                    f"TCP-LISTEN:{cdp_port},fork,reuseaddr,bind=0.0.0.0",
+                    f"TCP:127.0.0.1:{internal_cdp_port}",
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+
+            # Give socat a moment to start
+            await asyncio.sleep(0.5)
+
+            # Verify socat is running
+            if BrowserController._hybrid_socat_process.poll() is not None:
+                raise Exception("socat process failed to start")
+
+            logger.info(f"[Browser-Use] socat running, external CDP available at 0.0.0.0:{cdp_port}")
+            print(f"[Browser-Use] External CDP available at 0.0.0.0:{cdp_port}", flush=True)
+
+            # Connect browser-use to the Chrome instance via CDP (internal port)
             browser = Browser(cdp_url=cdp_url)
             BrowserController._hybrid_browser = browser
 
@@ -521,35 +570,74 @@ class BrowserController:
 
             execution_time = int((time.time() - start_time) * 1000)
 
-            # Get the current URL
-            current_url = ""
-            try:
-                if hasattr(browser, 'context') and browser.context:
-                    pages = browser.context.pages
-                    if pages:
-                        current_url = pages[0].url
-                elif hasattr(browser, 'page') and browser.page:
-                    current_url = browser.page.url
-            except Exception as url_err:
-                logger.warning(f"[Browser-Use] Could not get current URL: {url_err}")
+            # Note: browser-use resets the session after agent.run() completes,
+            # but Chrome should still be running with tabs open.
 
-            # Determine success based on URL patterns
+            # Verify Chrome is still responsive on CDP port
+            cdp_responsive = False
+            current_url = ""
+            for _ in range(5):  # Try a few times
+                try:
+                    async with aiohttp.ClientSession() as session:
+                        async with session.get(f"{cdp_url}/json/list", timeout=aiohttp.ClientTimeout(total=2)) as resp:
+                            if resp.status == 200:
+                                pages_info = await resp.json()
+                                cdp_responsive = True
+                                if pages_info:
+                                    # Get URL from the first page
+                                    current_url = pages_info[0].get('url', '')
+                                    logger.info(f"[Browser-Use] CDP still responsive, pages: {len(pages_info)}")
+                                    logger.info(f"[Browser-Use] First page URL: {current_url}")
+                                break
+                except Exception as e:
+                    logger.warning(f"[Browser-Use] CDP check failed: {e}")
+                    await asyncio.sleep(0.5)
+
+            if not cdp_responsive:
+                logger.error("[Browser-Use] Chrome CDP not responsive after agent completed!")
+                raise Exception("Chrome CDP became unresponsive after login")
+
+            # Determine success based on multiple indicators
             login_success = False
+
+            # Check URL patterns if URL is available
             if current_url:
                 url_lower = current_url.lower()
-                # Check if we're on a job search/results page
                 if any(pattern in url_lower for pattern in ['/jobs', '/search', '/results', 'q=', 'query=']):
                     login_success = True
-                # Also check result for success indicators
-                if hasattr(result, 'history') and result.history:
-                    for item in reversed(result.history[-5:]):
-                        if hasattr(item, 'result') and item.result:
-                            for step_result in item.result:
-                                if hasattr(step_result, 'extracted_content'):
-                                    content = str(step_result.extracted_content).lower()
-                                    if 'success' in content or 'logged in' in content:
+
+            # Check the agent's result for success indicators
+            if hasattr(result, 'history') and result.history:
+                for item in reversed(result.history[-5:]):
+                    # Check for "done" action with success=True
+                    if hasattr(item, 'model_output') and item.model_output:
+                        output = item.model_output
+                        # Check if it's a done action with success flag
+                        if hasattr(output, 'action') and output.action:
+                            for action in output.action:
+                                if hasattr(action, 'done') and action.done:
+                                    if getattr(action.done, 'success', False):
                                         login_success = True
+                                        # Try to extract URL from the done message
+                                        done_text = getattr(action.done, 'text', '')
+                                        if done_text:
+                                            logger.info(f"[Browser-Use] Done action text: {done_text}")
                                         break
+
+                    # Also check extracted_content for success text
+                    if hasattr(item, 'result') and item.result:
+                        for step_result in item.result:
+                            if hasattr(step_result, 'extracted_content'):
+                                content = str(step_result.extracted_content).lower()
+                                if 'success' in content or 'logged in' in content or 'job' in content:
+                                    login_success = True
+                            # Check for done result
+                            if hasattr(step_result, 'done') and step_result.done:
+                                if getattr(step_result, 'success', False):
+                                    login_success = True
+
+                    if login_success:
+                        break
 
             logger.info(f"[Browser-Use] Hybrid login complete - URL: {current_url}, success: {login_success}")
             print(f"[Browser-Use] Hybrid login complete - URL: {current_url}, success: {login_success}", flush=True)
@@ -581,15 +669,25 @@ class BrowserController:
 
     async def close_hybrid_session(self):
         """Close the hybrid browser session and Chrome process."""
-        # Close browser-use connection
+        # Clear the browser-use reference (it doesn't have a close method)
         if BrowserController._hybrid_browser:
+            BrowserController._hybrid_browser = None
+            logger.info("[Browser-Use] Hybrid browser reference cleared")
+
+        # Kill socat process first (it forwards to Chrome)
+        if BrowserController._hybrid_socat_process:
             try:
-                await BrowserController._hybrid_browser.close()
-                logger.info("[Browser-Use] Hybrid browser connection closed")
+                BrowserController._hybrid_socat_process.terminate()
+                BrowserController._hybrid_socat_process.wait(timeout=2)
+                logger.info("[Browser-Use] socat process terminated")
             except Exception as e:
-                logger.warning(f"[Browser-Use] Error closing hybrid browser: {e}")
+                logger.warning(f"[Browser-Use] Error terminating socat: {e}")
+                try:
+                    BrowserController._hybrid_socat_process.kill()
+                except:
+                    pass
             finally:
-                BrowserController._hybrid_browser = None
+                BrowserController._hybrid_socat_process = None
 
         # Kill Chrome process
         if BrowserController._hybrid_chrome_process:

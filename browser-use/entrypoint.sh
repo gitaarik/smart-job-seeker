@@ -1,6 +1,13 @@
 #!/bin/bash
 set -e
 
+# Install Playwright browsers if not installed
+# This is needed for the hybrid scraper which launches Chrome directly
+if [ ! -d "/root/.cache/ms-playwright" ]; then
+    echo "Installing Playwright browsers..."
+    playwright install chromium
+fi
+
 # Remove X lock file if exists
 rm -f /tmp/.X99-lock
 
