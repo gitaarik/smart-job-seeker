@@ -18,10 +18,7 @@ import {
   isJobClosed,
   isJobTooOld,
 } from "$lib/server/scrape-filters";
-import {
-  markClickableElementsInContainer,
-  markSemanticElements,
-} from "$lib/server/cdp-utils";
+import { markClickableElementsInContainer } from "$lib/server/cdp-utils";
 import {
   detectPaginationStrategy,
   navigateToNextPage,
@@ -61,7 +58,10 @@ export async function scrapeJobsWithClicks(
     if (loginSuccess) {
       // Navigate back to search URL after successful login
       console.log(`🔙 Navigating back to search URL...`);
-      await page.goto(searchUrl, { waitUntil: "domcontentloaded", timeout: 60000 });
+      await page.goto(searchUrl, {
+        waitUntil: "domcontentloaded",
+        timeout: 60000,
+      });
     } else {
       console.warn(
         "⚠️  Login failed, continuing with unauthenticated scraping",
@@ -92,14 +92,9 @@ export async function scrapeJobsWithClicks(
 
     // Mark all clickable elements using CDP
     console.log("   📍 Step 1/3: Detecting click handlers via CDP...");
-    const container = siteConfig.selectors.jobListContainer || "body";
-    console.log(`      Scanning container: ${container}`);
     const startCdp = Date.now();
 
-    const clickableCount = await markClickableElementsInContainer(
-      page,
-      container,
-    );
+    const clickableCount = await markClickableElementsInContainer(page, "body");
 
     const cdpDuration = ((Date.now() - startCdp) / 1000).toFixed(2);
     console.log(
@@ -110,22 +105,6 @@ export async function scrapeJobsWithClicks(
       console.log(
         "      ⚠️  No clickable elements found - page may not be loaded",
       );
-
-      // Debug: Check if basic LinkedIn selectors exist
-      console.log("      🔍 Checking if page has LinkedIn job elements...");
-      const hasContainer = await page.locator(container).count();
-      const hasJobCards = await page.locator(".job-card-container, .jobs-search-results__list-item").count();
-      const hasAnyJobs = await page.locator("[data-job-id]").count();
-      console.log(`         Container "${container}": ${hasContainer} found`);
-      console.log(`         Job cards: ${hasJobCards} found`);
-      console.log(`         Elements with data-job-id: ${hasAnyJobs} found`);
-
-      // If we found job cards but CDP didn't, might be DOMDebugger issue
-      if (hasJobCards > 0) {
-        console.log("      💡 Job cards exist but CDP didn't detect them - might be DOMDebugger compatibility issue");
-        console.log("      💡 Consider using browser-use method instead of patchright for this site");
-      }
-
       break;
     }
 
@@ -355,16 +334,6 @@ export async function scrapeJobsWithClicks(
 
         // Try to find a modal/dialog/panel that appeared after the click
         const { modalContent, modalSelector } = await detectModalContent(page);
-
-        // Mark semantic elements in modal if configured
-        if (modalContent && siteConfig.semanticSelectors?.modal) {
-          console.log("      🏷️  Marking semantic elements in modal...");
-          const markResult = await markSemanticElements(
-            page,
-            siteConfig.semanticSelectors.modal,
-          );
-          console.log(`      Marked ${markResult.total} elements`);
-        }
 
         // If we found modal content, use it; otherwise fall back to full page
         const jobHtml = modalContent
