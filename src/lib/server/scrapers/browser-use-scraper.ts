@@ -417,12 +417,11 @@ function parseBrowserUseResponse(result: any): any[] {
  */
 export async function scrapeJobsWithBrowserUse(
   searchUrl: string,
-  navigationType: "url" | "click",
   platformId: string,
   profileId?: number,
   sendScreenshots?: boolean,
 ): Promise<number> {
-  console.log(`\n🤖 Using Browser-Use (${navigationType} mode)...`);
+  console.log(`\n🤖 Using Browser-Use...`);
 
   // Use default config automatically
   const browserUse = new BrowserUseClient(

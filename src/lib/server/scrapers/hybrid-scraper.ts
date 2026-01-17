@@ -78,7 +78,6 @@ Report your final status as either:
  * Patchright connects from the host via localhost:9222.
  *
  * @param searchUrl URL of the job search results page
- * @param navigationType Navigation type: "url" or "click"
  * @param platformId Platform ID for job storage
  * @param profileId Profile ID for credentials (required for hybrid)
  * @param sendScreenshots Whether to send screenshots to LLM
@@ -86,7 +85,6 @@ Report your final status as either:
  */
 export async function scrapeJobsWithHybrid(
   searchUrl: string,
-  navigationType: "url" | "click",
   platformId: string,
   profileId?: number,
   sendScreenshots?: boolean,
@@ -101,7 +99,7 @@ export async function scrapeJobsWithHybrid(
       "⚠️ Hybrid scraper requires profileId for credentials. Falling back to patchright.",
     );
     const { scrapeJobsWithPatchright } = await import("./patchright-scraper");
-    return scrapeJobsWithPatchright(searchUrl, navigationType, platformId);
+    return scrapeJobsWithPatchright(searchUrl, platformId);
   }
 
   // Get platform information
@@ -125,12 +123,7 @@ export async function scrapeJobsWithHybrid(
       "⚠️ No credentials found for hybrid scraper. Falling back to patchright.",
     );
     const { scrapeJobsWithPatchright } = await import("./patchright-scraper");
-    return scrapeJobsWithPatchright(
-      searchUrl,
-      navigationType,
-      platformId,
-      profileId,
-    );
+    return scrapeJobsWithPatchright(searchUrl, platformId, profileId);
   }
 
   console.log(`🔐 Credentials found for ${platform.name}`);

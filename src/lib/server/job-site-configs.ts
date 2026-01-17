@@ -4,8 +4,7 @@
  */
 
 export interface SiteConfig {
-  timeout?: number;
-  navigationType?: "url" | "click";
+  timeout: number;
 }
 
 /**
@@ -15,28 +14,23 @@ export interface SiteConfig {
 const SITE_CONFIGS: Record<string, SiteConfig> = {
   "linkedin.com": {
     timeout: 45000, // LinkedIn is slow
-    navigationType: "click",
   },
 
   "indeed.com": {
     timeout: 30000,
-    navigationType: "url",
   },
 
   "glassdoor.com": {
     timeout: 30000,
-    navigationType: "url",
   },
 
   "developers.turing.com": {
     timeout: 30000,
-    navigationType: "click",
   },
 
   // Default fallback configuration
   default: {
     timeout: 30000,
-    navigationType: "url",
   },
 };
 

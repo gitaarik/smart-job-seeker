@@ -13,7 +13,6 @@ import { config } from "$lib/server/config";
 import { BrowserUseClient } from "$lib/server/browser-use-client";
 import { parseRelativeDate } from "$lib/tools/date-utils";
 import { clearDirectusCache } from "$lib/server/directus";
-import { getSiteConfig } from "$lib/server/job-site-configs";
 import { scrapeJobsWithBrowserUse } from "$lib/server/scrapers/browser-use-scraper";
 import { scrapeJobsWithPatchright } from "$lib/server/scrapers/patchright-scraper";
 import { scrapeJobsWithHybrid } from "$lib/server/scrapers/hybrid-scraper";
@@ -22,11 +21,9 @@ interface SearchAction {
   id: number;
   name: string;
   search_url: string | null;
-  navigation_type: "url" | "click" | null;
   platform: number | null;
   job_platforms: {
-    navigation_type: "url" | "click" | null;
-    pagination_type: string | null;
+    name: string;
   } | null;
 }
 
@@ -82,19 +79,6 @@ async function scrapeJobSite(
   const platformId = searchAction.platform ??
     await getPlatformIdFromUrl(searchUrl);
 
-  // Determine navigation type
-  const navigationType = searchAction.navigation_type ||
-    searchAction.job_platforms?.navigation_type ||
-    getSiteConfig(searchUrl).navigationType || "url";
-
-  // Get pagination type from platform config
-  const paginationType = searchAction.job_platforms?.pagination_type || null;
-
-  console.log(`📍 Navigation type: ${navigationType}`);
-  if (paginationType) {
-    console.log(`📄 Pagination type: ${paginationType}`);
-  }
-
   // Get scraper method from config
   const scraperMethod = config.scraperMethod;
   console.log(`🔧 Scraper method: ${scraperMethod}`);
@@ -105,29 +89,23 @@ async function scrapeJobSite(
   try {
     if (scraperMethod === "hybrid") {
       // Use Hybrid scraper (Browser-Use login + Patchright extraction)
-      console.log(`\n🔀 Using Hybrid scraper...`);
       processedCount = await scrapeJobsWithHybrid(
         searchUrl,
-        navigationType,
         platformId,
         config.systemScraperProfileId,
         options.screenshots,
       );
     } else if (scraperMethod === "patchright") {
       // Use Patchright scraper
-      console.log(`\n🎭 Using Patchright scraper...`);
       processedCount = await scrapeJobsWithPatchright(
         searchUrl,
-        navigationType,
         platformId,
         config.systemScraperProfileId,
       );
     } else {
       // Use Browser-Use (default)
-      console.log(`\n🤖 Using Browser-Use...`);
       processedCount = await scrapeJobsWithBrowserUse(
         searchUrl,
-        navigationType,
         platformId,
         config.systemScraperProfileId,
         options.screenshots,
@@ -273,12 +251,10 @@ async function scrapeJobSites(): Promise<void> {
         id: true,
         name: true,
         search_url: true,
-        navigation_type: true,
         platform: true,
         job_platforms: {
           select: {
-            navigation_type: true,
-            pagination_type: true,
+            name: true,
           },
         },
       },
