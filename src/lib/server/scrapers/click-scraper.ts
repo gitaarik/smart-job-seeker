@@ -26,14 +26,12 @@ import {
 } from "$lib/server/pagination-utils";
 import { detectModalContent } from "$lib/server/scraper-interactive";
 import { performPatchwrightLogin } from "../patchright-login";
-import type { getSiteConfig } from "$lib/server/job-site-configs";
 
 /**
  * Scrape jobs using click-based navigation (SPAs)
  * Marks clickable elements with CDP, uses LLM to identify job cards, then clicks each
  * Extracts and saves jobs immediately during clicking for real-time feedback
  * @param page Patchright page instance
- * @param siteConfig Site configuration object
  * @param searchUrl URL of the search results page
  * @param platformId Platform ID for job storage
  * @param profileId Optional profile ID for credential-based login
@@ -41,7 +39,6 @@ import type { getSiteConfig } from "$lib/server/job-site-configs";
  */
 export async function scrapeJobsWithClicks(
   page: Page,
-  siteConfig: ReturnType<typeof getSiteConfig>,
   searchUrl: string,
   platformId: string,
   profileId?: number,

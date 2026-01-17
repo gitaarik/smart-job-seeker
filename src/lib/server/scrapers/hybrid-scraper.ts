@@ -14,7 +14,6 @@ import { chromium } from "patchright";
 import { config } from "$lib/server/config";
 import { BrowserUseClient } from "$lib/server/browser-use-client";
 import { scrapeJobsWithClicks } from "./click-scraper";
-import { getSiteConfig } from "../job-site-configs";
 import { interpolatePrompt } from "$lib/server/ai-chat-utils";
 import { dbDirect } from "$lib/db";
 
@@ -201,12 +200,9 @@ export async function scrapeJobsWithHybrid(
     // Phase 4: Patchright extraction
     console.log("\n📌 Phase 4: Patchright job extraction...");
 
-    const siteConfig = getSiteConfig(searchUrl);
-
     // Use click-scraper for extraction (skip login since already logged in)
     const result = await scrapeJobsWithClicks(
       page,
-      siteConfig,
       searchUrl,
       platformId,
       undefined, // Don't pass profileId - already logged in

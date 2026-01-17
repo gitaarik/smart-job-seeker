@@ -5,7 +5,6 @@
 
 import { launchBrowser } from "../browser-utils";
 import { scrapeJobsWithClicks } from "./click-scraper";
-import { getSiteConfig } from "../job-site-configs";
 
 /**
  * Scrape jobs using Patchright
@@ -33,13 +32,9 @@ export async function scrapeJobsWithPatchright(
     await page.goto(searchUrl);
     await page.waitForLoadState("domcontentloaded");
 
-    // Get site config
-    const siteConfig = getSiteConfig(searchUrl);
-
     // Use click-based scraper (works for both SPAs and traditional sites)
     const result = await scrapeJobsWithClicks(
       page,
-      siteConfig,
       searchUrl,
       platformId,
       profileId,
