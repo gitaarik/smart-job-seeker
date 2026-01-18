@@ -1,13 +1,9 @@
 /**
- * Hybrid Scraper: Browser-Use login + Patchright extraction
+ * Unified Job Scraper
  *
- * Flow:
- * 1. Browser-Use (in container) launches Chrome with CDP on port 9222
- * 2. Browser-Use performs AI-driven login
- * 3. Browser stays open, CDP port is exposed to host via docker-compose
- * 4. Patchright (on host) connects to localhost:9222
- * 5. Patchright uses click-scraper for reliable job extraction
- * 6. Browser-Use closes the browser when done
+ * Single entry point for all job scraping:
+ * - With credentials: Browser-Use login → Patchright extraction via CDP
+ * - Without credentials: Patchright direct browser → extraction
  */
 
 import { chromium } from "patchright";
@@ -16,6 +12,8 @@ import { BrowserUseClient } from "$lib/server/browser-use-client";
 import { scrapeJobsWithClicks } from "./click-scraper";
 import { interpolatePrompt } from "$lib/server/ai-chat-utils";
 import { dbDirect } from "$lib/db";
+import { launchBrowser } from "../browser-utils";
+import { getPlatformCredentials } from "../platform-auth";
 
 const CDP_PORT = 9222;
 
@@ -71,60 +69,16 @@ Report your final status as either:
 }
 
 /**
- * Scrape jobs using hybrid approach: Browser-Use login + Patchright extraction
- *
- * Browser-Use manages Chrome in its container, exposes CDP on port 9222.
- * Patchright connects from the host via localhost:9222.
- *
- * @param searchUrl URL of the job search results page
- * @param platformId Platform ID for job storage
- * @param profileId Profile ID for credentials (required for hybrid)
- * @param sendScreenshots Whether to send screenshots to LLM
- * @returns Number of jobs processed
+ * Scrape jobs with Browser-Use login + Patchright extraction
+ * Used when credentials are available
  */
-export async function scrapeJobsWithHybrid(
+async function scrapeWithLogin(
   searchUrl: string,
   platformId: string,
-  profileId?: number,
+  platform: { name: string; url: string; login_page_url?: string | null },
+  credentials: { username: string; password: string },
   sendScreenshots?: boolean,
 ): Promise<number> {
-  console.log(
-    `\n🔀 Using Hybrid scraper (Browser-Use login + Patchright extraction)...`,
-  );
-
-  // Profile ID is required for hybrid (need credentials for login)
-  if (!profileId) {
-    console.warn(
-      "⚠️ Hybrid scraper requires profileId for credentials. Falling back to patchright.",
-    );
-    const { scrapeJobsWithPatchright } = await import("./patchright-scraper");
-    return scrapeJobsWithPatchright(searchUrl, platformId);
-  }
-
-  // Get platform information
-  const platform = await dbDirect.job_platforms.findUnique({
-    where: { id: Number(platformId) },
-  });
-
-  if (!platform) {
-    throw new Error(`Platform with ID ${platformId} not found`);
-  }
-
-  // Get credentials
-  const { getPlatformCredentials } = await import("../platform-auth");
-  const credentials = await getPlatformCredentials(
-    profileId,
-    Number(platformId),
-  );
-
-  if (!credentials?.username || !credentials?.password) {
-    console.warn(
-      "⚠️ No credentials found for hybrid scraper. Falling back to patchright.",
-    );
-    const { scrapeJobsWithPatchright } = await import("./patchright-scraper");
-    return scrapeJobsWithPatchright(searchUrl, platformId, profileId);
-  }
-
   console.log(`🔐 Credentials found for ${platform.name}`);
 
   const browserUse = new BrowserUseClient(
@@ -133,7 +87,7 @@ export async function scrapeJobsWithHybrid(
 
   try {
     // Phase 1: Browser-Use launches Chrome with CDP and performs login
-    console.log("\n📌 Phase 1: Browser-Use login (Chrome in container)...");
+    console.log("\n📌 Phase 1: Browser-Use login...");
 
     const loginTask = await buildLoginPrompt(platform, credentials, searchUrl);
 
@@ -198,32 +152,125 @@ export async function scrapeJobsWithHybrid(
     }
 
     // Phase 4: Patchright extraction
-    console.log("\n📌 Phase 4: Patchright job extraction...");
+    console.log("\n📌 Phase 4: Job extraction...");
 
-    // Use click-scraper for extraction (skip login since already logged in)
-    // Pass browserUse client for AI-powered clicking on SPAs
     const result = await scrapeJobsWithClicks(
       page,
       searchUrl,
       platformId,
       undefined, // Don't pass profileId - already logged in
-      browserUse, // Use Browser-Use for clicking job cards
     );
 
     console.log(
-      `\n✅ Hybrid scraper complete: ${result.jobsProcessed} jobs processed`,
+      `\n✅ Scraping complete: ${result.jobsProcessed} jobs processed`,
     );
 
     // Disconnect Patchright (don't close browser - we'll do that via API)
     await browser.close();
 
     return result.jobsProcessed;
-  } catch (error) {
-    console.error(`\n❌ Hybrid scraper error:`, error);
-    throw error;
   } finally {
     // Always close the hybrid session
-    console.log("\n🧹 Closing hybrid session...");
+    console.log("\n🧹 Closing browser session...");
     await browserUse.closeHybridSession();
+  }
+}
+
+/**
+ * Scrape jobs with Patchright only (no login)
+ * Used when no credentials are available
+ */
+async function scrapeWithoutLogin(
+  searchUrl: string,
+  platformId: string,
+  profileId?: number,
+): Promise<number> {
+  console.log(`\n🎭 Using Patchright (no login)...`);
+
+  // Launch browser with fingerprint (headed mode for debugging)
+  const context = await launchBrowser({ headless: false });
+
+  try {
+    const page = await context.newPage();
+
+    // Navigate to search URL
+    console.log(`\n🌐 Navigating to: ${searchUrl}`);
+    await page.goto(searchUrl);
+    await page.waitForLoadState("domcontentloaded");
+
+    // Use click-based scraper
+    const result = await scrapeJobsWithClicks(
+      page,
+      searchUrl,
+      platformId,
+      profileId,
+    );
+
+    console.log(
+      `\n✅ Scraping complete: ${result.jobsProcessed} jobs processed`,
+    );
+
+    return result.jobsProcessed;
+  } finally {
+    // Always close browser context
+    await context.close();
+  }
+}
+
+/**
+ * Scrape jobs from a search URL
+ *
+ * Unified entry point that handles both authenticated and unauthenticated scraping:
+ * - With credentials: Uses Browser-Use for login, then Patchright for extraction
+ * - Without credentials: Uses Patchright directly
+ *
+ * @param searchUrl URL of the job search results page
+ * @param platformId Platform ID for job storage
+ * @param profileId Optional profile ID for credentials
+ * @param sendScreenshots Whether to send screenshots to LLM (for login)
+ * @returns Number of jobs processed
+ */
+export async function scrapeJobs(
+  searchUrl: string,
+  platformId: string,
+  profileId?: number,
+  sendScreenshots?: boolean,
+): Promise<number> {
+  console.log(`\n🔍 Starting job scraper...`);
+
+  // Get platform information
+  const platform = await dbDirect.job_platforms.findUnique({
+    where: { id: Number(platformId) },
+  });
+
+  if (!platform) {
+    throw new Error(`Platform with ID ${platformId} not found`);
+  }
+
+  // Check if we have credentials for login
+  let credentials: { username: string; password: string } | null = null;
+
+  if (profileId) {
+    const creds = await getPlatformCredentials(profileId, Number(platformId));
+    if (creds?.username && creds?.password) {
+      credentials = { username: creds.username, password: creds.password };
+    }
+  }
+
+  if (credentials) {
+    // Full flow: Browser-Use login + Patchright extraction
+    return scrapeWithLogin(
+      searchUrl,
+      platformId,
+      platform,
+      credentials,
+      sendScreenshots,
+    );
+  } else {
+    // Simple flow: Just launch Patchright directly (no login)
+    if (profileId) {
+      console.warn("⚠️ No credentials found, scraping without login");
+    }
+    return scrapeWithoutLogin(searchUrl, platformId, profileId);
   }
 }

@@ -13,9 +13,7 @@ import { config } from "$lib/server/config";
 import { BrowserUseClient } from "$lib/server/browser-use-client";
 import { parseRelativeDate } from "$lib/tools/date-utils";
 import { clearDirectusCache } from "$lib/server/directus";
-import { scrapeJobsWithBrowserUse } from "$lib/server/scrapers/browser-use-scraper";
-import { scrapeJobsWithPatchright } from "$lib/server/scrapers/patchright-scraper";
-import { scrapeJobsWithHybrid } from "$lib/server/scrapers/hybrid-scraper";
+import { scrapeJobs } from "$lib/server/scrapers/job-scraper";
 
 interface SearchAction {
   id: number;
@@ -79,38 +77,16 @@ async function scrapeJobSite(
   const platformId = searchAction.platform ??
     await getPlatformIdFromUrl(searchUrl);
 
-  // Get scraper method from config
-  const scraperMethod = config.scraperMethod;
-  console.log(`🔧 Scraper method: ${scraperMethod}`);
-
   let processedCount: number;
   let strippedHtml: string | null = null;
 
   try {
-    if (scraperMethod === "hybrid") {
-      // Use Hybrid scraper (Browser-Use login + Patchright extraction)
-      processedCount = await scrapeJobsWithHybrid(
-        searchUrl,
-        platformId,
-        config.systemScraperProfileId,
-        options.screenshots,
-      );
-    } else if (scraperMethod === "patchright") {
-      // Use Patchright scraper
-      processedCount = await scrapeJobsWithPatchright(
-        searchUrl,
-        platformId,
-        config.systemScraperProfileId,
-      );
-    } else {
-      // Use Browser-Use (default)
-      processedCount = await scrapeJobsWithBrowserUse(
-        searchUrl,
-        platformId,
-        config.systemScraperProfileId,
-        options.screenshots,
-      );
-    }
+    processedCount = await scrapeJobs(
+      searchUrl,
+      platformId,
+      config.systemScraperProfileId,
+      options.screenshots,
+    );
 
     console.log(`\n✅ Successfully processed ${processedCount} job(s)\n`);
 

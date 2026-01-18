@@ -73,9 +73,6 @@ export interface AppConfig {
   browserUseSendScreenshots: boolean;
   browserUseMaxJobsToClick: number; // Max number of jobs to click through and extract details
 
-  // Scraper Method Selection
-  scraperMethod: "browser-use" | "patchright" | "hybrid";
-
   // Hybrid Scraper (Browser-Use login + Patchright extraction via CDP)
   hybridCdpPort: number; // Port for Chrome debugging (default: 9222)
   hybridLoginTimeout: number; // Max time for Browser-Use login (ms)
@@ -242,12 +239,6 @@ function loadConfig(): AppConfig {
       getEnv("SJS_BROWSER_USE_MAX_JOBS_TO_CLICK", "5"),
       10,
     ),
-
-    // Scraper Method Selection
-    scraperMethod: (getEnv("SJS_SCRAPER_METHOD", "browser-use") as
-      | "browser-use"
-      | "patchright"
-      | "hybrid"),
 
     // Hybrid Scraper (Browser-Use login + Patchright extraction via CDP)
     hybridCdpPort: parseInt(getEnv("SJS_HYBRID_CDP_PORT", "9222"), 10),

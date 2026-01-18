@@ -745,35 +745,26 @@ class BrowserController:
 
         # Build task prompt based on action type
         if action_type == "click_job":
-            task = f"""Open the job details for: {target_description}
+            task = f"""Click on the job card to open its details: {target_description}
+
+IMPORTANT: Look for the element with a RED BORDER/OUTLINE - this is the exact job card you need to click.
 
 STEPS:
-1. First, close any open modals (press Escape or click X)
-2. Scroll until you find the job card with this EXACT title
-3. Find a clickable element WITHIN that job card that opens the job details:
-   - The job title text itself
-   - A "View Details", "More Info", "See Job", "Learn More" button
-   - The job card container if it's clickable
-   - Any button that looks like it would show more information
-4. Click that element
-5. Verify the opened modal/panel shows the CORRECT job (check if the description relates to the title)
-6. If wrong job opened, close it and try a DIFFERENT element within the same job card
+1. Look for the job card that has a RED BORDER or RED OUTLINE around it
+2. Click directly on that highlighted element (the title text or anywhere inside the red-bordered card)
+3. Wait for a modal/panel to open showing the job details
+4. Verify the opened content shows job details (description, requirements, etc.)
 
-IMPORTANT:
-- Only click elements INSIDE the job card that contains the target title
-- Do NOT click buttons from adjacent/other job cards
-- The job card is a container/row that groups the title with its action buttons
-- Try multiple clickable elements within the card if the first one doesn't work
+If you don't see a red-bordered element:
+- Look for the job title mentioned in the target description
+- Click on that job card
 
 DO NOT click: "Apply", "Save", "Share", "Earn", "Refer" buttons - these won't show the job description
 
-Keep trying different elements within the correct job card until you succeed.
-Only report FAILED after trying all reasonable clickable elements within that card.
-
 Report:
-- SUCCESS: Correct job details are now visible
-- NOT_FOUND: Job with this exact title doesn't exist on the page
-- FAILED: Tried multiple elements but couldn't open the correct job details"""
+- SUCCESS: Job details modal/panel is now visible
+- NOT_FOUND: Cannot find the highlighted element or job title
+- FAILED: Clicked but no job details appeared"""
 
         elif action_type == "close_modal":
             task = f"""Close the job details modal/panel.

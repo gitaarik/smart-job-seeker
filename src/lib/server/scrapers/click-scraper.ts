@@ -26,7 +26,6 @@ import {
 } from "$lib/server/pagination-utils";
 import { detectModalContent } from "$lib/server/scraper-interactive";
 import { performPatchwrightLogin } from "../patchright-login";
-import type { BrowserUseClient } from "$lib/server/browser-use-client";
 
 /**
  * Scrape jobs using click-based navigation (SPAs)
@@ -36,7 +35,6 @@ import type { BrowserUseClient } from "$lib/server/browser-use-client";
  * @param searchUrl URL of the search results page
  * @param platformId Platform ID for job storage
  * @param profileId Optional profile ID for credential-based login
- * @param browserUseClient Optional Browser-Use client for AI-powered clicking
  * @returns Object with jobsProcessed count and strippedHtml for debugging
  */
 export async function scrapeJobsWithClicks(
@@ -44,7 +42,6 @@ export async function scrapeJobsWithClicks(
   searchUrl: string,
   platformId: string,
   profileId?: number,
-  browserUseClient?: BrowserUseClient,
 ): Promise<{ jobsProcessed: number; strippedHtml: string }> {
   console.log("\n🔄 Starting SPA scraping mode (click-based navigation)");
 
@@ -171,14 +168,15 @@ export async function scrapeJobsWithClicks(
       };
     }
 
-    // If we also detected job-detail buttons via CDP, verify consistency
+    // If we detected job-detail buttons via CDP, prefer those IDs
+    // (they are high-confidence clickable elements that open job details)
     if (jobDetailButtonIds.length > 0) {
       console.log(
-        `      ℹ️  CDP also detected ${jobDetailButtonIds.length} job-detail buttons`,
+        `      ℹ️  CDP detected ${jobDetailButtonIds.length} job-detail buttons`,
       );
 
-      // Use CDP IDs as fallback if LLM extraction failed
       if (jobs.length === 0) {
+        // Fallback: use CDP IDs directly if LLM extraction failed
         console.log(
           "      ⚠️  LLM found 0 jobs, falling back to CDP-detected buttons",
         );
@@ -186,6 +184,36 @@ export async function scrapeJobsWithClicks(
           clickableId: id,
           title: null,
         }));
+      } else {
+        // Filter LLM jobs to only include CDP-detected job-detail-button IDs
+        // This prevents clicking on non-job elements (navigation, logos, etc.)
+        const jobDetailButtonIdSet = new Set(jobDetailButtonIds);
+        const filteredJobs = jobs.filter((j) =>
+          jobDetailButtonIdSet.has(j.clickableId)
+        );
+
+        if (filteredJobs.length > 0) {
+          const droppedCount = jobs.length - filteredJobs.length;
+          if (droppedCount > 0) {
+            console.log(
+              `      🎯 Filtered to ${filteredJobs.length} jobs with job-detail-button IDs (dropped ${droppedCount} non-job elements)`,
+            );
+          }
+          jobs = filteredJobs;
+        } else {
+          // LLM IDs don't match any job-detail-buttons - use CDP IDs with LLM titles if possible
+          console.log(
+            "      ⚠️  LLM IDs don't match job-detail buttons, using CDP IDs",
+          );
+          jobs = jobDetailButtonIds.map((id) => {
+            // Try to find a title from LLM results for context (even if ID didn't match)
+            const llmJob = jobs.find((j) => j.title && j.title.length > 0);
+            return {
+              clickableId: id,
+              title: null, // Can't reliably map titles when IDs don't match
+            };
+          });
+        }
       }
     }
 
@@ -295,73 +323,41 @@ export async function scrapeJobsWithClicks(
       }
 
       try {
-        // Use Browser-Use visual AI for clicking when client is available
-        if (browserUseClient) {
-          // Build target description for visual AI
-          const targetDescription = `the job titled "${searchJobData.title}"${
-            searchJobData.company ? ` at ${searchJobData.company}` : ""
-          }`;
+        // Use Patchright direct clicking
+        console.log(
+          `      👆 Clicking data-extract-clickable-id="${clickableId}"...`,
+        );
 
-          console.log(`      🤖 Browser-Use clicking: ${targetDescription}`);
+        // Close any open modals first
+        await page.locator('[class*="close"]').first().click().catch(
+          () => {},
+        );
+        await page.locator('[aria-label*="close" i]').first().click().catch(
+          () => {},
+        );
+        await page.keyboard.press("Escape").catch(() => {});
+        await page.waitForTimeout(config.scraperModalWaitTimeout);
 
-          // Force screenshots ON for clicking - visual context is critical
-          // for reliably identifying the correct element to click
-          // Agent handles retries internally - will keep trying until success or exhausted
-          const clickResult = await browserUseClient.performHybridAction({
-            actionType: "click_job",
-            targetDescription,
-            maxTime: 90, // 90s to allow agent to retry internally
-            sendScreenshots: true, // Always use vision for clicking
-          });
+        // Capture page state before click for comparison
+        const beforeClick = await page.evaluate(() =>
+          document.body.innerText.length
+        );
 
-          if (!clickResult.success) {
-            console.warn(
-              `      ❌ Click failed: ${clickResult.action_performed}`,
-            );
-            continue; // Skip to next job
-          }
+        await page.locator(`[data-extract-clickable-id="${clickableId}"]`)
+          .click();
 
-          console.log(`      ✓ Click successful, modal should be open`);
+        await page.waitForTimeout(config.scraperClickWaitTimeout);
 
-          // Wait a bit for modal to fully render
-          await page.waitForTimeout(config.scraperClickWaitTimeout);
-        } else {
-          // No Browser-Use client - use Patchright direct clicking
-          console.log(
-            `      👆 Clicking data-extract-clickable-id="${clickableId}"...`,
+        // Check if page content changed after click
+        const afterClick = await page.evaluate(() =>
+          document.body.innerText.length
+        );
+        const contentChanged = Math.abs(afterClick - beforeClick) > 100;
+
+        if (!contentChanged) {
+          console.warn(
+            `      ⚠️  Page content didn't change after click (before: ${beforeClick}, after: ${afterClick})`,
           );
-
-          // Close any open modals first
-          await page.locator('[class*="close"]').first().click().catch(
-            () => {},
-          );
-          await page.locator('[aria-label*="close" i]').first().click().catch(
-            () => {},
-          );
-          await page.keyboard.press("Escape").catch(() => {});
-          await page.waitForTimeout(config.scraperModalWaitTimeout);
-
-          // Capture page state before click for comparison
-          const beforeClick = await page.evaluate(() =>
-            document.body.innerText.length
-          );
-
-          await page.locator(`[data-extract-clickable-id="${clickableId}"]`)
-            .click();
-
-          await page.waitForTimeout(config.scraperClickWaitTimeout);
-
-          // Check if page content changed after click
-          const afterClick = await page.evaluate(() =>
-            document.body.innerText.length
-          );
-          const contentChanged = Math.abs(afterClick - beforeClick) > 100;
-
-          if (!contentChanged) {
-            console.warn(
-              `      ⚠️  Page content didn't change after click (before: ${beforeClick}, after: ${afterClick})`,
-            );
-          }
         }
 
         // Try to find a modal/dialog/panel that appeared after the click
@@ -429,25 +425,12 @@ export async function scrapeJobsWithClicks(
         const hasDescription = jobData.job_description &&
           jobData.job_description.trim() !== "";
 
-        // Helper to close modal when using Browser-Use
-        const closeModalIfBrowserUse = async () => {
-          if (browserUseClient) {
-            await browserUseClient.performHybridAction({
-              actionType: "close_modal",
-              targetDescription: "Close the job detail modal",
-              maxTime: 10,
-              sendScreenshots: true, // Use vision for reliable modal closing
-            });
-          }
-        };
-
         // If we don't have at least a title OR company, it's probably not a real job
         if (!hasTitle && !hasCompany) {
           console.log(
             `      ⏭️  Skipping - No title or company (likely login/error page)`,
           );
           stats.consecutiveClosedJobs = 0; // Reset counter for invalid pages
-          await closeModalIfBrowserUse();
           continue;
         }
 
@@ -457,7 +440,6 @@ export async function scrapeJobsWithClicks(
             `      ⏭️  Skipping - No title or description (incomplete data)`,
           );
           stats.consecutiveClosedJobs = 0;
-          await closeModalIfBrowserUse();
           continue;
         }
 
@@ -468,7 +450,6 @@ export async function scrapeJobsWithClicks(
           );
           stats.jobsSkippedOld++;
           stats.consecutiveClosedJobs = 0; // Reset (not a closed job)
-          await closeModalIfBrowserUse();
           continue;
         }
 
@@ -486,13 +467,11 @@ export async function scrapeJobsWithClicks(
           });
           if (stopCheck.shouldStop) {
             console.log(`\n      🛑 ${stopCheck.reason}`);
-            await closeModalIfBrowserUse();
             return {
               jobsProcessed: stats.jobsProcessed,
               strippedHtml: savedStrippedHtml,
             };
           }
-          await closeModalIfBrowserUse();
           continue;
         }
 
@@ -505,17 +484,6 @@ export async function scrapeJobsWithClicks(
 
         const action = result.created ? "Created" : "Updated";
         console.log(`      ✅ ${action} job #${result.id}`);
-
-        // Close modal using Browser-Use when available
-        if (browserUseClient) {
-          console.log(`      🤖 Browser-Use closing modal...`);
-          await browserUseClient.performHybridAction({
-            actionType: "close_modal",
-            targetDescription: "Close the job detail modal",
-            maxTime: 10,
-            sendScreenshots: true, // Use vision for reliable modal closing
-          });
-        }
 
         stats.jobsProcessed++;
 
