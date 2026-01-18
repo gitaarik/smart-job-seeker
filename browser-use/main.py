@@ -179,3 +179,51 @@ async def close_hybrid_session():
         logger.error(f"Error closing hybrid session: {str(e)}")
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
+
+
+class HybridActionRequest(BaseModel):
+    """Request to perform a single action on the existing hybrid browser session"""
+
+    action_type: str  # "click_job" | "close_modal" | "scroll"
+    target_description: str  # Natural language description of target
+    cdp_port: Optional[int] = 9222
+    max_time: Optional[int] = 30  # Shorter timeout for single actions
+    send_screenshots: Optional[bool] = True
+
+
+class HybridActionResponse(BaseModel):
+    """Response from hybrid action"""
+
+    success: bool
+    action_performed: str  # What the agent actually did
+    current_url: str
+    execution_time_ms: int
+    error: Optional[str] = None
+
+
+@app.post("/hybrid/action", response_model=HybridActionResponse)
+async def perform_hybrid_action(request: HybridActionRequest):
+    """
+    Perform a single action on the existing hybrid browser session.
+
+    Used by the hybrid scraper to:
+    1. Click on a specific job card (visual AI finds it)
+    2. Close a modal/dialog after extraction
+    3. Scroll to load more content
+
+    The Chrome browser must already be running from /hybrid/start.
+    """
+    try:
+        controller = get_hybrid_controller()
+        result = await controller.perform_hybrid_action(
+            action_type=request.action_type,
+            target_description=request.target_description,
+            cdp_port=request.cdp_port,
+            max_time=request.max_time,
+            send_screenshots=request.send_screenshots,
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Error performing hybrid action: {str(e)}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))

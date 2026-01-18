@@ -54,6 +54,24 @@ export interface HybridSessionResponse {
   error?: string;
 }
 
+// Hybrid action parameters (for clicking jobs, closing modals, etc.)
+export interface HybridActionParams {
+  actionType: "click_job" | "close_modal" | "scroll";
+  targetDescription: string; // e.g., "the job titled 'Senior Python Developer'"
+  cdpPort?: number;
+  maxTime?: number;
+  sendScreenshots?: boolean;
+}
+
+// Hybrid action response
+export interface HybridActionResponse {
+  success: boolean;
+  action_performed: string; // "completed", "not_found", "wrong_button", etc.
+  current_url: string;
+  execution_time_ms: number;
+  error?: string;
+}
+
 // Job data structure expected from Browser-Use extraction
 export interface JobData {
   title: string;
@@ -430,5 +448,73 @@ export class BrowserUseClient {
         `[BrowserUseClient] Error closing hybrid session: ${error}`,
       );
     }
+  }
+
+  /**
+   * Perform a single action on the existing hybrid browser session.
+   * Uses Browser-Use's visual AI to click job cards, close modals, etc.
+   * @param params Action parameters
+   * @returns Response with success status and action details
+   */
+  async performHybridAction(
+    params: HybridActionParams,
+  ): Promise<HybridActionResponse> {
+    const sendScreenshots = params.sendScreenshots ??
+      this.config.sendScreenshots;
+    console.log(
+      `[BrowserUseClient] Performing hybrid action: ${params.actionType}`,
+    );
+    console.log(`[BrowserUseClient] Target: ${params.targetDescription}`);
+
+    let response: Response;
+    try {
+      response = await fetch(`${this.config.baseUrl}/hybrid/action`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action_type: params.actionType,
+          target_description: params.targetDescription,
+          cdp_port: params.cdpPort ?? 9222,
+          max_time: params.maxTime ?? 30,
+          send_screenshots: sendScreenshots,
+        }),
+        signal: AbortSignal.timeout(60000), // 60s timeout for action
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.error(`\n[BrowserUseClient] Hybrid action failed: ${errorMsg}`);
+      return {
+        success: false,
+        action_performed: "error",
+        current_url: "",
+        execution_time_ms: 0,
+        error: `Hybrid action failed: ${errorMsg}`,
+      };
+    }
+
+    if (!response.ok) {
+      const errorBody = await response.text().catch(() => "");
+      console.error(
+        `\n[BrowserUseClient] Hybrid action API error: ${response.status} ${response.statusText}`,
+      );
+      if (errorBody) {
+        console.error(`   Response: ${errorBody.substring(0, 500)}`);
+      }
+      return {
+        success: false,
+        action_performed: "error",
+        current_url: "",
+        execution_time_ms: 0,
+        error: `Hybrid action API error: ${response.status} ${response.statusText}`,
+      };
+    }
+
+    const result: HybridActionResponse = await response.json();
+
+    console.log(
+      `[BrowserUseClient] Hybrid action result: success=${result.success}, performed=${result.action_performed}`,
+    );
+
+    return result;
   }
 }

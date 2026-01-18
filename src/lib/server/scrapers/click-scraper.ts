@@ -26,6 +26,7 @@ import {
 } from "$lib/server/pagination-utils";
 import { detectModalContent } from "$lib/server/scraper-interactive";
 import { performPatchwrightLogin } from "../patchright-login";
+import type { BrowserUseClient } from "$lib/server/browser-use-client";
 
 /**
  * Scrape jobs using click-based navigation (SPAs)
@@ -35,6 +36,7 @@ import { performPatchwrightLogin } from "../patchright-login";
  * @param searchUrl URL of the search results page
  * @param platformId Platform ID for job storage
  * @param profileId Optional profile ID for credential-based login
+ * @param browserUseClient Optional Browser-Use client for AI-powered clicking
  * @returns Object with jobsProcessed count and strippedHtml for debugging
  */
 export async function scrapeJobsWithClicks(
@@ -42,6 +44,7 @@ export async function scrapeJobsWithClicks(
   searchUrl: string,
   platformId: string,
   profileId?: number,
+  browserUseClient?: BrowserUseClient,
 ): Promise<{ jobsProcessed: number; strippedHtml: string }> {
   console.log("\n🔄 Starting SPA scraping mode (click-based navigation)");
 
@@ -292,41 +295,85 @@ export async function scrapeJobsWithClicks(
       }
 
       try {
-        console.log(
-          `      👆 Clicking data-extract-clickable-id="${clickableId}"...`,
-        );
+        // Use Browser-Use visual AI for clicking when client is available
+        if (browserUseClient) {
+          // Build target description for visual AI
+          const targetDescription = `the job titled "${searchJobData.title}"${
+            searchJobData.company ? ` at ${searchJobData.company}` : ""
+          }`;
 
-        // Close any open modals first (SPAs often have close buttons or backdrop clicks)
-        // Try common modal close patterns
-        await page.locator('[class*="close"]').first().click().catch(() => {});
-        await page.locator('[aria-label*="close" i]').first().click().catch(
-          () => {},
-        );
-        await page.keyboard.press("Escape").catch(() => {});
-        await page.waitForTimeout(config.scraperModalWaitTimeout);
+          console.log(`      🤖 Browser-Use clicking: ${targetDescription}`);
 
-        // Capture page state before click for comparison
-        const beforeClick = await page.evaluate(() =>
-          document.body.innerText.length
-        );
+          let clickResult = await browserUseClient.performHybridAction({
+            actionType: "click_job",
+            targetDescription,
+            maxTime: 30,
+          });
 
-        await page.locator(`[data-extract-clickable-id="${clickableId}"]`)
-          .click();
+          // Retry once if wrong button was clicked
+          if (
+            !clickResult.success &&
+            clickResult.action_performed === "wrong_button"
+          ) {
+            console.warn(`      ⚠️ Clicked wrong button, retrying...`);
+            clickResult = await browserUseClient.performHybridAction({
+              actionType: "click_job",
+              targetDescription,
+              maxTime: 30,
+            });
+          }
 
-        // Wait for SPA to update - look for common modal/dialog/panel containers
-        // This is a generic approach that works across different SPA frameworks
-        await page.waitForTimeout(config.scraperClickWaitTimeout);
+          if (!clickResult.success) {
+            console.warn(
+              `      ❌ Click failed: ${clickResult.action_performed}`,
+            );
+            continue; // Skip to next job
+          }
 
-        // Check if page content changed after click
-        const afterClick = await page.evaluate(() =>
-          document.body.innerText.length
-        );
-        const contentChanged = Math.abs(afterClick - beforeClick) > 100;
+          console.log(`      ✓ Click successful, modal should be open`);
 
-        if (!contentChanged) {
-          console.warn(
-            `      ⚠️  Page content didn't change after click (before: ${beforeClick}, after: ${afterClick})`,
+          // Wait a bit for modal to fully render
+          await page.waitForTimeout(config.scraperClickWaitTimeout);
+        } else {
+          // Fallback: Use Patchright direct clicking via CDP-marked elements
+          console.log(
+            `      👆 Clicking data-extract-clickable-id="${clickableId}"...`,
           );
+
+          // Close any open modals first (SPAs often have close buttons or backdrop clicks)
+          // Try common modal close patterns
+          await page.locator('[class*="close"]').first().click().catch(
+            () => {},
+          );
+          await page.locator('[aria-label*="close" i]').first().click().catch(
+            () => {},
+          );
+          await page.keyboard.press("Escape").catch(() => {});
+          await page.waitForTimeout(config.scraperModalWaitTimeout);
+
+          // Capture page state before click for comparison
+          const beforeClick = await page.evaluate(() =>
+            document.body.innerText.length
+          );
+
+          await page.locator(`[data-extract-clickable-id="${clickableId}"]`)
+            .click();
+
+          // Wait for SPA to update - look for common modal/dialog/panel containers
+          // This is a generic approach that works across different SPA frameworks
+          await page.waitForTimeout(config.scraperClickWaitTimeout);
+
+          // Check if page content changed after click
+          const afterClick = await page.evaluate(() =>
+            document.body.innerText.length
+          );
+          const contentChanged = Math.abs(afterClick - beforeClick) > 100;
+
+          if (!contentChanged) {
+            console.warn(
+              `      ⚠️  Page content didn't change after click (before: ${beforeClick}, after: ${afterClick})`,
+            );
+          }
         }
 
         // Try to find a modal/dialog/panel that appeared after the click
@@ -370,12 +417,24 @@ export async function scrapeJobsWithClicks(
         const hasDescription = jobData.job_description &&
           jobData.job_description.trim() !== "";
 
+        // Helper to close modal when using Browser-Use
+        const closeModalIfBrowserUse = async () => {
+          if (browserUseClient) {
+            await browserUseClient.performHybridAction({
+              actionType: "close_modal",
+              targetDescription: "Close the job detail modal",
+              maxTime: 10,
+            });
+          }
+        };
+
         // If we don't have at least a title OR company, it's probably not a real job
         if (!hasTitle && !hasCompany) {
           console.log(
             `      ⏭️  Skipping - No title or company (likely login/error page)`,
           );
           stats.consecutiveClosedJobs = 0; // Reset counter for invalid pages
+          await closeModalIfBrowserUse();
           continue;
         }
 
@@ -385,6 +444,7 @@ export async function scrapeJobsWithClicks(
             `      ⏭️  Skipping - No title or description (incomplete data)`,
           );
           stats.consecutiveClosedJobs = 0;
+          await closeModalIfBrowserUse();
           continue;
         }
 
@@ -395,6 +455,7 @@ export async function scrapeJobsWithClicks(
           );
           stats.jobsSkippedOld++;
           stats.consecutiveClosedJobs = 0; // Reset (not a closed job)
+          await closeModalIfBrowserUse();
           continue;
         }
 
@@ -412,11 +473,13 @@ export async function scrapeJobsWithClicks(
           });
           if (stopCheck.shouldStop) {
             console.log(`\n      🛑 ${stopCheck.reason}`);
+            await closeModalIfBrowserUse();
             return {
               jobsProcessed: stats.jobsProcessed,
               strippedHtml: savedStrippedHtml,
             };
           }
+          await closeModalIfBrowserUse();
           continue;
         }
 
@@ -429,6 +492,16 @@ export async function scrapeJobsWithClicks(
 
         const action = result.created ? "Created" : "Updated";
         console.log(`      ✅ ${action} job #${result.id}`);
+
+        // Close modal using Browser-Use when available
+        if (browserUseClient) {
+          console.log(`      🤖 Browser-Use closing modal...`);
+          await browserUseClient.performHybridAction({
+            actionType: "close_modal",
+            targetDescription: "Close the job detail modal",
+            maxTime: 10,
+          });
+        }
 
         stats.jobsProcessed++;
 

@@ -201,11 +201,13 @@ export async function scrapeJobsWithHybrid(
     console.log("\n📌 Phase 4: Patchright job extraction...");
 
     // Use click-scraper for extraction (skip login since already logged in)
+    // Pass browserUse client for AI-powered clicking on SPAs
     const result = await scrapeJobsWithClicks(
       page,
       searchUrl,
       platformId,
       undefined, // Don't pass profileId - already logged in
+      browserUse, // Use Browser-Use for clicking job cards
     );
 
     console.log(

@@ -706,3 +706,201 @@ class BrowserController:
                 BrowserController._hybrid_chrome_process = None
 
         return {"closed": True}
+
+    async def perform_hybrid_action(
+        self,
+        action_type: str,
+        target_description: str,
+        cdp_port: int = 9222,
+        max_time: int = 30,
+        send_screenshots: bool = True,
+    ):
+        """
+        Perform a single action on the existing hybrid browser session.
+        Connects a new Browser-Use Agent to the running Chrome via CDP.
+
+        Args:
+            action_type: Type of action ("click_job", "close_modal", "scroll")
+            target_description: Natural language description of target element
+            cdp_port: CDP port (default 9222)
+            max_time: Maximum execution time in seconds
+            send_screenshots: Whether to send screenshots to LLM
+
+        Returns:
+            dict with success, action_performed, current_url, execution_time_ms, error
+        """
+        import asyncio
+        import aiohttp
+
+        start_time = time.time()
+
+        # Build the internal CDP URL (internal port is cdp_port + 1)
+        internal_cdp_port = cdp_port + 1
+        cdp_url = f"http://127.0.0.1:{internal_cdp_port}"
+
+        logger.info(f"[Browser-Use] Performing hybrid action: {action_type}")
+        logger.info(f"[Browser-Use] Target: {target_description}")
+        print(f"[Browser-Use] Performing hybrid action: {action_type}", flush=True)
+        print(f"[Browser-Use] Target: {target_description}", flush=True)
+
+        # Build task prompt based on action type
+        if action_type == "click_job":
+            task = f"""Open the job details for: {target_description}
+
+IMPORTANT - Click the RIGHT element:
+- Click on the job TITLE text itself, OR
+- Click a "View Details", "More Info", "See Job", or similar button
+- Click the job card/row itself if it's clickable
+
+DO NOT click these buttons (they won't show job description):
+- "Apply", "Apply Now", "Easy Apply", "Quick Apply"
+- "Save", "Bookmark", "Heart icon"
+- "Share", "Refer", "Earn"
+
+Your goal is to open a modal/panel showing the FULL JOB DESCRIPTION.
+After clicking, wait for job details to appear.
+
+Report your result:
+- SUCCESS: Job description/details are now visible
+- NOT_FOUND: Could not find the job listing
+- WRONG_BUTTON: Accidentally clicked apply/save (try again)
+- FAILED: Click didn't produce expected result"""
+
+        elif action_type == "close_modal":
+            task = f"""Close the job details modal/panel.
+
+Look for:
+- Close button (X icon, "Close" text)
+- Click outside the modal (backdrop)
+- Press Escape key
+
+After closing, verify the modal is no longer visible.
+Report SUCCESS if modal is closed, FAILED if still visible."""
+
+        elif action_type == "scroll":
+            task = f"""Scroll down the page to load more job listings.
+
+{target_description}
+
+Scroll smoothly to trigger infinite scroll loading.
+Wait for new content to appear.
+Report SUCCESS if new jobs loaded, NO_MORE if no new content appeared."""
+
+        else:
+            return {
+                "success": False,
+                "action_performed": "none",
+                "current_url": "",
+                "execution_time_ms": int((time.time() - start_time) * 1000),
+                "error": f"Unknown action_type: {action_type}",
+            }
+
+        # Determine vision usage
+        use_vision_for_task = send_screenshots and self.vision_support
+
+        try:
+            # Verify Chrome is still running on CDP port
+            async with aiohttp.ClientSession() as session:
+                try:
+                    async with session.get(
+                        f"{cdp_url}/json/version",
+                        timeout=aiohttp.ClientTimeout(total=2)
+                    ) as resp:
+                        if resp.status != 200:
+                            raise Exception("CDP not responding")
+                except Exception as e:
+                    return {
+                        "success": False,
+                        "action_performed": "none",
+                        "current_url": "",
+                        "execution_time_ms": int((time.time() - start_time) * 1000),
+                        "error": f"Chrome not running on CDP port {cdp_port}: {e}",
+                    }
+
+            # Connect Browser-Use to existing Chrome via CDP
+            browser = Browser(
+                cdp_url=cdp_url,
+                minimum_wait_page_load_time=0.5,
+                wait_for_network_idle_page_load_time=1.0,
+                wait_between_actions=0.5,
+            )
+
+            # Create agent for this specific action
+            agent = Agent(
+                task=task,
+                llm=self.llm,
+                browser=browser,
+                use_vision=use_vision_for_task,
+            )
+
+            # Run the action (short task)
+            result = await agent.run()
+
+            execution_time = int((time.time() - start_time) * 1000)
+
+            # Get current URL
+            current_url = ""
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(
+                        f"{cdp_url}/json/list",
+                        timeout=aiohttp.ClientTimeout(total=2)
+                    ) as resp:
+                        if resp.status == 200:
+                            pages_info = await resp.json()
+                            if pages_info:
+                                current_url = pages_info[0].get('url', '')
+            except Exception as url_err:
+                logger.warning(f"[Browser-Use] Could not get current URL: {url_err}")
+
+            # Parse result to determine success
+            success = False
+            action_performed = "unknown"
+
+            if hasattr(result, 'history') and result.history:
+                for item in reversed(result.history[-5:]):
+                    if hasattr(item, 'model_output') and item.model_output:
+                        output = item.model_output
+                        if hasattr(output, 'action') and output.action:
+                            for action in output.action:
+                                if hasattr(action, 'done') and action.done:
+                                    done_text = getattr(action.done, 'text', '').upper()
+                                    if 'SUCCESS' in done_text:
+                                        success = True
+                                        action_performed = "completed"
+                                    elif 'NOT_FOUND' in done_text:
+                                        action_performed = "not_found"
+                                    elif 'WRONG_BUTTON' in done_text:
+                                        action_performed = "wrong_button"
+                                    elif 'NO_MORE' in done_text:
+                                        action_performed = "no_more_content"
+                                    elif 'FAILED' in done_text:
+                                        action_performed = "failed"
+                                    break
+                    if action_performed != "unknown":
+                        break
+
+            logger.info(f"[Browser-Use] Action result: success={success}, performed={action_performed}")
+            print(f"[Browser-Use] Action result: success={success}, performed={action_performed}", flush=True)
+
+            return {
+                "success": success,
+                "action_performed": action_performed,
+                "current_url": current_url,
+                "execution_time_ms": execution_time,
+            }
+
+        except Exception as e:
+            execution_time = int((time.time() - start_time) * 1000)
+            error_str = str(e)
+
+            logger.error(f"[Browser-Use] Hybrid action error: {error_str}")
+            print(f"[Browser-Use] Hybrid action error: {error_str}", flush=True)
+
+            return {
+                "success": False,
+                "action_performed": "error",
+                "current_url": "",
+                "execution_time_ms": execution_time,
+                "error": error_str,
+            }
