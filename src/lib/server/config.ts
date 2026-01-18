@@ -234,7 +234,7 @@ function loadConfig(): AppConfig {
     browserUseFallbackEnabled:
       getEnv("SJS_BROWSER_USE_FALLBACK_ENABLED", "true") === "true",
     browserUseSendScreenshots:
-      getEnv("SJS_BROWSER_USE_SEND_SCREENSHOTS", "false") === "true",
+      getEnv("SJS_BROWSER_USE_SEND_SCREENSHOTS", "true") === "true",
     browserUseMaxJobsToClick: parseInt(
       getEnv("SJS_BROWSER_USE_MAX_JOBS_TO_CLICK", "5"),
       10,
