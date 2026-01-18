@@ -478,7 +478,7 @@ export class BrowserUseClient {
           max_time: params.maxTime ?? 30,
           send_screenshots: sendScreenshots,
         }),
-        signal: AbortSignal.timeout(60000), // 60s timeout for action
+        signal: AbortSignal.timeout(120000), // 120s timeout for action (screenshots add latency)
       });
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
@@ -505,7 +505,8 @@ export class BrowserUseClient {
         action_performed: "error",
         current_url: "",
         execution_time_ms: 0,
-        error: `Hybrid action API error: ${response.status} ${response.statusText}`,
+        error:
+          `Hybrid action API error: ${response.status} ${response.statusText}`,
       };
     }
 

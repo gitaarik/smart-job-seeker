@@ -304,24 +304,15 @@ export async function scrapeJobsWithClicks(
 
           console.log(`      🤖 Browser-Use clicking: ${targetDescription}`);
 
-          let clickResult = await browserUseClient.performHybridAction({
+          // Force screenshots ON for clicking - visual context is critical
+          // for reliably identifying the correct element to click
+          // Agent handles retries internally - will keep trying until success or exhausted
+          const clickResult = await browserUseClient.performHybridAction({
             actionType: "click_job",
             targetDescription,
-            maxTime: 30,
+            maxTime: 90, // 90s to allow agent to retry internally
+            sendScreenshots: true, // Always use vision for clicking
           });
-
-          // Retry once if wrong button was clicked
-          if (
-            !clickResult.success &&
-            clickResult.action_performed === "wrong_button"
-          ) {
-            console.warn(`      ⚠️ Clicked wrong button, retrying...`);
-            clickResult = await browserUseClient.performHybridAction({
-              actionType: "click_job",
-              targetDescription,
-              maxTime: 30,
-            });
-          }
 
           if (!clickResult.success) {
             console.warn(
@@ -335,13 +326,12 @@ export async function scrapeJobsWithClicks(
           // Wait a bit for modal to fully render
           await page.waitForTimeout(config.scraperClickWaitTimeout);
         } else {
-          // Fallback: Use Patchright direct clicking via CDP-marked elements
+          // No Browser-Use client - use Patchright direct clicking
           console.log(
             `      👆 Clicking data-extract-clickable-id="${clickableId}"...`,
           );
 
-          // Close any open modals first (SPAs often have close buttons or backdrop clicks)
-          // Try common modal close patterns
+          // Close any open modals first
           await page.locator('[class*="close"]').first().click().catch(
             () => {},
           );
@@ -359,8 +349,6 @@ export async function scrapeJobsWithClicks(
           await page.locator(`[data-extract-clickable-id="${clickableId}"]`)
             .click();
 
-          // Wait for SPA to update - look for common modal/dialog/panel containers
-          // This is a generic approach that works across different SPA frameworks
           await page.waitForTimeout(config.scraperClickWaitTimeout);
 
           // Check if page content changed after click
@@ -407,8 +395,32 @@ export async function scrapeJobsWithClicks(
         const detailJobData = await extractJobData(strippedHtml, pseudoUrl);
 
         // Merge search page data with detail page data
-        console.log(`      🔀 Merging search and detail page data...`);
         const jobData = mergeJobData(searchJobData, detailJobData);
+
+        // Log final merged job data
+        console.log(`      📋 Final job data:`);
+        console.log(`         Title: ${jobData.title || "(none)"}`);
+        if (jobData.job_poster) {
+          console.log(`         Company: ${jobData.job_poster}`);
+        }
+        if (jobData.location) {
+          console.log(`         Location: ${jobData.location}`);
+        }
+        if (jobData.remote) console.log(`         Remote: ${jobData.remote}`);
+        if (jobData.job_type) console.log(`         Type: ${jobData.job_type}`);
+        if (jobData.experience_level) {
+          console.log(`         Level: ${jobData.experience_level}`);
+        }
+        if (jobData.skills?.length) {
+          console.log(`         Skills: ${jobData.skills.join(", ")}`);
+        }
+        if (jobData.job_description) {
+          console.log(
+            `         Description: ${
+              jobData.job_description.substring(0, 80)
+            }...`,
+          );
+        }
 
         // Skip if no meaningful data was extracted (invalid/expired page)
         // Check if critical fields are null/empty
@@ -424,6 +436,7 @@ export async function scrapeJobsWithClicks(
               actionType: "close_modal",
               targetDescription: "Close the job detail modal",
               maxTime: 10,
+              sendScreenshots: true, // Use vision for reliable modal closing
             });
           }
         };
@@ -500,6 +513,7 @@ export async function scrapeJobsWithClicks(
             actionType: "close_modal",
             targetDescription: "Close the job detail modal",
             maxTime: 10,
+            sendScreenshots: true, // Use vision for reliable modal closing
           });
         }
 

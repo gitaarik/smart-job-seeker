@@ -510,26 +510,6 @@ export async function extractJobData(
   const data = aiResult.response;
 
   try {
-    // Debug: Log extracted data
-    console.log("Extracted job data:", {
-      title: data.title,
-      company: data.job_poster,
-      location: data.location,
-      date_posted: data.date_posted || null,
-      salary: formatSalary(data),
-      remote: data.remote,
-      job_type: data.job_type,
-      experience_level: data.experience_level,
-      skills: data.skills,
-      status: data.status,
-      job_description: data.job_description
-        ? `${data.job_description.substring(0, 100)}...`
-        : null,
-      company_description: data.company_description
-        ? `${data.company_description.substring(0, 100)}...`
-        : null,
-    });
-
     // 7. If LLM didn't extract date, try fallback regex extraction
     if (!data.date_posted) {
       // Look for "Posted X ago" patterns in the stripped HTML

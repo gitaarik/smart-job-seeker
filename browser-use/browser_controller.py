@@ -747,24 +747,33 @@ class BrowserController:
         if action_type == "click_job":
             task = f"""Open the job details for: {target_description}
 
-IMPORTANT - Click the RIGHT element:
-- Click on the job TITLE text itself, OR
-- Click a "View Details", "More Info", "See Job", or similar button
-- Click the job card/row itself if it's clickable
+STEPS:
+1. First, close any open modals (press Escape or click X)
+2. Scroll until you find the job card with this EXACT title
+3. Find a clickable element WITHIN that job card that opens the job details:
+   - The job title text itself
+   - A "View Details", "More Info", "See Job", "Learn More" button
+   - The job card container if it's clickable
+   - Any button that looks like it would show more information
+4. Click that element
+5. Verify the opened modal/panel shows the CORRECT job (check if the description relates to the title)
+6. If wrong job opened, close it and try a DIFFERENT element within the same job card
 
-DO NOT click these buttons (they won't show job description):
-- "Apply", "Apply Now", "Easy Apply", "Quick Apply"
-- "Save", "Bookmark", "Heart icon"
-- "Share", "Refer", "Earn"
+IMPORTANT:
+- Only click elements INSIDE the job card that contains the target title
+- Do NOT click buttons from adjacent/other job cards
+- The job card is a container/row that groups the title with its action buttons
+- Try multiple clickable elements within the card if the first one doesn't work
 
-Your goal is to open a modal/panel showing the FULL JOB DESCRIPTION.
-After clicking, wait for job details to appear.
+DO NOT click: "Apply", "Save", "Share", "Earn", "Refer" buttons - these won't show the job description
 
-Report your result:
-- SUCCESS: Job description/details are now visible
-- NOT_FOUND: Could not find the job listing
-- WRONG_BUTTON: Accidentally clicked apply/save (try again)
-- FAILED: Click didn't produce expected result"""
+Keep trying different elements within the correct job card until you succeed.
+Only report FAILED after trying all reasonable clickable elements within that card.
+
+Report:
+- SUCCESS: Correct job details are now visible
+- NOT_FOUND: Job with this exact title doesn't exist on the page
+- FAILED: Tried multiple elements but couldn't open the correct job details"""
 
         elif action_type == "close_modal":
             task = f"""Close the job details modal/panel.
@@ -857,14 +866,37 @@ Report SUCCESS if new jobs loaded, NO_MORE if no new content appeared."""
             success = False
             action_performed = "unknown"
 
-            if hasattr(result, 'history') and result.history:
+            # First, try to get the final result directly (browser-use provides this)
+            final_result_text = ""
+            if hasattr(result, 'final_result'):
+                final_result_text = str(result.final_result()).upper() if callable(result.final_result) else str(result.final_result).upper()
+                logger.info(f"[Browser-Use] Final result text: {final_result_text[:200]}")
+
+            # Parse from final result text first
+            if final_result_text:
+                if 'SUCCESS' in final_result_text:
+                    success = True
+                    action_performed = "completed"
+                elif 'NOT_FOUND' in final_result_text:
+                    action_performed = "not_found"
+                elif 'WRONG_BUTTON' in final_result_text:
+                    action_performed = "wrong_button"
+                elif 'NO_MORE' in final_result_text:
+                    action_performed = "no_more_content"
+                elif 'FAILED' in final_result_text:
+                    action_performed = "failed"
+
+            # Fallback: check history for done actions
+            if action_performed == "unknown" and hasattr(result, 'history') and result.history:
                 for item in reversed(result.history[-5:]):
+                    # Check model_output.action for done
                     if hasattr(item, 'model_output') and item.model_output:
                         output = item.model_output
                         if hasattr(output, 'action') and output.action:
                             for action in output.action:
                                 if hasattr(action, 'done') and action.done:
                                     done_text = getattr(action.done, 'text', '').upper()
+                                    logger.info(f"[Browser-Use] Found done action: {done_text[:100]}")
                                     if 'SUCCESS' in done_text:
                                         success = True
                                         action_performed = "completed"
@@ -877,6 +909,20 @@ Report SUCCESS if new jobs loaded, NO_MORE if no new content appeared."""
                                     elif 'FAILED' in done_text:
                                         action_performed = "failed"
                                     break
+
+                    # Also check item.result for done flag (alternative structure)
+                    if action_performed == "unknown" and hasattr(item, 'result') and item.result:
+                        for step_result in item.result:
+                            if hasattr(step_result, 'done') and step_result.done:
+                                done_text = str(step_result.extracted_content).upper() if hasattr(step_result, 'extracted_content') else ""
+                                logger.info(f"[Browser-Use] Found step done: {done_text[:100]}")
+                                if 'SUCCESS' in done_text:
+                                    success = True
+                                    action_performed = "completed"
+                                elif 'FAILED' in done_text:
+                                    action_performed = "failed"
+                                break
+
                     if action_performed != "unknown":
                         break
 
