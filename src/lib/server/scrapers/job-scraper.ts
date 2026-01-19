@@ -105,12 +105,13 @@ CRITICAL RULES:
  * Uses persistent browser session (like a real browser).
  *
  * Flow:
- * 1. Check if session is valid (already logged in)
- * 2. If logged in, skip login and proceed to scraping
- * 3. If not logged in:
- *    - If credentials exist: auto-fill, pause for manual CAPTCHA/verification if needed
- *    - If no credentials: pause for manual login
- * 4. Proceed to scraping
+ * 1. If credentials AND login_page_url configured:
+ *    - Proactive login (skip unreliable URL-based session check)
+ *    - Sites like Indeed allow browsing without login initially
+ * 2. If no proactive login config:
+ *    - Check session via URL pattern
+ *    - If not logged in: credentials → auto-fill, else → manual login
+ * 3. Proceed to scraping
  */
 async function scrapeWithLogin(
   searchUrl: string,
@@ -122,7 +123,9 @@ async function scrapeWithLogin(
   if (credentials) {
     console.log(`🔐 Credentials found for ${platform.name}`);
   } else {
-    console.log(`⚠️ No credentials - will require manual login for ${platform.name}`);
+    console.log(
+      `⚠️ No credentials - will require manual login for ${platform.name}`,
+    );
   }
 
   const browserUse = new BrowserUseClient(
@@ -132,83 +135,60 @@ async function scrapeWithLogin(
   // Determine the login URL pattern for this platform
   const loginUrlPattern = getLoginUrlPattern(platform);
 
+  // Determine login strategy:
+  // - If credentials AND login_page_url configured: proactive login (skip unreliable session check)
+  // - Otherwise: check session first, then manual login if needed
+  const hasProactiveLoginConfig = credentials && platform.login_page_url;
+
   try {
-    // Phase 1: Check if we already have a valid session
-    console.log("\n📌 Phase 1: Checking existing session...");
+    let isLoggedIn = false;
 
-    const sessionCheck = await browserUse.checkSession(
-      searchUrl,
-      loginUrlPattern,
-      CDP_PORT,
-    );
+    if (hasProactiveLoginConfig) {
+      // Proactive login - don't rely on session check for sites that
+      // allow unauthenticated browsing (like Indeed)
+      console.log(
+        "\n📌 Phase 1: Proactive login (credentials + login URL configured)...",
+      );
+      console.log("   Auto-filling credentials...");
 
-    console.log(
-      `   Session exists: ${sessionCheck.session_exists}, Logged in: ${sessionCheck.is_logged_in}`,
-    );
+      const loginTask = await buildLoginPrompt(
+        platform,
+        credentials,
+        searchUrl,
+      );
 
-    let isLoggedIn = sessionCheck.is_logged_in;
+      console.log("📝 Login task preview:");
+      console.log(loginTask.substring(0, 300) + "...");
 
-    // Phase 2: Handle login if not already logged in
-    if (!isLoggedIn) {
-      console.log("\n📌 Phase 2: Login required...");
+      const loginResult = await browserUse.startHybridSession({
+        task: loginTask,
+        startUrl: platform.login_page_url || platform.url,
+        cdpPort: CDP_PORT,
+        maxTime: config.hybridLoginTimeout / 1000,
+        sendScreenshots,
+      });
 
-      if (credentials) {
-        // We have credentials - use Browser-Use to auto-fill
-        console.log("   Auto-filling credentials...");
-
-        const loginTask = await buildLoginPrompt(
+      // Check if login succeeded or needs manual intervention
+      if (loginResult.login_success) {
+        console.log(`✅ Login successful! URL: ${loginResult.current_url}`);
+        isLoggedIn = true;
+      } else if (loginResult.verification_needed) {
+        // Verification code needed - prompt user
+        console.log(
+          `\n🔐 Verification required: ${loginResult.verification_prompt}`,
+        );
+        isLoggedIn = await handleVerification(
+          browserUse,
+          loginResult,
           platform,
-          credentials,
           searchUrl,
         );
-
-        console.log("📝 Login task preview:");
-        console.log(loginTask.substring(0, 300) + "...");
-
-        const loginResult = await browserUse.startHybridSession({
-          task: loginTask,
-          startUrl: platform.login_page_url || platform.url,
-          cdpPort: CDP_PORT,
-          maxTime: config.hybridLoginTimeout / 1000,
-          sendScreenshots,
-        });
-
-        // Check if login succeeded or needs manual intervention
-        if (loginResult.login_success) {
-          console.log(`✅ Login successful! URL: ${loginResult.current_url}`);
-          isLoggedIn = true;
-        } else if (loginResult.verification_needed) {
-          // Verification code needed - prompt user
-          console.log(
-            `\n🔐 Verification required: ${loginResult.verification_prompt}`,
-          );
-          isLoggedIn = await handleVerification(
-            browserUse,
-            loginResult,
-            platform,
-            searchUrl,
-          );
-        } else {
-          // Login failed - likely CAPTCHA, ask user for manual intervention
-          console.log(
-            `\n⚠️ Login failed (likely CAPTCHA). Manual intervention required.`,
-          );
-          console.log(`   Error: ${loginResult.error || "Unknown"}`);
-          isLoggedIn = await waitForManualIntervention(
-            browserUse,
-            platform,
-            searchUrl,
-          );
-        }
       } else {
-        // No credentials - start browser for manual login
-        console.log("   Starting browser for manual login...");
-
-        await browserUse.startSession(
-          platform.login_page_url || platform.url,
-          CDP_PORT,
+        // Login failed - likely CAPTCHA, ask user for manual intervention
+        console.log(
+          `\n⚠️ Login failed (likely CAPTCHA). Manual intervention required.`,
         );
-
+        console.log(`   Error: ${loginResult.error || "Unknown"}`);
         isLoggedIn = await waitForManualIntervention(
           browserUse,
           platform,
@@ -216,23 +196,107 @@ async function scrapeWithLogin(
         );
       }
     } else {
-      console.log("✅ Already logged in, skipping login phase");
+      // No proactive login config - check session first
+      console.log("\n📌 Phase 1: Checking existing session...");
+
+      const sessionCheck = await browserUse.checkSession(
+        searchUrl,
+        loginUrlPattern,
+        CDP_PORT,
+      );
+
+      console.log(
+        `   Session exists: ${sessionCheck.session_exists}, Logged in: ${sessionCheck.is_logged_in}`,
+      );
+
+      isLoggedIn = sessionCheck.is_logged_in;
+
+      // Phase 2: Handle login if not already logged in
+      if (!isLoggedIn) {
+        console.log("\n📌 Phase 2: Login required...");
+
+        if (credentials) {
+          // We have credentials but no login_page_url - use Browser-Use to auto-fill
+          console.log("   Auto-filling credentials...");
+
+          const loginTask = await buildLoginPrompt(
+            platform,
+            credentials,
+            searchUrl,
+          );
+
+          console.log("📝 Login task preview:");
+          console.log(loginTask.substring(0, 300) + "...");
+
+          const loginResult = await browserUse.startHybridSession({
+            task: loginTask,
+            startUrl: platform.url,
+            cdpPort: CDP_PORT,
+            maxTime: config.hybridLoginTimeout / 1000,
+            sendScreenshots,
+          });
+
+          // Check if login succeeded or needs manual intervention
+          if (loginResult.login_success) {
+            console.log(`✅ Login successful! URL: ${loginResult.current_url}`);
+            isLoggedIn = true;
+          } else if (loginResult.verification_needed) {
+            // Verification code needed - prompt user
+            console.log(
+              `\n🔐 Verification required: ${loginResult.verification_prompt}`,
+            );
+            isLoggedIn = await handleVerification(
+              browserUse,
+              loginResult,
+              platform,
+              searchUrl,
+            );
+          } else {
+            // Login failed - likely CAPTCHA, ask user for manual intervention
+            console.log(
+              `\n⚠️ Login failed (likely CAPTCHA). Manual intervention required.`,
+            );
+            console.log(`   Error: ${loginResult.error || "Unknown"}`);
+            isLoggedIn = await waitForManualIntervention(
+              browserUse,
+              platform,
+              searchUrl,
+            );
+          }
+        } else {
+          // No credentials - start browser for manual login
+          console.log("   Starting browser for manual login...");
+
+          await browserUse.startSession(
+            platform.login_page_url || platform.url,
+            CDP_PORT,
+          );
+
+          isLoggedIn = await waitForManualIntervention(
+            browserUse,
+            platform,
+            searchUrl,
+          );
+        }
+      } else {
+        console.log("✅ Already logged in, skipping login phase");
+      }
     }
 
     if (!isLoggedIn) {
       throw new Error("Login failed or cancelled");
     }
 
-    // Phase 3: Handoff delay
+    // Phase 2: Handoff delay
     console.log(
-      `\n📌 Phase 3: Handoff delay (${config.hybridHandoffDelay}ms)...`,
+      `\n📌 Phase 2: Handoff delay (${config.hybridHandoffDelay}ms)...`,
     );
     await new Promise((resolve) =>
       setTimeout(resolve, config.hybridHandoffDelay)
     );
 
-    // Phase 4: Connect Playwright via CDP
-    console.log("\n📌 Phase 4: Connecting Playwright via CDP...");
+    // Phase 3: Connect Playwright via CDP
+    console.log("\n📌 Phase 3: Connecting Playwright via CDP...");
 
     const cdpUrl = `http://localhost:${CDP_PORT}`;
     const browser = await chromium.connectOverCDP(cdpUrl);
@@ -341,7 +405,10 @@ async function handleVerification(
     }
 
     console.log("⏳ Submitting verification code...");
-    const verifyResult = await browserUse.submitVerificationCode(code, CDP_PORT);
+    const verifyResult = await browserUse.submitVerificationCode(
+      code,
+      CDP_PORT,
+    );
 
     if (verifyResult.login_complete) {
       console.log("✅ Verification successful!");
@@ -361,13 +428,20 @@ async function handleVerification(
 
       // Check if login succeeded after manual CAPTCHA solve
       const searchPath = new URL(searchUrl).pathname;
-      const waitResult = await browserUse.waitForLogin(searchPath, CDP_PORT, 10, 2);
+      const waitResult = await browserUse.waitForLogin(
+        searchPath,
+        CDP_PORT,
+        10,
+        2,
+      );
 
       if (waitResult.success) {
         console.log("✅ Login successful after manual CAPTCHA!");
         return true;
       } else {
-        console.log("⚠️ Still not logged in. Current URL: " + waitResult.current_url);
+        console.log(
+          "⚠️ Still not logged in. Current URL: " + waitResult.current_url,
+        );
         const retry = await promptUser("Continue waiting? (y/n): ");
         if (retry.toLowerCase() !== "y") return false;
         // Loop back to wait for manual intervention
