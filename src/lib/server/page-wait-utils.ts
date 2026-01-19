@@ -3,7 +3,7 @@
  * Only includes features Playwright doesn't handle automatically
  */
 
-import type { Page } from "patchright";
+import type { Page } from "playwright";
 
 /**
  * Wait for page with scroll detection (for infinite scroll pages)

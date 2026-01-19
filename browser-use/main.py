@@ -118,6 +118,9 @@ class HybridSessionResponse(BaseModel):
     """Response from hybrid session start"""
 
     login_success: bool
+    verification_needed: Optional[bool] = False  # True if 2FA/verification required
+    verification_type: Optional[str] = None  # "email", "sms", "2fa", "code"
+    verification_prompt: Optional[str] = None  # User-friendly prompt
     current_url: str
     cdp_port: int
     execution_time_ms: int
@@ -225,5 +228,257 @@ async def perform_hybrid_action(request: HybridActionRequest):
         return result
     except Exception as e:
         logger.error(f"Error performing hybrid action: {str(e)}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =====================
+# Verification Endpoints
+# =====================
+
+
+class VerifyCodeRequest(BaseModel):
+    """Request to submit a verification code"""
+
+    code: str  # The verification code to enter
+    cdp_port: Optional[int] = 9222
+    max_time: Optional[int] = 60
+    send_screenshots: Optional[bool] = True
+
+
+class VerifyCodeResponse(BaseModel):
+    """Response from verification code submission"""
+
+    success: bool  # Whether the code was accepted
+    login_complete: bool  # Whether login is now complete
+    needs_new_code: bool  # Whether the code expired and a new one is needed
+    captcha_failed: Optional[bool] = False  # Whether CAPTCHA/human verification failed
+    current_url: str
+    execution_time_ms: int
+    error: Optional[str] = None
+
+
+class ResendCodeRequest(BaseModel):
+    """Request to resend verification code"""
+
+    cdp_port: Optional[int] = 9222
+    max_time: Optional[int] = 30
+    send_screenshots: Optional[bool] = True
+
+
+class ResendCodeResponse(BaseModel):
+    """Response from resend code request"""
+
+    success: bool
+    execution_time_ms: int
+    error: Optional[str] = None
+
+
+@app.post("/hybrid/verify", response_model=VerifyCodeResponse)
+async def submit_verification_code(request: VerifyCodeRequest):
+    """
+    Submit a verification code to continue login.
+
+    Call this after /hybrid/start returns verification_needed=True.
+    The browser session remains open from the previous call.
+
+    Flow:
+    1. /hybrid/start returns verification_needed=True
+    2. User provides code (from email, SMS, or authenticator app)
+    3. Call this endpoint with the code
+    4. If login_complete=True, proceed with extraction
+    5. If needs_new_code=True, call /hybrid/resend-code and try again
+    6. If success=False (invalid code), prompt user and retry
+    """
+    try:
+        controller = get_hybrid_controller()
+        result = await controller.submit_verification_code(
+            code=request.code,
+            cdp_port=request.cdp_port,
+            max_time=request.max_time,
+            send_screenshots=request.send_screenshots,
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Error submitting verification code: {str(e)}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/hybrid/resend-code", response_model=ResendCodeResponse)
+async def resend_verification_code(request: ResendCodeRequest):
+    """
+    Request a new verification code.
+
+    Call this when the verification code has expired.
+    The browser will click the 'resend code' button on the page.
+    """
+    try:
+        controller = get_hybrid_controller()
+        result = await controller.resend_verification_code(
+            cdp_port=request.cdp_port,
+            max_time=request.max_time,
+            send_screenshots=request.send_screenshots,
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Error resending verification code: {str(e)}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =====================
+# Session Management Endpoints
+# =====================
+
+
+class SessionCheckRequest(BaseModel):
+    """Request to check if a session is valid (logged in)"""
+
+    check_url: str  # URL to navigate to for login check
+    login_url_pattern: str  # Pattern that indicates user is on login page (not logged in)
+    cdp_port: Optional[int] = 9222
+
+
+class SessionCheckResponse(BaseModel):
+    """Response from session check"""
+
+    session_exists: bool  # Whether session directory exists
+    is_logged_in: bool  # Whether user is logged in (not redirected to login)
+    current_url: str
+    cdp_port: int
+
+
+class SessionStartRequest(BaseModel):
+    """Request to start browser with existing session (no login)"""
+
+    start_url: str  # URL to navigate to
+    cdp_port: Optional[int] = 9222
+
+
+class SessionStartResponse(BaseModel):
+    """Response from session start"""
+
+    success: bool
+    current_url: str
+    cdp_port: int
+    vnc_url: str  # VNC URL for manual intervention
+
+
+class SessionWaitRequest(BaseModel):
+    """Request to wait for manual login completion"""
+
+    target_url_pattern: str  # Pattern indicating successful login (e.g., "/jobs", "/feed")
+    cdp_port: Optional[int] = 9222
+    timeout: Optional[int] = 300  # 5 minutes default
+    poll_interval: Optional[int] = 5  # Check every 5 seconds
+
+
+class SessionWaitResponse(BaseModel):
+    """Response from session wait"""
+
+    success: bool  # Whether login was detected
+    current_url: str
+    timed_out: bool
+
+
+class SessionClearRequest(BaseModel):
+    """Request to clear session data"""
+
+    pass  # No parameters needed - clears the single shared session
+
+
+class SessionClearResponse(BaseModel):
+    """Response from session clear"""
+
+    success: bool
+    message: str
+
+
+@app.post("/session/check", response_model=SessionCheckResponse)
+async def check_session(request: SessionCheckRequest):
+    """
+    Check if the persistent session is logged in.
+
+    Launches browser with existing session, navigates to check_url,
+    and determines if user is logged in based on URL pattern.
+
+    If current URL contains login_url_pattern, user is NOT logged in.
+    """
+    try:
+        controller = get_hybrid_controller()
+        result = await controller.check_session(
+            check_url=request.check_url,
+            login_url_pattern=request.login_url_pattern,
+            cdp_port=request.cdp_port,
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Error checking session: {str(e)}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/session/start", response_model=SessionStartResponse)
+async def start_session(request: SessionStartRequest):
+    """
+    Start browser with existing persistent session (no login attempt).
+
+    Use this to launch the browser for manual login or when you want
+    to use an existing session without checking login status.
+    """
+    try:
+        controller = get_hybrid_controller()
+        result = await controller.start_session(
+            start_url=request.start_url,
+            cdp_port=request.cdp_port,
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Error starting session: {str(e)}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/session/wait", response_model=SessionWaitResponse)
+async def wait_for_login(request: SessionWaitRequest):
+    """
+    Wait for manual login completion by polling the current URL.
+
+    Polls every poll_interval seconds to check if current URL
+    matches target_url_pattern, indicating successful login.
+
+    Use this after /session/start to wait for user to complete
+    manual login via VNC.
+    """
+    try:
+        controller = get_hybrid_controller()
+        result = await controller.wait_for_login(
+            target_url_pattern=request.target_url_pattern,
+            cdp_port=request.cdp_port,
+            timeout=request.timeout,
+            poll_interval=request.poll_interval,
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Error waiting for login: {str(e)}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/session/clear", response_model=SessionClearResponse)
+async def clear_session(request: SessionClearRequest):
+    """
+    Clear the persistent session data.
+
+    Deletes cookies and session storage. Use this to force
+    a fresh login on next scrape.
+    """
+    try:
+        controller = get_hybrid_controller()
+        result = await controller.clear_session()
+        return result
+    except Exception as e:
+        logger.error(f"Error clearing session: {str(e)}")
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))

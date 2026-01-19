@@ -3,7 +3,7 @@
  * Handles LLM-based login field detection and form submission
  */
 
-import type { Page } from "patchright";
+import type { Page } from "playwright";
 import type { z } from "zod";
 import { stripHtmlForLlm } from "./html-strip";
 import { getPlatformCredentials } from "./platform-auth";

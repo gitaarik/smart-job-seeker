@@ -1,6 +1,9 @@
 import os
 import time
+import json
 import logging
+import asyncio
+import subprocess
 from browser_use import Agent, Browser, ChatBrowserUse
 from langchain_groq import ChatGroq
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -484,6 +487,10 @@ class BrowserController:
             # So we use an internal port and socat to forward from 0.0.0.0:cdp_port
             internal_cdp_port = cdp_port + 1  # e.g., 9223 for internal, 9222 for external
 
+            # Use persistent session storage (cookies persist across runs)
+            session_dir = "/app/data/sessions/chrome-user-data"
+            os.makedirs(session_dir, exist_ok=True)
+
             chrome_args = [
                 chrome_path,
                 f"--remote-debugging-port={internal_cdp_port}",
@@ -495,7 +502,7 @@ class BrowserController:
                 "--disable-translate",
                 "--no-sandbox",
                 "--disable-dev-shm-usage",
-                f"--user-data-dir=/tmp/chrome-hybrid-{cdp_port}",
+                f"--user-data-dir={session_dir}",
                 start_url,  # Open start URL directly
             ]
 
@@ -597,6 +604,145 @@ class BrowserController:
                 logger.error("[Browser-Use] Chrome CDP not responsive after agent completed!")
                 raise Exception("Chrome CDP became unresponsive after login")
 
+            # Check for verification/2FA requirement first
+            verification_needed = False
+            verification_type = None
+            verification_prompt = None
+            page_text = ""
+
+            # First check: URL-based detection (if still on auth/login/verify page after login attempt)
+            if current_url:
+                url_lower = current_url.lower()
+                auth_url_patterns = ['/auth', '/login', '/signin', '/verify', '/challenge', '/2fa', '/mfa', '/otp']
+                if any(pattern in url_lower for pattern in auth_url_patterns):
+                    logger.info(f"[Browser-Use] Still on auth page after login: {current_url}")
+                    print(f"[Browser-Use] Still on auth page after login: {current_url}", flush=True)
+                    # Likely need verification - will confirm with page content check
+
+            # Get page content to check for verification indicators
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(f"{cdp_url}/json/list", timeout=aiohttp.ClientTimeout(total=2)) as resp:
+                        if resp.status == 200:
+                            pages_info = await resp.json()
+                            if pages_info:
+                                # Use CDP to get page content
+                                page_ws_url = pages_info[0].get('webSocketDebuggerUrl', '')
+                                if page_ws_url:
+                                    import websockets
+                                    try:
+                                        async with websockets.connect(page_ws_url, close_timeout=5) as ws:
+                                            # Get page HTML to check for verification patterns
+                                            await ws.send(json.dumps({
+                                                "id": 1,
+                                                "method": "Runtime.evaluate",
+                                                "params": {"expression": "document.body.innerText"}
+                                            }))
+                                            ws_response = await asyncio.wait_for(ws.recv(), timeout=5)
+                                            page_text = json.loads(ws_response).get('result', {}).get('result', {}).get('value', '').lower()
+                                            logger.info(f"[Browser-Use] Got page text ({len(page_text)} chars)")
+                                    except Exception as ws_err:
+                                        logger.warning(f"[Browser-Use] WebSocket error getting page content: {ws_err}")
+                                        print(f"[Browser-Use] WebSocket error: {ws_err}", flush=True)
+            except Exception as e:
+                logger.warning(f"[Browser-Use] Error getting page info: {e}")
+                print(f"[Browser-Use] Error getting page info: {e}", flush=True)
+
+            # Check page content for verification patterns
+            # IMPORTANT: We need to distinguish between:
+            # - CAPTCHA/human verification (agent should solve these, NOT flag as verification_needed)
+            # - Actual verification CODES (email, SMS, 2FA - user needs to provide these)
+            if page_text:
+                import re
+
+                # First, check if this is a CAPTCHA page (should NOT trigger verification_needed)
+                captcha_patterns = [
+                    'verify you are human',
+                    'verify you.re human',
+                    'i.m not a robot',
+                    'not a robot',
+                    'security check',
+                    'cloudflare',
+                    'turnstile',
+                    'recaptcha',
+                    'hcaptcha',
+                    'prove you.re human',
+                    'confirm you.re human',
+                    'human verification',
+                    'bot detection',
+                ]
+                is_captcha_page = any(re.search(pattern, page_text) for pattern in captcha_patterns)
+
+                if is_captcha_page:
+                    logger.info(f"[Browser-Use] Detected CAPTCHA page - NOT flagging as verification_needed")
+                    print(f"[Browser-Use] Detected CAPTCHA page - agent should solve this", flush=True)
+                else:
+                    # Check for actual verification CODE patterns (sent to email/phone/authenticator)
+                    verification_patterns = [
+                        ('email', ['check your email', 'sent.*code.*email', 'sent to your email', 'email.*code', 'we sent you', 'we.ve sent']),
+                        ('sms', ['check your phone', 'sent.*code.*phone', 'sent to your phone', 'sms.*code', 'text message']),
+                        ('2fa', ['two-factor', '2fa', 'authenticator app', 'authentication app', 'google authenticator', 'authy']),
+                        ('code', ['enter the code we sent', 'enter your code', 'verification code sent', 'one-time password', 'otp']),
+                    ]
+
+                    for vtype, patterns in verification_patterns:
+                        for pattern in patterns:
+                            if re.search(pattern, page_text):
+                                verification_needed = True
+                                verification_type = vtype
+                                logger.info(f"[Browser-Use] Found verification CODE pattern: {pattern}")
+                                print(f"[Browser-Use] Found verification CODE pattern: {pattern}", flush=True)
+                                break
+                        if verification_needed:
+                            break
+
+            # Check if agent explicitly reported VERIFICATION_NEEDED
+            if not verification_needed and hasattr(result, 'history') and result.history:
+                for item in reversed(result.history[-5:]):
+                    if hasattr(item, 'model_output') and item.model_output:
+                        output = item.model_output
+                        if hasattr(output, 'action') and output.action:
+                            for action in output.action:
+                                if hasattr(action, 'done') and action.done:
+                                    done_text = getattr(action.done, 'text', '').upper()
+                                    # Only flag if agent explicitly said VERIFICATION_NEEDED
+                                    if 'VERIFICATION_NEEDED' in done_text:
+                                        verification_needed = True
+                                        verification_type = 'code'
+                                        logger.info(f"[Browser-Use] Agent reported VERIFICATION_NEEDED: {done_text[:100]}")
+                                        print(f"[Browser-Use] Agent reported VERIFICATION_NEEDED", flush=True)
+                                        break
+                            if verification_needed:
+                                break
+                    if verification_needed:
+                        break
+
+            # Generate user-friendly prompt
+            if verification_needed:
+                if verification_type == 'email':
+                    verification_prompt = "Please check your email for a verification code"
+                elif verification_type == 'sms':
+                    verification_prompt = "Please check your phone for an SMS verification code"
+                elif verification_type == '2fa':
+                    verification_prompt = "Please enter your 2FA/authenticator code"
+                else:
+                    verification_prompt = "Please enter the verification code"
+
+                logger.info(f"[Browser-Use] Verification needed: {verification_type}")
+                print(f"[Browser-Use] Verification needed: {verification_type}", flush=True)
+
+            # If verification is needed, return early (don't close browser)
+            if verification_needed:
+                return {
+                    "login_success": False,
+                    "verification_needed": True,
+                    "verification_type": verification_type,
+                    "verification_prompt": verification_prompt,
+                    "current_url": current_url,
+                    "cdp_port": cdp_port,
+                    "execution_time_ms": execution_time,
+                }
+
             # Determine success based on multiple indicators
             login_success = False
 
@@ -645,6 +791,7 @@ class BrowserController:
 
             return {
                 "login_success": login_success,
+                "verification_needed": False,
                 "current_url": current_url,
                 "cdp_port": cdp_port,
                 "execution_time_ms": execution_time,
@@ -706,6 +853,326 @@ class BrowserController:
                 BrowserController._hybrid_chrome_process = None
 
         return {"closed": True}
+
+    async def submit_verification_code(
+        self,
+        code: str,
+        cdp_port: int = 9222,
+        max_time: int = 60,
+        send_screenshots: bool = True,
+    ):
+        """
+        Submit a verification code and continue the login process.
+        Connects to the existing browser via CDP and enters the code.
+
+        Args:
+            code: The verification code to enter
+            cdp_port: CDP port (default 9222)
+            max_time: Maximum execution time in seconds
+            send_screenshots: Whether to send screenshots to LLM
+
+        Returns:
+            dict with 'success', 'login_complete', 'needs_new_code', 'current_url', 'error'
+        """
+        import asyncio
+        import aiohttp
+        import json
+
+        start_time = time.time()
+
+        # Build the internal CDP URL (internal port is cdp_port + 1)
+        internal_cdp_port = cdp_port + 1
+        cdp_url = f"http://127.0.0.1:{internal_cdp_port}"
+
+        logger.info(f"[Browser-Use] Submitting verification code")
+        print(f"[Browser-Use] Submitting verification code", flush=True)
+
+        # Build task for entering the verification code
+        # IMPORTANT: Do NOT try to solve CAPTCHAs - just enter the code and report if CAPTCHA appears
+        task = f"""Enter the verification code and submit. Do NOT try to solve any CAPTCHA challenges.
+
+CODE TO ENTER: {code}
+
+STEPS:
+1. Find the verification code input field on the page
+2. Enter the code: {code}
+3. Click the submit/verify/continue button
+4. Wait for the page to process
+
+IMPORTANT:
+- Look for input fields labeled "code", "verification", "OTP", "confirmation"
+- After entering the code, look for a submit button (e.g., "Verify", "Continue", "Submit", "Confirm")
+- If there's no submit button, the form might auto-submit after entering all digits
+- Do NOT try to click or solve any CAPTCHA/human verification challenges
+
+Report ONE of:
+- SUCCESS: Login complete, now on the main site/dashboard
+- INVALID_CODE: The code was rejected (wrong code or expired)
+- NEEDS_NEW_CODE: The code expired, need to request a new one
+- CAPTCHA_NEEDED: A CAPTCHA/human verification appeared that needs manual solving (DO NOT try to solve it)
+- FAILED: Could not enter the code or submit failed for another reason"""
+
+        # Determine vision usage
+        use_vision_for_task = send_screenshots and self.vision_support
+
+        try:
+            # Verify Chrome is still running on CDP port
+            async with aiohttp.ClientSession() as session:
+                try:
+                    async with session.get(
+                        f"{cdp_url}/json/version",
+                        timeout=aiohttp.ClientTimeout(total=2)
+                    ) as resp:
+                        if resp.status != 200:
+                            raise Exception("CDP not responding")
+                except Exception as e:
+                    return {
+                        "success": False,
+                        "login_complete": False,
+                        "needs_new_code": False,
+                        "current_url": "",
+                        "execution_time_ms": int((time.time() - start_time) * 1000),
+                        "error": f"Chrome not running on CDP port {cdp_port}: {e}",
+                    }
+
+            # Connect Browser-Use to existing Chrome via CDP
+            browser = Browser(
+                cdp_url=cdp_url,
+                minimum_wait_page_load_time=1.0,
+                wait_for_network_idle_page_load_time=2.0,
+                wait_between_actions=1.0,
+            )
+
+            # Create agent for verification code entry
+            agent = Agent(
+                task=task,
+                llm=self.llm,
+                browser=browser,
+                use_vision=use_vision_for_task,
+            )
+
+            # Run the verification task
+            result = await agent.run()
+
+            execution_time = int((time.time() - start_time) * 1000)
+
+            # Get current URL
+            current_url = ""
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(
+                        f"{cdp_url}/json/list",
+                        timeout=aiohttp.ClientTimeout(total=2)
+                    ) as resp:
+                        if resp.status == 200:
+                            pages_info = await resp.json()
+                            if pages_info:
+                                current_url = pages_info[0].get('url', '')
+            except Exception as url_err:
+                logger.warning(f"[Browser-Use] Could not get current URL: {url_err}")
+
+            # Parse result to determine outcome
+            success = False
+            login_complete = False
+            needs_new_code = False
+            captcha_needed = False  # CAPTCHA appeared, needs manual solving
+
+            # Get final result text
+            final_result_text = ""
+            if hasattr(result, 'final_result'):
+                final_result_text = str(result.final_result()).upper() if callable(result.final_result) else str(result.final_result).upper()
+
+            # Parse outcomes
+            if final_result_text:
+                if 'SUCCESS' in final_result_text:
+                    success = True
+                    login_complete = True
+                elif 'INVALID_CODE' in final_result_text:
+                    success = False
+                    login_complete = False
+                elif 'NEEDS_NEW_CODE' in final_result_text or 'EXPIRED' in final_result_text:
+                    success = False
+                    login_complete = False
+                    needs_new_code = True
+                elif 'CAPTCHA_NEEDED' in final_result_text or 'CAPTCHA' in final_result_text or 'VERIFY' in final_result_text:
+                    # CAPTCHA appeared - user needs to solve it manually
+                    success = False
+                    login_complete = False
+                    captcha_needed = True
+
+            # Fallback: check history
+            if not success and hasattr(result, 'history') and result.history:
+                for item in reversed(result.history[-5:]):
+                    if hasattr(item, 'model_output') and item.model_output:
+                        output = item.model_output
+                        if hasattr(output, 'action') and output.action:
+                            for action in output.action:
+                                if hasattr(action, 'done') and action.done:
+                                    done_text = getattr(action.done, 'text', '').upper()
+                                    if 'SUCCESS' in done_text:
+                                        success = True
+                                        login_complete = True
+                                    elif 'INVALID' in done_text:
+                                        success = False
+                                    elif 'EXPIRED' in done_text or 'NEW_CODE' in done_text:
+                                        needs_new_code = True
+                                    break
+
+            # Also check if URL indicates successful login
+            if current_url:
+                url_lower = current_url.lower()
+                # If we're now on a jobs/dashboard page, login succeeded
+                if any(pattern in url_lower for pattern in ['/jobs', '/search', '/results', '/dashboard', '/feed', '/home']):
+                    success = True
+                    login_complete = True
+                # If still on login/verify page, not complete
+                elif any(pattern in url_lower for pattern in ['/login', '/verify', '/code', '/2fa', '/challenge']):
+                    login_complete = False
+
+            logger.info(f"[Browser-Use] Verification result: success={success}, login_complete={login_complete}, needs_new_code={needs_new_code}, captcha_needed={captcha_needed}")
+            print(f"[Browser-Use] Verification result: success={success}, login_complete={login_complete}, needs_new_code={needs_new_code}, captcha_needed={captcha_needed}", flush=True)
+
+            return {
+                "success": success,
+                "login_complete": login_complete,
+                "needs_new_code": needs_new_code,
+                "captcha_needed": captcha_needed,  # CAPTCHA appeared, user must solve manually
+                "current_url": current_url,
+                "execution_time_ms": execution_time,
+            }
+
+        except Exception as e:
+            execution_time = int((time.time() - start_time) * 1000)
+            error_str = str(e)
+
+            logger.error(f"[Browser-Use] Verification code submission error: {error_str}")
+            print(f"[Browser-Use] Verification code submission error: {error_str}", flush=True)
+
+            return {
+                "success": False,
+                "login_complete": False,
+                "needs_new_code": False,
+                "captcha_failed": False,
+                "current_url": "",
+                "execution_time_ms": execution_time,
+                "error": error_str,
+            }
+
+    async def resend_verification_code(
+        self,
+        cdp_port: int = 9222,
+        max_time: int = 30,
+        send_screenshots: bool = True,
+    ):
+        """
+        Click the 'resend code' button on the verification page.
+
+        Args:
+            cdp_port: CDP port (default 9222)
+            max_time: Maximum execution time in seconds
+            send_screenshots: Whether to send screenshots to LLM
+
+        Returns:
+            dict with 'success', 'error'
+        """
+        import asyncio
+        import aiohttp
+
+        start_time = time.time()
+
+        # Build the internal CDP URL
+        internal_cdp_port = cdp_port + 1
+        cdp_url = f"http://127.0.0.1:{internal_cdp_port}"
+
+        logger.info(f"[Browser-Use] Requesting new verification code")
+        print(f"[Browser-Use] Requesting new verification code", flush=True)
+
+        # Build task for resending code
+        task = """Find and click the 'resend code' or 'send new code' button.
+
+Look for buttons/links with text like:
+- "Resend code"
+- "Send new code"
+- "Didn't receive the code?"
+- "Request new code"
+- "Try again"
+
+Click on the resend option and wait for confirmation that a new code was sent.
+
+Report:
+- SUCCESS: New code has been sent (confirmation message appeared)
+- NOT_FOUND: Could not find a resend option on the page
+- FAILED: Found the button but clicking didn't work"""
+
+        # Determine vision usage
+        use_vision_for_task = send_screenshots and self.vision_support
+
+        try:
+            # Verify Chrome is still running
+            async with aiohttp.ClientSession() as session:
+                try:
+                    async with session.get(
+                        f"{cdp_url}/json/version",
+                        timeout=aiohttp.ClientTimeout(total=2)
+                    ) as resp:
+                        if resp.status != 200:
+                            raise Exception("CDP not responding")
+                except Exception as e:
+                    return {
+                        "success": False,
+                        "execution_time_ms": int((time.time() - start_time) * 1000),
+                        "error": f"Chrome not running on CDP port {cdp_port}: {e}",
+                    }
+
+            # Connect to Chrome via CDP
+            browser = Browser(
+                cdp_url=cdp_url,
+                minimum_wait_page_load_time=0.5,
+                wait_for_network_idle_page_load_time=1.0,
+                wait_between_actions=0.5,
+            )
+
+            # Create agent
+            agent = Agent(
+                task=task,
+                llm=self.llm,
+                browser=browser,
+                use_vision=use_vision_for_task,
+            )
+
+            # Run the resend task
+            result = await agent.run()
+
+            execution_time = int((time.time() - start_time) * 1000)
+
+            # Parse result
+            success = False
+            final_result_text = ""
+            if hasattr(result, 'final_result'):
+                final_result_text = str(result.final_result()).upper() if callable(result.final_result) else str(result.final_result).upper()
+
+            if 'SUCCESS' in final_result_text:
+                success = True
+
+            logger.info(f"[Browser-Use] Resend code result: success={success}")
+            print(f"[Browser-Use] Resend code result: success={success}", flush=True)
+
+            return {
+                "success": success,
+                "execution_time_ms": execution_time,
+            }
+
+        except Exception as e:
+            execution_time = int((time.time() - start_time) * 1000)
+            error_str = str(e)
+
+            logger.error(f"[Browser-Use] Resend code error: {error_str}")
+
+            return {
+                "success": False,
+                "execution_time_ms": execution_time,
+                "error": error_str,
+            }
 
     async def perform_hybrid_action(
         self,
@@ -941,3 +1408,288 @@ Report SUCCESS if new jobs loaded, NO_MORE if no new content appeared."""
                 "execution_time_ms": execution_time,
                 "error": error_str,
             }
+
+    # =====================
+    # Session Management Methods
+    # =====================
+
+    async def check_session(
+        self,
+        check_url: str,
+        login_url_pattern: str,
+        cdp_port: int = 9222,
+    ) -> dict:
+        """
+        Check if the persistent session is logged in.
+
+        Launches Chrome with existing session, navigates to check_url,
+        and determines if user is logged in based on URL pattern.
+        """
+        import shutil
+        session_dir = "/app/data/sessions/chrome-user-data"
+        session_exists = os.path.exists(session_dir) and os.path.isdir(session_dir)
+
+        if not session_exists:
+            return {
+                "session_exists": False,
+                "is_logged_in": False,
+                "current_url": "",
+                "cdp_port": cdp_port,
+            }
+
+        # Launch browser with existing session
+        await self._launch_chrome_with_session(check_url, cdp_port)
+
+        # Wait for page to load and check URL
+        await asyncio.sleep(3)  # Give page time to load/redirect
+
+        # Get current URL via CDP
+        current_url = await self._get_current_url_via_cdp(cdp_port)
+
+        # Check if we're on login page (not logged in)
+        is_logged_in = login_url_pattern.lower() not in current_url.lower()
+
+        return {
+            "session_exists": True,
+            "is_logged_in": is_logged_in,
+            "current_url": current_url,
+            "cdp_port": cdp_port,
+        }
+
+    async def start_session(
+        self,
+        start_url: str,
+        cdp_port: int = 9222,
+    ) -> dict:
+        """
+        Start browser with existing persistent session (no login attempt).
+        """
+        await self._launch_chrome_with_session(start_url, cdp_port)
+
+        # Get current URL
+        current_url = await self._get_current_url_via_cdp(cdp_port)
+
+        return {
+            "success": True,
+            "current_url": current_url,
+            "cdp_port": cdp_port,
+            "vnc_url": "localhost:5900",
+        }
+
+    async def wait_for_login(
+        self,
+        target_url_pattern: str,
+        cdp_port: int = 9222,
+        timeout: int = 300,
+        poll_interval: int = 5,
+    ) -> dict:
+        """
+        Wait for manual login completion by polling the current URL.
+        """
+        start_time = time.time()
+        current_url = ""
+
+        while (time.time() - start_time) < timeout:
+            current_url = await self._get_current_url_via_cdp(cdp_port)
+
+            # Check if URL matches target pattern (login successful)
+            if target_url_pattern.lower() in current_url.lower():
+                return {
+                    "success": True,
+                    "current_url": current_url,
+                    "timed_out": False,
+                }
+
+            await asyncio.sleep(poll_interval)
+
+        return {
+            "success": False,
+            "current_url": current_url,
+            "timed_out": True,
+        }
+
+    async def clear_session(self) -> dict:
+        """
+        Clear the persistent session data.
+        """
+        import shutil
+        session_dir = "/app/data/sessions/chrome-user-data"
+
+        try:
+            # Close any running browser first
+            await self.close_hybrid_session()
+        except Exception:
+            pass  # Ignore if no browser running
+
+        try:
+            if os.path.exists(session_dir):
+                shutil.rmtree(session_dir)
+                return {
+                    "success": True,
+                    "message": f"Session data cleared from {session_dir}",
+                }
+            else:
+                return {
+                    "success": True,
+                    "message": "No session data to clear",
+                }
+        except Exception as e:
+            return {
+                "success": False,
+                "message": f"Failed to clear session: {str(e)}",
+            }
+
+    async def _launch_chrome_with_session(
+        self,
+        start_url: str,
+        cdp_port: int = 9222,
+    ):
+        """
+        Helper to launch Chrome with persistent session directory.
+        Reuses existing launch logic from start_hybrid_session.
+        """
+        # Close any existing session first
+        try:
+            await self.close_hybrid_session()
+        except Exception:
+            pass
+
+        # Kill any orphaned Chrome processes and remove lock files
+        session_dir = "/app/data/sessions/chrome-user-data"
+        try:
+            # Kill all Chrome processes (aggressive cleanup)
+            subprocess.run(["pkill", "-9", "chrome"], capture_output=True, timeout=5)
+            await asyncio.sleep(0.5)
+        except Exception as e:
+            logger.warning(f"[Session] pkill warning: {e}")
+
+        # Remove all Singleton* lock files
+        try:
+            import glob as glob_module
+            lock_files = glob_module.glob(os.path.join(session_dir, "Singleton*"))
+            for lock_file in lock_files:
+                try:
+                    os.remove(lock_file)
+                    logger.info(f"[Session] Removed lock file: {lock_file}")
+                except Exception as e:
+                    logger.warning(f"[Session] Could not remove {lock_file}: {e}")
+        except Exception as e:
+            logger.warning(f"[Session] Lock cleanup warning: {e}")
+
+        # Use the same Chrome launch logic as start_hybrid_session
+        chrome_path = None
+        for pattern in [
+            "/root/.cache/ms-playwright/chromium-*/chrome-linux/chrome",
+            "/usr/bin/chromium",
+            "/usr/bin/google-chrome",
+            "/usr/bin/google-chrome-stable",
+        ]:
+            import glob as glob_module
+            matches = glob_module.glob(pattern)
+            if matches:
+                chrome_path = matches[0]
+                break
+
+        if not chrome_path:
+            raise Exception("Chrome/Chromium not found")
+
+        headless_mode = os.getenv("SJS_BROWSER_USE_HEADLESS", "true").lower() == "true"
+        internal_cdp_port = cdp_port + 1
+
+        # Use persistent session storage
+        session_dir = "/app/data/sessions/chrome-user-data"
+        os.makedirs(session_dir, exist_ok=True)
+
+        chrome_args = [
+            chrome_path,
+            f"--remote-debugging-port={internal_cdp_port}",
+            "--remote-debugging-address=0.0.0.0",
+            "--no-first-run",
+            "--no-default-browser-check",
+            "--disable-background-networking",
+            "--disable-sync",
+            "--disable-translate",
+            "--no-sandbox",
+            "--disable-dev-shm-usage",
+            f"--user-data-dir={session_dir}",
+            start_url,
+        ]
+
+        if headless_mode:
+            chrome_args.insert(1, "--headless=new")
+
+        logger.info(f"[Session] Launching Chrome: {chrome_path}")
+        print(f"[Session] Launching Chrome on internal port {internal_cdp_port}", flush=True)
+
+        # Set up environment with DISPLAY for GUI mode
+        chrome_env = os.environ.copy()
+        chrome_env["DISPLAY"] = os.environ.get("DISPLAY", ":99")
+
+        BrowserController._hybrid_chrome_process = subprocess.Popen(
+            chrome_args,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=chrome_env,
+        )
+
+        # Wait for Chrome CDP to be ready
+        cdp_url = f"http://127.0.0.1:{internal_cdp_port}"
+        import aiohttp
+        for _ in range(30):
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(f"{cdp_url}/json/version", timeout=aiohttp.ClientTimeout(total=1)) as resp:
+                        if resp.status == 200:
+                            logger.info(f"[Session] CDP ready at {cdp_url}")
+                            break
+            except Exception:
+                pass
+            # Check if Chrome process died
+            if BrowserController._hybrid_chrome_process.poll() is not None:
+                stderr = BrowserController._hybrid_chrome_process.stderr.read().decode() if BrowserController._hybrid_chrome_process.stderr else ""
+                logger.error(f"[Session] Chrome process died. stderr: {stderr[:500]}")
+                raise Exception(f"Chrome process died. stderr: {stderr[:500]}")
+            await asyncio.sleep(0.5)
+        else:
+            # Check for Chrome stderr on timeout
+            stderr = ""
+            if BrowserController._hybrid_chrome_process.poll() is not None:
+                stderr = BrowserController._hybrid_chrome_process.stderr.read().decode() if BrowserController._hybrid_chrome_process.stderr else ""
+            raise Exception(f"CDP not ready after 15 seconds at {cdp_url}. Chrome stderr: {stderr[:500]}")
+
+        # Start socat for port forwarding
+        BrowserController._hybrid_socat_process = subprocess.Popen(
+            [
+                "socat",
+                f"TCP-LISTEN:{cdp_port},fork,reuseaddr,bind=0.0.0.0",
+                f"TCP:127.0.0.1:{internal_cdp_port}",
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+        await asyncio.sleep(0.5)
+        if BrowserController._hybrid_socat_process.poll() is not None:
+            raise Exception("socat process failed to start")
+
+        logger.info(f"[Session] External CDP available at 0.0.0.0:{cdp_port}")
+
+    async def _get_current_url_via_cdp(self, cdp_port: int = 9222) -> str:
+        """
+        Get current page URL via CDP.
+        """
+        import aiohttp
+        internal_cdp_port = cdp_port + 1
+        cdp_url = f"http://127.0.0.1:{internal_cdp_port}"
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f"{cdp_url}/json", timeout=aiohttp.ClientTimeout(total=5)) as resp:
+                    if resp.status == 200:
+                        pages = await resp.json()
+                        if pages:
+                            return pages[0].get("url", "")
+        except Exception as e:
+            logger.error(f"[Session] Error getting URL via CDP: {e}")
+
+        return ""

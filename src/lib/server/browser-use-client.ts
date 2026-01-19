@@ -48,8 +48,29 @@ export interface HybridSessionParams {
 // Hybrid session response
 export interface HybridSessionResponse {
   login_success: boolean;
+  verification_needed?: boolean; // True if 2FA/verification required
+  verification_type?: string; // "email", "sms", "2fa", "code"
+  verification_prompt?: string; // User-friendly prompt
   current_url: string;
   cdp_port: number;
+  execution_time_ms: number;
+  error?: string;
+}
+
+// Verification code response
+export interface VerifyCodeResponse {
+  success: boolean; // Whether the code was accepted
+  login_complete: boolean; // Whether login is now complete
+  needs_new_code: boolean; // Whether code expired and needs resend
+  captcha_needed?: boolean; // CAPTCHA appeared, user must solve manually via VNC
+  current_url: string;
+  execution_time_ms: number;
+  error?: string;
+}
+
+// Resend code response
+export interface ResendCodeResponse {
+  success: boolean;
   execution_time_ms: number;
   error?: string;
 }
@@ -451,6 +472,131 @@ export class BrowserUseClient {
   }
 
   /**
+   * Submit a verification code to continue login.
+   * Call this after startHybridSession returns verification_needed=true.
+   * @param code The verification code to enter
+   * @param cdpPort CDP port (default 9222)
+   * @returns Response with success, login_complete, needs_new_code
+   */
+  async submitVerificationCode(
+    code: string,
+    cdpPort: number = 9222,
+  ): Promise<VerifyCodeResponse> {
+    console.log(`[BrowserUseClient] Submitting verification code...`);
+
+    let response: Response;
+    try {
+      response = await fetch(`${this.config.baseUrl}/hybrid/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code,
+          cdp_port: cdpPort,
+          max_time: 60,
+          send_screenshots: this.config.sendScreenshots,
+        }),
+        signal: AbortSignal.timeout(120000),
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.error(`\n❌ Failed to submit verification code: ${errorMsg}`);
+      return {
+        success: false,
+        login_complete: false,
+        needs_new_code: false,
+        current_url: "",
+        execution_time_ms: 0,
+        error: `Verification submission failed: ${errorMsg}`,
+      };
+    }
+
+    if (!response.ok) {
+      const errorBody = await response.text().catch(() => "");
+      console.error(
+        `\n❌ Verification API error: ${response.status} ${response.statusText}`,
+      );
+      if (errorBody) {
+        console.error(`   Response: ${errorBody.substring(0, 500)}`);
+      }
+      return {
+        success: false,
+        login_complete: false,
+        needs_new_code: false,
+        current_url: "",
+        execution_time_ms: 0,
+        error:
+          `Verification API error: ${response.status} ${response.statusText}`,
+      };
+    }
+
+    const result: VerifyCodeResponse = await response.json();
+
+    console.log(
+      `[BrowserUseClient] Verification result: success=${result.success}, login_complete=${result.login_complete}, needs_new_code=${result.needs_new_code}`,
+    );
+
+    return result;
+  }
+
+  /**
+   * Request a new verification code.
+   * Call this when the verification code has expired.
+   * @param cdpPort CDP port (default 9222)
+   * @returns Response with success status
+   */
+  async resendVerificationCode(
+    cdpPort: number = 9222,
+  ): Promise<ResendCodeResponse> {
+    console.log(`[BrowserUseClient] Requesting new verification code...`);
+
+    let response: Response;
+    try {
+      response = await fetch(`${this.config.baseUrl}/hybrid/resend-code`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          cdp_port: cdpPort,
+          max_time: 30,
+          send_screenshots: this.config.sendScreenshots,
+        }),
+        signal: AbortSignal.timeout(60000),
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.error(`\n❌ Failed to resend verification code: ${errorMsg}`);
+      return {
+        success: false,
+        execution_time_ms: 0,
+        error: `Resend code failed: ${errorMsg}`,
+      };
+    }
+
+    if (!response.ok) {
+      const errorBody = await response.text().catch(() => "");
+      console.error(
+        `\n❌ Resend code API error: ${response.status} ${response.statusText}`,
+      );
+      if (errorBody) {
+        console.error(`   Response: ${errorBody.substring(0, 500)}`);
+      }
+      return {
+        success: false,
+        execution_time_ms: 0,
+        error:
+          `Resend code API error: ${response.status} ${response.statusText}`,
+      };
+    }
+
+    const result: ResendCodeResponse = await response.json();
+
+    console.log(
+      `[BrowserUseClient] Resend code result: success=${result.success}`,
+    );
+
+    return result;
+  }
+
+  /**
    * Perform a single action on the existing hybrid browser session.
    * Uses Browser-Use's visual AI to click job cards, close modals, etc.
    * @param params Action parameters
@@ -516,6 +662,241 @@ export class BrowserUseClient {
       `[BrowserUseClient] Hybrid action result: success=${result.success}, performed=${result.action_performed}`,
     );
 
+    return result;
+  }
+
+  // =====================
+  // Session Management Methods
+  // =====================
+
+  /**
+   * Check if the persistent session is logged in for a platform.
+   * @param checkUrl URL to navigate to (e.g., the job search page)
+   * @param loginUrlPattern Pattern indicating login page (if URL contains this, not logged in)
+   * @param cdpPort CDP port (default 9222)
+   * @returns Session status with is_logged_in flag
+   */
+  async checkSession(
+    checkUrl: string,
+    loginUrlPattern: string,
+    cdpPort: number = 9222,
+  ): Promise<{
+    session_exists: boolean;
+    is_logged_in: boolean;
+    current_url: string;
+    cdp_port: number;
+  }> {
+    console.log(`[BrowserUseClient] Checking session for: ${checkUrl}`);
+
+    let response: Response;
+    try {
+      response = await fetch(`${this.config.baseUrl}/session/check`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          check_url: checkUrl,
+          login_url_pattern: loginUrlPattern,
+          cdp_port: cdpPort,
+        }),
+        signal: AbortSignal.timeout(60000),
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.error(`\n❌ Failed to check session: ${errorMsg}`);
+      return {
+        session_exists: false,
+        is_logged_in: false,
+        current_url: "",
+        cdp_port: cdpPort,
+      };
+    }
+
+    if (!response.ok) {
+      const errorBody = await response.text().catch(() => "");
+      console.error(
+        `\n❌ Session check API error: ${response.status} ${response.statusText}`,
+      );
+      if (errorBody) {
+        console.error(`   Response: ${errorBody.substring(0, 500)}`);
+      }
+      return {
+        session_exists: false,
+        is_logged_in: false,
+        current_url: "",
+        cdp_port: cdpPort,
+      };
+    }
+
+    const result = await response.json();
+    console.log(
+      `[BrowserUseClient] Session check: exists=${result.session_exists}, logged_in=${result.is_logged_in}`,
+    );
+    return result;
+  }
+
+  /**
+   * Start browser with existing persistent session (no login attempt).
+   * Use this to launch the browser for manual login.
+   * @param startUrl URL to navigate to
+   * @param cdpPort CDP port (default 9222)
+   * @returns Session start response with VNC URL for manual intervention
+   */
+  async startSession(
+    startUrl: string,
+    cdpPort: number = 9222,
+  ): Promise<{
+    success: boolean;
+    current_url: string;
+    cdp_port: number;
+    vnc_url: string;
+  }> {
+    console.log(`[BrowserUseClient] Starting session at: ${startUrl}`);
+
+    let response: Response;
+    try {
+      response = await fetch(`${this.config.baseUrl}/session/start`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          start_url: startUrl,
+          cdp_port: cdpPort,
+        }),
+        signal: AbortSignal.timeout(60000),
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.error(`\n❌ Failed to start session: ${errorMsg}`);
+      throw new Error(`Session start failed: ${errorMsg}`);
+    }
+
+    if (!response.ok) {
+      const errorBody = await response.text().catch(() => "");
+      console.error(
+        `\n❌ Session start API error: ${response.status} ${response.statusText}`,
+      );
+      if (errorBody) {
+        console.error(`   Response: ${errorBody.substring(0, 500)}`);
+      }
+      throw new Error(
+        `Session start API error: ${response.status} ${response.statusText}`,
+      );
+    }
+
+    const result = await response.json();
+    console.log(
+      `[BrowserUseClient] Session started: ${result.current_url}, VNC: ${result.vnc_url}`,
+    );
+    return result;
+  }
+
+  /**
+   * Wait for manual login completion by polling the current URL.
+   * @param targetUrlPattern Pattern indicating successful login (e.g., "/jobs", "/feed")
+   * @param cdpPort CDP port (default 9222)
+   * @param timeoutSeconds Timeout in seconds (default 300 = 5 minutes)
+   * @param pollIntervalSeconds Poll interval in seconds (default 5)
+   * @returns Response with success flag and current URL
+   */
+  async waitForLogin(
+    targetUrlPattern: string,
+    cdpPort: number = 9222,
+    timeoutSeconds: number = 300,
+    pollIntervalSeconds: number = 5,
+  ): Promise<{
+    success: boolean;
+    current_url: string;
+    timed_out: boolean;
+  }> {
+    console.log(
+      `[BrowserUseClient] Waiting for login (target pattern: ${targetUrlPattern})...`,
+    );
+
+    let response: Response;
+    try {
+      response = await fetch(`${this.config.baseUrl}/session/wait`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          target_url_pattern: targetUrlPattern,
+          cdp_port: cdpPort,
+          timeout: timeoutSeconds,
+          poll_interval: pollIntervalSeconds,
+        }),
+        signal: AbortSignal.timeout((timeoutSeconds + 30) * 1000), // Extra 30s buffer
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.error(`\n❌ Wait for login failed: ${errorMsg}`);
+      return {
+        success: false,
+        current_url: "",
+        timed_out: true,
+      };
+    }
+
+    if (!response.ok) {
+      const errorBody = await response.text().catch(() => "");
+      console.error(
+        `\n❌ Wait for login API error: ${response.status} ${response.statusText}`,
+      );
+      if (errorBody) {
+        console.error(`   Response: ${errorBody.substring(0, 500)}`);
+      }
+      return {
+        success: false,
+        current_url: "",
+        timed_out: false,
+      };
+    }
+
+    const result = await response.json();
+    console.log(
+      `[BrowserUseClient] Wait for login result: success=${result.success}, timed_out=${result.timed_out}`,
+    );
+    return result;
+  }
+
+  /**
+   * Clear the persistent session data.
+   * Use this to force a fresh login on next scrape.
+   */
+  async clearSession(): Promise<{
+    success: boolean;
+    message: string;
+  }> {
+    console.log(`[BrowserUseClient] Clearing session...`);
+
+    let response: Response;
+    try {
+      response = await fetch(`${this.config.baseUrl}/session/clear`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+        signal: AbortSignal.timeout(30000),
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.error(`\n❌ Failed to clear session: ${errorMsg}`);
+      return {
+        success: false,
+        message: `Clear session failed: ${errorMsg}`,
+      };
+    }
+
+    if (!response.ok) {
+      const errorBody = await response.text().catch(() => "");
+      console.error(
+        `\n❌ Clear session API error: ${response.status} ${response.statusText}`,
+      );
+      return {
+        success: false,
+        message:
+          `Clear session API error: ${response.status} ${response.statusText}`,
+      };
+    }
+
+    const result = await response.json();
+    console.log(`[BrowserUseClient] Clear session result: ${result.message}`);
     return result;
   }
 }

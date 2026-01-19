@@ -1,12 +1,13 @@
 /**
  * Browser utilities for Playwright
  * Provides Chrome detection and browser context creation
+ *
+ * Uses standard Playwright (not Patchright) since we now use persistent
+ * sessions that look like a normal browser to anti-bot systems.
  */
 
 import { existsSync } from "fs";
-import { type BrowserContext, chromium, type Page } from "patchright";
-import { newInjectedContext } from "fingerprint-injector";
-import { generateFingerprintOptions } from "./fingerprint-utils";
+import { type BrowserContext, chromium, type Page } from "playwright";
 
 // Chrome installation paths to check (Linux)
 const CHROME_PATHS = [
@@ -54,59 +55,38 @@ export function findChromeExecutable(): string | undefined {
   console.warn(
     "⚠️  Google Chrome not found. Using Playwright bundled Chromium.",
   );
-  console.warn("   For better bot detection avoidance, install Chrome:");
+  console.warn("   For better compatibility, install Chrome:");
   console.warn("   Ubuntu/Debian: sudo apt install google-chrome-stable");
   console.warn("   Or set: export CHROME_EXECUTABLE_PATH=/path/to/chrome");
   return undefined;
 }
 
 /**
- * Launch browser with random fingerprint (NO persistent context)
- * This creates a fresh browser context with a new random fingerprint each time.
- * Use Browser-Use with credentials for authenticated scraping.
+ * Launch browser with a fresh context
+ * Since we use persistent sessions via Browser-Use, this is simplified
+ * and no longer needs fingerprint injection.
  */
 export async function launchBrowser(
   options: BrowserLaunchOptions = {},
 ): Promise<BrowserContext> {
   const executablePath = findChromeExecutable();
 
-  console.log(`🚀 Launching browser with randomized fingerprint...`);
+  console.log(`🚀 Launching browser...`);
 
   const viewport = options.headless ? { width: 1920, height: 1080 } : null;
 
-  try {
-    // Launch browser
-    const browser = await chromium.launch({
-      executablePath,
-      headless: !!options.headless,
-      args: options.args,
-    });
+  const browser = await chromium.launch({
+    executablePath,
+    headless: !!options.headless,
+    args: options.args,
+  });
 
-    // Generate new random fingerprint
-    console.log("🎲 Generating new random fingerprint");
-    const fingerprintOptions = generateFingerprintOptions({
-      browserName: "chrome",
-      deviceCategory: "desktop",
-      operatingSystems: ["windows", "linux", "macos"],
-      locales: ["en-US", "en-GB", "en"],
-    });
+  const context = await browser.newContext({
+    viewport,
+  });
 
-    const context = await newInjectedContext(browser, {
-      fingerprintOptions,
-      newContextOptions: {
-        viewport,
-      },
-    });
-
-    console.log("✅ Browser context created successfully");
-    return context;
-  } catch (error) {
-    console.error(
-      "❌ Failed to launch browser context:",
-      error instanceof Error ? error.message : String(error),
-    );
-    throw error;
-  }
+  console.log("✅ Browser context created successfully");
+  return context;
 }
 
 /**
@@ -155,7 +135,7 @@ export async function waitForJobContentToLoad(
 
     // Give content extra time to render after scrolling
     await page.waitForTimeout(1000);
-  } catch (e) {
+  } catch (_e) {
     // Timeout is not critical - proceed anyway with what we have
     // Silently continue (caller can log if needed)
   }
