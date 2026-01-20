@@ -4,6 +4,7 @@
  */
 
 import type { Page } from "playwright";
+import { dbDirect } from "$lib/db";
 import { config } from "$lib/server/config";
 import {
   extractJobData,
@@ -36,6 +37,7 @@ import {
   promptUser,
   SCRAPER_CONSTANTS,
 } from "./utils";
+import { createJobScrapingAiChat } from "$lib/server/ai-chat-job-utils";
 
 /**
  * Log detailed job data after saving
@@ -82,6 +84,89 @@ function logJobDetails(
   console.log(
     `         🏛️ Company Info: ${cap(jobData.company_description, 150)}`,
   );
+}
+
+/**
+ * Classify marked clickable elements using LLM
+ * Determines which elements open job details vs perform actions
+ */
+async function classifyMarkedClickables(
+  page: Page,
+): Promise<Map<number, "view-details" | "action">> {
+  // 1. Extract metadata for all marked clickables
+  const clickableMetadata = await page.evaluate(() => {
+    const clickables: Array<{
+      id: number;
+      text: string;
+      tagName: string;
+      className: string;
+    }> = [];
+    document.querySelectorAll("[data-extract-clickable-id]").forEach((el) => {
+      clickables.push({
+        id: parseInt(el.getAttribute("data-extract-clickable-id") || "0"),
+        text: el.textContent?.trim().substring(0, 100) || "",
+        tagName: el.tagName.toLowerCase(),
+        className: el.className || "",
+      });
+    });
+    return clickables;
+  });
+
+  // 2. Skip LLM if no clickables or just one
+  if (clickableMetadata.length <= 1) {
+    return new Map(
+      clickableMetadata.map((c) => [c.id, "view-details" as const]),
+    );
+  }
+
+  // 3. Format for LLM
+  const clickablesText = clickableMetadata
+    .map((c) =>
+      `ID ${c.id}: "${c.text}" (${c.tagName}, class="${c.className}")`
+    )
+    .join("\n");
+
+  // 4. Call LLM for classification
+  const result = await createJobScrapingAiChat<{
+    clickables: Array<{ id: number; type: "view-details" | "action" }>;
+  }>("classify_clickables", { clickables: clickablesText });
+
+  // 5. Build classification map
+  const classificationMap = new Map<number, "view-details" | "action">();
+  if (result.success && result.response?.clickables) {
+    for (const c of result.response.clickables) {
+      classificationMap.set(c.id, c.type);
+    }
+  }
+
+  // 6. Default unclassified to "view-details"
+  for (const c of clickableMetadata) {
+    if (!classificationMap.has(c.id)) {
+      classificationMap.set(c.id, "view-details");
+    }
+  }
+
+  return classificationMap;
+}
+
+/**
+ * Remove action clickables from HTML by removing their data-extract-clickable-id attributes
+ */
+function removeActionClickablesFromHtml(
+  html: string,
+  classifications: Map<number, "view-details" | "action">,
+): string {
+  let result = html;
+  for (const [id, type] of classifications) {
+    if (type === "action") {
+      // Remove the data-extract-clickable-id attribute for action clickables
+      result = result.replace(
+        new RegExp(`data-extract-clickable-id="${id}"`, "g"),
+        "",
+      );
+    }
+  }
+  return result;
 }
 
 /**
@@ -164,13 +249,41 @@ export async function scrapeJobsWithClicks(
       break;
     }
 
+    // Classify clickables with LLM to filter out action buttons (Apply, Share, etc.)
+    let clickableClassifications:
+      | Map<
+        number,
+        "view-details" | "action"
+      >
+      | null = null;
+    if (clickableCount > 1) {
+      console.log("   🏷️  Step 1.5/3: Classifying clickables with LLM...");
+      const startClassify = Date.now();
+      clickableClassifications = await classifyMarkedClickables(page);
+      const actionCount = [...clickableClassifications.values()].filter(
+        (v) => v === "action",
+      ).length;
+      const classifyDuration = ((Date.now() - startClassify) / 1000).toFixed(2);
+      console.log(
+        `      ✓ ${
+          clickableCount - actionCount
+        } view-details, ${actionCount} action (${classifyDuration}s)`,
+      );
+    }
+
     // Get marked HTML
     const markedHtml = await page.content();
-    const htmlSize = (markedHtml.length / 1024).toFixed(1);
+
+    // Remove action clickables from HTML before LLM extraction
+    const cleanedHtml = clickableClassifications
+      ? removeActionClickablesFromHtml(markedHtml, clickableClassifications)
+      : markedHtml;
+
+    const htmlSize = (cleanedHtml.length / 1024).toFixed(1);
     console.log(`      HTML size: ${htmlSize} KB`);
 
     // Strip HTML for LLM processing (data-extract-clickable-id attributes survive)
-    const strippedHtml = stripHtmlForLlm(markedHtml);
+    const strippedHtml = stripHtmlForLlm(cleanedHtml);
 
     // Capture stripped HTML from first page BEFORE LLM extraction (so we save it even if LLM fails)
     if (pageNumber === 1) {
@@ -183,6 +296,12 @@ export async function scrapeJobsWithClicks(
         console.log(
           `      📋 Debug stripped HTML: ${directusUrl}/admin/content/job_searches/${jobSearchId}`,
         );
+
+        // Save stripped HTML immediately for debugging (before LLM extraction or interactive prompts)
+        await dbDirect.job_searches.update({
+          where: { id: jobSearchId },
+          data: { stripped_html: strippedHtml },
+        });
       }
     }
 
@@ -265,6 +384,14 @@ export async function scrapeJobsWithClicks(
             // Update saved HTML if this is page 1
             if (pageNumber === 1) {
               savedStrippedHtml = currentStrippedHtml;
+
+              // Update database with new stripped HTML
+              if (jobSearchId) {
+                await dbDirect.job_searches.update({
+                  where: { id: jobSearchId },
+                  data: { stripped_html: currentStrippedHtml },
+                });
+              }
             }
 
             console.log(
@@ -320,6 +447,14 @@ export async function scrapeJobsWithClicks(
             // Update saved HTML if this is page 1
             if (pageNumber === 1) {
               savedStrippedHtml = currentStrippedHtml;
+
+              // Update database with new stripped HTML
+              if (jobSearchId) {
+                await dbDirect.job_searches.update({
+                  where: { id: jobSearchId },
+                  data: { stripped_html: currentStrippedHtml },
+                });
+              }
             }
 
             console.log(

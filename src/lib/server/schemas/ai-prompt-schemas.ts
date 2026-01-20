@@ -355,6 +355,21 @@ export const extractJobsFromSearchPageSchema = z.object({
 });
 
 /**
+ * Schema for classify_clickables prompt
+ * Classifies clickable elements as view-details or action buttons
+ */
+export const classifyClickablesSchema = z.object({
+  clickables: z.array(
+    z.object({
+      id: z.number().int().describe("The data-extract-clickable-id value"),
+      type: z
+        .enum(["view-details", "action"])
+        .describe("Clickable classification"),
+    }),
+  ),
+});
+
+/**
  * Schema registry mapping request identifiers to Zod schemas
  * This provides type-safe lookup of schemas by prompt request name
  *
@@ -373,6 +388,7 @@ export const aiPromptSchemas = {
   detect_job_detail_content: detectJobDetailContentSchema,
   detect_pagination: detectPaginationSchema,
   extract_resume_data: extractResumeDataSchema,
+  classify_clickables: classifyClickablesSchema,
 } as const;
 
 /**
