@@ -503,9 +503,9 @@ async function handleVerification(
  * Wait for user to complete login manually
  */
 async function waitForManualIntervention(
-  browserUse: BrowserUseClient,
+  _browserUse: BrowserUseClient,
   platform: { name: string },
-  searchUrl: string,
+  _searchUrl: string,
 ): Promise<boolean> {
   console.log(`\n${"=".repeat(60)}`);
   console.log(`🔐 Manual Login Required for ${platform.name}`);
@@ -513,30 +513,11 @@ async function waitForManualIntervention(
   console.log(`\nPlease complete login manually:`);
   console.log(`  - VNC: localhost:5900 (connect with VNC viewer)`);
   console.log(`  - Browser CDP: localhost:9222`);
-  console.log(`\nWaiting for login... (timeout: 5 min)\n`);
 
-  // Extract the path pattern for success detection
-  const searchPath = new URL(searchUrl).pathname;
+  await promptUser("\nPress Enter when you've completed login...");
 
-  const waitResult = await browserUse.waitForLogin(
-    searchPath,
-    CDP_PORT,
-    300, // 5 minutes
-    5, // check every 5 seconds
-  );
-
-  if (waitResult.success) {
-    console.log("✅ Login detected!");
-    return true;
-  } else if (waitResult.timed_out) {
-    console.log("⚠️ Login timeout. Do you want to continue waiting?");
-    const retry = await promptUser("Continue waiting? (y/n): ");
-    if (retry.toLowerCase() === "y") {
-      return waitForManualIntervention(browserUse, platform, searchUrl);
-    }
-  }
-
-  return false;
+  console.log("✅ Continuing with scrape...");
+  return true;
 }
 
 /**
