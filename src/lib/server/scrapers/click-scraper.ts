@@ -28,6 +28,70 @@ import { detectModalContent } from "$lib/server/scraper-interactive";
 import { performPatchwrightLogin } from "../patchright-login";
 
 /**
+ * Format salary for display
+ */
+function formatSalary(jobData: {
+  salary_min: number | null;
+  salary_max: number | null;
+  salary_currency: string | null;
+  salary_period: string | null;
+}): string {
+  if (!jobData.salary_min && !jobData.salary_max) return "-";
+  const min = jobData.salary_min?.toLocaleString() || "?";
+  const max = jobData.salary_max?.toLocaleString() || "?";
+  const curr = jobData.salary_currency || "";
+  const period = jobData.salary_period ? `/${jobData.salary_period}` : "";
+  return `${curr}${min}-${max}${period}`;
+}
+
+/**
+ * Log detailed job data after saving
+ */
+function logJobDetails(
+  jobData: {
+    title: string | null;
+    job_description: string | null;
+    company_description: string | null;
+    job_poster: string | null;
+    date_posted: Date | string | null;
+    location: string | null;
+    remote: string | null;
+    experience_level: string | null;
+    job_type: string | null;
+    salary_min: number | null;
+    salary_max: number | null;
+    salary_currency: string | null;
+    salary_period: string | null;
+    skills: string[] | null;
+  },
+  sourceUrl: string,
+): void {
+  const cap = (s: string | null | undefined, len: number) =>
+    s ? (s.length > len ? s.substring(0, len) + "..." : s) : "-";
+
+  const formatDate = (d: Date | string | null) => {
+    if (!d) return "-";
+    if (d instanceof Date) return d.toISOString().split("T")[0];
+    return String(d).split("T")[0];
+  };
+
+  console.log(`         📋 Title: ${jobData.title || "-"}`);
+  console.log(`         🔗 URL: ${sourceUrl}`);
+  console.log(`         🏢 Company: ${jobData.job_poster || "-"}`);
+  console.log(`         📅 Posted: ${formatDate(jobData.date_posted)}`);
+  console.log(`         📍 Location: ${jobData.location || "-"}`);
+  console.log(`         🏠 Remote: ${jobData.remote || "-"}`);
+  console.log(`         💼 Job Type: ${jobData.job_type || "-"}`);
+  console.log(`         📊 Experience: ${jobData.experience_level || "-"}`);
+  console.log(`         💰 Salary: ${formatSalary(jobData)}`);
+  console.log(`         🔧 Skills: ${jobData.skills?.join(", ") || "-"}`);
+  console.log(`         📝 Description: ${cap(jobData.job_description, 150)}`);
+  console.log(
+    `         🏛️ Company Info: ${cap(jobData.company_description, 150)}`,
+  );
+}
+
+/**
  * Scrape jobs using click-based navigation (SPAs)
  * Marks clickable elements with CDP, uses LLM to identify job cards, then clicks each
  * Extracts and saves jobs immediately during clicking for real-time feedback
@@ -507,6 +571,7 @@ export async function scrapeJobsWithClicks(
 
         const action = result.created ? "Created" : "Updated";
         console.log(`      ✅ ${action} job #${result.id}`);
+        logJobDetails(jobData, pseudoUrl);
 
         stats.jobsProcessed++;
 
