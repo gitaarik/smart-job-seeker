@@ -591,6 +591,7 @@ export async function upsertJob(
     salary_period: string | null;
     skills: string[] | null;
     status: string | null;
+    source_html_stripped?: string | null;
     ai_chat_extraction?: number | null;
   },
   sourceUrl: string,
@@ -640,6 +641,7 @@ export async function upsertJob(
     salary_max: jobData.salary_max,
     salary_currency: jobData.salary_currency,
     salary_period: jobData.salary_period,
+    source_html_stripped: jobData.source_html_stripped || null,
   };
 
   const multiSelectData = {
