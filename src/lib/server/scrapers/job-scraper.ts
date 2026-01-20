@@ -36,11 +36,13 @@ async function promptUser(question: string): Promise<string> {
 
 /**
  * Build login-only task prompt for Browser-Use
+ * @param solveCaptcha If true, agent attempts to solve CAPTCHAs. If false (default), reports CAPTCHA_NEEDED for manual solving.
  */
 async function buildLoginPrompt(
   platform: { name: string; url: string; login_page_url?: string | null },
   credentials: { username: string; password: string },
   searchUrl: string,
+  solveCaptcha: boolean = false,
 ): Promise<string> {
   // Try to fetch the login-only prompt from Directus
   const promptTemplate = await dbDirect.ai_chat_prompts.findUnique({
@@ -55,6 +57,7 @@ async function buildLoginPrompt(
       username: credentials.username,
       password: credentials.password,
       searchUrl,
+      solveCaptcha: solveCaptcha ? "true" : "false",
     });
     return `${systemPrompt}\n\n${userPrompt}`.trim();
   }
@@ -64,39 +67,56 @@ async function buildLoginPrompt(
     "⚠️ Prompt 'browser_use_login_only' not found, using inline fallback",
   );
 
+  // Generate CAPTCHA handling instructions based on mode
+  const captchaInstructions = solveCaptcha
+    ? `STEP 3: If there's a CAPTCHA/human verification challenge:
+   - "Verify you're human" checkbox → Click it
+   - CAPTCHA puzzle → Attempt to solve it
+   - After solving, proceed to click login
+
+STEP 4: Click the login/sign-in button`
+    : `STEP 3: BEFORE clicking login, check for CAPTCHA/human verification:
+   - "Verify you're human" checkbox
+   - "I'm not a robot" checkbox
+   - CAPTCHA image/puzzle
+   - Cloudflare/Turnstile challenge
+
+   If CAPTCHA IS visible:
+   - Report: CAPTCHA_NEEDED: Human verification required before login
+   - Do NOT click the login button
+   - The user will solve the CAPTCHA manually via VNC
+
+   If NO CAPTCHA visible:
+   - Proceed to click the login/sign-in button`;
+
   return `You are a browser automation assistant. Your task is to log into a website.
 
 STEP 1: Navigate to ${platform.login_page_url || platform.url}
 
-STEP 2: Enter credentials:
+STEP 2: Enter credentials (do this FIRST, before checking for CAPTCHA):
    - Email/Username: ${credentials.username}
    - Password: ${credentials.password}
 
-STEP 3: Click the login/sign-in button
+${captchaInstructions}
 
-STEP 4: Handle any challenges:
+AFTER clicking login, check the result:
 
-   a) CAPTCHA / "Verify you're human" checkbox (Cloudflare, reCAPTCHA, etc.):
-      - Click the checkbox or complete the challenge
-      - These are automated anti-bot checks - TRY TO SOLVE THEM
-      - Continue with login after solving
+   a) Verification CODE input (email code, SMS code, 2FA, OTP, authenticator):
+      - STOP and report: VERIFICATION_NEEDED: [describe what code is needed]
+      - DO NOT enter any code
 
-   b) Verification CODE input (email code, SMS code, 2FA, OTP, authenticator):
-      - This is asking for a code sent to the user's email/phone or from an authenticator app
-      - DO NOT enter any code - you don't have access to the user's email/phone/authenticator
-      - DO NOT guess or make up codes
-      - STOP IMMEDIATELY and report: VERIFICATION_NEEDED: [describe what code is needed]
+   b) Another CAPTCHA appeared after login:
+      - Report: CAPTCHA_NEEDED: Human verification required after login
 
-STEP 5: After login (if no verification code was needed):
-   - Navigate to: ${searchUrl}
-   - Report: SUCCESS: Currently at [URL]
+   c) Login successful:
+      - Navigate to: ${searchUrl}
+      - Report: SUCCESS: Currently at [URL]
 
-CRITICAL RULES:
-- CAPTCHA/human verification checkboxes → TRY TO SOLVE THEM, then proceed
-- Verification CODES (email, SMS, 2FA, OTP) → STOP and report VERIFICATION_NEEDED
-- The difference: CAPTCHAs are visual challenges you can solve. Codes require access to user's email/phone which you don't have.
-- NEVER enter a verification code - this will be handled separately
-- NEVER guess or make up codes
+CRITICAL:
+- Enter credentials FIRST, then check for CAPTCHA
+- CAPTCHA_NEEDED = visual challenge visible, user must solve via VNC
+- VERIFICATION_NEEDED = code input needed (email/SMS/2FA) - you cannot solve this
+- NEVER enter a verification code
 `;
 }
 

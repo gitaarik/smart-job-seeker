@@ -744,7 +744,26 @@ class BrowserController:
                         if verification_needed:
                             break
 
-            # Check if agent explicitly reported VERIFICATION_NEEDED
+            # Check if agent explicitly reported CAPTCHA_NEEDED or VERIFICATION_NEEDED
+            agent_reported_captcha = False
+            if hasattr(result, 'final_result'):
+                final_text = str(result.final_result()).upper() if callable(result.final_result) else str(result.final_result).upper()
+                if 'CAPTCHA_NEEDED' in final_text:
+                    agent_reported_captcha = True
+                    logger.info(f"[Browser-Use] Agent reported CAPTCHA_NEEDED during login")
+                    print(f"[Browser-Use] Agent reported CAPTCHA_NEEDED during login", flush=True)
+
+            if agent_reported_captcha:
+                return {
+                    "success": False,
+                    "login_success": False,
+                    "captcha_needed": True,
+                    "verification_needed": False,
+                    "current_url": current_url,
+                    "cdp_port": cdp_port,
+                    "execution_time_ms": execution_time,
+                }
+
             if not verification_needed and hasattr(result, 'history') and result.history:
                 for item in reversed(result.history[-5:]):
                     if hasattr(item, 'model_output') and item.model_output:
