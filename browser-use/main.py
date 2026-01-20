@@ -112,12 +112,14 @@ class HybridSessionRequest(BaseModel):
     cdp_port: Optional[int] = 9222  # Port for CDP
     max_time: Optional[int] = 120  # Maximum execution time in seconds
     send_screenshots: Optional[bool] = True  # Whether to send screenshots to LLM
+    solve_captcha: Optional[bool] = False  # If True, Browser-Use attempts to solve CAPTCHAs
 
 
 class HybridSessionResponse(BaseModel):
     """Response from hybrid session start"""
 
     login_success: bool
+    captcha_needed: Optional[bool] = False  # True if CAPTCHA needs manual solving
     verification_needed: Optional[bool] = False  # True if 2FA/verification required
     verification_type: Optional[str] = None  # "email", "sms", "2fa", "code"
     verification_prompt: Optional[str] = None  # User-friendly prompt
@@ -160,6 +162,7 @@ async def start_hybrid_session(request: HybridSessionRequest):
             cdp_port=request.cdp_port,
             max_time=request.max_time,
             send_screenshots=request.send_screenshots,
+            solve_captcha=request.solve_captcha,
         )
         return result
     except Exception as e:

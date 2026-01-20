@@ -172,6 +172,16 @@ async function scrapeWithLogin(
       if (loginResult.login_success) {
         console.log(`✅ Login successful! URL: ${loginResult.current_url}`);
         isLoggedIn = true;
+      } else if (loginResult.captcha_needed) {
+        // CAPTCHA detected - needs manual solving
+        console.log(`\n⚠️ CAPTCHA detected. Manual intervention required.`);
+        console.log(`   VNC: localhost:5900`);
+        console.log(`   Please solve the CAPTCHA manually.`);
+        isLoggedIn = await waitForManualIntervention(
+          browserUse,
+          platform,
+          searchUrl,
+        );
       } else if (loginResult.verification_needed) {
         // Verification code needed - prompt user
         console.log(
@@ -184,10 +194,8 @@ async function scrapeWithLogin(
           searchUrl,
         );
       } else {
-        // Login failed - likely CAPTCHA, ask user for manual intervention
-        console.log(
-          `\n⚠️ Login failed (likely CAPTCHA). Manual intervention required.`,
-        );
+        // Login failed for other reason
+        console.log(`\n⚠️ Login failed. Manual intervention required.`);
         console.log(`   Error: ${loginResult.error || "Unknown"}`);
         isLoggedIn = await waitForManualIntervention(
           browserUse,
@@ -240,6 +248,16 @@ async function scrapeWithLogin(
           if (loginResult.login_success) {
             console.log(`✅ Login successful! URL: ${loginResult.current_url}`);
             isLoggedIn = true;
+          } else if (loginResult.captcha_needed) {
+            // CAPTCHA detected - needs manual solving
+            console.log(`\n⚠️ CAPTCHA detected. Manual intervention required.`);
+            console.log(`   VNC: localhost:5900`);
+            console.log(`   Please solve the CAPTCHA manually.`);
+            isLoggedIn = await waitForManualIntervention(
+              browserUse,
+              platform,
+              searchUrl,
+            );
           } else if (loginResult.verification_needed) {
             // Verification code needed - prompt user
             console.log(
@@ -252,10 +270,8 @@ async function scrapeWithLogin(
               searchUrl,
             );
           } else {
-            // Login failed - likely CAPTCHA, ask user for manual intervention
-            console.log(
-              `\n⚠️ Login failed (likely CAPTCHA). Manual intervention required.`,
-            );
+            // Login failed for other reason
+            console.log(`\n⚠️ Login failed. Manual intervention required.`);
             console.log(`   Error: ${loginResult.error || "Unknown"}`);
             isLoggedIn = await waitForManualIntervention(
               browserUse,

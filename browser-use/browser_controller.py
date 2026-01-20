@@ -414,6 +414,7 @@ class BrowserController:
         cdp_port: int = 9222,
         max_time: int = 120,
         send_screenshots: bool = True,
+        solve_captcha: bool = False,
     ):
         """
         Start a hybrid session: launch Chrome with CDP, perform login, keep browser open.
@@ -425,9 +426,11 @@ class BrowserController:
             cdp_port: Port for CDP (default 9222)
             max_time: Maximum execution time in seconds
             send_screenshots: Whether to send screenshots to LLM
+            solve_captcha: If True, Browser-Use will attempt to solve CAPTCHAs automatically.
+                          If False (default), returns captcha_needed=True for manual solving.
 
         Returns:
-            dict with 'login_success', 'current_url', 'cdp_port', 'execution_time_ms'
+            dict with 'login_success', 'current_url', 'cdp_port', 'execution_time_ms', 'captcha_needed'
         """
         import subprocess
         import asyncio
@@ -449,6 +452,26 @@ class BrowserController:
             # The container has chromium installed via playwright
             import os as os_module
             import glob as glob_module
+
+            # Kill any orphaned Chrome processes and remove lock files
+            session_dir = "/app/data/sessions/chrome-user-data"
+            try:
+                subprocess.run(["pkill", "-9", "chrome"], capture_output=True, timeout=5)
+                await asyncio.sleep(0.5)
+            except Exception as e:
+                logger.warning(f"[Browser-Use] pkill warning: {e}")
+
+            # Remove all Singleton* lock files
+            try:
+                lock_files = glob_module.glob(os.path.join(session_dir, "Singleton*"))
+                for lock_file in lock_files:
+                    try:
+                        os.remove(lock_file)
+                        logger.info(f"[Browser-Use] Removed lock file: {lock_file}")
+                    except Exception as e:
+                        logger.warning(f"[Browser-Use] Could not remove {lock_file}: {e}")
+            except Exception as e:
+                logger.warning(f"[Browser-Use] Lock cleanup warning: {e}")
 
             chrome_path = None
 
@@ -512,10 +535,15 @@ class BrowserController:
             logger.info(f"[Browser-Use] Launching Chrome: {chrome_path}")
             print(f"[Browser-Use] Launching Chrome on internal port {internal_cdp_port}", flush=True)
 
+            # Set up environment with DISPLAY for GUI mode
+            chrome_env = os.environ.copy()
+            chrome_env["DISPLAY"] = os.environ.get("DISPLAY", ":99")
+
             BrowserController._hybrid_chrome_process = subprocess.Popen(
                 chrome_args,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
+                env=chrome_env,
             )
 
             # Wait for Chrome CDP to be ready on internal port
@@ -531,6 +559,11 @@ class BrowserController:
                                 break
                 except:
                     pass
+                # Check if Chrome process died
+                if BrowserController._hybrid_chrome_process.poll() is not None:
+                    stderr = BrowserController._hybrid_chrome_process.stderr.read().decode() if BrowserController._hybrid_chrome_process.stderr else ""
+                    logger.error(f"[Browser-Use] Chrome process died. stderr: {stderr[:500]}")
+                    raise Exception(f"Chrome process died. stderr: {stderr[:500]}")
                 await asyncio.sleep(0.5)
             else:
                 raise Exception(f"CDP not ready after 15 seconds at {cdp_url}")
@@ -674,8 +707,23 @@ class BrowserController:
                 is_captcha_page = any(re.search(pattern, page_text) for pattern in captcha_patterns)
 
                 if is_captcha_page:
-                    logger.info(f"[Browser-Use] Detected CAPTCHA page - NOT flagging as verification_needed")
-                    print(f"[Browser-Use] Detected CAPTCHA page - agent should solve this", flush=True)
+                    if solve_captcha:
+                        logger.info(f"[Browser-Use] Detected CAPTCHA page - agent will attempt to solve")
+                        print(f"[Browser-Use] Detected CAPTCHA page - agent will attempt to solve", flush=True)
+                        # Continue - let agent handle it (or it already did)
+                    else:
+                        logger.info(f"[Browser-Use] Detected CAPTCHA page - manual intervention required")
+                        print(f"[Browser-Use] Detected CAPTCHA page - manual intervention required", flush=True)
+                        # Return early - user needs to solve CAPTCHA manually
+                        return {
+                            "success": False,
+                            "login_success": False,
+                            "captcha_needed": True,
+                            "verification_needed": False,
+                            "current_url": current_url,
+                            "cdp_port": cdp_port,
+                            "execution_time_ms": execution_time,
+                        }
                 else:
                     # Check for actual verification CODE patterns (sent to email/phone/authenticator)
                     verification_patterns = [
@@ -735,6 +783,7 @@ class BrowserController:
             if verification_needed:
                 return {
                     "login_success": False,
+                    "captcha_needed": False,
                     "verification_needed": True,
                     "verification_type": verification_type,
                     "verification_prompt": verification_prompt,
@@ -791,6 +840,7 @@ class BrowserController:
 
             return {
                 "login_success": login_success,
+                "captcha_needed": False,
                 "verification_needed": False,
                 "current_url": current_url,
                 "cdp_port": cdp_port,
@@ -808,6 +858,8 @@ class BrowserController:
 
             return {
                 "login_success": False,
+                "captcha_needed": False,
+                "verification_needed": False,
                 "current_url": "",
                 "cdp_port": cdp_port,
                 "execution_time_ms": execution_time,
@@ -888,29 +940,37 @@ class BrowserController:
         print(f"[Browser-Use] Submitting verification code", flush=True)
 
         # Build task for entering the verification code
-        # IMPORTANT: Do NOT try to solve CAPTCHAs - just enter the code and report if CAPTCHA appears
-        task = f"""Enter the verification code and submit. Do NOT try to solve any CAPTCHA challenges.
+        # IMPORTANT: Check for CAPTCHA BEFORE submitting - if present, do NOT submit
+        task = f"""Enter the verification code. Check for CAPTCHA before submitting.
 
 CODE TO ENTER: {code}
 
 STEPS:
 1. Find the verification code input field on the page
 2. Enter the code: {code}
-3. Click the submit/verify/continue button
-4. Wait for the page to process
+3. BEFORE clicking submit, look for any CAPTCHA or human verification challenge:
+   - "Verify you're human" checkbox
+   - "I'm not a robot" checkbox
+   - CAPTCHA image/puzzle
+   - Cloudflare/Turnstile challenge
+   - Any checkbox or challenge asking to verify you're human
+4. If CAPTCHA is visible: Report CAPTCHA_NEEDED immediately. Do NOT click submit.
+5. If NO CAPTCHA visible: Click the submit/verify/continue button and wait for page to process
 
 IMPORTANT:
 - Look for input fields labeled "code", "verification", "OTP", "confirmation"
-- After entering the code, look for a submit button (e.g., "Verify", "Continue", "Submit", "Confirm")
-- If there's no submit button, the form might auto-submit after entering all digits
-- Do NOT try to click or solve any CAPTCHA/human verification challenges
+- ALWAYS check for CAPTCHA/human verification BEFORE clicking submit
+- If you see ANY human verification challenge, report CAPTCHA_NEEDED and STOP
+- Do NOT attempt to solve any CAPTCHA challenges
+- Do NOT click submit if a CAPTCHA is visible
+- If there's no submit button and no CAPTCHA, the form might auto-submit after entering all digits
 
 Report ONE of:
 - SUCCESS: Login complete, now on the main site/dashboard
+- CAPTCHA_NEEDED: CAPTCHA/human verification visible - did NOT submit (user must solve manually)
 - INVALID_CODE: The code was rejected (wrong code or expired)
 - NEEDS_NEW_CODE: The code expired, need to request a new one
-- CAPTCHA_NEEDED: A CAPTCHA/human verification appeared that needs manual solving (DO NOT try to solve it)
-- FAILED: Could not enter the code or submit failed for another reason"""
+- FAILED: Could not enter the code or other error"""
 
         # Determine vision usage
         use_vision_for_task = send_screenshots and self.vision_support

@@ -43,11 +43,13 @@ export interface HybridSessionParams {
   cdpPort?: number; // Port for CDP (default 9222)
   maxTime?: number; // Max execution time in seconds
   sendScreenshots?: boolean;
+  solveCaptcha?: boolean; // If true, Browser-Use attempts to solve CAPTCHAs (default: false)
 }
 
 // Hybrid session response
 export interface HybridSessionResponse {
   login_success: boolean;
+  captcha_needed?: boolean; // True if CAPTCHA needs manual solving via VNC
   verification_needed?: boolean; // True if 2FA/verification required
   verification_type?: string; // "email", "sms", "2fa", "code"
   verification_prompt?: string; // User-friendly prompt
@@ -412,6 +414,7 @@ export class BrowserUseClient {
           cdp_port: params.cdpPort ?? 9222,
           max_time: params.maxTime,
           send_screenshots: sendScreenshots,
+          solve_captcha: params.solveCaptcha ?? false,
         }),
         signal: AbortSignal.timeout(this.config.timeout),
       });
