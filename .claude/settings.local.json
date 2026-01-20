@@ -102,7 +102,8 @@
       "Bash(python -m pytest:*)",
       "Bash(python -c:*)",
       "Bash(python -m py_compile:*)",
-      "Bash(python -m black:*)"
+      "Bash(python -m black:*)",
+      "Bash(npx svelte-check:*)"
     ],
     "deny": [],
     "ask": []
