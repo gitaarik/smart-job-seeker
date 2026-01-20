@@ -14,9 +14,11 @@ import {
 import { stripHtmlForLlm } from "$lib/server/html-strip";
 import {
   checkStopConditions,
+  getJobInvalidReason,
   isFatalScraperError,
   isJobClosed,
   isJobTooOld,
+  isValidJob,
 } from "$lib/server/scrape-filters";
 import { markClickableElementsInContainer } from "$lib/server/cdp-utils";
 import {
@@ -26,23 +28,7 @@ import {
 } from "$lib/server/pagination-utils";
 import { detectModalContent } from "$lib/server/scraper-interactive";
 import { performPatchwrightLogin } from "../patchright-login";
-
-/**
- * Format salary for display
- */
-function formatSalary(jobData: {
-  salary_min: number | null;
-  salary_max: number | null;
-  salary_currency: string | null;
-  salary_period: string | null;
-}): string {
-  if (!jobData.salary_min && !jobData.salary_max) return "-";
-  const min = jobData.salary_min?.toLocaleString() || "?";
-  const max = jobData.salary_max?.toLocaleString() || "?";
-  const curr = jobData.salary_currency || "";
-  const period = jobData.salary_period ? `/${jobData.salary_period}` : "";
-  return `${curr}${min}-${max}${period}`;
-}
+import { formatSalary, getErrorMessage, SCRAPER_CONSTANTS } from "./utils";
 
 /**
  * Log detailed job data after saving
@@ -218,9 +204,7 @@ export async function scrapeJobsWithClicks(
       console.log(`      Job cards found: ${jobs.length}`);
     } catch (error) {
       console.error(
-        `      ❌ LLM extraction failed: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `      ❌ LLM extraction failed: ${getErrorMessage(error)}`,
       );
       console.log(
         `      ℹ️  Returning stripped HTML for debugging (${savedStrippedHtml.length} chars)`,
@@ -296,7 +280,9 @@ export async function scrapeJobsWithClicks(
       const duplicatePercentage = (duplicateCount / currentJobIds.length) *
         100;
 
-      if (duplicatePercentage > 80) {
+      if (
+        duplicatePercentage > SCRAPER_CONSTANTS.DUPLICATE_PAGE_THRESHOLD_PERCENT
+      ) {
         console.log(
           `\n   ⏭️  Stopping: ${
             duplicatePercentage.toFixed(0)
@@ -506,27 +492,10 @@ export async function scrapeJobsWithClicks(
         }
 
         // Skip if no meaningful data was extracted (invalid/expired page)
-        // Check if critical fields are null/empty
-        const hasTitle = jobData.title && jobData.title.trim() !== "";
-        const hasCompany = jobData.company && jobData.company.trim() !== "";
-        const hasDescription = jobData.job_description &&
-          jobData.job_description.trim() !== "";
-
-        // If we don't have at least a title OR company, it's probably not a real job
-        if (!hasTitle && !hasCompany) {
-          console.log(
-            `      ⏭️  Skipping - No title or company (likely login/error page)`,
-          );
+        if (!isValidJob(jobData)) {
+          const reason = getJobInvalidReason(jobData);
+          console.log(`      ⏭️  Skipping - ${reason}`);
           stats.consecutiveClosedJobs = 0; // Reset counter for invalid pages
-          continue;
-        }
-
-        // If we have neither title nor description, also skip
-        if (!hasTitle && !hasDescription) {
-          console.log(
-            `      ⏭️  Skipping - No title or description (incomplete data)`,
-          );
-          stats.consecutiveClosedJobs = 0;
           continue;
         }
 
@@ -588,16 +557,17 @@ export async function scrapeJobsWithClicks(
           };
         }
       } catch (error) {
-        const err = error instanceof Error ? error : new Error(String(error));
+        const errMessage = getErrorMessage(error);
         console.error(
           `      ❌ Error processing job ${jobNumber}:`,
-          err.message,
+          errMessage,
         );
 
         // Check if this is a fatal error that should stop all scraping
+        const err = error instanceof Error ? error : new Error(errMessage);
         if (isFatalScraperError(err)) {
           console.error(
-            `\n🛑 Fatal error encountered - stopping scraper: ${err.message}`,
+            `\n🛑 Fatal error encountered - stopping scraper: ${errMessage}`,
           );
           return {
             jobsProcessed: stats.jobsProcessed,

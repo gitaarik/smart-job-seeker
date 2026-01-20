@@ -15,8 +15,49 @@ import { interpolatePrompt } from "$lib/server/ai-chat-utils";
 import { dbDirect } from "$lib/db";
 import { launchBrowser } from "../browser-utils";
 import { getPlatformCredentials } from "../platform-auth";
+import type {
+  LoginResult,
+  Platform,
+  PlatformCredentials,
+  ScrapeResult,
+} from "./types";
 
 const CDP_PORT = 9222;
+
+/**
+ * Handle login result from Browser-Use
+ * Consolidates the duplicate logic for processing login attempts
+ */
+async function handleLoginResult(
+  browserUse: BrowserUseClient,
+  loginResult: LoginResult,
+  platform: Platform,
+  searchUrl: string,
+): Promise<boolean> {
+  if (loginResult.login_success) {
+    console.log(`✅ Login successful! URL: ${loginResult.current_url}`);
+    return true;
+  }
+
+  if (loginResult.captcha_needed) {
+    console.log(`\n⚠️ CAPTCHA detected. Manual intervention required.`);
+    console.log(`   VNC: localhost:5900`);
+    console.log(`   Please solve the CAPTCHA manually.`);
+    return waitForManualIntervention(browserUse, platform, searchUrl);
+  }
+
+  if (loginResult.verification_needed) {
+    console.log(
+      `\n🔐 Verification required: ${loginResult.verification_prompt}`,
+    );
+    return handleVerification(browserUse, loginResult, platform, searchUrl);
+  }
+
+  // Login failed for other reason
+  console.log(`\n⚠️ Login failed. Manual intervention required.`);
+  console.log(`   Error: ${loginResult.error || "Unknown"}`);
+  return waitForManualIntervention(browserUse, platform, searchUrl);
+}
 
 /**
  * Prompt user for input via CLI
@@ -188,41 +229,12 @@ async function scrapeWithLogin(
         sendScreenshots,
       });
 
-      // Check if login succeeded or needs manual intervention
-      if (loginResult.login_success) {
-        console.log(`✅ Login successful! URL: ${loginResult.current_url}`);
-        isLoggedIn = true;
-      } else if (loginResult.captcha_needed) {
-        // CAPTCHA detected - needs manual solving
-        console.log(`\n⚠️ CAPTCHA detected. Manual intervention required.`);
-        console.log(`   VNC: localhost:5900`);
-        console.log(`   Please solve the CAPTCHA manually.`);
-        isLoggedIn = await waitForManualIntervention(
-          browserUse,
-          platform,
-          searchUrl,
-        );
-      } else if (loginResult.verification_needed) {
-        // Verification code needed - prompt user
-        console.log(
-          `\n🔐 Verification required: ${loginResult.verification_prompt}`,
-        );
-        isLoggedIn = await handleVerification(
-          browserUse,
-          loginResult,
-          platform,
-          searchUrl,
-        );
-      } else {
-        // Login failed for other reason
-        console.log(`\n⚠️ Login failed. Manual intervention required.`);
-        console.log(`   Error: ${loginResult.error || "Unknown"}`);
-        isLoggedIn = await waitForManualIntervention(
-          browserUse,
-          platform,
-          searchUrl,
-        );
-      }
+      isLoggedIn = await handleLoginResult(
+        browserUse,
+        loginResult,
+        platform,
+        searchUrl,
+      );
     } else {
       // No proactive login config - check session first
       console.log("\n📌 Phase 1: Checking existing session...");
@@ -264,41 +276,12 @@ async function scrapeWithLogin(
             sendScreenshots,
           });
 
-          // Check if login succeeded or needs manual intervention
-          if (loginResult.login_success) {
-            console.log(`✅ Login successful! URL: ${loginResult.current_url}`);
-            isLoggedIn = true;
-          } else if (loginResult.captcha_needed) {
-            // CAPTCHA detected - needs manual solving
-            console.log(`\n⚠️ CAPTCHA detected. Manual intervention required.`);
-            console.log(`   VNC: localhost:5900`);
-            console.log(`   Please solve the CAPTCHA manually.`);
-            isLoggedIn = await waitForManualIntervention(
-              browserUse,
-              platform,
-              searchUrl,
-            );
-          } else if (loginResult.verification_needed) {
-            // Verification code needed - prompt user
-            console.log(
-              `\n🔐 Verification required: ${loginResult.verification_prompt}`,
-            );
-            isLoggedIn = await handleVerification(
-              browserUse,
-              loginResult,
-              platform,
-              searchUrl,
-            );
-          } else {
-            // Login failed for other reason
-            console.log(`\n⚠️ Login failed. Manual intervention required.`);
-            console.log(`   Error: ${loginResult.error || "Unknown"}`);
-            isLoggedIn = await waitForManualIntervention(
-              browserUse,
-              platform,
-              searchUrl,
-            );
-          }
+          isLoggedIn = await handleLoginResult(
+            browserUse,
+            loginResult,
+            platform,
+            searchUrl,
+          );
         } else {
           // No credentials - start browser for manual login
           console.log("   Starting browser for manual login...");
@@ -504,7 +487,7 @@ async function handleVerification(
  */
 async function waitForManualIntervention(
   _browserUse: BrowserUseClient,
-  platform: { name: string },
+  platform: Platform,
   _searchUrl: string,
 ): Promise<boolean> {
   console.log(`\n${"=".repeat(60)}`);

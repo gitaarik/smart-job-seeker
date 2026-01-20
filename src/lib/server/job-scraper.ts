@@ -388,56 +388,6 @@ export function mergeJobData(
 }
 
 /**
- * Detect if a page is a login page using LLM
- * Currently unused but available for future login detection needs
- * @param pageHtml HTML content of the page
- * @returns Boolean indicating if it's a login page
- */
-export async function detectLoginPage(pageHtml: string): Promise<boolean> {
-  // 1. Strip HTML to minimal content
-  const strippedHtml = stripHtmlForLlm(pageHtml);
-
-  // 2. Call AI chat with system profile for job scraping
-  const result = await createJobScrapingAiChat<{
-    isLoginPage: boolean;
-    reasoning: string;
-  }>("detect_login_page", { html: strippedHtml });
-
-  if (!result.success || !result.response) {
-    throw new Error(`Failed to detect login page: ${result.message}`);
-  }
-
-  return result.response.isLoginPage === true;
-}
-
-/**
- * Format salary information for display
- */
-function formatSalary(data: {
-  salary_min: number | null;
-  salary_max: number | null;
-  salary_currency: string | null;
-  salary_period: string | null;
-}): string | null {
-  if (!data.salary_min && !data.salary_max) {
-    return null;
-  }
-
-  const currency = data.salary_currency || "USD";
-  const period = data.salary_period || "year";
-
-  if (data.salary_min && data.salary_max) {
-    return `${currency} ${data.salary_min.toLocaleString()} - ${data.salary_max.toLocaleString()} per ${period}`;
-  } else if (data.salary_min) {
-    return `${currency} ${data.salary_min.toLocaleString()}+ per ${period}`;
-  } else if (data.salary_max) {
-    return `Up to ${currency} ${data.salary_max.toLocaleString()} per ${period}`;
-  }
-
-  return null;
-}
-
-/**
  * Extract job data from job posting HTML using LLM
  * @param jobHtml HTML content from individual job page
  * @param sourceUrl URL of the job page

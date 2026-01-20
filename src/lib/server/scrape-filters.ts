@@ -9,6 +9,59 @@ import {
   LLMRateLimitError,
 } from "./llm";
 
+/**
+ * Job data for validation
+ */
+export interface JobForValidation {
+  title?: string | null;
+  company?: string | null;
+  job_poster?: string | null;
+  job_description?: string | null;
+}
+
+/**
+ * Check if job has minimum required data to be valid
+ * A job needs at least:
+ * - A title OR company (to identify what/where it is)
+ * - AND (title OR description) (to have something meaningful)
+ */
+export function isValidJob(job: JobForValidation): boolean {
+  const hasTitle = Boolean(job.title?.trim());
+  const hasCompany = Boolean(job.company?.trim() || job.job_poster?.trim());
+  const hasDescription = Boolean(job.job_description?.trim());
+
+  // Need at least title OR company to identify the job
+  if (!hasTitle && !hasCompany) {
+    return false;
+  }
+
+  // Need at least title OR description for meaningful content
+  if (!hasTitle && !hasDescription) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Get reason why job is invalid (for logging)
+ */
+export function getJobInvalidReason(job: JobForValidation): string | null {
+  const hasTitle = Boolean(job.title?.trim());
+  const hasCompany = Boolean(job.company?.trim() || job.job_poster?.trim());
+  const hasDescription = Boolean(job.job_description?.trim());
+
+  if (!hasTitle && !hasCompany) {
+    return "No title or company (likely login/error page)";
+  }
+
+  if (!hasTitle && !hasDescription) {
+    return "No title or description (incomplete data)";
+  }
+
+  return null;
+}
+
 export interface ScrapingStats {
   jobsProcessed: number;
   consecutiveClosedJobs: number;
