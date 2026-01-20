@@ -98,7 +98,10 @@
       "mcp__plugin_serena_serena__read_memory",
       "mcp__plugin_serena_serena__get_symbols_overview",
       "WebFetch(domain:playwright.dev)",
-      "Bash(npm show:*)"
+      "Bash(npm show:*)",
+      "Bash(python -m pytest:*)",
+      "Bash(python -c:*)",
+      "Bash(python -m py_compile:*)"
     ],
     "deny": [],
     "ask": []
