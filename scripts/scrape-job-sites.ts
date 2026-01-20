@@ -83,6 +83,7 @@ async function scrapeJobSite(
       platformId,
       config.systemScraperProfileId,
       options.screenshots,
+      searchAction.id,
     );
 
     console.log(`\n✅ Successfully processed ${result.jobsProcessed} job(s)\n`);

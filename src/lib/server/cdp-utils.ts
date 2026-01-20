@@ -61,10 +61,39 @@ export async function markClickableElementsInContainer(
 
     const clickableNodes: Array<{ nodeId: number; text: string }> = [];
 
+    // Exclusion patterns for UI chrome elements
+    const excludePatterns = [
+      "menu",
+      "nav",
+      "header",
+      "footer",
+      "pagination",
+      "filter",
+      "sort",
+      "dropdown",
+      "close",
+      "modal",
+      "dialog",
+      "popup",
+    ];
+
+    // Exclude action button text patterns
+    const excludeButtonTexts = [
+      "apply",
+      "apply now",
+      "quick apply",
+      "easy apply",
+      "save",
+      "share",
+      "bookmark",
+      "refer",
+      "earn",
+    ];
+
     // Check each descendant for click listeners
     for (const nodeId of nodeIds) {
       try {
-        // Get element attributes first for filtering
+        // Get element attributes for filtering
         const { attributes } = await client.send("DOM.getAttributes", {
           nodeId,
         });
@@ -75,88 +104,44 @@ export async function markClickableElementsInContainer(
           attrs[attributes[i]] = attributes[i + 1];
         }
 
-        // Check if this is a job-detail button (high priority - don't exclude)
         const className = attrs.class?.toLowerCase() || "";
-        const isJobDetailButton = className.includes("job-description") ||
-          className.includes("job-detail") ||
-          className.includes("view-detail") ||
-          className.includes("more-info");
+        const role = attrs.role?.toLowerCase() || "";
+        const ariaLabel = attrs["aria-label"]?.toLowerCase() || "";
+        const ariaHaspopup = attrs["aria-haspopup"] === "true";
 
-        if (!isJobDetailButton) {
-          // Filter out obvious non-job-card elements
-          const excludePatterns = [
-            "menu",
-            "nav",
-            "header",
-            "footer",
-            "pagination",
-            "filter",
-            "sort",
-            "dropdown",
-            "close",
-            "modal",
-            "dialog",
-            "popup",
-          ];
+        // Filter out UI chrome elements
+        const shouldExcludeByAttr = excludePatterns.some((pattern) =>
+          className.includes(pattern) ||
+          role.includes(pattern) ||
+          ariaLabel.includes(pattern) ||
+          (pattern === "menu" && ariaHaspopup)
+        );
 
-          // Check exclude patterns based on attributes
-          const shouldExcludeByAttr = excludePatterns.some((pattern) => {
-            const role = attrs.role?.toLowerCase() || "";
-            const ariaHaspopup = attrs["aria-haspopup"] === "true";
-            const ariaLabel = attrs["aria-label"]?.toLowerCase() || "";
-
-            return className.includes(pattern) ||
-              role.includes(pattern) ||
-              ariaLabel.includes(pattern) ||
-              (pattern === "menu" && ariaHaspopup);
-          });
-
-          if (shouldExcludeByAttr) {
-            continue;
-          }
+        if (shouldExcludeByAttr) {
+          continue;
         }
 
-        // Get element text content to check for apply/action buttons
-        // Skip this check for job-detail buttons (they may have no text, just icons)
+        // Get element text content
         let elementText = "";
-        if (!isJobDetailButton) {
-          try {
-            const { outerHTML } = await client.send("DOM.getOuterHTML", {
-              nodeId,
-            });
-            // Extract text content from HTML (simple regex)
-            const textMatch = outerHTML.match(/>([^<]+)</);
-            elementText = textMatch ? textMatch[1].trim().toLowerCase() : "";
-          } catch {
-            // Failed to get HTML, continue without text filtering
-          }
-
-          // Filter out apply/share/save buttons by text content
-          const excludeButtonTexts = [
-            "apply",
-            "apply now",
-            "quick apply",
-            "easy apply",
-            "save",
-            "share",
-            "bookmark",
-            "refer",
-            "earn",
-          ];
-
-          const isExcludedButton = excludeButtonTexts.some((text) =>
-            elementText.includes(text)
-          );
-
-          if (isExcludedButton) {
-            continue;
-          }
+        try {
+          const { outerHTML } = await client.send("DOM.getOuterHTML", {
+            nodeId,
+          });
+          // Extract text content from HTML (simple regex)
+          const textMatch = outerHTML.match(/>([^<]+)</);
+          elementText = textMatch ? textMatch[1].trim().toLowerCase() : "";
+        } catch {
+          // Failed to get HTML, continue without text filtering
         }
 
-        // Don't filter out links - mark them with data-extract attributes
-        // so the LLM can see them as click candidates alongside buttons.
-        // Modern job sites often use <a> tags with hrefs that trigger SPA
-        // navigation (update detail pane) rather than full page navigation.
+        // Filter out apply/share/save buttons by text content
+        const isExcludedButton = excludeButtonTexts.some((text) =>
+          elementText.includes(text)
+        );
+
+        if (isExcludedButton) {
+          continue;
+        }
 
         // Resolve node to remote object
         const { object } = await client.send("DOM.resolveNode", { nodeId });
@@ -175,11 +160,7 @@ export async function markClickableElementsInContainer(
         );
 
         if (hasClickListener) {
-          // For job-detail buttons, use a descriptive text
-          const finalText = isJobDetailButton
-            ? "job-detail-button"
-            : elementText;
-          clickableNodes.push({ nodeId, text: finalText });
+          clickableNodes.push({ nodeId, text: elementText });
         }
       } catch (error) {
         // Node might have been removed or is not accessible, skip it
@@ -187,23 +168,13 @@ export async function markClickableElementsInContainer(
       }
     }
 
-    const jobDetailCount = clickableNodes.filter((n) =>
-      n.text === "job-detail-button"
-    ).length;
     console.log(
-      `Found ${clickableNodes.length} elements with click listeners (${jobDetailCount} job-detail buttons)`,
+      `Found ${clickableNodes.length} elements with click listeners`,
     );
 
-    // Sort nodes to prioritize job-detail buttons (they get lower IDs for LLM)
-    // This ensures job buttons are presented first in the HTML for better LLM selection
-    const sortedNodes = [
-      ...clickableNodes.filter((n) => n.text === "job-detail-button"),
-      ...clickableNodes.filter((n) => n.text !== "job-detail-button"),
-    ];
-
     // Mark elements with data-extract-clickable-id attributes
-    for (let i = 0; i < sortedNodes.length; i++) {
-      const { nodeId, text } = sortedNodes[i];
+    for (let i = 0; i < clickableNodes.length; i++) {
+      const { nodeId, text } = clickableNodes[i];
       try {
         // Add data-extract-clickable-id attribute
         await client.send("DOM.setAttributeValue", {

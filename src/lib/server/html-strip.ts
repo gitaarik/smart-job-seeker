@@ -66,6 +66,41 @@ export function stripHtmlForLlm(html: string): string {
     "data-extract-click-text", // Click context for SPA navigation
   ]);
 
+  // Whitelist of class name patterns to preserve for LLM context
+  // Classes containing these substrings will be kept
+  const classWhitelist = [
+    // Job-related
+    "job",
+    "position",
+    "vacancy",
+    "opening",
+    "career",
+    // Company/employer
+    "company",
+    "employer",
+    "organization",
+    // Title/role
+    "title",
+    "role",
+    "heading",
+    // Location
+    "location",
+    "remote",
+    "onsite",
+    // Salary
+    "salary",
+    "compensation",
+    "pay",
+    // List/card structures
+    "card",
+    "item",
+    "list",
+    "result",
+    // LinkedIn-specific
+    "artdeco",
+    "scaffold",
+  ];
+
   const maxAttrLength = 75; // Truncate long URLs (75 chars is enough for domain+path)
 
   $("*").each((_: number, elem: cheerio.Element) => {
@@ -74,7 +109,20 @@ export function stripHtmlForLlm(html: string): string {
 
     if (attrs) {
       Object.keys(attrs).forEach((attr) => {
-        if (!keepAttributes.has(attr)) {
+        if (attr === "class") {
+          // Filter classes to only keep those matching whitelist patterns
+          const classes = (attrs[attr] || "").split(/\s+/);
+          const filteredClasses = classes.filter((cls) =>
+            classWhitelist.some((pattern) =>
+              cls.toLowerCase().includes(pattern)
+            )
+          );
+          if (filteredClasses.length > 0) {
+            element.attr("class", filteredClasses.join(" "));
+          } else {
+            element.removeAttr("class");
+          }
+        } else if (!keepAttributes.has(attr)) {
           element.removeAttr(attr);
         } else {
           // Truncate long attribute values (especially URLs)
@@ -164,10 +212,12 @@ export function stripHtmlForLlm(html: string): string {
 
       if (selfClosingTags.has(tagName)) return;
 
-      // Check if element has any preserved attributes
+      // Check if element has any preserved attributes (including whitelisted classes)
       const attrs = element.attr();
       const hasPreservedAttrs = attrs &&
-        Object.keys(attrs).some((attr) => keepAttributes.has(attr));
+        Object.keys(attrs).some((attr) =>
+          keepAttributes.has(attr) || attr === "class"
+        );
 
       // Don't remove elements with preserved attributes (even if empty)
       if (hasPreservedAttrs) return;

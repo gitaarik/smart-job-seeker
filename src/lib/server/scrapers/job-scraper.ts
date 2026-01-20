@@ -7,7 +7,6 @@
  */
 
 import { chromium } from "playwright";
-import * as readline from "readline";
 import { config } from "$lib/server/config";
 import { BrowserUseClient } from "$lib/server/browser-use-client";
 import { scrapeJobsWithClicks } from "./click-scraper";
@@ -15,6 +14,7 @@ import { interpolatePrompt } from "$lib/server/ai-chat-utils";
 import { dbDirect } from "$lib/db";
 import { launchBrowser } from "../browser-utils";
 import { getPlatformCredentials } from "../platform-auth";
+import { promptUser } from "./utils";
 import type {
   LoginResult,
   Platform,
@@ -57,22 +57,6 @@ async function handleLoginResult(
   console.log(`\n⚠️ Login failed. Manual intervention required.`);
   console.log(`   Error: ${loginResult.error || "Unknown"}`);
   return waitForManualIntervention(browserUse, platform, searchUrl);
-}
-
-/**
- * Prompt user for input via CLI
- */
-async function promptUser(question: string): Promise<string> {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-  return new Promise((resolve) => {
-    rl.question(question, (answer) => {
-      rl.close();
-      resolve(answer.trim());
-    });
-  });
 }
 
 /**
@@ -180,6 +164,7 @@ async function scrapeWithLogin(
   platform: { name: string; url: string; login_page_url?: string | null },
   credentials: { username: string; password: string } | null,
   sendScreenshots?: boolean,
+  jobSearchId?: number,
 ): Promise<{ jobsProcessed: number; strippedHtml: string }> {
   if (credentials) {
     console.log(`🔐 Credentials found for ${platform.name}`);
@@ -332,6 +317,14 @@ async function scrapeWithLogin(
       throw new Error("No pages available in browser context");
     }
 
+    // Close all tabs except the first one to start fresh
+    if (pages.length > 1) {
+      console.log(`🧹 Closing ${pages.length - 1} extra tab(s)...`);
+      for (let i = 1; i < pages.length; i++) {
+        await pages[i].close();
+      }
+    }
+
     const page = pages[0];
     const currentUrl = page.url();
     console.log(`📄 Connected to page: ${currentUrl}`);
@@ -354,6 +347,7 @@ async function scrapeWithLogin(
       searchUrl,
       platformId,
       undefined, // Don't pass profileId - already logged in
+      jobSearchId,
     );
 
     console.log(
@@ -440,10 +434,13 @@ async function handleVerification(
       console.log(`   VNC: localhost:5900`);
       console.log(`   Browser CDP: localhost:9222`);
 
-      const action = await promptUser(
-        "\nAfter solving CAPTCHA, press Enter to check login status (or 'q' to quit): ",
-      );
-      if (action.toLowerCase() === "q") return false;
+      let action = "";
+      while (action !== "c" && action !== "q") {
+        action = (await promptUser(
+          "\nAfter solving CAPTCHA, enter 'c' to check login status or 'q' to quit: ",
+        )).toLowerCase();
+      }
+      if (action === "q") return false;
 
       // Check if login succeeded after manual CAPTCHA solve
       const searchPath = new URL(searchUrl).pathname;
@@ -497,7 +494,12 @@ async function waitForManualIntervention(
   console.log(`  - VNC: localhost:5900 (connect with VNC viewer)`);
   console.log(`  - Browser CDP: localhost:9222`);
 
-  await promptUser("\nPress Enter when you've completed login...");
+  let confirm = "";
+  while (confirm !== "c") {
+    confirm = (await promptUser(
+      "\nWhen you've completed login, enter 'c' to continue: ",
+    )).toLowerCase();
+  }
 
   console.log("✅ Continuing with scrape...");
   return true;
@@ -511,6 +513,7 @@ async function scrapeWithoutLogin(
   searchUrl: string,
   platformId: string,
   profileId?: number,
+  jobSearchId?: number,
 ): Promise<{ jobsProcessed: number; strippedHtml: string }> {
   console.log(`\n🎭 Using Patchright (no login)...`);
 
@@ -531,6 +534,7 @@ async function scrapeWithoutLogin(
       searchUrl,
       platformId,
       profileId,
+      jobSearchId,
     );
 
     console.log(
@@ -558,6 +562,7 @@ async function scrapeWithoutLogin(
  * @param platformId Platform ID for job storage
  * @param profileId Optional profile ID for credentials
  * @param sendScreenshots Whether to send screenshots to LLM (for login)
+ * @param jobSearchId Optional job search ID for Directus URL logging
  * @returns Object with jobsProcessed count and strippedHtml from search page
  */
 export async function scrapeJobs(
@@ -565,6 +570,7 @@ export async function scrapeJobs(
   platformId: string,
   profileId?: number,
   sendScreenshots?: boolean,
+  jobSearchId?: number,
 ): Promise<{ jobsProcessed: number; strippedHtml: string }> {
   console.log(`\n🔍 Starting job scraper (with persistent sessions)...`);
 
@@ -597,5 +603,6 @@ export async function scrapeJobs(
     platform,
     credentials,
     sendScreenshots,
+    jobSearchId,
   );
 }

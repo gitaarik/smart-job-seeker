@@ -272,7 +272,9 @@ describe("stripHtmlForLlm", () => {
     // Header and nav are removed, so href is not present
     expect(result).not.toContain('href="/"');
     expect(result).not.toContain("charset");
-    expect(result).not.toContain("class=");
+    // Whitelisted classes are preserved (job, company, title patterns)
+    expect(result).toContain('class="job-posting"');
+    expect(result).toContain('class="company"');
     expect(result).not.toContain("id=");
     expect(result).not.toContain("<script");
     expect(result).not.toContain("<style");
@@ -302,14 +304,74 @@ describe("stripHtmlForLlm", () => {
 
     // Other attributes should be removed
     expect(result).not.toContain("data-other-attribute");
-    expect(result).not.toContain('class="title"');
     expect(result).not.toContain('id="company"');
-    expect(result).not.toContain('class="other"');
+
+    // Whitelisted class preserved, non-whitelisted class removed
+    expect(result).toContain('class="title"'); // "title" is whitelisted
+    expect(result).not.toContain('class="other"'); // "other" is not whitelisted
 
     // Content should be preserved
     expect(result).toContain("Senior Engineer");
     expect(result).toContain("Acme Corp");
     expect(result).toContain("View Details");
     expect(result).toContain("Some content");
+  });
+
+  it("should preserve whitelisted class names for LLM context", () => {
+    const html = `
+      <html>
+        <body>
+          <div class="jobs-search-results__list ember-view pv2">
+            <div class="artdeco-card job-card entity-result">
+              <h3 class="job-title text-heading">Software Engineer</h3>
+              <span class="company-name t-14">Acme Corp</span>
+              <span class="location remote">San Francisco, CA</span>
+              <span class="salary-range compensation">$100k - $150k</span>
+            </div>
+            <div class="random-class xyz-component">Other content</div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const result = stripHtmlForLlm(html);
+
+    // Job-related classes preserved
+    expect(result).toContain("job-card");
+    expect(result).toContain("job-title");
+    expect(result).toContain("jobs-search-results__list");
+
+    // Company/employer classes preserved
+    expect(result).toContain("company-name");
+
+    // Location classes preserved
+    expect(result).toContain("location");
+    expect(result).toContain("remote");
+
+    // Salary classes preserved
+    expect(result).toContain("salary-range");
+    expect(result).toContain("compensation");
+
+    // Structure classes preserved
+    expect(result).toContain("artdeco-card");
+    expect(result).toContain("result");
+
+    // Title/heading classes preserved
+    expect(result).toContain("heading");
+    expect(result).toContain("title");
+
+    // Non-whitelisted classes removed (no whitelist pattern match)
+    expect(result).not.toContain("ember-view");
+    expect(result).not.toContain("pv2");
+    expect(result).not.toContain("t-14"); // LinkedIn typography class
+    expect(result).not.toContain("random-class");
+    expect(result).not.toContain("xyz-component");
+
+    // Content preserved
+    expect(result).toContain("Software Engineer");
+    expect(result).toContain("Acme Corp");
+    expect(result).toContain("San Francisco, CA");
+    expect(result).toContain("$100k - $150k");
+    expect(result).toContain("Other content");
   });
 });

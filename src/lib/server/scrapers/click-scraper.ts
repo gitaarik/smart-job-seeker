@@ -28,7 +28,12 @@ import {
 } from "$lib/server/pagination-utils";
 import { detectModalContent } from "$lib/server/scraper-interactive";
 import { performPatchwrightLogin } from "../patchright-login";
-import { formatSalary, getErrorMessage, SCRAPER_CONSTANTS } from "./utils";
+import {
+  formatSalary,
+  getErrorMessage,
+  promptUser,
+  SCRAPER_CONSTANTS,
+} from "./utils";
 
 /**
  * Log detailed job data after saving
@@ -85,6 +90,7 @@ function logJobDetails(
  * @param searchUrl URL of the search results page
  * @param platformId Platform ID for job storage
  * @param profileId Optional profile ID for credential-based login
+ * @param jobSearchId Optional job search ID for Directus URL logging
  * @returns Object with jobsProcessed count and strippedHtml for debugging
  */
 export async function scrapeJobsWithClicks(
@@ -92,6 +98,7 @@ export async function scrapeJobsWithClicks(
   searchUrl: string,
   platformId: string,
   profileId?: number,
+  jobSearchId?: number,
 ): Promise<{ jobsProcessed: number; strippedHtml: string }> {
   console.log("\n🔄 Starting SPA scraping mode (click-based navigation)");
 
@@ -160,20 +167,21 @@ export async function scrapeJobsWithClicks(
     const htmlSize = (markedHtml.length / 1024).toFixed(1);
     console.log(`      HTML size: ${htmlSize} KB`);
 
-    // Check if we have job-detail-button markers (high-confidence job buttons)
-    const jobDetailButtonMatches = markedHtml.matchAll(
-      /data-extract-clickable-id="(\d+)" data-extract-click-text="job-detail-button"/g,
-    );
-    const jobDetailButtonIds = Array.from(jobDetailButtonMatches).map((
-      match,
-    ) => parseInt(match[1]));
-
     // Strip HTML for LLM processing (data-extract-clickable-id attributes survive)
     const strippedHtml = stripHtmlForLlm(markedHtml);
 
     // Capture stripped HTML from first page BEFORE LLM extraction (so we save it even if LLM fails)
     if (pageNumber === 1) {
       savedStrippedHtml = strippedHtml;
+
+      // Log Directus admin URL for debugging stripped HTML
+      if (jobSearchId) {
+        const directusUrl = process.env.PUBLIC_ADMIN_URL ||
+          "http://localhost:8055";
+        console.log(
+          `      📋 Debug stripped HTML: ${directusUrl}/admin/content/job_searches/${jobSearchId}`,
+        );
+      }
     }
 
     // Always use LLM to extract jobs with titles (even when CDP detects job-detail buttons)
@@ -216,60 +224,43 @@ export async function scrapeJobsWithClicks(
       };
     }
 
-    // If we detected job-detail buttons via CDP, prefer those IDs
-    // (they are high-confidence clickable elements that open job details)
-    if (jobDetailButtonIds.length > 0) {
-      console.log(
-        `      ℹ️  CDP detected ${jobDetailButtonIds.length} job-detail buttons`,
-      );
-
-      if (jobs.length === 0) {
-        // Fallback: use CDP IDs directly if LLM extraction failed
-        console.log(
-          "      ⚠️  LLM found 0 jobs, falling back to CDP-detected buttons",
-        );
-        jobs = jobDetailButtonIds.map((id) => ({
-          clickableId: id,
-          title: null,
-        }));
-      } else {
-        // Filter LLM jobs to only include CDP-detected job-detail-button IDs
-        // This prevents clicking on non-job elements (navigation, logos, etc.)
-        const jobDetailButtonIdSet = new Set(jobDetailButtonIds);
-        const filteredJobs = jobs.filter((j) =>
-          jobDetailButtonIdSet.has(j.clickableId)
-        );
-
-        if (filteredJobs.length > 0) {
-          const droppedCount = jobs.length - filteredJobs.length;
-          if (droppedCount > 0) {
-            console.log(
-              `      🎯 Filtered to ${filteredJobs.length} jobs with job-detail-button IDs (dropped ${droppedCount} non-job elements)`,
-            );
-          }
-          jobs = filteredJobs;
-        } else {
-          // LLM IDs don't match any job-detail-buttons - use CDP IDs with LLM titles if possible
-          console.log(
-            "      ⚠️  LLM IDs don't match job-detail buttons, using CDP IDs",
-          );
-          jobs = jobDetailButtonIds.map((id) => {
-            // Try to find a title from LLM results for context (even if ID didn't match)
-            const llmJob = jobs.find((j) => j.title && j.title.length > 0);
-            return {
-              clickableId: id,
-              title: null, // Can't reliably map titles when IDs don't match
-            };
-          });
-        }
-      }
-    }
-
+    // Log job cards found by LLM (now with preserved semantic class names for context)
     console.log(
       `      Jobs: [${
         jobs.map((j) => `${j.clickableId}:${j.title || "?"}`).join(", ")
       }]`,
     );
+
+    // Ask user confirmation on first page before processing
+    if (pageNumber === 1 && jobs.length > 0) {
+      console.log(`\n${"=".repeat(60)}`);
+      console.log(`📋 Found ${jobs.length} job cards to process:\n`);
+
+      for (const job of jobs) {
+        const title = job.title || "(no title)";
+        const company = job.company || "(no company)";
+        console.log(`  #${job.clickableId}: ${title} @ ${company}`);
+      }
+
+      console.log(`\n${"=".repeat(60)}`);
+
+      let answer = "";
+      while (answer !== "y" && answer !== "n") {
+        answer = (await promptUser(
+          `\nProceed with importing these ${jobs.length} jobs? (y/n): `,
+        )).toLowerCase();
+      }
+
+      if (answer !== "y") {
+        console.log("❌ Scraping cancelled by user");
+        return {
+          jobsProcessed: 0,
+          strippedHtml: savedStrippedHtml,
+        };
+      }
+
+      console.log("✅ Proceeding with import...\n");
+    }
 
     // Detect duplicate pages (SPA pagination false positives)
     if (pageNumber > 1 && previousPageJobIds.length > 0) {
@@ -378,7 +369,9 @@ export async function scrapeJobsWithClicks(
           `[data-extract-clickable-id="${clickableId}"]`,
         ).evaluate((el) => {
           const tag = el.tagName.toLowerCase();
-          const text = el.textContent?.trim().substring(0, 50) || "";
+          // Normalize whitespace (collapse newlines/spaces) then trim
+          const text =
+            el.textContent?.replace(/\s+/g, " ").trim().substring(0, 50) || "";
           const href = el.getAttribute("href")?.substring(0, 60) || "";
           const ariaLabel = el.getAttribute("aria-label")?.substring(0, 50) ||
             "";
@@ -398,6 +391,7 @@ export async function scrapeJobsWithClicks(
           elementInfo.text ? `"${elementInfo.text}"` : "",
           elementInfo.href ? `href="${elementInfo.href}..."` : "",
           elementInfo.ariaLabel ? `aria-label="${elementInfo.ariaLabel}"` : "",
+          `</${elementInfo.tag}>`,
         ].filter(Boolean).join(" ");
         console.log(`      👆 Clicking #${clickableId}: ${elementDesc}`);
 
