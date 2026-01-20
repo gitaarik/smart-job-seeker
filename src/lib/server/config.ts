@@ -66,6 +66,12 @@ export interface AppConfig {
   scraperCaptchaCheckInterval: number; // Interval for checking CAPTCHA status (ms)
   scraperModalWaitTimeout: number; // Wait time for modal content to load (ms)
 
+  // SPA Content Loading Detection
+  scraperSpaContentPollAttempts: number; // Max polls for content growth detection
+  scraperSpaContentPollInterval: number; // Interval between content polls (ms)
+  scraperSpaMinContentGrowth: number; // Min chars growth to consider "still loading"
+  scraperSpaLlmRetryAttempts: number; // Max LLM retry attempts when no jobs found
+
   // Browser-Use Integration
   browserUseUrl: string;
   browserUseTimeout: number;
@@ -223,6 +229,24 @@ function loadConfig(): AppConfig {
     ),
     scraperModalWaitTimeout: parseInt(
       getEnv("SJS_SCRAPER_MODAL_WAIT_TIMEOUT", "500"),
+      10,
+    ),
+
+    // SPA Content Loading Detection
+    scraperSpaContentPollAttempts: parseInt(
+      getEnv("SJS_SCRAPER_SPA_CONTENT_POLL_ATTEMPTS", "3"),
+      10,
+    ),
+    scraperSpaContentPollInterval: parseInt(
+      getEnv("SJS_SCRAPER_SPA_CONTENT_POLL_INTERVAL", "2000"),
+      10,
+    ),
+    scraperSpaMinContentGrowth: parseInt(
+      getEnv("SJS_SCRAPER_SPA_MIN_CONTENT_GROWTH", "500"),
+      10,
+    ),
+    scraperSpaLlmRetryAttempts: parseInt(
+      getEnv("SJS_SCRAPER_SPA_LLM_RETRY_ATTEMPTS", "2"),
       10,
     ),
 

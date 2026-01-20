@@ -27,6 +27,7 @@ import {
   navigateToNextPage,
   performInfiniteScroll,
 } from "$lib/server/pagination-utils";
+import { waitForSpaContent } from "$lib/server/page-wait-utils";
 // Note: detectModalContent removed - now using full page HTML with search context
 import { performPatchwrightLogin } from "../patchright-login";
 import {
@@ -186,10 +187,10 @@ export async function scrapeJobsWithClicks(
     }
 
     // Always use LLM to extract jobs with titles (even when CDP detects job-detail buttons)
+    // Includes retry logic for slow-loading SPAs that may not have rendered job cards yet
     console.log(
       "\n   🤖 Step 2/3: Asking LLM to extract job cards with titles...",
     );
-    const startLlm = Date.now();
 
     let jobs: Array<
       {
@@ -202,27 +203,97 @@ export async function scrapeJobsWithClicks(
         salary_currency?: string | null;
         salary_period?: string | null;
       }
-    >;
+    > = [];
 
-    try {
-      const result = await extractJobsFromSearchPage(strippedHtml);
-      jobs = result.jobs;
+    let currentStrippedHtml = strippedHtml;
+    let extractionAttempt = 0;
+    const maxLlmRetries = config.scraperSpaLlmRetryAttempts;
 
-      const llmDuration = ((Date.now() - startLlm) / 1000).toFixed(2);
-      console.log(`      ✓ LLM analysis complete (${llmDuration}s)`);
-      console.log(`      Job cards found: ${jobs.length}`);
-    } catch (error) {
-      console.error(
-        `      ❌ LLM extraction failed: ${getErrorMessage(error)}`,
-      );
-      console.log(
-        `      ℹ️  Returning stripped HTML for debugging (${savedStrippedHtml.length} chars)`,
-      );
-      // Return early with stripped HTML so it gets saved to database
-      return {
-        jobsProcessed: stats.jobsProcessed,
-        strippedHtml: savedStrippedHtml,
-      };
+    // Extraction loop with SPA content loading detection
+    while (extractionAttempt <= maxLlmRetries) {
+      extractionAttempt++;
+      const startLlm = Date.now();
+
+      try {
+        const result = await extractJobsFromSearchPage(currentStrippedHtml);
+        jobs = result.jobs;
+
+        const llmDuration = ((Date.now() - startLlm) / 1000).toFixed(2);
+        console.log(`      ✓ LLM analysis complete (${llmDuration}s)`);
+        console.log(`      Job cards found: ${jobs.length}`);
+
+        // If jobs found, we're done
+        if (jobs.length > 0) {
+          if (extractionAttempt > 1) {
+            console.log(
+              `      ℹ️  Required ${extractionAttempt} extraction attempts`,
+            );
+          }
+          break;
+        }
+
+        // No jobs found - check if page is still loading (only if we have retries left)
+        if (extractionAttempt <= maxLlmRetries) {
+          console.log(
+            "      ⚠️  No jobs found, checking if page is still loading...",
+          );
+
+          const contentWait = await waitForSpaContent(page, {
+            maxAttempts: config.scraperSpaContentPollAttempts,
+            pollInterval: config.scraperSpaContentPollInterval,
+            minGrowthThreshold: config.scraperSpaMinContentGrowth,
+          });
+
+          if (contentWait.totalGrowth >= config.scraperSpaMinContentGrowth) {
+            // Content grew - re-capture HTML and retry
+            console.log(
+              `      ⏳ Content grew ${contentWait.totalGrowth.toLocaleString()} chars, re-extracting...`,
+            );
+
+            // Re-mark clickable elements (new elements may have loaded)
+            console.log("      📍 Re-marking clickable elements...");
+            const newClickableCount = await markClickableElementsInContainer(
+              page,
+              "body",
+            );
+            console.log(`      ✓ Found ${newClickableCount} elements`);
+
+            // Re-capture HTML
+            const newMarkedHtml = await page.content();
+            currentStrippedHtml = stripHtmlForLlm(newMarkedHtml);
+
+            // Update saved HTML if this is page 1
+            if (pageNumber === 1) {
+              savedStrippedHtml = currentStrippedHtml;
+            }
+
+            console.log(
+              `      🤖 Retry extraction attempt ${extractionAttempt + 1}/${
+                maxLlmRetries + 1
+              }...`,
+            );
+            continue;
+          } else {
+            // Content stabilized but still no jobs - give up
+            console.log(
+              "      📊 Content stabilized but no job cards found",
+            );
+            break;
+          }
+        }
+      } catch (error) {
+        console.error(
+          `      ❌ LLM extraction failed: ${getErrorMessage(error)}`,
+        );
+        console.log(
+          `      ℹ️  Returning stripped HTML for debugging (${savedStrippedHtml.length} chars)`,
+        );
+        // Return early with stripped HTML so it gets saved to database
+        return {
+          jobsProcessed: stats.jobsProcessed,
+          strippedHtml: savedStrippedHtml,
+        };
+      }
     }
 
     // Log job cards found by LLM (now with preserved semantic class names for context)
