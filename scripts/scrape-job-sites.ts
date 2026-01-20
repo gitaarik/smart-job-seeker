@@ -77,20 +77,17 @@ async function scrapeJobSite(
   const platformId = searchAction.platform ??
     await getPlatformIdFromUrl(searchUrl);
 
-  let processedCount: number;
-  let strippedHtml: string | null = null;
-
   try {
-    processedCount = await scrapeJobs(
+    const result = await scrapeJobs(
       searchUrl,
       platformId,
       config.systemScraperProfileId,
       options.screenshots,
     );
 
-    console.log(`\n✅ Successfully processed ${processedCount} job(s)\n`);
+    console.log(`\n✅ Successfully processed ${result.jobsProcessed} job(s)\n`);
 
-    return { strippedHtml };
+    return { strippedHtml: result.strippedHtml };
   } catch (error) {
     console.error(
       `❌ Scraping failed:`,

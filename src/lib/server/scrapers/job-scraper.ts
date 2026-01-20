@@ -139,7 +139,7 @@ async function scrapeWithLogin(
   platform: { name: string; url: string; login_page_url?: string | null },
   credentials: { username: string; password: string } | null,
   sendScreenshots?: boolean,
-): Promise<number> {
+): Promise<{ jobsProcessed: number; strippedHtml: string }> {
   if (credentials) {
     console.log(`🔐 Credentials found for ${platform.name}`);
   } else {
@@ -380,7 +380,7 @@ async function scrapeWithLogin(
     // Disconnect Playwright (don't close browser - we'll do that via API)
     await browser.close();
 
-    return result.jobsProcessed;
+    return result;
   } finally {
     // Always close the hybrid session
     console.log("\n🧹 Closing browser session...");
@@ -528,7 +528,7 @@ async function scrapeWithoutLogin(
   searchUrl: string,
   platformId: string,
   profileId?: number,
-): Promise<number> {
+): Promise<{ jobsProcessed: number; strippedHtml: string }> {
   console.log(`\n🎭 Using Patchright (no login)...`);
 
   // Launch browser with fingerprint (headed mode for debugging)
@@ -554,7 +554,7 @@ async function scrapeWithoutLogin(
       `\n✅ Scraping complete: ${result.jobsProcessed} jobs processed`,
     );
 
-    return result.jobsProcessed;
+    return result;
   } finally {
     // Always close browser context
     await context.close();
@@ -575,14 +575,14 @@ async function scrapeWithoutLogin(
  * @param platformId Platform ID for job storage
  * @param profileId Optional profile ID for credentials
  * @param sendScreenshots Whether to send screenshots to LLM (for login)
- * @returns Number of jobs processed
+ * @returns Object with jobsProcessed count and strippedHtml from search page
  */
 export async function scrapeJobs(
   searchUrl: string,
   platformId: string,
   profileId?: number,
   sendScreenshots?: boolean,
-): Promise<number> {
+): Promise<{ jobsProcessed: number; strippedHtml: string }> {
   console.log(`\n🔍 Starting job scraper (with persistent sessions)...`);
 
   // Get platform information
