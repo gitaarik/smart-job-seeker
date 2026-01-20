@@ -66,7 +66,7 @@ export function stripHtmlForLlm(html: string): string {
     "data-extract-click-text", // Click context for SPA navigation
   ]);
 
-  const maxAttrLength = 200; // Truncate long URLs
+  const maxAttrLength = 75; // Truncate long URLs (75 chars is enough for domain+path)
 
   $("*").each((_: number, elem: cheerio.Element) => {
     const element = $(elem);

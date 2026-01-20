@@ -323,10 +323,33 @@ export async function scrapeJobsWithClicks(
       }
 
       try {
-        // Use Patchright direct clicking
-        console.log(
-          `      👆 Clicking data-extract-clickable-id="${clickableId}"...`,
-        );
+        // Get element info before clicking for debugging
+        const elementInfo = await page.locator(
+          `[data-extract-clickable-id="${clickableId}"]`,
+        ).evaluate((el) => {
+          const tag = el.tagName.toLowerCase();
+          const text = el.textContent?.trim().substring(0, 50) || "";
+          const href = el.getAttribute("href")?.substring(0, 60) || "";
+          const ariaLabel = el.getAttribute("aria-label")?.substring(0, 50) ||
+            "";
+          const className = el.className?.toString().substring(0, 50) || "";
+          return { tag, text, href, ariaLabel, className };
+        }).catch(() => ({
+          tag: "?",
+          text: "",
+          href: "",
+          ariaLabel: "",
+          className: "",
+        }));
+
+        // Log what element we're clicking
+        const elementDesc = [
+          `<${elementInfo.tag}>`,
+          elementInfo.text ? `"${elementInfo.text}"` : "",
+          elementInfo.href ? `href="${elementInfo.href}..."` : "",
+          elementInfo.ariaLabel ? `aria-label="${elementInfo.ariaLabel}"` : "",
+        ].filter(Boolean).join(" ");
+        console.log(`      👆 Clicking #${clickableId}: ${elementDesc}`);
 
         // Close any open modals first
         await page.locator('[class*="close"]').first().click().catch(

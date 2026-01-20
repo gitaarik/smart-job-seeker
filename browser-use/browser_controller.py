@@ -941,34 +941,29 @@ class BrowserController:
 
         # Build task for entering the verification code
         # IMPORTANT: Check for CAPTCHA BEFORE submitting - if present, do NOT submit
-        task = f"""Enter the verification code. Check for CAPTCHA before submitting.
+        task = f"""Enter the verification code, then check for CAPTCHA before submitting.
 
 CODE TO ENTER: {code}
 
-STEPS:
-1. Find the verification code input field on the page
-2. Enter the code: {code}
-3. BEFORE clicking submit, look for any CAPTCHA or human verification challenge:
+STEPS (follow in order):
+1. Find the verification code input field (labeled "code", "verification", "OTP", "confirmation", or similar)
+2. FIRST: Enter the code {code} into the input field - this is required before anything else
+3. AFTER entering the code, check if there's a CAPTCHA or human verification challenge visible:
    - "Verify you're human" checkbox
    - "I'm not a robot" checkbox
    - CAPTCHA image/puzzle
    - Cloudflare/Turnstile challenge
-   - Any checkbox or challenge asking to verify you're human
-4. If CAPTCHA is visible: Report CAPTCHA_NEEDED immediately. Do NOT click submit.
-5. If NO CAPTCHA visible: Click the submit/verify/continue button and wait for page to process
+4. If CAPTCHA IS visible: Report CAPTCHA_NEEDED. Do NOT click submit.
+5. If NO CAPTCHA visible: Click the submit/verify/continue button and wait for result
 
-IMPORTANT:
-- Look for input fields labeled "code", "verification", "OTP", "confirmation"
-- ALWAYS check for CAPTCHA/human verification BEFORE clicking submit
-- If you see ANY human verification challenge, report CAPTCHA_NEEDED and STOP
-- Do NOT attempt to solve any CAPTCHA challenges
-- Do NOT click submit if a CAPTCHA is visible
-- If there's no submit button and no CAPTCHA, the form might auto-submit after entering all digits
+CRITICAL: You MUST enter the code first (step 2) before checking for CAPTCHA (step 3).
+Do NOT skip entering the code just because you see a CAPTCHA on the page.
+The user needs the code entered so they can manually solve the CAPTCHA and submit.
 
 Report ONE of:
 - SUCCESS: Login complete, now on the main site/dashboard
-- CAPTCHA_NEEDED: CAPTCHA/human verification visible - did NOT submit (user must solve manually)
-- INVALID_CODE: The code was rejected (wrong code or expired)
+- CAPTCHA_NEEDED: Code was entered, but CAPTCHA visible - did NOT submit (user must solve manually)
+- INVALID_CODE: The code was rejected after submission (wrong code)
 - NEEDS_NEW_CODE: The code expired, need to request a new one
 - FAILED: Could not enter the code or other error"""
 
@@ -1042,6 +1037,10 @@ Report ONE of:
             if hasattr(result, 'final_result'):
                 final_result_text = str(result.final_result()).upper() if callable(result.final_result) else str(result.final_result).upper()
 
+            # Debug: log the final result text
+            logger.info(f"[Browser-Use] final_result_text: {final_result_text[:200] if final_result_text else 'EMPTY'}")
+            print(f"[Browser-Use] final_result_text: {final_result_text[:200] if final_result_text else 'EMPTY'}", flush=True)
+
             # Parse outcomes
             if final_result_text:
                 if 'SUCCESS' in final_result_text:
@@ -1112,7 +1111,7 @@ Report ONE of:
                 "success": False,
                 "login_complete": False,
                 "needs_new_code": False,
-                "captcha_failed": False,
+                "captcha_needed": False,
                 "current_url": "",
                 "execution_time_ms": execution_time,
                 "error": error_str,

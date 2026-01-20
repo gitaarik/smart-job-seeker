@@ -153,16 +153,10 @@ export async function markClickableElementsInContainer(
           }
         }
 
-        // Filter out navigation links (href attributes that go to different pages)
-        // For SPAs with modals, we want elements without href or with # hrefs
-        const href = attrs.href || "";
-        const isExternalOrPageLink = href.length > 0 &&
-          !href.startsWith("#") &&
-          !href.startsWith("javascript:");
-
-        if (isExternalOrPageLink) {
-          continue;
-        }
+        // Don't filter out links - mark them with data-extract attributes
+        // so the LLM can see them as click candidates alongside buttons.
+        // Modern job sites often use <a> tags with hrefs that trigger SPA
+        // navigation (update detail pane) rather than full page navigation.
 
         // Resolve node to remote object
         const { object } = await client.send("DOM.resolveNode", { nodeId });

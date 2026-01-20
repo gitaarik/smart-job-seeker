@@ -535,7 +535,7 @@ export class BrowserUseClient {
     const result: VerifyCodeResponse = await response.json();
 
     console.log(
-      `[BrowserUseClient] Verification result: success=${result.success}, login_complete=${result.login_complete}, needs_new_code=${result.needs_new_code}`,
+      `[BrowserUseClient] Verification result: success=${result.success}, login_complete=${result.login_complete}, needs_new_code=${result.needs_new_code}, captcha_needed=${result.captcha_needed}`,
     );
 
     return result;

@@ -255,7 +255,7 @@ class VerifyCodeResponse(BaseModel):
     success: bool  # Whether the code was accepted
     login_complete: bool  # Whether login is now complete
     needs_new_code: bool  # Whether the code expired and a new one is needed
-    captcha_failed: Optional[bool] = False  # Whether CAPTCHA/human verification failed
+    captcha_needed: Optional[bool] = False  # CAPTCHA appeared, user must solve manually via VNC
     current_url: str
     execution_time_ms: int
     error: Optional[str] = None
