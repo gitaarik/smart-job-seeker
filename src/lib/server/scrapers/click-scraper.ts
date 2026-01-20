@@ -396,15 +396,10 @@ export async function scrapeJobsWithClicks(
         ].filter(Boolean).join(" ");
         console.log(`      👆 Clicking #${clickableId}: ${elementDesc}`);
 
-        // Close any open modals first
-        await page.locator('[class*="close"]').first().click().catch(
-          () => {},
-        );
-        await page.locator('[aria-label*="close" i]').first().click().catch(
-          () => {},
-        );
+        // Press Escape to clear any stray modals (fast, universal across sites)
+        // Note: We don't try to click close buttons - that causes 30s timeout penalties
+        // The full page HTML + search context approach handles any modal state
         await page.keyboard.press("Escape").catch(() => {});
-        await page.waitForTimeout(config.scraperModalWaitTimeout);
 
         // Capture page state before click for comparison
         const beforeClick = await page.evaluate(() =>
