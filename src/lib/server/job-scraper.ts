@@ -274,15 +274,34 @@ export async function extractJobsFromSearchPage(
     } hallucinated)`,
   );
 
-  // If all IDs were hallucinated, throw error
-  if (validJobs.length === 0 && aiResult.response.jobs.length > 0) {
+  // Filter out jobs without a title (can't be a valid job card)
+  const jobsWithTitles = validJobs.filter((job: { title: string | null }) => {
+    const hasTitle = job.title && job.title.trim() !== "";
+    if (!hasTitle) {
+      console.warn(
+        `      ⚠️  Filtered job with ID ${(job as any).clickableId} - no title`,
+      );
+    }
+    return hasTitle;
+  });
+
+  if (jobsWithTitles.length < validJobs.length) {
+    console.log(
+      `      → ${jobsWithTitles.length} jobs with titles (filtered ${
+        validJobs.length - jobsWithTitles.length
+      } without title)`,
+    );
+  }
+
+  // If all IDs were hallucinated or had no title, throw error
+  if (jobsWithTitles.length === 0 && aiResult.response.jobs.length > 0) {
     throw new Error(
-      `All ${aiResult.response.jobs.length} LLM-extracted IDs were hallucinated (not found in page)`,
+      `All ${aiResult.response.jobs.length} LLM-extracted jobs were invalid (hallucinated IDs or missing titles)`,
     );
   }
 
   return {
-    jobs: validJobs,
+    jobs: jobsWithTitles,
   };
 }
 
