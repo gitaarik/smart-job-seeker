@@ -33,6 +33,8 @@ class BrowserController:
     def __init__(self):
         """Initialize with LLM from factory."""
         self.llm, self.vision_support = create_llm()
+        # Keep browser object alive to prevent premature cleanup
+        self._active_browser: Browser | None = None
 
     async def execute_task(
         self,
@@ -170,7 +172,10 @@ class BrowserController:
             cdp_url = await ChromeManager.launch(start_url, cdp_port)
 
             # Connect browser-use to Chrome via CDP
-            browser = Browser(cdp_url=cdp_url)
+            # Use keep_alive=True to prevent browser-use from closing Chrome when agent finishes
+            browser = Browser(cdp_url=cdp_url, keep_alive=True)
+            # Store reference to keep browser alive after agent completes
+            self._active_browser = browser
 
             # Create and run the agent
             agent = Agent(
@@ -285,6 +290,8 @@ class BrowserController:
 
     async def close_hybrid_session(self):
         """Close the hybrid browser session."""
+        # Clear browser reference to allow cleanup
+        self._active_browser = None
         await ChromeManager.close()
         return {"closed": True}
 

@@ -51,6 +51,10 @@ services:
       SJS_DATABASE_URL: ${SJS_POSTGRES_URL_DOCKER}
       # DATABASE_URL is also set for compatibility with standard Prisma tools
       DATABASE_URL: ${SJS_POSTGRES_URL_DOCKER}
+      # Override browser-use URL to use Docker networking (localhost in .env is for host scripts)
+      SJS_BROWSER_USE_URL: http://browser-use:8000
+      # Override CDP host for Playwright connection (browser-use exposes CDP on 9222)
+      SJS_HYBRID_CDP_HOST: browser-use
   admin:
     extends:
       file: docker-compose.directus.yml

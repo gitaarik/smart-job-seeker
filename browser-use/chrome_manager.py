@@ -160,6 +160,7 @@ class ChromeManager:
             chrome_path,
             f"--remote-debugging-port={internal_cdp_port}",
             "--remote-debugging-address=0.0.0.0",
+            "--remote-allow-origins=*",  # Allow CDP connections from Docker hostnames
             "--no-first-run",
             "--no-default-browser-check",
             "--disable-background-networking",

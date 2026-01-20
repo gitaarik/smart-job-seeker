@@ -7,6 +7,7 @@
  */
 
 import { chromium } from "playwright";
+import { promises as dns } from "dns";
 import { config } from "$lib/server/config";
 import { BrowserUseClient } from "$lib/server/browser-use-client";
 import { scrapeJobsWithClicks } from "./click-scraper";
@@ -22,7 +23,32 @@ import type {
   ScrapeResult,
 } from "./types";
 
-const CDP_PORT = 9222;
+const CDP_HOST = config.hybridCdpHost;
+const CDP_PORT = config.hybridCdpPort;
+
+/**
+ * Resolve hostname to IP address for CDP connection.
+ * Chrome DevTools Protocol rejects non-localhost/non-IP Host headers,
+ * so we need to resolve the hostname before connecting.
+ */
+async function resolveCdpHost(host: string): Promise<string> {
+  // If already an IP address or localhost, return as-is
+  if (
+    host === "localhost" || host === "127.0.0.1" ||
+    /^\d+\.\d+\.\d+\.\d+$/.test(host)
+  ) {
+    return host;
+  }
+
+  try {
+    const addresses = await dns.lookup(host);
+    console.log(`🔍 Resolved ${host} to ${addresses.address}`);
+    return addresses.address;
+  } catch (error) {
+    console.warn(`⚠️ Could not resolve ${host}, using as-is: ${error}`);
+    return host;
+  }
+}
 
 /**
  * Handle login result from Browser-Use
@@ -302,7 +328,9 @@ async function scrapeWithLogin(
     // Phase 3: Connect Playwright via CDP
     console.log("\n📌 Phase 3: Connecting Playwright via CDP...");
 
-    const cdpUrl = `http://localhost:${CDP_PORT}`;
+    // Resolve hostname to IP - Chrome DevTools rejects non-IP Host headers
+    const resolvedHost = await resolveCdpHost(CDP_HOST);
+    const cdpUrl = `http://${resolvedHost}:${CDP_PORT}`;
     const browser = await chromium.connectOverCDP(cdpUrl);
     const contexts = browser.contexts();
 

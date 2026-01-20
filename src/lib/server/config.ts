@@ -74,6 +74,7 @@ export interface AppConfig {
   browserUseMaxJobsToClick: number; // Max number of jobs to click through and extract details
 
   // Hybrid Scraper (Browser-Use login + Patchright extraction via CDP)
+  hybridCdpHost: string; // Host for Chrome debugging (default: localhost, use browser-use in Docker)
   hybridCdpPort: number; // Port for Chrome debugging (default: 9222)
   hybridLoginTimeout: number; // Max time for Browser-Use login (ms)
   hybridHandoffDelay: number; // Delay before Patchright connects (ms)
@@ -241,6 +242,7 @@ function loadConfig(): AppConfig {
     ),
 
     // Hybrid Scraper (Browser-Use login + Patchright extraction via CDP)
+    hybridCdpHost: getEnv("SJS_HYBRID_CDP_HOST", "localhost"),
     hybridCdpPort: parseInt(getEnv("SJS_HYBRID_CDP_PORT", "9222"), 10),
     hybridLoginTimeout: parseInt(
       getEnv("SJS_HYBRID_LOGIN_TIMEOUT", "120000"),
