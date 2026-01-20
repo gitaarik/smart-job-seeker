@@ -38,6 +38,11 @@ import {
   SCRAPER_CONSTANTS,
 } from "./utils";
 import { createJobScrapingAiChat } from "$lib/server/ai-chat-job-utils";
+import {
+  humanClick,
+  humanWait,
+  injectStealthScripts,
+} from "$lib/server/stealth-utils";
 
 /**
  * Log detailed job data after saving
@@ -210,9 +215,12 @@ export async function scrapeJobsWithClicks(
     }
   }
 
+  // Inject stealth scripts to hide automation markers
+  await injectStealthScripts(page);
+
   // Wait for page to fully render (SPAs need time)
   console.log("⏳ Waiting for SPA to fully render...");
-  await page.waitForTimeout(3000);
+  await humanWait(page, 3000);
   console.log(`📍 Current URL: ${page.url()}`);
 
   // Initialize stats
@@ -664,10 +672,11 @@ export async function scrapeJobsWithClicks(
           document.body.innerText.length
         );
 
-        await page.locator(`[data-extract-clickable-id="${clickableId}"]`)
-          .click();
+        // Use human-like click with natural mouse movement
+        const selector = `[data-extract-clickable-id="${clickableId}"]`;
+        await humanClick(page, selector);
 
-        await page.waitForTimeout(config.scraperClickWaitTimeout);
+        await humanWait(page, config.scraperClickWaitTimeout);
 
         // Check if page content changed after click
         const afterClick = await page.evaluate(() =>
@@ -852,7 +861,7 @@ export async function scrapeJobsWithClicks(
         break;
       }
 
-      await page.waitForTimeout(config.scraperRateLimitDelay); // Rate limiting
+      await humanWait(page, config.scraperRateLimitDelay); // Rate limiting with jitter
     } else {
       console.log("      No pagination detected, stopping");
       break;

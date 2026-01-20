@@ -147,7 +147,6 @@ class ChromeManager:
         cls._setup_preferences()
 
         chrome_path = cls._find_chrome_path()
-        headless_mode = os.getenv("SJS_BROWSER_USE_HEADLESS", "true").lower() == "true"
 
         # Chrome binds to 127.0.0.1 even with --remote-debugging-address=0.0.0.0
         # So we use internal port and socat to forward from external port
@@ -177,12 +176,12 @@ class ChromeManager:
             # Disable password manager prompts
             "--password-store=basic",
             "--disable-save-password-bubble",
+            # Anti-bot stealth flags
+            "--disable-blink-features=AutomationControlled",
+            "--disable-infobars",
             f"--user-data-dir={SESSION_DIR}",
             start_url,
         ]
-
-        if headless_mode:
-            chrome_args.insert(1, "--headless=new")
 
         logger.info(f"[Chrome] Launching: {chrome_path}")
         print(f"[Chrome] Launching on internal port {internal_cdp_port}", flush=True)
@@ -258,7 +257,11 @@ class ChromeManager:
         await asyncio.sleep(0.5)
 
         if cls._socat_process.poll() is not None:
-            raise RuntimeError("socat process failed to start")
+            stderr = ""
+            if cls._socat_process.stderr:
+                stderr = cls._socat_process.stderr.read().decode()
+            logger.error(f"[Chrome] socat failed with stderr: {stderr}")
+            raise RuntimeError(f"socat process failed to start: {stderr}")
 
     @classmethod
     async def close(cls) -> None:
