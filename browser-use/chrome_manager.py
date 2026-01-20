@@ -59,6 +59,50 @@ class ChromeManager:
         )
 
     @classmethod
+    def _setup_preferences(cls) -> None:
+        """Set up Chrome preferences to disable unwanted prompts."""
+        default_dir = os.path.join(SESSION_DIR, "Default")
+        os.makedirs(default_dir, exist_ok=True)
+        prefs_path = os.path.join(default_dir, "Preferences")
+
+        # Load existing preferences or start fresh
+        prefs = {}
+        if os.path.exists(prefs_path):
+            try:
+                with open(prefs_path, "r") as f:
+                    prefs = json.load(f)
+            except (json.JSONDecodeError, IOError):
+                prefs = {}
+
+        # Disable password manager prompts
+        if "credentials_enable_service" not in prefs:
+            prefs["credentials_enable_service"] = False
+        if "profile" not in prefs:
+            prefs["profile"] = {}
+        prefs["profile"]["password_manager_enabled"] = False
+
+        # Disable session restore prompt
+        if "session" not in prefs:
+            prefs["session"] = {}
+        prefs["session"]["restore_on_startup"] = 1  # 1 = open new tab page
+        if "browser" not in prefs:
+            prefs["browser"] = {}
+        prefs["browser"]["show_home_button"] = False
+
+        # Disable "Chrome didn't shut down correctly" bubble
+        if "profile" not in prefs:
+            prefs["profile"] = {}
+        prefs["profile"]["exit_type"] = "Normal"
+        prefs["profile"]["exited_cleanly"] = True
+
+        try:
+            with open(prefs_path, "w") as f:
+                json.dump(prefs, f, indent=2)
+            logger.info("[Chrome] Preferences configured")
+        except IOError as e:
+            logger.warning(f"[Chrome] Could not write preferences: {e}")
+
+    @classmethod
     def _cleanup_lock_files(cls) -> None:
         """Remove Chrome singleton lock files."""
         try:
@@ -100,6 +144,7 @@ class ChromeManager:
         # Clean up first
         await cls._kill_orphaned_chrome()
         cls._cleanup_lock_files()
+        cls._setup_preferences()
 
         chrome_path = cls._find_chrome_path()
         headless_mode = os.getenv("SJS_BROWSER_USE_HEADLESS", "true").lower() == "true"
@@ -122,6 +167,15 @@ class ChromeManager:
             "--disable-translate",
             "--no-sandbox",
             "--disable-dev-shm-usage",
+            # Window size - larger for better Browser-Use screenshot analysis
+            "--window-size=1920,1080",
+            "--window-position=0,0",
+            # Disable session restore popup ("Restore pages?" after crash)
+            "--disable-session-crashed-bubble",
+            "--hide-crash-restore-bubble",
+            # Disable password manager prompts
+            "--password-store=basic",
+            "--disable-save-password-bubble",
             f"--user-data-dir={SESSION_DIR}",
             start_url,
         ]
