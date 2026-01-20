@@ -19,23 +19,6 @@ export interface ExecuteTaskResponse {
   execution_time_ms: number;
 }
 
-// CDP task parameters for hybrid scraper (login via CDP connection)
-export interface CdpTaskParams {
-  task: string; // Natural language task description (login + navigate)
-  cdpUrl: string; // CDP endpoint URL (e.g., "http://localhost:9222")
-  maxTime?: number; // Optional max execution time in seconds
-  sendScreenshots?: boolean; // Optional screenshot configuration
-}
-
-// CDP task response with handoff information
-export interface CdpTaskResponse {
-  result: any; // Whatever the agent returns
-  execution_time_ms: number;
-  login_success: boolean; // Whether login was successful
-  current_url: string; // URL browser ended up on
-  ready_for_handoff: boolean; // Whether ready for Patchright to take over
-}
-
 // Hybrid session parameters (Browser-Use launches Chrome, keeps it open)
 export interface HybridSessionParams {
   task: string; // Natural language login task
@@ -73,24 +56,6 @@ export interface VerifyCodeResponse {
 // Resend code response
 export interface ResendCodeResponse {
   success: boolean;
-  execution_time_ms: number;
-  error?: string;
-}
-
-// Hybrid action parameters (for clicking jobs, closing modals, etc.)
-export interface HybridActionParams {
-  actionType: "click_job" | "close_modal" | "scroll";
-  targetDescription: string; // e.g., "the job titled 'Senior Python Developer'"
-  cdpPort?: number;
-  maxTime?: number;
-  sendScreenshots?: boolean;
-}
-
-// Hybrid action response
-export interface HybridActionResponse {
-  success: boolean;
-  action_performed: string; // "completed", "not_found", "wrong_button", etc.
-  current_url: string;
   execution_time_ms: number;
   error?: string;
 }
@@ -162,6 +127,27 @@ export class BrowserUseClient {
     console.log(
       `[BrowserUseClient] Initialized with sendScreenshots: ${this.config.sendScreenshots} (custom: ${customConfig?.sendScreenshots}, env: ${config.browserUseSendScreenshots})`,
     );
+  }
+
+  /**
+   * Fetch a prompt template from the database.
+   * @param request The request identifier (e.g., "submit_verification_code_browser_use")
+   * @returns Combined system_prompt + user_prompt as a single task string
+   */
+  private async fetchPromptTemplate(request: string): Promise<string> {
+    const template = await dbDirect.ai_chat_prompts.findUnique({
+      where: { request },
+    });
+
+    if (!template) {
+      throw new Error(
+        `Prompt template '${request}' not found in ai_chat_prompts`,
+      );
+    }
+
+    // Combine system and user prompts (Browser-Use uses single task string)
+    return `${template.system_prompt || ""}\n\n${template.user_prompt || ""}`
+      .trim();
   }
 
   async executeTask(params: ExecuteTaskParams): Promise<ExecuteTaskResponse> {
@@ -321,72 +307,6 @@ export class BrowserUseClient {
   }
 
   /**
-   * Execute a login task by connecting to an existing Chrome instance via CDP.
-   * Used by the hybrid scraper for AI-driven login before Patchright extraction.
-   * @param params CDP task parameters including cdpUrl
-   * @returns Response with login_success, current_url, and ready_for_handoff
-   */
-  async executeLoginWithCdp(params: CdpTaskParams): Promise<CdpTaskResponse> {
-    const sendScreenshots = params.sendScreenshots ??
-      this.config.sendScreenshots;
-    console.log(
-      `[BrowserUseClient] CDP login request with send_screenshots: ${sendScreenshots}`,
-    );
-    console.log(`[BrowserUseClient] CDP URL: ${params.cdpUrl}`);
-
-    let response: Response;
-    try {
-      response = await fetch(`${this.config.baseUrl}/execute-with-cdp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          task: params.task,
-          cdp_url: params.cdpUrl,
-          max_time: params.maxTime,
-          send_screenshots: sendScreenshots,
-        }),
-        signal: AbortSignal.timeout(this.config.timeout),
-      });
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
-
-      console.error(`\n❌ Failed to communicate with browser-use server (CDP)`);
-      console.error(`   Error: ${errorMsg}`);
-      console.error(`\n💡 Common causes:`);
-      console.error(`   - Browser-use server not running`);
-      console.error(`   - LLM API rate limit exceeded`);
-      console.error(`   - Network timeout`);
-      console.error(`\n📋 Check browser-use container logs:`);
-      console.error(`   docker compose logs browser-use --tail=50\n`);
-
-      throw new Error(
-        `Browser-Use CDP connection failed: ${errorMsg}. Check 'docker compose logs browser-use' for details.`,
-      );
-    }
-
-    if (!response.ok) {
-      const errorBody = await response.text().catch(() => "");
-      console.error(
-        `\n❌ Browser-Use CDP API error: ${response.status} ${response.statusText}`,
-      );
-      if (errorBody) {
-        console.error(`   Response: ${errorBody.substring(0, 500)}`);
-      }
-      throw new Error(
-        `Browser-Use CDP API error: ${response.status} ${response.statusText}`,
-      );
-    }
-
-    const result: CdpTaskResponse = await response.json();
-
-    console.log(
-      `[BrowserUseClient] CDP login result: success=${result.login_success}, url=${result.current_url}, ready=${result.ready_for_handoff}`,
-    );
-
-    return result;
-  }
-
-  /**
    * Start a hybrid session: Browser-Use launches Chrome with CDP, performs login,
    * and keeps the browser open for Patchright to connect.
    * @param params Hybrid session parameters
@@ -487,12 +407,33 @@ export class BrowserUseClient {
   ): Promise<VerifyCodeResponse> {
     console.log(`[BrowserUseClient] Submitting verification code...`);
 
+    // Fetch and interpolate the prompt template
+    let task: string;
+    try {
+      const taskTemplate = await this.fetchPromptTemplate(
+        "submit_verification_code_browser_use",
+      );
+      task = taskTemplate.replace(/\{\{code\}\}/g, code);
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.error(`\n❌ Failed to fetch prompt template: ${errorMsg}`);
+      return {
+        success: false,
+        login_complete: false,
+        needs_new_code: false,
+        current_url: "",
+        execution_time_ms: 0,
+        error: `Failed to fetch prompt template: ${errorMsg}`,
+      };
+    }
+
     let response: Response;
     try {
       response = await fetch(`${this.config.baseUrl}/hybrid/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          task,
           code,
           cdp_port: cdpPort,
           max_time: 60,
@@ -552,12 +493,29 @@ export class BrowserUseClient {
   ): Promise<ResendCodeResponse> {
     console.log(`[BrowserUseClient] Requesting new verification code...`);
 
+    // Fetch the prompt template (no interpolation needed)
+    let task: string;
+    try {
+      task = await this.fetchPromptTemplate(
+        "resend_verification_code_browser_use",
+      );
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.error(`\n❌ Failed to fetch prompt template: ${errorMsg}`);
+      return {
+        success: false,
+        execution_time_ms: 0,
+        error: `Failed to fetch prompt template: ${errorMsg}`,
+      };
+    }
+
     let response: Response;
     try {
       response = await fetch(`${this.config.baseUrl}/hybrid/resend-code`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          task,
           cdp_port: cdpPort,
           max_time: 30,
           send_screenshots: this.config.sendScreenshots,
@@ -594,75 +552,6 @@ export class BrowserUseClient {
 
     console.log(
       `[BrowserUseClient] Resend code result: success=${result.success}`,
-    );
-
-    return result;
-  }
-
-  /**
-   * Perform a single action on the existing hybrid browser session.
-   * Uses Browser-Use's visual AI to click job cards, close modals, etc.
-   * @param params Action parameters
-   * @returns Response with success status and action details
-   */
-  async performHybridAction(
-    params: HybridActionParams,
-  ): Promise<HybridActionResponse> {
-    const sendScreenshots = params.sendScreenshots ??
-      this.config.sendScreenshots;
-    console.log(
-      `[BrowserUseClient] Performing hybrid action: ${params.actionType}`,
-    );
-    console.log(`[BrowserUseClient] Target: ${params.targetDescription}`);
-
-    let response: Response;
-    try {
-      response = await fetch(`${this.config.baseUrl}/hybrid/action`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action_type: params.actionType,
-          target_description: params.targetDescription,
-          cdp_port: params.cdpPort ?? 9222,
-          max_time: params.maxTime ?? 30,
-          send_screenshots: sendScreenshots,
-        }),
-        signal: AbortSignal.timeout(120000), // 120s timeout for action (screenshots add latency)
-      });
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      console.error(`\n[BrowserUseClient] Hybrid action failed: ${errorMsg}`);
-      return {
-        success: false,
-        action_performed: "error",
-        current_url: "",
-        execution_time_ms: 0,
-        error: `Hybrid action failed: ${errorMsg}`,
-      };
-    }
-
-    if (!response.ok) {
-      const errorBody = await response.text().catch(() => "");
-      console.error(
-        `\n[BrowserUseClient] Hybrid action API error: ${response.status} ${response.statusText}`,
-      );
-      if (errorBody) {
-        console.error(`   Response: ${errorBody.substring(0, 500)}`);
-      }
-      return {
-        success: false,
-        action_performed: "error",
-        current_url: "",
-        execution_time_ms: 0,
-        error:
-          `Hybrid action API error: ${response.status} ${response.statusText}`,
-      };
-    }
-
-    const result: HybridActionResponse = await response.json();
-
-    console.log(
-      `[BrowserUseClient] Hybrid action result: success=${result.success}, performed=${result.action_performed}`,
     );
 
     return result;
@@ -856,50 +745,6 @@ export class BrowserUseClient {
     console.log(
       `[BrowserUseClient] Wait for login result: success=${result.success}, timed_out=${result.timed_out}`,
     );
-    return result;
-  }
-
-  /**
-   * Clear the persistent session data.
-   * Use this to force a fresh login on next scrape.
-   */
-  async clearSession(): Promise<{
-    success: boolean;
-    message: string;
-  }> {
-    console.log(`[BrowserUseClient] Clearing session...`);
-
-    let response: Response;
-    try {
-      response = await fetch(`${this.config.baseUrl}/session/clear`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
-        signal: AbortSignal.timeout(30000),
-      });
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      console.error(`\n❌ Failed to clear session: ${errorMsg}`);
-      return {
-        success: false,
-        message: `Clear session failed: ${errorMsg}`,
-      };
-    }
-
-    if (!response.ok) {
-      const errorBody = await response.text().catch(() => "");
-      console.error(
-        `\n❌ Clear session API error: ${response.status} ${response.statusText}`,
-      );
-      return {
-        success: false,
-        message:
-          `Clear session API error: ${response.status} ${response.statusText}`,
-      };
-    }
-
-    const result = await response.json();
-    console.log(`[BrowserUseClient] Clear session result: ${result.message}`);
     return result;
   }
 }

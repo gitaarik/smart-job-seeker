@@ -272,136 +272,6 @@ class BrowserController:
             "execution_time_ms": execution_time,
         }
 
-    async def execute_task_with_cdp(
-        self,
-        task: str,
-        cdp_url: str,
-        max_time: int = 120,
-        send_screenshots: bool = True,
-    ):
-        """
-        Execute a browser automation task by connecting to an existing Chrome instance via CDP.
-        Used by the hybrid scraper for login-only tasks before handing off to Patchright.
-
-        Args:
-            task: Natural language description of what to do (login + navigate to results)
-            cdp_url: CDP WebSocket URL (e.g., "http://localhost:9222")
-            max_time: Maximum execution time in seconds
-            send_screenshots: Whether to send screenshots to LLM
-
-        Returns:
-            dict with 'result', 'execution_time_ms', 'login_success', 'current_url', 'ready_for_handoff'
-        """
-        start_time = time.time()
-
-        logger.info(f"[Browser-Use] Connecting to existing browser via CDP: {cdp_url}")
-        print(f"[Browser-Use] Connecting to existing browser via CDP: {cdp_url}", flush=True)
-
-        # Determine vision usage
-        use_vision_for_task = send_screenshots and self.vision_support
-        logger.info(f"[Browser-Use] CDP mode - vision enabled: {use_vision_for_task}")
-        print(f"[Browser-Use] CDP mode - vision enabled: {use_vision_for_task}", flush=True)
-
-        try:
-            # Connect to existing browser via CDP instead of launching new one
-            browser = Browser(
-                cdp_url=cdp_url,
-                # Don't set headless - browser already running
-            )
-
-            # Create the agent (no initial_actions - browser may already be on a page)
-            agent = Agent(
-                task=task,
-                llm=self.llm,
-                browser=browser,
-                use_vision=use_vision_for_task,
-            )
-
-            # Run the task
-            result = await agent.run()
-
-            execution_time = int((time.time() - start_time) * 1000)
-
-            # Try to get the current URL from the browser context
-            current_url = ""
-            try:
-                # Browser-use provides access to the browser context
-                if hasattr(browser, 'context') and browser.context:
-                    pages = browser.context.pages
-                    if pages:
-                        current_url = pages[0].url
-                elif hasattr(browser, 'page') and browser.page:
-                    current_url = browser.page.url
-            except Exception as url_err:
-                logger.warning(f"[Browser-Use] Could not get current URL: {url_err}")
-
-            # Determine if login was successful by checking result
-            # The agent should report success in its final message
-            login_success = False
-            ready_for_handoff = False
-
-            if hasattr(result, 'history') and result.history:
-                # Check the last history item for success indicators
-                for item in reversed(result.history[-5:]):
-                    if hasattr(item, 'result') and item.result:
-                        for step_result in item.result:
-                            if hasattr(step_result, 'extracted_content'):
-                                content = str(step_result.extracted_content).lower()
-                                if 'success' in content or 'logged in' in content or 'results' in content:
-                                    login_success = True
-                                    ready_for_handoff = True
-                                    break
-                    if login_success:
-                        break
-
-            # Also check if we're on a search results page (common patterns)
-            if current_url:
-                url_lower = current_url.lower()
-                if any(pattern in url_lower for pattern in ['/jobs', '/search', '/results', 'q=', 'query=']):
-                    ready_for_handoff = True
-                    if not login_success:
-                        login_success = True  # Assume login worked if we reached results
-
-            logger.info(f"[Browser-Use] CDP task complete - URL: {current_url}, login_success: {login_success}")
-            print(f"[Browser-Use] CDP task complete - URL: {current_url}, login_success: {login_success}", flush=True)
-
-            return {
-                "result": result.model_dump() if hasattr(result, 'model_dump') else result,
-                "execution_time_ms": execution_time,
-                "login_success": login_success,
-                "current_url": current_url,
-                "ready_for_handoff": ready_for_handoff,
-            }
-
-        except Exception as e:
-            execution_time = int((time.time() - start_time) * 1000)
-            error_str = str(e)
-
-            # Detect specific error types
-            if "rate limit" in error_str.lower() or "429" in error_str:
-                error_type = "rate_limit"
-                logger.error(f"[Browser-Use] CDP mode - LLM rate limit exceeded: {error_str}")
-            elif "context_length" in error_str.lower() or "context length" in error_str.lower():
-                error_type = "context_length"
-                logger.error(f"[Browser-Use] CDP mode - LLM context length exceeded: {error_str}")
-            elif "cdp" in error_str.lower() or "connect" in error_str.lower():
-                error_type = "cdp_connection"
-                logger.error(f"[Browser-Use] CDP connection failed: {error_str}")
-            else:
-                error_type = "agent_error"
-                logger.error(f"[Browser-Use] CDP mode - Agent error: {error_str}")
-
-            return {
-                "result": {
-                    "error": error_str,
-                    "error_type": error_type,
-                },
-                "execution_time_ms": execution_time,
-                "login_success": False,
-                "current_url": "",
-                "ready_for_handoff": False,
-            }
-
     # Store browser/process for hybrid mode (keeps browser open between requests)
     _hybrid_browser = None
     _hybrid_chrome_process = None
@@ -927,6 +797,7 @@ class BrowserController:
 
     async def submit_verification_code(
         self,
+        task: str,
         code: str,
         cdp_port: int = 9222,
         max_time: int = 60,
@@ -937,6 +808,7 @@ class BrowserController:
         Connects to the existing browser via CDP and enters the code.
 
         Args:
+            task: Task prompt from database (with {{code}} already interpolated)
             code: The verification code to enter
             cdp_port: CDP port (default 9222)
             max_time: Maximum execution time in seconds
@@ -957,34 +829,6 @@ class BrowserController:
 
         logger.info(f"[Browser-Use] Submitting verification code")
         print(f"[Browser-Use] Submitting verification code", flush=True)
-
-        # Build task for entering the verification code
-        # IMPORTANT: Check for CAPTCHA BEFORE submitting - if present, do NOT submit
-        task = f"""Enter the verification code, then check for CAPTCHA before submitting.
-
-CODE TO ENTER: {code}
-
-STEPS (follow in order):
-1. Find the verification code input field (labeled "code", "verification", "OTP", "confirmation", or similar)
-2. FIRST: Enter the code {code} into the input field - this is required before anything else
-3. AFTER entering the code, check if there's a CAPTCHA or human verification challenge visible:
-   - "Verify you're human" checkbox
-   - "I'm not a robot" checkbox
-   - CAPTCHA image/puzzle
-   - Cloudflare/Turnstile challenge
-4. If CAPTCHA IS visible: Report CAPTCHA_NEEDED. Do NOT click submit.
-5. If NO CAPTCHA visible: Click the submit/verify/continue button and wait for result
-
-CRITICAL: You MUST enter the code first (step 2) before checking for CAPTCHA (step 3).
-Do NOT skip entering the code just because you see a CAPTCHA on the page.
-The user needs the code entered so they can manually solve the CAPTCHA and submit.
-
-Report ONE of:
-- SUCCESS: Login complete, now on the main site/dashboard
-- CAPTCHA_NEEDED: Code was entered, but CAPTCHA visible - did NOT submit (user must solve manually)
-- INVALID_CODE: The code was rejected after submission (wrong code)
-- NEEDS_NEW_CODE: The code expired, need to request a new one
-- FAILED: Could not enter the code or other error"""
 
         # Determine vision usage
         use_vision_for_task = send_screenshots and self.vision_support
@@ -1138,6 +982,7 @@ Report ONE of:
 
     async def resend_verification_code(
         self,
+        task: str,
         cdp_port: int = 9222,
         max_time: int = 30,
         send_screenshots: bool = True,
@@ -1146,6 +991,7 @@ Report ONE of:
         Click the 'resend code' button on the verification page.
 
         Args:
+            task: Task prompt from database
             cdp_port: CDP port (default 9222)
             max_time: Maximum execution time in seconds
             send_screenshots: Whether to send screenshots to LLM
@@ -1164,23 +1010,6 @@ Report ONE of:
 
         logger.info(f"[Browser-Use] Requesting new verification code")
         print(f"[Browser-Use] Requesting new verification code", flush=True)
-
-        # Build task for resending code
-        task = """Find and click the 'resend code' or 'send new code' button.
-
-Look for buttons/links with text like:
-- "Resend code"
-- "Send new code"
-- "Didn't receive the code?"
-- "Request new code"
-- "Try again"
-
-Click on the resend option and wait for confirmation that a new code was sent.
-
-Report:
-- SUCCESS: New code has been sent (confirmation message appeared)
-- NOT_FOUND: Could not find a resend option on the page
-- FAILED: Found the button but clicking didn't work"""
 
         # Determine vision usage
         use_vision_for_task = send_screenshots and self.vision_support
@@ -1248,241 +1077,6 @@ Report:
 
             return {
                 "success": False,
-                "execution_time_ms": execution_time,
-                "error": error_str,
-            }
-
-    async def perform_hybrid_action(
-        self,
-        action_type: str,
-        target_description: str,
-        cdp_port: int = 9222,
-        max_time: int = 30,
-        send_screenshots: bool = True,
-    ):
-        """
-        Perform a single action on the existing hybrid browser session.
-        Connects a new Browser-Use Agent to the running Chrome via CDP.
-
-        Args:
-            action_type: Type of action ("click_job", "close_modal", "scroll")
-            target_description: Natural language description of target element
-            cdp_port: CDP port (default 9222)
-            max_time: Maximum execution time in seconds
-            send_screenshots: Whether to send screenshots to LLM
-
-        Returns:
-            dict with success, action_performed, current_url, execution_time_ms, error
-        """
-        import asyncio
-        import aiohttp
-
-        start_time = time.time()
-
-        # Build the internal CDP URL (internal port is cdp_port + 1)
-        internal_cdp_port = cdp_port + 1
-        cdp_url = f"http://127.0.0.1:{internal_cdp_port}"
-
-        logger.info(f"[Browser-Use] Performing hybrid action: {action_type}")
-        logger.info(f"[Browser-Use] Target: {target_description}")
-        print(f"[Browser-Use] Performing hybrid action: {action_type}", flush=True)
-        print(f"[Browser-Use] Target: {target_description}", flush=True)
-
-        # Build task prompt based on action type
-        if action_type == "click_job":
-            task = f"""Click on the job card to open its details: {target_description}
-
-IMPORTANT: Look for the element with a RED BORDER/OUTLINE - this is the exact job card you need to click.
-
-STEPS:
-1. Look for the job card that has a RED BORDER or RED OUTLINE around it
-2. Click directly on that highlighted element (the title text or anywhere inside the red-bordered card)
-3. Wait for a modal/panel to open showing the job details
-4. Verify the opened content shows job details (description, requirements, etc.)
-
-If you don't see a red-bordered element:
-- Look for the job title mentioned in the target description
-- Click on that job card
-
-DO NOT click: "Apply", "Save", "Share", "Earn", "Refer" buttons - these won't show the job description
-
-Report:
-- SUCCESS: Job details modal/panel is now visible
-- NOT_FOUND: Cannot find the highlighted element or job title
-- FAILED: Clicked but no job details appeared"""
-
-        elif action_type == "close_modal":
-            task = f"""Close the job details modal/panel.
-
-Look for:
-- Close button (X icon, "Close" text)
-- Click outside the modal (backdrop)
-- Press Escape key
-
-After closing, verify the modal is no longer visible.
-Report SUCCESS if modal is closed, FAILED if still visible."""
-
-        elif action_type == "scroll":
-            task = f"""Scroll down the page to load more job listings.
-
-{target_description}
-
-Scroll smoothly to trigger infinite scroll loading.
-Wait for new content to appear.
-Report SUCCESS if new jobs loaded, NO_MORE if no new content appeared."""
-
-        else:
-            return {
-                "success": False,
-                "action_performed": "none",
-                "current_url": "",
-                "execution_time_ms": int((time.time() - start_time) * 1000),
-                "error": f"Unknown action_type: {action_type}",
-            }
-
-        # Determine vision usage
-        use_vision_for_task = send_screenshots and self.vision_support
-
-        try:
-            # Verify Chrome is still running on CDP port
-            async with aiohttp.ClientSession() as session:
-                try:
-                    async with session.get(
-                        f"{cdp_url}/json/version",
-                        timeout=aiohttp.ClientTimeout(total=2)
-                    ) as resp:
-                        if resp.status != 200:
-                            raise Exception("CDP not responding")
-                except Exception as e:
-                    return {
-                        "success": False,
-                        "action_performed": "none",
-                        "current_url": "",
-                        "execution_time_ms": int((time.time() - start_time) * 1000),
-                        "error": f"Chrome not running on CDP port {cdp_port}: {e}",
-                    }
-
-            # Connect Browser-Use to existing Chrome via CDP
-            browser = Browser(
-                cdp_url=cdp_url,
-                minimum_wait_page_load_time=0.5,
-                wait_for_network_idle_page_load_time=1.0,
-                wait_between_actions=0.5,
-            )
-
-            # Create agent for this specific action
-            agent = Agent(
-                task=task,
-                llm=self.llm,
-                browser=browser,
-                use_vision=use_vision_for_task,
-            )
-
-            # Run the action (short task)
-            result = await agent.run()
-
-            execution_time = int((time.time() - start_time) * 1000)
-
-            # Get current URL
-            current_url = ""
-            try:
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(
-                        f"{cdp_url}/json/list",
-                        timeout=aiohttp.ClientTimeout(total=2)
-                    ) as resp:
-                        if resp.status == 200:
-                            pages_info = await resp.json()
-                            if pages_info:
-                                current_url = pages_info[0].get('url', '')
-            except Exception as url_err:
-                logger.warning(f"[Browser-Use] Could not get current URL: {url_err}")
-
-            # Parse result to determine success
-            success = False
-            action_performed = "unknown"
-
-            # First, try to get the final result directly (browser-use provides this)
-            final_result_text = ""
-            if hasattr(result, 'final_result'):
-                final_result_text = str(result.final_result()).upper() if callable(result.final_result) else str(result.final_result).upper()
-                logger.info(f"[Browser-Use] Final result text: {final_result_text[:200]}")
-
-            # Parse from final result text first
-            if final_result_text:
-                if 'SUCCESS' in final_result_text:
-                    success = True
-                    action_performed = "completed"
-                elif 'NOT_FOUND' in final_result_text:
-                    action_performed = "not_found"
-                elif 'WRONG_BUTTON' in final_result_text:
-                    action_performed = "wrong_button"
-                elif 'NO_MORE' in final_result_text:
-                    action_performed = "no_more_content"
-                elif 'FAILED' in final_result_text:
-                    action_performed = "failed"
-
-            # Fallback: check history for done actions
-            if action_performed == "unknown" and hasattr(result, 'history') and result.history:
-                for item in reversed(result.history[-5:]):
-                    # Check model_output.action for done
-                    if hasattr(item, 'model_output') and item.model_output:
-                        output = item.model_output
-                        if hasattr(output, 'action') and output.action:
-                            for action in output.action:
-                                if hasattr(action, 'done') and action.done:
-                                    done_text = getattr(action.done, 'text', '').upper()
-                                    logger.info(f"[Browser-Use] Found done action: {done_text[:100]}")
-                                    if 'SUCCESS' in done_text:
-                                        success = True
-                                        action_performed = "completed"
-                                    elif 'NOT_FOUND' in done_text:
-                                        action_performed = "not_found"
-                                    elif 'WRONG_BUTTON' in done_text:
-                                        action_performed = "wrong_button"
-                                    elif 'NO_MORE' in done_text:
-                                        action_performed = "no_more_content"
-                                    elif 'FAILED' in done_text:
-                                        action_performed = "failed"
-                                    break
-
-                    # Also check item.result for done flag (alternative structure)
-                    if action_performed == "unknown" and hasattr(item, 'result') and item.result:
-                        for step_result in item.result:
-                            if hasattr(step_result, 'done') and step_result.done:
-                                done_text = str(step_result.extracted_content).upper() if hasattr(step_result, 'extracted_content') else ""
-                                logger.info(f"[Browser-Use] Found step done: {done_text[:100]}")
-                                if 'SUCCESS' in done_text:
-                                    success = True
-                                    action_performed = "completed"
-                                elif 'FAILED' in done_text:
-                                    action_performed = "failed"
-                                break
-
-                    if action_performed != "unknown":
-                        break
-
-            logger.info(f"[Browser-Use] Action result: success={success}, performed={action_performed}")
-            print(f"[Browser-Use] Action result: success={success}, performed={action_performed}", flush=True)
-
-            return {
-                "success": success,
-                "action_performed": action_performed,
-                "current_url": current_url,
-                "execution_time_ms": execution_time,
-            }
-
-        except Exception as e:
-            execution_time = int((time.time() - start_time) * 1000)
-            error_str = str(e)
-
-            logger.error(f"[Browser-Use] Hybrid action error: {error_str}")
-            print(f"[Browser-Use] Hybrid action error: {error_str}", flush=True)
-
-            return {
-                "success": False,
-                "action_performed": "error",
-                "current_url": "",
                 "execution_time_ms": execution_time,
                 "error": error_str,
             }
@@ -1585,37 +1179,6 @@ Report SUCCESS if new jobs loaded, NO_MORE if no new content appeared."""
             "current_url": current_url,
             "timed_out": True,
         }
-
-    async def clear_session(self) -> dict:
-        """
-        Clear the persistent session data.
-        """
-        import shutil
-        session_dir = "/app/data/sessions/chrome-user-data"
-
-        try:
-            # Close any running browser first
-            await self.close_hybrid_session()
-        except Exception:
-            pass  # Ignore if no browser running
-
-        try:
-            if os.path.exists(session_dir):
-                shutil.rmtree(session_dir)
-                return {
-                    "success": True,
-                    "message": f"Session data cleared from {session_dir}",
-                }
-            else:
-                return {
-                    "success": True,
-                    "message": "No session data to clear",
-                }
-        except Exception as e:
-            return {
-                "success": False,
-                "message": f"Failed to clear session: {str(e)}",
-            }
 
     async def _launch_chrome_with_session(
         self,

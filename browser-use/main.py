@@ -27,25 +27,6 @@ class ExecuteTaskResponse(BaseModel):
     execution_time_ms: int
 
 
-class CdpTaskRequest(BaseModel):
-    """Request for executing task via CDP connection to existing browser"""
-
-    task: str  # Natural language task description (login + navigate)
-    cdp_url: str  # CDP endpoint URL (e.g., "http://localhost:9222")
-    max_time: Optional[int] = 120  # Maximum execution time in seconds
-    send_screenshots: Optional[bool] = True  # Whether to send screenshots to LLM
-
-
-class CdpTaskResponse(BaseModel):
-    """Response from CDP task execution"""
-
-    result: Any  # Whatever the agent returns
-    execution_time_ms: int
-    login_success: bool  # Whether login was successful
-    current_url: str  # URL browser ended up on
-    ready_for_handoff: bool  # Whether ready for Patchright to take over
-
-
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
@@ -72,34 +53,6 @@ async def execute_task(request: ExecuteTaskRequest):
         return result
     except Exception as e:
         logger.error(f"Error executing task: {str(e)}")
-        logger.error(traceback.format_exc())
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/execute-with-cdp", response_model=CdpTaskResponse)
-async def execute_task_with_cdp(request: CdpTaskRequest):
-    """
-    Execute a browser automation task by connecting to an existing Chrome instance via CDP.
-
-    This endpoint is used by the hybrid scraper:
-    1. TypeScript launches Chrome with --remote-debugging-port
-    2. This endpoint connects Browser-Use to that Chrome instance
-    3. Browser-Use performs login and navigates to results page
-    4. Returns success status so Patchright can take over for extraction
-
-    The task should be a login-only task that ends on the job search results page.
-    """
-    try:
-        controller = BrowserController()
-        result = await controller.execute_task_with_cdp(
-            task=request.task,
-            cdp_url=request.cdp_url,
-            max_time=request.max_time,
-            send_screenshots=request.send_screenshots,
-        )
-        return result
-    except Exception as e:
-        logger.error(f"Error executing CDP task: {str(e)}")
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -187,54 +140,6 @@ async def close_hybrid_session():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-class HybridActionRequest(BaseModel):
-    """Request to perform a single action on the existing hybrid browser session"""
-
-    action_type: str  # "click_job" | "close_modal" | "scroll"
-    target_description: str  # Natural language description of target
-    cdp_port: Optional[int] = 9222
-    max_time: Optional[int] = 30  # Shorter timeout for single actions
-    send_screenshots: Optional[bool] = True
-
-
-class HybridActionResponse(BaseModel):
-    """Response from hybrid action"""
-
-    success: bool
-    action_performed: str  # What the agent actually did
-    current_url: str
-    execution_time_ms: int
-    error: Optional[str] = None
-
-
-@app.post("/hybrid/action", response_model=HybridActionResponse)
-async def perform_hybrid_action(request: HybridActionRequest):
-    """
-    Perform a single action on the existing hybrid browser session.
-
-    Used by the hybrid scraper to:
-    1. Click on a specific job card (visual AI finds it)
-    2. Close a modal/dialog after extraction
-    3. Scroll to load more content
-
-    The Chrome browser must already be running from /hybrid/start.
-    """
-    try:
-        controller = get_hybrid_controller()
-        result = await controller.perform_hybrid_action(
-            action_type=request.action_type,
-            target_description=request.target_description,
-            cdp_port=request.cdp_port,
-            max_time=request.max_time,
-            send_screenshots=request.send_screenshots,
-        )
-        return result
-    except Exception as e:
-        logger.error(f"Error performing hybrid action: {str(e)}")
-        logger.error(traceback.format_exc())
-        raise HTTPException(status_code=500, detail=str(e))
-
-
 # =====================
 # Verification Endpoints
 # =====================
@@ -243,6 +148,7 @@ async def perform_hybrid_action(request: HybridActionRequest):
 class VerifyCodeRequest(BaseModel):
     """Request to submit a verification code"""
 
+    task: str  # Task prompt from database
     code: str  # The verification code to enter
     cdp_port: Optional[int] = 9222
     max_time: Optional[int] = 60
@@ -264,6 +170,7 @@ class VerifyCodeResponse(BaseModel):
 class ResendCodeRequest(BaseModel):
     """Request to resend verification code"""
 
+    task: str  # Task prompt from database
     cdp_port: Optional[int] = 9222
     max_time: Optional[int] = 30
     send_screenshots: Optional[bool] = True
@@ -296,6 +203,7 @@ async def submit_verification_code(request: VerifyCodeRequest):
     try:
         controller = get_hybrid_controller()
         result = await controller.submit_verification_code(
+            task=request.task,
             code=request.code,
             cdp_port=request.cdp_port,
             max_time=request.max_time,
@@ -319,6 +227,7 @@ async def resend_verification_code(request: ResendCodeRequest):
     try:
         controller = get_hybrid_controller()
         result = await controller.resend_verification_code(
+            task=request.task,
             cdp_port=request.cdp_port,
             max_time=request.max_time,
             send_screenshots=request.send_screenshots,
@@ -383,19 +292,6 @@ class SessionWaitResponse(BaseModel):
     success: bool  # Whether login was detected
     current_url: str
     timed_out: bool
-
-
-class SessionClearRequest(BaseModel):
-    """Request to clear session data"""
-
-    pass  # No parameters needed - clears the single shared session
-
-
-class SessionClearResponse(BaseModel):
-    """Response from session clear"""
-
-    success: bool
-    message: str
 
 
 @app.post("/session/check", response_model=SessionCheckResponse)
@@ -465,23 +361,5 @@ async def wait_for_login(request: SessionWaitRequest):
         return result
     except Exception as e:
         logger.error(f"Error waiting for login: {str(e)}")
-        logger.error(traceback.format_exc())
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/session/clear", response_model=SessionClearResponse)
-async def clear_session(request: SessionClearRequest):
-    """
-    Clear the persistent session data.
-
-    Deletes cookies and session storage. Use this to force
-    a fresh login on next scrape.
-    """
-    try:
-        controller = get_hybrid_controller()
-        result = await controller.clear_session()
-        return result
-    except Exception as e:
-        logger.error(f"Error clearing session: {str(e)}")
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
