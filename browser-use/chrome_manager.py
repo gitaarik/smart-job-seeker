@@ -170,9 +170,10 @@ class ChromeManager:
             # Window size - larger for better Browser-Use screenshot analysis
             "--window-size=1920,1080",
             "--window-position=0,0",
-            # Disable session restore popup ("Restore pages?" after crash)
+            # Disable session restore popup and tab restoration after crash
             "--disable-session-crashed-bubble",
             "--hide-crash-restore-bubble",
+            "--no-restore-state",  # Don't restore previous tabs/windows
             # Disable password manager prompts
             "--password-store=basic",
             "--disable-save-password-bubble",
