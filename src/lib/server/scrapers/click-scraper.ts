@@ -9,6 +9,7 @@ import {
   extractJobData,
   extractJobsFromSearchPage,
   mergeJobData,
+  type SearchContext,
   upsertJob,
 } from "$lib/server/job-scraper";
 import { stripHtmlForLlm } from "$lib/server/html-strip";
@@ -26,7 +27,7 @@ import {
   navigateToNextPage,
   performInfiniteScroll,
 } from "$lib/server/pagination-utils";
-import { detectModalContent } from "$lib/server/scraper-interactive";
+// Note: detectModalContent removed - now using full page HTML with search context
 import { performPatchwrightLogin } from "../patchright-login";
 import {
   formatSalary,
@@ -427,35 +428,34 @@ export async function scrapeJobsWithClicks(
           );
         }
 
-        // Try to find a modal/dialog/panel that appeared after the click
-        const { modalContent, modalSelector } = await detectModalContent(page);
+        // Get full page HTML (no modal detection needed - LLM uses search context to identify correct job)
+        const jobHtml = await page.content();
+        console.log(`      ✓ Captured page HTML (${jobHtml.length} chars)`);
 
-        // If we found modal content, use it; otherwise fall back to full page
-        const jobHtml = modalContent
-          ? `<div class="job-detail-modal">${modalContent}</div>`
-          : await page.content();
-
-        if (!modalContent) {
-          console.warn(
-            "      ⚠️  No modal found, using full page HTML (may extract wrong job)",
-          );
-        }
-
-        // Log captured HTML size
-        console.log(`      ✓ Captured job HTML (${jobHtml.length} chars)`);
-
-        // Debug: Log first 500 chars of captured HTML
+        // Debug: Log first 500 chars of stripped HTML
         if (config.scraperDebugMode) {
           const preview = stripHtmlForLlm(jobHtml).substring(0, 500);
           console.log(`      [DEBUG] HTML preview: ${preview}...`);
         }
 
-        // Strip HTML for LLM processing
-        const strippedHtml = stripHtmlForLlm(jobHtml);
+        // Build search context to help LLM identify the correct job
+        const searchContext: SearchContext = {
+          title: searchJobData.title,
+          company: searchJobData.company,
+          location: searchJobData.location,
+        };
 
-        // Extract job data from detail page
-        console.log(`      🔍 Extracting job data from detail page...`);
-        const detailJobData = await extractJobData(strippedHtml, pseudoUrl);
+        // Extract job data from page (LLM uses search context to find the right job details)
+        console.log(
+          `      🔍 Extracting job data (context: ${
+            searchJobData.title || "unknown"
+          } @ ${searchJobData.company || "unknown"})...`,
+        );
+        const detailJobData = await extractJobData(
+          jobHtml,
+          pseudoUrl,
+          searchContext,
+        );
 
         // Merge search page data with detail page data
         const jobData = mergeJobData(searchJobData, detailJobData);

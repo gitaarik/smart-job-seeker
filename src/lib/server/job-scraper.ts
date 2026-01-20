@@ -388,14 +388,26 @@ export function mergeJobData(
 }
 
 /**
+ * Search context from the job search page
+ * Used to help LLM identify the correct job when page contains multiple job cards
+ */
+export interface SearchContext {
+  title?: string | null;
+  company?: string | null;
+  location?: string | null;
+}
+
+/**
  * Extract job data from job posting HTML using LLM
- * @param jobHtml HTML content from individual job page
+ * @param jobHtml HTML content from individual job page (can be full page or modal)
  * @param sourceUrl URL of the job page
+ * @param searchContext Optional context from search page to help identify the correct job
  * @returns Parsed job data
  */
 export async function extractJobData(
   jobHtml: string,
   sourceUrl: string,
+  searchContext?: SearchContext,
 ): Promise<{
   title: string | null;
   job_description: string | null;
@@ -431,7 +443,26 @@ export async function extractJobData(
     );
   }
 
-  // 3. Call AI chat utility to extract job data
+  // 3. Build search context hint for LLM (helps identify correct job on pages with multiple cards)
+  let searchContextHint = "";
+  if (searchContext?.title || searchContext?.company) {
+    const parts = [];
+    if (searchContext.title) parts.push(`title: "${searchContext.title}"`);
+    if (searchContext.company) {
+      parts.push(`company: "${searchContext.company}"`);
+    }
+    if (searchContext.location) {
+      parts.push(`location: "${searchContext.location}"`);
+    }
+    searchContextHint =
+      `\n\nIMPORTANT: We clicked on a specific job from the search results. ` +
+      `Look for the DETAILED job information (full description, requirements, etc.) for this job: ${
+        parts.join(", ")
+      }. ` +
+      `The page may show other job cards in a sidebar - ignore those and extract only the main job's details.`;
+  }
+
+  // 4. Call AI chat utility to extract job data
   const aiResult = await createJobScrapingAiChat<{
     title?: string | null;
     job_description?: string | null;
@@ -451,6 +482,7 @@ export async function extractJobData(
   }>("extract_job_data", {
     html: strippedHtml,
     sourceUrl: sourceUrl,
+    searchContextHint: searchContextHint,
   });
 
   if (!aiResult.success || !aiResult.response) {
