@@ -282,9 +282,61 @@ export async function scrapeJobsWithClicks(
           }
         }
       } catch (error) {
-        console.error(
-          `      ❌ LLM extraction failed: ${getErrorMessage(error)}`,
-        );
+        const errorMsg = getErrorMessage(error);
+
+        // Check if this is an "all jobs invalid" error - treat like 0 jobs found
+        const isAllInvalidError = errorMsg.includes("were invalid") ||
+          errorMsg.includes("hallucinated");
+
+        if (isAllInvalidError && extractionAttempt <= maxLlmRetries) {
+          console.log(
+            "      ⚠️  All extracted jobs were invalid, checking if page is still loading...",
+          );
+
+          const contentWait = await waitForSpaContent(page, {
+            maxAttempts: config.scraperSpaContentPollAttempts,
+            pollInterval: config.scraperSpaContentPollInterval,
+            minGrowthThreshold: config.scraperSpaMinContentGrowth,
+          });
+
+          if (contentWait.totalGrowth >= config.scraperSpaMinContentGrowth) {
+            // Content grew - re-capture HTML and retry
+            console.log(
+              `      ⏳ Content grew ${contentWait.totalGrowth.toLocaleString()} chars, re-extracting...`,
+            );
+
+            // Re-mark clickable elements (new elements may have loaded)
+            console.log("      📍 Re-marking clickable elements...");
+            const newClickableCount = await markClickableElementsInContainer(
+              page,
+              "body",
+            );
+            console.log(`      ✓ Found ${newClickableCount} elements`);
+
+            // Re-capture HTML
+            const newMarkedHtml = await page.content();
+            currentStrippedHtml = stripHtmlForLlm(newMarkedHtml);
+
+            // Update saved HTML if this is page 1
+            if (pageNumber === 1) {
+              savedStrippedHtml = currentStrippedHtml;
+            }
+
+            console.log(
+              `      🤖 Retry extraction attempt ${extractionAttempt + 1}/${
+                maxLlmRetries + 1
+              }...`,
+            );
+            continue;
+          } else {
+            // Content stabilized but still invalid - give up
+            console.log(
+              "      📊 Content stabilized but no valid job cards found",
+            );
+          }
+        }
+
+        console.error(`      ❌ LLM extraction failed: ${errorMsg}`);
         console.log(
           `      ℹ️  Returning stripped HTML for debugging (${savedStrippedHtml.length} chars)`,
         );
