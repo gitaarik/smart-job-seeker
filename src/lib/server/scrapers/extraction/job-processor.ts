@@ -168,17 +168,38 @@ function formatJobOutput(
 }
 
 /**
+ * Result of clicking a job card, including navigation state
+ */
+interface ClickResult {
+  contentChanged: boolean;
+  /** The page to extract job details from (may be a new tab) */
+  extractionPage: Page;
+  /** If a new tab was opened, reference to close it later */
+  newTab: Page | null;
+  /** Whether navigation occurred (URL changed in same tab) */
+  navigatedAway: boolean;
+  /** Original URL to return to */
+  originalUrl: string;
+}
+
+/**
  * Click on a job card element and wait for content to load
- * @returns true if content changed after click
+ * Handles three scenarios:
+ * 1. SPA behavior - content updates in place
+ * 2. New tab opens - extract from new tab
+ * 3. Navigation in same tab - need to go back after extraction
  */
 async function clickJobCard(
   page: Page,
   clickableId: number,
-): Promise<boolean> {
+): Promise<ClickResult> {
   // Press Escape to clear any stray modals
   await page.keyboard.press("Escape").catch(() => {});
 
-  // Capture page state before click for comparison
+  // Store state before clicking
+  const originalUrl = page.url();
+  const context = page.context();
+  const originalPages = context.pages();
   const beforeClick = await page.evaluate(() => document.body.innerText.length);
 
   // Use human-like click with natural mouse movement
@@ -187,17 +208,85 @@ async function clickJobCard(
 
   await humanWait(page, config.scraperClickWaitTimeout);
 
+  // Check for new tab opened
+  const currentPages = context.pages();
+  let extractionPage: Page = page;
+  let newTab: Page | null = null;
+
+  if (currentPages.length > originalPages.length) {
+    // New tab was opened - find it
+    newTab = currentPages.find((p) => !originalPages.includes(p)) || null;
+    if (newTab) {
+      extractionPage = newTab;
+      console.log(`      📑 New tab opened, extracting from new tab`);
+      await newTab.waitForLoadState("domcontentloaded");
+      await humanWait(newTab, 1000);
+    }
+  }
+
+  // Check if URL changed (navigation in same tab)
+  const navigatedAway = !newTab && page.url() !== originalUrl;
+  if (navigatedAway) {
+    console.log(`      🔀 Navigated to: ${page.url()}`);
+  }
+
   // Check if page content changed after click
-  const afterClick = await page.evaluate(() => document.body.innerText.length);
+  const afterClick = await extractionPage.evaluate(
+    () => document.body.innerText.length,
+  );
   const contentChanged = Math.abs(afterClick - beforeClick) > 100;
 
-  if (!contentChanged) {
+  if (!contentChanged && !newTab && !navigatedAway) {
     console.warn(
       `      ⚠️  Page content didn't change after click (before: ${beforeClick}, after: ${afterClick})`,
     );
   }
 
-  return contentChanged;
+  return {
+    contentChanged,
+    extractionPage,
+    newTab,
+    navigatedAway,
+    originalUrl,
+  };
+}
+
+/**
+ * Return to the search page after extracting job details
+ * Handles closing new tabs or navigating back
+ */
+async function returnToSearchPage(
+  page: Page,
+  clickResult: ClickResult,
+): Promise<void> {
+  const { newTab, navigatedAway, originalUrl } = clickResult;
+
+  if (newTab) {
+    // Close the new tab - original page is still intact
+    console.log(`      🔙 Closing job tab, returning to search`);
+    await newTab.close();
+    return;
+  }
+
+  if (navigatedAway) {
+    // Navigate back to search results
+    console.log(`      🔙 Navigating back to search results`);
+    await page.goBack({ waitUntil: "domcontentloaded" });
+    await humanWait(page, 1500);
+
+    // Verify we're back on the search page
+    const currentUrl = page.url();
+    if (currentUrl !== originalUrl) {
+      console.warn(
+        `      ⚠️  Back navigation landed on different URL: ${currentUrl}`,
+      );
+      // Try to navigate directly to the search URL
+      await page.goto(originalUrl, { waitUntil: "domcontentloaded" });
+      await humanWait(page, 1500);
+    }
+  }
+
+  // SPA behavior - nothing to do, we're still on the search page
 }
 
 /**
@@ -234,61 +323,82 @@ export async function processJobCard(
   const clickText = elementInfo.text || elementInfo.ariaLabel || "(no text)";
   console.log(`      👆 Clicking #${clickableId}: "${clickText}"`);
 
-  // Click and wait for content to load
-  await clickJobCard(page, clickableId);
+  // Click and wait for content to load (handles new tabs and navigation)
+  const clickResult = await clickJobCard(page, clickableId);
+  const { extractionPage, navigatedAway, newTab } = clickResult;
 
-  // Get full page HTML
-  const jobHtml = await page.content();
+  // Use actual URL if we navigated, otherwise use pseudo URL for SPAs
+  const jobSourceUrl = navigatedAway || newTab
+    ? extractionPage.url()
+    : pseudoUrl;
 
-  // Build search context to help LLM identify the correct job
-  const searchContext: SearchContext = {
-    title: searchJobData.title,
-    company: searchJobData.company,
-    location: searchJobData.location,
-  };
+  try {
+    // Get full page HTML from the appropriate page
+    const jobHtml = await extractionPage.content();
 
-  // Extract job data from page
-  const detailJobData = await extractJobData(jobHtml, pseudoUrl, searchContext);
-
-  // Merge search page data with detail page data
-  const jobData = mergeJobData(searchJobData, detailJobData);
-
-  // Skip if no meaningful data was extracted (invalid/expired page)
-  if (!isValidJob(jobData)) {
-    const reason = getJobInvalidReason(jobData);
-    console.log(`      ⏭️  Skipping - ${reason}`);
-    return {
-      success: false,
-      skipped: true,
-      skipReason: reason,
+    // Build search context to help LLM identify the correct job
+    const searchContext: SearchContext = {
+      title: searchJobData.title,
+      company: searchJobData.company,
+      location: searchJobData.location,
     };
+
+    // Extract job data from page
+    const detailJobData = await extractJobData(
+      jobHtml,
+      jobSourceUrl,
+      searchContext,
+    );
+
+    // Merge search page data with detail page data
+    const jobData = mergeJobData(searchJobData, detailJobData);
+
+    // Skip if no meaningful data was extracted (invalid/expired page)
+    if (!isValidJob(jobData)) {
+      const reason = getJobInvalidReason(jobData);
+      console.log(`      ⏭️  Skipping - ${reason}`);
+      // Return to search page before returning
+      await returnToSearchPage(page, clickResult);
+      return {
+        success: false,
+        skipped: true,
+        skipReason: reason,
+      };
+    }
+
+    // Age check: Mark old jobs as "stale" but still import them
+    let isStale = false;
+    if (isJobTooOld(jobData.date_posted, config.scraperMaxJobAge)) {
+      jobData.status = "stale";
+      isStale = true;
+    }
+
+    // Status check: Track closed jobs
+    const isClosed = isJobClosed(jobData.status);
+
+    // Save job and show formatted output
+    const result = await upsertJob(jobData, jobSourceUrl, platformId);
+    formatJobOutput(jobData, result, jobSourceUrl);
+
+    // Return to search page for the next job
+    await returnToSearchPage(page, clickResult);
+
+    return {
+      success: true,
+      jobId: result.id,
+      created: result.created,
+      isClosed,
+      isStale,
+      title: jobData.title,
+      company: jobData.job_poster,
+      location: jobData.location,
+      remote: jobData.remote,
+      jobType: jobData.job_type,
+      skills: jobData.skills,
+    };
+  } catch (error) {
+    // Ensure we return to search page even on error
+    await returnToSearchPage(page, clickResult);
+    throw error;
   }
-
-  // Age check: Mark old jobs as "stale" but still import them
-  let isStale = false;
-  if (isJobTooOld(jobData.date_posted, config.scraperMaxJobAge)) {
-    jobData.status = "stale";
-    isStale = true;
-  }
-
-  // Status check: Track closed jobs
-  const isClosed = isJobClosed(jobData.status);
-
-  // Save job and show formatted output
-  const result = await upsertJob(jobData, pseudoUrl, platformId);
-  formatJobOutput(jobData, result, pseudoUrl);
-
-  return {
-    success: true,
-    jobId: result.id,
-    created: result.created,
-    isClosed,
-    isStale,
-    title: jobData.title,
-    company: jobData.job_poster,
-    location: jobData.location,
-    remote: jobData.remote,
-    jobType: jobData.job_type,
-    skills: jobData.skills,
-  };
 }

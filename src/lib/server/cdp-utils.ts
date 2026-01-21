@@ -143,6 +143,17 @@ export async function markClickableElementsInContainer(
           continue;
         }
 
+        // Get node name to check for anchor elements
+        const { node } = await client.send("DOM.describeNode", { nodeId });
+        const nodeName = node.nodeName.toLowerCase();
+
+        // Check if this is an anchor element with href attribute
+        const isAnchorWithHref = nodeName === "a" &&
+          attrs.href !== undefined &&
+          attrs.href !== "" &&
+          !attrs.href.startsWith("#") &&
+          !attrs.href.startsWith("javascript:");
+
         // Resolve node to remote object
         const { object } = await client.send("DOM.resolveNode", { nodeId });
 
@@ -159,7 +170,8 @@ export async function markClickableElementsInContainer(
           (listener: { type: string }) => listener.type === "click",
         );
 
-        if (hasClickListener) {
+        // Element is clickable if it has a click listener OR is an anchor with href
+        if (hasClickListener || isAnchorWithHref) {
           clickableNodes.push({ nodeId, text: elementText });
         }
       } catch (error) {
@@ -169,7 +181,7 @@ export async function markClickableElementsInContainer(
     }
 
     console.log(
-      `Found ${clickableNodes.length} elements with click listeners`,
+      `Found ${clickableNodes.length} clickable elements (click listeners + anchor links)`,
     );
 
     // Mark elements with data-extract-clickable-id attributes
