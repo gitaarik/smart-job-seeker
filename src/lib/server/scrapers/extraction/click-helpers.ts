@@ -11,14 +11,61 @@ import { waitForSpaContent } from "$lib/server/page-wait-utils";
 import { createJobScrapingAiChat } from "$lib/server/ai-chat-job-utils";
 
 /**
+ * Metadata for a clickable element
+ */
+interface ClickableMetadata {
+  id: number;
+  text: string;
+  tagName: string;
+  className: string;
+}
+
+/**
+ * Split array into chunks of specified size
+ */
+function chunkArray<T>(array: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < array.length; i += size) {
+    chunks.push(array.slice(i, i + size));
+  }
+  return chunks;
+}
+
+/**
+ * Classify a single batch of clickables using LLM
+ */
+async function classifySingleBatch(
+  metadata: ClickableMetadata[],
+): Promise<Map<number, "view-details" | "action">> {
+  const clickablesText = metadata
+    .map((c) =>
+      `ID ${c.id}: "${c.text}" (${c.tagName}, class="${c.className}")`
+    )
+    .join("\n");
+
+  const result = await createJobScrapingAiChat<{
+    clickables: Array<{ id: number; type: "view-details" | "action" }>;
+  }>("classify_clickables", { clickables: clickablesText });
+
+  const map = new Map<number, "view-details" | "action">();
+  if (result.success && result.response?.clickables) {
+    for (const c of result.response.clickables) {
+      map.set(c.id, c.type);
+    }
+  }
+  return map;
+}
+
+/**
  * Classify marked clickable elements using LLM
  * Determines which elements open job details vs perform actions
+ * For large numbers of clickables, batches requests and processes in parallel
  */
 export async function classifyMarkedClickables(
   page: Page,
 ): Promise<Map<number, "view-details" | "action">> {
   // 1. Extract metadata for all marked clickables
-  const clickableMetadata = await page.evaluate(() => {
+  const clickableMetadata: ClickableMetadata[] = await page.evaluate(() => {
     const clickables: Array<{
       id: number;
       text: string;
@@ -43,27 +90,34 @@ export async function classifyMarkedClickables(
     );
   }
 
-  // 3. Format for LLM
-  const clickablesText = clickableMetadata
-    .map((c) =>
-      `ID ${c.id}: "${c.text}" (${c.tagName}, class="${c.className}")`
-    )
-    .join("\n");
+  // 3. Check if batching is needed
+  const batchSize = config.scraperClickableClassifyBatchSize;
+  let classificationMap: Map<number, "view-details" | "action">;
 
-  // 4. Call LLM for classification
-  const result = await createJobScrapingAiChat<{
-    clickables: Array<{ id: number; type: "view-details" | "action" }>;
-  }>("classify_clickables", { clickables: clickablesText });
+  if (clickableMetadata.length <= batchSize) {
+    // Single batch - use existing logic
+    classificationMap = await classifySingleBatch(clickableMetadata);
+  } else {
+    // Multiple batches - process in parallel
+    const batches = chunkArray(clickableMetadata, batchSize);
+    console.log(
+      `      📦 Splitting ${clickableMetadata.length} clickables into ${batches.length} batches`,
+    );
 
-  // 5. Build classification map
-  const classificationMap = new Map<number, "view-details" | "action">();
-  if (result.success && result.response?.clickables) {
-    for (const c of result.response.clickables) {
-      classificationMap.set(c.id, c.type);
+    const results = await Promise.all(
+      batches.map((batch) => classifySingleBatch(batch)),
+    );
+
+    // Combine results from all batches
+    classificationMap = new Map<number, "view-details" | "action">();
+    for (const batchResult of results) {
+      for (const [id, type] of batchResult) {
+        classificationMap.set(id, type);
+      }
     }
   }
 
-  // 6. Default unclassified to "view-details"
+  // 4. Default unclassified to "view-details"
   for (const c of clickableMetadata) {
     if (!classificationMap.has(c.id)) {
       classificationMap.set(c.id, "view-details");

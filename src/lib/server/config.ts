@@ -71,6 +71,7 @@ export interface AppConfig {
   scraperSpaContentPollInterval: number; // Interval between content polls (ms)
   scraperSpaMinContentGrowth: number; // Min chars growth to consider "still loading"
   scraperSpaLlmRetryAttempts: number; // Max LLM retry attempts when no jobs found
+  scraperClickableClassifyBatchSize: number; // Max clickables per LLM classification batch
 
   // Browser-Use Integration
   browserUseUrl: string;
@@ -242,6 +243,10 @@ function loadConfig(): AppConfig {
     ),
     scraperSpaLlmRetryAttempts: parseInt(
       getEnv("SJS_SCRAPER_SPA_LLM_RETRY_ATTEMPTS", "2"),
+      10,
+    ),
+    scraperClickableClassifyBatchSize: parseInt(
+      getEnv("SJS_SCRAPER_CLICKABLE_CLASSIFY_BATCH_SIZE", "50"),
       10,
     ),
 
