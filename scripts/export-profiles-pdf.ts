@@ -15,7 +15,7 @@ import { getDefaultProfileId } from "$lib/server/profile-default";
 import { createProfileExport } from "$lib/server/profile-exports";
 import { buildExportUrl } from "$lib/server/export-url-builder";
 
-const appPort = getEnv("SJS_APP_PORT");
+const appPort = getEnv("SJS_APP_PORT", "5173");
 
 async function exportProfilesToPDF(profileId?: number) {
   console.log("🚀 Starting profile PDF export (Resume & CV)...");

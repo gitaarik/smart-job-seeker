@@ -1,12 +1,12 @@
 import { getEnv } from "$lib/tools/get-env";
 
-const SMTP2GO_API_KEY = getEnv("SJS_SMTP2GO_API_KEY");
-const FROM_EMAIL = getEnv("SJS_FROM_EMAIL") || "noreply@localhost";
-const FROM_NAME = getEnv("SJS_FROM_NAME") || "Portfolio App";
+const SMTP2GO_API_KEY = getEnv("SJS_SMTP2GO_API_KEY", { allowEmpty: true });
+const FROM_EMAIL = getEnv("SJS_FROM_EMAIL", "noreply@localhost");
+const FROM_NAME = getEnv("SJS_FROM_NAME", "Portfolio App");
 
 if (!SMTP2GO_API_KEY) {
   console.warn(
-    "SMTP2GO_API_KEY is not set. Email functionality will be disabled.",
+    "SJS_SMTP2GO_API_KEY is not set. Email functionality will be disabled.",
   );
 }
 

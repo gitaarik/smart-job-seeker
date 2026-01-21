@@ -12,30 +12,13 @@ export interface DirectusSchema {
 function getDirectusUrl(): string {
   // When running in Docker: use 'admin' as hostname (Docker service name)
   // When running on host: use 'localhost' to connect to the exposed port
-  const url = isRunningInDocker()
+  return isRunningInDocker()
     ? getEnv("SJS_ADMIN_URL")
     : getEnv("SJS_ADMIN_PUBLIC_URL");
-
-  if (!url) {
-    const envVar = isRunningInDocker()
-      ? "SJS_ADMIN_URL"
-      : "SJS_ADMIN_PUBLIC_URL";
-    throw new Error(`${envVar} environment variable is not set`);
-  }
-
-  return url;
 }
 
 function getDirectusToken(): string {
-  const token = getEnv("SJS_ADMIN_TOKEN");
-
-  if (!token) {
-    throw new Error(
-      "SJS_ADMIN_TOKEN environment variable is not set",
-    );
-  }
-
-  return token;
+  return getEnv("SJS_ADMIN_TOKEN");
 }
 
 export function createDirectusClient() {

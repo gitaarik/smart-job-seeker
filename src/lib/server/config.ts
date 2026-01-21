@@ -264,9 +264,9 @@ function loadConfig(): AppConfig {
       10,
     ),
 
-    // System Profile
+    // System Profile (0 means not configured)
     systemScraperProfileId: parseInt(
-      getEnv("SJS_SYSTEM_SCRAPER_PROFILE_ID"),
+      getEnv("SJS_SYSTEM_SCRAPER_PROFILE_ID", "0"),
       10,
     ),
   };

@@ -7,7 +7,7 @@ export interface ExportUrlOptions {
 }
 
 export function getBaseUrl(): string {
-  const appUrl = getEnv("SJS_APP_URL");
+  const appUrl = getEnv("SJS_APP_URL", { allowEmpty: true });
   if (appUrl) return appUrl;
 
   const appPort = getEnv("SJS_APP_PORT", "5173");

@@ -21,12 +21,7 @@ export const POST: RequestHandler = async ({ request }) => {
     });
   }
 
-  // Get environment variable (throws if not set, which is intentional)
   const turnstileSecret = getEnv("SJS_TURNSTILE_SECRET_KEY");
-
-  if (!turnstileSecret) {
-    throw new Error("SJS_TURNSTILE_SECRET_KEY env var unset");
-  }
 
   // Verify with Cloudflare (try block for async operations)
   let verifyResponse;

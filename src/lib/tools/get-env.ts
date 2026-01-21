@@ -1,15 +1,41 @@
-import * as dotenvx from "@dotenvx/dotenvx";
+type GetEnvOptions = { allowEmpty: true };
 
+/**
+ * Get an environment variable with fail-fast behavior.
+ *
+ * @param envVar - The environment variable name
+ * @param defaultOrOptions - Either a default value string, or options object
+ *
+ * @example
+ * // Required - throws if not set/empty (most common)
+ * getEnv("API_KEY")
+ *
+ * @example
+ * // Optional with default value
+ * getEnv("PORT", "3000")
+ *
+ * @example
+ * // Optional without default - allowed to be empty
+ * getEnv("OPTIONAL_VAR", { allowEmpty: true })
+ */
 export function getEnv(
   envVar: string,
-  defaultValue?: string,
+  defaultOrOptions?: string | GetEnvOptions,
 ): string | undefined {
-  // If a default value is provided, use process.env directly to avoid
-  // dotenvx warnings about missing optional configuration
-  if (defaultValue !== undefined) {
-    return process.env[envVar] ?? defaultValue;
+  // Option 1: Default value provided - return env var or default
+  if (typeof defaultOrOptions === "string") {
+    return process.env[envVar] ?? defaultOrOptions;
   }
 
-  // For required variables (no default), use dotenvx which will warn if missing
-  return dotenvx.get(envVar);
+  // Option 2: allowEmpty option - return undefined if not set
+  if (defaultOrOptions?.allowEmpty) {
+    return process.env[envVar] || undefined;
+  }
+
+  // Option 3: Required (default behavior) - throw if missing/empty
+  const value = process.env[envVar];
+  if (!value) {
+    throw new Error(`Environment variable ${envVar} is not set`);
+  }
+  return value;
 }
