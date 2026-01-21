@@ -1,441 +1,444 @@
 # Job Scraping Architecture
 
-This document describes the job scraping system using Browser-Use, an AI-powered
-browser automation framework.
+This document describes the hybrid job scraping system that combines Browser-Use
+for authentication with Patchright for high-performance data extraction.
 
 ## Overview
 
-The job scraper uses **Browser-Use** for autonomous navigation and data
-extraction:
+The scraper uses a **hybrid approach**:
 
-- **AI Agent Navigation** - Natural language instructions guide the browser
-- **Unified Approach** - Same method for both URL-based and click-based sites
-- **Automatic Extraction** - AI extracts structured data directly from pages
-- **No Manual Selectors** - Agent finds elements intelligently
+1. **Browser-Use (Python)** - Handles login and authentication via AI agent
+2. **Patchright (TypeScript)** - Connects via CDP for fast job extraction
+3. **LLM Extraction** - Groq/OpenAI extracts structured data from HTML
 
-Browser-Use replaces the previous Playwright + CDP-based approach with a fully
-autonomous AI agent.
+This architecture provides the best of both worlds: Browser-Use's intelligent
+login handling with Patchright's reliable, fast extraction.
 
 ## Architecture
 
-### Core Components
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           Job Scraping Flow                             │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  ┌──────────────┐    CDP Port 9222    ┌──────────────────────────────┐ │
+│  │              │ ◄─────────────────► │                              │ │
+│  │  Browser-Use │                     │  Patchright (TypeScript)     │ │
+│  │   (Python)   │                     │                              │ │
+│  │              │                     │  ├─ CDP Element Marking      │ │
+│  │  ├─ Login    │                     │  ├─ HTML Capture             │ │
+│  │  ├─ CAPTCHA  │                     │  ├─ LLM Job Extraction       │ │
+│  │  └─ 2FA      │                     │  └─ Pagination Handling      │ │
+│  │              │                     │                              │ │
+│  └──────────────┘                     └──────────────────────────────┘ │
+│         │                                          │                    │
+│         ▼                                          ▼                    │
+│  ┌──────────────┐                     ┌──────────────────────────────┐ │
+│  │   Chrome     │                     │      PostgreSQL Database     │ │
+│  │  (Headless)  │                     │                              │ │
+│  │              │                     │  ├─ jobs                     │ │
+│  │  Port 9222   │                     │  ├─ job_searches             │ │
+│  │  noVNC 6080  │                     │  └─ job_platforms            │ │
+│  └──────────────┘                     └──────────────────────────────┘ │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+## Components
+
+### Core Files
 
 ```
-scripts/scrape-job-sites.ts          - Main scraping orchestration
-├── scrapeJobsWithBrowserUse()       - AI-powered scraping (unified)
-│
+src/lib/server/scrapers/
+├── job-scraper.ts      # Entry point, login orchestration, CDP handoff
+├── click-scraper.ts    # CDP marking, LLM extraction, pagination
+├── types.ts            # TypeScript interfaces
+└── utils.ts            # Helper functions (formatting, prompts)
+
 src/lib/server/
-├── browser-use-client.ts            - Browser-Use API client
-├── job-scraper.ts                   - Job upsert & validation
-├── job-site-configs.ts              - Site-specific configurations
-└── ai-chat-utils.ts                 - Prompt interpolation
-│
-browser-use/                         - Python service (Docker)
-├── browser_controller.py            - Browser-Use agent controller
-├── main.py                          - FastAPI service
-└── Dockerfile                       - Browser-Use container
+├── browser-use-client.ts   # Browser-Use Python service client
+├── cdp-utils.ts            # Chrome DevTools Protocol utilities
+├── html-strip.ts           # Clean HTML for LLM processing
+├── scrape-filters.ts       # Job validation and stop conditions
+├── pagination-utils.ts     # Pagination detection and navigation
+└── page-wait-utils.ts      # SPA content loading detection
+
+browser-use/                # Python service (Docker)
+├── browser_controller.py   # Browser-Use agent controller
+├── main.py                 # FastAPI endpoints
+└── Dockerfile
 ```
 
-## Browser-Use Integration
+### Entry Points
 
-### How It Works
+| File                                     | Purpose                        |
+| ---------------------------------------- | ------------------------------ |
+| `scripts/scrape-job-sites.ts`            | CLI script for running scrapes |
+| `src/lib/server/scrapers/job-scraper.ts` | Main `scrapeJobs()` function   |
 
-Browser-Use is a Python library that provides an AI agent capable of:
+## Login Flow
 
-- Interpreting natural language instructions
-- Navigating web pages autonomously
-- Finding and clicking elements
-- Extracting structured data
-- Handling pagination and scrolling
+The scraper handles authentication in several ways:
 
-The scraper sends a task description to the Browser-Use service:
+### 1. Proactive Login (Recommended)
+
+When a platform has `login_page_url` and credentials configured:
+
+```
+Platform config:
+├─ url: "https://linkedin.com"
+├─ login_page_url: "https://linkedin.com/login"
+└─ credentials (in job_platform_credentials)
+
+Flow:
+1. Browser-Use navigates to login_page_url
+2. AI agent fills credentials
+3. Handles CAPTCHA/2FA if needed
+4. Navigates to search URL
+5. CDP handoff to Patchright
+```
+
+### 2. Session Check Path
+
+When no `login_page_url` is configured:
+
+```
+Flow:
+1. Browser-Use checks if already logged in
+2. If logged in → CDP handoff
+3. If not logged in:
+   a. Has credentials → Auto-login attempt
+   b. No credentials → Manual login via noVNC
+```
+
+### 3. Manual Intervention
+
+For CAPTCHA, 2FA, or sites without saved credentials:
+
+```
+Flow:
+1. Scraper detects login/verification needed
+2. Opens noVNC at http://localhost:6080
+3. User completes authentication manually
+4. Scraper resumes automatically when logged in
+```
+
+## Extraction Flow
+
+After successful login, Patchright takes over:
+
+### Phase 1: CDP Connection
 
 ```typescript
-const task = `
-Navigate to ${searchUrl} and extract job listings.
-For each job:
-- Extract title, company, location, salary, description, etc.
-- Return structured JSON data
-
-${navigationInstructions}
-`;
-
-const response = await browserUse.executeTask({
-  task,
-  startUrl: searchUrl,
-  maxTime: 180, // 3 minutes max
-});
+// Connect to Browser-Use's Chrome instance
+const browser = await chromium.connectOverCDP(`http://${cdpHost}:${cdpPort}`);
+const page = browser.contexts()[0].pages()[0];
 ```
 
-### Navigation Modes
-
-Both modes use the same Browser-Use approach with different instructions:
-
-**URL Mode** (Traditional Sites):
-
-```
-Navigate through pagination links/buttons to find more jobs.
-Stop after finding 20 jobs or 5 pages.
-```
-
-**Click Mode** (SPAs):
-
-```
-Click on each job card to view details.
-Stop after finding 20 jobs.
-```
-
-### AI Prompt Configuration
-
-The Browser-Use prompt is stored in Directus (`ai_chat_prompts` collection):
-
-**Prompt:** `extract_job_browser_use`
-
-```
-System: You are a job scraper agent. Navigate the page and extract job listings.
-
-User: Navigate to the job search page and find all job postings.
-For each job, extract:
-- title (string)
-- job_description (string)
-- company_description (string)
-- job_poster (string)
-- date_posted (ISO date string)
-- location (string)
-- remote (string: "yes", "no", "hybrid")
-- experience_level (string)
-- job_type (string)
-- salary information
-- skills (array)
-
-Return as JSON array of jobs.
-
-{navigationInstructions}
-```
-
-The `{navigationInstructions}` variable is interpolated based on navigation
-mode.
-
-### Configuration Example
-
-Site configuration in `job-site-configs.ts`:
+### Phase 2: Element Marking
 
 ```typescript
-export const SITE_CONFIGS: Record<string, SiteConfig> = {
-  "linkedin.com": {
-    timeout: 45000,
-    navigationType: "url", // or "click" for SPAs
-  },
-};
+// Mark all clickable elements with CDP
+const clickableCount = await markClickableElementsInContainer(page, "body");
+// Elements get data-extract-clickable-id="1", "2", etc.
 ```
 
-Much simpler than before - no selectors needed, Browser-Use finds everything!
-
-## Browser-Use Benefits
-
-The migration to Browser-Use provides significant advantages:
-
-### No Manual Selector Configuration
-
-**Before** (Playwright + CDP):
+### Phase 3: LLM Classification
 
 ```typescript
-selectors: {
-  jobListContainer: ".jobs-search__results-list",
-  jobListItem: ".job-card-container",
-  jobDescription: ".jobs-description",
-  pagination: ".pagination-next",
+// LLM identifies which clickables are job cards
+const classifications = await classifyMarkedClickables(html);
+// Returns: { 1: "view-details", 2: "action", 3: "view-details", ... }
+```
+
+### Phase 4: Job Extraction
+
+```typescript
+// LLM extracts job data from search page
+const jobs = await extractJobsFromSearchPage(strippedHtml);
+// Returns: [{ clickableId: 1, title: "...", company: "...", ... }]
+
+// Click each job to get full details
+for (const job of jobs) {
+  await page.click(`[data-extract-clickable-id="${job.clickableId}"]`);
+  const detailHtml = await page.content();
+  const fullData = await extractJobData(detailHtml);
+  await upsertJob(fullData, jobUrl, platformId);
 }
 ```
 
-**After** (Browser-Use):
+### Phase 5: Pagination
 
 ```typescript
-// No selectors needed - AI finds everything!
-timeout: 45000,
-navigationType: "url"
+// Detect pagination type
+const pagination = await detectPaginationStrategy(page);
+// Types: "numbered", "next_prev", "load_more", "infinite_scroll", "none"
+
+// Navigate to next page
+if (pagination.type === "next_prev") {
+  await page.click(pagination.nextButtonSelector);
+}
 ```
-
-### Autonomous Navigation
-
-The AI agent:
-
-- Finds job cards automatically
-- Handles pagination intelligently
-- Adapts to layout changes
-- Works with any framework (React, Vue, Angular, vanilla JS)
-
-### Single Prompt for Everything
-
-One prompt template handles:
-
-- Navigation (clicking, scrolling, pagination)
-- Data extraction (titles, descriptions, salaries)
-- Error handling (login walls, CAPTCHAs)
-- Site-specific quirks
-
-### Built on Playwright
-
-Browser-Use uses Playwright internally, so you get:
-
-- Auto-waiting for elements
-- Reliable CDP access
-- Cross-browser support
-- Vision capabilities (with supported LLMs)
-
-## Usage
-
-### Running the Scraper
-
-```bash
-# Scrape all active job searches
-npm run docker:scrape:jobs
-
-# Scrape specific job search by ID
-npm run docker:scrape:jobs -- --search-id 1
-
-# Force re-scrape (ignore HTML change detection)
-npm run docker:scrape:jobs -- --search-id 1 --force
-
-# Re-scrape specific job by ID
-npm run docker:scrape:jobs -- --job-id 123
-```
-
-### Manual Login
-
-For sites requiring authentication:
-
-```bash
-# Open browser for manual login
-npm run docker:login:jobs
-
-# Then run scraper (session is saved)
-npm run docker:scrape:jobs -- --search-id 1
-```
-
-Browser profile is saved in `chrome-profiles/default/` for session persistence.
 
 ## Configuration
 
-### Site Configuration
+### Platform Setup (Directus)
 
-Add new sites in `src/lib/server/job-site-configs.ts`:
+Create platforms in `job_platforms` collection:
 
-```typescript
-export const SITE_CONFIGS: Record<string, SiteConfig> = {
-  "mysite.com": {
-    timeout: 30000,
-    navigationType: "url", // "url" | "click"
-  },
-};
-```
+| Field            | Description                      |
+| ---------------- | -------------------------------- |
+| `name`           | Platform name (e.g., "LinkedIn") |
+| `url`            | Base URL                         |
+| `login_page_url` | Login page URL (optional)        |
 
-That's it! Browser-Use handles everything else automatically.
+Create credentials in `job_platform_credentials`:
 
-### AI Prompts
+| Field      | Description           |
+| ---------- | --------------------- |
+| `platform` | Link to job_platforms |
+| `profile`  | Link to profiles      |
+| `username` | Login email/username  |
+| `password` | Login password        |
 
-The main prompt in Directus (`ai_chat_prompts` collection):
+Create searches in `job_searches`:
 
-**extract_job_browser_use** - Complete navigation and extraction prompt
+| Field        | Description                  |
+| ------------ | ---------------------------- |
+| `name`       | Search name                  |
+| `search_url` | Full search URL with filters |
+| `platform`   | Link to job_platforms        |
+| `status`     | "active" or "inactive"       |
 
-- Handles both URL and click modes
-- Uses `{navigationInstructions}` variable for mode-specific guidance
-- Returns structured JSON array of jobs
-
-### Browser-Use Service Configuration
-
-The Python service runs in Docker and accepts these environment variables:
+### Environment Variables
 
 ```bash
-# .env in browser-use/
-SJS_LLM_API_KEY_GROQ=your_groq_api_key_here
-SJS_BROWSER_HEADLESS=true  # Set to false for debugging
+# Browser-Use Service
+SJS_BROWSER_USE_URL=http://browser-use:8000  # Python service URL
+SJS_BROWSER_USE_TIMEOUT=120000               # Max time for Browser-Use tasks
+SJS_BROWSER_USE_SEND_SCREENSHOTS=true        # Send screenshots to LLM
+SJS_BROWSER_USE_MAX_JOBS_TO_CLICK=5          # Max jobs per page
+
+# CDP Connection (Hybrid)
+SJS_HYBRID_CDP_HOST=localhost                # Chrome host (browser-use in Docker)
+SJS_HYBRID_CDP_PORT=9222                     # Chrome debugging port
+SJS_HYBRID_LOGIN_TIMEOUT=120000              # Max time for login
+SJS_HYBRID_HANDOFF_DELAY=1000                # Delay before Patchright connects
+
+# Scraper Behavior
+SJS_SCRAPER_MAX_JOBS_PER_SEARCH=100          # Hard limit per search
+SJS_SCRAPER_MAX_JOB_AGE=60                   # Max days old
+SJS_SCRAPER_DEBUG_MODE=false                 # Enable verbose logging
+SJS_SCRAPER_SAVE_DEBUG_SCREENSHOTS=false     # Save screenshots to disk
+
+# Timing
+SJS_SCRAPER_PAGE_LOAD_TIMEOUT=3000           # Wait after navigation
+SJS_SCRAPER_CLICK_WAIT_TIMEOUT=1000          # Wait after clicks
+SJS_SCRAPER_RATE_LIMIT_DELAY=2000            # Delay between requests
+
+# SPA Content Detection
+SJS_SCRAPER_SPA_CONTENT_POLL_ATTEMPTS=3      # Max polls for content
+SJS_SCRAPER_SPA_CONTENT_POLL_INTERVAL=2000   # Poll interval (ms)
+SJS_SCRAPER_SPA_MIN_CONTENT_GROWTH=500       # Min chars to retry
+SJS_SCRAPER_SPA_LLM_RETRY_ATTEMPTS=2         # LLM retry attempts
 ```
 
-Service configuration in TypeScript:
+## Usage
 
-```typescript
-// src/lib/server/config.ts
-export const config = {
-  browserUseUrl: process.env.SJS_BROWSER_USE_URL || "http://localhost:8000",
-  browserUseTimeout: 180000, // 3 minutes
-};
+### Run All Active Searches
+
+```bash
+npm run docker:scrape:jobs
 ```
+
+### Run Specific Search
+
+```bash
+npm run docker:scrape:jobs -- --search-id 1
+```
+
+### Re-scrape Single Job
+
+```bash
+npm run docker:scrape:jobs -- --job-id 123
+```
+
+### Options
+
+| Flag               | Description                    |
+| ------------------ | ------------------------------ |
+| `--search-id <id>` | Run specific search            |
+| `--job-id <id>`    | Re-scrape specific job         |
+| `--force`          | Ignore HTML change detection   |
+| `--screenshots`    | Enable Browser-Use screenshots |
+| `--no-screenshots` | Disable screenshots (default)  |
 
 ## Debugging
 
-### Enable Headful Mode
+### noVNC Access
 
-To see what Browser-Use is doing:
+For manual login or debugging:
 
-```bash
-# In .env
-SJS_BROWSER_USE_HEADLESS=false
+```
+URL: http://localhost:6080
+Password: (none by default)
 ```
 
-The browser window will be visible during scraping.
+Use noVNC when:
 
-### Check Browser-Use Logs
+- CAPTCHA appears during login
+- 2FA/verification code needed
+- Debugging page interactions
+
+### View Logs
 
 ```bash
-# View Python service logs
+# All containers
+docker compose logs -f
+
+# Browser-Use service only
 docker compose logs -f browser-use
 
-# Or check execution history
-# Browser-Use saves action history as animated GIFs
-ls browser-use/agent_history.gif
+# App container only
+docker compose logs -f app
 ```
 
-### Test the Python Service Directly
+### Debug Mode
+
+Enable verbose logging:
 
 ```bash
-# Test if service is running
-curl http://localhost:8000/health
-
-# Execute a simple task
-curl -X POST http://localhost:8000/execute \
-  -H "Content-Type: application/json" \
-  -d '{
-    "task": "Navigate to google.com and search for jobs",
-    "start_url": "https://google.com",
-    "max_time": 60
-  }'
+SJS_SCRAPER_DEBUG_MODE=true npm run docker:scrape:jobs -- --search-id 1
 ```
 
-### Common Issues
-
-**Browser-Use service not responding:**
-
-- Check if container is running: `docker compose ps`
-- View logs: `docker compose logs browser-use`
-- Verify LLM API key is set in `.env` (e.g., `SJS_LLM_API_KEY_GROQ`)
-
-**No jobs extracted:**
-
-- Check prompt template exists in Directus: `extract_job_browser_use`
-- Verify navigation mode is set correctly
-- Try headful mode to see what's happening
-- Check if site requires login
-
-**Extraction timeout:**
-
-- Increase `maxTime` in `scrapeJobsWithBrowserUse()`
-- Reduce `scraperMaxJobsPerSearch` for faster completion
-- Check for slow-loading sites
-
-**Vision mode disabled warning:**
-
-- Expected behavior - Groq doesn't support vision
-- `use_vision=False` is set in `browser_controller.py`
-- Agent still works using DOM-based navigation
-
-## Performance
-
-### Browser-Use vs Previous Approach
-
-| Metric                  | Playwright + CDP | Browser-Use        |
-| ----------------------- | ---------------- | ------------------ |
-| Configuration required  | Extensive        | Minimal            |
-| Selector maintenance    | High             | None (AI finds it) |
-| Adaptation to changes   | Manual           | Automatic          |
-| Multi-framework support | Limited          | Universal          |
-| Vision capabilities     | No               | Yes (with GPT-4o)  |
-
-### Optimization Tips
-
-1. **Batch processing** - Run multiple searches sequentially (Browser-Use uses
-   one browser instance)
-2. **Max time limits** - Set appropriate `maxTime` based on site complexity
-3. **Job limits** - Use `scraperMaxJobsPerSearch` to control extraction depth
-4. **Headless mode** - Keep `SJS_BROWSER_HEADLESS=true` in production for
-   performance
-
-## Testing
-
-### Unit Tests
+### Save Screenshots
 
 ```bash
-npm test
+SJS_SCRAPER_SAVE_DEBUG_SCREENSHOTS=true npm run docker:scrape:jobs -- --search-id 1
 ```
 
-Tests cover:
+Screenshots saved to `debug-screenshots/` directory.
 
-- LLM extraction functions
-- HTML stripping
-- Job upsert logic
-- Data validation
+## Troubleshooting
 
-### Manual Testing
+### Login Issues
 
-1. Test URL mode with LinkedIn/Indeed search
-2. Test click mode with SPA site
-3. Verify login flow persists across sessions
-4. Check database for proper job creation/updates
+**CAPTCHA appearing:**
 
-## Future Improvements
+- Open noVNC at http://localhost:6080
+- Solve CAPTCHA manually
+- Scraper will continue automatically
 
-Possible enhancements:
+**2FA/Verification code needed:**
 
-- [ ] Pagination support for multi-page results
-- [ ] Infinite scroll detection and handling
-- [ ] Parallel job extraction (currently sequential)
-- [ ] Retry logic for failed extractions
-- [ ] Job expiration detection
-- [ ] Company logo scraping
-- [ ] Salary estimation for listings without salary
+- Open noVNC
+- Enter code when prompted
+- Press Enter to continue
 
-## Technical Details
+**Invalid credentials:**
 
-### Stack
+- Check `job_platform_credentials` in Directus
+- Verify username/password are correct
 
-- **AI Agent:** Browser-Use (Python)
-- **Browser:** Playwright (Chromium) via Browser-Use
-- **Language:** TypeScript (Node.js) + Python (Browser-Use service)
-- **LLM:** Groq API (Llama models)
-- **Database:** PostgreSQL (via Prisma)
-- **CMS:** Directus (for prompts and config)
-- **Service Communication:** FastAPI (Python) ↔ HTTP Client (TypeScript)
+### Extraction Issues
 
-### Key Libraries
+**No jobs found:**
 
-**TypeScript:**
+- Check if page loaded correctly (noVNC)
+- Increase `SJS_SCRAPER_SPA_CONTENT_POLL_ATTEMPTS`
+- Check HTML stripping isn't too aggressive
 
-```json
-{
-  "commander": "^12.1.0" // CLI
-}
-```
+**Wrong elements clicked:**
 
-**Python (Browser-Use service):**
+- LLM may misclassify clickables
+- Check `data-extract-clickable-id` attributes in HTML
+- Adjust prompts in `ai_chat_prompts` collection
 
-```txt
-browser-use>=0.1.0
-playwright>=1.40.0
-groq>=0.4.0
-fastapi>=0.100.0
-uvicorn>=0.20.0
-```
+**Pagination not working:**
 
-### File Structure
+- Check pagination detection in logs
+- Some sites use infinite scroll (handled automatically)
+- Verify `scraperPaginationMaxPages` limit
 
-```
-scripts/
-  scrape-job-sites.ts              - Main scraper orchestration
+### Connection Issues
 
-src/lib/server/
-  browser-use-client.ts            - Browser-Use API client
-  job-scraper.ts                   - Job upsert & validation
-  job-site-configs.ts              - Site configurations
-  ai-chat-utils.ts                 - Prompt interpolation
+**CDP connection failed:**
 
-browser-use/                       - Python service
-  browser_controller.py            - Browser-Use agent controller
-  main.py                          - FastAPI endpoints
-  Dockerfile                       - Service containerization
-  requirements.txt                 - Python dependencies
-```
+- Verify Chrome is running on port 9222
+- Check `SJS_HYBRID_CDP_HOST` (use `browser-use` in Docker)
+- Ensure Browser-Use started successfully
 
-## License
+**Browser-Use timeout:**
 
-This scraper is part of the Smart Job Seeker application and follows the same
-license.
+- Increase `SJS_BROWSER_USE_TIMEOUT`
+- Check Browser-Use logs for errors
+- Verify LLM API key is set
+
+### Performance Issues
+
+**Scraping too slow:**
+
+- Reduce `SJS_SCRAPER_RATE_LIMIT_DELAY`
+- Disable screenshots (`--no-screenshots`)
+- Reduce `SJS_BROWSER_USE_MAX_JOBS_TO_CLICK`
+
+**Memory issues:**
+
+- Reduce `SJS_SCRAPER_MAX_JOBS_PER_SEARCH`
+- Restart containers between large scrapes
+
+## AI Prompts
+
+The scraper uses prompts from `ai_chat_prompts` collection:
+
+| Request                         | Purpose                               |
+| ------------------------------- | ------------------------------------- |
+| `browser_use_login_only`        | Login task for Browser-Use            |
+| `extract_jobs_from_search_page` | Extract job cards from search results |
+| `extract_job_data`              | Extract full job details              |
+| `classify_clickables`           | Classify clickable elements           |
+| `detect_pagination`             | Detect pagination mechanism           |
+
+## Database Schema
+
+### jobs
+
+| Field             | Type     | Description              |
+| ----------------- | -------- | ------------------------ |
+| `id`              | int      | Primary key              |
+| `title`           | string   | Job title                |
+| `job_description` | text     | Full description         |
+| `source_url`      | string   | Original URL (unique)    |
+| `job_platform`    | int      | Foreign key to platforms |
+| `status`          | enum     | hiring, closed, stale    |
+| `scrape_count`    | int      | Times scraped            |
+| `last_scraped`    | datetime | Last scrape time         |
+
+### job_searches
+
+| Field           | Type     | Description              |
+| --------------- | -------- | ------------------------ |
+| `id`            | int      | Primary key              |
+| `name`          | string   | Search name              |
+| `search_url`    | string   | Full search URL          |
+| `platform`      | int      | Foreign key to platforms |
+| `status`        | enum     | active, inactive         |
+| `last_run`      | datetime | Last execution           |
+| `stripped_html` | text     | Last captured HTML       |
+
+### job_platforms
+
+| Field            | Type   | Description    |
+| ---------------- | ------ | -------------- |
+| `id`             | int    | Primary key    |
+| `name`           | string | Platform name  |
+| `url`            | string | Base URL       |
+| `login_page_url` | string | Login page URL |
+
+## Technical Stack
+
+- **Browser Automation:** Patchright (Playwright fork with stealth)
+- **AI Login:** Browser-Use (Python)
+- **LLM:** Groq API (Llama models) / OpenAI / Gemini
+- **Database:** PostgreSQL via Prisma
+- **Service Communication:** FastAPI (Python) <-> HTTP Client (TypeScript)

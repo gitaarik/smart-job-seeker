@@ -91,15 +91,14 @@ This starts:
 
 ### Key Modules
 
-**Job Scraping Pipeline**
+**Job Scraping Pipeline** (see [SCRAPING.md](docs/SCRAPING.md))
 
-- `browser-utils.ts` - Playwright browser launch and context management
-- `cdp-utils.ts` - Chrome DevTools Protocol for click detection
+- `scrapers/job-scraper.ts` - Login orchestration and CDP handoff
+- `scrapers/click-scraper.ts` - CDP element marking and LLM extraction
+- `browser-use-client.ts` - Browser-Use Python service client
+- `cdp-utils.ts` - Chrome DevTools Protocol utilities
 - `html-strip.ts` - Clean HTML for LLM processing
-- `llm.ts` - Generic LLM chat completion interface
-- `job-scraper.ts` - Job data extraction and storage
-- `job-site-configs.ts` - Site-specific navigation configurations
-- `scrape-job-sites.ts` - Main scraping orchestration with dual-mode support
+- `scripts/scrape-job-sites.ts` - CLI script for running scrapes
 
 **AI Features**
 
