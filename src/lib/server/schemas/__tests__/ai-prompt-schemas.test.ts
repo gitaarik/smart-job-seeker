@@ -4,7 +4,6 @@ import {
   detectLoginPageSchema,
   detectPaginationSchema,
   extractJobDataSchema,
-  extractResumeDataSchema,
   getSchemaForPrompt,
   scoreJobMatchSchema,
 } from "../ai-prompt-schemas";
@@ -17,7 +16,7 @@ describe("AI Prompt Schemas", () => {
       expect(aiPromptSchemas).toHaveProperty("score_job_match");
       expect(aiPromptSchemas).toHaveProperty("detect_login_page");
       expect(aiPromptSchemas).toHaveProperty("detect_pagination");
-      expect(aiPromptSchemas).toHaveProperty("extract_resume_data");
+      expect(aiPromptSchemas).toHaveProperty("classify_clickables");
     });
 
     it("should get schema by request name", () => {
@@ -205,79 +204,6 @@ describe("AI Prompt Schemas", () => {
         paginationType: "unknown", // Invalid enum
       };
       expect(() => detectPaginationSchema.parse(invalidType)).toThrow();
-    });
-  });
-
-  describe("extractResumeDataSchema", () => {
-    it("should validate minimal resume data", () => {
-      const minimalData = {
-        basics: {
-          name: "John Doe",
-        },
-      };
-      expect(() => extractResumeDataSchema.parse(minimalData)).not.toThrow();
-    });
-
-    it("should validate complete resume data", () => {
-      const completeData = {
-        basics: {
-          name: "John Doe",
-          email: "john@example.com",
-          phone: "+1234567890",
-          title: "Software Engineer",
-          summary: "Experienced developer",
-          location: "San Francisco, CA",
-          linkedin: "https://linkedin.com/in/johndoe",
-          github: "https://github.com/johndoe",
-        },
-        work: [
-          {
-            name: "Acme Corp",
-            position: "Senior Engineer",
-            startDate: "2020-01",
-            endDate: "2025-12",
-            summary: "Built great things",
-            technologies: ["JavaScript", "React"],
-          },
-        ],
-        education: [
-          {
-            institution: "University of Example",
-            area: "Computer Science",
-            studyType: "Bachelor",
-            graduationYear: 2020,
-          },
-        ],
-        skills: [
-          {
-            name: "Frontend",
-            skills: [
-              {
-                name: "React",
-                level: "expert",
-                yearsExperience: 5,
-              },
-            ],
-          },
-        ],
-        languages: [
-          {
-            name: "English",
-            languageCode: "en",
-            proficiency: "native",
-          },
-        ],
-      };
-      expect(() => extractResumeDataSchema.parse(completeData)).not.toThrow();
-    });
-
-    it("should require basics.name", () => {
-      const missingName = {
-        basics: {
-          email: "john@example.com",
-        },
-      };
-      expect(() => extractResumeDataSchema.parse(missingName)).toThrow();
     });
   });
 });

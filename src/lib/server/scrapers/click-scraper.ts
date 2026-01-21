@@ -155,9 +155,9 @@ async function classifyMarkedClickables(
 }
 
 /**
- * Remove action clickables from HTML by removing their data-extract-clickable-id attributes
+ * Strip action clickables from HTML by removing their data-extract-clickable-id attributes
  */
-function removeActionClickablesFromHtml(
+function stripActionClickables(
   html: string,
   classifications: Map<number, "view-details" | "action">,
 ): string {
@@ -288,9 +288,9 @@ export async function scrapeJobsWithClicks(
     console.log(`      📍 Capturing HTML from: ${captureUrl}`);
     console.log(`      📄 Page title: "${captureTitle}"`);
 
-    // Remove action clickables from HTML before LLM extraction
+    // Strip action clickables from HTML before LLM extraction
     const cleanedHtml = clickableClassifications
-      ? removeActionClickablesFromHtml(markedHtml, clickableClassifications)
+      ? stripActionClickables(markedHtml, clickableClassifications)
       : markedHtml;
 
     const htmlSize = (cleanedHtml.length / 1024).toFixed(1);

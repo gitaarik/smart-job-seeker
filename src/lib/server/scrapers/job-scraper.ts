@@ -69,7 +69,7 @@ async function handleLoginResult(
     console.log(`\n⚠️ CAPTCHA detected. Manual intervention required.`);
     console.log(`   VNC: localhost:5900`);
     console.log(`   Please solve the CAPTCHA manually.`);
-    return waitForManualIntervention(browserUse, platform, searchUrl);
+    return waitForManualIntervention(platform);
   }
 
   if (loginResult.verification_needed) {
@@ -82,7 +82,7 @@ async function handleLoginResult(
   // Login failed for other reason
   console.log(`\n⚠️ Login failed. Manual intervention required.`);
   console.log(`   Error: ${loginResult.error || "Unknown"}`);
-  return waitForManualIntervention(browserUse, platform, searchUrl);
+  return waitForManualIntervention(platform);
 }
 
 /**
@@ -302,11 +302,7 @@ async function scrapeWithLogin(
             CDP_PORT,
           );
 
-          isLoggedIn = await waitForManualIntervention(
-            browserUse,
-            platform,
-            searchUrl,
-          );
+          isLoggedIn = await waitForManualIntervention(platform);
         }
       } else {
         console.log("✅ Already logged in, skipping login phase");
@@ -367,8 +363,8 @@ async function scrapeWithLogin(
       });
     }
 
-    // Phase 5: Playwright extraction
-    console.log("\n📌 Phase 5: Job extraction...");
+    // Phase 4: Playwright extraction
+    console.log("\n📌 Phase 4: Job extraction...");
 
     const result = await scrapeJobsWithClicks(
       page,
@@ -489,7 +485,7 @@ async function handleVerification(
         const retry = await promptUser("Continue waiting? (y/n): ");
         if (retry.toLowerCase() !== "y") return false;
         // Loop back to wait for manual intervention
-        return waitForManualIntervention(browserUse, platform, searchUrl);
+        return waitForManualIntervention(platform);
       }
     } else if (verifyResult.needs_new_code) {
       const retry = await promptUser("⚠️ Code expired. Resend? (y/n): ");
@@ -511,9 +507,7 @@ async function handleVerification(
  * Wait for user to complete login manually
  */
 async function waitForManualIntervention(
-  _browserUse: BrowserUseClient,
   platform: Platform,
-  _searchUrl: string,
 ): Promise<boolean> {
   console.log(`\n${"=".repeat(60)}`);
   console.log(`🔐 Manual Login Required for ${platform.name}`);

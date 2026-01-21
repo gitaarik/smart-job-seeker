@@ -64,12 +64,6 @@ export const extractJobDataSchema = z.object({
 });
 
 /**
- * Schema for extract_job_data_browser_use prompt
- * Same as extract_job_data, used by Browser-Use agent
- */
-export const extractJobDataBrowserUseSchema = extractJobDataSchema;
-
-/**
  * Schema for score_job_match prompt
  * Evaluates how well a job matches a candidate's profile
  */
@@ -150,26 +144,6 @@ export const detectLoginFieldsSchema = z.object({
 });
 
 /**
- * Schema for detect_job_detail_content prompt
- * Identifies where job details appear after clicking a job card
- */
-export const detectJobDetailContentSchema = z.object({
-  selector: z
-    .string()
-    .nullable()
-    .describe("CSS selector for the job detail container"),
-  confidence: z
-    .number()
-    .int()
-    .min(0)
-    .max(100)
-    .describe("Confidence score from 0 to 100"),
-  contentType: z
-    .enum(["modal", "panel", "inline", "main", "unknown"])
-    .describe("Type of container displaying job details"),
-});
-
-/**
  * Schema for detect_pagination prompt
  * Identifies pagination mechanisms on job listing pages
  */
@@ -201,103 +175,6 @@ export const detectPaginationSchema = z.object({
       "none",
     ])
     .describe("The type of pagination mechanism detected"),
-});
-
-/**
- * Schema for extract_resume_data prompt
- * Extracts structured information from resume text
- */
-export const extractResumeDataSchema = z.object({
-  basics: z.object({
-    name: z.string(),
-    email: z.string().optional(),
-    phone: z.string().optional(),
-    title: z.string().optional(),
-    summary: z.string().optional(),
-    location: z.string().optional(),
-    website: z.string().optional(),
-    linkedin: z.string().optional(),
-    github: z.string().optional(),
-    stackoverflow: z.string().optional(),
-  }),
-  work: z
-    .array(
-      z.object({
-        name: z.string(),
-        position: z.string(),
-        location: z.string().optional(),
-        website: z.string().optional(),
-        startDate: z.string().optional(),
-        endDate: z.string().optional(),
-        summary: z.string().optional(),
-        achievements: z.array(z.string()).optional(),
-        technologies: z.array(z.string()).optional(),
-      }),
-    )
-    .optional(),
-  education: z
-    .array(
-      z.object({
-        institution: z.string(),
-        area: z.string().optional(),
-        studyType: z.string().optional(),
-        location: z.string().optional(),
-        url: z.string().optional(),
-        startDate: z.string().optional(),
-        endDate: z.string().optional(),
-        graduationYear: z.number().int().optional(),
-      }),
-    )
-    .optional(),
-  skills: z
-    .array(
-      z.object({
-        name: z.string(),
-        skills: z.array(
-          z.object({
-            name: z.string(),
-            level: z
-              .enum(["expert", "proficient", "intermediate", "beginner"])
-              .optional(),
-            yearsExperience: z.number().int().optional(),
-          }),
-        ),
-      }),
-    )
-    .optional(),
-  languages: z
-    .array(
-      z.object({
-        name: z.string(),
-        languageCode: z.string().optional(),
-        proficiency: z
-          .enum(["native", "fluent", "proficient", "conversational", "basic"])
-          .optional(),
-      }),
-    )
-    .optional(),
-  projects: z
-    .array(
-      z.object({
-        name: z.string(),
-        url: z.string().optional(),
-        summary: z.string().optional(),
-        startDate: z.string().optional(),
-        endDate: z.string().optional(),
-        achievements: z.array(z.string()).optional(),
-        technologies: z.array(z.string()).optional(),
-      }),
-    )
-    .optional(),
-  references: z
-    .array(
-      z.object({
-        author: z.string(),
-        authorPosition: z.string().optional(),
-        text: z.string(),
-      }),
-    )
-    .optional(),
 });
 
 /**
@@ -369,14 +246,12 @@ export const classifyClickablesSchema = z.object({
  */
 export const aiPromptSchemas = {
   extract_job_data: extractJobDataSchema,
-  extract_job_data_browser_use: extractJobDataBrowserUseSchema,
+  extract_job_data_browser_use: extractJobDataSchema, // Same schema, different prompt
   extract_jobs_from_search_page: extractJobsFromSearchPageSchema,
   score_job_match: scoreJobMatchSchema,
   detect_login_page: detectLoginPageSchema,
   detect_login_fields: detectLoginFieldsSchema,
-  detect_job_detail_content: detectJobDetailContentSchema,
   detect_pagination: detectPaginationSchema,
-  extract_resume_data: extractResumeDataSchema,
   classify_clickables: classifyClickablesSchema,
 } as const;
 

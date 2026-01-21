@@ -49,7 +49,6 @@ export interface AppConfig {
   scraperNetworkIdleTimeout: number;
   scraperMaxRetries: number;
   scraperDebugMode: boolean;
-  scraperScrollMaxIterations: number;
   scraperSaveDebugScreenshots: boolean;
 
   // Pagination & Filtering
@@ -64,7 +63,6 @@ export interface AppConfig {
   scraperClickWaitTimeout: number; // Wait time after clicking elements (ms)
   scraperRateLimitDelay: number; // Delay between requests to avoid rate limiting (ms)
   scraperCaptchaCheckInterval: number; // Interval for checking CAPTCHA status (ms)
-  scraperModalWaitTimeout: number; // Wait time for modal content to load (ms)
 
   // SPA Content Loading Detection
   scraperSpaContentPollAttempts: number; // Max polls for content growth detection
@@ -75,7 +73,6 @@ export interface AppConfig {
   // Browser-Use Integration
   browserUseUrl: string;
   browserUseTimeout: number;
-  browserUseFallbackEnabled: boolean;
   browserUseSendScreenshots: boolean;
   browserUseMaxJobsToClick: number; // Max number of jobs to click through and extract details
 
@@ -182,10 +179,6 @@ function loadConfig(): AppConfig {
     ),
     scraperMaxRetries: parseInt(getEnv("SJS_SCRAPER_MAX_RETRIES", "2"), 10),
     scraperDebugMode: getEnv("SJS_SCRAPER_DEBUG_MODE", "false") === "true",
-    scraperScrollMaxIterations: parseInt(
-      getEnv("SJS_SCRAPER_SCROLL_MAX_ITERATIONS", "3"),
-      10,
-    ),
     scraperSaveDebugScreenshots: getEnv(
       "SJS_SCRAPER_SAVE_DEBUG_SCREENSHOTS",
       "false",
@@ -227,10 +220,6 @@ function loadConfig(): AppConfig {
       getEnv("SJS_SCRAPER_CAPTCHA_CHECK_INTERVAL", "3000"),
       10,
     ),
-    scraperModalWaitTimeout: parseInt(
-      getEnv("SJS_SCRAPER_MODAL_WAIT_TIMEOUT", "500"),
-      10,
-    ),
 
     // SPA Content Loading Detection
     scraperSpaContentPollAttempts: parseInt(
@@ -256,8 +245,6 @@ function loadConfig(): AppConfig {
       getEnv("SJS_BROWSER_USE_TIMEOUT", "120000"),
       10,
     ),
-    browserUseFallbackEnabled:
-      getEnv("SJS_BROWSER_USE_FALLBACK_ENABLED", "true") === "true",
     browserUseSendScreenshots:
       getEnv("SJS_BROWSER_USE_SEND_SCREENSHOTS", "true") === "true",
     browserUseMaxJobsToClick: parseInt(
@@ -346,9 +333,6 @@ export function validateConfig(): void {
   }
   if (config.scraperCaptchaCheckInterval <= 0) {
     errors.push("scraperCaptchaCheckInterval must be > 0");
-  }
-  if (config.scraperModalWaitTimeout <= 0) {
-    errors.push("scraperModalWaitTimeout must be > 0");
   }
   if (config.browserUseTimeout <= 0) {
     errors.push("browserUseTimeout must be > 0");
