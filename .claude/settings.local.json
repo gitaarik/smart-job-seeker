@@ -103,7 +103,9 @@
       "Bash(python -c:*)",
       "Bash(python -m py_compile:*)",
       "Bash(python -m black:*)",
-      "Bash(npx svelte-check:*)"
+      "Bash(npx svelte-check:*)",
+      "WebFetch(domain:substack.thewebscraping.club)",
+      "WebFetch(domain:libraries.io)"
     ],
     "deny": [],
     "ask": []
