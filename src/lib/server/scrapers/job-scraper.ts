@@ -15,11 +15,7 @@ import { interpolatePrompt } from "$lib/server/ai-chat-utils";
 import { dbDirect } from "$lib/db";
 import { getPlatformCredentials } from "../platform-auth";
 import { promptUser } from "./utils";
-import type {
-  LoginResult,
-  Platform,
-  PlatformCredentials,
-} from "./types";
+import type { LoginResult, Platform, PlatformCredentials } from "./types";
 
 const CDP_HOST = config.hybridCdpHost;
 const CDP_PORT = config.hybridCdpPort;
@@ -170,6 +166,34 @@ CRITICAL:
 }
 
 /**
+ * Execute auto-login with Browser-Use.
+ * Builds the login prompt, starts a hybrid session, and handles the result.
+ */
+async function attemptAutoLogin(
+  browserUse: BrowserUseClient,
+  platform: Platform,
+  credentials: PlatformCredentials,
+  searchUrl: string,
+  startUrl: string,
+  sendScreenshots: boolean | undefined,
+): Promise<boolean> {
+  const loginTask = await buildLoginPrompt(platform, credentials, searchUrl);
+
+  console.log("📝 Login task preview:");
+  console.log(loginTask.substring(0, 300) + "...");
+
+  const loginResult = await browserUse.startHybridSession({
+    task: loginTask,
+    startUrl,
+    cdpPort: CDP_PORT,
+    maxTime: config.hybridLoginTimeout / 1000,
+    sendScreenshots,
+  });
+
+  return handleLoginResult(browserUse, loginResult, platform, searchUrl);
+}
+
+/**
  * Scrape jobs with persistent session + Playwright extraction
  * Uses persistent browser session (like a real browser).
  *
@@ -221,28 +245,13 @@ async function scrapeWithLogin(
       );
       console.log("   Auto-filling credentials...");
 
-      const loginTask = await buildLoginPrompt(
+      isLoggedIn = await attemptAutoLogin(
+        browserUse,
         platform,
         credentials,
         searchUrl,
-      );
-
-      console.log("📝 Login task preview:");
-      console.log(loginTask.substring(0, 300) + "...");
-
-      const loginResult = await browserUse.startHybridSession({
-        task: loginTask,
-        startUrl: platform.login_page_url || platform.url,
-        cdpPort: CDP_PORT,
-        maxTime: config.hybridLoginTimeout / 1000,
+        platform.login_page_url || platform.url,
         sendScreenshots,
-      });
-
-      isLoggedIn = await handleLoginResult(
-        browserUse,
-        loginResult,
-        platform,
-        searchUrl,
       );
     } else {
       // No proactive login config - check session first
@@ -268,28 +277,13 @@ async function scrapeWithLogin(
           // We have credentials but no login_page_url - use Browser-Use to auto-fill
           console.log("   Auto-filling credentials...");
 
-          const loginTask = await buildLoginPrompt(
+          isLoggedIn = await attemptAutoLogin(
+            browserUse,
             platform,
             credentials,
             searchUrl,
-          );
-
-          console.log("📝 Login task preview:");
-          console.log(loginTask.substring(0, 300) + "...");
-
-          const loginResult = await browserUse.startHybridSession({
-            task: loginTask,
-            startUrl: platform.url,
-            cdpPort: CDP_PORT,
-            maxTime: config.hybridLoginTimeout / 1000,
+            platform.url,
             sendScreenshots,
-          });
-
-          isLoggedIn = await handleLoginResult(
-            browserUse,
-            loginResult,
-            platform,
-            searchUrl,
           );
         } else {
           // No credentials - start browser for manual login

@@ -175,6 +175,77 @@ function stripActionClickables(
 }
 
 /**
+ * Check if page content is still loading and retry extraction if so.
+ * Used when LLM extraction finds no jobs or all invalid jobs - the page might still be loading.
+ */
+async function tryContentRetryOnLoad(
+  page: Page,
+  pageNumber: number,
+  extractionAttempt: number,
+  maxLlmRetries: number,
+  jobSearchId: number | undefined,
+  currentSavedHtml: string,
+): Promise<{
+  shouldRetry: boolean;
+  newStrippedHtml: string;
+  savedHtml: string;
+}> {
+  const contentWait = await waitForSpaContent(page, {
+    maxAttempts: config.scraperSpaContentPollAttempts,
+    pollInterval: config.scraperSpaContentPollInterval,
+    minGrowthThreshold: config.scraperSpaMinContentGrowth,
+  });
+
+  if (contentWait.totalGrowth >= config.scraperSpaMinContentGrowth) {
+    // Content grew - re-capture HTML and retry
+    console.log(
+      `      ⏳ Content grew ${contentWait.totalGrowth.toLocaleString()} chars, re-extracting...`,
+    );
+
+    // Re-mark clickable elements (new elements may have loaded)
+    console.log("      📍 Re-marking clickable elements...");
+    const newClickableCount = await markClickableElementsInContainer(
+      page,
+      "body",
+    );
+    console.log(`      ✓ Found ${newClickableCount} elements`);
+
+    // Re-capture HTML
+    const newMarkedHtml = await page.content();
+    const newStrippedHtml = stripHtmlForLlm(newMarkedHtml);
+
+    // Update saved HTML if this is page 1
+    let savedHtml = currentSavedHtml;
+    if (pageNumber === 1) {
+      savedHtml = newStrippedHtml;
+
+      // Update database with new stripped HTML
+      if (jobSearchId) {
+        await dbDirect.job_searches.update({
+          where: { id: jobSearchId },
+          data: { stripped_html: newStrippedHtml },
+        });
+      }
+    }
+
+    console.log(
+      `      🤖 Retry extraction attempt ${extractionAttempt + 1}/${
+        maxLlmRetries + 1
+      }...`,
+    );
+
+    return { shouldRetry: true, newStrippedHtml, savedHtml };
+  }
+
+  // Content stabilized - no retry
+  return {
+    shouldRetry: false,
+    newStrippedHtml: "",
+    savedHtml: currentSavedHtml,
+  };
+}
+
+/**
  * Scrape jobs using click-based navigation (SPAs)
  * Marks clickable elements with CDP, uses LLM to identify job cards, then clicks each
  * Extracts and saves jobs immediately during clicking for real-time feedback
@@ -394,54 +465,21 @@ export async function scrapeJobsWithClicks(
             "      ⚠️  No jobs found, checking if page is still loading...",
           );
 
-          const contentWait = await waitForSpaContent(page, {
-            maxAttempts: config.scraperSpaContentPollAttempts,
-            pollInterval: config.scraperSpaContentPollInterval,
-            minGrowthThreshold: config.scraperSpaMinContentGrowth,
-          });
+          const retry = await tryContentRetryOnLoad(
+            page,
+            pageNumber,
+            extractionAttempt,
+            maxLlmRetries,
+            jobSearchId,
+            savedStrippedHtml,
+          );
 
-          if (contentWait.totalGrowth >= config.scraperSpaMinContentGrowth) {
-            // Content grew - re-capture HTML and retry
-            console.log(
-              `      ⏳ Content grew ${contentWait.totalGrowth.toLocaleString()} chars, re-extracting...`,
-            );
-
-            // Re-mark clickable elements (new elements may have loaded)
-            console.log("      📍 Re-marking clickable elements...");
-            const newClickableCount = await markClickableElementsInContainer(
-              page,
-              "body",
-            );
-            console.log(`      ✓ Found ${newClickableCount} elements`);
-
-            // Re-capture HTML
-            const newMarkedHtml = await page.content();
-            currentStrippedHtml = stripHtmlForLlm(newMarkedHtml);
-
-            // Update saved HTML if this is page 1
-            if (pageNumber === 1) {
-              savedStrippedHtml = currentStrippedHtml;
-
-              // Update database with new stripped HTML
-              if (jobSearchId) {
-                await dbDirect.job_searches.update({
-                  where: { id: jobSearchId },
-                  data: { stripped_html: currentStrippedHtml },
-                });
-              }
-            }
-
-            console.log(
-              `      🤖 Retry extraction attempt ${extractionAttempt + 1}/${
-                maxLlmRetries + 1
-              }...`,
-            );
+          if (retry.shouldRetry) {
+            currentStrippedHtml = retry.newStrippedHtml;
+            savedStrippedHtml = retry.savedHtml;
             continue;
           } else {
-            // Content stabilized but still no jobs - give up
-            console.log(
-              "      📊 Content stabilized but no job cards found",
-            );
+            console.log("      📊 Content stabilized but no job cards found");
             break;
           }
         }
@@ -457,51 +495,20 @@ export async function scrapeJobsWithClicks(
             "      ⚠️  All extracted jobs were invalid, checking if page is still loading...",
           );
 
-          const contentWait = await waitForSpaContent(page, {
-            maxAttempts: config.scraperSpaContentPollAttempts,
-            pollInterval: config.scraperSpaContentPollInterval,
-            minGrowthThreshold: config.scraperSpaMinContentGrowth,
-          });
+          const retry = await tryContentRetryOnLoad(
+            page,
+            pageNumber,
+            extractionAttempt,
+            maxLlmRetries,
+            jobSearchId,
+            savedStrippedHtml,
+          );
 
-          if (contentWait.totalGrowth >= config.scraperSpaMinContentGrowth) {
-            // Content grew - re-capture HTML and retry
-            console.log(
-              `      ⏳ Content grew ${contentWait.totalGrowth.toLocaleString()} chars, re-extracting...`,
-            );
-
-            // Re-mark clickable elements (new elements may have loaded)
-            console.log("      📍 Re-marking clickable elements...");
-            const newClickableCount = await markClickableElementsInContainer(
-              page,
-              "body",
-            );
-            console.log(`      ✓ Found ${newClickableCount} elements`);
-
-            // Re-capture HTML
-            const newMarkedHtml = await page.content();
-            currentStrippedHtml = stripHtmlForLlm(newMarkedHtml);
-
-            // Update saved HTML if this is page 1
-            if (pageNumber === 1) {
-              savedStrippedHtml = currentStrippedHtml;
-
-              // Update database with new stripped HTML
-              if (jobSearchId) {
-                await dbDirect.job_searches.update({
-                  where: { id: jobSearchId },
-                  data: { stripped_html: currentStrippedHtml },
-                });
-              }
-            }
-
-            console.log(
-              `      🤖 Retry extraction attempt ${extractionAttempt + 1}/${
-                maxLlmRetries + 1
-              }...`,
-            );
+          if (retry.shouldRetry) {
+            currentStrippedHtml = retry.newStrippedHtml;
+            savedStrippedHtml = retry.savedHtml;
             continue;
           } else {
-            // Content stabilized but still invalid - give up
             console.log(
               "      📊 Content stabilized but no valid job cards found",
             );
