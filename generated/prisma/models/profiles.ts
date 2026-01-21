@@ -584,6 +584,9 @@ export type profilesWhereInput = {
   profile_exports?: Prisma.Profile_exportsListRelationFilter
   profile_versions?: Prisma.Profile_versionsListRelationFilter
   directus_files?: Prisma.XOR<Prisma.Directus_filesNullableScalarRelationFilter, Prisma.directus_filesWhereInput> | null
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.XOR<Prisma.Profile_versionsNullableScalarRelationFilter, Prisma.profile_versionsWhereInput> | null
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.XOR<Prisma.Profile_versionsNullableScalarRelationFilter, Prisma.profile_versionsWhereInput> | null
+  directus_users?: Prisma.XOR<Prisma.Directus_usersNullableScalarRelationFilter, Prisma.directus_usersWhereInput> | null
   project_stories?: Prisma.Project_storiesListRelationFilter
   references?: Prisma.ReferencesListRelationFilter
   salary_expectations?: Prisma.Salary_expectationsListRelationFilter
@@ -655,6 +658,9 @@ export type profilesOrderByWithRelationInput = {
   profile_exports?: Prisma.profile_exportsOrderByRelationAggregateInput
   profile_versions?: Prisma.profile_versionsOrderByRelationAggregateInput
   directus_files?: Prisma.directus_filesOrderByWithRelationInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsOrderByWithRelationInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsOrderByWithRelationInput
+  directus_users?: Prisma.directus_usersOrderByWithRelationInput
   project_stories?: Prisma.project_storiesOrderByRelationAggregateInput
   references?: Prisma.referencesOrderByRelationAggregateInput
   salary_expectations?: Prisma.salary_expectationsOrderByRelationAggregateInput
@@ -729,6 +735,9 @@ export type profilesWhereUniqueInput = Prisma.AtLeast<{
   profile_exports?: Prisma.Profile_exportsListRelationFilter
   profile_versions?: Prisma.Profile_versionsListRelationFilter
   directus_files?: Prisma.XOR<Prisma.Directus_filesNullableScalarRelationFilter, Prisma.directus_filesWhereInput> | null
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.XOR<Prisma.Profile_versionsNullableScalarRelationFilter, Prisma.profile_versionsWhereInput> | null
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.XOR<Prisma.Profile_versionsNullableScalarRelationFilter, Prisma.profile_versionsWhereInput> | null
+  directus_users?: Prisma.XOR<Prisma.Directus_usersNullableScalarRelationFilter, Prisma.directus_usersWhereInput> | null
   project_stories?: Prisma.Project_storiesListRelationFilter
   references?: Prisma.ReferencesListRelationFilter
   salary_expectations?: Prisma.Salary_expectationsListRelationFilter
@@ -885,9 +894,6 @@ export type profilesCreateInput = {
   signal_profile?: string | null
   whatsapp_number?: string | null
   telegram_username?: string | null
-  user_id?: string | null
-  public_cv_version?: number | null
-  public_resume_version?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -904,6 +910,9 @@ export type profilesCreateInput = {
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutProfilesInput
   profile_versions?: Prisma.profile_versionsCreateNestedManyWithoutProfilesInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutProfilesInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsInput
+  directus_users?: Prisma.directus_usersCreateNestedOneWithoutProfilesInput
   project_stories?: Prisma.project_storiesCreateNestedManyWithoutProfilesInput
   references?: Prisma.referencesCreateNestedManyWithoutProfilesInput
   salary_expectations?: Prisma.salary_expectationsCreateNestedManyWithoutProfilesInput
@@ -1024,9 +1033,6 @@ export type profilesUpdateInput = {
   signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -1043,6 +1049,9 @@ export type profilesUpdateInput = {
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutProfilesNestedInput
   profile_versions?: Prisma.profile_versionsUpdateManyWithoutProfilesNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutProfilesNestedInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsNestedInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsNestedInput
+  directus_users?: Prisma.directus_usersUpdateOneWithoutProfilesNestedInput
   project_stories?: Prisma.project_storiesUpdateManyWithoutProfilesNestedInput
   references?: Prisma.referencesUpdateManyWithoutProfilesNestedInput
   salary_expectations?: Prisma.salary_expectationsUpdateManyWithoutProfilesNestedInput
@@ -1212,9 +1221,6 @@ export type profilesUpdateManyMutationInput = {
   signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type profilesUncheckedUpdateManyInput = {
@@ -1539,6 +1545,48 @@ export type profilesUncheckedUpdateManyWithoutDirectus_filesNestedInput = {
   deleteMany?: Prisma.profilesScalarWhereInput | Prisma.profilesScalarWhereInput[]
 }
 
+export type profilesCreateNestedManyWithoutDirectus_usersInput = {
+  create?: Prisma.XOR<Prisma.profilesCreateWithoutDirectus_usersInput, Prisma.profilesUncheckedCreateWithoutDirectus_usersInput> | Prisma.profilesCreateWithoutDirectus_usersInput[] | Prisma.profilesUncheckedCreateWithoutDirectus_usersInput[]
+  connectOrCreate?: Prisma.profilesCreateOrConnectWithoutDirectus_usersInput | Prisma.profilesCreateOrConnectWithoutDirectus_usersInput[]
+  createMany?: Prisma.profilesCreateManyDirectus_usersInputEnvelope
+  connect?: Prisma.profilesWhereUniqueInput | Prisma.profilesWhereUniqueInput[]
+}
+
+export type profilesUncheckedCreateNestedManyWithoutDirectus_usersInput = {
+  create?: Prisma.XOR<Prisma.profilesCreateWithoutDirectus_usersInput, Prisma.profilesUncheckedCreateWithoutDirectus_usersInput> | Prisma.profilesCreateWithoutDirectus_usersInput[] | Prisma.profilesUncheckedCreateWithoutDirectus_usersInput[]
+  connectOrCreate?: Prisma.profilesCreateOrConnectWithoutDirectus_usersInput | Prisma.profilesCreateOrConnectWithoutDirectus_usersInput[]
+  createMany?: Prisma.profilesCreateManyDirectus_usersInputEnvelope
+  connect?: Prisma.profilesWhereUniqueInput | Prisma.profilesWhereUniqueInput[]
+}
+
+export type profilesUpdateManyWithoutDirectus_usersNestedInput = {
+  create?: Prisma.XOR<Prisma.profilesCreateWithoutDirectus_usersInput, Prisma.profilesUncheckedCreateWithoutDirectus_usersInput> | Prisma.profilesCreateWithoutDirectus_usersInput[] | Prisma.profilesUncheckedCreateWithoutDirectus_usersInput[]
+  connectOrCreate?: Prisma.profilesCreateOrConnectWithoutDirectus_usersInput | Prisma.profilesCreateOrConnectWithoutDirectus_usersInput[]
+  upsert?: Prisma.profilesUpsertWithWhereUniqueWithoutDirectus_usersInput | Prisma.profilesUpsertWithWhereUniqueWithoutDirectus_usersInput[]
+  createMany?: Prisma.profilesCreateManyDirectus_usersInputEnvelope
+  set?: Prisma.profilesWhereUniqueInput | Prisma.profilesWhereUniqueInput[]
+  disconnect?: Prisma.profilesWhereUniqueInput | Prisma.profilesWhereUniqueInput[]
+  delete?: Prisma.profilesWhereUniqueInput | Prisma.profilesWhereUniqueInput[]
+  connect?: Prisma.profilesWhereUniqueInput | Prisma.profilesWhereUniqueInput[]
+  update?: Prisma.profilesUpdateWithWhereUniqueWithoutDirectus_usersInput | Prisma.profilesUpdateWithWhereUniqueWithoutDirectus_usersInput[]
+  updateMany?: Prisma.profilesUpdateManyWithWhereWithoutDirectus_usersInput | Prisma.profilesUpdateManyWithWhereWithoutDirectus_usersInput[]
+  deleteMany?: Prisma.profilesScalarWhereInput | Prisma.profilesScalarWhereInput[]
+}
+
+export type profilesUncheckedUpdateManyWithoutDirectus_usersNestedInput = {
+  create?: Prisma.XOR<Prisma.profilesCreateWithoutDirectus_usersInput, Prisma.profilesUncheckedCreateWithoutDirectus_usersInput> | Prisma.profilesCreateWithoutDirectus_usersInput[] | Prisma.profilesUncheckedCreateWithoutDirectus_usersInput[]
+  connectOrCreate?: Prisma.profilesCreateOrConnectWithoutDirectus_usersInput | Prisma.profilesCreateOrConnectWithoutDirectus_usersInput[]
+  upsert?: Prisma.profilesUpsertWithWhereUniqueWithoutDirectus_usersInput | Prisma.profilesUpsertWithWhereUniqueWithoutDirectus_usersInput[]
+  createMany?: Prisma.profilesCreateManyDirectus_usersInputEnvelope
+  set?: Prisma.profilesWhereUniqueInput | Prisma.profilesWhereUniqueInput[]
+  disconnect?: Prisma.profilesWhereUniqueInput | Prisma.profilesWhereUniqueInput[]
+  delete?: Prisma.profilesWhereUniqueInput | Prisma.profilesWhereUniqueInput[]
+  connect?: Prisma.profilesWhereUniqueInput | Prisma.profilesWhereUniqueInput[]
+  update?: Prisma.profilesUpdateWithWhereUniqueWithoutDirectus_usersInput | Prisma.profilesUpdateWithWhereUniqueWithoutDirectus_usersInput[]
+  updateMany?: Prisma.profilesUpdateManyWithWhereWithoutDirectus_usersInput | Prisma.profilesUpdateManyWithWhereWithoutDirectus_usersInput[]
+  deleteMany?: Prisma.profilesScalarWhereInput | Prisma.profilesScalarWhereInput[]
+}
+
 export type profilesCreateNestedOneWithoutEducationInput = {
   create?: Prisma.XOR<Prisma.profilesCreateWithoutEducationInput, Prisma.profilesUncheckedCreateWithoutEducationInput>
   connectOrCreate?: Prisma.profilesCreateOrConnectWithoutEducationInput
@@ -1601,12 +1649,96 @@ export type profilesCreateNestedOneWithoutProfile_versionsInput = {
   connect?: Prisma.profilesWhereUniqueInput
 }
 
+export type profilesCreateNestedManyWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput = {
+  create?: Prisma.XOR<Prisma.profilesCreateWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput, Prisma.profilesUncheckedCreateWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput> | Prisma.profilesCreateWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput[] | Prisma.profilesUncheckedCreateWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput[]
+  connectOrCreate?: Prisma.profilesCreateOrConnectWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput | Prisma.profilesCreateOrConnectWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput[]
+  createMany?: Prisma.profilesCreateManyProfile_versions_profiles_public_cv_versionToprofile_versionsInputEnvelope
+  connect?: Prisma.profilesWhereUniqueInput | Prisma.profilesWhereUniqueInput[]
+}
+
+export type profilesCreateNestedManyWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput = {
+  create?: Prisma.XOR<Prisma.profilesCreateWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput, Prisma.profilesUncheckedCreateWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput> | Prisma.profilesCreateWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput[] | Prisma.profilesUncheckedCreateWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput[]
+  connectOrCreate?: Prisma.profilesCreateOrConnectWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput | Prisma.profilesCreateOrConnectWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput[]
+  createMany?: Prisma.profilesCreateManyProfile_versions_profiles_public_resume_versionToprofile_versionsInputEnvelope
+  connect?: Prisma.profilesWhereUniqueInput | Prisma.profilesWhereUniqueInput[]
+}
+
+export type profilesUncheckedCreateNestedManyWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput = {
+  create?: Prisma.XOR<Prisma.profilesCreateWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput, Prisma.profilesUncheckedCreateWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput> | Prisma.profilesCreateWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput[] | Prisma.profilesUncheckedCreateWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput[]
+  connectOrCreate?: Prisma.profilesCreateOrConnectWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput | Prisma.profilesCreateOrConnectWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput[]
+  createMany?: Prisma.profilesCreateManyProfile_versions_profiles_public_cv_versionToprofile_versionsInputEnvelope
+  connect?: Prisma.profilesWhereUniqueInput | Prisma.profilesWhereUniqueInput[]
+}
+
+export type profilesUncheckedCreateNestedManyWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput = {
+  create?: Prisma.XOR<Prisma.profilesCreateWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput, Prisma.profilesUncheckedCreateWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput> | Prisma.profilesCreateWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput[] | Prisma.profilesUncheckedCreateWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput[]
+  connectOrCreate?: Prisma.profilesCreateOrConnectWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput | Prisma.profilesCreateOrConnectWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput[]
+  createMany?: Prisma.profilesCreateManyProfile_versions_profiles_public_resume_versionToprofile_versionsInputEnvelope
+  connect?: Prisma.profilesWhereUniqueInput | Prisma.profilesWhereUniqueInput[]
+}
+
 export type profilesUpdateOneRequiredWithoutProfile_versionsNestedInput = {
   create?: Prisma.XOR<Prisma.profilesCreateWithoutProfile_versionsInput, Prisma.profilesUncheckedCreateWithoutProfile_versionsInput>
   connectOrCreate?: Prisma.profilesCreateOrConnectWithoutProfile_versionsInput
   upsert?: Prisma.profilesUpsertWithoutProfile_versionsInput
   connect?: Prisma.profilesWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.profilesUpdateToOneWithWhereWithoutProfile_versionsInput, Prisma.profilesUpdateWithoutProfile_versionsInput>, Prisma.profilesUncheckedUpdateWithoutProfile_versionsInput>
+}
+
+export type profilesUpdateManyWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsNestedInput = {
+  create?: Prisma.XOR<Prisma.profilesCreateWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput, Prisma.profilesUncheckedCreateWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput> | Prisma.profilesCreateWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput[] | Prisma.profilesUncheckedCreateWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput[]
+  connectOrCreate?: Prisma.profilesCreateOrConnectWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput | Prisma.profilesCreateOrConnectWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput[]
+  upsert?: Prisma.profilesUpsertWithWhereUniqueWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput | Prisma.profilesUpsertWithWhereUniqueWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput[]
+  createMany?: Prisma.profilesCreateManyProfile_versions_profiles_public_cv_versionToprofile_versionsInputEnvelope
+  set?: Prisma.profilesWhereUniqueInput | Prisma.profilesWhereUniqueInput[]
+  disconnect?: Prisma.profilesWhereUniqueInput | Prisma.profilesWhereUniqueInput[]
+  delete?: Prisma.profilesWhereUniqueInput | Prisma.profilesWhereUniqueInput[]
+  connect?: Prisma.profilesWhereUniqueInput | Prisma.profilesWhereUniqueInput[]
+  update?: Prisma.profilesUpdateWithWhereUniqueWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput | Prisma.profilesUpdateWithWhereUniqueWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput[]
+  updateMany?: Prisma.profilesUpdateManyWithWhereWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput | Prisma.profilesUpdateManyWithWhereWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput[]
+  deleteMany?: Prisma.profilesScalarWhereInput | Prisma.profilesScalarWhereInput[]
+}
+
+export type profilesUpdateManyWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsNestedInput = {
+  create?: Prisma.XOR<Prisma.profilesCreateWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput, Prisma.profilesUncheckedCreateWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput> | Prisma.profilesCreateWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput[] | Prisma.profilesUncheckedCreateWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput[]
+  connectOrCreate?: Prisma.profilesCreateOrConnectWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput | Prisma.profilesCreateOrConnectWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput[]
+  upsert?: Prisma.profilesUpsertWithWhereUniqueWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput | Prisma.profilesUpsertWithWhereUniqueWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput[]
+  createMany?: Prisma.profilesCreateManyProfile_versions_profiles_public_resume_versionToprofile_versionsInputEnvelope
+  set?: Prisma.profilesWhereUniqueInput | Prisma.profilesWhereUniqueInput[]
+  disconnect?: Prisma.profilesWhereUniqueInput | Prisma.profilesWhereUniqueInput[]
+  delete?: Prisma.profilesWhereUniqueInput | Prisma.profilesWhereUniqueInput[]
+  connect?: Prisma.profilesWhereUniqueInput | Prisma.profilesWhereUniqueInput[]
+  update?: Prisma.profilesUpdateWithWhereUniqueWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput | Prisma.profilesUpdateWithWhereUniqueWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput[]
+  updateMany?: Prisma.profilesUpdateManyWithWhereWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput | Prisma.profilesUpdateManyWithWhereWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput[]
+  deleteMany?: Prisma.profilesScalarWhereInput | Prisma.profilesScalarWhereInput[]
+}
+
+export type profilesUncheckedUpdateManyWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsNestedInput = {
+  create?: Prisma.XOR<Prisma.profilesCreateWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput, Prisma.profilesUncheckedCreateWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput> | Prisma.profilesCreateWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput[] | Prisma.profilesUncheckedCreateWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput[]
+  connectOrCreate?: Prisma.profilesCreateOrConnectWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput | Prisma.profilesCreateOrConnectWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput[]
+  upsert?: Prisma.profilesUpsertWithWhereUniqueWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput | Prisma.profilesUpsertWithWhereUniqueWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput[]
+  createMany?: Prisma.profilesCreateManyProfile_versions_profiles_public_cv_versionToprofile_versionsInputEnvelope
+  set?: Prisma.profilesWhereUniqueInput | Prisma.profilesWhereUniqueInput[]
+  disconnect?: Prisma.profilesWhereUniqueInput | Prisma.profilesWhereUniqueInput[]
+  delete?: Prisma.profilesWhereUniqueInput | Prisma.profilesWhereUniqueInput[]
+  connect?: Prisma.profilesWhereUniqueInput | Prisma.profilesWhereUniqueInput[]
+  update?: Prisma.profilesUpdateWithWhereUniqueWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput | Prisma.profilesUpdateWithWhereUniqueWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput[]
+  updateMany?: Prisma.profilesUpdateManyWithWhereWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput | Prisma.profilesUpdateManyWithWhereWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput[]
+  deleteMany?: Prisma.profilesScalarWhereInput | Prisma.profilesScalarWhereInput[]
+}
+
+export type profilesUncheckedUpdateManyWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsNestedInput = {
+  create?: Prisma.XOR<Prisma.profilesCreateWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput, Prisma.profilesUncheckedCreateWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput> | Prisma.profilesCreateWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput[] | Prisma.profilesUncheckedCreateWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput[]
+  connectOrCreate?: Prisma.profilesCreateOrConnectWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput | Prisma.profilesCreateOrConnectWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput[]
+  upsert?: Prisma.profilesUpsertWithWhereUniqueWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput | Prisma.profilesUpsertWithWhereUniqueWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput[]
+  createMany?: Prisma.profilesCreateManyProfile_versions_profiles_public_resume_versionToprofile_versionsInputEnvelope
+  set?: Prisma.profilesWhereUniqueInput | Prisma.profilesWhereUniqueInput[]
+  disconnect?: Prisma.profilesWhereUniqueInput | Prisma.profilesWhereUniqueInput[]
+  delete?: Prisma.profilesWhereUniqueInput | Prisma.profilesWhereUniqueInput[]
+  connect?: Prisma.profilesWhereUniqueInput | Prisma.profilesWhereUniqueInput[]
+  update?: Prisma.profilesUpdateWithWhereUniqueWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput | Prisma.profilesUpdateWithWhereUniqueWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput[]
+  updateMany?: Prisma.profilesUpdateManyWithWhereWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput | Prisma.profilesUpdateManyWithWhereWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput[]
+  deleteMany?: Prisma.profilesScalarWhereInput | Prisma.profilesScalarWhereInput[]
 }
 
 export type profilesCreateNestedOneWithoutProject_storiesInput = {
@@ -1837,9 +1969,6 @@ export type profilesCreateWithoutApplicationsInput = {
   signal_profile?: string | null
   whatsapp_number?: string | null
   telegram_username?: string | null
-  user_id?: string | null
-  public_cv_version?: number | null
-  public_resume_version?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
   collected_data?: Prisma.collected_dataCreateNestedManyWithoutProfilesInput
@@ -1855,6 +1984,9 @@ export type profilesCreateWithoutApplicationsInput = {
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutProfilesInput
   profile_versions?: Prisma.profile_versionsCreateNestedManyWithoutProfilesInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutProfilesInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsInput
+  directus_users?: Prisma.directus_usersCreateNestedOneWithoutProfilesInput
   project_stories?: Prisma.project_storiesCreateNestedManyWithoutProfilesInput
   references?: Prisma.referencesCreateNestedManyWithoutProfilesInput
   salary_expectations?: Prisma.salary_expectationsCreateNestedManyWithoutProfilesInput
@@ -1990,9 +2122,6 @@ export type profilesUpdateWithoutApplicationsInput = {
   signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
   collected_data?: Prisma.collected_dataUpdateManyWithoutProfilesNestedInput
@@ -2008,6 +2137,9 @@ export type profilesUpdateWithoutApplicationsInput = {
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutProfilesNestedInput
   profile_versions?: Prisma.profile_versionsUpdateManyWithoutProfilesNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutProfilesNestedInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsNestedInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsNestedInput
+  directus_users?: Prisma.directus_usersUpdateOneWithoutProfilesNestedInput
   project_stories?: Prisma.project_storiesUpdateManyWithoutProfilesNestedInput
   references?: Prisma.referencesUpdateManyWithoutProfilesNestedInput
   salary_expectations?: Prisma.salary_expectationsUpdateManyWithoutProfilesNestedInput
@@ -2127,9 +2259,6 @@ export type profilesCreateWithoutCheat_sheetsInput = {
   signal_profile?: string | null
   whatsapp_number?: string | null
   telegram_username?: string | null
-  user_id?: string | null
-  public_cv_version?: number | null
-  public_resume_version?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   collected_data?: Prisma.collected_dataCreateNestedManyWithoutProfilesInput
@@ -2145,6 +2274,9 @@ export type profilesCreateWithoutCheat_sheetsInput = {
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutProfilesInput
   profile_versions?: Prisma.profile_versionsCreateNestedManyWithoutProfilesInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutProfilesInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsInput
+  directus_users?: Prisma.directus_usersCreateNestedOneWithoutProfilesInput
   project_stories?: Prisma.project_storiesCreateNestedManyWithoutProfilesInput
   references?: Prisma.referencesCreateNestedManyWithoutProfilesInput
   salary_expectations?: Prisma.salary_expectationsCreateNestedManyWithoutProfilesInput
@@ -2280,9 +2412,6 @@ export type profilesUpdateWithoutCheat_sheetsInput = {
   signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   collected_data?: Prisma.collected_dataUpdateManyWithoutProfilesNestedInput
@@ -2298,6 +2427,9 @@ export type profilesUpdateWithoutCheat_sheetsInput = {
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutProfilesNestedInput
   profile_versions?: Prisma.profile_versionsUpdateManyWithoutProfilesNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutProfilesNestedInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsNestedInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsNestedInput
+  directus_users?: Prisma.directus_usersUpdateOneWithoutProfilesNestedInput
   project_stories?: Prisma.project_storiesUpdateManyWithoutProfilesNestedInput
   references?: Prisma.referencesUpdateManyWithoutProfilesNestedInput
   salary_expectations?: Prisma.salary_expectationsUpdateManyWithoutProfilesNestedInput
@@ -2417,9 +2549,6 @@ export type profilesCreateWithoutCollected_dataInput = {
   signal_profile?: string | null
   whatsapp_number?: string | null
   telegram_username?: string | null
-  user_id?: string | null
-  public_cv_version?: number | null
-  public_resume_version?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -2435,6 +2564,9 @@ export type profilesCreateWithoutCollected_dataInput = {
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutProfilesInput
   profile_versions?: Prisma.profile_versionsCreateNestedManyWithoutProfilesInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutProfilesInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsInput
+  directus_users?: Prisma.directus_usersCreateNestedOneWithoutProfilesInput
   project_stories?: Prisma.project_storiesCreateNestedManyWithoutProfilesInput
   references?: Prisma.referencesCreateNestedManyWithoutProfilesInput
   salary_expectations?: Prisma.salary_expectationsCreateNestedManyWithoutProfilesInput
@@ -2570,9 +2702,6 @@ export type profilesUpdateWithoutCollected_dataInput = {
   signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -2588,6 +2717,9 @@ export type profilesUpdateWithoutCollected_dataInput = {
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutProfilesNestedInput
   profile_versions?: Prisma.profile_versionsUpdateManyWithoutProfilesNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutProfilesNestedInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsNestedInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsNestedInput
+  directus_users?: Prisma.directus_usersUpdateOneWithoutProfilesNestedInput
   project_stories?: Prisma.project_storiesUpdateManyWithoutProfilesNestedInput
   references?: Prisma.referencesUpdateManyWithoutProfilesNestedInput
   salary_expectations?: Prisma.salary_expectationsUpdateManyWithoutProfilesNestedInput
@@ -2707,9 +2839,6 @@ export type profilesCreateWithoutDirectus_filesInput = {
   signal_profile?: string | null
   whatsapp_number?: string | null
   telegram_username?: string | null
-  user_id?: string | null
-  public_cv_version?: number | null
-  public_resume_version?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -2725,6 +2854,9 @@ export type profilesCreateWithoutDirectus_filesInput = {
   platform_profiles?: Prisma.platform_profilesCreateNestedManyWithoutProfilesInput
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutProfilesInput
   profile_versions?: Prisma.profile_versionsCreateNestedManyWithoutProfilesInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsInput
+  directus_users?: Prisma.directus_usersCreateNestedOneWithoutProfilesInput
   project_stories?: Prisma.project_storiesCreateNestedManyWithoutProfilesInput
   references?: Prisma.referencesCreateNestedManyWithoutProfilesInput
   salary_expectations?: Prisma.salary_expectationsCreateNestedManyWithoutProfilesInput
@@ -2880,6 +3012,169 @@ export type profilesScalarWhereInput = {
   public_resume_version?: Prisma.IntNullableFilter<"profiles"> | number | null
 }
 
+export type profilesCreateWithoutDirectus_usersInput = {
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  name?: string | null
+  title?: string | null
+  phone_number?: string | null
+  email_address?: string | null
+  personal_website?: string | null
+  subtitle?: string | null
+  core_stack?: string | null
+  linkedin_profile?: string | null
+  github_profile?: string | null
+  stackoverflow_profile?: string | null
+  headline?: string | null
+  summary?: string | null
+  nationality?: string | null
+  location_url?: string | null
+  location_timezone?: string | null
+  sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
+  is_default?: boolean | null
+  slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
+  ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
+  applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
+  cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
+  collected_data?: Prisma.collected_dataCreateNestedManyWithoutProfilesInput
+  config?: Prisma.configCreateNestedManyWithoutProfilesInput
+  education?: Prisma.educationCreateNestedManyWithoutProfilesInput
+  highlights?: Prisma.highlightsCreateNestedManyWithoutProfilesInput
+  job_match_preferences?: Prisma.job_match_preferencesCreateNestedManyWithoutProfilesInput
+  job_matches?: Prisma.job_matchesCreateNestedManyWithoutProfilesInput
+  job_searches?: Prisma.job_searchesCreateNestedManyWithoutProfilesInput
+  languages?: Prisma.languagesCreateNestedManyWithoutProfilesInput
+  os_contributions?: Prisma.os_contributionsCreateNestedManyWithoutProfilesInput
+  platform_profiles?: Prisma.platform_profilesCreateNestedManyWithoutProfilesInput
+  profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutProfilesInput
+  profile_versions?: Prisma.profile_versionsCreateNestedManyWithoutProfilesInput
+  directus_files?: Prisma.directus_filesCreateNestedOneWithoutProfilesInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsInput
+  project_stories?: Prisma.project_storiesCreateNestedManyWithoutProfilesInput
+  references?: Prisma.referencesCreateNestedManyWithoutProfilesInput
+  salary_expectations?: Prisma.salary_expectationsCreateNestedManyWithoutProfilesInput
+  side_projects?: Prisma.side_projectsCreateNestedManyWithoutProfilesInput
+  tech_skill_categories?: Prisma.tech_skill_categoriesCreateNestedManyWithoutProfilesInput
+  work_experiences?: Prisma.work_experiencesCreateNestedManyWithoutProfilesInput
+}
+
+export type profilesUncheckedCreateWithoutDirectus_usersInput = {
+  id?: number
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  name?: string | null
+  title?: string | null
+  phone_number?: string | null
+  email_address?: string | null
+  personal_website?: string | null
+  subtitle?: string | null
+  core_stack?: string | null
+  linkedin_profile?: string | null
+  github_profile?: string | null
+  stackoverflow_profile?: string | null
+  headline?: string | null
+  profile_picture?: string | null
+  summary?: string | null
+  nationality?: string | null
+  location_url?: string | null
+  location_timezone?: string | null
+  sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
+  is_default?: boolean | null
+  slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
+  public_cv_version?: number | null
+  public_resume_version?: number | null
+  ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
+  applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
+  cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
+  collected_data?: Prisma.collected_dataUncheckedCreateNestedManyWithoutProfilesInput
+  config?: Prisma.configUncheckedCreateNestedManyWithoutProfilesInput
+  education?: Prisma.educationUncheckedCreateNestedManyWithoutProfilesInput
+  highlights?: Prisma.highlightsUncheckedCreateNestedManyWithoutProfilesInput
+  job_match_preferences?: Prisma.job_match_preferencesUncheckedCreateNestedManyWithoutProfilesInput
+  job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutProfilesInput
+  job_searches?: Prisma.job_searchesUncheckedCreateNestedManyWithoutProfilesInput
+  languages?: Prisma.languagesUncheckedCreateNestedManyWithoutProfilesInput
+  os_contributions?: Prisma.os_contributionsUncheckedCreateNestedManyWithoutProfilesInput
+  platform_profiles?: Prisma.platform_profilesUncheckedCreateNestedManyWithoutProfilesInput
+  profile_exports?: Prisma.profile_exportsUncheckedCreateNestedManyWithoutProfilesInput
+  profile_versions?: Prisma.profile_versionsUncheckedCreateNestedManyWithoutProfilesInput
+  project_stories?: Prisma.project_storiesUncheckedCreateNestedManyWithoutProfilesInput
+  references?: Prisma.referencesUncheckedCreateNestedManyWithoutProfilesInput
+  salary_expectations?: Prisma.salary_expectationsUncheckedCreateNestedManyWithoutProfilesInput
+  side_projects?: Prisma.side_projectsUncheckedCreateNestedManyWithoutProfilesInput
+  tech_skill_categories?: Prisma.tech_skill_categoriesUncheckedCreateNestedManyWithoutProfilesInput
+  work_experiences?: Prisma.work_experiencesUncheckedCreateNestedManyWithoutProfilesInput
+}
+
+export type profilesCreateOrConnectWithoutDirectus_usersInput = {
+  where: Prisma.profilesWhereUniqueInput
+  create: Prisma.XOR<Prisma.profilesCreateWithoutDirectus_usersInput, Prisma.profilesUncheckedCreateWithoutDirectus_usersInput>
+}
+
+export type profilesCreateManyDirectus_usersInputEnvelope = {
+  data: Prisma.profilesCreateManyDirectus_usersInput | Prisma.profilesCreateManyDirectus_usersInput[]
+  skipDuplicates?: boolean
+}
+
+export type profilesUpsertWithWhereUniqueWithoutDirectus_usersInput = {
+  where: Prisma.profilesWhereUniqueInput
+  update: Prisma.XOR<Prisma.profilesUpdateWithoutDirectus_usersInput, Prisma.profilesUncheckedUpdateWithoutDirectus_usersInput>
+  create: Prisma.XOR<Prisma.profilesCreateWithoutDirectus_usersInput, Prisma.profilesUncheckedCreateWithoutDirectus_usersInput>
+}
+
+export type profilesUpdateWithWhereUniqueWithoutDirectus_usersInput = {
+  where: Prisma.profilesWhereUniqueInput
+  data: Prisma.XOR<Prisma.profilesUpdateWithoutDirectus_usersInput, Prisma.profilesUncheckedUpdateWithoutDirectus_usersInput>
+}
+
+export type profilesUpdateManyWithWhereWithoutDirectus_usersInput = {
+  where: Prisma.profilesScalarWhereInput
+  data: Prisma.XOR<Prisma.profilesUpdateManyMutationInput, Prisma.profilesUncheckedUpdateManyWithoutDirectus_usersInput>
+}
+
 export type profilesCreateWithoutEducationInput = {
   date_created?: Date | string | null
   date_updated?: Date | string | null
@@ -2922,9 +3217,6 @@ export type profilesCreateWithoutEducationInput = {
   signal_profile?: string | null
   whatsapp_number?: string | null
   telegram_username?: string | null
-  user_id?: string | null
-  public_cv_version?: number | null
-  public_resume_version?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -2940,6 +3232,9 @@ export type profilesCreateWithoutEducationInput = {
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutProfilesInput
   profile_versions?: Prisma.profile_versionsCreateNestedManyWithoutProfilesInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutProfilesInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsInput
+  directus_users?: Prisma.directus_usersCreateNestedOneWithoutProfilesInput
   project_stories?: Prisma.project_storiesCreateNestedManyWithoutProfilesInput
   references?: Prisma.referencesCreateNestedManyWithoutProfilesInput
   salary_expectations?: Prisma.salary_expectationsCreateNestedManyWithoutProfilesInput
@@ -3075,9 +3370,6 @@ export type profilesUpdateWithoutEducationInput = {
   signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -3093,6 +3385,9 @@ export type profilesUpdateWithoutEducationInput = {
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutProfilesNestedInput
   profile_versions?: Prisma.profile_versionsUpdateManyWithoutProfilesNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutProfilesNestedInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsNestedInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsNestedInput
+  directus_users?: Prisma.directus_usersUpdateOneWithoutProfilesNestedInput
   project_stories?: Prisma.project_storiesUpdateManyWithoutProfilesNestedInput
   references?: Prisma.referencesUpdateManyWithoutProfilesNestedInput
   salary_expectations?: Prisma.salary_expectationsUpdateManyWithoutProfilesNestedInput
@@ -3212,9 +3507,6 @@ export type profilesCreateWithoutHighlightsInput = {
   signal_profile?: string | null
   whatsapp_number?: string | null
   telegram_username?: string | null
-  user_id?: string | null
-  public_cv_version?: number | null
-  public_resume_version?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -3230,6 +3522,9 @@ export type profilesCreateWithoutHighlightsInput = {
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutProfilesInput
   profile_versions?: Prisma.profile_versionsCreateNestedManyWithoutProfilesInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutProfilesInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsInput
+  directus_users?: Prisma.directus_usersCreateNestedOneWithoutProfilesInput
   project_stories?: Prisma.project_storiesCreateNestedManyWithoutProfilesInput
   references?: Prisma.referencesCreateNestedManyWithoutProfilesInput
   salary_expectations?: Prisma.salary_expectationsCreateNestedManyWithoutProfilesInput
@@ -3365,9 +3660,6 @@ export type profilesUpdateWithoutHighlightsInput = {
   signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -3383,6 +3675,9 @@ export type profilesUpdateWithoutHighlightsInput = {
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutProfilesNestedInput
   profile_versions?: Prisma.profile_versionsUpdateManyWithoutProfilesNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutProfilesNestedInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsNestedInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsNestedInput
+  directus_users?: Prisma.directus_usersUpdateOneWithoutProfilesNestedInput
   project_stories?: Prisma.project_storiesUpdateManyWithoutProfilesNestedInput
   references?: Prisma.referencesUpdateManyWithoutProfilesNestedInput
   salary_expectations?: Prisma.salary_expectationsUpdateManyWithoutProfilesNestedInput
@@ -3502,9 +3797,6 @@ export type profilesCreateWithoutLanguagesInput = {
   signal_profile?: string | null
   whatsapp_number?: string | null
   telegram_username?: string | null
-  user_id?: string | null
-  public_cv_version?: number | null
-  public_resume_version?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -3520,6 +3812,9 @@ export type profilesCreateWithoutLanguagesInput = {
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutProfilesInput
   profile_versions?: Prisma.profile_versionsCreateNestedManyWithoutProfilesInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutProfilesInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsInput
+  directus_users?: Prisma.directus_usersCreateNestedOneWithoutProfilesInput
   project_stories?: Prisma.project_storiesCreateNestedManyWithoutProfilesInput
   references?: Prisma.referencesCreateNestedManyWithoutProfilesInput
   salary_expectations?: Prisma.salary_expectationsCreateNestedManyWithoutProfilesInput
@@ -3655,9 +3950,6 @@ export type profilesUpdateWithoutLanguagesInput = {
   signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -3673,6 +3965,9 @@ export type profilesUpdateWithoutLanguagesInput = {
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutProfilesNestedInput
   profile_versions?: Prisma.profile_versionsUpdateManyWithoutProfilesNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutProfilesNestedInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsNestedInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsNestedInput
+  directus_users?: Prisma.directus_usersUpdateOneWithoutProfilesNestedInput
   project_stories?: Prisma.project_storiesUpdateManyWithoutProfilesNestedInput
   references?: Prisma.referencesUpdateManyWithoutProfilesNestedInput
   salary_expectations?: Prisma.salary_expectationsUpdateManyWithoutProfilesNestedInput
@@ -3792,9 +4087,6 @@ export type profilesCreateWithoutPlatform_profilesInput = {
   signal_profile?: string | null
   whatsapp_number?: string | null
   telegram_username?: string | null
-  user_id?: string | null
-  public_cv_version?: number | null
-  public_resume_version?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -3810,6 +4102,9 @@ export type profilesCreateWithoutPlatform_profilesInput = {
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutProfilesInput
   profile_versions?: Prisma.profile_versionsCreateNestedManyWithoutProfilesInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutProfilesInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsInput
+  directus_users?: Prisma.directus_usersCreateNestedOneWithoutProfilesInput
   project_stories?: Prisma.project_storiesCreateNestedManyWithoutProfilesInput
   references?: Prisma.referencesCreateNestedManyWithoutProfilesInput
   salary_expectations?: Prisma.salary_expectationsCreateNestedManyWithoutProfilesInput
@@ -3945,9 +4240,6 @@ export type profilesUpdateWithoutPlatform_profilesInput = {
   signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -3963,6 +4255,9 @@ export type profilesUpdateWithoutPlatform_profilesInput = {
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutProfilesNestedInput
   profile_versions?: Prisma.profile_versionsUpdateManyWithoutProfilesNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutProfilesNestedInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsNestedInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsNestedInput
+  directus_users?: Prisma.directus_usersUpdateOneWithoutProfilesNestedInput
   project_stories?: Prisma.project_storiesUpdateManyWithoutProfilesNestedInput
   references?: Prisma.referencesUpdateManyWithoutProfilesNestedInput
   salary_expectations?: Prisma.salary_expectationsUpdateManyWithoutProfilesNestedInput
@@ -4082,9 +4377,6 @@ export type profilesCreateWithoutProfile_versionsInput = {
   signal_profile?: string | null
   whatsapp_number?: string | null
   telegram_username?: string | null
-  user_id?: string | null
-  public_cv_version?: number | null
-  public_resume_version?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -4100,6 +4392,9 @@ export type profilesCreateWithoutProfile_versionsInput = {
   platform_profiles?: Prisma.platform_profilesCreateNestedManyWithoutProfilesInput
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutProfilesInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutProfilesInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsInput
+  directus_users?: Prisma.directus_usersCreateNestedOneWithoutProfilesInput
   project_stories?: Prisma.project_storiesCreateNestedManyWithoutProfilesInput
   references?: Prisma.referencesCreateNestedManyWithoutProfilesInput
   salary_expectations?: Prisma.salary_expectationsCreateNestedManyWithoutProfilesInput
@@ -4182,6 +4477,300 @@ export type profilesCreateOrConnectWithoutProfile_versionsInput = {
   create: Prisma.XOR<Prisma.profilesCreateWithoutProfile_versionsInput, Prisma.profilesUncheckedCreateWithoutProfile_versionsInput>
 }
 
+export type profilesCreateWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput = {
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  name?: string | null
+  title?: string | null
+  phone_number?: string | null
+  email_address?: string | null
+  personal_website?: string | null
+  subtitle?: string | null
+  core_stack?: string | null
+  linkedin_profile?: string | null
+  github_profile?: string | null
+  stackoverflow_profile?: string | null
+  headline?: string | null
+  summary?: string | null
+  nationality?: string | null
+  location_url?: string | null
+  location_timezone?: string | null
+  sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
+  is_default?: boolean | null
+  slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
+  ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
+  applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
+  cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
+  collected_data?: Prisma.collected_dataCreateNestedManyWithoutProfilesInput
+  config?: Prisma.configCreateNestedManyWithoutProfilesInput
+  education?: Prisma.educationCreateNestedManyWithoutProfilesInput
+  highlights?: Prisma.highlightsCreateNestedManyWithoutProfilesInput
+  job_match_preferences?: Prisma.job_match_preferencesCreateNestedManyWithoutProfilesInput
+  job_matches?: Prisma.job_matchesCreateNestedManyWithoutProfilesInput
+  job_searches?: Prisma.job_searchesCreateNestedManyWithoutProfilesInput
+  languages?: Prisma.languagesCreateNestedManyWithoutProfilesInput
+  os_contributions?: Prisma.os_contributionsCreateNestedManyWithoutProfilesInput
+  platform_profiles?: Prisma.platform_profilesCreateNestedManyWithoutProfilesInput
+  profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutProfilesInput
+  profile_versions?: Prisma.profile_versionsCreateNestedManyWithoutProfilesInput
+  directus_files?: Prisma.directus_filesCreateNestedOneWithoutProfilesInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsInput
+  directus_users?: Prisma.directus_usersCreateNestedOneWithoutProfilesInput
+  project_stories?: Prisma.project_storiesCreateNestedManyWithoutProfilesInput
+  references?: Prisma.referencesCreateNestedManyWithoutProfilesInput
+  salary_expectations?: Prisma.salary_expectationsCreateNestedManyWithoutProfilesInput
+  side_projects?: Prisma.side_projectsCreateNestedManyWithoutProfilesInput
+  tech_skill_categories?: Prisma.tech_skill_categoriesCreateNestedManyWithoutProfilesInput
+  work_experiences?: Prisma.work_experiencesCreateNestedManyWithoutProfilesInput
+}
+
+export type profilesUncheckedCreateWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput = {
+  id?: number
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  name?: string | null
+  title?: string | null
+  phone_number?: string | null
+  email_address?: string | null
+  personal_website?: string | null
+  subtitle?: string | null
+  core_stack?: string | null
+  linkedin_profile?: string | null
+  github_profile?: string | null
+  stackoverflow_profile?: string | null
+  headline?: string | null
+  profile_picture?: string | null
+  summary?: string | null
+  nationality?: string | null
+  location_url?: string | null
+  location_timezone?: string | null
+  sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
+  is_default?: boolean | null
+  slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
+  user_id?: string | null
+  public_resume_version?: number | null
+  ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
+  applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
+  cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
+  collected_data?: Prisma.collected_dataUncheckedCreateNestedManyWithoutProfilesInput
+  config?: Prisma.configUncheckedCreateNestedManyWithoutProfilesInput
+  education?: Prisma.educationUncheckedCreateNestedManyWithoutProfilesInput
+  highlights?: Prisma.highlightsUncheckedCreateNestedManyWithoutProfilesInput
+  job_match_preferences?: Prisma.job_match_preferencesUncheckedCreateNestedManyWithoutProfilesInput
+  job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutProfilesInput
+  job_searches?: Prisma.job_searchesUncheckedCreateNestedManyWithoutProfilesInput
+  languages?: Prisma.languagesUncheckedCreateNestedManyWithoutProfilesInput
+  os_contributions?: Prisma.os_contributionsUncheckedCreateNestedManyWithoutProfilesInput
+  platform_profiles?: Prisma.platform_profilesUncheckedCreateNestedManyWithoutProfilesInput
+  profile_exports?: Prisma.profile_exportsUncheckedCreateNestedManyWithoutProfilesInput
+  profile_versions?: Prisma.profile_versionsUncheckedCreateNestedManyWithoutProfilesInput
+  project_stories?: Prisma.project_storiesUncheckedCreateNestedManyWithoutProfilesInput
+  references?: Prisma.referencesUncheckedCreateNestedManyWithoutProfilesInput
+  salary_expectations?: Prisma.salary_expectationsUncheckedCreateNestedManyWithoutProfilesInput
+  side_projects?: Prisma.side_projectsUncheckedCreateNestedManyWithoutProfilesInput
+  tech_skill_categories?: Prisma.tech_skill_categoriesUncheckedCreateNestedManyWithoutProfilesInput
+  work_experiences?: Prisma.work_experiencesUncheckedCreateNestedManyWithoutProfilesInput
+}
+
+export type profilesCreateOrConnectWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput = {
+  where: Prisma.profilesWhereUniqueInput
+  create: Prisma.XOR<Prisma.profilesCreateWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput, Prisma.profilesUncheckedCreateWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput>
+}
+
+export type profilesCreateManyProfile_versions_profiles_public_cv_versionToprofile_versionsInputEnvelope = {
+  data: Prisma.profilesCreateManyProfile_versions_profiles_public_cv_versionToprofile_versionsInput | Prisma.profilesCreateManyProfile_versions_profiles_public_cv_versionToprofile_versionsInput[]
+  skipDuplicates?: boolean
+}
+
+export type profilesCreateWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput = {
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  name?: string | null
+  title?: string | null
+  phone_number?: string | null
+  email_address?: string | null
+  personal_website?: string | null
+  subtitle?: string | null
+  core_stack?: string | null
+  linkedin_profile?: string | null
+  github_profile?: string | null
+  stackoverflow_profile?: string | null
+  headline?: string | null
+  summary?: string | null
+  nationality?: string | null
+  location_url?: string | null
+  location_timezone?: string | null
+  sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
+  is_default?: boolean | null
+  slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
+  ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
+  applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
+  cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
+  collected_data?: Prisma.collected_dataCreateNestedManyWithoutProfilesInput
+  config?: Prisma.configCreateNestedManyWithoutProfilesInput
+  education?: Prisma.educationCreateNestedManyWithoutProfilesInput
+  highlights?: Prisma.highlightsCreateNestedManyWithoutProfilesInput
+  job_match_preferences?: Prisma.job_match_preferencesCreateNestedManyWithoutProfilesInput
+  job_matches?: Prisma.job_matchesCreateNestedManyWithoutProfilesInput
+  job_searches?: Prisma.job_searchesCreateNestedManyWithoutProfilesInput
+  languages?: Prisma.languagesCreateNestedManyWithoutProfilesInput
+  os_contributions?: Prisma.os_contributionsCreateNestedManyWithoutProfilesInput
+  platform_profiles?: Prisma.platform_profilesCreateNestedManyWithoutProfilesInput
+  profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutProfilesInput
+  profile_versions?: Prisma.profile_versionsCreateNestedManyWithoutProfilesInput
+  directus_files?: Prisma.directus_filesCreateNestedOneWithoutProfilesInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsInput
+  directus_users?: Prisma.directus_usersCreateNestedOneWithoutProfilesInput
+  project_stories?: Prisma.project_storiesCreateNestedManyWithoutProfilesInput
+  references?: Prisma.referencesCreateNestedManyWithoutProfilesInput
+  salary_expectations?: Prisma.salary_expectationsCreateNestedManyWithoutProfilesInput
+  side_projects?: Prisma.side_projectsCreateNestedManyWithoutProfilesInput
+  tech_skill_categories?: Prisma.tech_skill_categoriesCreateNestedManyWithoutProfilesInput
+  work_experiences?: Prisma.work_experiencesCreateNestedManyWithoutProfilesInput
+}
+
+export type profilesUncheckedCreateWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput = {
+  id?: number
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  name?: string | null
+  title?: string | null
+  phone_number?: string | null
+  email_address?: string | null
+  personal_website?: string | null
+  subtitle?: string | null
+  core_stack?: string | null
+  linkedin_profile?: string | null
+  github_profile?: string | null
+  stackoverflow_profile?: string | null
+  headline?: string | null
+  profile_picture?: string | null
+  summary?: string | null
+  nationality?: string | null
+  location_url?: string | null
+  location_timezone?: string | null
+  sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
+  is_default?: boolean | null
+  slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
+  user_id?: string | null
+  public_cv_version?: number | null
+  ai_chat?: Prisma.ai_chatUncheckedCreateNestedManyWithoutProfilesInput
+  applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
+  cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
+  collected_data?: Prisma.collected_dataUncheckedCreateNestedManyWithoutProfilesInput
+  config?: Prisma.configUncheckedCreateNestedManyWithoutProfilesInput
+  education?: Prisma.educationUncheckedCreateNestedManyWithoutProfilesInput
+  highlights?: Prisma.highlightsUncheckedCreateNestedManyWithoutProfilesInput
+  job_match_preferences?: Prisma.job_match_preferencesUncheckedCreateNestedManyWithoutProfilesInput
+  job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutProfilesInput
+  job_searches?: Prisma.job_searchesUncheckedCreateNestedManyWithoutProfilesInput
+  languages?: Prisma.languagesUncheckedCreateNestedManyWithoutProfilesInput
+  os_contributions?: Prisma.os_contributionsUncheckedCreateNestedManyWithoutProfilesInput
+  platform_profiles?: Prisma.platform_profilesUncheckedCreateNestedManyWithoutProfilesInput
+  profile_exports?: Prisma.profile_exportsUncheckedCreateNestedManyWithoutProfilesInput
+  profile_versions?: Prisma.profile_versionsUncheckedCreateNestedManyWithoutProfilesInput
+  project_stories?: Prisma.project_storiesUncheckedCreateNestedManyWithoutProfilesInput
+  references?: Prisma.referencesUncheckedCreateNestedManyWithoutProfilesInput
+  salary_expectations?: Prisma.salary_expectationsUncheckedCreateNestedManyWithoutProfilesInput
+  side_projects?: Prisma.side_projectsUncheckedCreateNestedManyWithoutProfilesInput
+  tech_skill_categories?: Prisma.tech_skill_categoriesUncheckedCreateNestedManyWithoutProfilesInput
+  work_experiences?: Prisma.work_experiencesUncheckedCreateNestedManyWithoutProfilesInput
+}
+
+export type profilesCreateOrConnectWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput = {
+  where: Prisma.profilesWhereUniqueInput
+  create: Prisma.XOR<Prisma.profilesCreateWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput, Prisma.profilesUncheckedCreateWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput>
+}
+
+export type profilesCreateManyProfile_versions_profiles_public_resume_versionToprofile_versionsInputEnvelope = {
+  data: Prisma.profilesCreateManyProfile_versions_profiles_public_resume_versionToprofile_versionsInput | Prisma.profilesCreateManyProfile_versions_profiles_public_resume_versionToprofile_versionsInput[]
+  skipDuplicates?: boolean
+}
+
 export type profilesUpsertWithoutProfile_versionsInput = {
   update: Prisma.XOR<Prisma.profilesUpdateWithoutProfile_versionsInput, Prisma.profilesUncheckedUpdateWithoutProfile_versionsInput>
   create: Prisma.XOR<Prisma.profilesCreateWithoutProfile_versionsInput, Prisma.profilesUncheckedCreateWithoutProfile_versionsInput>
@@ -4235,9 +4824,6 @@ export type profilesUpdateWithoutProfile_versionsInput = {
   signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -4253,6 +4839,9 @@ export type profilesUpdateWithoutProfile_versionsInput = {
   platform_profiles?: Prisma.platform_profilesUpdateManyWithoutProfilesNestedInput
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutProfilesNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutProfilesNestedInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsNestedInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsNestedInput
+  directus_users?: Prisma.directus_usersUpdateOneWithoutProfilesNestedInput
   project_stories?: Prisma.project_storiesUpdateManyWithoutProfilesNestedInput
   references?: Prisma.referencesUpdateManyWithoutProfilesNestedInput
   salary_expectations?: Prisma.salary_expectationsUpdateManyWithoutProfilesNestedInput
@@ -4330,6 +4919,38 @@ export type profilesUncheckedUpdateWithoutProfile_versionsInput = {
   work_experiences?: Prisma.work_experiencesUncheckedUpdateManyWithoutProfilesNestedInput
 }
 
+export type profilesUpsertWithWhereUniqueWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput = {
+  where: Prisma.profilesWhereUniqueInput
+  update: Prisma.XOR<Prisma.profilesUpdateWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput, Prisma.profilesUncheckedUpdateWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput>
+  create: Prisma.XOR<Prisma.profilesCreateWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput, Prisma.profilesUncheckedCreateWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput>
+}
+
+export type profilesUpdateWithWhereUniqueWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput = {
+  where: Prisma.profilesWhereUniqueInput
+  data: Prisma.XOR<Prisma.profilesUpdateWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput, Prisma.profilesUncheckedUpdateWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput>
+}
+
+export type profilesUpdateManyWithWhereWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput = {
+  where: Prisma.profilesScalarWhereInput
+  data: Prisma.XOR<Prisma.profilesUpdateManyMutationInput, Prisma.profilesUncheckedUpdateManyWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput>
+}
+
+export type profilesUpsertWithWhereUniqueWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput = {
+  where: Prisma.profilesWhereUniqueInput
+  update: Prisma.XOR<Prisma.profilesUpdateWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput, Prisma.profilesUncheckedUpdateWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput>
+  create: Prisma.XOR<Prisma.profilesCreateWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput, Prisma.profilesUncheckedCreateWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput>
+}
+
+export type profilesUpdateWithWhereUniqueWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput = {
+  where: Prisma.profilesWhereUniqueInput
+  data: Prisma.XOR<Prisma.profilesUpdateWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput, Prisma.profilesUncheckedUpdateWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput>
+}
+
+export type profilesUpdateManyWithWhereWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput = {
+  where: Prisma.profilesScalarWhereInput
+  data: Prisma.XOR<Prisma.profilesUpdateManyMutationInput, Prisma.profilesUncheckedUpdateManyWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput>
+}
+
 export type profilesCreateWithoutProject_storiesInput = {
   date_created?: Date | string | null
   date_updated?: Date | string | null
@@ -4372,9 +4993,6 @@ export type profilesCreateWithoutProject_storiesInput = {
   signal_profile?: string | null
   whatsapp_number?: string | null
   telegram_username?: string | null
-  user_id?: string | null
-  public_cv_version?: number | null
-  public_resume_version?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -4391,6 +5009,9 @@ export type profilesCreateWithoutProject_storiesInput = {
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutProfilesInput
   profile_versions?: Prisma.profile_versionsCreateNestedManyWithoutProfilesInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutProfilesInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsInput
+  directus_users?: Prisma.directus_usersCreateNestedOneWithoutProfilesInput
   references?: Prisma.referencesCreateNestedManyWithoutProfilesInput
   salary_expectations?: Prisma.salary_expectationsCreateNestedManyWithoutProfilesInput
   side_projects?: Prisma.side_projectsCreateNestedManyWithoutProfilesInput
@@ -4525,9 +5146,6 @@ export type profilesUpdateWithoutProject_storiesInput = {
   signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -4544,6 +5162,9 @@ export type profilesUpdateWithoutProject_storiesInput = {
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutProfilesNestedInput
   profile_versions?: Prisma.profile_versionsUpdateManyWithoutProfilesNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutProfilesNestedInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsNestedInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsNestedInput
+  directus_users?: Prisma.directus_usersUpdateOneWithoutProfilesNestedInput
   references?: Prisma.referencesUpdateManyWithoutProfilesNestedInput
   salary_expectations?: Prisma.salary_expectationsUpdateManyWithoutProfilesNestedInput
   side_projects?: Prisma.side_projectsUpdateManyWithoutProfilesNestedInput
@@ -4662,9 +5283,6 @@ export type profilesCreateWithoutReferencesInput = {
   signal_profile?: string | null
   whatsapp_number?: string | null
   telegram_username?: string | null
-  user_id?: string | null
-  public_cv_version?: number | null
-  public_resume_version?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -4681,6 +5299,9 @@ export type profilesCreateWithoutReferencesInput = {
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutProfilesInput
   profile_versions?: Prisma.profile_versionsCreateNestedManyWithoutProfilesInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutProfilesInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsInput
+  directus_users?: Prisma.directus_usersCreateNestedOneWithoutProfilesInput
   project_stories?: Prisma.project_storiesCreateNestedManyWithoutProfilesInput
   salary_expectations?: Prisma.salary_expectationsCreateNestedManyWithoutProfilesInput
   side_projects?: Prisma.side_projectsCreateNestedManyWithoutProfilesInput
@@ -4815,9 +5436,6 @@ export type profilesUpdateWithoutReferencesInput = {
   signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -4834,6 +5452,9 @@ export type profilesUpdateWithoutReferencesInput = {
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutProfilesNestedInput
   profile_versions?: Prisma.profile_versionsUpdateManyWithoutProfilesNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutProfilesNestedInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsNestedInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsNestedInput
+  directus_users?: Prisma.directus_usersUpdateOneWithoutProfilesNestedInput
   project_stories?: Prisma.project_storiesUpdateManyWithoutProfilesNestedInput
   salary_expectations?: Prisma.salary_expectationsUpdateManyWithoutProfilesNestedInput
   side_projects?: Prisma.side_projectsUpdateManyWithoutProfilesNestedInput
@@ -4952,9 +5573,6 @@ export type profilesCreateWithoutSalary_expectationsInput = {
   signal_profile?: string | null
   whatsapp_number?: string | null
   telegram_username?: string | null
-  user_id?: string | null
-  public_cv_version?: number | null
-  public_resume_version?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -4971,6 +5589,9 @@ export type profilesCreateWithoutSalary_expectationsInput = {
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutProfilesInput
   profile_versions?: Prisma.profile_versionsCreateNestedManyWithoutProfilesInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutProfilesInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsInput
+  directus_users?: Prisma.directus_usersCreateNestedOneWithoutProfilesInput
   project_stories?: Prisma.project_storiesCreateNestedManyWithoutProfilesInput
   references?: Prisma.referencesCreateNestedManyWithoutProfilesInput
   side_projects?: Prisma.side_projectsCreateNestedManyWithoutProfilesInput
@@ -5105,9 +5726,6 @@ export type profilesUpdateWithoutSalary_expectationsInput = {
   signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -5124,6 +5742,9 @@ export type profilesUpdateWithoutSalary_expectationsInput = {
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutProfilesNestedInput
   profile_versions?: Prisma.profile_versionsUpdateManyWithoutProfilesNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutProfilesNestedInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsNestedInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsNestedInput
+  directus_users?: Prisma.directus_usersUpdateOneWithoutProfilesNestedInput
   project_stories?: Prisma.project_storiesUpdateManyWithoutProfilesNestedInput
   references?: Prisma.referencesUpdateManyWithoutProfilesNestedInput
   side_projects?: Prisma.side_projectsUpdateManyWithoutProfilesNestedInput
@@ -5242,9 +5863,6 @@ export type profilesCreateWithoutSide_projectsInput = {
   signal_profile?: string | null
   whatsapp_number?: string | null
   telegram_username?: string | null
-  user_id?: string | null
-  public_cv_version?: number | null
-  public_resume_version?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -5261,6 +5879,9 @@ export type profilesCreateWithoutSide_projectsInput = {
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutProfilesInput
   profile_versions?: Prisma.profile_versionsCreateNestedManyWithoutProfilesInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutProfilesInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsInput
+  directus_users?: Prisma.directus_usersCreateNestedOneWithoutProfilesInput
   project_stories?: Prisma.project_storiesCreateNestedManyWithoutProfilesInput
   references?: Prisma.referencesCreateNestedManyWithoutProfilesInput
   salary_expectations?: Prisma.salary_expectationsCreateNestedManyWithoutProfilesInput
@@ -5395,9 +6016,6 @@ export type profilesUpdateWithoutSide_projectsInput = {
   signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -5414,6 +6032,9 @@ export type profilesUpdateWithoutSide_projectsInput = {
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutProfilesNestedInput
   profile_versions?: Prisma.profile_versionsUpdateManyWithoutProfilesNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutProfilesNestedInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsNestedInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsNestedInput
+  directus_users?: Prisma.directus_usersUpdateOneWithoutProfilesNestedInput
   project_stories?: Prisma.project_storiesUpdateManyWithoutProfilesNestedInput
   references?: Prisma.referencesUpdateManyWithoutProfilesNestedInput
   salary_expectations?: Prisma.salary_expectationsUpdateManyWithoutProfilesNestedInput
@@ -5532,9 +6153,6 @@ export type profilesCreateWithoutTech_skill_categoriesInput = {
   signal_profile?: string | null
   whatsapp_number?: string | null
   telegram_username?: string | null
-  user_id?: string | null
-  public_cv_version?: number | null
-  public_resume_version?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -5551,6 +6169,9 @@ export type profilesCreateWithoutTech_skill_categoriesInput = {
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutProfilesInput
   profile_versions?: Prisma.profile_versionsCreateNestedManyWithoutProfilesInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutProfilesInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsInput
+  directus_users?: Prisma.directus_usersCreateNestedOneWithoutProfilesInput
   project_stories?: Prisma.project_storiesCreateNestedManyWithoutProfilesInput
   references?: Prisma.referencesCreateNestedManyWithoutProfilesInput
   salary_expectations?: Prisma.salary_expectationsCreateNestedManyWithoutProfilesInput
@@ -5685,9 +6306,6 @@ export type profilesUpdateWithoutTech_skill_categoriesInput = {
   signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -5704,6 +6322,9 @@ export type profilesUpdateWithoutTech_skill_categoriesInput = {
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutProfilesNestedInput
   profile_versions?: Prisma.profile_versionsUpdateManyWithoutProfilesNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutProfilesNestedInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsNestedInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsNestedInput
+  directus_users?: Prisma.directus_usersUpdateOneWithoutProfilesNestedInput
   project_stories?: Prisma.project_storiesUpdateManyWithoutProfilesNestedInput
   references?: Prisma.referencesUpdateManyWithoutProfilesNestedInput
   salary_expectations?: Prisma.salary_expectationsUpdateManyWithoutProfilesNestedInput
@@ -5822,9 +6443,6 @@ export type profilesCreateWithoutWork_experiencesInput = {
   signal_profile?: string | null
   whatsapp_number?: string | null
   telegram_username?: string | null
-  user_id?: string | null
-  public_cv_version?: number | null
-  public_resume_version?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -5841,6 +6459,9 @@ export type profilesCreateWithoutWork_experiencesInput = {
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutProfilesInput
   profile_versions?: Prisma.profile_versionsCreateNestedManyWithoutProfilesInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutProfilesInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsInput
+  directus_users?: Prisma.directus_usersCreateNestedOneWithoutProfilesInput
   project_stories?: Prisma.project_storiesCreateNestedManyWithoutProfilesInput
   references?: Prisma.referencesCreateNestedManyWithoutProfilesInput
   salary_expectations?: Prisma.salary_expectationsCreateNestedManyWithoutProfilesInput
@@ -5975,9 +6596,6 @@ export type profilesUpdateWithoutWork_experiencesInput = {
   signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -5994,6 +6612,9 @@ export type profilesUpdateWithoutWork_experiencesInput = {
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutProfilesNestedInput
   profile_versions?: Prisma.profile_versionsUpdateManyWithoutProfilesNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutProfilesNestedInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsNestedInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsNestedInput
+  directus_users?: Prisma.directus_usersUpdateOneWithoutProfilesNestedInput
   project_stories?: Prisma.project_storiesUpdateManyWithoutProfilesNestedInput
   references?: Prisma.referencesUpdateManyWithoutProfilesNestedInput
   salary_expectations?: Prisma.salary_expectationsUpdateManyWithoutProfilesNestedInput
@@ -6112,9 +6733,6 @@ export type profilesCreateWithoutAi_chatInput = {
   signal_profile?: string | null
   whatsapp_number?: string | null
   telegram_username?: string | null
-  user_id?: string | null
-  public_cv_version?: number | null
-  public_resume_version?: number | null
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
   collected_data?: Prisma.collected_dataCreateNestedManyWithoutProfilesInput
@@ -6130,6 +6748,9 @@ export type profilesCreateWithoutAi_chatInput = {
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutProfilesInput
   profile_versions?: Prisma.profile_versionsCreateNestedManyWithoutProfilesInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutProfilesInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsInput
+  directus_users?: Prisma.directus_usersCreateNestedOneWithoutProfilesInput
   project_stories?: Prisma.project_storiesCreateNestedManyWithoutProfilesInput
   references?: Prisma.referencesCreateNestedManyWithoutProfilesInput
   salary_expectations?: Prisma.salary_expectationsCreateNestedManyWithoutProfilesInput
@@ -6265,9 +6886,6 @@ export type profilesUpdateWithoutAi_chatInput = {
   signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
   collected_data?: Prisma.collected_dataUpdateManyWithoutProfilesNestedInput
@@ -6283,6 +6901,9 @@ export type profilesUpdateWithoutAi_chatInput = {
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutProfilesNestedInput
   profile_versions?: Prisma.profile_versionsUpdateManyWithoutProfilesNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutProfilesNestedInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsNestedInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsNestedInput
+  directus_users?: Prisma.directus_usersUpdateOneWithoutProfilesNestedInput
   project_stories?: Prisma.project_storiesUpdateManyWithoutProfilesNestedInput
   references?: Prisma.referencesUpdateManyWithoutProfilesNestedInput
   salary_expectations?: Prisma.salary_expectationsUpdateManyWithoutProfilesNestedInput
@@ -6402,9 +7023,6 @@ export type profilesCreateWithoutOs_contributionsInput = {
   signal_profile?: string | null
   whatsapp_number?: string | null
   telegram_username?: string | null
-  user_id?: string | null
-  public_cv_version?: number | null
-  public_resume_version?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -6420,6 +7038,9 @@ export type profilesCreateWithoutOs_contributionsInput = {
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutProfilesInput
   profile_versions?: Prisma.profile_versionsCreateNestedManyWithoutProfilesInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutProfilesInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsInput
+  directus_users?: Prisma.directus_usersCreateNestedOneWithoutProfilesInput
   project_stories?: Prisma.project_storiesCreateNestedManyWithoutProfilesInput
   references?: Prisma.referencesCreateNestedManyWithoutProfilesInput
   salary_expectations?: Prisma.salary_expectationsCreateNestedManyWithoutProfilesInput
@@ -6555,9 +7176,6 @@ export type profilesUpdateWithoutOs_contributionsInput = {
   signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -6573,6 +7191,9 @@ export type profilesUpdateWithoutOs_contributionsInput = {
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutProfilesNestedInput
   profile_versions?: Prisma.profile_versionsUpdateManyWithoutProfilesNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutProfilesNestedInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsNestedInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsNestedInput
+  directus_users?: Prisma.directus_usersUpdateOneWithoutProfilesNestedInput
   project_stories?: Prisma.project_storiesUpdateManyWithoutProfilesNestedInput
   references?: Prisma.referencesUpdateManyWithoutProfilesNestedInput
   salary_expectations?: Prisma.salary_expectationsUpdateManyWithoutProfilesNestedInput
@@ -6692,9 +7313,6 @@ export type profilesCreateWithoutJob_searchesInput = {
   signal_profile?: string | null
   whatsapp_number?: string | null
   telegram_username?: string | null
-  user_id?: string | null
-  public_cv_version?: number | null
-  public_resume_version?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -6710,6 +7328,9 @@ export type profilesCreateWithoutJob_searchesInput = {
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutProfilesInput
   profile_versions?: Prisma.profile_versionsCreateNestedManyWithoutProfilesInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutProfilesInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsInput
+  directus_users?: Prisma.directus_usersCreateNestedOneWithoutProfilesInput
   project_stories?: Prisma.project_storiesCreateNestedManyWithoutProfilesInput
   references?: Prisma.referencesCreateNestedManyWithoutProfilesInput
   salary_expectations?: Prisma.salary_expectationsCreateNestedManyWithoutProfilesInput
@@ -6845,9 +7466,6 @@ export type profilesUpdateWithoutJob_searchesInput = {
   signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -6863,6 +7481,9 @@ export type profilesUpdateWithoutJob_searchesInput = {
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutProfilesNestedInput
   profile_versions?: Prisma.profile_versionsUpdateManyWithoutProfilesNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutProfilesNestedInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsNestedInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsNestedInput
+  directus_users?: Prisma.directus_usersUpdateOneWithoutProfilesNestedInput
   project_stories?: Prisma.project_storiesUpdateManyWithoutProfilesNestedInput
   references?: Prisma.referencesUpdateManyWithoutProfilesNestedInput
   salary_expectations?: Prisma.salary_expectationsUpdateManyWithoutProfilesNestedInput
@@ -6982,9 +7603,6 @@ export type profilesCreateWithoutJob_match_preferencesInput = {
   signal_profile?: string | null
   whatsapp_number?: string | null
   telegram_username?: string | null
-  user_id?: string | null
-  public_cv_version?: number | null
-  public_resume_version?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -7000,6 +7618,9 @@ export type profilesCreateWithoutJob_match_preferencesInput = {
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutProfilesInput
   profile_versions?: Prisma.profile_versionsCreateNestedManyWithoutProfilesInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutProfilesInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsInput
+  directus_users?: Prisma.directus_usersCreateNestedOneWithoutProfilesInput
   project_stories?: Prisma.project_storiesCreateNestedManyWithoutProfilesInput
   references?: Prisma.referencesCreateNestedManyWithoutProfilesInput
   salary_expectations?: Prisma.salary_expectationsCreateNestedManyWithoutProfilesInput
@@ -7135,9 +7756,6 @@ export type profilesUpdateWithoutJob_match_preferencesInput = {
   signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -7153,6 +7771,9 @@ export type profilesUpdateWithoutJob_match_preferencesInput = {
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutProfilesNestedInput
   profile_versions?: Prisma.profile_versionsUpdateManyWithoutProfilesNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutProfilesNestedInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsNestedInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsNestedInput
+  directus_users?: Prisma.directus_usersUpdateOneWithoutProfilesNestedInput
   project_stories?: Prisma.project_storiesUpdateManyWithoutProfilesNestedInput
   references?: Prisma.referencesUpdateManyWithoutProfilesNestedInput
   salary_expectations?: Prisma.salary_expectationsUpdateManyWithoutProfilesNestedInput
@@ -7272,9 +7893,6 @@ export type profilesCreateWithoutJob_matchesInput = {
   signal_profile?: string | null
   whatsapp_number?: string | null
   telegram_username?: string | null
-  user_id?: string | null
-  public_cv_version?: number | null
-  public_resume_version?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -7290,6 +7908,9 @@ export type profilesCreateWithoutJob_matchesInput = {
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutProfilesInput
   profile_versions?: Prisma.profile_versionsCreateNestedManyWithoutProfilesInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutProfilesInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsInput
+  directus_users?: Prisma.directus_usersCreateNestedOneWithoutProfilesInput
   project_stories?: Prisma.project_storiesCreateNestedManyWithoutProfilesInput
   references?: Prisma.referencesCreateNestedManyWithoutProfilesInput
   salary_expectations?: Prisma.salary_expectationsCreateNestedManyWithoutProfilesInput
@@ -7425,9 +8046,6 @@ export type profilesUpdateWithoutJob_matchesInput = {
   signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -7443,6 +8061,9 @@ export type profilesUpdateWithoutJob_matchesInput = {
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutProfilesNestedInput
   profile_versions?: Prisma.profile_versionsUpdateManyWithoutProfilesNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutProfilesNestedInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsNestedInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsNestedInput
+  directus_users?: Prisma.directus_usersUpdateOneWithoutProfilesNestedInput
   project_stories?: Prisma.project_storiesUpdateManyWithoutProfilesNestedInput
   references?: Prisma.referencesUpdateManyWithoutProfilesNestedInput
   salary_expectations?: Prisma.salary_expectationsUpdateManyWithoutProfilesNestedInput
@@ -7562,9 +8183,6 @@ export type profilesCreateWithoutConfigInput = {
   signal_profile?: string | null
   whatsapp_number?: string | null
   telegram_username?: string | null
-  user_id?: string | null
-  public_cv_version?: number | null
-  public_resume_version?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -7580,6 +8198,9 @@ export type profilesCreateWithoutConfigInput = {
   profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutProfilesInput
   profile_versions?: Prisma.profile_versionsCreateNestedManyWithoutProfilesInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutProfilesInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsInput
+  directus_users?: Prisma.directus_usersCreateNestedOneWithoutProfilesInput
   project_stories?: Prisma.project_storiesCreateNestedManyWithoutProfilesInput
   references?: Prisma.referencesCreateNestedManyWithoutProfilesInput
   salary_expectations?: Prisma.salary_expectationsCreateNestedManyWithoutProfilesInput
@@ -7715,9 +8336,6 @@ export type profilesUpdateWithoutConfigInput = {
   signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -7733,6 +8351,9 @@ export type profilesUpdateWithoutConfigInput = {
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutProfilesNestedInput
   profile_versions?: Prisma.profile_versionsUpdateManyWithoutProfilesNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutProfilesNestedInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsNestedInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsNestedInput
+  directus_users?: Prisma.directus_usersUpdateOneWithoutProfilesNestedInput
   project_stories?: Prisma.project_storiesUpdateManyWithoutProfilesNestedInput
   references?: Prisma.referencesUpdateManyWithoutProfilesNestedInput
   salary_expectations?: Prisma.salary_expectationsUpdateManyWithoutProfilesNestedInput
@@ -7852,9 +8473,6 @@ export type profilesCreateWithoutProfile_exportsInput = {
   signal_profile?: string | null
   whatsapp_number?: string | null
   telegram_username?: string | null
-  user_id?: string | null
-  public_cv_version?: number | null
-  public_resume_version?: number | null
   ai_chat?: Prisma.ai_chatCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -7870,6 +8488,9 @@ export type profilesCreateWithoutProfile_exportsInput = {
   platform_profiles?: Prisma.platform_profilesCreateNestedManyWithoutProfilesInput
   profile_versions?: Prisma.profile_versionsCreateNestedManyWithoutProfilesInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutProfilesInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsCreateNestedOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsInput
+  directus_users?: Prisma.directus_usersCreateNestedOneWithoutProfilesInput
   project_stories?: Prisma.project_storiesCreateNestedManyWithoutProfilesInput
   references?: Prisma.referencesCreateNestedManyWithoutProfilesInput
   salary_expectations?: Prisma.salary_expectationsCreateNestedManyWithoutProfilesInput
@@ -8005,9 +8626,6 @@ export type profilesUpdateWithoutProfile_exportsInput = {
   signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -8023,6 +8641,9 @@ export type profilesUpdateWithoutProfile_exportsInput = {
   platform_profiles?: Prisma.platform_profilesUpdateManyWithoutProfilesNestedInput
   profile_versions?: Prisma.profile_versionsUpdateManyWithoutProfilesNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutProfilesNestedInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsNestedInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsNestedInput
+  directus_users?: Prisma.directus_usersUpdateOneWithoutProfilesNestedInput
   project_stories?: Prisma.project_storiesUpdateManyWithoutProfilesNestedInput
   references?: Prisma.referencesUpdateManyWithoutProfilesNestedInput
   salary_expectations?: Prisma.salary_expectationsUpdateManyWithoutProfilesNestedInput
@@ -8190,9 +8811,6 @@ export type profilesUpdateWithoutDirectus_filesInput = {
   signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -8208,6 +8826,9 @@ export type profilesUpdateWithoutDirectus_filesInput = {
   platform_profiles?: Prisma.platform_profilesUpdateManyWithoutProfilesNestedInput
   profile_exports?: Prisma.profile_exportsUpdateManyWithoutProfilesNestedInput
   profile_versions?: Prisma.profile_versionsUpdateManyWithoutProfilesNestedInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsNestedInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsNestedInput
+  directus_users?: Prisma.directus_usersUpdateOneWithoutProfilesNestedInput
   project_stories?: Prisma.project_storiesUpdateManyWithoutProfilesNestedInput
   references?: Prisma.referencesUpdateManyWithoutProfilesNestedInput
   salary_expectations?: Prisma.salary_expectationsUpdateManyWithoutProfilesNestedInput
@@ -8331,6 +8952,705 @@ export type profilesUncheckedUpdateManyWithoutDirectus_filesInput = {
   user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+}
+
+export type profilesCreateManyDirectus_usersInput = {
+  id?: number
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  name?: string | null
+  title?: string | null
+  phone_number?: string | null
+  email_address?: string | null
+  personal_website?: string | null
+  subtitle?: string | null
+  core_stack?: string | null
+  linkedin_profile?: string | null
+  github_profile?: string | null
+  stackoverflow_profile?: string | null
+  headline?: string | null
+  profile_picture?: string | null
+  summary?: string | null
+  nationality?: string | null
+  location_url?: string | null
+  location_timezone?: string | null
+  sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
+  is_default?: boolean | null
+  slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
+  public_cv_version?: number | null
+  public_resume_version?: number | null
+}
+
+export type profilesUpdateWithoutDirectus_usersInput = {
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  core_stack?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  linkedin_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
+  applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
+  cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
+  collected_data?: Prisma.collected_dataUpdateManyWithoutProfilesNestedInput
+  config?: Prisma.configUpdateManyWithoutProfilesNestedInput
+  education?: Prisma.educationUpdateManyWithoutProfilesNestedInput
+  highlights?: Prisma.highlightsUpdateManyWithoutProfilesNestedInput
+  job_match_preferences?: Prisma.job_match_preferencesUpdateManyWithoutProfilesNestedInput
+  job_matches?: Prisma.job_matchesUpdateManyWithoutProfilesNestedInput
+  job_searches?: Prisma.job_searchesUpdateManyWithoutProfilesNestedInput
+  languages?: Prisma.languagesUpdateManyWithoutProfilesNestedInput
+  os_contributions?: Prisma.os_contributionsUpdateManyWithoutProfilesNestedInput
+  platform_profiles?: Prisma.platform_profilesUpdateManyWithoutProfilesNestedInput
+  profile_exports?: Prisma.profile_exportsUpdateManyWithoutProfilesNestedInput
+  profile_versions?: Prisma.profile_versionsUpdateManyWithoutProfilesNestedInput
+  directus_files?: Prisma.directus_filesUpdateOneWithoutProfilesNestedInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsNestedInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsNestedInput
+  project_stories?: Prisma.project_storiesUpdateManyWithoutProfilesNestedInput
+  references?: Prisma.referencesUpdateManyWithoutProfilesNestedInput
+  salary_expectations?: Prisma.salary_expectationsUpdateManyWithoutProfilesNestedInput
+  side_projects?: Prisma.side_projectsUpdateManyWithoutProfilesNestedInput
+  tech_skill_categories?: Prisma.tech_skill_categoriesUpdateManyWithoutProfilesNestedInput
+  work_experiences?: Prisma.work_experiencesUpdateManyWithoutProfilesNestedInput
+}
+
+export type profilesUncheckedUpdateWithoutDirectus_usersInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  core_stack?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  linkedin_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
+  applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
+  cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
+  collected_data?: Prisma.collected_dataUncheckedUpdateManyWithoutProfilesNestedInput
+  config?: Prisma.configUncheckedUpdateManyWithoutProfilesNestedInput
+  education?: Prisma.educationUncheckedUpdateManyWithoutProfilesNestedInput
+  highlights?: Prisma.highlightsUncheckedUpdateManyWithoutProfilesNestedInput
+  job_match_preferences?: Prisma.job_match_preferencesUncheckedUpdateManyWithoutProfilesNestedInput
+  job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutProfilesNestedInput
+  job_searches?: Prisma.job_searchesUncheckedUpdateManyWithoutProfilesNestedInput
+  languages?: Prisma.languagesUncheckedUpdateManyWithoutProfilesNestedInput
+  os_contributions?: Prisma.os_contributionsUncheckedUpdateManyWithoutProfilesNestedInput
+  platform_profiles?: Prisma.platform_profilesUncheckedUpdateManyWithoutProfilesNestedInput
+  profile_exports?: Prisma.profile_exportsUncheckedUpdateManyWithoutProfilesNestedInput
+  profile_versions?: Prisma.profile_versionsUncheckedUpdateManyWithoutProfilesNestedInput
+  project_stories?: Prisma.project_storiesUncheckedUpdateManyWithoutProfilesNestedInput
+  references?: Prisma.referencesUncheckedUpdateManyWithoutProfilesNestedInput
+  salary_expectations?: Prisma.salary_expectationsUncheckedUpdateManyWithoutProfilesNestedInput
+  side_projects?: Prisma.side_projectsUncheckedUpdateManyWithoutProfilesNestedInput
+  tech_skill_categories?: Prisma.tech_skill_categoriesUncheckedUpdateManyWithoutProfilesNestedInput
+  work_experiences?: Prisma.work_experiencesUncheckedUpdateManyWithoutProfilesNestedInput
+}
+
+export type profilesUncheckedUpdateManyWithoutDirectus_usersInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  core_stack?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  linkedin_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+}
+
+export type profilesCreateManyProfile_versions_profiles_public_cv_versionToprofile_versionsInput = {
+  id?: number
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  name?: string | null
+  title?: string | null
+  phone_number?: string | null
+  email_address?: string | null
+  personal_website?: string | null
+  subtitle?: string | null
+  core_stack?: string | null
+  linkedin_profile?: string | null
+  github_profile?: string | null
+  stackoverflow_profile?: string | null
+  headline?: string | null
+  profile_picture?: string | null
+  summary?: string | null
+  nationality?: string | null
+  location_url?: string | null
+  location_timezone?: string | null
+  sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
+  is_default?: boolean | null
+  slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
+  user_id?: string | null
+  public_resume_version?: number | null
+}
+
+export type profilesCreateManyProfile_versions_profiles_public_resume_versionToprofile_versionsInput = {
+  id?: number
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  name?: string | null
+  title?: string | null
+  phone_number?: string | null
+  email_address?: string | null
+  personal_website?: string | null
+  subtitle?: string | null
+  core_stack?: string | null
+  linkedin_profile?: string | null
+  github_profile?: string | null
+  stackoverflow_profile?: string | null
+  headline?: string | null
+  profile_picture?: string | null
+  summary?: string | null
+  nationality?: string | null
+  location_url?: string | null
+  location_timezone?: string | null
+  sort?: number | null
+  city?: string | null
+  region?: string | null
+  country_code?: string | null
+  location_city?: string | null
+  location_region?: string | null
+  location_country_code?: string | null
+  is_default?: boolean | null
+  slug?: string | null
+  npm_profile?: string | null
+  pypi_profile?: string | null
+  company_name?: string | null
+  street_address?: string | null
+  postal_code?: string | null
+  vat_id?: string | null
+  kvk_number?: string | null
+  about_me_text?: string | null
+  meta_image_url?: string | null
+  dev_start_year?: number | null
+  python_js_start_year?: number | null
+  remote_start_year?: number | null
+  signal_profile?: string | null
+  whatsapp_number?: string | null
+  telegram_username?: string | null
+  user_id?: string | null
+  public_cv_version?: number | null
+}
+
+export type profilesUpdateWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput = {
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  core_stack?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  linkedin_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
+  applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
+  cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
+  collected_data?: Prisma.collected_dataUpdateManyWithoutProfilesNestedInput
+  config?: Prisma.configUpdateManyWithoutProfilesNestedInput
+  education?: Prisma.educationUpdateManyWithoutProfilesNestedInput
+  highlights?: Prisma.highlightsUpdateManyWithoutProfilesNestedInput
+  job_match_preferences?: Prisma.job_match_preferencesUpdateManyWithoutProfilesNestedInput
+  job_matches?: Prisma.job_matchesUpdateManyWithoutProfilesNestedInput
+  job_searches?: Prisma.job_searchesUpdateManyWithoutProfilesNestedInput
+  languages?: Prisma.languagesUpdateManyWithoutProfilesNestedInput
+  os_contributions?: Prisma.os_contributionsUpdateManyWithoutProfilesNestedInput
+  platform_profiles?: Prisma.platform_profilesUpdateManyWithoutProfilesNestedInput
+  profile_exports?: Prisma.profile_exportsUpdateManyWithoutProfilesNestedInput
+  profile_versions?: Prisma.profile_versionsUpdateManyWithoutProfilesNestedInput
+  directus_files?: Prisma.directus_filesUpdateOneWithoutProfilesNestedInput
+  profile_versions_profiles_public_resume_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_resume_versionToprofile_versionsNestedInput
+  directus_users?: Prisma.directus_usersUpdateOneWithoutProfilesNestedInput
+  project_stories?: Prisma.project_storiesUpdateManyWithoutProfilesNestedInput
+  references?: Prisma.referencesUpdateManyWithoutProfilesNestedInput
+  salary_expectations?: Prisma.salary_expectationsUpdateManyWithoutProfilesNestedInput
+  side_projects?: Prisma.side_projectsUpdateManyWithoutProfilesNestedInput
+  tech_skill_categories?: Prisma.tech_skill_categoriesUpdateManyWithoutProfilesNestedInput
+  work_experiences?: Prisma.work_experiencesUpdateManyWithoutProfilesNestedInput
+}
+
+export type profilesUncheckedUpdateWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  core_stack?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  linkedin_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
+  applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
+  cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
+  collected_data?: Prisma.collected_dataUncheckedUpdateManyWithoutProfilesNestedInput
+  config?: Prisma.configUncheckedUpdateManyWithoutProfilesNestedInput
+  education?: Prisma.educationUncheckedUpdateManyWithoutProfilesNestedInput
+  highlights?: Prisma.highlightsUncheckedUpdateManyWithoutProfilesNestedInput
+  job_match_preferences?: Prisma.job_match_preferencesUncheckedUpdateManyWithoutProfilesNestedInput
+  job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutProfilesNestedInput
+  job_searches?: Prisma.job_searchesUncheckedUpdateManyWithoutProfilesNestedInput
+  languages?: Prisma.languagesUncheckedUpdateManyWithoutProfilesNestedInput
+  os_contributions?: Prisma.os_contributionsUncheckedUpdateManyWithoutProfilesNestedInput
+  platform_profiles?: Prisma.platform_profilesUncheckedUpdateManyWithoutProfilesNestedInput
+  profile_exports?: Prisma.profile_exportsUncheckedUpdateManyWithoutProfilesNestedInput
+  profile_versions?: Prisma.profile_versionsUncheckedUpdateManyWithoutProfilesNestedInput
+  project_stories?: Prisma.project_storiesUncheckedUpdateManyWithoutProfilesNestedInput
+  references?: Prisma.referencesUncheckedUpdateManyWithoutProfilesNestedInput
+  salary_expectations?: Prisma.salary_expectationsUncheckedUpdateManyWithoutProfilesNestedInput
+  side_projects?: Prisma.side_projectsUncheckedUpdateManyWithoutProfilesNestedInput
+  tech_skill_categories?: Prisma.tech_skill_categoriesUncheckedUpdateManyWithoutProfilesNestedInput
+  work_experiences?: Prisma.work_experiencesUncheckedUpdateManyWithoutProfilesNestedInput
+}
+
+export type profilesUncheckedUpdateManyWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  core_stack?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  linkedin_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+}
+
+export type profilesUpdateWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput = {
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  core_stack?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  linkedin_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_chat?: Prisma.ai_chatUpdateManyWithoutProfilesNestedInput
+  applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
+  cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
+  collected_data?: Prisma.collected_dataUpdateManyWithoutProfilesNestedInput
+  config?: Prisma.configUpdateManyWithoutProfilesNestedInput
+  education?: Prisma.educationUpdateManyWithoutProfilesNestedInput
+  highlights?: Prisma.highlightsUpdateManyWithoutProfilesNestedInput
+  job_match_preferences?: Prisma.job_match_preferencesUpdateManyWithoutProfilesNestedInput
+  job_matches?: Prisma.job_matchesUpdateManyWithoutProfilesNestedInput
+  job_searches?: Prisma.job_searchesUpdateManyWithoutProfilesNestedInput
+  languages?: Prisma.languagesUpdateManyWithoutProfilesNestedInput
+  os_contributions?: Prisma.os_contributionsUpdateManyWithoutProfilesNestedInput
+  platform_profiles?: Prisma.platform_profilesUpdateManyWithoutProfilesNestedInput
+  profile_exports?: Prisma.profile_exportsUpdateManyWithoutProfilesNestedInput
+  profile_versions?: Prisma.profile_versionsUpdateManyWithoutProfilesNestedInput
+  directus_files?: Prisma.directus_filesUpdateOneWithoutProfilesNestedInput
+  profile_versions_profiles_public_cv_versionToprofile_versions?: Prisma.profile_versionsUpdateOneWithoutProfiles_profiles_public_cv_versionToprofile_versionsNestedInput
+  directus_users?: Prisma.directus_usersUpdateOneWithoutProfilesNestedInput
+  project_stories?: Prisma.project_storiesUpdateManyWithoutProfilesNestedInput
+  references?: Prisma.referencesUpdateManyWithoutProfilesNestedInput
+  salary_expectations?: Prisma.salary_expectationsUpdateManyWithoutProfilesNestedInput
+  side_projects?: Prisma.side_projectsUpdateManyWithoutProfilesNestedInput
+  tech_skill_categories?: Prisma.tech_skill_categoriesUpdateManyWithoutProfilesNestedInput
+  work_experiences?: Prisma.work_experiencesUpdateManyWithoutProfilesNestedInput
+}
+
+export type profilesUncheckedUpdateWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  core_stack?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  linkedin_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ai_chat?: Prisma.ai_chatUncheckedUpdateManyWithoutProfilesNestedInput
+  applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
+  cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
+  collected_data?: Prisma.collected_dataUncheckedUpdateManyWithoutProfilesNestedInput
+  config?: Prisma.configUncheckedUpdateManyWithoutProfilesNestedInput
+  education?: Prisma.educationUncheckedUpdateManyWithoutProfilesNestedInput
+  highlights?: Prisma.highlightsUncheckedUpdateManyWithoutProfilesNestedInput
+  job_match_preferences?: Prisma.job_match_preferencesUncheckedUpdateManyWithoutProfilesNestedInput
+  job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutProfilesNestedInput
+  job_searches?: Prisma.job_searchesUncheckedUpdateManyWithoutProfilesNestedInput
+  languages?: Prisma.languagesUncheckedUpdateManyWithoutProfilesNestedInput
+  os_contributions?: Prisma.os_contributionsUncheckedUpdateManyWithoutProfilesNestedInput
+  platform_profiles?: Prisma.platform_profilesUncheckedUpdateManyWithoutProfilesNestedInput
+  profile_exports?: Prisma.profile_exportsUncheckedUpdateManyWithoutProfilesNestedInput
+  profile_versions?: Prisma.profile_versionsUncheckedUpdateManyWithoutProfilesNestedInput
+  project_stories?: Prisma.project_storiesUncheckedUpdateManyWithoutProfilesNestedInput
+  references?: Prisma.referencesUncheckedUpdateManyWithoutProfilesNestedInput
+  salary_expectations?: Prisma.salary_expectationsUncheckedUpdateManyWithoutProfilesNestedInput
+  side_projects?: Prisma.side_projectsUncheckedUpdateManyWithoutProfilesNestedInput
+  tech_skill_categories?: Prisma.tech_skill_categoriesUncheckedUpdateManyWithoutProfilesNestedInput
+  work_experiences?: Prisma.work_experiencesUncheckedUpdateManyWithoutProfilesNestedInput
+}
+
+export type profilesUncheckedUpdateManyWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  personal_website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  subtitle?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  core_stack?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  linkedin_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location_country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  is_default?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  slug?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  npm_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pypi_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  street_address?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  postal_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  vat_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  kvk_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  about_me_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  meta_image_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  dev_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  python_js_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  remote_start_year?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  signal_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  whatsapp_number?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 
@@ -8607,6 +9927,9 @@ export type profilesSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   profile_exports?: boolean | Prisma.profiles$profile_exportsArgs<ExtArgs>
   profile_versions?: boolean | Prisma.profiles$profile_versionsArgs<ExtArgs>
   directus_files?: boolean | Prisma.profiles$directus_filesArgs<ExtArgs>
+  profile_versions_profiles_public_cv_versionToprofile_versions?: boolean | Prisma.profiles$profile_versions_profiles_public_cv_versionToprofile_versionsArgs<ExtArgs>
+  profile_versions_profiles_public_resume_versionToprofile_versions?: boolean | Prisma.profiles$profile_versions_profiles_public_resume_versionToprofile_versionsArgs<ExtArgs>
+  directus_users?: boolean | Prisma.profiles$directus_usersArgs<ExtArgs>
   project_stories?: boolean | Prisma.profiles$project_storiesArgs<ExtArgs>
   references?: boolean | Prisma.profiles$referencesArgs<ExtArgs>
   salary_expectations?: boolean | Prisma.profiles$salary_expectationsArgs<ExtArgs>
@@ -8664,6 +9987,9 @@ export type profilesSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   public_cv_version?: boolean
   public_resume_version?: boolean
   directus_files?: boolean | Prisma.profiles$directus_filesArgs<ExtArgs>
+  profile_versions_profiles_public_cv_versionToprofile_versions?: boolean | Prisma.profiles$profile_versions_profiles_public_cv_versionToprofile_versionsArgs<ExtArgs>
+  profile_versions_profiles_public_resume_versionToprofile_versions?: boolean | Prisma.profiles$profile_versions_profiles_public_resume_versionToprofile_versionsArgs<ExtArgs>
+  directus_users?: boolean | Prisma.profiles$directus_usersArgs<ExtArgs>
 }, ExtArgs["result"]["profiles"]>
 
 export type profilesSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -8714,6 +10040,9 @@ export type profilesSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   public_cv_version?: boolean
   public_resume_version?: boolean
   directus_files?: boolean | Prisma.profiles$directus_filesArgs<ExtArgs>
+  profile_versions_profiles_public_cv_versionToprofile_versions?: boolean | Prisma.profiles$profile_versions_profiles_public_cv_versionToprofile_versionsArgs<ExtArgs>
+  profile_versions_profiles_public_resume_versionToprofile_versions?: boolean | Prisma.profiles$profile_versions_profiles_public_resume_versionToprofile_versionsArgs<ExtArgs>
+  directus_users?: boolean | Prisma.profiles$directus_usersArgs<ExtArgs>
 }, ExtArgs["result"]["profiles"]>
 
 export type profilesSelectScalar = {
@@ -8783,6 +10112,9 @@ export type profilesInclude<ExtArgs extends runtime.Types.Extensions.InternalArg
   profile_exports?: boolean | Prisma.profiles$profile_exportsArgs<ExtArgs>
   profile_versions?: boolean | Prisma.profiles$profile_versionsArgs<ExtArgs>
   directus_files?: boolean | Prisma.profiles$directus_filesArgs<ExtArgs>
+  profile_versions_profiles_public_cv_versionToprofile_versions?: boolean | Prisma.profiles$profile_versions_profiles_public_cv_versionToprofile_versionsArgs<ExtArgs>
+  profile_versions_profiles_public_resume_versionToprofile_versions?: boolean | Prisma.profiles$profile_versions_profiles_public_resume_versionToprofile_versionsArgs<ExtArgs>
+  directus_users?: boolean | Prisma.profiles$directus_usersArgs<ExtArgs>
   project_stories?: boolean | Prisma.profiles$project_storiesArgs<ExtArgs>
   references?: boolean | Prisma.profiles$referencesArgs<ExtArgs>
   salary_expectations?: boolean | Prisma.profiles$salary_expectationsArgs<ExtArgs>
@@ -8793,9 +10125,15 @@ export type profilesInclude<ExtArgs extends runtime.Types.Extensions.InternalArg
 }
 export type profilesIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   directus_files?: boolean | Prisma.profiles$directus_filesArgs<ExtArgs>
+  profile_versions_profiles_public_cv_versionToprofile_versions?: boolean | Prisma.profiles$profile_versions_profiles_public_cv_versionToprofile_versionsArgs<ExtArgs>
+  profile_versions_profiles_public_resume_versionToprofile_versions?: boolean | Prisma.profiles$profile_versions_profiles_public_resume_versionToprofile_versionsArgs<ExtArgs>
+  directus_users?: boolean | Prisma.profiles$directus_usersArgs<ExtArgs>
 }
 export type profilesIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   directus_files?: boolean | Prisma.profiles$directus_filesArgs<ExtArgs>
+  profile_versions_profiles_public_cv_versionToprofile_versions?: boolean | Prisma.profiles$profile_versions_profiles_public_cv_versionToprofile_versionsArgs<ExtArgs>
+  profile_versions_profiles_public_resume_versionToprofile_versions?: boolean | Prisma.profiles$profile_versions_profiles_public_resume_versionToprofile_versionsArgs<ExtArgs>
+  directus_users?: boolean | Prisma.profiles$directus_usersArgs<ExtArgs>
 }
 
 export type $profilesPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -8817,6 +10155,9 @@ export type $profilesPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     profile_exports: Prisma.$profile_exportsPayload<ExtArgs>[]
     profile_versions: Prisma.$profile_versionsPayload<ExtArgs>[]
     directus_files: Prisma.$directus_filesPayload<ExtArgs> | null
+    profile_versions_profiles_public_cv_versionToprofile_versions: Prisma.$profile_versionsPayload<ExtArgs> | null
+    profile_versions_profiles_public_resume_versionToprofile_versions: Prisma.$profile_versionsPayload<ExtArgs> | null
+    directus_users: Prisma.$directus_usersPayload<ExtArgs> | null
     project_stories: Prisma.$project_storiesPayload<ExtArgs>[]
     references: Prisma.$referencesPayload<ExtArgs>[]
     salary_expectations: Prisma.$salary_expectationsPayload<ExtArgs>[]
@@ -9281,6 +10622,9 @@ export interface Prisma__profilesClient<T, Null = never, ExtArgs extends runtime
   profile_exports<T extends Prisma.profiles$profile_exportsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.profiles$profile_exportsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$profile_exportsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   profile_versions<T extends Prisma.profiles$profile_versionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.profiles$profile_versionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$profile_versionsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   directus_files<T extends Prisma.profiles$directus_filesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.profiles$directus_filesArgs<ExtArgs>>): Prisma.Prisma__directus_filesClient<runtime.Types.Result.GetResult<Prisma.$directus_filesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  profile_versions_profiles_public_cv_versionToprofile_versions<T extends Prisma.profiles$profile_versions_profiles_public_cv_versionToprofile_versionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.profiles$profile_versions_profiles_public_cv_versionToprofile_versionsArgs<ExtArgs>>): Prisma.Prisma__profile_versionsClient<runtime.Types.Result.GetResult<Prisma.$profile_versionsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  profile_versions_profiles_public_resume_versionToprofile_versions<T extends Prisma.profiles$profile_versions_profiles_public_resume_versionToprofile_versionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.profiles$profile_versions_profiles_public_resume_versionToprofile_versionsArgs<ExtArgs>>): Prisma.Prisma__profile_versionsClient<runtime.Types.Result.GetResult<Prisma.$profile_versionsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  directus_users<T extends Prisma.profiles$directus_usersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.profiles$directus_usersArgs<ExtArgs>>): Prisma.Prisma__directus_usersClient<runtime.Types.Result.GetResult<Prisma.$directus_usersPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   project_stories<T extends Prisma.profiles$project_storiesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.profiles$project_storiesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$project_storiesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   references<T extends Prisma.profiles$referencesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.profiles$referencesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$referencesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   salary_expectations<T extends Prisma.profiles$salary_expectationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.profiles$salary_expectationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$salary_expectationsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -10134,6 +11478,63 @@ export type profiles$directus_filesArgs<ExtArgs extends runtime.Types.Extensions
    */
   include?: Prisma.directus_filesInclude<ExtArgs> | null
   where?: Prisma.directus_filesWhereInput
+}
+
+/**
+ * profiles.profile_versions_profiles_public_cv_versionToprofile_versions
+ */
+export type profiles$profile_versions_profiles_public_cv_versionToprofile_versionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the profile_versions
+   */
+  select?: Prisma.profile_versionsSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the profile_versions
+   */
+  omit?: Prisma.profile_versionsOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.profile_versionsInclude<ExtArgs> | null
+  where?: Prisma.profile_versionsWhereInput
+}
+
+/**
+ * profiles.profile_versions_profiles_public_resume_versionToprofile_versions
+ */
+export type profiles$profile_versions_profiles_public_resume_versionToprofile_versionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the profile_versions
+   */
+  select?: Prisma.profile_versionsSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the profile_versions
+   */
+  omit?: Prisma.profile_versionsOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.profile_versionsInclude<ExtArgs> | null
+  where?: Prisma.profile_versionsWhereInput
+}
+
+/**
+ * profiles.directus_users
+ */
+export type profiles$directus_usersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the directus_users
+   */
+  select?: Prisma.directus_usersSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the directus_users
+   */
+  omit?: Prisma.directus_usersOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.directus_usersInclude<ExtArgs> | null
+  where?: Prisma.directus_usersWhereInput
 }
 
 /**

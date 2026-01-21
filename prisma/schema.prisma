@@ -525,6 +525,7 @@ model directus_users {
   directus_roles                                                          directus_roles?          @relation(fields: [role], references: [id], onUpdate: NoAction, map: "directus_users_role_foreign")
   directus_versions_directus_versions_user_createdTodirectus_users        directus_versions[]      @relation("directus_versions_user_createdTodirectus_users")
   directus_versions_directus_versions_user_updatedTodirectus_users        directus_versions[]      @relation("directus_versions_user_updatedTodirectus_users")
+  profiles                                                                profiles[]
 }
 
 model directus_versions {
@@ -625,77 +626,82 @@ model profile_versions {
   profile_version_extensions_profile_version_extensions_extendedToprofile_versions profile_version_extensions[] @relation("profile_version_extensions_extendedToprofile_versions")
   profile_version_extensions_profile_version_extensions_extenderToprofile_versions profile_version_extensions[] @relation("profile_version_extensions_extenderToprofile_versions")
   profiles                                                                         profiles                     @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "profile_versions_profile_foreign")
+  profiles_profiles_public_cv_versionToprofile_versions                            profiles[]                   @relation("profiles_public_cv_versionToprofile_versions")
+  profiles_profiles_public_resume_versionToprofile_versions                        profiles[]                   @relation("profiles_public_resume_versionToprofile_versions")
 }
 
 model profiles {
-  id                    Int                     @id(map: "profile_pkey") @default(autoincrement())
-  date_created          DateTime?               @db.Timestamptz(6)
-  date_updated          DateTime?               @db.Timestamptz(6)
-  name                  String?                 @db.VarChar(255)
-  title                 String?                 @db.VarChar(255)
-  phone_number          String?                 @db.VarChar(255)
-  email_address         String?                 @db.VarChar(255)
-  personal_website      String?                 @db.VarChar(255)
-  subtitle              String?                 @db.VarChar(255)
-  core_stack            String?                 @db.VarChar(255)
-  linkedin_profile      String?                 @db.VarChar(255)
-  github_profile        String?                 @db.VarChar(255)
-  stackoverflow_profile String?                 @db.VarChar(255)
-  headline              String?                 @db.VarChar(255)
-  profile_picture       String?                 @db.Uuid
-  summary               String?
-  nationality           String?                 @db.VarChar(255)
-  location_url          String?                 @db.VarChar(255)
-  location_timezone     String?                 @db.VarChar(255)
-  sort                  Int?
-  city                  String?                 @db.VarChar(255)
-  region                String?                 @db.VarChar(255)
-  country_code          String?                 @db.VarChar(10)
-  location_city         String?                 @db.VarChar(255)
-  location_region       String?                 @db.VarChar(255)
-  location_country_code String?                 @db.VarChar(10)
-  is_default            Boolean?                @default(false)
-  slug                  String?                 @unique(map: "profiles_slug_unique") @db.VarChar(255)
-  npm_profile           String?                 @db.VarChar(255)
-  pypi_profile          String?                 @db.VarChar(255)
-  company_name          String?                 @db.VarChar(255)
-  street_address        String?                 @db.VarChar(255)
-  postal_code           String?                 @db.VarChar(20)
-  vat_id                String?                 @db.VarChar(50)
-  kvk_number            String?                 @db.VarChar(50)
-  about_me_text         String?
-  meta_image_url        String?                 @db.VarChar(500)
-  dev_start_year        Int?
-  python_js_start_year  Int?
-  remote_start_year     Int?
-  signal_profile        String?                 @db.VarChar(500)
-  whatsapp_number       String?                 @db.VarChar(50)
-  telegram_username     String?                 @db.VarChar(100)
-  user_id               String?                 @db.Uuid
-  public_cv_version     Int?
-  public_resume_version Int?
-  ai_chat               ai_chat[]
-  applications          applications[]
-  cheat_sheets          cheat_sheets[]
-  collected_data        collected_data[]
-  config                config[]
-  education             education[]
-  highlights            highlights[]
-  job_match_preferences job_match_preferences[]
-  job_matches           job_matches[]
-  job_searches          job_searches[]
-  languages             languages[]
-  os_contributions      os_contributions[]
-  platform_profiles     platform_profiles[]
-  profile_exports       profile_exports[]
-  profile_versions      profile_versions[]
-  directus_files        directus_files?         @relation(fields: [profile_picture], references: [id], onUpdate: NoAction, map: "profiles_profile_picture_foreign")
-  project_stories       project_stories[]
-  references            references[]
-  salary_expectations   salary_expectations[]
-  side_projects         side_projects[]
-  tech_skill_categories tech_skill_categories[]
-  work_experiences      work_experiences[]
+  id                                                                Int                     @id(map: "profile_pkey") @default(autoincrement())
+  date_created                                                      DateTime?               @db.Timestamptz(6)
+  date_updated                                                      DateTime?               @db.Timestamptz(6)
+  name                                                              String?                 @db.VarChar(255)
+  title                                                             String?                 @db.VarChar(255)
+  phone_number                                                      String?                 @db.VarChar(255)
+  email_address                                                     String?                 @db.VarChar(255)
+  personal_website                                                  String?                 @db.VarChar(255)
+  subtitle                                                          String?                 @db.VarChar(255)
+  core_stack                                                        String?                 @db.VarChar(255)
+  linkedin_profile                                                  String?                 @db.VarChar(255)
+  github_profile                                                    String?                 @db.VarChar(255)
+  stackoverflow_profile                                             String?                 @db.VarChar(255)
+  headline                                                          String?                 @db.VarChar(255)
+  profile_picture                                                   String?                 @db.Uuid
+  summary                                                           String?
+  nationality                                                       String?                 @db.VarChar(255)
+  location_url                                                      String?                 @db.VarChar(255)
+  location_timezone                                                 String?                 @db.VarChar(255)
+  sort                                                              Int?
+  city                                                              String?                 @db.VarChar(255)
+  region                                                            String?                 @db.VarChar(255)
+  country_code                                                      String?                 @db.VarChar(10)
+  location_city                                                     String?                 @db.VarChar(255)
+  location_region                                                   String?                 @db.VarChar(255)
+  location_country_code                                             String?                 @db.VarChar(10)
+  is_default                                                        Boolean?                @default(false)
+  slug                                                              String?                 @unique(map: "profiles_slug_unique") @db.VarChar(255)
+  npm_profile                                                       String?                 @db.VarChar(255)
+  pypi_profile                                                      String?                 @db.VarChar(255)
+  company_name                                                      String?                 @db.VarChar(255)
+  street_address                                                    String?                 @db.VarChar(255)
+  postal_code                                                       String?                 @db.VarChar(20)
+  vat_id                                                            String?                 @db.VarChar(50)
+  kvk_number                                                        String?                 @db.VarChar(50)
+  about_me_text                                                     String?
+  meta_image_url                                                    String?                 @db.VarChar(500)
+  dev_start_year                                                    Int?
+  python_js_start_year                                              Int?
+  remote_start_year                                                 Int?
+  signal_profile                                                    String?                 @db.VarChar(500)
+  whatsapp_number                                                   String?                 @db.VarChar(50)
+  telegram_username                                                 String?                 @db.VarChar(100)
+  user_id                                                           String?                 @db.Uuid
+  public_cv_version                                                 Int?
+  public_resume_version                                             Int?
+  ai_chat                                                           ai_chat[]
+  applications                                                      applications[]
+  cheat_sheets                                                      cheat_sheets[]
+  collected_data                                                    collected_data[]
+  config                                                            config[]
+  education                                                         education[]
+  highlights                                                        highlights[]
+  job_match_preferences                                             job_match_preferences[]
+  job_matches                                                       job_matches[]
+  job_searches                                                      job_searches[]
+  languages                                                         languages[]
+  os_contributions                                                  os_contributions[]
+  platform_profiles                                                 platform_profiles[]
+  profile_exports                                                   profile_exports[]
+  profile_versions                                                  profile_versions[]
+  directus_files                                                    directus_files?         @relation(fields: [profile_picture], references: [id], onUpdate: NoAction, map: "profiles_profile_picture_foreign")
+  profile_versions_profiles_public_cv_versionToprofile_versions     profile_versions?       @relation("profiles_public_cv_versionToprofile_versions", fields: [public_cv_version], references: [id], onUpdate: NoAction, map: "profiles_public_cv_version_foreign")
+  profile_versions_profiles_public_resume_versionToprofile_versions profile_versions?       @relation("profiles_public_resume_versionToprofile_versions", fields: [public_resume_version], references: [id], onUpdate: NoAction, map: "profiles_public_resume_version_foreign")
+  directus_users                                                    directus_users?         @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "profiles_user_id_foreign")
+  project_stories                                                   project_stories[]
+  references                                                        references[]
+  salary_expectations                                               salary_expectations[]
+  side_projects                                                     side_projects[]
+  tech_skill_categories                                             tech_skill_categories[]
+  work_experiences                                                  work_experiences[]
 }
 
 model project_stories {
