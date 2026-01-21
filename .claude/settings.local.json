@@ -109,7 +109,10 @@
       "Bash(pip show:*)",
       "Bash(git check-ignore:*)",
       "WebFetch(domain:hub.docker.com)",
-      "Bash(git mv:*)"
+      "Bash(git mv:*)",
+      "WebFetch(domain:groq.com)",
+      "WebFetch(domain:www.together.ai)",
+      "WebFetch(domain:pypi.org)"
     ],
     "deny": [],
     "ask": []

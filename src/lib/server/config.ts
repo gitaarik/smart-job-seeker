@@ -27,7 +27,8 @@ export interface AppConfig {
     | "gemini"
     | "openai"
     | "openrouter"
-    | "deepseek";
+    | "deepseek"
+    | "cerebras";
   llmModel: string; // Configurable model name, with smart defaults per provider
   groqApiKey: string;
   bedrockApiKey: string;
@@ -35,6 +36,7 @@ export interface AppConfig {
   openaiApiKey: string;
   openrouterApiKey: string;
   deepseekApiKey: string;
+  cerebrasApiKey: string;
 
   // LLM Configuration
   llmCacheTTL: number; // milliseconds
@@ -98,6 +100,7 @@ function getModelForProvider(provider: string): string {
     openai: "gpt-4o",
     openrouter: "anthropic/claude-3.5-sonnet",
     deepseek: "deepseek-chat",
+    cerebras: "llama-3.3-70b",
   };
 
   // Provider-specific env var names
@@ -108,6 +111,7 @@ function getModelForProvider(provider: string): string {
     openai: "SJS_LLM_MODEL_OPENAI",
     openrouter: "SJS_LLM_MODEL_OPENROUTER",
     deepseek: "SJS_LLM_MODEL_DEEPSEEK",
+    cerebras: "SJS_LLM_MODEL_CEREBRAS",
   };
 
   const hardcodedDefault = hardcodedDefaults[provider] ||
@@ -148,7 +152,8 @@ function loadConfig(): AppConfig {
       | "gemini"
       | "openai"
       | "openrouter"
-      | "deepseek"),
+      | "deepseek"
+      | "cerebras"),
     llmModel: getModelForProvider(llmProvider),
     groqApiKey: getEnv("SJS_LLM_API_KEY_GROQ", ""),
     bedrockApiKey: getEnv("SJS_LLM_API_KEY_BEDROCK", ""),
@@ -156,6 +161,7 @@ function loadConfig(): AppConfig {
     openaiApiKey: getEnv("SJS_LLM_API_KEY_OPENAI", ""),
     openrouterApiKey: getEnv("SJS_LLM_API_KEY_OPENROUTER", ""),
     deepseekApiKey: getEnv("SJS_LLM_API_KEY_DEEPSEEK", ""),
+    cerebrasApiKey: getEnv("SJS_LLM_API_KEY_CEREBRAS", ""),
 
     // Caching (1 hour default)
     llmCacheTTL: parseInt(

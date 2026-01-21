@@ -9,6 +9,7 @@ import logging
 from typing import Tuple, Any
 
 from langchain_groq import ChatGroq
+from langchain_cerebras import ChatCerebras
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
 from langchain_aws import ChatBedrock
@@ -19,6 +20,7 @@ logger = logging.getLogger(__name__)
 # Default models per provider
 DEFAULT_MODELS = {
     "groq": "llama-3.3-70b-versatile",
+    "cerebras": "llama-3.3-70b",
     "gemini": "gemini-2.0-flash-exp",
     "openai": "gpt-4o",
     "openrouter": "anthropic/claude-3.5-sonnet",
@@ -30,6 +32,7 @@ DEFAULT_MODELS = {
 # Provider-specific environment variable names for model selection
 PROVIDER_MODEL_ENV_VARS = {
     "groq": "SJS_LLM_MODEL_GROQ",
+    "cerebras": "SJS_LLM_MODEL_CEREBRAS",
     "gemini": "SJS_LLM_MODEL_GEMINI",
     "openai": "SJS_LLM_MODEL_OPENAI",
     "openrouter": "SJS_LLM_MODEL_OPENROUTER",
@@ -107,6 +110,16 @@ def _create_deepseek_llm(model: str) -> Tuple[Any, bool]:
     return llm, "v3" in model  # DeepSeek v3 supports vision
 
 
+def _create_cerebras_llm(model: str) -> Tuple[Any, bool]:
+    """Create Cerebras LLM instance."""
+    llm = ChatCerebras(
+        model=model,
+        api_key=os.getenv("SJS_LLM_API_KEY_CEREBRAS"),
+        temperature=0.3,
+    )
+    return llm, False  # Cerebras doesn't support vision
+
+
 def _create_bedrock_llm(model: str) -> Tuple[Any, bool]:
     """Create AWS Bedrock LLM instance."""
     aws_region = os.getenv("SJS_AWS_REGION") or "us-east-1"
@@ -179,6 +192,8 @@ def create_llm(provider: str | None = None) -> Tuple[Any, bool]:
         return _create_openrouter_llm(model)
     elif provider == "deepseek":
         return _create_deepseek_llm(model)
+    elif provider == "cerebras":
+        return _create_cerebras_llm(model)
     elif provider == "bedrock":
         return _create_bedrock_llm(model)
     elif provider == "browser_use":

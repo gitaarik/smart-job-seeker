@@ -4,6 +4,7 @@
  */
 
 import { ChatGroq } from "@langchain/groq";
+import { ChatCerebras } from "@langchain/cerebras";
 import { BedrockChat } from "@langchain/community/chat_models/bedrock";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { ChatOpenAI } from "@langchain/openai";
@@ -352,6 +353,23 @@ function createLangChainModel(
       });
     }
 
+    case "cerebras": {
+      const apiKey = config.cerebrasApiKey;
+      if (!apiKey) {
+        throw new LLMAuthenticationError(
+          "Cerebras API key not configured. Set SJS_LLM_API_KEY_CEREBRAS.",
+          "cerebras",
+          model,
+        );
+      }
+      return new ChatCerebras({
+        apiKey,
+        model,
+        temperature,
+        maxTokens,
+      });
+    }
+
     default:
       throw new Error(`Unknown LLM provider: ${provider}`);
   }
@@ -447,9 +465,9 @@ async function generateWithLangChain(
       // Use Zod schema directly (no conversion needed)
       const zodSchema = structuredOutput.schema;
 
-      // For Groq, use JSON mode instead of structured output (tool calling)
-      // Groq's tool calling has strict validation that conflicts with our schemas
-      if (provider === "groq") {
+      // For Groq and Cerebras, use JSON mode instead of structured output (tool calling)
+      // These providers' tool calling has strict validation that conflicts with our schemas
+      if (provider === "groq" || provider === "cerebras") {
         // Convert Zod schema to JSON Schema for the prompt
         const jsonSchema = zodToJsonSchema(zodSchema, {
           name: structuredOutput.name,
@@ -493,7 +511,7 @@ async function generateWithLangChain(
             ? parseError.message
             : String(parseError);
           throw new Error(
-            `Failed to parse JSON response from Groq: ${errorMsg}\nResponse was: ${
+            `Failed to parse JSON response from ${provider}: ${errorMsg}\nResponse was: ${
               responseContent.substring(0, 500)
             }`,
           );
