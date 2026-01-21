@@ -128,7 +128,7 @@ smart-job-seeker/
 │   │   │   ├── ai-chat-*.ts     # AI chat modules
 │   │   │   ├── html-*.ts        # HTML utilities
 │   │   │   ├── llm.ts           # LLM integration
-│   │   │   └── job-scraper.ts
+│   │   │   └── scrapers/        # Job scraping modules
 │   │   ├── components/           # Reusable Svelte components
 │   │   ├── data/                 # Static data and config
 │   │   └── images/               # Image assets

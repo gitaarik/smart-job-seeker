@@ -39,8 +39,9 @@ The scraper uses a **hybrid approach** (see `docs/SCRAPING.md` for details):
 
 Key files:
 
-- `src/lib/server/scrapers/job-scraper.ts` - Entry point, login orchestration
-- `src/lib/server/scrapers/click-scraper.ts` - CDP marking, LLM extraction
+- `src/lib/server/scrapers/scraper.ts` - Entry point, login orchestration
+- `src/lib/server/scrapers/extraction.ts` - CDP marking, LLM extraction
+- `src/lib/server/scrapers/job-data.ts` - Job data processing, DB operations
 - `scripts/scrape-job-sites.ts` - CLI script
 
 Run scraper: `npm run docker:scrape:jobs -- --search-id <id>`

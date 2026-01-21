@@ -50,10 +50,11 @@ login handling with Patchright's reliable, fast extraction.
 
 ```
 src/lib/server/scrapers/
-├── job-scraper.ts      # Entry point, login orchestration, CDP handoff
-├── click-scraper.ts    # CDP marking, LLM extraction, pagination
+├── scraper.ts          # Entry point, login orchestration, CDP handoff
+├── extraction.ts       # CDP marking, LLM extraction, pagination
+├── job-data.ts         # Job data processing, DB operations
 ├── types.ts            # TypeScript interfaces
-└── utils.ts            # Helper functions (formatting, prompts)
+└── utils.ts            # Helper functions (prompts, error handling)
 
 src/lib/server/
 ├── browser-use-client.ts   # Browser-Use Python service client
@@ -71,10 +72,10 @@ browser-use/                # Python service (Docker)
 
 ### Entry Points
 
-| File                                     | Purpose                        |
-| ---------------------------------------- | ------------------------------ |
-| `scripts/scrape-job-sites.ts`            | CLI script for running scrapes |
-| `src/lib/server/scrapers/job-scraper.ts` | Main `scrapeJobs()` function   |
+| File                                 | Purpose                        |
+| ------------------------------------ | ------------------------------ |
+| `scripts/scrape-job-sites.ts`        | CLI script for running scrapes |
+| `src/lib/server/scrapers/scraper.ts` | Main `scrapeJobs()` function   |
 
 ## Login Flow
 

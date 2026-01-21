@@ -123,7 +123,7 @@ const structuredOutput = zodSchema
 
 These files continue to work without modification:
 
-- `src/lib/server/job-scraper.ts`
+- `src/lib/server/scrapers/extraction.ts`
 - `src/lib/server/job-matcher.ts`
 - `src/lib/server/ai-chat-application-letter.ts`
 - `src/lib/server/ai-chat-application-question.ts`
@@ -253,5 +253,5 @@ For questions about this migration or how to work with AI prompt schemas:
    `src/lib/server/schemas/ai-prompt-schemas.ts`
 2. Check the tests in
    `src/lib/server/schemas/__tests__/ai-prompt-schemas.test.ts`
-3. See usage examples in `src/lib/server/job-scraper.ts` and
+3. See usage examples in `src/lib/server/scrapers/extraction.ts` and
    `src/lib/server/job-matcher.ts`
