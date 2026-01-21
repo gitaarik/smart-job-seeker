@@ -108,7 +108,8 @@
       "WebFetch(domain:libraries.io)",
       "Bash(pip show:*)",
       "Bash(git check-ignore:*)",
-      "WebFetch(domain:hub.docker.com)"
+      "WebFetch(domain:hub.docker.com)",
+      "Bash(git mv:*)"
     ],
     "deny": [],
     "ask": []
