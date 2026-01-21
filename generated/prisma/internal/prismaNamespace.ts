@@ -6693,9 +6693,7 @@ export const Job_searchesScalarFieldEnum = {
   profile: 'profile',
   last_run: 'last_run',
   search_url: 'search_url',
-  platform: 'platform',
-  navigation_type: 'navigation_type',
-  stripped_html: 'stripped_html'
+  platform: 'platform'
 } as const
 
 export type Job_searchesScalarFieldEnum = (typeof Job_searchesScalarFieldEnum)[keyof typeof Job_searchesScalarFieldEnum]
@@ -6754,9 +6752,7 @@ export const Job_platformsScalarFieldEnum = {
   name: 'name',
   url: 'url',
   type: 'type',
-  navigation_type: 'navigation_type',
   key: 'key',
-  pagination_type: 'pagination_type',
   login_page_url: 'login_page_url'
 } as const
 
