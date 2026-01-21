@@ -150,12 +150,12 @@ class ChromeManager:
             chrome_path,
             f"--remote-debugging-port={internal_cdp_port}",
             "--remote-debugging-address=0.0.0.0",
+            "--no-sandbox",  # Required when running as root in container
             "--no-first-run",
             "--no-default-browser-check",
             "--disable-background-networking",
             "--disable-sync",
             "--disable-translate",
-            "--no-sandbox",
             "--disable-dev-shm-usage",
             # Window size - larger for better Browser-Use screenshot analysis
             "--window-size=1920,1080",

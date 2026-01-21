@@ -24,7 +24,7 @@ import {
 import { waitForSpaContent } from "$lib/server/page-wait-utils";
 import { performPatchwrightLogin } from "../patchright-login";
 import { getErrorMessage, promptUser, SCRAPER_CONSTANTS } from "./utils";
-import { formatSalary, upsertJob } from "./job-data";
+import { upsertJob } from "./job-data";
 import { createJobScrapingAiChat } from "$lib/server/ai-chat-job-utils";
 import {
   humanClick,
@@ -35,6 +35,17 @@ import {
   isValidJobPostingDate,
   parseRelativeDate,
 } from "$lib/tools/date-utils";
+
+// ============================================================================
+// Helpers
+// ============================================================================
+
+/**
+ * Get Directus admin URL for a job record
+ */
+function getDirectusJobUrl(jobId: number): string {
+  return `${config.directusUrl}/admin/content/jobs/${jobId}`;
+}
 
 // ============================================================================
 // Types
@@ -400,6 +411,14 @@ export async function extractJobData(
   }
 
   // 4. Call AI chat utility to extract job data
+  // Log LLM request with HTML sample from middle (for debugging)
+  const midPoint = Math.floor(strippedHtml.length / 2);
+  const htmlSample = strippedHtml.substring(midPoint - 100, midPoint + 100);
+  console.log(
+    `      🤖 LLM request: extract_job_data (${strippedHtml.length} chars)`,
+  );
+  console.log(`      📄 HTML sample (mid): "...${htmlSample}..."`);
+
   const aiResult = await createJobScrapingAiChat<{
     title?: string | null;
     job_description?: string | null;
@@ -489,53 +508,6 @@ export async function extractJobData(
 // ============================================================================
 // Click-Based Scraping Helpers
 // ============================================================================
-
-/**
- * Log detailed job data after saving
- */
-function logJobDetails(
-  jobData: {
-    title: string | null;
-    job_description: string | null;
-    company_description: string | null;
-    job_poster: string | null;
-    date_posted: Date | string | null;
-    location: string | null;
-    remote: string | null;
-    experience_level: string | null;
-    job_type: string | null;
-    salary_min: number | null;
-    salary_max: number | null;
-    salary_currency: string | null;
-    salary_period: string | null;
-    skills: string[] | null;
-  },
-  sourceUrl: string,
-): void {
-  const cap = (s: string | null | undefined, len: number) =>
-    s ? (s.length > len ? s.substring(0, len) + "..." : s) : "-";
-
-  const formatDate = (d: Date | string | null) => {
-    if (!d) return "-";
-    if (d instanceof Date) return d.toISOString().split("T")[0];
-    return String(d).split("T")[0];
-  };
-
-  console.log(`         📋 Title: ${jobData.title || "-"}`);
-  console.log(`         🔗 URL: ${sourceUrl}`);
-  console.log(`         🏢 Company: ${jobData.job_poster || "-"}`);
-  console.log(`         📅 Posted: ${formatDate(jobData.date_posted)}`);
-  console.log(`         📍 Location: ${jobData.location || "-"}`);
-  console.log(`         🏠 Remote: ${jobData.remote || "-"}`);
-  console.log(`         💼 Job Type: ${jobData.job_type || "-"}`);
-  console.log(`         📊 Experience: ${jobData.experience_level || "-"}`);
-  console.log(`         💰 Salary: ${formatSalary(jobData)}`);
-  console.log(`         🔧 Skills: ${jobData.skills?.join(", ") || "-"}`);
-  console.log(`         📝 Description: ${cap(jobData.job_description, 150)}`);
-  console.log(
-    `         🏛️ Company Info: ${cap(jobData.company_description, 150)}`,
-  );
-}
 
 /**
  * Classify marked clickable elements using LLM
@@ -751,6 +723,17 @@ export async function scrapeJobsWithClicks(
     jobsImportedStale: 0,
     jobsImportedClosed: 0,
   };
+
+  // Collect processed jobs for end summary
+  const processedJobs: Array<{
+    id: number;
+    title: string | null;
+    company: string | null;
+    location: string | null;
+    remote: string | null;
+    jobType: string | null;
+    skills: string[] | null;
+  }> = [];
 
   let pageNumber = 1;
   let savedStrippedHtml = ""; // Store stripped HTML from first page for debugging
@@ -1208,31 +1191,6 @@ export async function scrapeJobsWithClicks(
         // Merge search page data with detail page data
         const jobData = mergeJobData(searchJobData, detailJobData);
 
-        // Log final merged job data
-        console.log(`      📋 Final job data:`);
-        console.log(`         Title: ${jobData.title || "(none)"}`);
-        if (jobData.job_poster) {
-          console.log(`         Company: ${jobData.job_poster}`);
-        }
-        if (jobData.location) {
-          console.log(`         Location: ${jobData.location}`);
-        }
-        if (jobData.remote) console.log(`         Remote: ${jobData.remote}`);
-        if (jobData.job_type) console.log(`         Type: ${jobData.job_type}`);
-        if (jobData.experience_level) {
-          console.log(`         Level: ${jobData.experience_level}`);
-        }
-        if (jobData.skills?.length) {
-          console.log(`         Skills: ${jobData.skills.join(", ")}`);
-        }
-        if (jobData.job_description) {
-          console.log(
-            `         Description: ${
-              jobData.job_description.substring(0, 80)
-            }...`,
-          );
-        }
-
         // Skip if no meaningful data was extracted (invalid/expired page)
         if (!isValidJob(jobData)) {
           const reason = getJobInvalidReason(jobData);
@@ -1286,7 +1244,18 @@ export async function scrapeJobsWithClicks(
 
         const action = result.created ? "Created" : "Updated";
         console.log(`      ✅ ${action} job #${result.id}`);
-        logJobDetails(jobData, pseudoUrl);
+        console.log(`      🔗 ${getDirectusJobUrl(result.id)}`);
+
+        // Collect for end summary
+        processedJobs.push({
+          id: result.id,
+          title: jobData.title,
+          company: jobData.job_poster,
+          location: jobData.location,
+          remote: jobData.remote,
+          jobType: jobData.job_type,
+          skills: jobData.skills,
+        });
 
         stats.jobsProcessed++;
 
@@ -1366,7 +1335,31 @@ export async function scrapeJobsWithClicks(
   console.log(`   Jobs saved: ${stats.jobsProcessed}`);
   console.log(`   Stale (old): ${stats.jobsImportedStale}`);
   console.log(`   Closed: ${stats.jobsImportedClosed}`);
-  console.log(`${"═".repeat(60)}\n`);
+  console.log(`${"═".repeat(60)}`);
+
+  // Jobs summary
+  if (processedJobs.length > 0) {
+    console.log(`\n📊 Jobs Summary (${processedJobs.length} processed)`);
+    console.log(`${"═".repeat(60)}`);
+    for (const job of processedJobs) {
+      console.log(`#${job.id} ${job.title || "(no title)"}`);
+      const details = [
+        job.company ? `🏢 ${job.company}` : null,
+        job.location ? `📍 ${job.location}` : null,
+        job.remote ? `🏠 ${job.remote}` : null,
+        job.jobType ? `💼 ${job.jobType}` : null,
+      ].filter(Boolean).join(" | ");
+      if (details) console.log(`     ${details}`);
+      if (job.skills?.length) {
+        const skillsStr = job.skills.slice(0, 5).join(", ");
+        const suffix = job.skills.length > 5 ? ", ..." : "";
+        console.log(`     🔧 ${skillsStr}${suffix}`);
+      }
+      console.log("");
+    }
+    console.log(`${"═".repeat(60)}`);
+  }
+  console.log("");
   return {
     jobsProcessed: stats.jobsProcessed,
     strippedHtml: savedStrippedHtml,
