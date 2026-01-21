@@ -374,18 +374,14 @@ async function scrapeWithLogin(
     }
 
     const page = pages[0];
-    const currentUrl = page.url();
-    console.log(`📄 Connected to page: ${currentUrl}`);
+    console.log(`📄 Current page: ${page.url()}`);
 
-    // Navigate to search URL if not already there
-    const searchPath = new URL(searchUrl).pathname;
-    if (!currentUrl.includes(searchPath)) {
-      console.log(`🔄 Navigating to search results: ${searchUrl}`);
-      await page.goto(searchUrl, {
-        waitUntil: "domcontentloaded",
-        timeout: 60000,
-      });
-    }
+    // Always navigate to search URL to ensure we're on the correct site
+    console.log(`🔄 Navigating to search results: ${searchUrl}`);
+    await page.goto(searchUrl, {
+      waitUntil: "domcontentloaded",
+      timeout: 60000,
+    });
 
     // Phase 4: Playwright extraction
     console.log("\n📌 Phase 4: Job extraction...");
