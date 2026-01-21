@@ -50,27 +50,7 @@ export async function extractJobsFromSearchPage(
     console.log(`\n📝 Saved stripped HTML to: ${debugPath}\n`);
   }
 
-  // Extract all data-extract-clickable-id values with regex
-  const clickableIdMatches = strippedSearchResultsHtml.match(
-    /data-extract-clickable-id="(\d+)"/g,
-  );
-
-  let allClickableIds: number[] = [];
-  if (clickableIdMatches) {
-    allClickableIds = clickableIdMatches
-      .map((m) => parseInt(m.match(/\d+/)?.[0] || "0"))
-      .filter((id) => !isNaN(id)); // Allow ID 0, just filter out NaN
-    console.log(
-      `      Found ${allClickableIds.length} data-extract-clickable-id attributes in stripped HTML`,
-    );
-  } else {
-    console.warn(
-      "      ⚠️  No data-extract-clickable-id attributes found in stripped HTML!",
-    );
-  }
-
-  // 2. Call AI chat with system profile for job scraping
-  console.log("      🤖 Running LLM to extract job data from search page...");
+  // Call AI chat with system profile for job scraping
 
   const aiResult = await createJobScrapingAiChat<{
     jobs: Array<{
@@ -100,50 +80,18 @@ export async function extractJobsFromSearchPage(
     throw new Error("LLM response missing 'jobs' array");
   }
 
-  console.log(
-    `      ✓ LLM extracted ${aiResult.response.jobs.length} jobs from search page`,
-  );
-
-  // CRITICAL: Validate that LLM IDs actually exist in the page
-  const validJobs = aiResult.response.jobs.filter((job: any) => {
-    const idExists = allClickableIds.includes(job.clickableId);
-    if (!idExists) {
-      console.warn(
-        `      ⚠️  LLM hallucinated ID ${job.clickableId} (title: "${job.title}") - not in page`,
-      );
-    }
-    return idExists;
-  });
-
-  console.log(
-    `      → ${validJobs.length} jobs with valid IDs (filtered ${
-      aiResult.response.jobs.length - validJobs.length
-    } hallucinated)`,
-  );
-
   // Filter out jobs without a title (can't be a valid job card)
-  const jobsWithTitles = validJobs.filter((job: { title: string | null }) => {
-    const hasTitle = job.title && job.title.trim() !== "";
-    if (!hasTitle) {
-      console.warn(
-        `      ⚠️  Filtered job with ID ${(job as any).clickableId} - no title`,
-      );
-    }
-    return hasTitle;
-  });
+  const jobsWithTitles = aiResult.response.jobs.filter(
+    (job: { title: string | null }) => job.title && job.title.trim() !== "",
+  );
 
-  if (jobsWithTitles.length < validJobs.length) {
-    console.log(
-      `      → ${jobsWithTitles.length} jobs with titles (filtered ${
-        validJobs.length - jobsWithTitles.length
-      } without title)`,
-    );
-  }
+  console.log(
+    `      ✓ LLM extracted ${jobsWithTitles.length} jobs from search page`,
+  );
 
-  // If all IDs were hallucinated or had no title, throw error
   if (jobsWithTitles.length === 0 && aiResult.response.jobs.length > 0) {
     throw new Error(
-      `All ${aiResult.response.jobs.length} LLM-extracted jobs were invalid (hallucinated IDs or missing titles)`,
+      `All ${aiResult.response.jobs.length} LLM-extracted jobs had no title`,
     );
   }
 

@@ -203,8 +203,7 @@ async function extractJobsWithRetry(
       const errorMsg = getErrorMessage(error);
 
       // Check if this is an "all jobs invalid" error - treat like 0 jobs found
-      const isAllInvalidError = errorMsg.includes("were invalid") ||
-        errorMsg.includes("hallucinated");
+      const isAllInvalidError = errorMsg.includes("had no title");
 
       if (isAllInvalidError && extractionAttempt <= maxLlmRetries) {
         console.log(
