@@ -89,80 +89,28 @@ async function buildLoginPrompt(
   searchUrl: string,
   solveCaptcha: boolean = false,
 ): Promise<string> {
-  // Try to fetch the login-only prompt from Directus
+  const promptKey = solveCaptcha
+    ? "browser_use_login_solve_captcha"
+    : "browser_use_login_report_captcha";
+
   const promptTemplate = await dbDirect.ai_chat_prompts.findUnique({
-    where: { request: "browser_use_login_only" },
+    where: { request: promptKey },
   });
 
-  if (promptTemplate) {
-    const systemPrompt = promptTemplate.system_prompt || "";
-    const userPrompt = interpolatePrompt(promptTemplate.user_prompt || "", {
-      platformUrl: platform.login_page_url || platform.url,
-      platformName: platform.name,
-      username: credentials.username,
-      password: credentials.password,
-      searchUrl,
-      solveCaptcha: solveCaptcha ? "true" : "false",
-    });
-    return `${systemPrompt}\n\n${userPrompt}`.trim();
+  if (!promptTemplate?.user_prompt) {
+    throw new Error(`Prompt '${promptKey}' not found in database`);
   }
 
-  // Fallback: inline prompt if template not found
-  console.warn(
-    "⚠️ Prompt 'browser_use_login_only' not found, using inline fallback",
-  );
+  const userPrompt = interpolatePrompt(promptTemplate.user_prompt, {
+    platformUrl: platform.login_page_url || platform.url,
+    platformName: platform.name,
+    username: credentials.username,
+    password: credentials.password,
+    searchUrl,
+  });
 
-  // Generate CAPTCHA handling instructions based on mode
-  const captchaInstructions = solveCaptcha
-    ? `STEP 3: If there's a CAPTCHA/human verification challenge:
-   - "Verify you're human" checkbox → Click it
-   - CAPTCHA puzzle → Attempt to solve it
-   - After solving, proceed to click login
-
-STEP 4: Click the login/sign-in button`
-    : `STEP 3: BEFORE clicking login, check for CAPTCHA/human verification:
-   - "Verify you're human" checkbox
-   - "I'm not a robot" checkbox
-   - CAPTCHA image/puzzle
-   - Cloudflare/Turnstile challenge
-
-   If CAPTCHA IS visible:
-   - Report: CAPTCHA_NEEDED: Human verification required before login
-   - Do NOT click the login button
-   - The user will solve the CAPTCHA manually via VNC
-
-   If NO CAPTCHA visible:
-   - Proceed to click the login/sign-in button`;
-
-  return `You are a browser automation assistant. Your task is to log into a website.
-
-STEP 1: Navigate to ${platform.login_page_url || platform.url}
-
-STEP 2: Enter credentials (do this FIRST, before checking for CAPTCHA):
-   - Email/Username: ${credentials.username}
-   - Password: ${credentials.password}
-
-${captchaInstructions}
-
-AFTER clicking login, check the result:
-
-   a) Verification CODE input (email code, SMS code, 2FA, OTP, authenticator):
-      - STOP and report: VERIFICATION_NEEDED: [describe what code is needed]
-      - DO NOT enter any code
-
-   b) Another CAPTCHA appeared after login:
-      - Report: CAPTCHA_NEEDED: Human verification required after login
-
-   c) Login successful:
-      - Navigate to: ${searchUrl}
-      - Report: SUCCESS: Currently at [URL]
-
-CRITICAL:
-- Enter credentials FIRST, then check for CAPTCHA
-- CAPTCHA_NEEDED = visual challenge visible, user must solve via VNC
-- VERIFICATION_NEEDED = code input needed (email/SMS/2FA) - you cannot solve this
-- NEVER enter a verification code
-`;
+  const systemPrompt = promptTemplate.system_prompt || "";
+  return `${systemPrompt}\n\n${userPrompt}`.trim();
 }
 
 /**
