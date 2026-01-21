@@ -10,16 +10,6 @@
 import { z } from "zod";
 
 /**
- * Schema for extract_job_links prompt
- * Extracts job posting URLs from search results HTML
- */
-export const extractJobLinksSchema = z.object({
-  urls: z
-    .array(z.string().describe("Full URL to a job posting"))
-    .describe("Array of job posting URLs found in the search results"),
-});
-
-/**
  * Schema for extract_job_data prompt
  * Extracts structured data from individual job posting pages
  */
@@ -378,7 +368,6 @@ export const classifyClickablesSchema = z.object({
  * are not included as they don't use structured JSON output.
  */
 export const aiPromptSchemas = {
-  extract_job_links: extractJobLinksSchema,
   extract_job_data: extractJobDataSchema,
   extract_job_data_browser_use: extractJobDataBrowserUseSchema,
   extract_jobs_from_search_page: extractJobsFromSearchPageSchema,

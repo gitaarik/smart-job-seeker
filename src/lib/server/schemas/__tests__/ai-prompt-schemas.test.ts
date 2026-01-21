@@ -4,7 +4,6 @@ import {
   detectLoginPageSchema,
   detectPaginationSchema,
   extractJobDataSchema,
-  extractJobLinksSchema,
   extractResumeDataSchema,
   getSchemaForPrompt,
   scoreJobMatchSchema,
@@ -13,7 +12,6 @@ import {
 describe("AI Prompt Schemas", () => {
   describe("Schema Registry", () => {
     it("should have all expected schemas in registry", () => {
-      expect(aiPromptSchemas).toHaveProperty("extract_job_links");
       expect(aiPromptSchemas).toHaveProperty("extract_job_data");
       expect(aiPromptSchemas).toHaveProperty("extract_job_data_browser_use");
       expect(aiPromptSchemas).toHaveProperty("score_job_match");
@@ -23,9 +21,9 @@ describe("AI Prompt Schemas", () => {
     });
 
     it("should get schema by request name", () => {
-      const schema = getSchemaForPrompt("extract_job_links");
+      const schema = getSchemaForPrompt("extract_job_data");
       expect(schema).toBeDefined();
-      expect(schema).toBe(extractJobLinksSchema);
+      expect(schema).toBe(extractJobDataSchema);
     });
 
     it("should return undefined for unknown request", () => {
@@ -38,28 +36,6 @@ describe("AI Prompt Schemas", () => {
       expect(getSchemaForPrompt("write_cover_letter")).toBeUndefined();
       expect(getSchemaForPrompt("write_motivation_letter")).toBeUndefined();
       expect(getSchemaForPrompt("answer_application_question")).toBeUndefined();
-    });
-  });
-
-  describe("extractJobLinksSchema", () => {
-    it("should validate valid job links data", () => {
-      const validData = {
-        urls: [
-          "https://example.com/job1",
-          "https://example.com/job2",
-        ],
-      };
-      expect(() => extractJobLinksSchema.parse(validData)).not.toThrow();
-    });
-
-    it("should reject invalid data structure", () => {
-      const invalidData = ["https://example.com/job1"]; // Array instead of object
-      expect(() => extractJobLinksSchema.parse(invalidData)).toThrow();
-    });
-
-    it("should reject non-array urls field", () => {
-      const invalidData = { urls: "not-an-array" };
-      expect(() => extractJobLinksSchema.parse(invalidData)).toThrow();
     });
   });
 

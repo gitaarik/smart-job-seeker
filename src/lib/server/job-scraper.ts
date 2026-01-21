@@ -125,52 +125,6 @@ export function validateJobSearchHtml(html: string): {
 }
 
 /**
- * Extract job links from search results HTML using LLM
- * @param searchResultsHtml HTML content from job search results page
- * @returns Array of URLs to individual job pages
- */
-export async function extractJobLinks(
-  searchResultsHtml: string,
-): Promise<string[]> {
-  // 0. Validate HTML before processing
-  const validation = validateJobSearchHtml(searchResultsHtml);
-
-  if (!validation.isValid) {
-    console.warn("⚠️  HTML validation warnings:", validation.warnings);
-    // Continue anyway - warnings are informational, not blocking
-  }
-
-  // 1. Strip HTML to minimal content
-  const strippedHtml = stripHtmlForLlm(searchResultsHtml);
-
-  // 2. Call AI chat with system profile for job scraping
-  const aiResult = await createJobScrapingAiChat<{
-    urls?: string[];
-    job_urls?: string[];
-    links?: string[];
-  }>("extract_job_links", { html: strippedHtml });
-
-  if (!aiResult.success || !aiResult.response) {
-    throw new Error(`Failed to extract job links: ${aiResult.message}`);
-  }
-
-  // Extract urls array from the structured response
-  // Try multiple possible field names for compatibility
-  const links = aiResult.response.urls || aiResult.response.job_urls ||
-    aiResult.response.links;
-
-  if (!Array.isArray(links)) {
-    throw new Error(
-      `LLM response doesn't contain a valid array. Expected 'urls', 'job_urls', or 'links' field. Got: ${
-        JSON.stringify(aiResult.response)
-      }`,
-    );
-  }
-
-  return links;
-}
-
-/**
  * Extract comprehensive job data from search results page (SPA sites)
  * Extracts core fields: title, company, location, salary, skills, remote, date_posted + clickableId
  * Replaces extractJobClickSelectors with richer data extraction

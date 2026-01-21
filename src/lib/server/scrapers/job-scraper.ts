@@ -534,49 +534,6 @@ async function waitForManualIntervention(
 }
 
 /**
- * Scrape jobs with Patchright only (no login)
- * Used when no credentials are available
- */
-async function scrapeWithoutLogin(
-  searchUrl: string,
-  platformId: string,
-  profileId?: number,
-  jobSearchId?: number,
-): Promise<{ jobsProcessed: number; strippedHtml: string }> {
-  console.log(`\n🎭 Using Patchright (no login)...`);
-
-  // Launch browser with fingerprint (headed mode for debugging)
-  const context = await launchBrowser({ headless: false });
-
-  try {
-    const page = await context.newPage();
-
-    // Navigate to search URL
-    console.log(`\n🌐 Navigating to: ${searchUrl}`);
-    await page.goto(searchUrl);
-    await page.waitForLoadState("domcontentloaded");
-
-    // Use click-based scraper
-    const result = await scrapeJobsWithClicks(
-      page,
-      searchUrl,
-      platformId,
-      profileId,
-      jobSearchId,
-    );
-
-    console.log(
-      `\n✅ Scraping complete: ${result.jobsProcessed} jobs processed`,
-    );
-
-    return result;
-  } finally {
-    // Always close browser context
-    await context.close();
-  }
-}
-
-/**
  * Scrape jobs from a search URL
  *
  * Unified entry point that handles all scraping scenarios:
