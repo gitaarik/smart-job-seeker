@@ -4,7 +4,6 @@
 
 import type { Page } from "playwright";
 import { config } from "$lib/server/config";
-import { stripHtmlForLlm } from "$lib/server/html-strip";
 import {
   getJobInvalidReason,
   isJobClosed,
@@ -12,7 +11,7 @@ import {
   isValidJob,
 } from "$lib/server/scrape-filters";
 import { humanClick, humanWait } from "$lib/server/stealth-utils";
-import { upsertJob } from "../job-data";
+import { formatSalary, upsertJob, type UpsertResult } from "../job-data";
 import type { SearchContext } from "./types";
 import { mergeJobData } from "./merge";
 import { extractJobData, getDirectusJobUrl } from "./llm-extract";
@@ -74,30 +73,97 @@ async function getElementInfo(
 }
 
 /**
- * Log search page data if available
+ * Merged job data type (from search + detail pages)
  */
-function logSearchData(searchJobData: SearchPageJob): void {
-  if (searchJobData.title) {
-    console.log(`      📋 Title: "${searchJobData.title}"`);
+type MergedJobData = {
+  title: string;
+  job_description: string | null;
+  company_description: string | null;
+  job_poster: string | null;
+  date_posted: Date | null;
+  location: string | null;
+  remote: string | null;
+  experience_level: string | null;
+  job_type: string | null;
+  salary_min: number | null;
+  salary_max: number | null;
+  salary_currency: string | null;
+  salary_period: string | null;
+  skills: string[] | null;
+  status: string | null;
+};
+
+/**
+ * Format and log job data after save
+ */
+function formatJobOutput(
+  jobData: MergedJobData,
+  result: UpsertResult,
+  sourceUrl: string,
+): void {
+  const action = result.created ? "✨ Created" : "📝 Updated";
+  console.log(`\n      ${action} job #${result.id}`);
+  console.log(`      ${"─".repeat(50)}`);
+
+  // Core info
+  console.log(`      📋 Title:       ${jobData.title || "(none)"}`);
+  console.log(`      🏢 Company:     ${jobData.job_poster || "(none)"}`);
+  console.log(`      📍 Location:    ${jobData.location || "(none)"}`);
+  console.log(`      🏠 Remote:      ${jobData.remote || "(none)"}`);
+  console.log(`      💼 Type:        ${jobData.job_type || "(none)"}`);
+  console.log(`      📊 Level:       ${jobData.experience_level || "(none)"}`);
+  console.log(`      📋 Status:      ${jobData.status || "(none)"}`);
+
+  // Salary
+  const salary = formatSalary(jobData);
+  if (salary !== "-") {
+    console.log(`      💰 Salary:      ${salary}`);
   }
-  if (searchJobData.company) {
-    console.log(`      🏢 Company: "${searchJobData.company}"`);
+
+  // Skills (show all)
+  if (jobData.skills?.length) {
+    console.log(`      🔧 Skills:      ${jobData.skills.join(", ")}`);
   }
-  if (searchJobData.location) {
-    console.log(`      📍 Location: "${searchJobData.location}"`);
+
+  // Description preview (capped at 100 chars)
+  if (jobData.job_description) {
+    const preview = jobData.job_description.substring(0, 100).replace(
+      /\n/g,
+      " ",
+    );
+    console.log(`      📝 Description: ${preview}...`);
   }
-  if (searchJobData.salary_min || searchJobData.salary_max) {
-    const salaryStr = [
-      searchJobData.salary_currency || "",
-      searchJobData.salary_min?.toLocaleString() || "",
-      searchJobData.salary_max
-        ? `-${searchJobData.salary_max.toLocaleString()}`
-        : "",
-      searchJobData.salary_period ? `per ${searchJobData.salary_period}` : "",
-    ]
-      .filter(Boolean)
-      .join(" ");
-    console.log(`      💰 Salary: ${salaryStr}`);
+
+  // URLs
+  console.log(`      🔗 Source:      ${sourceUrl}`);
+  console.log(`      🔗 Admin:       ${getDirectusJobUrl(result.id)}`);
+
+  // Show changes for updates
+  if (!result.created && result.changes) {
+    const c = result.changes;
+    console.log(`      ${"─".repeat(50)}`);
+    console.log(`      📊 Changes:`);
+    if (c.status) {
+      console.log(
+        `         Status: ${c.status.old || "(none)"} → ${
+          c.status.new || "(none)"
+        }`,
+      );
+    }
+    if (c.description) {
+      console.log(`         Description: updated`);
+    }
+    if (c.skills) {
+      if (c.skills.added.length) {
+        console.log(`         Skills added: ${c.skills.added.join(", ")}`);
+      }
+      if (c.skills.removed.length) {
+        console.log(`         Skills removed: ${c.skills.removed.join(", ")}`);
+      }
+    }
+    if (c.salary) {
+      console.log(`         Salary: ${c.salary.old} → ${c.salary.new}`);
+    }
   }
 }
 
@@ -161,36 +227,18 @@ export async function processJobCard(
   console.log(`   Job ${jobNumber}/${totalJobs}`);
   console.log(`   [${"─".repeat(56)}]`);
 
-  // Log search page data
-  logSearchData(searchJobData);
-
   // Get element info before clicking for debugging
   const elementInfo = await getElementInfo(page, clickableId);
 
-  // Log what element we're clicking
-  const elementDesc = [
-    `<${elementInfo.tag}>`,
-    elementInfo.text ? `"${elementInfo.text}"` : "",
-    elementInfo.href ? `href="${elementInfo.href}..."` : "",
-    elementInfo.ariaLabel ? `aria-label="${elementInfo.ariaLabel}"` : "",
-    `</${elementInfo.tag}>`,
-  ]
-    .filter(Boolean)
-    .join(" ");
-  console.log(`      👆 Clicking #${clickableId}: ${elementDesc}`);
+  // Log click info concisely
+  const clickText = elementInfo.text || elementInfo.ariaLabel || "(no text)";
+  console.log(`      👆 Clicking #${clickableId}: "${clickText}"`);
 
   // Click and wait for content to load
   await clickJobCard(page, clickableId);
 
   // Get full page HTML
   const jobHtml = await page.content();
-  console.log(`      ✓ Captured page HTML (${jobHtml.length} chars)`);
-
-  // Debug: Log first 500 chars of stripped HTML
-  if (config.scraperDebugMode) {
-    const preview = stripHtmlForLlm(jobHtml).substring(0, 500);
-    console.log(`      [DEBUG] HTML preview: ${preview}...`);
-  }
 
   // Build search context to help LLM identify the correct job
   const searchContext: SearchContext = {
@@ -200,11 +248,6 @@ export async function processJobCard(
   };
 
   // Extract job data from page
-  console.log(
-    `      🔍 Extracting job data (context: ${
-      searchJobData.title || "unknown"
-    } @ ${searchJobData.company || "unknown"})...`,
-  );
   const detailJobData = await extractJobData(jobHtml, pseudoUrl, searchContext);
 
   // Merge search page data with detail page data
@@ -224,26 +267,16 @@ export async function processJobCard(
   // Age check: Mark old jobs as "stale" but still import them
   let isStale = false;
   if (isJobTooOld(jobData.date_posted, config.scraperMaxJobAge)) {
-    console.log(
-      `      📅 Old job (${jobData.date_posted?.toLocaleDateString()}) - importing as 'stale'`,
-    );
     jobData.status = "stale";
     isStale = true;
   }
 
   // Status check: Track closed jobs
   const isClosed = isJobClosed(jobData.status);
-  if (isClosed) {
-    console.log(`      📋 Closed job (${jobData.status}) - importing`);
-  }
 
-  // Save job
-  console.log(`      💾 Saving to database...`);
+  // Save job and show formatted output
   const result = await upsertJob(jobData, pseudoUrl, platformId);
-
-  const action = result.created ? "Created" : "Updated";
-  console.log(`      ✅ ${action} job #${result.id}`);
-  console.log(`      🔗 ${getDirectusJobUrl(result.id)}`);
+  formatJobOutput(jobData, result, pseudoUrl);
 
   return {
     success: true,

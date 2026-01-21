@@ -77,14 +77,13 @@ export async function createJobScrapingAiChat<T>(
     if (result.aiChat.response) {
       try {
         parsedResponse = JSON.parse(result.aiChat.response) as T;
-      } catch (parseError) {
+      } catch (_parseError) {
+        const viewUrl =
+          `${config.directusUrl}/admin/content/ai_chats/${result.aiChat.id}`;
         return {
           success: false,
-          message: `Failed to parse AI response as JSON: ${
-            parseError instanceof Error
-              ? parseError.message
-              : String(parseError)
-          }`,
+          message:
+            `Failed to parse AI response as JSON. View response: ${viewUrl}`,
           response: null,
           aiChatId: result.aiChat.id,
         };
@@ -169,14 +168,13 @@ export async function createJobMatchingAiChat<T>(
     if (result.aiChat.response) {
       try {
         parsedResponse = JSON.parse(result.aiChat.response) as T;
-      } catch (parseError) {
+      } catch (_parseError) {
+        const viewUrl =
+          `${config.directusUrl}/admin/content/ai_chats/${result.aiChat.id}`;
         return {
           success: false,
-          message: `Failed to parse AI response as JSON: ${
-            parseError instanceof Error
-              ? parseError.message
-              : String(parseError)
-          }`,
+          message:
+            `Failed to parse AI response as JSON. View response: ${viewUrl}`,
           response: null,
           aiChatId: result.aiChat.id,
         };

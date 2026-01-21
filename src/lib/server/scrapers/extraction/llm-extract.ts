@@ -63,7 +63,6 @@ export async function extractJobsFromSearchPage(
     console.log(
       `      Found ${allClickableIds.length} data-extract-clickable-id attributes in stripped HTML`,
     );
-    console.log(`      All IDs: [${allClickableIds.join(", ")}]`);
   } else {
     console.warn(
       "      ⚠️  No data-extract-clickable-id attributes found in stripped HTML!",
@@ -219,14 +218,6 @@ export async function extractJobData(
   }
 
   // 4. Call AI chat utility to extract job data
-  // Log LLM request with HTML sample from middle (for debugging)
-  const midPoint = Math.floor(strippedHtml.length / 2);
-  const htmlSample = strippedHtml.substring(midPoint - 100, midPoint + 100);
-  console.log(
-    `      🤖 LLM request: extract_job_data (${strippedHtml.length} chars)`,
-  );
-  console.log(`      📄 HTML sample (mid): "...${htmlSample}..."`);
-
   const aiResult = await createJobScrapingAiChat<{
     title?: string | null;
     job_description?: string | null;

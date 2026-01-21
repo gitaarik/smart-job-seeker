@@ -27,6 +27,20 @@ export function formatSalary(data: {
   return `${curr}${min}-${max}${period}`;
 }
 
+/**
+ * Result of upserting a job
+ */
+export interface UpsertResult {
+  id: number;
+  created: boolean;
+  changes?: {
+    status?: { old: string | null; new: string | null };
+    description?: boolean;
+    skills?: { added: string[]; removed: string[] };
+    salary?: { old: string; new: string };
+  };
+}
+
 // ============================================================================
 // URL Processing
 // ============================================================================
@@ -145,7 +159,7 @@ export async function upsertJob(
   },
   sourceUrl: string,
   platformId: number | string | null,
-): Promise<{ id: number; created: boolean }> {
+): Promise<UpsertResult> {
   // Normalize URL to match jobs regardless of tracking params
   const normalizedUrl = normalizeJobUrl(sourceUrl);
 
@@ -205,19 +219,42 @@ export async function upsertJob(
   };
 
   if (existing) {
-    // Update existing
-    console.log(
-      `Updating existing job #${existing.id} (scrape count: ${
-        existing.scrape_count || 0
-      } -> ${(existing.scrape_count || 0) + 1})`,
-    );
-    console.log("Update data:", {
-      status: effectiveStatus,
-      job_poster: effectiveJobPoster,
-      remote_options: multiSelectData.remote_options,
-      job_types: multiSelectData.job_types,
-      experience_levels: multiSelectData.experience_levels,
+    // Detect changes before updating
+    const changes: UpsertResult["changes"] = {};
+
+    // Status change
+    if (existing.status !== effectiveStatus) {
+      changes.status = { old: existing.status, new: effectiveStatus };
+    }
+
+    // Description change (just flag, don't compare full text)
+    if (
+      jobData.job_description &&
+      existing.job_description !== jobData.job_description
+    ) {
+      changes.description = true;
+    }
+
+    // Skills change
+    const oldSkills = (existing.skills as string[] | null) || [];
+    const newSkills = jobData.skills || [];
+    const added = newSkills.filter((s) => !oldSkills.includes(s));
+    const removed = oldSkills.filter((s) => !newSkills.includes(s));
+    if (added.length > 0 || removed.length > 0) {
+      changes.skills = { added, removed };
+    }
+
+    // Salary change
+    const oldSalary = formatSalary({
+      salary_min: existing.salary_min,
+      salary_max: existing.salary_max,
+      salary_currency: existing.salary_currency,
+      salary_period: existing.salary_period,
     });
+    const newSalary = formatSalary(jobData);
+    if (oldSalary !== newSalary && newSalary !== "-") {
+      changes.salary = { old: oldSalary, new: newSalary };
+    }
 
     await db.jobs.update({
       where: { id: existing.id },
@@ -234,10 +271,13 @@ export async function upsertJob(
         date_updated: currentDate,
       },
     });
-    return { id: existing.id, created: false };
+
+    return {
+      id: existing.id,
+      created: false,
+      changes: Object.keys(changes).length > 0 ? changes : undefined,
+    };
   } else {
-    // Create new
-    console.log("Creating new job");
     const newJob = await db.jobs.create({
       data: {
         ...baseJobData,
