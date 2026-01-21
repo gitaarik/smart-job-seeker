@@ -236,7 +236,6 @@ export type directus_flowsWhereInput = {
   user_created?: Prisma.UuidNullableFilter<"directus_flows"> | string | null
   directus_users?: Prisma.XOR<Prisma.Directus_usersNullableScalarRelationFilter, Prisma.directus_usersWhereInput> | null
   directus_operations?: Prisma.Directus_operationsListRelationFilter
-  directus_webhooks?: Prisma.Directus_webhooksListRelationFilter
 }
 
 export type directus_flowsOrderByWithRelationInput = {
@@ -254,7 +253,6 @@ export type directus_flowsOrderByWithRelationInput = {
   user_created?: Prisma.SortOrderInput | Prisma.SortOrder
   directus_users?: Prisma.directus_usersOrderByWithRelationInput
   directus_operations?: Prisma.directus_operationsOrderByRelationAggregateInput
-  directus_webhooks?: Prisma.directus_webhooksOrderByRelationAggregateInput
 }
 
 export type directus_flowsWhereUniqueInput = Prisma.AtLeast<{
@@ -275,7 +273,6 @@ export type directus_flowsWhereUniqueInput = Prisma.AtLeast<{
   user_created?: Prisma.UuidNullableFilter<"directus_flows"> | string | null
   directus_users?: Prisma.XOR<Prisma.Directus_usersNullableScalarRelationFilter, Prisma.directus_usersWhereInput> | null
   directus_operations?: Prisma.Directus_operationsListRelationFilter
-  directus_webhooks?: Prisma.Directus_webhooksListRelationFilter
 }, "id" | "operation">
 
 export type directus_flowsOrderByWithAggregationInput = {
@@ -328,7 +325,6 @@ export type directus_flowsCreateInput = {
   date_created?: Date | string | null
   directus_users?: Prisma.directus_usersCreateNestedOneWithoutDirectus_flowsInput
   directus_operations?: Prisma.directus_operationsCreateNestedManyWithoutDirectus_flowsInput
-  directus_webhooks?: Prisma.directus_webhooksCreateNestedManyWithoutDirectus_flowsInput
 }
 
 export type directus_flowsUncheckedCreateInput = {
@@ -345,7 +341,6 @@ export type directus_flowsUncheckedCreateInput = {
   date_created?: Date | string | null
   user_created?: string | null
   directus_operations?: Prisma.directus_operationsUncheckedCreateNestedManyWithoutDirectus_flowsInput
-  directus_webhooks?: Prisma.directus_webhooksUncheckedCreateNestedManyWithoutDirectus_flowsInput
 }
 
 export type directus_flowsUpdateInput = {
@@ -362,7 +357,6 @@ export type directus_flowsUpdateInput = {
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   directus_users?: Prisma.directus_usersUpdateOneWithoutDirectus_flowsNestedInput
   directus_operations?: Prisma.directus_operationsUpdateManyWithoutDirectus_flowsNestedInput
-  directus_webhooks?: Prisma.directus_webhooksUpdateManyWithoutDirectus_flowsNestedInput
 }
 
 export type directus_flowsUncheckedUpdateInput = {
@@ -379,7 +373,6 @@ export type directus_flowsUncheckedUpdateInput = {
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   user_created?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   directus_operations?: Prisma.directus_operationsUncheckedUpdateManyWithoutDirectus_flowsNestedInput
-  directus_webhooks?: Prisma.directus_webhooksUncheckedUpdateManyWithoutDirectus_flowsNestedInput
 }
 
 export type directus_flowsCreateManyInput = {
@@ -484,11 +477,6 @@ export type directus_flowsOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
-export type Directus_flowsNullableScalarRelationFilter = {
-  is?: Prisma.directus_flowsWhereInput | null
-  isNot?: Prisma.directus_flowsWhereInput | null
-}
-
 export type directus_flowsCreateNestedOneWithoutDirectus_operationsInput = {
   create?: Prisma.XOR<Prisma.directus_flowsCreateWithoutDirectus_operationsInput, Prisma.directus_flowsUncheckedCreateWithoutDirectus_operationsInput>
   connectOrCreate?: Prisma.directus_flowsCreateOrConnectWithoutDirectus_operationsInput
@@ -545,22 +533,6 @@ export type directus_flowsUncheckedUpdateManyWithoutDirectus_usersNestedInput = 
   deleteMany?: Prisma.directus_flowsScalarWhereInput | Prisma.directus_flowsScalarWhereInput[]
 }
 
-export type directus_flowsCreateNestedOneWithoutDirectus_webhooksInput = {
-  create?: Prisma.XOR<Prisma.directus_flowsCreateWithoutDirectus_webhooksInput, Prisma.directus_flowsUncheckedCreateWithoutDirectus_webhooksInput>
-  connectOrCreate?: Prisma.directus_flowsCreateOrConnectWithoutDirectus_webhooksInput
-  connect?: Prisma.directus_flowsWhereUniqueInput
-}
-
-export type directus_flowsUpdateOneWithoutDirectus_webhooksNestedInput = {
-  create?: Prisma.XOR<Prisma.directus_flowsCreateWithoutDirectus_webhooksInput, Prisma.directus_flowsUncheckedCreateWithoutDirectus_webhooksInput>
-  connectOrCreate?: Prisma.directus_flowsCreateOrConnectWithoutDirectus_webhooksInput
-  upsert?: Prisma.directus_flowsUpsertWithoutDirectus_webhooksInput
-  disconnect?: Prisma.directus_flowsWhereInput | boolean
-  delete?: Prisma.directus_flowsWhereInput | boolean
-  connect?: Prisma.directus_flowsWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.directus_flowsUpdateToOneWithWhereWithoutDirectus_webhooksInput, Prisma.directus_flowsUpdateWithoutDirectus_webhooksInput>, Prisma.directus_flowsUncheckedUpdateWithoutDirectus_webhooksInput>
-}
-
 export type directus_flowsCreateWithoutDirectus_operationsInput = {
   id: string
   name: string
@@ -574,7 +546,6 @@ export type directus_flowsCreateWithoutDirectus_operationsInput = {
   operation?: string | null
   date_created?: Date | string | null
   directus_users?: Prisma.directus_usersCreateNestedOneWithoutDirectus_flowsInput
-  directus_webhooks?: Prisma.directus_webhooksCreateNestedManyWithoutDirectus_flowsInput
 }
 
 export type directus_flowsUncheckedCreateWithoutDirectus_operationsInput = {
@@ -590,7 +561,6 @@ export type directus_flowsUncheckedCreateWithoutDirectus_operationsInput = {
   operation?: string | null
   date_created?: Date | string | null
   user_created?: string | null
-  directus_webhooks?: Prisma.directus_webhooksUncheckedCreateNestedManyWithoutDirectus_flowsInput
 }
 
 export type directus_flowsCreateOrConnectWithoutDirectus_operationsInput = {
@@ -622,7 +592,6 @@ export type directus_flowsUpdateWithoutDirectus_operationsInput = {
   operation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   directus_users?: Prisma.directus_usersUpdateOneWithoutDirectus_flowsNestedInput
-  directus_webhooks?: Prisma.directus_webhooksUpdateManyWithoutDirectus_flowsNestedInput
 }
 
 export type directus_flowsUncheckedUpdateWithoutDirectus_operationsInput = {
@@ -638,7 +607,6 @@ export type directus_flowsUncheckedUpdateWithoutDirectus_operationsInput = {
   operation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   user_created?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  directus_webhooks?: Prisma.directus_webhooksUncheckedUpdateManyWithoutDirectus_flowsNestedInput
 }
 
 export type directus_flowsCreateWithoutDirectus_usersInput = {
@@ -654,7 +622,6 @@ export type directus_flowsCreateWithoutDirectus_usersInput = {
   operation?: string | null
   date_created?: Date | string | null
   directus_operations?: Prisma.directus_operationsCreateNestedManyWithoutDirectus_flowsInput
-  directus_webhooks?: Prisma.directus_webhooksCreateNestedManyWithoutDirectus_flowsInput
 }
 
 export type directus_flowsUncheckedCreateWithoutDirectus_usersInput = {
@@ -670,7 +637,6 @@ export type directus_flowsUncheckedCreateWithoutDirectus_usersInput = {
   operation?: string | null
   date_created?: Date | string | null
   directus_operations?: Prisma.directus_operationsUncheckedCreateNestedManyWithoutDirectus_flowsInput
-  directus_webhooks?: Prisma.directus_webhooksUncheckedCreateNestedManyWithoutDirectus_flowsInput
 }
 
 export type directus_flowsCreateOrConnectWithoutDirectus_usersInput = {
@@ -717,86 +683,6 @@ export type directus_flowsScalarWhereInput = {
   user_created?: Prisma.UuidNullableFilter<"directus_flows"> | string | null
 }
 
-export type directus_flowsCreateWithoutDirectus_webhooksInput = {
-  id: string
-  name: string
-  icon?: string | null
-  color?: string | null
-  description?: string | null
-  status?: string
-  trigger?: string | null
-  accountability?: string | null
-  options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  operation?: string | null
-  date_created?: Date | string | null
-  directus_users?: Prisma.directus_usersCreateNestedOneWithoutDirectus_flowsInput
-  directus_operations?: Prisma.directus_operationsCreateNestedManyWithoutDirectus_flowsInput
-}
-
-export type directus_flowsUncheckedCreateWithoutDirectus_webhooksInput = {
-  id: string
-  name: string
-  icon?: string | null
-  color?: string | null
-  description?: string | null
-  status?: string
-  trigger?: string | null
-  accountability?: string | null
-  options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  operation?: string | null
-  date_created?: Date | string | null
-  user_created?: string | null
-  directus_operations?: Prisma.directus_operationsUncheckedCreateNestedManyWithoutDirectus_flowsInput
-}
-
-export type directus_flowsCreateOrConnectWithoutDirectus_webhooksInput = {
-  where: Prisma.directus_flowsWhereUniqueInput
-  create: Prisma.XOR<Prisma.directus_flowsCreateWithoutDirectus_webhooksInput, Prisma.directus_flowsUncheckedCreateWithoutDirectus_webhooksInput>
-}
-
-export type directus_flowsUpsertWithoutDirectus_webhooksInput = {
-  update: Prisma.XOR<Prisma.directus_flowsUpdateWithoutDirectus_webhooksInput, Prisma.directus_flowsUncheckedUpdateWithoutDirectus_webhooksInput>
-  create: Prisma.XOR<Prisma.directus_flowsCreateWithoutDirectus_webhooksInput, Prisma.directus_flowsUncheckedCreateWithoutDirectus_webhooksInput>
-  where?: Prisma.directus_flowsWhereInput
-}
-
-export type directus_flowsUpdateToOneWithWhereWithoutDirectus_webhooksInput = {
-  where?: Prisma.directus_flowsWhereInput
-  data: Prisma.XOR<Prisma.directus_flowsUpdateWithoutDirectus_webhooksInput, Prisma.directus_flowsUncheckedUpdateWithoutDirectus_webhooksInput>
-}
-
-export type directus_flowsUpdateWithoutDirectus_webhooksInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  icon?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  trigger?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  accountability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  operation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  directus_users?: Prisma.directus_usersUpdateOneWithoutDirectus_flowsNestedInput
-  directus_operations?: Prisma.directus_operationsUpdateManyWithoutDirectus_flowsNestedInput
-}
-
-export type directus_flowsUncheckedUpdateWithoutDirectus_webhooksInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  icon?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  trigger?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  accountability?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  operation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  user_created?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  directus_operations?: Prisma.directus_operationsUncheckedUpdateManyWithoutDirectus_flowsNestedInput
-}
-
 export type directus_flowsCreateManyDirectus_usersInput = {
   id: string
   name: string
@@ -824,7 +710,6 @@ export type directus_flowsUpdateWithoutDirectus_usersInput = {
   operation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   directus_operations?: Prisma.directus_operationsUpdateManyWithoutDirectus_flowsNestedInput
-  directus_webhooks?: Prisma.directus_webhooksUpdateManyWithoutDirectus_flowsNestedInput
 }
 
 export type directus_flowsUncheckedUpdateWithoutDirectus_usersInput = {
@@ -840,7 +725,6 @@ export type directus_flowsUncheckedUpdateWithoutDirectus_usersInput = {
   operation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   directus_operations?: Prisma.directus_operationsUncheckedUpdateManyWithoutDirectus_flowsNestedInput
-  directus_webhooks?: Prisma.directus_webhooksUncheckedUpdateManyWithoutDirectus_flowsNestedInput
 }
 
 export type directus_flowsUncheckedUpdateManyWithoutDirectus_usersInput = {
@@ -864,12 +748,10 @@ export type directus_flowsUncheckedUpdateManyWithoutDirectus_usersInput = {
 
 export type Directus_flowsCountOutputType = {
   directus_operations: number
-  directus_webhooks: number
 }
 
 export type Directus_flowsCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   directus_operations?: boolean | Directus_flowsCountOutputTypeCountDirectus_operationsArgs
-  directus_webhooks?: boolean | Directus_flowsCountOutputTypeCountDirectus_webhooksArgs
 }
 
 /**
@@ -889,13 +771,6 @@ export type Directus_flowsCountOutputTypeCountDirectus_operationsArgs<ExtArgs ex
   where?: Prisma.directus_operationsWhereInput
 }
 
-/**
- * Directus_flowsCountOutputType without action
- */
-export type Directus_flowsCountOutputTypeCountDirectus_webhooksArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.directus_webhooksWhereInput
-}
-
 
 export type directus_flowsSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -912,7 +787,6 @@ export type directus_flowsSelect<ExtArgs extends runtime.Types.Extensions.Intern
   user_created?: boolean
   directus_users?: boolean | Prisma.directus_flows$directus_usersArgs<ExtArgs>
   directus_operations?: boolean | Prisma.directus_flows$directus_operationsArgs<ExtArgs>
-  directus_webhooks?: boolean | Prisma.directus_flows$directus_webhooksArgs<ExtArgs>
   _count?: boolean | Prisma.Directus_flowsCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["directus_flows"]>
 
@@ -967,7 +841,6 @@ export type directus_flowsOmit<ExtArgs extends runtime.Types.Extensions.Internal
 export type directus_flowsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   directus_users?: boolean | Prisma.directus_flows$directus_usersArgs<ExtArgs>
   directus_operations?: boolean | Prisma.directus_flows$directus_operationsArgs<ExtArgs>
-  directus_webhooks?: boolean | Prisma.directus_flows$directus_webhooksArgs<ExtArgs>
   _count?: boolean | Prisma.Directus_flowsCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type directus_flowsIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -982,7 +855,6 @@ export type $directus_flowsPayload<ExtArgs extends runtime.Types.Extensions.Inte
   objects: {
     directus_users: Prisma.$directus_usersPayload<ExtArgs> | null
     directus_operations: Prisma.$directus_operationsPayload<ExtArgs>[]
-    directus_webhooks: Prisma.$directus_webhooksPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1393,7 +1265,6 @@ export interface Prisma__directus_flowsClient<T, Null = never, ExtArgs extends r
   readonly [Symbol.toStringTag]: "PrismaPromise"
   directus_users<T extends Prisma.directus_flows$directus_usersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.directus_flows$directus_usersArgs<ExtArgs>>): Prisma.Prisma__directus_usersClient<runtime.Types.Result.GetResult<Prisma.$directus_usersPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   directus_operations<T extends Prisma.directus_flows$directus_operationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.directus_flows$directus_operationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$directus_operationsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  directus_webhooks<T extends Prisma.directus_flows$directus_webhooksArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.directus_flows$directus_webhooksArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$directus_webhooksPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1871,30 +1742,6 @@ export type directus_flows$directus_operationsArgs<ExtArgs extends runtime.Types
   take?: number
   skip?: number
   distinct?: Prisma.Directus_operationsScalarFieldEnum | Prisma.Directus_operationsScalarFieldEnum[]
-}
-
-/**
- * directus_flows.directus_webhooks
- */
-export type directus_flows$directus_webhooksArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the directus_webhooks
-   */
-  select?: Prisma.directus_webhooksSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the directus_webhooks
-   */
-  omit?: Prisma.directus_webhooksOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.directus_webhooksInclude<ExtArgs> | null
-  where?: Prisma.directus_webhooksWhereInput
-  orderBy?: Prisma.directus_webhooksOrderByWithRelationInput | Prisma.directus_webhooksOrderByWithRelationInput[]
-  cursor?: Prisma.directus_webhooksWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.Directus_webhooksScalarFieldEnum | Prisma.Directus_webhooksScalarFieldEnum[]
 }
 
 /**

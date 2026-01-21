@@ -80,7 +80,6 @@ export const ModelName = {
   directus_translations: 'directus_translations',
   directus_users: 'directus_users',
   directus_versions: 'directus_versions',
-  directus_webhooks: 'directus_webhooks',
   education: 'education',
   highlights: 'highlights',
   languages: 'languages',
@@ -656,23 +655,6 @@ export const Directus_versionsScalarFieldEnum = {
 export type Directus_versionsScalarFieldEnum = (typeof Directus_versionsScalarFieldEnum)[keyof typeof Directus_versionsScalarFieldEnum]
 
 
-export const Directus_webhooksScalarFieldEnum = {
-  id: 'id',
-  name: 'name',
-  method: 'method',
-  url: 'url',
-  status: 'status',
-  data: 'data',
-  actions: 'actions',
-  collections: 'collections',
-  headers: 'headers',
-  was_active_before_deprecation: 'was_active_before_deprecation',
-  migrated_flow: 'migrated_flow'
-} as const
-
-export type Directus_webhooksScalarFieldEnum = (typeof Directus_webhooksScalarFieldEnum)[keyof typeof Directus_webhooksScalarFieldEnum]
-
-
 export const EducationScalarFieldEnum = {
   id: 'id',
   status: 'status',
@@ -1214,7 +1196,9 @@ export const Job_searchesScalarFieldEnum = {
   profile: 'profile',
   last_run: 'last_run',
   search_url: 'search_url',
-  platform: 'platform'
+  platform: 'platform',
+  navigation_type: 'navigation_type',
+  stripped_html: 'stripped_html'
 } as const
 
 export type Job_searchesScalarFieldEnum = (typeof Job_searchesScalarFieldEnum)[keyof typeof Job_searchesScalarFieldEnum]

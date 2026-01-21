@@ -163,11 +163,6 @@ export type directus_users = Prisma.directus_usersModel
  */
 export type directus_versions = Prisma.directus_versionsModel
 /**
- * Model directus_webhooks
- * 
- */
-export type directus_webhooks = Prisma.directus_webhooksModel
-/**
  * Model education
  * 
  */

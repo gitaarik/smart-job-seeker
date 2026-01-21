@@ -413,7 +413,6 @@ export const ModelName = {
   directus_translations: 'directus_translations',
   directus_users: 'directus_users',
   directus_versions: 'directus_versions',
-  directus_webhooks: 'directus_webhooks',
   education: 'education',
   highlights: 'highlights',
   languages: 'languages',
@@ -468,7 +467,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "applications" | "cheat_sheets" | "collected_data" | "directus_access" | "directus_activity" | "directus_collections" | "directus_comments" | "directus_dashboards" | "directus_extensions" | "directus_fields" | "directus_files" | "directus_flows" | "directus_folders" | "directus_migrations" | "directus_notifications" | "directus_operations" | "directus_panels" | "directus_permissions" | "directus_policies" | "directus_presets" | "directus_relations" | "directus_revisions" | "directus_roles" | "directus_sessions" | "directus_settings" | "directus_shares" | "directus_translations" | "directus_users" | "directus_versions" | "directus_webhooks" | "education" | "highlights" | "languages" | "platform_profiles" | "profile_versions" | "profiles" | "project_stories" | "references" | "salary_expectations" | "side_project_achievements" | "side_project_technologies" | "side_projects" | "tech_skill_categories" | "tech_skill_types" | "tech_skills" | "work_experience_achievements" | "work_experience_technologies" | "work_experiences" | "ai_chat" | "os_contributions" | "work_experience_project_technologies" | "work_experience_projects" | "ai_prompts" | "application_questions" | "application_activity_log" | "applications_files" | "ai_chat_prompts" | "profile_version_extensions" | "application_letters" | "job_resources" | "jobs" | "job_searches" | "job_searches_job_sites" | "job_match_preferences" | "job_matches" | "job_platforms" | "config" | "profile_exports" | "profile_tokens"
+    modelProps: "applications" | "cheat_sheets" | "collected_data" | "directus_access" | "directus_activity" | "directus_collections" | "directus_comments" | "directus_dashboards" | "directus_extensions" | "directus_fields" | "directus_files" | "directus_flows" | "directus_folders" | "directus_migrations" | "directus_notifications" | "directus_operations" | "directus_panels" | "directus_permissions" | "directus_policies" | "directus_presets" | "directus_relations" | "directus_revisions" | "directus_roles" | "directus_sessions" | "directus_settings" | "directus_shares" | "directus_translations" | "directus_users" | "directus_versions" | "education" | "highlights" | "languages" | "platform_profiles" | "profile_versions" | "profiles" | "project_stories" | "references" | "salary_expectations" | "side_project_achievements" | "side_project_technologies" | "side_projects" | "tech_skill_categories" | "tech_skill_types" | "tech_skills" | "work_experience_achievements" | "work_experience_technologies" | "work_experiences" | "ai_chat" | "os_contributions" | "work_experience_project_technologies" | "work_experience_projects" | "ai_prompts" | "application_questions" | "application_activity_log" | "applications_files" | "ai_chat_prompts" | "profile_version_extensions" | "application_letters" | "job_resources" | "jobs" | "job_searches" | "job_searches_job_sites" | "job_match_preferences" | "job_matches" | "job_platforms" | "config" | "profile_exports" | "profile_tokens"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2615,80 +2614,6 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.directus_versionsCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.Directus_versionsCountAggregateOutputType> | number
-        }
-      }
-    }
-    directus_webhooks: {
-      payload: Prisma.$directus_webhooksPayload<ExtArgs>
-      fields: Prisma.directus_webhooksFieldRefs
-      operations: {
-        findUnique: {
-          args: Prisma.directus_webhooksFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_webhooksPayload> | null
-        }
-        findUniqueOrThrow: {
-          args: Prisma.directus_webhooksFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_webhooksPayload>
-        }
-        findFirst: {
-          args: Prisma.directus_webhooksFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_webhooksPayload> | null
-        }
-        findFirstOrThrow: {
-          args: Prisma.directus_webhooksFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_webhooksPayload>
-        }
-        findMany: {
-          args: Prisma.directus_webhooksFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_webhooksPayload>[]
-        }
-        create: {
-          args: Prisma.directus_webhooksCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_webhooksPayload>
-        }
-        createMany: {
-          args: Prisma.directus_webhooksCreateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        createManyAndReturn: {
-          args: Prisma.directus_webhooksCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_webhooksPayload>[]
-        }
-        delete: {
-          args: Prisma.directus_webhooksDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_webhooksPayload>
-        }
-        update: {
-          args: Prisma.directus_webhooksUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_webhooksPayload>
-        }
-        deleteMany: {
-          args: Prisma.directus_webhooksDeleteManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateMany: {
-          args: Prisma.directus_webhooksUpdateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateManyAndReturn: {
-          args: Prisma.directus_webhooksUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_webhooksPayload>[]
-        }
-        upsert: {
-          args: Prisma.directus_webhooksUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_webhooksPayload>
-        }
-        aggregate: {
-          args: Prisma.Directus_webhooksAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateDirectus_webhooks>
-        }
-        groupBy: {
-          args: Prisma.directus_webhooksGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.Directus_webhooksGroupByOutputType>[]
-        }
-        count: {
-          args: Prisma.directus_webhooksCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.Directus_webhooksCountAggregateOutputType> | number
         }
       }
     }
@@ -6135,23 +6060,6 @@ export const Directus_versionsScalarFieldEnum = {
 export type Directus_versionsScalarFieldEnum = (typeof Directus_versionsScalarFieldEnum)[keyof typeof Directus_versionsScalarFieldEnum]
 
 
-export const Directus_webhooksScalarFieldEnum = {
-  id: 'id',
-  name: 'name',
-  method: 'method',
-  url: 'url',
-  status: 'status',
-  data: 'data',
-  actions: 'actions',
-  collections: 'collections',
-  headers: 'headers',
-  was_active_before_deprecation: 'was_active_before_deprecation',
-  migrated_flow: 'migrated_flow'
-} as const
-
-export type Directus_webhooksScalarFieldEnum = (typeof Directus_webhooksScalarFieldEnum)[keyof typeof Directus_webhooksScalarFieldEnum]
-
-
 export const EducationScalarFieldEnum = {
   id: 'id',
   status: 'status',
@@ -6693,7 +6601,9 @@ export const Job_searchesScalarFieldEnum = {
   profile: 'profile',
   last_run: 'last_run',
   search_url: 'search_url',
-  platform: 'platform'
+  platform: 'platform',
+  navigation_type: 'navigation_type',
+  stripped_html: 'stripped_html'
 } as const
 
 export type Job_searchesScalarFieldEnum = (typeof Job_searchesScalarFieldEnum)[keyof typeof Job_searchesScalarFieldEnum]
@@ -7065,7 +6975,6 @@ export type GlobalOmitConfig = {
   directus_translations?: Prisma.directus_translationsOmit
   directus_users?: Prisma.directus_usersOmit
   directus_versions?: Prisma.directus_versionsOmit
-  directus_webhooks?: Prisma.directus_webhooksOmit
   education?: Prisma.educationOmit
   highlights?: Prisma.highlightsOmit
   languages?: Prisma.languagesOmit

@@ -1587,12 +1587,10 @@ export type profilesCreateNestedOneWithoutPlatform_profilesInput = {
   connect?: Prisma.profilesWhereUniqueInput
 }
 
-export type profilesUpdateOneWithoutPlatform_profilesNestedInput = {
+export type profilesUpdateOneRequiredWithoutPlatform_profilesNestedInput = {
   create?: Prisma.XOR<Prisma.profilesCreateWithoutPlatform_profilesInput, Prisma.profilesUncheckedCreateWithoutPlatform_profilesInput>
   connectOrCreate?: Prisma.profilesCreateOrConnectWithoutPlatform_profilesInput
   upsert?: Prisma.profilesUpsertWithoutPlatform_profilesInput
-  disconnect?: Prisma.profilesWhereInput | boolean
-  delete?: Prisma.profilesWhereInput | boolean
   connect?: Prisma.profilesWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.profilesUpdateToOneWithWhereWithoutPlatform_profilesInput, Prisma.profilesUpdateWithoutPlatform_profilesInput>, Prisma.profilesUncheckedUpdateWithoutPlatform_profilesInput>
 }

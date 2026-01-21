@@ -239,7 +239,7 @@ export type Platform_profilesGroupByOutputType = {
   sort: number | null
   date_created: Date | null
   date_updated: Date | null
-  profile: number | null
+  profile: number
   platform: number | null
   username: string | null
   password: string | null
@@ -277,7 +277,7 @@ export type platform_profilesWhereInput = {
   sort?: Prisma.IntNullableFilter<"platform_profiles"> | number | null
   date_created?: Prisma.DateTimeNullableFilter<"platform_profiles"> | Date | string | null
   date_updated?: Prisma.DateTimeNullableFilter<"platform_profiles"> | Date | string | null
-  profile?: Prisma.IntNullableFilter<"platform_profiles"> | number | null
+  profile?: Prisma.IntFilter<"platform_profiles"> | number
   platform?: Prisma.IntNullableFilter<"platform_profiles"> | number | null
   username?: Prisma.StringNullableFilter<"platform_profiles"> | string | null
   password?: Prisma.StringNullableFilter<"platform_profiles"> | string | null
@@ -285,7 +285,7 @@ export type platform_profilesWhereInput = {
   last_login_at?: Prisma.DateTimeNullableFilter<"platform_profiles"> | Date | string | null
   login_error?: Prisma.StringNullableFilter<"platform_profiles"> | string | null
   job_platforms?: Prisma.XOR<Prisma.Job_platformsNullableScalarRelationFilter, Prisma.job_platformsWhereInput> | null
-  profiles?: Prisma.XOR<Prisma.ProfilesNullableScalarRelationFilter, Prisma.profilesWhereInput> | null
+  profiles?: Prisma.XOR<Prisma.ProfilesScalarRelationFilter, Prisma.profilesWhereInput>
 }
 
 export type platform_profilesOrderByWithRelationInput = {
@@ -294,7 +294,7 @@ export type platform_profilesOrderByWithRelationInput = {
   sort?: Prisma.SortOrderInput | Prisma.SortOrder
   date_created?: Prisma.SortOrderInput | Prisma.SortOrder
   date_updated?: Prisma.SortOrderInput | Prisma.SortOrder
-  profile?: Prisma.SortOrderInput | Prisma.SortOrder
+  profile?: Prisma.SortOrder
   platform?: Prisma.SortOrderInput | Prisma.SortOrder
   username?: Prisma.SortOrderInput | Prisma.SortOrder
   password?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -314,7 +314,7 @@ export type platform_profilesWhereUniqueInput = Prisma.AtLeast<{
   sort?: Prisma.IntNullableFilter<"platform_profiles"> | number | null
   date_created?: Prisma.DateTimeNullableFilter<"platform_profiles"> | Date | string | null
   date_updated?: Prisma.DateTimeNullableFilter<"platform_profiles"> | Date | string | null
-  profile?: Prisma.IntNullableFilter<"platform_profiles"> | number | null
+  profile?: Prisma.IntFilter<"platform_profiles"> | number
   platform?: Prisma.IntNullableFilter<"platform_profiles"> | number | null
   username?: Prisma.StringNullableFilter<"platform_profiles"> | string | null
   password?: Prisma.StringNullableFilter<"platform_profiles"> | string | null
@@ -322,7 +322,7 @@ export type platform_profilesWhereUniqueInput = Prisma.AtLeast<{
   last_login_at?: Prisma.DateTimeNullableFilter<"platform_profiles"> | Date | string | null
   login_error?: Prisma.StringNullableFilter<"platform_profiles"> | string | null
   job_platforms?: Prisma.XOR<Prisma.Job_platformsNullableScalarRelationFilter, Prisma.job_platformsWhereInput> | null
-  profiles?: Prisma.XOR<Prisma.ProfilesNullableScalarRelationFilter, Prisma.profilesWhereInput> | null
+  profiles?: Prisma.XOR<Prisma.ProfilesScalarRelationFilter, Prisma.profilesWhereInput>
 }, "id">
 
 export type platform_profilesOrderByWithAggregationInput = {
@@ -331,7 +331,7 @@ export type platform_profilesOrderByWithAggregationInput = {
   sort?: Prisma.SortOrderInput | Prisma.SortOrder
   date_created?: Prisma.SortOrderInput | Prisma.SortOrder
   date_updated?: Prisma.SortOrderInput | Prisma.SortOrder
-  profile?: Prisma.SortOrderInput | Prisma.SortOrder
+  profile?: Prisma.SortOrder
   platform?: Prisma.SortOrderInput | Prisma.SortOrder
   username?: Prisma.SortOrderInput | Prisma.SortOrder
   password?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -354,7 +354,7 @@ export type platform_profilesScalarWhereWithAggregatesInput = {
   sort?: Prisma.IntNullableWithAggregatesFilter<"platform_profiles"> | number | null
   date_created?: Prisma.DateTimeNullableWithAggregatesFilter<"platform_profiles"> | Date | string | null
   date_updated?: Prisma.DateTimeNullableWithAggregatesFilter<"platform_profiles"> | Date | string | null
-  profile?: Prisma.IntNullableWithAggregatesFilter<"platform_profiles"> | number | null
+  profile?: Prisma.IntWithAggregatesFilter<"platform_profiles"> | number
   platform?: Prisma.IntNullableWithAggregatesFilter<"platform_profiles"> | number | null
   username?: Prisma.StringNullableWithAggregatesFilter<"platform_profiles"> | string | null
   password?: Prisma.StringNullableWithAggregatesFilter<"platform_profiles"> | string | null
@@ -374,7 +374,7 @@ export type platform_profilesCreateInput = {
   last_login_at?: Date | string | null
   login_error?: string | null
   job_platforms?: Prisma.job_platformsCreateNestedOneWithoutPlatform_profilesInput
-  profiles?: Prisma.profilesCreateNestedOneWithoutPlatform_profilesInput
+  profiles: Prisma.profilesCreateNestedOneWithoutPlatform_profilesInput
 }
 
 export type platform_profilesUncheckedCreateInput = {
@@ -383,7 +383,7 @@ export type platform_profilesUncheckedCreateInput = {
   sort?: number | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
-  profile?: number | null
+  profile: number
   platform?: number | null
   username?: string | null
   password?: string | null
@@ -403,7 +403,7 @@ export type platform_profilesUpdateInput = {
   last_login_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   login_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_platforms?: Prisma.job_platformsUpdateOneWithoutPlatform_profilesNestedInput
-  profiles?: Prisma.profilesUpdateOneWithoutPlatform_profilesNestedInput
+  profiles?: Prisma.profilesUpdateOneRequiredWithoutPlatform_profilesNestedInput
 }
 
 export type platform_profilesUncheckedUpdateInput = {
@@ -412,7 +412,7 @@ export type platform_profilesUncheckedUpdateInput = {
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  profile?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  profile?: Prisma.IntFieldUpdateOperationsInput | number
   platform?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -427,7 +427,7 @@ export type platform_profilesCreateManyInput = {
   sort?: number | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
-  profile?: number | null
+  profile: number
   platform?: number | null
   username?: string | null
   password?: string | null
@@ -454,7 +454,7 @@ export type platform_profilesUncheckedUpdateManyInput = {
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  profile?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  profile?: Prisma.IntFieldUpdateOperationsInput | number
   platform?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -678,7 +678,7 @@ export type platform_profilesScalarWhereInput = {
   sort?: Prisma.IntNullableFilter<"platform_profiles"> | number | null
   date_created?: Prisma.DateTimeNullableFilter<"platform_profiles"> | Date | string | null
   date_updated?: Prisma.DateTimeNullableFilter<"platform_profiles"> | Date | string | null
-  profile?: Prisma.IntNullableFilter<"platform_profiles"> | number | null
+  profile?: Prisma.IntFilter<"platform_profiles"> | number
   platform?: Prisma.IntNullableFilter<"platform_profiles"> | number | null
   username?: Prisma.StringNullableFilter<"platform_profiles"> | string | null
   password?: Prisma.StringNullableFilter<"platform_profiles"> | string | null
@@ -697,7 +697,7 @@ export type platform_profilesCreateWithoutJob_platformsInput = {
   api_token?: string | null
   last_login_at?: Date | string | null
   login_error?: string | null
-  profiles?: Prisma.profilesCreateNestedOneWithoutPlatform_profilesInput
+  profiles: Prisma.profilesCreateNestedOneWithoutPlatform_profilesInput
 }
 
 export type platform_profilesUncheckedCreateWithoutJob_platformsInput = {
@@ -706,7 +706,7 @@ export type platform_profilesUncheckedCreateWithoutJob_platformsInput = {
   sort?: number | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
-  profile?: number | null
+  profile: number
   username?: string | null
   password?: string | null
   api_token?: string | null
@@ -801,7 +801,7 @@ export type platform_profilesCreateManyJob_platformsInput = {
   sort?: number | null
   date_created?: Date | string | null
   date_updated?: Date | string | null
-  profile?: number | null
+  profile: number
   username?: string | null
   password?: string | null
   api_token?: string | null
@@ -819,7 +819,7 @@ export type platform_profilesUpdateWithoutJob_platformsInput = {
   api_token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_login_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   login_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profiles?: Prisma.profilesUpdateOneWithoutPlatform_profilesNestedInput
+  profiles?: Prisma.profilesUpdateOneRequiredWithoutPlatform_profilesNestedInput
 }
 
 export type platform_profilesUncheckedUpdateWithoutJob_platformsInput = {
@@ -828,7 +828,7 @@ export type platform_profilesUncheckedUpdateWithoutJob_platformsInput = {
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  profile?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  profile?: Prisma.IntFieldUpdateOperationsInput | number
   username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   api_token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -842,7 +842,7 @@ export type platform_profilesUncheckedUpdateManyWithoutJob_platformsInput = {
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  profile?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  profile?: Prisma.IntFieldUpdateOperationsInput | number
   username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   api_token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -866,7 +866,7 @@ export type platform_profilesSelect<ExtArgs extends runtime.Types.Extensions.Int
   last_login_at?: boolean
   login_error?: boolean
   job_platforms?: boolean | Prisma.platform_profiles$job_platformsArgs<ExtArgs>
-  profiles?: boolean | Prisma.platform_profiles$profilesArgs<ExtArgs>
+  profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["platform_profiles"]>
 
 export type platform_profilesSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -883,7 +883,7 @@ export type platform_profilesSelectCreateManyAndReturn<ExtArgs extends runtime.T
   last_login_at?: boolean
   login_error?: boolean
   job_platforms?: boolean | Prisma.platform_profiles$job_platformsArgs<ExtArgs>
-  profiles?: boolean | Prisma.platform_profiles$profilesArgs<ExtArgs>
+  profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["platform_profiles"]>
 
 export type platform_profilesSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -900,7 +900,7 @@ export type platform_profilesSelectUpdateManyAndReturn<ExtArgs extends runtime.T
   last_login_at?: boolean
   login_error?: boolean
   job_platforms?: boolean | Prisma.platform_profiles$job_platformsArgs<ExtArgs>
-  profiles?: boolean | Prisma.platform_profiles$profilesArgs<ExtArgs>
+  profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["platform_profiles"]>
 
 export type platform_profilesSelectScalar = {
@@ -921,22 +921,22 @@ export type platform_profilesSelectScalar = {
 export type platform_profilesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "sort" | "date_created" | "date_updated" | "profile" | "platform" | "username" | "password" | "api_token" | "last_login_at" | "login_error", ExtArgs["result"]["platform_profiles"]>
 export type platform_profilesInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   job_platforms?: boolean | Prisma.platform_profiles$job_platformsArgs<ExtArgs>
-  profiles?: boolean | Prisma.platform_profiles$profilesArgs<ExtArgs>
+  profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }
 export type platform_profilesIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   job_platforms?: boolean | Prisma.platform_profiles$job_platformsArgs<ExtArgs>
-  profiles?: boolean | Prisma.platform_profiles$profilesArgs<ExtArgs>
+  profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }
 export type platform_profilesIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   job_platforms?: boolean | Prisma.platform_profiles$job_platformsArgs<ExtArgs>
-  profiles?: boolean | Prisma.platform_profiles$profilesArgs<ExtArgs>
+  profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }
 
 export type $platform_profilesPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "platform_profiles"
   objects: {
     job_platforms: Prisma.$job_platformsPayload<ExtArgs> | null
-    profiles: Prisma.$profilesPayload<ExtArgs> | null
+    profiles: Prisma.$profilesPayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
@@ -944,7 +944,7 @@ export type $platform_profilesPayload<ExtArgs extends runtime.Types.Extensions.I
     sort: number | null
     date_created: Date | null
     date_updated: Date | null
-    profile: number | null
+    profile: number
     platform: number | null
     username: string | null
     password: string | null
@@ -1346,7 +1346,7 @@ readonly fields: platform_profilesFieldRefs;
 export interface Prisma__platform_profilesClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   job_platforms<T extends Prisma.platform_profiles$job_platformsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.platform_profiles$job_platformsArgs<ExtArgs>>): Prisma.Prisma__job_platformsClient<runtime.Types.Result.GetResult<Prisma.$job_platformsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-  profiles<T extends Prisma.platform_profiles$profilesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.platform_profiles$profilesArgs<ExtArgs>>): Prisma.Prisma__profilesClient<runtime.Types.Result.GetResult<Prisma.$profilesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  profiles<T extends Prisma.profilesDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.profilesDefaultArgs<ExtArgs>>): Prisma.Prisma__profilesClient<runtime.Types.Result.GetResult<Prisma.$profilesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1606,7 +1606,7 @@ export type platform_profilesCreateArgs<ExtArgs extends runtime.Types.Extensions
   /**
    * The data needed to create a platform_profiles.
    */
-  data?: Prisma.XOR<Prisma.platform_profilesCreateInput, Prisma.platform_profilesUncheckedCreateInput>
+  data: Prisma.XOR<Prisma.platform_profilesCreateInput, Prisma.platform_profilesUncheckedCreateInput>
 }
 
 /**
@@ -1800,25 +1800,6 @@ export type platform_profiles$job_platformsArgs<ExtArgs extends runtime.Types.Ex
    */
   include?: Prisma.job_platformsInclude<ExtArgs> | null
   where?: Prisma.job_platformsWhereInput
-}
-
-/**
- * platform_profiles.profiles
- */
-export type platform_profiles$profilesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the profiles
-   */
-  select?: Prisma.profilesSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the profiles
-   */
-  omit?: Prisma.profilesOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.profilesInclude<ExtArgs> | null
-  where?: Prisma.profilesWhereInput
 }
 
 /**
