@@ -77,7 +77,7 @@ describe("stripHtmlForLlm", () => {
     expect(result).toContain("Content");
   });
 
-  it("should keep important attributes (href and type only)", () => {
+  it("should keep important attributes (href) and remove form elements", () => {
     const html = `
       <html>
         <body>
@@ -90,7 +90,9 @@ describe("stripHtmlForLlm", () => {
     const result = stripHtmlForLlm(html);
 
     expect(result).toContain('href="https://example.com"');
-    expect(result).toContain('type="email"');
+    // Input elements are now removed (form elements are noise for job scraping)
+    expect(result).not.toContain('type="email"');
+    expect(result).not.toContain("<input");
     expect(result).not.toContain('class="link"');
     expect(result).not.toContain('id="test"');
     expect(result).not.toContain('name="email"');

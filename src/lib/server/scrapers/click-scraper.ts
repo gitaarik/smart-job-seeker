@@ -282,20 +282,49 @@ export async function scrapeJobsWithClicks(
     // Get marked HTML
     const markedHtml = await page.content();
 
+    // Debug: Log current URL and page title at time of HTML capture
+    const captureUrl = page.url();
+    const captureTitle = await page.title();
+    console.log(`      📍 Capturing HTML from: ${captureUrl}`);
+    console.log(`      📄 Page title: "${captureTitle}"`);
+
     // Remove action clickables from HTML before LLM extraction
     const cleanedHtml = clickableClassifications
       ? removeActionClickablesFromHtml(markedHtml, clickableClassifications)
       : markedHtml;
 
     const htmlSize = (cleanedHtml.length / 1024).toFixed(1);
-    console.log(`      HTML size: ${htmlSize} KB`);
+    console.log(`      HTML size (raw): ${htmlSize} KB`);
 
     // Strip HTML for LLM processing (data-extract-clickable-id attributes survive)
     const strippedHtml = stripHtmlForLlm(cleanedHtml);
 
+    // Debug: Count clickable IDs that survived stripping
+    const clickableIdMatches = strippedHtml.match(/data-extract-clickable-id/g);
+    const survivingClickables = clickableIdMatches
+      ? clickableIdMatches.length
+      : 0;
+    const strippedSize = (strippedHtml.length / 1024).toFixed(1);
+    console.log(
+      `      HTML size (stripped): ${strippedSize} KB, clickables preserved: ${survivingClickables}/${clickableCount}`,
+    );
+
     // Capture stripped HTML from first page BEFORE LLM extraction (so we save it even if LLM fails)
     if (pageNumber === 1) {
-      savedStrippedHtml = strippedHtml;
+      // Prepend debug metadata to help diagnose issues
+      const debugHeader = [
+        `<!-- DEBUG INFO`,
+        `URL: ${captureUrl}`,
+        `Title: ${captureTitle}`,
+        `Raw HTML: ${htmlSize} KB`,
+        `Stripped HTML: ${strippedSize} KB`,
+        `CDP clickables found: ${clickableCount}`,
+        `Clickables after strip: ${survivingClickables}`,
+        `Timestamp: ${new Date().toISOString()}`,
+        `-->`,
+      ].join("\n");
+
+      savedStrippedHtml = debugHeader + "\n" + strippedHtml;
 
       // Log Directus admin URL for debugging stripped HTML
       if (jobSearchId) {
@@ -308,7 +337,7 @@ export async function scrapeJobsWithClicks(
         // Save stripped HTML immediately for debugging (before LLM extraction or interactive prompts)
         await dbDirect.job_searches.update({
           where: { id: jobSearchId },
-          data: { stripped_html: strippedHtml },
+          data: { stripped_html: savedStrippedHtml },
         });
       }
     }

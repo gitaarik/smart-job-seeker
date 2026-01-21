@@ -116,6 +116,17 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+  novnc:
+    image: bonigarcia/novnc:1.3.0
+    restart: unless-stopped
+    ports:
+      - "6080:6080"
+    environment:
+      - AUTOCONNECT=true
+      - VNC_PASSWORD=secret
+      - VNC_SERVER=browser-use:5900
+    depends_on:
+      - browser-use
 volumes:
   postgres_data:
   browser_use_data:

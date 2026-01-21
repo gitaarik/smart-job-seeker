@@ -43,6 +43,18 @@ export function stripHtmlForLlm(html: string): string {
   $("img").remove();
   $("picture").remove();
 
+  // Remove form elements - filter checkboxes, search inputs, etc. are noise for job extraction
+  $("form").remove();
+  $("input").remove();
+  $("select").remove();
+  $("textarea").remove();
+  $("label").remove();
+  $("fieldset").remove();
+  $("legend").remove();
+  $("datalist").remove();
+  $("option").remove();
+  $("optgroup").remove();
+
   // Remove all forms of hidden content
   $("[hidden]").remove();
   $("[style*='display:none']").remove();
@@ -185,7 +197,6 @@ export function stripHtmlForLlm(html: string): string {
   const selfClosingTags = new Set([
     "br",
     "hr",
-    "input",
     "meta",
     "link",
     "area",
@@ -223,9 +234,7 @@ export function stripHtmlForLlm(html: string): string {
       if (hasPreservedAttrs) return;
 
       const text = element.text().trim();
-      const hasContentChildren =
-        element.find("input, br, hr, a, button").length >
-          0;
+      const hasContentChildren = element.find("br, hr, a, button").length > 0;
 
       if (!text && !hasContentChildren) {
         element.remove();
@@ -248,9 +257,9 @@ export function stripHtmlForLlm(html: string): string {
   cleaned = cleaned.trim();
 
   // 6. Truncate if still too large (last resort)
-  // Groq model limit: 30k tokens per request
-  // Target: ~20k tokens for content = ~80k chars (leaving room for prompt + response)
-  const maxChars = 80000;
+  // Modern LLMs (Llama 4, Gemini, GPT-4, Claude) have 128k+ token context windows
+  // Target: ~75k tokens for content = ~300k chars (leaving room for prompt + response)
+  const maxChars = 300000;
   if (cleaned.length > maxChars) {
     console.warn(
       `⚠️  HTML too large (${cleaned.length} chars), truncating to ${maxChars} chars`,

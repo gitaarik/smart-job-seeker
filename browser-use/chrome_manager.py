@@ -117,15 +117,6 @@ class ChromeManager:
             logger.warning(f"[Chrome] Lock cleanup warning: {e}")
 
     @classmethod
-    async def _kill_orphaned_chrome(cls) -> None:
-        """Kill any orphaned Chrome processes."""
-        try:
-            subprocess.run(["pkill", "-9", "chrome"], capture_output=True, timeout=5)
-            await asyncio.sleep(0.5)
-        except Exception as e:
-            logger.warning(f"[Chrome] pkill warning: {e}")
-
-    @classmethod
     async def launch(
         cls,
         start_url: str,
@@ -141,8 +132,8 @@ class ChromeManager:
         Returns:
             Internal CDP URL (http://127.0.0.1:{internal_port})
         """
-        # Clean up first
-        await cls._kill_orphaned_chrome()
+        # Clean up any existing Chrome and socat processes first
+        await cls.close()
         cls._cleanup_lock_files()
         cls._setup_preferences()
 
@@ -266,7 +257,7 @@ class ChromeManager:
     @classmethod
     async def close(cls) -> None:
         """Close Chrome and socat processes."""
-        # Kill socat first
+        # Kill tracked socat process
         if cls._socat_process:
             try:
                 cls._socat_process.terminate()
@@ -281,7 +272,7 @@ class ChromeManager:
             finally:
                 cls._socat_process = None
 
-        # Kill Chrome
+        # Kill tracked Chrome process
         if cls._chrome_process:
             try:
                 cls._chrome_process.terminate()
@@ -296,6 +287,14 @@ class ChromeManager:
                     pass
             finally:
                 cls._chrome_process = None
+
+        # Also kill any orphaned processes (in case references were lost)
+        try:
+            subprocess.run(["pkill", "-9", "socat"], capture_output=True, timeout=5)
+            subprocess.run(["pkill", "-9", "chrome"], capture_output=True, timeout=5)
+            await asyncio.sleep(0.3)
+        except Exception as e:
+            logger.warning(f"[Chrome] pkill cleanup warning: {e}")
 
     @classmethod
     async def is_cdp_ready(cls, cdp_url: str) -> bool:
@@ -380,3 +379,70 @@ class ChromeManager:
     def session_exists(cls) -> bool:
         """Check if session directory exists."""
         return os.path.exists(SESSION_DIR) and os.path.isdir(SESSION_DIR)
+
+    @classmethod
+    def is_running(cls) -> bool:
+        """Check if Chrome process is running."""
+        return cls._chrome_process is not None and cls._chrome_process.poll() is None
+
+    @classmethod
+    async def navigate(cls, url: str, cdp_port: int = 9222) -> str:
+        """
+        Navigate to URL, launching Chrome if needed.
+
+        This is the main entry point for browser navigation. It:
+        - Launches Chrome if not running
+        - Navigates to the URL in the existing tab if already running
+
+        Args:
+            url: URL to navigate to
+            cdp_port: External CDP port
+
+        Returns:
+            Internal CDP URL
+        """
+        internal_cdp_port = cdp_port + 1
+        cdp_url = f"http://127.0.0.1:{internal_cdp_port}"
+
+        # Check if Chrome is already running and CDP is ready
+        if cls.is_running() and await cls.is_cdp_ready(cdp_url):
+            # Chrome is running - navigate via CDP
+            logger.info(f"[Chrome] Already running, navigating to: {url}")
+            print(f"[Chrome] Navigating to: {url}", flush=True)
+
+            pages_info = await cls.get_pages_info(cdp_port)
+            if not pages_info:
+                logger.warning("[Chrome] No pages found, will relaunch")
+            else:
+                page_ws_url = pages_info[0].get("webSocketDebuggerUrl", "")
+                if not page_ws_url:
+                    logger.warning("[Chrome] No WebSocket URL found, will relaunch")
+                else:
+                    try:
+                        async with websockets.connect(page_ws_url, close_timeout=10) as ws:
+                            await ws.send(json.dumps({
+                                "id": 1,
+                                "method": "Page.navigate",
+                                "params": {"url": url}
+                            }))
+                            response = await asyncio.wait_for(ws.recv(), timeout=10)
+                            result = json.loads(response)
+
+                            # Check for navigation errors
+                            if "error" in result:
+                                logger.warning(f"[Chrome] CDP navigate error: {result['error']}")
+                            else:
+                                # Wait for page to load
+                                await asyncio.sleep(2)
+                                logger.info(f"[Chrome] Navigation complete")
+                                print(f"[Chrome] Navigation complete", flush=True)
+                                return cdp_url
+                    except Exception as e:
+                        logger.warning(f"[Chrome] CDP navigate failed: {e}, will relaunch")
+
+            # CDP navigation failed - close and relaunch
+            logger.info("[Chrome] Closing existing instance before relaunch")
+            print("[Chrome] Closing existing instance before relaunch", flush=True)
+
+        # Chrome not running or CDP failed - launch fresh
+        return await cls.launch(url, cdp_port)

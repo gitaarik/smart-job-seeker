@@ -169,7 +169,7 @@ class BrowserController:
             await self.close_hybrid_session()
 
             # Launch Chrome with CDP
-            cdp_url = await ChromeManager.launch(start_url, cdp_port)
+            cdp_url = await ChromeManager.navigate(start_url, cdp_port)
 
             # Connect browser-use to Chrome via CDP
             # Use keep_alive=True to prevent browser-use from closing Chrome when agent finishes
@@ -501,7 +501,7 @@ class BrowserController:
             }
 
         # Launch browser with existing session
-        await ChromeManager.launch(check_url, cdp_port)
+        await ChromeManager.navigate(check_url, cdp_port)
 
         # Wait for page to load
         await asyncio.sleep(3)
@@ -524,7 +524,7 @@ class BrowserController:
         """
         Start browser with existing persistent session (no login attempt).
         """
-        await ChromeManager.launch(start_url, cdp_port)
+        await ChromeManager.navigate(start_url, cdp_port)
         current_url = await ChromeManager.get_current_url(cdp_port)
 
         return {
