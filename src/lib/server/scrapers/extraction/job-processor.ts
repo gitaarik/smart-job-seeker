@@ -58,7 +58,8 @@ async function getElementInfo(
       // Normalize whitespace (collapse newlines/spaces) then trim
       const text =
         el.textContent?.replace(/\s+/g, " ").trim().substring(0, 50) || "";
-      const href = el.getAttribute("href")?.substring(0, 60) || "";
+      // Don't truncate href - we need the full URL for navigation
+      const href = el.getAttribute("href") || "";
       const ariaLabel = el.getAttribute("aria-label")?.substring(0, 50) || "";
       const className = el.className?.toString().substring(0, 50) || "";
       return { tag, text, href, ariaLabel, className };
@@ -168,6 +169,16 @@ function formatJobOutput(
 }
 
 /**
+ * Check if href is a valid navigable URL (not empty, not # fragment, not javascript:)
+ */
+function isNavigableHref(href: string): boolean {
+  if (!href || href === "#" || href.startsWith("javascript:")) {
+    return false;
+  }
+  return true;
+}
+
+/**
  * Result of clicking a job card, including navigation state
  */
 interface ClickResult {
@@ -183,67 +194,83 @@ interface ClickResult {
 }
 
 /**
- * Click on a job card element and wait for content to load
- * Handles three scenarios:
- * 1. SPA behavior - content updates in place
- * 2. New tab opens - extract from new tab
- * 3. Navigation in same tab - need to go back after extraction
+ * Open a job in a new tab or click to view details
+ *
+ * For anchor elements with href: opens in new tab to preserve search page
+ * For JS click handlers: clicks normally (SPA behavior)
  */
 async function clickJobCard(
   page: Page,
   clickableId: number,
+  href: string,
 ): Promise<ClickResult> {
   // Press Escape to clear any stray modals
   await page.keyboard.press("Escape").catch(() => {});
 
-  // Store state before clicking
   const originalUrl = page.url();
   const context = page.context();
-  const originalPages = context.pages();
-  const beforeClick = await page.evaluate(() => document.body.innerText.length);
-
-  // Use human-like click with natural mouse movement
-  const selector = `[data-extract-clickable-id="${clickableId}"]`;
-  await humanClick(page, selector);
-
-  await humanWait(page, config.scraperClickWaitTimeout);
-
-  // Check for new tab opened
-  const currentPages = context.pages();
   let extractionPage: Page = page;
   let newTab: Page | null = null;
+  let navigatedAway = false;
 
-  if (currentPages.length > originalPages.length) {
-    // New tab was opened - find it
-    newTab = currentPages.find((p) => !originalPages.includes(p)) || null;
-    if (newTab) {
-      extractionPage = newTab;
-      console.log(`      📑 New tab opened, extracting from new tab`);
-      await newTab.waitForLoadState("domcontentloaded");
-      await humanWait(newTab, 1000);
+  // If element has a valid href, open in new tab to preserve search page
+  if (isNavigableHref(href)) {
+    // Resolve relative URLs
+    const fullUrl = new URL(href, originalUrl).href;
+    console.log(`      📑 Opening in new tab: ${fullUrl}`);
+
+    // Open new tab and navigate
+    newTab = await context.newPage();
+    await newTab.goto(fullUrl, { waitUntil: "domcontentloaded" });
+    await humanWait(newTab, 1000);
+    extractionPage = newTab;
+  } else {
+    // No href - this is a JS click handler (SPA behavior)
+    const beforeClick = await page.evaluate(
+      () => document.body.innerText.length,
+    );
+
+    // Use human-like click
+    const selector = `[data-extract-clickable-id="${clickableId}"]`;
+    await humanClick(page, selector);
+    await humanWait(page, config.scraperClickWaitTimeout);
+
+    // Check if a new tab was opened by the click
+    const currentPages = context.pages();
+    if (currentPages.length > 1) {
+      // Find the new tab (not the original page)
+      const possibleNewTab = currentPages.find((p) => p !== page);
+      if (possibleNewTab) {
+        newTab = possibleNewTab;
+        extractionPage = newTab;
+        console.log(`      📑 Click opened new tab`);
+        await newTab.waitForLoadState("domcontentloaded");
+        await humanWait(newTab, 1000);
+      }
+    }
+
+    // Check if URL changed (navigation in same tab)
+    if (!newTab && page.url() !== originalUrl) {
+      navigatedAway = true;
+      console.log(`      🔀 Navigated to: ${page.url()}`);
+    }
+
+    // Check if content changed (SPA update)
+    if (!newTab && !navigatedAway) {
+      const afterClick = await page.evaluate(
+        () => document.body.innerText.length,
+      );
+      const contentChanged = Math.abs(afterClick - beforeClick) > 100;
+      if (!contentChanged) {
+        console.warn(
+          `      ⚠️  Page content didn't change after click`,
+        );
+      }
     }
   }
 
-  // Check if URL changed (navigation in same tab)
-  const navigatedAway = !newTab && page.url() !== originalUrl;
-  if (navigatedAway) {
-    console.log(`      🔀 Navigated to: ${page.url()}`);
-  }
-
-  // Check if page content changed after click
-  const afterClick = await extractionPage.evaluate(
-    () => document.body.innerText.length,
-  );
-  const contentChanged = Math.abs(afterClick - beforeClick) > 100;
-
-  if (!contentChanged && !newTab && !navigatedAway) {
-    console.warn(
-      `      ⚠️  Page content didn't change after click (before: ${beforeClick}, after: ${afterClick})`,
-    );
-  }
-
   return {
-    contentChanged,
+    contentChanged: true,
     extractionPage,
     newTab,
     navigatedAway,
@@ -323,8 +350,8 @@ export async function processJobCard(
   const clickText = elementInfo.text || elementInfo.ariaLabel || "(no text)";
   console.log(`      👆 Clicking #${clickableId}: "${clickText}"`);
 
-  // Click and wait for content to load (handles new tabs and navigation)
-  const clickResult = await clickJobCard(page, clickableId);
+  // Open job details (new tab for anchors, click for SPAs)
+  const clickResult = await clickJobCard(page, clickableId, elementInfo.href);
   const { extractionPage, navigatedAway, newTab } = clickResult;
 
   // Use actual URL if we navigated, otherwise use pseudo URL for SPAs
