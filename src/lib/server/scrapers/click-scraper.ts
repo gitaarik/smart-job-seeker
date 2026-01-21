@@ -227,8 +227,8 @@ export async function scrapeJobsWithClicks(
   const stats = {
     jobsProcessed: 0,
     consecutiveClosedJobs: 0,
-    jobsSkippedOld: 0,
-    jobsSkippedClosed: 0,
+    jobsImportedStale: 0,
+    jobsImportedClosed: 0,
   };
 
   let pageNumber = 1;
@@ -755,40 +755,44 @@ export async function scrapeJobsWithClicks(
           continue;
         }
 
-        // Age filter
+        // Age check: Mark old jobs as "stale" but still import them
         if (isJobTooOld(jobData.date_posted, config.scraperMaxJobAge)) {
           console.log(
-            `      ⏭️  Skipping - Posted ${jobData.date_posted?.toLocaleDateString()} (too old)`,
+            `      📅 Old job (${jobData.date_posted?.toLocaleDateString()}) - importing as 'stale'`,
           );
-          stats.jobsSkippedOld++;
-          stats.consecutiveClosedJobs = 0; // Reset (not a closed job)
-          continue;
+          jobData.status = "stale";
+          stats.jobsImportedStale++;
         }
 
-        // Status filter
+        // Status check: Import closed jobs but track them for stop condition
         const isClosed = isJobClosed(jobData.status);
         if (isClosed) {
-          console.log(`      ⏭️  Skipping - Status: ${jobData.status}`);
-          stats.jobsSkippedClosed++;
+          console.log(`      📋 Closed job (${jobData.status}) - importing`);
+          stats.jobsImportedClosed++;
           stats.consecutiveClosedJobs++;
 
-          // Check stop condition
+          // Check stop condition (too many closed jobs in a row = end of active listings)
           const stopCheck = checkStopConditions(stats, {
             maxJobsPerSearch: config.scraperMaxJobsPerSearch,
             consecutiveClosedLimit: config.scraperConsecutiveClosedLimit,
           });
           if (stopCheck.shouldStop) {
             console.log(`\n      🛑 ${stopCheck.reason}`);
+            // Still save this last job before stopping
+            console.log(`      💾 Saving final job to database...`);
+            const result = await upsertJob(jobData, pseudoUrl, platformId);
+            const action = result.created ? "Created" : "Updated";
+            console.log(`      ✅ ${action} job #${result.id}`);
+            stats.jobsProcessed++;
             return {
               jobsProcessed: stats.jobsProcessed,
               strippedHtml: savedStrippedHtml,
             };
           }
-          continue;
+        } else {
+          // Reset consecutive closed counter for non-closed jobs
+          stats.consecutiveClosedJobs = 0;
         }
-
-        // Reset consecutive closed counter
-        stats.consecutiveClosedJobs = 0;
 
         // Save job
         console.log(`      💾 Saving to database...`);
@@ -874,8 +878,8 @@ export async function scrapeJobsWithClicks(
   console.log(`\n${"═".repeat(60)}`);
   console.log(`✅ SPA scraping complete:`);
   console.log(`   Jobs saved: ${stats.jobsProcessed}`);
-  console.log(`   Skipped (old): ${stats.jobsSkippedOld}`);
-  console.log(`   Skipped (closed): ${stats.jobsSkippedClosed}`);
+  console.log(`   Stale (old): ${stats.jobsImportedStale}`);
+  console.log(`   Closed: ${stats.jobsImportedClosed}`);
   console.log(`${"═".repeat(60)}\n`);
   return {
     jobsProcessed: stats.jobsProcessed,

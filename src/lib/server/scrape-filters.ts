@@ -65,8 +65,8 @@ export function getJobInvalidReason(job: JobForValidation): string | null {
 export interface ScrapingStats {
   jobsProcessed: number;
   consecutiveClosedJobs: number;
-  jobsSkippedOld: number;
-  jobsSkippedClosed: number;
+  jobsImportedStale: number;
+  jobsImportedClosed: number;
 }
 
 export interface StopCondition {
