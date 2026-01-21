@@ -13,14 +13,12 @@ import { BrowserUseClient } from "$lib/server/browser-use-client";
 import { scrapeJobsWithClicks } from "./click-scraper";
 import { interpolatePrompt } from "$lib/server/ai-chat-utils";
 import { dbDirect } from "$lib/db";
-import { launchBrowser } from "../browser-utils";
 import { getPlatformCredentials } from "../platform-auth";
 import { promptUser } from "./utils";
 import type {
   LoginResult,
   Platform,
   PlatformCredentials,
-  ScrapeResult,
 } from "./types";
 
 const CDP_HOST = config.hybridCdpHost;
