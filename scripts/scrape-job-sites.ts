@@ -6,14 +6,14 @@
  */
 
 import { dbDirect } from "$lib/db";
-import { getPlatformIdFromUrl, upsertJob } from "$lib/server/job-scraper";
+import { getPlatformIdFromUrl, upsertJob } from "$lib/server/scrapers/job-data";
 import { Command } from "commander";
 import { getSiteName } from "$lib/server/job-site-configs";
 import { config } from "$lib/server/config";
 import { BrowserUseClient } from "$lib/server/browser-use-client";
 import { parseRelativeDate } from "$lib/tools/date-utils";
 import { clearDirectusCache } from "$lib/server/directus";
-import { scrapeJobs } from "$lib/server/scrapers/job-scraper";
+import { scrapeJobs } from "$lib/server/scrapers/scraper";
 
 interface SearchAction {
   id: number;

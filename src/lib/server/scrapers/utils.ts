@@ -21,24 +21,6 @@ export async function promptUser(question: string): Promise<string> {
 }
 
 /**
- * Format salary for display
- * @returns Formatted salary string or "-" if no salary data
- */
-export function formatSalary(data: {
-  salary_min: number | null;
-  salary_max: number | null;
-  salary_currency: string | null;
-  salary_period: string | null;
-}): string {
-  if (!data.salary_min && !data.salary_max) return "-";
-  const min = data.salary_min?.toLocaleString() || "?";
-  const max = data.salary_max?.toLocaleString() || "?";
-  const curr = data.salary_currency || "";
-  const period = data.salary_period ? `/${data.salary_period}` : "";
-  return `${curr}${min}-${max}${period}`;
-}
-
-/**
  * Extract error message from unknown error type
  */
 export function getErrorMessage(error: unknown): string {

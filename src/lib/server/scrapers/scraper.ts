@@ -10,7 +10,7 @@ import { chromium } from "playwright";
 import { promises as dns } from "dns";
 import { config } from "$lib/server/config";
 import { BrowserUseClient } from "$lib/server/browser-use-client";
-import { scrapeJobsWithClicks } from "./click-scraper";
+import { scrapeJobsWithClicks } from "./extraction";
 import { interpolatePrompt } from "$lib/server/ai-chat-utils";
 import { dbDirect } from "$lib/db";
 import { getPlatformCredentials } from "../platform-auth";

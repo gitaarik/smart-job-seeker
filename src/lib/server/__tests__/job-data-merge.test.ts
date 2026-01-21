@@ -4,7 +4,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { mergeJobData, mergeSkills } from "../job-scraper";
+import { mergeJobData, mergeSkills } from "../scrapers/extraction";
 
 describe("mergeSkills", () => {
   it("should return null when both inputs are null", () => {

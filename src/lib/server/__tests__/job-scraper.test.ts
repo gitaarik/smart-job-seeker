@@ -3,7 +3,7 @@ import {
   getPlatformIdFromUrl,
   normalizeJobUrl,
   upsertJob,
-} from "../job-scraper";
+} from "../scrapers/job-data";
 
 // Mock dependencies
 vi.mock("$lib/db", () => ({
