@@ -21,6 +21,42 @@ const CDP_HOST = config.hybridCdpHost;
 const CDP_PORT = config.hybridCdpPort;
 
 /**
+ * Check if an error is a recoverable browser-use error that should trigger manual login fallback.
+ * These are typically timeout/CDP issues, not auth failures.
+ */
+function isRecoverableBrowserUseError(error: unknown): boolean {
+  const errorMsg = error instanceof Error ? error.message : String(error);
+  const lowerMsg = errorMsg.toLowerCase();
+
+  // CDP/connection issues
+  if (lowerMsg.includes("cdp") && lowerMsg.includes("unresponsive")) {
+    return true;
+  }
+  if (lowerMsg.includes("websocket") && lowerMsg.includes("closed")) {
+    return true;
+  }
+
+  // Timeout issues (watchdog timeouts, general timeouts)
+  if (lowerMsg.includes("timeout")) return true;
+  if (lowerMsg.includes("timed out")) return true;
+
+  // Watchdog-specific errors
+  if (lowerMsg.includes("watchdog")) return true;
+  if (lowerMsg.includes("domwatchdog")) return true;
+  if (lowerMsg.includes("screenshotwatchdog")) return true;
+
+  // Event bus errors
+  if (lowerMsg.includes("eventbus")) return true;
+  if (lowerMsg.includes("event bus")) return true;
+
+  // Connection failures
+  if (lowerMsg.includes("connection failed")) return true;
+  if (lowerMsg.includes("connection refused")) return true;
+
+  return false;
+}
+
+/**
  * Resolve hostname to IP address for CDP connection.
  * Chrome DevTools Protocol rejects non-localhost/non-IP Host headers,
  * so we need to resolve the hostname before connecting.
@@ -193,14 +229,38 @@ async function scrapeWithLogin(
       );
       console.log("   Auto-filling credentials...");
 
-      isLoggedIn = await attemptAutoLogin(
-        browserUse,
-        platform,
-        credentials,
-        searchUrl,
-        platform.login_page_url || platform.url,
-        sendScreenshots,
-      );
+      try {
+        isLoggedIn = await attemptAutoLogin(
+          browserUse,
+          platform,
+          credentials,
+          searchUrl,
+          platform.login_page_url || platform.url,
+          sendScreenshots,
+        );
+      } catch (error) {
+        if (isRecoverableBrowserUseError(error)) {
+          console.log(
+            `\n⚠️ AI login failed with recoverable error: ${
+              error instanceof Error ? error.message : error
+            }`,
+          );
+          console.log("   Falling back to manual login...");
+
+          // Close any existing session before starting fresh
+          await browserUse.closeHybridSession();
+
+          // Start browser for manual login
+          await browserUse.startSession(
+            platform.login_page_url || platform.url,
+            CDP_PORT,
+          );
+
+          isLoggedIn = await waitForManualIntervention(platform);
+        } else {
+          throw error;
+        }
+      }
     } else {
       // No proactive login config - check session first
       console.log("\n📌 Phase 1: Checking existing session...");
@@ -225,14 +285,38 @@ async function scrapeWithLogin(
           // We have credentials but no login_page_url - use Browser-Use to auto-fill
           console.log("   Auto-filling credentials...");
 
-          isLoggedIn = await attemptAutoLogin(
-            browserUse,
-            platform,
-            credentials,
-            searchUrl,
-            platform.url,
-            sendScreenshots,
-          );
+          try {
+            isLoggedIn = await attemptAutoLogin(
+              browserUse,
+              platform,
+              credentials,
+              searchUrl,
+              platform.url,
+              sendScreenshots,
+            );
+          } catch (error) {
+            if (isRecoverableBrowserUseError(error)) {
+              console.log(
+                `\n⚠️ AI login failed with recoverable error: ${
+                  error instanceof Error ? error.message : error
+                }`,
+              );
+              console.log("   Falling back to manual login...");
+
+              // Close any existing session before starting fresh
+              await browserUse.closeHybridSession();
+
+              // Start browser for manual login
+              await browserUse.startSession(
+                platform.login_page_url || platform.url,
+                CDP_PORT,
+              );
+
+              isLoggedIn = await waitForManualIntervention(platform);
+            } else {
+              throw error;
+            }
+          }
         } else {
           // No credentials - start browser for manual login
           console.log("   Starting browser for manual login...");
