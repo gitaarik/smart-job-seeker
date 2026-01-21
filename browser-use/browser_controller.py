@@ -168,8 +168,9 @@ class BrowserController:
             # Close any existing session
             await self.close_hybrid_session()
 
-            # Launch Chrome with CDP
-            cdp_url = await ChromeManager.navigate(start_url, cdp_port)
+            # Ensure Chrome has exactly one blank tab
+            # Browser-use will handle navigation via the task prompt
+            cdp_url = await ChromeManager.ensure_single_blank_tab(cdp_port)
 
             # Connect browser-use to Chrome via CDP
             # Use keep_alive=True to prevent browser-use from closing Chrome when agent finishes
@@ -500,6 +501,9 @@ class BrowserController:
                 "cdp_port": cdp_port,
             }
 
+        # Clean up any extra tabs first
+        await ChromeManager.close_extra_tabs(cdp_port)
+
         # Launch browser with existing session
         await ChromeManager.navigate(check_url, cdp_port)
 
@@ -524,6 +528,9 @@ class BrowserController:
         """
         Start browser with existing persistent session (no login attempt).
         """
+        # Clean up any extra tabs first
+        await ChromeManager.close_extra_tabs(cdp_port)
+
         await ChromeManager.navigate(start_url, cdp_port)
         current_url = await ChromeManager.get_current_url(cdp_port)
 

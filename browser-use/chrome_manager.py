@@ -376,6 +376,116 @@ class ChromeManager:
             return ""
 
     @classmethod
+    async def close_extra_tabs(cls, cdp_port: int = 9222) -> int:
+        """
+        Close all tabs except one.
+
+        Args:
+            cdp_port: External CDP port
+
+        Returns:
+            Number of tabs closed
+        """
+        pages_info = await cls.get_pages_info(cdp_port)
+
+        if len(pages_info) <= 1:
+            return 0
+
+        internal_cdp_port = cdp_port + 1
+        cdp_url = f"http://127.0.0.1:{internal_cdp_port}"
+        closed_count = 0
+
+        # Close all tabs except the first one
+        for page in pages_info[1:]:
+            target_id = page.get("id")
+            if not target_id:
+                continue
+
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(
+                        f"{cdp_url}/json/close/{target_id}",
+                        timeout=aiohttp.ClientTimeout(total=5)
+                    ) as resp:
+                        if resp.status == 200:
+                            closed_count += 1
+                            logger.info(f"[Chrome] Closed tab: {page.get('url', 'unknown')[:50]}")
+            except Exception as e:
+                logger.warning(f"[Chrome] Error closing tab {target_id}: {e}")
+
+        if closed_count > 0:
+            print(f"[Chrome] Closed {closed_count} extra tab(s)", flush=True)
+
+        return closed_count
+
+    @classmethod
+    async def navigate_tab_to_blank(cls, cdp_port: int = 9222) -> bool:
+        """
+        Navigate the first tab to about:blank.
+
+        Args:
+            cdp_port: External CDP port
+
+        Returns:
+            True if successful
+        """
+        pages_info = await cls.get_pages_info(cdp_port)
+        if not pages_info:
+            return False
+
+        page_ws_url = pages_info[0].get("webSocketDebuggerUrl", "")
+        if not page_ws_url:
+            return False
+
+        try:
+            async with websockets.connect(page_ws_url, close_timeout=10) as ws:
+                await ws.send(json.dumps({
+                    "id": 1,
+                    "method": "Page.navigate",
+                    "params": {"url": "about:blank"}
+                }))
+                await asyncio.wait_for(ws.recv(), timeout=5)
+                return True
+        except Exception as e:
+            logger.warning(f"[Chrome] Error navigating to blank: {e}")
+            return False
+
+    @classmethod
+    async def ensure_single_blank_tab(cls, cdp_port: int = 9222) -> str:
+        """
+        Ensure Chrome is running with exactly one blank tab.
+
+        This is the recommended way to prepare Chrome before browser-use connects.
+        Browser-use will handle all navigation via its task prompt.
+
+        Args:
+            cdp_port: External CDP port
+
+        Returns:
+            Internal CDP URL
+        """
+        internal_cdp_port = cdp_port + 1
+        cdp_url = f"http://127.0.0.1:{internal_cdp_port}"
+
+        # Check if Chrome is already running
+        if cls.is_running() and await cls.is_cdp_ready(cdp_url):
+            logger.info("[Chrome] Already running, cleaning up tabs...")
+            print("[Chrome] Already running, cleaning up tabs...", flush=True)
+
+            # Close extra tabs
+            await cls.close_extra_tabs(cdp_port)
+
+            # Navigate remaining tab to blank
+            await cls.navigate_tab_to_blank(cdp_port)
+
+            return cdp_url
+
+        # Chrome not running - launch with blank page
+        logger.info("[Chrome] Launching with blank page...")
+        print("[Chrome] Launching with blank page...", flush=True)
+        return await cls.launch("about:blank", cdp_port)
+
+    @classmethod
     def session_exists(cls) -> bool:
         """Check if session directory exists."""
         return os.path.exists(SESSION_DIR) and os.path.isdir(SESSION_DIR)
