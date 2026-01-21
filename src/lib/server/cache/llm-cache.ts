@@ -93,10 +93,3 @@ class LLMCache {
 
 // Export singleton instance
 export const llmCache = new LLMCache();
-
-// Clear expired entries every 15 minutes
-if (typeof setInterval !== "undefined") {
-  setInterval(() => {
-    llmCache.clearExpired();
-  }, 1000 * 60 * 15);
-}

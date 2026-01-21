@@ -142,14 +142,6 @@ export const apiRateLimiter = new RateLimiter({
   refillRate: 1, // 1 request per second
 });
 
-// Cleanup old buckets every 30 minutes
-if (typeof setInterval !== "undefined") {
-  setInterval(() => {
-    webhookRateLimiter.cleanup();
-    apiRateLimiter.cleanup();
-  }, 1000 * 60 * 30);
-}
-
 /**
  * Create a rate limit response
  */
