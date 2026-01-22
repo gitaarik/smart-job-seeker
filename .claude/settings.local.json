@@ -114,7 +114,8 @@
       "WebFetch(domain:www.together.ai)",
       "WebFetch(domain:pypi.org)",
       "WebFetch(domain:docs.cloud.browser-use.com)",
-      "WebFetch(domain:lumenalta.com)"
+      "WebFetch(domain:lumenalta.com)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []
