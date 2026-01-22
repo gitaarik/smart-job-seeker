@@ -1,5 +1,5 @@
 import type { LayoutServerLoad } from "./$types";
-import { getEnv } from "$lib/tools/get-env";
+import { config } from "$lib/server/config";
 
 function getSystemTheme(request: Request): "light" | "dark" {
   // Try to detect system preference from headers
@@ -62,6 +62,6 @@ export const load: LayoutServerLoad = async ({ request, locals }) => {
     actualTheme: themeData.actualTheme,
     systemTheme: themeData.systemTheme,
     user: locals.user || null,
-    adminPublicUrl: getEnv("SJS_ADMIN_URL_HOST"),
+    adminPublicUrl: config.adminPublicUrl,
   };
 };

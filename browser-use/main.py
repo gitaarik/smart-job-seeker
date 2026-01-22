@@ -57,8 +57,8 @@ async def execute_task(request: ExecuteTaskRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-class HybridSessionRequest(BaseModel):
-    """Request to start a hybrid session (Browser-Use login, keep browser open for Patchright)"""
+class LoginRequest(BaseModel):
+    """Request to start an AI-powered login session"""
 
     task: str  # Natural language login task
     start_url: str  # URL to start from (login page)
@@ -68,8 +68,8 @@ class HybridSessionRequest(BaseModel):
     solve_captcha: Optional[bool] = False  # If True, Browser-Use attempts to solve CAPTCHAs
 
 
-class HybridSessionResponse(BaseModel):
-    """Response from hybrid session start"""
+class LoginResponse(BaseModel):
+    """Response from login session"""
 
     login_success: bool
     captcha_needed: Optional[bool] = False  # True if CAPTCHA needs manual solving
@@ -82,22 +82,22 @@ class HybridSessionResponse(BaseModel):
     error: Optional[str] = None
 
 
-# Singleton controller for hybrid sessions (keeps browser state)
-_hybrid_controller: Optional[BrowserController] = None
+# Singleton controller for sessions (keeps browser state)
+_controller: Optional[BrowserController] = None
 
 
-def get_hybrid_controller() -> BrowserController:
-    global _hybrid_controller
-    if _hybrid_controller is None:
-        _hybrid_controller = BrowserController()
-    return _hybrid_controller
+def get_controller() -> BrowserController:
+    global _controller
+    if _controller is None:
+        _controller = BrowserController()
+    return _controller
 
 
-@app.post("/hybrid/start", response_model=HybridSessionResponse)
-async def start_hybrid_session(request: HybridSessionRequest):
+@app.post("/login", response_model=LoginResponse)
+async def login(request: LoginRequest):
     """
-    Start a hybrid session: Browser-Use launches Chrome with CDP, performs login,
-    and keeps the browser open for Patchright to connect and extract jobs.
+    Start an AI-powered login session: Browser-Use launches Chrome with CDP,
+    performs login, and keeps the browser open for Patchright to connect.
 
     Flow:
     1. Browser-Use launches Chrome with CDP enabled on port 9222
@@ -105,11 +105,11 @@ async def start_hybrid_session(request: HybridSessionRequest):
     3. Browser stays open (not closed)
     4. Returns success status and CDP port
     5. Patchright connects to localhost:9222 to extract jobs
-    6. Call /hybrid/close when done
+    6. Call /close when done
     """
     try:
-        controller = get_hybrid_controller()
-        result = await controller.start_hybrid_session(
+        controller = get_controller()
+        result = await controller.login(
             task=request.task,
             start_url=request.start_url,
             cdp_port=request.cdp_port,
@@ -119,23 +119,23 @@ async def start_hybrid_session(request: HybridSessionRequest):
         )
         return result
     except Exception as e:
-        logger.error(f"Error starting hybrid session: {str(e)}")
+        logger.error(f"Error starting login session: {str(e)}")
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/hybrid/close")
-async def close_hybrid_session():
+@app.post("/close")
+async def close_session():
     """
-    Close the hybrid browser session.
+    Close the browser session.
     Call this after Patchright has finished extracting jobs.
     """
     try:
-        controller = get_hybrid_controller()
-        result = await controller.close_hybrid_session()
+        controller = get_controller()
+        result = await controller.close()
         return result
     except Exception as e:
-        logger.error(f"Error closing hybrid session: {str(e)}")
+        logger.error(f"Error closing session: {str(e)}")
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -184,24 +184,24 @@ class ResendCodeResponse(BaseModel):
     error: Optional[str] = None
 
 
-@app.post("/hybrid/verify", response_model=VerifyCodeResponse)
+@app.post("/verify", response_model=VerifyCodeResponse)
 async def submit_verification_code(request: VerifyCodeRequest):
     """
     Submit a verification code to continue login.
 
-    Call this after /hybrid/start returns verification_needed=True.
+    Call this after /login returns verification_needed=True.
     The browser session remains open from the previous call.
 
     Flow:
-    1. /hybrid/start returns verification_needed=True
+    1. /login returns verification_needed=True
     2. User provides code (from email, SMS, or authenticator app)
     3. Call this endpoint with the code
     4. If login_complete=True, proceed with extraction
-    5. If needs_new_code=True, call /hybrid/resend-code and try again
+    5. If needs_new_code=True, call /resend-code and try again
     6. If success=False (invalid code), prompt user and retry
     """
     try:
-        controller = get_hybrid_controller()
+        controller = get_controller()
         result = await controller.submit_verification_code(
             task=request.task,
             code=request.code,
@@ -216,7 +216,7 @@ async def submit_verification_code(request: VerifyCodeRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/hybrid/resend-code", response_model=ResendCodeResponse)
+@app.post("/resend-code", response_model=ResendCodeResponse)
 async def resend_verification_code(request: ResendCodeRequest):
     """
     Request a new verification code.
@@ -225,7 +225,7 @@ async def resend_verification_code(request: ResendCodeRequest):
     The browser will click the 'resend code' button on the page.
     """
     try:
-        controller = get_hybrid_controller()
+        controller = get_controller()
         result = await controller.resend_verification_code(
             task=request.task,
             cdp_port=request.cdp_port,
@@ -305,7 +305,7 @@ async def check_session(request: SessionCheckRequest):
     If current URL contains login_url_pattern, user is NOT logged in.
     """
     try:
-        controller = get_hybrid_controller()
+        controller = get_controller()
         result = await controller.check_session(
             check_url=request.check_url,
             login_url_pattern=request.login_url_pattern,
@@ -327,7 +327,7 @@ async def start_session(request: SessionStartRequest):
     to use an existing session without checking login status.
     """
     try:
-        controller = get_hybrid_controller()
+        controller = get_controller()
         result = await controller.start_session(
             start_url=request.start_url,
             cdp_port=request.cdp_port,
@@ -351,7 +351,7 @@ async def wait_for_login(request: SessionWaitRequest):
     manual login via VNC.
     """
     try:
-        controller = get_hybrid_controller()
+        controller = get_controller()
         result = await controller.wait_for_login(
             target_url_pattern=request.target_url_pattern,
             cdp_port=request.cdp_port,

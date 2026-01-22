@@ -17,8 +17,8 @@ import { getPlatformCredentials } from "../platform-auth";
 import { promptUser } from "./utils";
 import type { LoginResult, Platform, PlatformCredentials } from "./types";
 
-const CDP_HOST = config.hybridCdpHost;
-const CDP_PORT = config.hybridCdpPort;
+const CDP_HOST = config.cdpHost;
+const CDP_PORT = config.cdpPort;
 
 /**
  * Check if an error is a recoverable browser-use error that should trigger manual login fallback.
@@ -174,7 +174,7 @@ async function buildLoginPrompt(
 
 /**
  * Execute auto-login with Browser-Use.
- * Builds the login prompt, starts a hybrid session, and handles the result.
+ * Builds the login prompt, starts a login session, and handles the result.
  *
  * @returns Object with success flag and optional cdp_url (for cloud mode)
  */
@@ -191,11 +191,11 @@ async function attemptAutoLogin(
   console.log("📝 Login task preview:");
   console.log(loginTask.substring(0, 300) + "...");
 
-  const loginResult = await browserUse.startHybridSession({
+  const loginResult = await browserUse.login({
     task: loginTask,
     startUrl,
     cdpPort: CDP_PORT,
-    maxTime: config.hybridLoginTimeout / 1000,
+    maxTime: config.loginTimeout / 1000,
     useVision,
   });
 
@@ -288,7 +288,7 @@ async function scrapeWithLogin(
           console.log("   Falling back to manual login...");
 
           // Close any existing session before starting fresh
-          await browserUse.closeHybridSession();
+          await browserUse.close();
 
           // Start browser for manual login
           await browserUse.startSession(
@@ -346,7 +346,7 @@ async function scrapeWithLogin(
               console.log("   Falling back to manual login...");
 
               // Close any existing session before starting fresh
-              await browserUse.closeHybridSession();
+              await browserUse.close();
 
               // Start browser for manual login
               await browserUse.startSession(
@@ -382,10 +382,10 @@ async function scrapeWithLogin(
     // Phase 2: Handoff delay (skip in cloud mode - session is already stable)
     if (!cloudCdpUrl) {
       console.log(
-        `\n📌 Phase 2: Handoff delay (${config.hybridHandoffDelay}ms)...`,
+        `\n📌 Phase 2: Handoff delay (${config.handoffDelay}ms)...`,
       );
       await new Promise((resolve) =>
-        setTimeout(resolve, config.hybridHandoffDelay)
+        setTimeout(resolve, config.handoffDelay)
       );
     }
 
@@ -454,9 +454,9 @@ async function scrapeWithLogin(
 
     return result;
   } finally {
-    // Always close the hybrid session
+    // Always close the browser session
     console.log("\n🧹 Closing browser session...");
-    await browserUse.closeHybridSession();
+    await browserUse.close();
   }
 }
 

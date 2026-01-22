@@ -1,7 +1,7 @@
 """
-Hybrid Session Mixin for Browser Controller.
+Login Mixin for Browser Controller.
 
-Provides methods for hybrid CDP browser sessions with Browser-Use agent.
+Provides methods for AI-powered login via Browser-Use agent.
 """
 
 import time
@@ -26,10 +26,10 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class HybridSessionMixin:
-    """Mixin providing hybrid session methods."""
+class LoginMixin:
+    """Mixin providing AI-powered login methods."""
 
-    async def start_hybrid_session(
+    async def login(
         self: "BrowserController",
         task: str,
         start_url: str,
@@ -39,7 +39,7 @@ class HybridSessionMixin:
         solve_captcha: bool = False,
     ):
         """
-        Start a hybrid session: launch Chrome with CDP, perform login, keep browser open.
+        Perform AI-powered login: launch Chrome with CDP, execute login task, keep browser open.
 
         Args:
             task: Natural language login task
@@ -54,11 +54,9 @@ class HybridSessionMixin:
         """
         start_time = time.time()
 
-        logger.info(
-            f"[Browser-Use] Starting hybrid session with CDP on port {cdp_port}"
-        )
+        logger.info(f"[Browser-Use] Starting login session with CDP on port {cdp_port}")
         print(
-            f"[Browser-Use] Starting hybrid session with CDP on port {cdp_port}",
+            f"[Browser-Use] Starting login session with CDP on port {cdp_port}",
             flush=True,
         )
 
@@ -66,7 +64,7 @@ class HybridSessionMixin:
 
         try:
             # Close any existing session
-            await self.close_hybrid_session()
+            await self.close()
 
             # Ensure Chrome has exactly one blank tab
             # Browser-use will handle navigation via the task prompt
@@ -168,9 +166,7 @@ class HybridSessionMixin:
                 current_url
             ) or check_agent_result_for_success(result)
 
-            logger.info(
-                f"[Browser-Use] Hybrid login complete - success: {login_success}"
-            )
+            logger.info(f"[Browser-Use] Login complete - success: {login_success}")
             print(
                 f"[Browser-Use] Browser kept open on CDP port {cdp_port}", flush=True
             )
@@ -188,8 +184,8 @@ class HybridSessionMixin:
             execution_time = int((time.time() - start_time) * 1000)
             error_str = str(e)
 
-            logger.error(f"[Browser-Use] Hybrid session error: {error_str}")
-            await self.close_hybrid_session()
+            logger.error(f"[Browser-Use] Login session error: {error_str}")
+            await self.close()
 
             return {
                 "login_success": False,
@@ -200,10 +196,3 @@ class HybridSessionMixin:
                 "execution_time_ms": execution_time,
                 "error": error_str,
             }
-
-    async def close_hybrid_session(self: "BrowserController"):
-        """Close the hybrid browser session."""
-        # Clear browser reference to allow cleanup
-        self._active_browser = None
-        await ChromeManager.close()
-        return {"closed": True}

@@ -19,8 +19,8 @@ export interface ExecuteTaskResponse {
   execution_time_ms: number;
 }
 
-// Hybrid session parameters (Browser-Use launches Chrome, keeps it open)
-export interface HybridSessionParams {
+// Login session parameters (Browser-Use launches Chrome, keeps it open)
+export interface LoginParams {
   task: string; // Natural language login task
   startUrl: string; // URL to start from (login page)
   cdpPort?: number; // Port for CDP (default 9222)
@@ -29,8 +29,8 @@ export interface HybridSessionParams {
   solveCaptcha?: boolean; // If true, Browser-Use attempts to solve CAPTCHAs (default: false)
 }
 
-// Hybrid session response
-export interface HybridSessionResponse {
+// Login session response
+export interface LoginResponse {
   login_success: boolean;
   captcha_needed?: boolean; // True if CAPTCHA needs manual solving via VNC
   verification_needed?: boolean; // True if 2FA/verification required
@@ -383,31 +383,31 @@ export class BrowserUseClient {
   }
 
   /**
-   * Start a hybrid session: Browser-Use launches Chrome with CDP, performs login,
-   * and keeps the browser open for Patchright to connect.
+   * Start an AI-powered login session: Browser-Use launches Chrome with CDP,
+   * performs login, and keeps the browser open for Patchright to connect.
    *
    * In cloud mode: Uses Browser-Use Cloud API to create a session and run login task.
-   * In local mode: Uses local Browser-Use server's /hybrid/start endpoint.
+   * In local mode: Uses local Browser-Use server's /login endpoint.
    *
-   * @param params Hybrid session parameters
+   * @param params Login session parameters
    * @returns Response with login_success, current_url, cdp_port (and cdp_url in cloud mode)
    */
-  async startHybridSession(
-    params: HybridSessionParams,
-  ): Promise<HybridSessionResponse> {
+  async login(
+    params: LoginParams,
+  ): Promise<LoginResponse> {
     if (this.isCloudMode) {
-      return this.startCloudHybridSession(params);
+      return this.startCloudLoginSession(params);
     }
-    return this.startLocalHybridSession(params);
+    return this.startLocalLoginSession(params);
   }
 
   /**
-   * Start hybrid session using Browser-Use Cloud.
+   * Start login session using Browser-Use Cloud.
    * Creates a cloud browser session with persistent profile, runs login task.
    */
-  private async startCloudHybridSession(
-    params: HybridSessionParams,
-  ): Promise<HybridSessionResponse> {
+  private async startCloudLoginSession(
+    params: LoginParams,
+  ): Promise<LoginResponse> {
     console.log(`\n🌐 Using Browser-Use Cloud`);
     const startTime = Date.now();
 
@@ -600,22 +600,22 @@ export class BrowserUseClient {
   }
 
   /**
-   * Start hybrid session using local Browser-Use server.
+   * Start login session using local Browser-Use server.
    */
-  private async startLocalHybridSession(
-    params: HybridSessionParams,
-  ): Promise<HybridSessionResponse> {
+  private async startLocalLoginSession(
+    params: LoginParams,
+  ): Promise<LoginResponse> {
     const useVision = params.useVision ??
       this.config.useVision;
     console.log(
-      `[BrowserUseClient] Starting local hybrid session, CDP port: ${
+      `[BrowserUseClient] Starting local login session, CDP port: ${
         params.cdpPort ?? 9222
       }`,
     );
 
     let response: Response;
     try {
-      response = await fetch(`${this.config.baseUrl}/hybrid/start`, {
+      response = await fetch(`${this.config.baseUrl}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -630,40 +630,40 @@ export class BrowserUseClient {
       });
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
-      console.error(`\n❌ Failed to start hybrid session: ${errorMsg}`);
-      throw new Error(`Hybrid session failed: ${errorMsg}`);
+      console.error(`\n❌ Failed to start login session: ${errorMsg}`);
+      throw new Error(`Login session failed: ${errorMsg}`);
     }
 
     if (!response.ok) {
       const errorBody = await response.text().catch(() => "");
       console.error(
-        `\n❌ Hybrid session API error: ${response.status} ${response.statusText}`,
+        `\n❌ Login session API error: ${response.status} ${response.statusText}`,
       );
       if (errorBody) {
         console.error(`   Response: ${errorBody.substring(0, 500)}`);
       }
       throw new Error(
-        `Hybrid session API error: ${response.status} ${response.statusText}`,
+        `Login session API error: ${response.status} ${response.statusText}`,
       );
     }
 
-    const result: HybridSessionResponse = await response.json();
+    const result: LoginResponse = await response.json();
 
     console.log(
-      `[BrowserUseClient] Hybrid session result: success=${result.login_success}, url=${result.current_url}, port=${result.cdp_port}`,
+      `[BrowserUseClient] Login session result: success=${result.login_success}, url=${result.current_url}, port=${result.cdp_port}`,
     );
 
     return result;
   }
 
   /**
-   * Close the hybrid browser session.
+   * Close the browser session.
    * Call this after Patchright has finished extracting jobs.
    *
    * In cloud mode: Stops the cloud browser session.
    * In local mode: Calls local Browser-Use server to close.
    */
-  async closeHybridSession(): Promise<void> {
+  async close(): Promise<void> {
     if (this.isCloudMode) {
       return this.closeCloudSession();
     }
@@ -710,35 +710,35 @@ export class BrowserUseClient {
   }
 
   /**
-   * Close local hybrid browser session.
+   * Close local browser session.
    */
   private async closeLocalSession(): Promise<void> {
-    console.log(`[BrowserUseClient] Closing local hybrid session...`);
+    console.log(`[BrowserUseClient] Closing local session...`);
 
     try {
-      const response = await fetch(`${this.config.baseUrl}/hybrid/close`, {
+      const response = await fetch(`${this.config.baseUrl}/close`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         signal: AbortSignal.timeout(10000),
       });
 
       if (response.ok) {
-        console.log(`[BrowserUseClient] Local hybrid session closed`);
+        console.log(`[BrowserUseClient] Local session closed`);
       } else {
         console.warn(
-          `[BrowserUseClient] Failed to close local hybrid session: ${response.status}`,
+          `[BrowserUseClient] Failed to close local session: ${response.status}`,
         );
       }
     } catch (error) {
       console.warn(
-        `[BrowserUseClient] Error closing local hybrid session: ${error}`,
+        `[BrowserUseClient] Error closing local session: ${error}`,
       );
     }
   }
 
   /**
    * Submit a verification code to continue login.
-   * Call this after startHybridSession returns verification_needed=true.
+   * Call this after login() returns verification_needed=true.
    * @param code The verification code to enter
    * @param cdpPort CDP port (default 9222)
    * @returns Response with success, login_complete, needs_new_code
@@ -771,7 +771,7 @@ export class BrowserUseClient {
 
     let response: Response;
     try {
-      response = await fetch(`${this.config.baseUrl}/hybrid/verify`, {
+      response = await fetch(`${this.config.baseUrl}/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -853,7 +853,7 @@ export class BrowserUseClient {
 
     let response: Response;
     try {
-      response = await fetch(`${this.config.baseUrl}/hybrid/resend-code`, {
+      response = await fetch(`${this.config.baseUrl}/resend-code`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -112,3 +112,10 @@ class SessionMixin:
             "current_url": current_url,
             "timed_out": True,
         }
+
+    async def close(self: "BrowserController"):
+        """Close the browser session."""
+        # Clear browser reference to allow cleanup
+        self._active_browser = None
+        await ChromeManager.close()
+        return {"closed": True}

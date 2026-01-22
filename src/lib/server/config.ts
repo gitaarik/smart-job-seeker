@@ -78,11 +78,11 @@ export interface AppConfig {
   browserUseTimeout: number;
   browserUseVision: boolean;
 
-  // Hybrid Scraper (Browser-Use login + Patchright extraction via CDP)
-  hybridCdpHost: string; // Host for Chrome debugging (default: localhost, use browser-use in Docker)
-  hybridCdpPort: number; // Port for Chrome debugging (default: 9222)
-  hybridLoginTimeout: number; // Max time for Browser-Use login (ms)
-  hybridHandoffDelay: number; // Delay before Patchright connects (ms)
+  // CDP connection for Browser-Use login + Patchright extraction
+  cdpHost: string; // Host for Chrome debugging (default: localhost, use browser-use in Docker)
+  cdpPort: number; // Port for Chrome debugging (default: 9222)
+  loginTimeout: number; // Max time for Browser-Use login (ms)
+  handoffDelay: number; // Delay before Patchright connects (ms)
 
   // Browser-Use Cloud (alternative to local Browser-Use)
   browserUseCloud: boolean; // Use Browser-Use Cloud instead of local
@@ -260,15 +260,15 @@ function loadConfig(): AppConfig {
     ),
     browserUseVision: getEnv("SJS_BROWSER_USE_VISION", "true") === "true",
 
-    // Hybrid Scraper (Browser-Use login + Patchright extraction via CDP)
-    hybridCdpHost: getEnv("SJS_HYBRID_CDP_HOST", "localhost"),
-    hybridCdpPort: parseInt(getEnv("SJS_HYBRID_CDP_PORT", "9222"), 10),
-    hybridLoginTimeout: parseInt(
-      getEnv("SJS_HYBRID_LOGIN_TIMEOUT", "120000"),
+    // CDP connection for Browser-Use login + Patchright extraction
+    cdpHost: getEnv("SJS_CDP_HOST", "localhost"),
+    cdpPort: parseInt(getEnv("SJS_CDP_PORT", "9222"), 10),
+    loginTimeout: parseInt(
+      getEnv("SJS_LOGIN_TIMEOUT", "120000"),
       10,
     ),
-    hybridHandoffDelay: parseInt(
-      getEnv("SJS_HYBRID_HANDOFF_DELAY", "1000"),
+    handoffDelay: parseInt(
+      getEnv("SJS_HANDOFF_DELAY", "1000"),
       10,
     ),
 
