@@ -3,8 +3,7 @@
  */
 
 import { db } from "$lib/db";
-import { generateAiChatFullPrompt } from "./ai-chat-full-prompt-generate";
-import { generateAiChatResponse } from "./ai-chat-response-generate";
+import { config } from "./config";
 import {
   generateChatCompletion,
   LLMAuthenticationError,
@@ -317,14 +316,13 @@ export async function createAndGenerateAiChat(
 
     // Save error to ai_chat record if it was created
     if (aiChatId) {
-      try {
-        await db.ai_chat.update({
-          where: { id: aiChatId },
-          data: { error: errorMessage },
-        });
-      } catch {
-        // Ignore errors when saving the error - don't mask the original error
-      }
+      await db.ai_chat.update({
+        where: { id: aiChatId },
+        data: { error: errorMessage },
+      });
+      console.error(
+        `      📋 Error details: ${config.directusUrl}/admin/content/ai_chat/${aiChatId}`,
+      );
     }
 
     // Re-throw fatal LLM errors so they can abort scraping
