@@ -11,7 +11,11 @@ import {
   isValidJob,
 } from "$lib/server/job/scrape-filters";
 import { humanClick, humanWait } from "$lib/server/browser/stealth-utils";
-import { waitForContentChange } from "$lib/server/utils/page-wait";
+import { markClickableElementsInContainer } from "$lib/server/browser/cdp-utils";
+import {
+  waitForContentChange,
+  waitForSpaContent,
+} from "$lib/server/utils/page-wait";
 import { formatSalary, upsertJob, type UpsertResult } from "../job-data";
 import type { SearchContext } from "./types";
 import { mergeJobData } from "./merge";
@@ -322,6 +326,16 @@ async function returnToSearchPage(
       await page.goto(originalUrl, { waitUntil: "domcontentloaded" });
       await humanWait(page, 1500);
     }
+
+    // Wait for content to stabilize before re-marking
+    await waitForSpaContent(page, {
+      maxAttempts: 3,
+      pollInterval: 1000,
+      minGrowthThreshold: 100,
+    });
+
+    // Re-mark clickable elements (DOM was re-rendered after navigation)
+    await markClickableElementsInContainer(page, "body");
   }
 
   // SPA behavior - nothing to do, we're still on the search page
