@@ -297,13 +297,10 @@ async function attemptAutoLogin(
  * Uses persistent browser session (like a real browser).
  *
  * Flow:
- * 1. If credentials AND login_page_url configured:
- *    - Proactive login (skip unreliable URL-based session check)
- *    - Sites like Indeed allow browsing without login initially
- * 2. If no proactive login config:
- *    - Check session via URL pattern
- *    - If not logged in: credentials → auto-fill, else → manual login
- * 3. Proceed to scraping
+ * 1. Check if already logged in (via login page navigation + redirect detection)
+ * 2. If not logged in and credentials available: auto-login via Browser-Use
+ * 3. If not logged in and no credentials: manual login via VNC
+ * 4. Proceed to scraping
  */
 async function scrapeWithLogin(
   searchUrl: string,
@@ -325,142 +322,90 @@ async function scrapeWithLogin(
     useVision !== undefined ? { useVision } : undefined,
   );
 
-  // Determine the login URL pattern for this platform
-  const loginUrlPattern = getLoginUrlPattern(platform);
-
-  // Determine login strategy:
-  // - If credentials AND login_page_url configured: proactive login (skip unreliable session check)
-  // - Otherwise: check session first, then manual login if needed
-  const hasProactiveLoginConfig = credentials && platform.login_page_url;
-
   try {
     let isLoggedIn = false;
     let cloudCdpUrl: string | undefined; // Track CDP URL from cloud mode
 
-    if (hasProactiveLoginConfig) {
-      // Proactive login - don't rely on session check for sites that
-      // allow unauthenticated browsing (like Indeed)
+    // Phase 1: Check if already logged in
+    console.log("\n📌 Phase 1: Checking login state...");
+
+    if (!platform.login_page_url) {
+      // No login_page_url configured, assume no login required
       console.log(
-        "\n📌 Phase 1: Proactive login (credentials + login URL configured)...",
+        "   No login_page_url configured, assuming no login required",
       );
-      console.log("   Auto-filling credentials...");
-
-      try {
-        const loginAttempt = await attemptAutoLogin(
-          browserUse,
-          platform,
-          credentials,
-          searchUrl,
-          platform.login_page_url || platform.url,
-          useVision,
-        );
-        isLoggedIn = loginAttempt.success;
-        cloudCdpUrl = loginAttempt.cdpUrl;
-      } catch (error) {
-        if (isRecoverableBrowserUseError(error)) {
-          console.log(
-            `\n⚠️ AI login failed with recoverable error: ${
-              error instanceof Error ? error.message : error
-            }`,
-          );
-          console.log("   Falling back to manual login...");
-
-          // Close any existing session before starting fresh
-          await browserUse.close();
-
-          // Start browser for manual login
-          await browserUse.startSession(
-            platform.login_page_url || platform.url,
-            CDP_PORT,
-          );
-
-          isLoggedIn = await waitForManualIntervention(platform);
-        } else {
-          throw error;
-        }
-      }
+      isLoggedIn = true;
     } else {
-      // No proactive login config - check if login is required
-      console.log("\n📌 Phase 1: Checking login state...");
+      // Navigate to login page and check if redirected (indicates logged in)
+      const loginCheck = await checkLoginByNavigation(
+        browserUse,
+        platform.login_page_url,
+        jobSearchId,
+        CDP_PORT,
+      );
 
-      if (!platform.login_page_url) {
-        // No login_page_url configured, assume no login required
-        console.log(
-          "   No login_page_url configured, assuming no login required",
-        );
-        isLoggedIn = true;
+      console.log(
+        `   Login check result: isLoggedIn=${loginCheck.isLoggedIn}`,
+      );
+
+      isLoggedIn = loginCheck.isLoggedIn;
+    }
+
+    // Phase 2: Handle login if not already logged in
+    if (!isLoggedIn) {
+      console.log("\n📌 Phase 2: Login required...");
+
+      if (credentials) {
+        // We have credentials - use Browser-Use to auto-fill
+        console.log("   Auto-filling credentials...");
+
+        try {
+          const loginAttempt = await attemptAutoLogin(
+            browserUse,
+            platform,
+            credentials,
+            searchUrl,
+            platform.login_page_url || platform.url,
+            useVision,
+          );
+          isLoggedIn = loginAttempt.success;
+          cloudCdpUrl = loginAttempt.cdpUrl;
+        } catch (error) {
+          if (isRecoverableBrowserUseError(error)) {
+            console.log(
+              `\n⚠️ AI login failed with recoverable error: ${
+                error instanceof Error ? error.message : error
+              }`,
+            );
+            console.log("   Falling back to manual login...");
+
+            // Close any existing session before starting fresh
+            await browserUse.close();
+
+            // Start browser for manual login
+            await browserUse.startSession(
+              platform.login_page_url || platform.url,
+              CDP_PORT,
+            );
+
+            isLoggedIn = await waitForManualIntervention(platform);
+          } else {
+            throw error;
+          }
+        }
       } else {
-        // Navigate to login page and check if redirected
-        const loginCheck = await checkLoginByNavigation(
-          browserUse,
-          platform.login_page_url,
-          jobSearchId,
+        // No credentials - start browser for manual login
+        console.log("   Starting browser for manual login...");
+
+        await browserUse.startSession(
+          platform.login_page_url || platform.url,
           CDP_PORT,
         );
 
-        console.log(
-          `   Login check result: isLoggedIn=${loginCheck.isLoggedIn}`,
-        );
-
-        isLoggedIn = loginCheck.isLoggedIn;
+        isLoggedIn = await waitForManualIntervention(platform);
       }
-
-      // Phase 2: Handle login if not already logged in
-      if (!isLoggedIn) {
-        console.log("\n📌 Phase 2: Login required...");
-
-        if (credentials) {
-          // We have credentials but no login_page_url - use Browser-Use to auto-fill
-          console.log("   Auto-filling credentials...");
-
-          try {
-            const loginAttempt = await attemptAutoLogin(
-              browserUse,
-              platform,
-              credentials,
-              searchUrl,
-              platform.url,
-              useVision,
-            );
-            isLoggedIn = loginAttempt.success;
-            cloudCdpUrl = loginAttempt.cdpUrl;
-          } catch (error) {
-            if (isRecoverableBrowserUseError(error)) {
-              console.log(
-                `\n⚠️ AI login failed with recoverable error: ${
-                  error instanceof Error ? error.message : error
-                }`,
-              );
-              console.log("   Falling back to manual login...");
-
-              // Close any existing session before starting fresh
-              await browserUse.close();
-
-              // Start browser for manual login
-              await browserUse.startSession(
-                platform.login_page_url || platform.url,
-                CDP_PORT,
-              );
-
-              isLoggedIn = await waitForManualIntervention(platform);
-            } else {
-              throw error;
-            }
-          }
-        } else {
-          // No credentials - start browser for manual login
-          console.log("   Starting browser for manual login...");
-
-          await browserUse.startSession(
-            platform.login_page_url || platform.url,
-            CDP_PORT,
-          );
-
-          isLoggedIn = await waitForManualIntervention(platform);
-        }
-      } else {
-        console.log("✅ Already logged in, skipping login phase");
-      }
+    } else {
+      console.log("✅ Already logged in, skipping login phase");
     }
 
     if (!isLoggedIn) {
