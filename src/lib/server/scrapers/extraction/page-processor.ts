@@ -299,10 +299,8 @@ export async function processSearchPage(
     savedStrippedHtml = debugHeader + "\n" + strippedHtml;
 
     // Log Directus admin URL for debugging stripped HTML
-    const directusUrl = process.env.PUBLIC_ADMIN_URL ||
-      "http://localhost:8055";
     console.log(
-      `      📋 Debug stripped HTML: ${directusUrl}/admin/content/job_searches/${jobSearchId}`,
+      `      📋 Debug stripped HTML: ${config.adminPublicUrl}/admin/content/job_searches/${jobSearchId}`,
     );
 
     // Save stripped HTML immediately for debugging (before LLM extraction)

@@ -1,6 +1,7 @@
 import type { Handle } from "@sveltejs/kit";
 import { createDirectusServerClient } from "$lib/server/directus";
 import { readMe } from "@directus/sdk";
+import { config } from "$lib/server/config";
 
 function getSystemTheme(request: Request): "light" | "dark" {
   // Try to detect system preference from headers
@@ -107,7 +108,7 @@ export const handle: Handle = async ({ event, resolve }) => {
               authResult.access_token,
               {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === "production",
+                secure: config.isProduction,
                 sameSite: "strict",
                 maxAge: authResult.expires || 60 * 15,
                 path: "/",
@@ -119,7 +120,7 @@ export const handle: Handle = async ({ event, resolve }) => {
               authResult.refresh_token,
               {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === "production",
+                secure: config.isProduction,
                 sameSite: "strict",
                 maxAge: 60 * 60 * 24 * 7,
                 path: "/",

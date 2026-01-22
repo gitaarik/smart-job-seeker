@@ -4,6 +4,8 @@
  * Future: Can be integrated with Sentry or other monitoring services
  */
 
+import { config } from "$lib/server/config";
+
 export interface ErrorContext {
   userId?: string;
   requestId?: string;
@@ -80,7 +82,7 @@ class ErrorTracker {
    * Log debug message (only in development)
    */
   logDebug(message: string, context?: ErrorContext): void {
-    if (process.env.NODE_ENV !== "production") {
+    if (!config.isProduction) {
       const logEntry: LogContext = {
         level: "debug",
         message,

@@ -8,6 +8,7 @@
 
 import { existsSync } from "fs";
 import { type BrowserContext, chromium, type Page } from "playwright";
+import { config } from "$lib/server/config";
 
 // Chrome installation paths to check (Linux)
 const CHROME_PATHS = [
@@ -29,16 +30,16 @@ export interface BrowserLaunchOptions {
  * Priority: ENV var > known paths > undefined (fallback to Playwright's bundled Chromium)
  */
 export function findChromeExecutable(): string | undefined {
-  // 1. Check environment variable override
-  if (process.env.CHROME_EXECUTABLE_PATH) {
-    if (existsSync(process.env.CHROME_EXECUTABLE_PATH)) {
+  // 1. Check config override
+  if (config.chromePath) {
+    if (existsSync(config.chromePath)) {
       console.log(
-        `✅ Using Chrome from ENV: ${process.env.CHROME_EXECUTABLE_PATH}`,
+        `✅ Using Chrome from config: ${config.chromePath}`,
       );
-      return process.env.CHROME_EXECUTABLE_PATH;
+      return config.chromePath;
     } else {
       console.warn(
-        `⚠️  CHROME_EXECUTABLE_PATH not found: ${process.env.CHROME_EXECUTABLE_PATH}`,
+        `⚠️  SJS_CHROME_PATH not found: ${config.chromePath}`,
       );
     }
   }
@@ -57,7 +58,7 @@ export function findChromeExecutable(): string | undefined {
   );
   console.warn("   For better compatibility, install Chrome:");
   console.warn("   Ubuntu/Debian: sudo apt install google-chrome-stable");
-  console.warn("   Or set: export CHROME_EXECUTABLE_PATH=/path/to/chrome");
+  console.warn("   Or set: export SJS_CHROME_PATH=/path/to/chrome");
   return undefined;
 }
 

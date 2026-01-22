@@ -16,9 +16,14 @@ export interface AppConfig {
   databaseUrl: string;
 
   // External Services
+  publicSiteUrl: string;
+  adminPublicUrl: string;
   directusUrl: string;
   directusToken: string;
   directusWebhookSecret: string;
+
+  // Browser
+  chromePath: string;
 
   // LLM (for TypeScript/SvelteKit app)
   llmProvider:
@@ -139,9 +144,14 @@ function loadConfig(): AppConfig {
     databaseUrl: getEnv("SJS_DATABASE_URL"),
 
     // External Services
+    publicSiteUrl: getEnv("SJS_PUBLIC_SITE_URL", "http://localhost:5173"),
+    adminPublicUrl: getEnv("SJS_ADMIN_PUBLIC_URL", "http://localhost:8055"),
     directusUrl: getEnv("SJS_ADMIN_URL"),
     directusToken: getEnv("SJS_ADMIN_TOKEN"),
     directusWebhookSecret: getEnv("SJS_WEBHOOK_SECRET"),
+
+    // Browser
+    chromePath: getEnv("SJS_CHROME_PATH", ""),
 
     // LLM (for TypeScript/SvelteKit app)
     llmProvider: (llmProvider as
@@ -165,10 +175,13 @@ function loadConfig(): AppConfig {
       10,
     ),
 
-    // Retry
-    retryMaxAttempts: parseInt(getEnv("SJS_RETRY_MAX_ATTEMPTS", "3"), 10),
-    retryInitialDelay: parseInt(getEnv("SJS_RETRY_INITIAL_DELAY", "1000"), 10),
-    retryMaxDelay: parseInt(getEnv("SJS_RETRY_MAX_DELAY", "10000"), 10),
+    // LLM Retry
+    retryMaxAttempts: parseInt(getEnv("SJS_LLM_RETRY_MAX_ATTEMPTS", "3"), 10),
+    retryInitialDelay: parseInt(
+      getEnv("SJS_LLM_RETRY_INITIAL_DELAY", "1000"),
+      10,
+    ),
+    retryMaxDelay: parseInt(getEnv("SJS_LLM_RETRY_MAX_DELAY", "10000"), 10),
 
     // Scraper
     scraperDefaultTimeout: parseInt(

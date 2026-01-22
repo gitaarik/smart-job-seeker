@@ -339,11 +339,7 @@ export class BrowserUseClient {
             console.log(
               "💡 Tip: Check your LLM provider API key and rate limits",
             );
-            console.log(
-              "Current provider:",
-              process.env.SJS_LLM_PROVIDER_BROWSER_USE ||
-                process.env.SJS_LLM_PROVIDER || "groq",
-            );
+            console.log("Current provider:", config.llmProvider);
             throw new Error(
               "Browser-Use hit rate limit - check API key and provider limits",
             );

@@ -4,6 +4,7 @@
  */
 
 import { db } from "$lib/db";
+import { config } from "$lib/server/config";
 import type { WebhookHandler, WebhookHandlerResult } from "../types";
 
 export const profileVersionLinksHandler: WebhookHandler = {
@@ -58,8 +59,7 @@ export const profileVersionLinksHandler: WebhookHandler = {
 
           const versionName = encodeURIComponent(profileVersion.name);
           const profileSlug = profileVersion.profiles.slug;
-          const baseUrl = process.env.PUBLIC_SITE_URL ||
-            "http://localhost:5173";
+          const baseUrl = config.publicSiteUrl;
 
           const previewHtml =
             `<div style="display: flex; gap: 32px; font-size: 16px;">` +
