@@ -52,6 +52,94 @@ export async function delay(ms: number): Promise<void> {
 }
 
 /**
+ * Result of content change wait operation
+ */
+export interface ContentChangeResult {
+  /** Whether content changed from baseline */
+  changed: boolean;
+  /** Final content length in characters */
+  newLength: number;
+  /** Whether content stabilized after changing */
+  stabilized: boolean;
+}
+
+/**
+ * Wait for page content to change from a baseline, then optionally stabilize
+ *
+ * Useful after navigation or clicks that trigger SPA content loading.
+ * Detects when content grows beyond threshold, then waits for it to stop changing.
+ *
+ * @param page - Playwright page instance
+ * @param baselineLength - Starting content length to compare against
+ * @param options - Configuration options
+ * @returns Result indicating if content changed and stabilized
+ */
+export async function waitForContentChange(
+  page: Page,
+  baselineLength: number,
+  options: {
+    /** Max time to wait for change in ms (default: 10000) */
+    timeout?: number;
+    /** Interval between checks in ms (default: 500) */
+    pollInterval?: number;
+    /** Min character growth to consider "changed" (default: 100) */
+    changeThreshold?: number;
+    /** Whether to wait for stabilization after change detected (default: true) */
+    stabilizeAfter?: boolean;
+  } = {},
+): Promise<ContentChangeResult> {
+  const timeout = options.timeout ?? 10000;
+  const pollInterval = options.pollInterval ?? 500;
+  const changeThreshold = options.changeThreshold ?? 100;
+  const stabilizeAfter = options.stabilizeAfter ?? true;
+
+  const startTime = Date.now();
+  let currentLength = baselineLength;
+
+  // Phase 1: Wait for content to change
+  while (Date.now() - startTime < timeout) {
+    await delay(pollInterval);
+
+    currentLength = await page.evaluate(() => document.body.innerText.length);
+    const growth = currentLength - baselineLength;
+
+    if (growth >= changeThreshold) {
+      console.log(
+        `      📊 Content changed: ${baselineLength.toLocaleString()} → ${currentLength.toLocaleString()} (+${growth.toLocaleString()})`,
+      );
+
+      // Phase 2: Wait for stabilization if requested
+      if (stabilizeAfter) {
+        const stabilizeResult = await waitForSpaContent(page, {
+          maxAttempts: 3,
+          pollInterval: 1000,
+          minGrowthThreshold: changeThreshold,
+        });
+
+        return {
+          changed: true,
+          newLength: stabilizeResult.contentLength,
+          stabilized: stabilizeResult.stabilized,
+        };
+      }
+
+      return {
+        changed: true,
+        newLength: currentLength,
+        stabilized: false,
+      };
+    }
+  }
+
+  // Timeout reached without detecting change
+  return {
+    changed: false,
+    newLength: currentLength,
+    stabilized: true, // No change means already stable
+  };
+}
+
+/**
  * Result of SPA content wait operation
  */
 export interface SpaContentWaitResult {

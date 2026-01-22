@@ -22,6 +22,7 @@ import {
 import { processSearchPage, type SearchPageJob } from "./page-processor";
 import { processJobCard } from "./job-processor";
 import { detectDuplicatePage, detectLoginPage } from "./page-guards";
+import { waitForSpaContent } from "$lib/server/utils/page-wait";
 
 /**
  * Stats tracked during scraping
@@ -269,9 +270,18 @@ export async function scrapeJobsWithClicks(
   // Inject stealth scripts
   await injectStealthScripts(page);
 
-  // Wait for SPA to render
-  console.log("⏳ Waiting for SPA to fully render...");
-  await humanWait(page, 3000);
+  // Wait for SPA content to stabilize before first extraction
+  console.log("⏳ Waiting for SPA content to stabilize...");
+  const initialWait = await waitForSpaContent(page, {
+    maxAttempts: config.scraperSpaContentPollAttempts,
+    pollInterval: config.scraperSpaContentPollInterval,
+    minGrowthThreshold: config.scraperSpaMinContentGrowth,
+  });
+  console.log(
+    `   Content ${
+      initialWait.stabilized ? "stabilized" : "still loading"
+    } at ${initialWait.contentLength.toLocaleString()} chars`,
+  );
   console.log(`📍 Current URL: ${page.url()}`);
 
   // Initialize tracking

@@ -11,6 +11,7 @@ import {
   isValidJob,
 } from "$lib/server/job/scrape-filters";
 import { humanClick, humanWait } from "$lib/server/browser/stealth-utils";
+import { waitForContentChange } from "$lib/server/utils/page-wait";
 import { formatSalary, upsertJob, type UpsertResult } from "../job-data";
 import type { SearchContext } from "./types";
 import { mergeJobData } from "./merge";
@@ -233,7 +234,9 @@ async function clickJobCard(
     // Use human-like click
     const selector = `[data-extract-clickable-id="${clickableId}"]`;
     await humanClick(page, selector);
-    await humanWait(page, config.scraperClickWaitTimeout);
+
+    // Brief initial wait for click handler to fire
+    await humanWait(page, 500);
 
     // Check if a new tab was opened by the click
     const currentPages = context.pages();
@@ -255,16 +258,24 @@ async function clickJobCard(
       console.log(`      🔀 Navigated to: ${page.url()}`);
     }
 
-    // Check if content changed (SPA update)
+    // Wait for SPA content to change and stabilize
     if (!newTab && !navigatedAway) {
-      const afterClick = await page.evaluate(
-        () => document.body.innerText.length,
-      );
-      const contentChanged = Math.abs(afterClick - beforeClick) > 100;
-      if (!contentChanged) {
+      const changeResult = await waitForContentChange(page, beforeClick, {
+        timeout: config.scraperClickWaitTimeout * 2,
+        changeThreshold: 100,
+        stabilizeAfter: true,
+      });
+
+      if (!changeResult.changed) {
         console.warn(
           `      ⚠️  Page content didn't change after click`,
         );
+      }
+
+      // Re-check if URL changed during content stabilization (slow navigation)
+      if (page.url() !== originalUrl) {
+        navigatedAway = true;
+        console.log(`      🔀 Navigated to: ${page.url()}`);
       }
     }
   }

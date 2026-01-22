@@ -5,8 +5,9 @@
 
 import type { Page } from "playwright";
 import { stripHtmlForLlm } from "../html/strip";
-import { waitWithScrollDetection } from "./page-wait";
+import { waitForSpaContent, waitWithScrollDetection } from "./page-wait";
 import { generateAiChatResponse } from "../ai-chat/response-generate";
+import { config } from "../config";
 
 export interface PaginationInfo {
   hasPagination: boolean;
@@ -156,8 +157,15 @@ export async function navigateToNextPage(
       // URL-based pagination
       console.log(`      → Navigating to URL: ${info.nextPageUrl}`);
       await page.goto(info.nextPageUrl, { waitUntil: "load", timeout: 30000 });
-      await page.waitForTimeout(2000); // Rate limiting
-      console.log(`      ✓ URL navigation complete`);
+      // Wait for SPA content to stabilize after navigation
+      const stabilize = await waitForSpaContent(page, {
+        maxAttempts: config.scraperSpaContentPollAttempts,
+        pollInterval: config.scraperSpaContentPollInterval,
+        minGrowthThreshold: config.scraperSpaMinContentGrowth,
+      });
+      console.log(
+        `      ✓ URL navigation complete (${stabilize.contentLength.toLocaleString()} chars)`,
+      );
       return true;
     }
 
@@ -172,11 +180,15 @@ export async function navigateToNextPage(
       if (isVisible) {
         console.log(`      → Clicking next button...`);
         await nextButton.click();
-        await page.waitForTimeout(2000); // Wait for content
-        await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(
-          () => {},
+        // Wait for SPA content to stabilize after click
+        const stabilize = await waitForSpaContent(page, {
+          maxAttempts: config.scraperSpaContentPollAttempts,
+          pollInterval: config.scraperSpaContentPollInterval,
+          minGrowthThreshold: config.scraperSpaMinContentGrowth,
+        });
+        console.log(
+          `      ✓ Button click complete (${stabilize.contentLength.toLocaleString()} chars)`,
         );
-        console.log(`      ✓ Button click complete`);
         return true;
       } else {
         console.log(`      ✗ Next button not visible`);
@@ -194,8 +206,15 @@ export async function navigateToNextPage(
       if (isVisible) {
         console.log(`      → Clicking load more...`);
         await loadButton.click();
-        await page.waitForTimeout(2000);
-        console.log(`      ✓ Load more click complete`);
+        // Wait for SPA content to stabilize after load more
+        const stabilize = await waitForSpaContent(page, {
+          maxAttempts: config.scraperSpaContentPollAttempts,
+          pollInterval: config.scraperSpaContentPollInterval,
+          minGrowthThreshold: config.scraperSpaMinContentGrowth,
+        });
+        console.log(
+          `      ✓ Load more click complete (${stabilize.contentLength.toLocaleString()} chars)`,
+        );
         return true;
       } else {
         console.log(`      ✗ Load more button not visible`);
