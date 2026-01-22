@@ -171,6 +171,9 @@ export async function createAndGenerateAiChat(
     date_updated: Date | null;
   };
 }> {
+  // Track aiChat ID so we can save errors to the record if creation succeeds but generation fails
+  let aiChatId: number | undefined;
+
   try {
     // Step 1: Fetch prompt template from ai_chat_prompts
     const promptTemplate = await fetchPromptTemplate(promptRequest);
@@ -238,6 +241,7 @@ export async function createAndGenerateAiChat(
         date_created: new Date(),
       },
     });
+    aiChatId = aiChat.id;
 
     // Step 6: Generate and save full_prompt (interpolated combination)
     const fullPrompt = makeFullPrompt(
@@ -307,6 +311,22 @@ export async function createAndGenerateAiChat(
       aiChat: completeAiChat,
     };
   } catch (error) {
+    const errorMessage = error instanceof Error
+      ? error.message
+      : "Unknown error";
+
+    // Save error to ai_chat record if it was created
+    if (aiChatId) {
+      try {
+        await db.ai_chat.update({
+          where: { id: aiChatId },
+          data: { error: errorMessage },
+        });
+      } catch {
+        // Ignore errors when saving the error - don't mask the original error
+      }
+    }
+
     // Re-throw fatal LLM errors so they can abort scraping
     if (
       error instanceof LLMRateLimitError ||
@@ -316,9 +336,6 @@ export async function createAndGenerateAiChat(
       throw error;
     }
 
-    const errorMessage = error instanceof Error
-      ? error.message
-      : "Unknown error";
     return {
       success: false,
       message: `Error creating and generating ai_chat: ${errorMessage}`,

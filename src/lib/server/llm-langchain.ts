@@ -88,14 +88,11 @@ function handleLLMError(
     : String(error);
   const messageLower = originalMessage.toLowerCase();
 
-  // Log full error object for debugging
-  console.error("[LLM Error Debug]", {
-    provider,
-    model,
-    errorType: error?.constructor?.name,
-    message: originalMessage,
-    fullError: error,
-  });
+  // Brief error log - full details are stored in ai_chat.error field
+  const truncatedMessage = originalMessage.length > 150
+    ? originalMessage.substring(0, 150) + "..."
+    : originalMessage;
+  console.error(`[LLM Error] ${provider}/${model}: ${truncatedMessage}`);
 
   // Check for quota/balance errors (402, insufficient balance, quota exceeded)
   if (
