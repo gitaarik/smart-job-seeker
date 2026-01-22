@@ -113,7 +113,8 @@
       "WebFetch(domain:groq.com)",
       "WebFetch(domain:www.together.ai)",
       "WebFetch(domain:pypi.org)",
-      "WebFetch(domain:docs.cloud.browser-use.com)"
+      "WebFetch(domain:docs.cloud.browser-use.com)",
+      "WebFetch(domain:lumenalta.com)"
     ],
     "deny": [],
     "ask": []
