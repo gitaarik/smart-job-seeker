@@ -25,10 +25,10 @@ services:
       DB_CLIENT: ${SJS_DB_CLIENT:-pg}
       DB_HOST: ${SJS_DB_HOST_DOCKER:-database}
       DB_PORT: 5432
-      DB_DATABASE: ${SJS_DB_DATABASE}
-      DB_USER: ${SJS_DB_USER}
-      DB_PASSWORD: ${SJS_DB_PASSWORD}
-      DB_SSL: ${SJS_DB_SSL}
+      DB_DATABASE: ${SJS_DB_DATABASE:-smartjobseeker}
+      DB_USER: ${SJS_DB_USER:-postgres}
+      DB_PASSWORD: ${SJS_DB_PASSWORD:-postgres}
+      DB_SSL: ${SJS_DB_SSL:-false}
       # DB_CONNECTION_TIMEOUT: 60000
       # DB_ACQUIRE_CONNECTION_TIMEOUT: 60000
 
