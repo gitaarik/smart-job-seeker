@@ -28,7 +28,7 @@ contributing to Smart Job Seeker.
    ```
 
    Update `.env` with your configuration:
-   - `SJS_APP_URL` - Application URL
+   - `SJS_PUBLIC_SITE_URL` - Public site URL
    - `SJS_JWT_SECRET` - Secret for JWT tokens
    - `SJS_DATABASE_URL` - PostgreSQL connection string
    - `SJS_SMTP2GO_API_KEY` - Email service API key

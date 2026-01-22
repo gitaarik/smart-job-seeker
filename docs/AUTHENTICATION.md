@@ -29,7 +29,7 @@ SJS_FROM_EMAIL="noreply@yourdomain.com"
 SJS_FROM_NAME="Portfolio App"
 
 # Application URL
-SJS_APP_URL="http://localhost:5173"
+SJS_PUBLIC_SITE_URL="http://localhost:5173"
 ```
 
 ### 2. SMTP2GO Setup
@@ -135,7 +135,7 @@ const response = await fetch("/api/auth/login", {
 ## Production Deployment
 
 1. **Update environment variables**:
-   - Set `SJS_APP_URL` to your production domain
+   - Set `SJS_PUBLIC_SITE_URL` to your production domain
    - Use a production PostgreSQL database
    - Ensure SMTP2GO API key is configured
 

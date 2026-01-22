@@ -1,4 +1,4 @@
-import { getEnv } from "$lib/tools/get-env";
+import { config } from "$lib/server/config";
 
 export interface ExportUrlOptions {
   route: string;
@@ -7,11 +7,7 @@ export interface ExportUrlOptions {
 }
 
 export function getBaseUrl(): string {
-  const appUrl = getEnv("SJS_APP_URL", { allowEmpty: true });
-  if (appUrl) return appUrl;
-
-  const appPort = getEnv("SJS_APP_PORT", "5173");
-  return `http://localhost:${appPort}`;
+  return config.publicSiteUrl;
 }
 
 export function buildExportUrl(options: ExportUrlOptions): string {
