@@ -154,7 +154,7 @@ async function rescrapeJobById(
     console.log(`\n🤖 Using Browser-Use to extract job data...`);
     const browserUse = new BrowserUseClient(
       options.screenshots !== undefined
-        ? { useVisual: options.screenshots }
+        ? { useVision: options.screenshots }
         : undefined,
     );
     jobData = await browserUse.extractSingleJob(job.source_url);

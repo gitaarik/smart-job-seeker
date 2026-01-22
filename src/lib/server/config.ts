@@ -76,7 +76,7 @@ export interface AppConfig {
 
   // Browser-Use Integration
   browserUseTimeout: number;
-  browserUseVisual: boolean;
+  browserUseVision: boolean;
 
   // Hybrid Scraper (Browser-Use login + Patchright extraction via CDP)
   hybridCdpHost: string; // Host for Chrome debugging (default: localhost, use browser-use in Docker)
@@ -258,7 +258,7 @@ function loadConfig(): AppConfig {
       getEnv("SJS_BROWSER_USE_TIMEOUT", "120000"),
       10,
     ),
-    browserUseVisual: getEnv("SJS_BROWSER_USE_VISUAL", "true") === "true",
+    browserUseVision: getEnv("SJS_BROWSER_USE_VISION", "true") === "true",
 
     // Hybrid Scraper (Browser-Use login + Patchright extraction via CDP)
     hybridCdpHost: getEnv("SJS_HYBRID_CDP_HOST", "localhost"),

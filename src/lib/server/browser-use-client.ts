@@ -4,14 +4,14 @@ import { dbDirect } from "$lib/db";
 export interface BrowserUseConfig {
   baseUrl: string;
   timeout: number;
-  useVisual: boolean;
+  useVision: boolean;
 }
 
 export interface ExecuteTaskParams {
   task: string; // Natural language task description
   startUrl: string; // URL to start from
   maxTime?: number; // Optional max execution time in seconds
-  useVisual?: boolean; // Optional screenshot configuration
+  useVision?: boolean; // Optional screenshot configuration
 }
 
 export interface ExecuteTaskResponse {
@@ -25,7 +25,7 @@ export interface HybridSessionParams {
   startUrl: string; // URL to start from (login page)
   cdpPort?: number; // Port for CDP (default 9222)
   maxTime?: number; // Max execution time in seconds
-  useVisual?: boolean;
+  useVision?: boolean;
   solveCaptcha?: boolean; // If true, Browser-Use attempts to solve CAPTCHAs (default: false)
 }
 
@@ -176,8 +176,8 @@ export class BrowserUseClient {
     this.config = {
       baseUrl: customConfig?.baseUrl ?? "http://browser-use:8000",
       timeout: customConfig?.timeout ?? config.browserUseTimeout,
-      useVisual: customConfig?.useVisual ??
-        config.browserUseVisual,
+      useVision: customConfig?.useVision ??
+        config.browserUseVision,
     };
 
     // Cloud mode configuration
@@ -204,7 +204,7 @@ export class BrowserUseClient {
     } else {
       this.cloudTimeout = 30; // Default, not used in local mode
       console.log(
-        `[BrowserUseClient] Initialized in LOCAL mode, useVisual: ${this.config.useVisual}`,
+        `[BrowserUseClient] Initialized in LOCAL mode, useVision: ${this.config.useVision}`,
       );
     }
   }
@@ -231,10 +231,10 @@ export class BrowserUseClient {
   }
 
   async executeTask(params: ExecuteTaskParams): Promise<ExecuteTaskResponse> {
-    const useVisual = params.useVisual ??
-      this.config.useVisual;
+    const useVision = params.useVision ??
+      this.config.useVision;
     console.log(
-      `[BrowserUseClient] Sending request with use_visual: ${useVisual}`,
+      `[BrowserUseClient] Sending request with use_vision: ${useVision}`,
     );
 
     let response: Response;
@@ -246,7 +246,7 @@ export class BrowserUseClient {
           task: params.task,
           start_url: params.startUrl,
           max_time: params.maxTime,
-          use_visual: useVisual,
+          use_vision: useVision,
         }),
         signal: AbortSignal.timeout(this.config.timeout),
       });
@@ -317,7 +317,7 @@ export class BrowserUseClient {
       task,
       startUrl: jobUrl,
       maxTime: 60, // 1 minute max for single job
-      useVisual: this.config.useVisual,
+      useVision: this.config.useVision,
     });
 
     // Parse the JSON result
@@ -605,8 +605,8 @@ export class BrowserUseClient {
   private async startLocalHybridSession(
     params: HybridSessionParams,
   ): Promise<HybridSessionResponse> {
-    const useVisual = params.useVisual ??
-      this.config.useVisual;
+    const useVision = params.useVision ??
+      this.config.useVision;
     console.log(
       `[BrowserUseClient] Starting local hybrid session, CDP port: ${
         params.cdpPort ?? 9222
@@ -623,7 +623,7 @@ export class BrowserUseClient {
           start_url: params.startUrl,
           cdp_port: params.cdpPort ?? 9222,
           max_time: params.maxTime,
-          use_visual: useVisual,
+          use_vision: useVision,
           solve_captcha: params.solveCaptcha ?? false,
         }),
         signal: AbortSignal.timeout(this.config.timeout),
@@ -779,7 +779,7 @@ export class BrowserUseClient {
           code,
           cdp_port: cdpPort,
           max_time: 60,
-          use_visual: this.config.useVisual,
+          use_vision: this.config.useVision,
         }),
         signal: AbortSignal.timeout(120000),
       });
@@ -860,7 +860,7 @@ export class BrowserUseClient {
           task,
           cdp_port: cdpPort,
           max_time: 30,
-          use_visual: this.config.useVisual,
+          use_vision: this.config.useVision,
         }),
         signal: AbortSignal.timeout(60000),
       });

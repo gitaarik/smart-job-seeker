@@ -216,7 +216,7 @@ Create searches in `job_searches`:
 ```bash
 # Browser-Use Service
 SJS_BROWSER_USE_TIMEOUT=120000               # Max time for Browser-Use tasks
-SJS_BROWSER_USE_VISUAL=true                  # Enable visual mode (screenshots) for LLM
+SJS_BROWSER_USE_VISION=true                  # Enable visual mode (screenshots) for LLM
 
 # CDP Connection (Hybrid)
 SJS_HYBRID_CDP_HOST=localhost                # Chrome host (browser-use in Docker)

@@ -184,7 +184,7 @@ async function attemptAutoLogin(
   credentials: PlatformCredentials,
   searchUrl: string,
   startUrl: string,
-  useVisual: boolean | undefined,
+  useVision: boolean | undefined,
 ): Promise<{ success: boolean; cdpUrl?: string }> {
   const loginTask = await buildLoginPrompt(platform, credentials, searchUrl);
 
@@ -196,7 +196,7 @@ async function attemptAutoLogin(
     startUrl,
     cdpPort: CDP_PORT,
     maxTime: config.hybridLoginTimeout / 1000,
-    useVisual,
+    useVision,
   });
 
   const isCloudMode = !!loginResult.cdp_url;
@@ -232,7 +232,7 @@ async function scrapeWithLogin(
   platformId: string,
   platform: { name: string; url: string; login_page_url?: string | null },
   credentials: { username: string; password: string } | null,
-  useVisual: boolean | undefined,
+  useVision: boolean | undefined,
   jobSearchId: number,
 ): Promise<{ jobsProcessed: number; strippedHtml: string }> {
   if (credentials) {
@@ -244,7 +244,7 @@ async function scrapeWithLogin(
   }
 
   const browserUse = new BrowserUseClient(
-    useVisual !== undefined ? { useVisual } : undefined,
+    useVision !== undefined ? { useVision } : undefined,
   );
 
   // Determine the login URL pattern for this platform
@@ -274,7 +274,7 @@ async function scrapeWithLogin(
           credentials,
           searchUrl,
           platform.login_page_url || platform.url,
-          useVisual,
+          useVision,
         );
         isLoggedIn = loginAttempt.success;
         cloudCdpUrl = loginAttempt.cdpUrl;
@@ -332,7 +332,7 @@ async function scrapeWithLogin(
               credentials,
               searchUrl,
               platform.url,
-              useVisual,
+              useVision,
             );
             isLoggedIn = loginAttempt.success;
             cloudCdpUrl = loginAttempt.cdpUrl;
@@ -611,14 +611,14 @@ async function waitForManualIntervention(
  * @param searchUrl URL of the job search results page
  * @param platformId Platform ID for job storage
  * @param jobSearchId Job search ID (required for profile lookup and logging)
- * @param useVisual Whether to enable visual mode (screenshots) for LLM (for login)
+ * @param useVision Whether to enable visual mode (screenshots) for LLM (for login)
  * @returns Object with jobsProcessed count and strippedHtml from search page
  */
 export async function scrapeJobs(
   searchUrl: string,
   platformId: string,
   jobSearchId: number,
-  useVisual?: boolean,
+  useVision?: boolean,
 ): Promise<{ jobsProcessed: number; strippedHtml: string }> {
   console.log(`\n🔍 Starting job scraper (with persistent sessions)...`);
 
@@ -663,7 +663,7 @@ export async function scrapeJobs(
     platformId,
     platform,
     credentials,
-    useVisual,
+    useVision,
     jobSearchId,
   );
 }

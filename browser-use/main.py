@@ -17,7 +17,7 @@ class ExecuteTaskRequest(BaseModel):
     task: str  # Natural language task description
     start_url: str  # URL to start from
     max_time: Optional[int] = 120  # Maximum execution time in seconds
-    use_visual: Optional[bool] = True  # Whether to enable visual mode (screenshots) for LLM
+    use_vision: Optional[bool] = True  # Whether to enable visual mode (screenshots) for LLM
 
 
 class ExecuteTaskResponse(BaseModel):
@@ -48,7 +48,7 @@ async def execute_task(request: ExecuteTaskRequest):
             task=request.task,
             start_url=request.start_url,
             max_time=request.max_time,
-            use_visual=request.use_visual,
+            use_vision=request.use_vision,
         )
         return result
     except Exception as e:
@@ -64,7 +64,7 @@ class HybridSessionRequest(BaseModel):
     start_url: str  # URL to start from (login page)
     cdp_port: Optional[int] = 9222  # Port for CDP
     max_time: Optional[int] = 120  # Maximum execution time in seconds
-    use_visual: Optional[bool] = True  # Whether to enable visual mode (screenshots) for LLM
+    use_vision: Optional[bool] = True  # Whether to enable visual mode (screenshots) for LLM
     solve_captcha: Optional[bool] = False  # If True, Browser-Use attempts to solve CAPTCHAs
 
 
@@ -114,7 +114,7 @@ async def start_hybrid_session(request: HybridSessionRequest):
             start_url=request.start_url,
             cdp_port=request.cdp_port,
             max_time=request.max_time,
-            use_visual=request.use_visual,
+            use_vision=request.use_vision,
             solve_captcha=request.solve_captcha,
         )
         return result
@@ -152,7 +152,7 @@ class VerifyCodeRequest(BaseModel):
     code: str  # The verification code to enter
     cdp_port: Optional[int] = 9222
     max_time: Optional[int] = 60
-    use_visual: Optional[bool] = True
+    use_vision: Optional[bool] = True
 
 
 class VerifyCodeResponse(BaseModel):
@@ -173,7 +173,7 @@ class ResendCodeRequest(BaseModel):
     task: str  # Task prompt from database
     cdp_port: Optional[int] = 9222
     max_time: Optional[int] = 30
-    use_visual: Optional[bool] = True
+    use_vision: Optional[bool] = True
 
 
 class ResendCodeResponse(BaseModel):
@@ -207,7 +207,7 @@ async def submit_verification_code(request: VerifyCodeRequest):
             code=request.code,
             cdp_port=request.cdp_port,
             max_time=request.max_time,
-            use_visual=request.use_visual,
+            use_vision=request.use_vision,
         )
         return result
     except Exception as e:
@@ -230,7 +230,7 @@ async def resend_verification_code(request: ResendCodeRequest):
             task=request.task,
             cdp_port=request.cdp_port,
             max_time=request.max_time,
-            use_visual=request.use_visual,
+            use_vision=request.use_vision,
         )
         return result
     except Exception as e:
