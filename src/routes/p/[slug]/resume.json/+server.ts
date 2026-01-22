@@ -1,7 +1,7 @@
 import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
-import { getProfileByIdentifier } from "$lib/server/profile-default";
-import { getLatestExportWithFile } from "$lib/server/profile-export-files";
+import { getProfileByIdentifier } from "$lib/server/profile/default";
+import { getLatestExportWithFile } from "$lib/server/profile/export-files";
 import { dbDirect } from "$lib/db";
 import { exportProfileToJsonResume } from "../../../../../scripts/lib/json-resume-exporter";
 

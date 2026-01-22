@@ -1,5 +1,8 @@
 import { dbDirect as db } from "$lib/db";
-import { deleteFileFromDirectus, uploadFileToDirectus } from "./directus-files";
+import {
+  deleteFileFromDirectus,
+  uploadFileToDirectus,
+} from "../directus/files";
 import type { Buffer } from "buffer";
 
 interface CreateExportOptions {

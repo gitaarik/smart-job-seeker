@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
 import { dbDirect } from "$lib/db";
-import { getDefaultProfileId } from "$lib/server/profile-default";
-import { createProfileExport } from "$lib/server/profile-exports";
-import { buildExportUrl } from "$lib/server/export-url-builder";
+import { getDefaultProfileId } from "$lib/server/profile/default";
+import { createProfileExport } from "$lib/server/profile/exports";
+import { buildExportUrl } from "$lib/server/utils/export-url-builder";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 
 interface ExportedProfile {

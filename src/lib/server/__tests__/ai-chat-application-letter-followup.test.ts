@@ -16,13 +16,13 @@ vi.mock("$lib/db", () => ({
 }));
 
 // Mock the core followup creation function
-vi.mock("$lib/server/ai-chat-create-followup", () => ({
+vi.mock("$lib/server/ai-chat/create-followup", () => ({
   createFollowupAiChat: vi.fn(),
 }));
 
 import { db } from "$lib/db";
-import { createFollowupAiChat } from "$lib/server/ai-chat-create-followup";
-import { createApplicationLetterFollowup } from "../ai-chat-application-letter-followup";
+import { createFollowupAiChat } from "$lib/server/ai-chat/create-followup";
+import { createApplicationLetterFollowup } from "../ai-chat/application-letter-followup";
 
 describe("createApplicationLetterFollowup", () => {
   const mockLetter = {

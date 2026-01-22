@@ -3,7 +3,7 @@
  * Called to generate and update the full_prompt field
  */
 
-import { generateAiChatFullPrompt } from "$lib/server/ai-chat-full-prompt-generate";
+import { generateAiChatFullPrompt } from "$lib/server/ai-chat/full-prompt-generate";
 import type { WebhookHandler, WebhookHandlerResult } from "../types";
 
 export const aiChatGeneratePromptHandler: WebhookHandler = {

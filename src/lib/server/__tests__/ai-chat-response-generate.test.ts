@@ -23,7 +23,7 @@ vi.mock("$lib/tools/get-env", () => ({
   }),
 }));
 
-vi.mock("../ai-chat-utils", () => ({
+vi.mock("../ai-chat/utils", () => ({
   getInterpolatedPrompts: vi.fn(),
 }));
 
@@ -55,10 +55,10 @@ vi.mock("@langchain/groq", () => ({
 }));
 
 import { db } from "$lib/db";
-import { getInterpolatedPrompts } from "../ai-chat-utils";
-import { generateAiChatResponse } from "../ai-chat-response-generate";
+import { getInterpolatedPrompts } from "../ai-chat/utils";
+import { generateAiChatResponse } from "../ai-chat/response-generate";
 import { AIMessage } from "@langchain/core/messages";
-import { llmCache } from "../cache/llm-cache";
+import { llmCache } from "../llm/cache";
 
 describe("generateAiChatResponse", () => {
   beforeEach(() => {

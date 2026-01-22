@@ -4,7 +4,7 @@
  */
 
 import { db } from "$lib/db";
-import { getInterpolatedPrompts, makeFullPrompt } from "./ai-chat-utils";
+import { getInterpolatedPrompts, makeFullPrompt } from "./utils";
 
 /**
  * Generate full prompt for a single AI chat using the same prisma instance

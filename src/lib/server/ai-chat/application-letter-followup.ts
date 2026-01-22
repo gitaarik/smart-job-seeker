@@ -1,28 +1,28 @@
 /**
- * Create follow-up AI chat for application questions
- * This handler manages the application_question-specific logic while delegating
+ * Create follow-up AI chat for application letters
+ * This handler manages the application_letter-specific logic while delegating
  * the core follow-up creation to the reusable createFollowupAiChat function
  */
 
 import { db } from "$lib/db";
-import { createFollowupAiChat } from "./ai-chat-create-followup";
+import { createFollowupAiChat } from "./create-followup";
 
 /**
- * Create a follow-up AI chat for an application question
+ * Create a follow-up AI chat for an application letter
  *
  * Steps:
- * 1. Fetch the application_questions with current ai_chat reference
+ * 1. Fetch the application_letter with current ai_chat reference
  * 2. Validate that ai_chat exists
  * 3. Call createFollowupAiChat to create the follow-up
- * 4. Update the application_questions to reference the new ai_chat
+ * 4. Update the application_letter to reference the new ai_chat
  *
- * @param questionId - The ID of the application question
+ * @param letterId - The ID of the application letter
  * @param followupRequest - User's follow-up request describing what to refine
  * @param includeOriginalContext - Whether to include original context variables
  * @returns Object with success status, message, and created ai_chat if successful
  */
-export async function createApplicationQuestionFollowup(
-  questionId: number,
+export async function createApplicationLetterFollowup(
+  letterId: number,
   followupRequest: string,
   includeOriginalContext?: boolean,
 ): Promise<{
@@ -39,11 +39,11 @@ export async function createApplicationQuestionFollowup(
     date_updated: Date | null;
   };
 }> {
-  // Step 1: Fetch application_questions (try block for database query)
-  let question;
+  // Step 1: Fetch application_letter (try block for database query)
+  let letter;
   try {
-    question = await db.application_questions.findUnique({
-      where: { id: questionId },
+    letter = await db.application_letters.findUnique({
+      where: { id: letterId },
       select: {
         id: true,
         ai_chat: true,
@@ -55,23 +55,23 @@ export async function createApplicationQuestionFollowup(
       : "Unknown error";
     return {
       success: false,
-      message: `Error creating application question follow-up: ${errorMessage}`,
+      message: `Error creating application letter follow-up: ${errorMessage}`,
     };
   }
 
   // Step 2: Validation outside try block
-  if (!question) {
+  if (!letter) {
     return {
       success: false,
-      message: `Application question with ID ${questionId} not found`,
+      message: `Application letter with ID ${letterId} not found`,
     };
   }
 
-  if (!question.ai_chat) {
+  if (!letter.ai_chat) {
     return {
       success: false,
       message:
-        `Application question ${questionId} does not have an ai_chat yet. Generate the initial answer first.`,
+        `Application letter ${letterId} does not have an ai_chat yet. Generate the initial letter first.`,
     };
   }
 
@@ -79,7 +79,7 @@ export async function createApplicationQuestionFollowup(
   let result;
   try {
     result = await createFollowupAiChat(
-      question.ai_chat,
+      letter.ai_chat,
       followupRequest,
       { includeOriginalContext },
     );
@@ -98,10 +98,10 @@ export async function createApplicationQuestionFollowup(
     return result;
   }
 
-  // Step 4: Update application_questions (try block for database update)
+  // Step 4: Update application_letter (try block for database update)
   try {
-    await db.application_questions.update({
-      where: { id: questionId },
+    await db.application_letters.update({
+      where: { id: letterId },
       data: {
         ai_chat: result.aiChat.id,
         ai_chat_response: result.aiChat.response,
@@ -113,7 +113,7 @@ export async function createApplicationQuestionFollowup(
       : "Unknown error";
     return {
       success: false,
-      message: `Error updating question record: ${errorMessage}`,
+      message: `Error updating letter record: ${errorMessage}`,
     };
   }
 
@@ -121,7 +121,7 @@ export async function createApplicationQuestionFollowup(
   return {
     success: true,
     message:
-      `Follow-up AI chat created successfully (ID: ${result.aiChat.id}). Application question ${questionId} has been updated.`,
+      `Follow-up AI chat created successfully (ID: ${result.aiChat.id}). Application letter ${letterId} has been updated.`,
     aiChat: result.aiChat,
   };
 }

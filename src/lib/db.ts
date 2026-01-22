@@ -12,8 +12,14 @@ export const db = new PrismaClient({ adapter });
 // When running in Docker: use 'database' as hostname (Docker service name)
 // When running on host: use 'localhost' to connect to the exposed port
 const postgresUrl = isRunningInDocker()
-  ? getEnv("SJS_POSTGRES_URL_DOCKER", 'postgres://postgres:postgres@database:5432/smartjobseeker')
-  : getEnv("SJS_POSTGRES_URL_HOST", 'postgres://postgres:postgres@database:5432/smartjobseeker');
+  ? getEnv(
+    "SJS_POSTGRES_URL_DOCKER",
+    "postgres://postgres:postgres@database:5432/smartjobseeker",
+  )
+  : getEnv(
+    "SJS_POSTGRES_URL_HOST",
+    "postgres://postgres:postgres@database:5432/smartjobseeker",
+  );
 
 const adapterDirect = new PrismaPg({
   connectionString: postgresUrl,

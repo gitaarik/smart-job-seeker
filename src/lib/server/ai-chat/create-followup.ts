@@ -3,7 +3,7 @@
  */
 
 import { db } from "$lib/db";
-import { createAndGenerateAiChat, interpolatePrompt } from "./ai-chat-utils";
+import { createAndGenerateAiChat, interpolatePrompt } from "./utils";
 
 /**
  * Escape variable placeholders in a string to prevent auto-interpolation

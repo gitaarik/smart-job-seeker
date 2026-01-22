@@ -1,5 +1,5 @@
 import { redirect } from "@sveltejs/kit";
-import { getDefaultProfile } from "$lib/server/profile-default";
+import { getDefaultProfile } from "$lib/server/profile/default";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async () => {

@@ -1,5 +1,5 @@
 import { deleteFile, readAssetRaw, uploadFiles } from "@directus/sdk";
-import { createDirectusClient } from "./directus";
+import { createDirectusClient } from "./client";
 import { Buffer } from "buffer";
 
 interface UploadFileOptions {

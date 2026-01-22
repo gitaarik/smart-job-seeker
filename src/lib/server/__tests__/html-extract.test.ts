@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extractLinks } from "../html-extract";
+import { extractLinks } from "../html/extract";
 
 describe("extractLinks", () => {
   it("should extract all links from HTML", () => {

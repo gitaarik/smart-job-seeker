@@ -5,8 +5,8 @@
 import type { Page } from "playwright";
 import { dbDirect } from "$lib/db";
 import { config } from "$lib/server/config";
-import { stripHtmlForLlm } from "$lib/server/html-strip";
-import { markClickableElementsInContainer } from "$lib/server/cdp-utils";
+import { stripHtmlForLlm } from "$lib/server/html/strip";
+import { markClickableElementsInContainer } from "$lib/server/browser/cdp-utils";
 import { getErrorMessage } from "../utils";
 import { extractJobsFromSearchPage } from "./llm-extract";
 import {

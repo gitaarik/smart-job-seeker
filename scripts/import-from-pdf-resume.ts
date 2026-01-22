@@ -9,7 +9,7 @@ import { Command } from "commander";
 import { extractResumeFromPdf } from "./lib/pdf-resume-extractor";
 import { createProfileFromResume } from "./lib/resume-importer";
 import { getEnv } from "$lib/tools/get-env";
-import { clearDirectusCache } from "$lib/server/directus";
+import { clearDirectusCache } from "$lib/server/directus/client";
 
 async function importPdfResume(
   filePath: string,

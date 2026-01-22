@@ -41,7 +41,7 @@ vi.mock("@langchain/groq", () => ({
 }));
 
 import { generateChatCompletion } from "../llm";
-import { llmCache } from "../cache/llm-cache";
+import { llmCache } from "../llm/cache";
 
 describe("generateChatCompletion", () => {
   beforeEach(() => {

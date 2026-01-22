@@ -1,5 +1,5 @@
 import type { Handle } from "@sveltejs/kit";
-import { createDirectusServerClient } from "$lib/server/directus";
+import { createDirectusClient } from "$lib/server/directus/client";
 import { readMe } from "@directus/sdk";
 import { config } from "$lib/server/config";
 
@@ -67,7 +67,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
   if (accessToken) {
     try {
-      const client = createDirectusServerClient();
+      const client = createDirectusClient();
 
       // Set the access token for this request
       client.setToken(accessToken);
@@ -98,7 +98,7 @@ export const handle: Handle = async ({ event, resolve }) => {
         refreshToken && error?.errors?.[0]?.extensions?.code === "TOKEN_EXPIRED"
       ) {
         try {
-          const client = createDirectusServerClient();
+          const client = createDirectusClient();
           const authResult = await client.refresh();
 
           if (authResult.access_token && authResult.refresh_token) {

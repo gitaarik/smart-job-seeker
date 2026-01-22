@@ -10,21 +10,21 @@ import type { WebhookPayload } from "$lib/types/webhook";
 // Global mocks are configured in vitest.setup.ts (getEnv and db)
 
 // Mock the followup functions
-vi.mock("$lib/server/ai-chat-application-letter-followup", () => ({
+vi.mock("$lib/server/ai-chat/application-letter-followup", () => ({
   createApplicationLetterFollowup: vi.fn(),
 }));
 
-vi.mock("$lib/server/ai-chat-application-question-followup", () => ({
+vi.mock("$lib/server/ai-chat/application-question-followup", () => ({
   createApplicationQuestionFollowup: vi.fn(),
 }));
 
-vi.mock("$lib/server/ai-chat-create-followup", () => ({
+vi.mock("$lib/server/ai-chat/create-followup", () => ({
   createFollowupAiChat: vi.fn(),
 }));
 
-import { createApplicationLetterFollowup } from "$lib/server/ai-chat-application-letter-followup";
-import { createApplicationQuestionFollowup } from "$lib/server/ai-chat-application-question-followup";
-import { createFollowupAiChat } from "$lib/server/ai-chat-create-followup";
+import { createApplicationLetterFollowup } from "$lib/server/ai-chat/application-letter-followup";
+import { createApplicationQuestionFollowup } from "$lib/server/ai-chat/application-question-followup";
+import { createFollowupAiChat } from "$lib/server/ai-chat/create-followup";
 import { POST } from "../+server";
 import { webhookRateLimiter } from "$lib/server/middleware/rate-limit";
 

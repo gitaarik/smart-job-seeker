@@ -3,7 +3,7 @@
  * Called to create a follow-up AI chat for an application letter
  */
 
-import { createApplicationLetterFollowup } from "$lib/server/ai-chat-application-letter-followup";
+import { createApplicationLetterFollowup } from "$lib/server/ai-chat/application-letter-followup";
 import type { WebhookHandler, WebhookHandlerResult } from "../types";
 
 export const followupLetterHandler: WebhookHandler = {

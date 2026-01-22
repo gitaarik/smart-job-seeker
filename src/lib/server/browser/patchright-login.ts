@@ -5,12 +5,12 @@
 
 import type { Page } from "playwright";
 import type { z } from "zod";
-import { stripHtmlForLlm } from "./html-strip";
-import { getPlatformCredentials } from "./platform-auth";
+import { stripHtmlForLlm } from "../html/strip";
+import { getPlatformCredentials } from "../auth/platform";
 import { dbDirect } from "$lib/db";
-import { interpolatePrompt } from "./ai-chat-utils";
-import { detectLoginFieldsSchema } from "./schemas/ai-prompt-schemas";
-import { generateChatCompletion } from "./llm-langchain";
+import { interpolatePrompt } from "../ai-chat/utils";
+import { detectLoginFieldsSchema } from "../schemas/ai-prompt-schemas";
+import { generateChatCompletion } from "../llm/langchain";
 
 interface LoginFieldSelectors {
   usernameSelector: string | null;

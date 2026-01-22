@@ -7,7 +7,7 @@ import {
   LLMAuthenticationError,
   LLMQuotaExceededError,
   LLMRateLimitError,
-} from "./llm";
+} from "../llm";
 
 /**
  * Job data for validation

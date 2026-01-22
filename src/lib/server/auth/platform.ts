@@ -4,7 +4,7 @@
  */
 
 import { dbDirect } from "$lib/db";
-import { BrowserUseClient } from "./browser-use-client";
+import { BrowserUseClient } from "../browser/use-client";
 
 export interface PlatformCredentials {
   platformId: number;

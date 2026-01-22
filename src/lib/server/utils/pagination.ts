@@ -4,9 +4,9 @@
  */
 
 import type { Page } from "playwright";
-import { stripHtmlForLlm } from "./html-strip";
-import { waitWithScrollDetection } from "./page-wait-utils";
-import { generateAiChatResponse } from "./ai-chat-response-generate";
+import { stripHtmlForLlm } from "../html/strip";
+import { waitWithScrollDetection } from "./page-wait";
+import { generateAiChatResponse } from "../ai-chat/response-generate";
 
 export interface PaginationInfo {
   hasPagination: boolean;

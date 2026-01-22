@@ -5,7 +5,7 @@ import {
   isJobClosed,
   isJobTooOld,
   type ScrapingStats,
-} from "../scrape-filters";
+} from "../job/scrape-filters";
 import {
   LLMAuthenticationError,
   LLMQuotaExceededError,

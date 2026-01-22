@@ -8,14 +8,17 @@ import { config } from "$lib/server/config";
 import {
   checkStopConditions,
   isFatalScraperError,
-} from "$lib/server/scrape-filters";
+} from "$lib/server/job/scrape-filters";
 import {
   detectPaginationStrategy,
   navigateToNextPage,
   performInfiniteScroll,
-} from "$lib/server/pagination-utils";
+} from "$lib/server/utils/pagination";
 import { getErrorMessage, promptUser } from "../utils";
-import { humanWait, injectStealthScripts } from "$lib/server/stealth-utils";
+import {
+  humanWait,
+  injectStealthScripts,
+} from "$lib/server/browser/stealth-utils";
 import { processSearchPage, type SearchPageJob } from "./page-processor";
 import { processJobCard } from "./job-processor";
 import { detectDuplicatePage, detectLoginPage } from "./page-guards";

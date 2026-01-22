@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { stripHtmlForLlm } from "../html-strip";
+import { stripHtmlForLlm } from "../html/strip";
 
 describe("stripHtmlForLlm", () => {
   it("should remove script tags", () => {

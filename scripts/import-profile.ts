@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { dbDirect } from "$lib/db";
-import { getDefaultProfileId } from "$lib/server/profile-default";
+import { getDefaultProfileId } from "$lib/server/profile/default";
 import { readFileSync } from "fs";
 import { v4 as uuidv4 } from "uuid";
 import { Command } from "commander";

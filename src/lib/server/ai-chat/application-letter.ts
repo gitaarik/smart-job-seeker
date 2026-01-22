@@ -4,8 +4,8 @@
  */
 
 import { db } from "$lib/db";
-import { createAndGenerateAiChat } from "./ai-chat-utils";
-import { getFieldChoiceLabel } from "./directus-field-labels";
+import { createAndGenerateAiChat } from "./utils";
+import { getFieldChoiceLabel } from "../directus/field-labels";
 
 /**
  * Map letter types to their corresponding AI chat prompt request types

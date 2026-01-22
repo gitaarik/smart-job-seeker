@@ -11,4 +11,7 @@ export {
   LLMError,
   LLMQuotaExceededError,
   LLMRateLimitError,
-} from "./llm-langchain";
+  type StructuredOutputConfig,
+} from "./langchain";
+
+export { llmCache } from "./cache";

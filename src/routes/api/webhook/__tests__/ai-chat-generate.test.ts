@@ -10,17 +10,17 @@ import type { WebhookPayload } from "$lib/types/webhook";
 // Only mock the specific functions under test here
 
 // Mock the ai-chat-full-prompt-generate module
-vi.mock("$lib/server/ai-chat-full-prompt-generate", () => ({
+vi.mock("$lib/server/ai-chat/full-prompt-generate", () => ({
   generateAiChatFullPrompt: vi.fn(),
 }));
 
 // Mock the ai-chat-response-generate module
-vi.mock("$lib/server/ai-chat-response-generate", () => ({
+vi.mock("$lib/server/ai-chat/response-generate", () => ({
   generateAiChatResponse: vi.fn(),
 }));
 
-import { generateAiChatFullPrompt } from "$lib/server/ai-chat-full-prompt-generate";
-import { generateAiChatResponse } from "$lib/server/ai-chat-response-generate";
+import { generateAiChatFullPrompt } from "$lib/server/ai-chat/full-prompt-generate";
+import { generateAiChatResponse } from "$lib/server/ai-chat/response-generate";
 import { POST } from "../+server";
 import { webhookRateLimiter } from "$lib/server/middleware/rate-limit";
 

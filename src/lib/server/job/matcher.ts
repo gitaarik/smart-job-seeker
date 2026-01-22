@@ -5,8 +5,8 @@
 
 import { Prisma } from "../../../generated/prisma/client";
 import { dbDirect as db } from "$lib/db";
-import { createJobMatchingAiChat } from "./ai-chat-job-utils";
-import { hasArrayOverlap, matchesLocation } from "./job-match-utils";
+import { createJobMatchingAiChat } from "../ai-chat/job-utils";
+import { hasArrayOverlap, matchesLocation } from "./match-utils";
 import type {
   job_match_preferences,
   jobs,

@@ -8,10 +8,10 @@
 import { dbDirect } from "$lib/db";
 import { getPlatformIdFromUrl, upsertJob } from "$lib/server/scrapers/job-data";
 import { Command } from "commander";
-import { getSiteName } from "$lib/server/job-site-configs";
-import { BrowserUseClient } from "$lib/server/browser-use-client";
+import { getSiteName } from "$lib/server/job/site-configs";
+import { BrowserUseClient } from "$lib/server/browser/use-client";
 import { parseRelativeDate } from "$lib/tools/date-utils";
-import { clearDirectusCache } from "$lib/server/directus";
+import { clearDirectusCache } from "$lib/server/directus/client";
 import { scrapeJobs } from "$lib/server/scrapers/scraper";
 
 interface SearchAction {

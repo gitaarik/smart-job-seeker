@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { dbDirect } from "$lib/db";
-import { getDefaultProfileId } from "$lib/server/profile-default";
+import { getDefaultProfileId } from "$lib/server/profile/default";
 import removeMd from "remove-markdown";
 
 // Mapping of ExportedProfile structure to Directus collections and fields

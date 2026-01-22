@@ -4,7 +4,7 @@
  */
 
 import { db } from "$lib/db";
-import { createAndGenerateAiChat } from "./ai-chat-utils";
+import { createAndGenerateAiChat } from "./utils";
 
 /**
  * Generate answer for a single application question

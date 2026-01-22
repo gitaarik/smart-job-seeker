@@ -3,7 +3,7 @@
  * Called to export profile schema and data to collected_data collection
  */
 
-import { exportProfile } from "$lib/server/profile-export";
+import { exportProfile } from "$lib/server/profile/export";
 import type { WebhookHandler, WebhookHandlerResult } from "../types";
 
 export const profileExportHandler: WebhookHandler = {

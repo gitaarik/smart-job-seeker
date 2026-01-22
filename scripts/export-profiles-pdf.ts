@@ -6,14 +6,14 @@
 //
 // But you can just use `npm run export-resume` (package.json script)
 
-import { launchBrowser } from "$lib/server/browser-utils";
+import { launchBrowser } from "$lib/server/browser/utils";
 import path from "path";
 import fs from "fs";
 import { dbDirect } from "$lib/db";
 import { getEnv } from "$lib/tools/get-env";
-import { getDefaultProfileId } from "$lib/server/profile-default";
-import { createProfileExport } from "$lib/server/profile-exports";
-import { buildExportUrl } from "$lib/server/export-url-builder";
+import { getDefaultProfileId } from "$lib/server/profile/default";
+import { createProfileExport } from "$lib/server/profile/exports";
+import { buildExportUrl } from "$lib/server/utils/export-url-builder";
 
 const appPort = getEnv("SJS_APP_PORT", "5173");
 

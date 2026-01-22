@@ -9,11 +9,11 @@
 import { chromium } from "playwright";
 import { promises as dns } from "dns";
 import { config } from "$lib/server/config";
-import { BrowserUseClient } from "$lib/server/browser-use-client";
+import { BrowserUseClient } from "$lib/server/browser/use-client";
 import { scrapeJobsWithClicks } from "./extraction";
-import { interpolatePrompt } from "$lib/server/ai-chat-utils";
+import { interpolatePrompt } from "$lib/server/ai-chat/utils";
 import { dbDirect } from "$lib/db";
-import { getPlatformCredentials } from "../platform-auth";
+import { getPlatformCredentials } from "../auth/platform";
 import { promptUser } from "./utils";
 import type { LoginResult, Platform, PlatformCredentials } from "./types";
 
@@ -384,9 +384,7 @@ async function scrapeWithLogin(
       console.log(
         `\n📌 Phase 2: Handoff delay (${config.handoffDelay}ms)...`,
       );
-      await new Promise((resolve) =>
-        setTimeout(resolve, config.handoffDelay)
-      );
+      await new Promise((resolve) => setTimeout(resolve, config.handoffDelay));
     }
 
     // Phase 3: Connect Playwright via CDP

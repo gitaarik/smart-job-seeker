@@ -3,14 +3,14 @@
  */
 
 import { db } from "$lib/db";
-import { config } from "./config";
+import { config } from "../config";
 import {
   generateChatCompletion,
   LLMAuthenticationError,
   LLMQuotaExceededError,
   LLMRateLimitError,
-} from "./llm";
-import { getSchemaForPrompt } from "./schemas/ai-prompt-schemas";
+} from "../llm";
+import { getSchemaForPrompt } from "../schemas/ai-prompt-schemas";
 
 /**
  * Interpolate variables in a prompt string

@@ -1,12 +1,12 @@
 import { error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
-import { getProfileByIdentifier } from "$lib/server/profile-default";
-import { getLatestExportWithFile } from "$lib/server/profile-export-files";
+import { getProfileByIdentifier } from "$lib/server/profile/default";
+import { getLatestExportWithFile } from "$lib/server/profile/export-files";
 import {
   checkProfileAccess,
   getVersionNameById,
-} from "$lib/server/profile-access-control";
-import { incrementTokenVisit } from "$lib/server/token-validation";
+} from "$lib/server/profile/access-control";
+import { incrementTokenVisit } from "$lib/server/auth/token-validation";
 
 /**
  * Transform version name to export_format

@@ -3,7 +3,7 @@
  * Called to generate AI-assisted answers for application interview questions
  */
 
-import { generateApplicationQuestionAnswer } from "$lib/server/ai-chat-application-question";
+import { generateApplicationQuestionAnswer } from "$lib/server/ai-chat/application-question";
 import type { WebhookHandler, WebhookHandlerResult } from "../types";
 
 export const applicationQuestionHandler: WebhookHandler = {

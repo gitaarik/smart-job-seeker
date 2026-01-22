@@ -3,8 +3,8 @@
  */
 
 import { config } from "$lib/server/config";
-import { stripHtmlForLlm } from "$lib/server/html-strip";
-import { createJobScrapingAiChat } from "$lib/server/ai-chat-job-utils";
+import { stripHtmlForLlm } from "$lib/server/html/strip";
+import { createJobScrapingAiChat } from "$lib/server/ai-chat/job-utils";
 import {
   isValidJobPostingDate,
   parseRelativeDate,

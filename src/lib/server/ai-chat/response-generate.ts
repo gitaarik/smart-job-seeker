@@ -4,13 +4,13 @@
  */
 
 import { db } from "$lib/db";
-import { getInterpolatedPrompts } from "./ai-chat-utils";
+import { getInterpolatedPrompts } from "./utils";
 import {
   generateChatCompletion,
   LLMAuthenticationError,
   LLMQuotaExceededError,
   LLMRateLimitError,
-} from "./llm";
+} from "../llm";
 
 /**
  * Generate response for a single AI chat using LLM provider

@@ -1,7 +1,7 @@
 import { error } from "@sveltejs/kit";
-import { getProfileByIdentifier } from "$lib/server/profile-default";
-import { checkProfileAccess } from "$lib/server/profile-access-control";
-import { incrementTokenVisit } from "$lib/server/token-validation";
+import { getProfileByIdentifier } from "$lib/server/profile/default";
+import { checkProfileAccess } from "$lib/server/profile/access-control";
+import { incrementTokenVisit } from "$lib/server/auth/token-validation";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({

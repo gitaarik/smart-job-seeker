@@ -4,7 +4,7 @@
  */
 
 import { dbDirect as db } from "$lib/db";
-import { getFileFromDirectus } from "./directus-files";
+import { getFileFromDirectus } from "../directus/files";
 
 /**
  * Query parameters for finding profile exports

@@ -23,7 +23,7 @@ vi.mock("$lib/db", () => ({
 }));
 
 // Mock ai-chat-utils
-vi.mock("$lib/server/ai-chat-utils", () => ({
+vi.mock("$lib/server/ai-chat/utils", () => ({
   createAndGenerateAiChat: vi.fn(),
   interpolatePrompt: vi.fn((template, vars) => {
     // Simple mock interpolation
@@ -42,8 +42,8 @@ import { db } from "$lib/db";
 import {
   createAndGenerateAiChat,
   interpolatePrompt,
-} from "$lib/server/ai-chat-utils";
-import { createFollowupAiChat } from "../ai-chat-create-followup";
+} from "$lib/server/ai-chat/utils";
+import { createFollowupAiChat } from "../ai-chat/create-followup";
 
 describe("createFollowupAiChat", () => {
   const mockParentAiChat = {

@@ -9,8 +9,8 @@ import {
   isJobClosed,
   isJobTooOld,
   isValidJob,
-} from "$lib/server/scrape-filters";
-import { humanClick, humanWait } from "$lib/server/stealth-utils";
+} from "$lib/server/job/scrape-filters";
+import { humanClick, humanWait } from "$lib/server/browser/stealth-utils";
 import { formatSalary, upsertJob, type UpsertResult } from "../job-data";
 import type { SearchContext } from "./types";
 import { mergeJobData } from "./merge";

@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { WebhookPayload } from "$lib/types/webhook";
 
 // Mock the profile-export module
-vi.mock("$lib/server/profile-export", () => ({
+vi.mock("$lib/server/profile/export", () => ({
   exportProfile: vi.fn(() =>
     Promise.resolve({
       success: true,
@@ -28,7 +28,7 @@ vi.mock("$lib/tools/get-env", () => ({
 }));
 
 // Mock directus cache clearing
-vi.mock("$lib/server/directus", () => ({
+vi.mock("$lib/server/directus/client", () => ({
   clearDirectusCache: vi.fn(() => Promise.resolve()),
 }));
 
@@ -48,7 +48,7 @@ vi.mock("$lib/server/monitoring/error-tracker", () => ({
   },
 }));
 
-import { exportProfile } from "$lib/server/profile-export";
+import { exportProfile } from "$lib/server/profile/export";
 import { POST } from "../+server";
 
 /**

@@ -30,7 +30,7 @@ vi.mock("remove-markdown", () => ({
   default: (text: string) => text.replace(/[#*_`\[\]]/g, ""),
 }));
 
-import { exportProfile } from "../profile-export";
+import { exportProfile } from "../profile/export";
 import { db } from "$lib/db";
 
 describe("exportProfile", () => {

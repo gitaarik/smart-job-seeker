@@ -1,5 +1,5 @@
 import { error } from "@sveltejs/kit";
-import { getProfileByIdentifier } from "$lib/server/profile-default";
+import { getProfileByIdentifier } from "$lib/server/profile/default";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ params }) => {

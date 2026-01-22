@@ -11,11 +11,11 @@ import {
   filterEligibleJobs,
   getMatchingPreferences,
   upsertJobMatch,
-} from "$lib/server/job-matcher";
-import { getProfileSkills, needsRematching } from "$lib/server/job-match-utils";
+} from "$lib/server/job/matcher";
+import { getProfileSkills, needsRematching } from "$lib/server/job/match-utils";
 import { errorTracker } from "$lib/server/monitoring/error-tracker";
-import { clearDirectusCache } from "$lib/server/directus";
-import { getDefaultProfileId } from "$lib/server/profile-default";
+import { clearDirectusCache } from "$lib/server/directus/client";
+import { getDefaultProfileId } from "$lib/server/profile/default";
 import { Command } from "commander";
 
 interface MatchStats {

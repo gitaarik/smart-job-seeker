@@ -5,10 +5,10 @@
 import type { Page } from "playwright";
 import { dbDirect } from "$lib/db";
 import { config } from "$lib/server/config";
-import { stripHtmlForLlm } from "$lib/server/html-strip";
-import { markClickableElementsInContainer } from "$lib/server/cdp-utils";
-import { waitForSpaContent } from "$lib/server/page-wait-utils";
-import { createJobScrapingAiChat } from "$lib/server/ai-chat-job-utils";
+import { stripHtmlForLlm } from "$lib/server/html/strip";
+import { markClickableElementsInContainer } from "$lib/server/browser/cdp-utils";
+import { waitForSpaContent } from "$lib/server/utils/page-wait";
+import { createJobScrapingAiChat } from "$lib/server/ai-chat/job-utils";
 
 /**
  * Metadata for a clickable element

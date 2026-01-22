@@ -4,7 +4,7 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getInterpolatedPrompts, interpolatePrompt } from "../ai-chat-utils";
+import { getInterpolatedPrompts, interpolatePrompt } from "../ai-chat/utils";
 
 // Mock the Prisma client
 vi.mock("$lib/db", () => ({

@@ -3,7 +3,7 @@
  * Called to create follow-up ai_chat instances for iterative refinement
  */
 
-import { createFollowupAiChat } from "$lib/server/ai-chat-create-followup";
+import { createFollowupAiChat } from "$lib/server/ai-chat/create-followup";
 import type { WebhookHandler, WebhookHandlerResult } from "../types";
 
 export const followupChatHandler: WebhookHandler = {

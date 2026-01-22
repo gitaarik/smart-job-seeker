@@ -5,7 +5,7 @@ import {
   validateWebhookPayload,
   verifyWebhookAuth,
 } from "$lib/server/webhook-handlers";
-import { clearDirectusCache } from "$lib/server/directus";
+import { clearDirectusCache } from "$lib/server/directus/client";
 import {
   createRateLimitResponse,
   webhookRateLimiter,

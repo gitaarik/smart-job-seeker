@@ -3,7 +3,7 @@
  * Called to generate AI-assisted letters for application_letters
  */
 
-import { generateApplicationLetter } from "$lib/server/ai-chat-application-letter";
+import { generateApplicationLetter } from "$lib/server/ai-chat/application-letter";
 import type { WebhookHandler, WebhookHandlerResult } from "../types";
 
 export const applicationLetterHandler: WebhookHandler = {

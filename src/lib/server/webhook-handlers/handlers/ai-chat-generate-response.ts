@@ -3,7 +3,7 @@
  * Called to generate AI responses using Groq API
  */
 
-import { generateAiChatResponse } from "$lib/server/ai-chat-response-generate";
+import { generateAiChatResponse } from "$lib/server/ai-chat/response-generate";
 import { LLMAuthenticationError, LLMQuotaExceededError } from "$lib/server/llm";
 import type { WebhookHandler, WebhookHandlerResult } from "../types";
 

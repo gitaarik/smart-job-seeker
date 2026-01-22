@@ -12,7 +12,7 @@ import {
   validateJsonResume,
 } from "./lib/json-resume-mapper";
 import { createProfileFromResume } from "./lib/resume-importer";
-import { clearDirectusCache } from "$lib/server/directus";
+import { clearDirectusCache } from "$lib/server/directus/client";
 
 async function importJsonResume(
   filePath: string,
