@@ -15,9 +15,7 @@ import { createJobScrapingAiChat } from "$lib/server/ai-chat/job-utils";
  */
 interface ClickableMetadata {
   id: number;
-  text: string;
-  tagName: string;
-  className: string;
+  html: string;
 }
 
 /**
@@ -38,15 +36,13 @@ async function classifySingleBatch(
   jobSearchId: number,
   metadata: ClickableMetadata[],
 ): Promise<Map<number, "view-details" | "action">> {
-  const clickablesText = metadata
-    .map((c) =>
-      `ID ${c.id}: "${c.text}" (${c.tagName}, class="${c.className}")`
-    )
-    .join("\n");
+  const clickablesHtml = metadata
+    .map((c) => `ID ${c.id}:\n${c.html}`)
+    .join("\n\n");
 
   const result = await createJobScrapingAiChat<{
     clickables: Array<{ id: number; type: "view-details" | "action" }>;
-  }>(jobSearchId, "classify_clickables", { clickables: clickablesText });
+  }>(jobSearchId, "classify_clickables", { clickables: clickablesHtml });
 
   const map = new Map<number, "view-details" | "action">();
   if (result.success && result.response?.clickables) {
@@ -70,16 +66,17 @@ export async function classifyMarkedClickables(
   const clickableMetadata: ClickableMetadata[] = await page.evaluate(() => {
     const clickables: Array<{
       id: number;
-      text: string;
-      tagName: string;
-      className: string;
+      html: string;
     }> = [];
     document.querySelectorAll("[data-extract-clickable-id]").forEach((el) => {
+      // Get outer HTML but truncate to reasonable size for LLM
+      const fullHtml = el.outerHTML;
+      const html = fullHtml.length > 500
+        ? fullHtml.substring(0, 500) + "..."
+        : fullHtml;
       clickables.push({
         id: parseInt(el.getAttribute("data-extract-clickable-id") || "0"),
-        text: el.textContent?.trim().substring(0, 100) || "",
-        tagName: el.tagName.toLowerCase(),
-        className: el.className || "",
+        html,
       });
     });
     return clickables;

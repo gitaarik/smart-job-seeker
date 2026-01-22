@@ -141,11 +141,13 @@ export async function humanWait(
 export async function humanClick(
   page: Page,
   selector: string,
+  options: { timeout?: number } = {},
 ): Promise<void> {
+  const timeout = options.timeout ?? 5000;
   const element = page.locator(selector);
 
   try {
-    const box = await element.boundingBox();
+    const box = await element.boundingBox({ timeout });
     if (box) {
       // Calculate target point with slight randomness (not dead center)
       const paddingX = box.width * 0.1;
@@ -166,11 +168,11 @@ export async function humanClick(
       await page.mouse.click(targetX, targetY);
     } else {
       // Fallback if we can't get bounding box
-      await element.click();
+      await element.click({ timeout });
     }
   } catch {
     // Fallback to regular click on any error
-    await element.click();
+    await element.click({ timeout });
   }
 }
 
