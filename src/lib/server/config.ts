@@ -74,7 +74,6 @@ export interface AppConfig {
   scraperClickableClassifyBatchSize: number; // Max clickables per LLM classification batch
 
   // Browser-Use Integration
-  browserUseUrl: string;
   browserUseTimeout: number;
   browserUseVisual: boolean;
 
@@ -256,7 +255,6 @@ function loadConfig(): AppConfig {
     ),
 
     // Browser-Use Integration
-    browserUseUrl: getEnv("SJS_BROWSER_USE_URL", "http://browser-use:8000"),
     browserUseTimeout: parseInt(
       getEnv("SJS_BROWSER_USE_TIMEOUT", "120000"),
       10,
@@ -356,11 +354,6 @@ export function validateConfig(): void {
   }
   if (config.browserUseTimeout <= 0) {
     errors.push("browserUseTimeout must be > 0");
-  }
-
-  // Browser-Use is required for local mode
-  if (!config.browserUseCloud && !config.browserUseUrl) {
-    errors.push("browserUseUrl is required when not using Browser-Use Cloud");
   }
 
   // Browser-Use Cloud requires API key and profile ID

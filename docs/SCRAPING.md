@@ -215,7 +215,6 @@ Create searches in `job_searches`:
 
 ```bash
 # Browser-Use Service
-SJS_BROWSER_USE_URL=http://browser-use:8000  # Python service URL
 SJS_BROWSER_USE_TIMEOUT=120000               # Max time for Browser-Use tasks
 SJS_BROWSER_USE_VISUAL=true                  # Enable visual mode (screenshots) for LLM
 

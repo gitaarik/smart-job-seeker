@@ -172,8 +172,9 @@ export class BrowserUseClient {
 
   constructor(customConfig?: Partial<BrowserUseConfig>) {
     // Use default config if not provided
+    // baseUrl is hardcoded since it's always the browser-use Docker service
     this.config = {
-      baseUrl: customConfig?.baseUrl ?? config.browserUseUrl,
+      baseUrl: customConfig?.baseUrl ?? "http://browser-use:8000",
       timeout: customConfig?.timeout ?? config.browserUseTimeout,
       useVisual: customConfig?.useVisual ??
         config.browserUseVisual,
