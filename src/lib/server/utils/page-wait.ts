@@ -101,11 +101,12 @@ export async function waitForContentChange(
     await delay(pollInterval);
 
     currentLength = await page.evaluate(() => document.body.innerText.length);
-    const growth = currentLength - baselineLength;
+    const delta = currentLength - baselineLength;
 
-    if (growth >= changeThreshold) {
+    if (Math.abs(delta) >= changeThreshold) {
+      const sign = delta > 0 ? "+" : "";
       console.log(
-        `      📊 Content changed: ${baselineLength.toLocaleString()} → ${currentLength.toLocaleString()} (+${growth.toLocaleString()})`,
+        `      📊 Content changed: ${baselineLength.toLocaleString()} → ${currentLength.toLocaleString()} (${sign}${delta.toLocaleString()})`,
       );
 
       // Phase 2: Wait for stabilization if requested
