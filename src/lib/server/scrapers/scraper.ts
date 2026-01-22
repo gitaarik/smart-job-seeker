@@ -334,6 +334,10 @@ async function scrapeWithLogin(
       console.log(
         "   No login_page_url configured, assuming no login required",
       );
+      console.log(`   Starting browser and navigating to: ${searchUrl}`);
+
+      // Still need to start browser and navigate to search URL
+      await browserUse.startSession(searchUrl, CDP_PORT);
       isLoggedIn = true;
     } else {
       // Navigate to login page and check if redirected (indicates logged in)
