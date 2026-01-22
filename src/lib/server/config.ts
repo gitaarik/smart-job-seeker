@@ -23,7 +23,6 @@ export interface AppConfig {
   // LLM (for TypeScript/SvelteKit app)
   llmProvider:
     | "groq"
-    | "bedrock"
     | "gemini"
     | "openai"
     | "openrouter"
@@ -31,7 +30,6 @@ export interface AppConfig {
     | "cerebras";
   llmModel: string; // Configurable model name, with smart defaults per provider
   groqApiKey: string;
-  bedrockApiKey: string;
   geminiApiKey: string;
   openaiApiKey: string;
   openrouterApiKey: string;
@@ -100,7 +98,6 @@ export interface AppConfig {
 function getModelForProvider(provider: string): string {
   const hardcodedDefaults: Record<string, string> = {
     groq: "meta-llama/llama-4-scout-17b-16e-instruct",
-    bedrock: "anthropic.claude-3-5-sonnet-20240620-v1:0",
     gemini: "gemini-2.0-flash-exp",
     openai: "gpt-4o",
     openrouter: "anthropic/claude-3.5-sonnet",
@@ -111,7 +108,6 @@ function getModelForProvider(provider: string): string {
   // Provider-specific env var names
   const providerEnvVars: Record<string, string> = {
     groq: "SJS_LLM_MODEL_GROQ",
-    bedrock: "SJS_LLM_MODEL_BEDROCK",
     gemini: "SJS_LLM_MODEL_GEMINI",
     openai: "SJS_LLM_MODEL_OPENAI",
     openrouter: "SJS_LLM_MODEL_OPENROUTER",
@@ -153,7 +149,6 @@ function loadConfig(): AppConfig {
     // LLM (for TypeScript/SvelteKit app)
     llmProvider: (llmProvider as
       | "groq"
-      | "bedrock"
       | "gemini"
       | "openai"
       | "openrouter"
@@ -161,7 +156,6 @@ function loadConfig(): AppConfig {
       | "cerebras"),
     llmModel: getModelForProvider(llmProvider),
     groqApiKey: getEnv("SJS_LLM_API_KEY_GROQ", ""),
-    bedrockApiKey: getEnv("SJS_LLM_API_KEY_BEDROCK", ""),
     geminiApiKey: getEnv("SJS_LLM_API_KEY_GEMINI", ""),
     openaiApiKey: getEnv("SJS_LLM_API_KEY_OPENAI", ""),
     openrouterApiKey: getEnv("SJS_LLM_API_KEY_OPENROUTER", ""),

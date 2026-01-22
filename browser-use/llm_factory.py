@@ -12,7 +12,6 @@ from langchain_groq import ChatGroq
 from langchain_cerebras import ChatCerebras
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
-from langchain_aws import ChatBedrock
 from browser_use import ChatBrowserUse
 
 logger = logging.getLogger(__name__)
@@ -25,7 +24,6 @@ DEFAULT_MODELS = {
     "openai": "gpt-4o",
     "openrouter": "anthropic/claude-3.5-sonnet",
     "deepseek": "deepseek-chat",
-    "bedrock": "amazon.nova-micro-v1:0",
     "browser_use": None,  # Uses their optimized model automatically
 }
 
@@ -37,7 +35,6 @@ PROVIDER_MODEL_ENV_VARS = {
     "openai": "SJS_LLM_MODEL_OPENAI",
     "openrouter": "SJS_LLM_MODEL_OPENROUTER",
     "deepseek": "SJS_LLM_MODEL_DEEPSEEK",
-    "bedrock": "SJS_LLM_MODEL_BEDROCK",
 }
 
 
@@ -120,26 +117,6 @@ def _create_cerebras_llm(model: str) -> Tuple[Any, bool]:
     return llm, False  # Cerebras doesn't support vision
 
 
-def _create_bedrock_llm(model: str) -> Tuple[Any, bool]:
-    """Create AWS Bedrock LLM instance."""
-    aws_region = os.getenv("SJS_AWS_REGION") or "us-east-1"
-    aws_profile = os.getenv("SJS_AWS_PROFILE")
-
-    bedrock_config = {
-        "model_id": model,
-        "region_name": aws_region,
-        "model_kwargs": {"temperature": 0.3},
-    }
-
-    if aws_profile:
-        bedrock_config["credentials_profile_name"] = aws_profile
-
-    llm = ChatBedrock(**bedrock_config)
-    # Claude and Nova models on Bedrock support vision
-    vision_support = "anthropic.claude" in model or "amazon.nova" in model
-    return llm, vision_support
-
-
 def _create_browser_use_llm() -> Tuple[Any, bool]:
     """Create Browser-Use cloud LLM instance."""
     api_key = os.getenv("SJS_LLM_API_KEY_BROWSER_USE") or os.getenv("BROWSER_USE_API_KEY")
@@ -194,8 +171,6 @@ def create_llm(provider: str | None = None) -> Tuple[Any, bool]:
         return _create_deepseek_llm(model)
     elif provider == "cerebras":
         return _create_cerebras_llm(model)
-    elif provider == "bedrock":
-        return _create_bedrock_llm(model)
     elif provider == "browser_use":
         return _create_browser_use_llm()
     else:

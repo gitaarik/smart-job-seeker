@@ -5,7 +5,6 @@
 
 import { ChatGroq } from "@langchain/groq";
 import { ChatCerebras } from "@langchain/cerebras";
-import { BedrockChat } from "@langchain/community/chat_models/bedrock";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { ChatOpenAI } from "@langchain/openai";
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
@@ -288,29 +287,6 @@ function createLangChainModel(
         model,
         temperature,
         maxOutputTokens: maxTokens,
-      });
-    }
-
-    case "bedrock": {
-      // AWS Bedrock uses AWS credentials, not a simple API key
-      // The bedrockApiKey is a base64-encoded JSON with accessKeyId and secretAccessKey
-      const credentials = config.bedrockApiKey
-        ? JSON.parse(
-          Buffer.from(config.bedrockApiKey, "base64").toString("utf-8"),
-        )
-        : undefined;
-
-      return new BedrockChat({
-        model,
-        region: "us-east-1", // Default region, can be made configurable
-        credentials: credentials
-          ? {
-            accessKeyId: credentials.accessKeyId,
-            secretAccessKey: credentials.secretAccessKey,
-          }
-          : undefined,
-        temperature,
-        maxTokens,
       });
     }
 
