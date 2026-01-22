@@ -112,7 +112,8 @@
       "Bash(git mv:*)",
       "WebFetch(domain:groq.com)",
       "WebFetch(domain:www.together.ai)",
-      "WebFetch(domain:pypi.org)"
+      "WebFetch(domain:pypi.org)",
+      "WebFetch(domain:docs.cloud.browser-use.com)"
     ],
     "deny": [],
     "ask": []
