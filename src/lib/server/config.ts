@@ -77,7 +77,6 @@ export interface AppConfig {
   browserUseUrl: string;
   browserUseTimeout: number;
   browserUseVisual: boolean;
-  browserUseMaxJobsToClick: number; // Max number of jobs to click through and extract details
 
   // Hybrid Scraper (Browser-Use login + Patchright extraction via CDP)
   hybridCdpHost: string; // Host for Chrome debugging (default: localhost, use browser-use in Docker)
@@ -263,10 +262,6 @@ function loadConfig(): AppConfig {
       10,
     ),
     browserUseVisual: getEnv("SJS_BROWSER_USE_VISUAL", "true") === "true",
-    browserUseMaxJobsToClick: parseInt(
-      getEnv("SJS_BROWSER_USE_MAX_JOBS_TO_CLICK", "5"),
-      10,
-    ),
 
     // Hybrid Scraper (Browser-Use login + Patchright extraction via CDP)
     hybridCdpHost: getEnv("SJS_HYBRID_CDP_HOST", "localhost"),
@@ -361,9 +356,6 @@ export function validateConfig(): void {
   }
   if (config.browserUseTimeout <= 0) {
     errors.push("browserUseTimeout must be > 0");
-  }
-  if (config.browserUseMaxJobsToClick <= 0) {
-    errors.push("browserUseMaxJobsToClick must be > 0");
   }
 
   // Browser-Use is required for local mode

@@ -218,7 +218,6 @@ Create searches in `job_searches`:
 SJS_BROWSER_USE_URL=http://browser-use:8000  # Python service URL
 SJS_BROWSER_USE_TIMEOUT=120000               # Max time for Browser-Use tasks
 SJS_BROWSER_USE_VISUAL=true                  # Enable visual mode (screenshots) for LLM
-SJS_BROWSER_USE_MAX_JOBS_TO_CLICK=5          # Max jobs per page
 
 # CDP Connection (Hybrid)
 SJS_HYBRID_CDP_HOST=localhost                # Chrome host (browser-use in Docker)
@@ -381,7 +380,6 @@ Screenshots saved to `debug-screenshots/` directory.
 
 - Reduce `SJS_SCRAPER_RATE_LIMIT_DELAY`
 - Disable screenshots (`--no-screenshots`)
-- Reduce `SJS_BROWSER_USE_MAX_JOBS_TO_CLICK`
 
 **Memory issues:**
 
