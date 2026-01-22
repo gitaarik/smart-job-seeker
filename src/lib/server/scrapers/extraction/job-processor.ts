@@ -34,6 +34,8 @@ export interface JobProcessingResult {
   isClosed?: boolean;
   isStale?: boolean;
   error?: string;
+  /** Whether processing this job required navigating away from search page */
+  navigatedAway?: boolean;
   // Extracted job data for summary
   title?: string | null;
   company?: string | null;
@@ -418,6 +420,7 @@ export async function processJobCard(
         success: false,
         skipped: true,
         skipReason: reason,
+        navigatedAway,
       };
     }
 
@@ -444,6 +447,7 @@ export async function processJobCard(
       created: result.created,
       isClosed,
       isStale,
+      navigatedAway,
       title: jobData.title,
       company: jobData.job_poster,
       location: jobData.location,

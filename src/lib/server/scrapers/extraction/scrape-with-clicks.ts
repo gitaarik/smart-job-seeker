@@ -48,6 +48,22 @@ interface ProcessedJobSummary {
 }
 
 /**
+ * Check if an error is a recoverable click/element error
+ * These are errors where the element wasn't found or couldn't be clicked,
+ * not fatal errors like auth failures or quota exceeded
+ */
+function isClickError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const msg = error.message.toLowerCase();
+  return (
+    msg.includes("timeout") ||
+    msg.includes("element") ||
+    msg.includes("locator") ||
+    msg.includes("waiting for")
+  );
+}
+
+/**
  * Print final stats summary
  */
 function printFinalSummary(
@@ -175,6 +191,11 @@ async function processPageJobs(
     `\n   👆 Step 3/3: Clicking and processing ${jobs.length} job cards...\n`,
   );
 
+  // Track if we've navigated away (DOM could have changed after returning)
+  let hasNavigatedAway = false;
+  // Track jobs we've already attempted recovery for (by title)
+  const retriedJobTitles = new Set<string>();
+
   for (let i = 0; i < jobs.length; i++) {
     const searchJobData = jobs[i];
     const jobNumber = i + 1;
@@ -189,6 +210,11 @@ async function processPageJobs(
         searchUrl,
         platformId,
       );
+
+      // Track if this job caused navigation (for recovery logic)
+      if (result.navigatedAway) {
+        hasNavigatedAway = true;
+      }
 
       if (result.skipped) {
         stats.consecutiveClosedJobs = 0; // Reset counter for invalid pages
@@ -239,6 +265,72 @@ async function processPageJobs(
           `\n🛑 Fatal error encountered - stopping scraper: ${errMessage}`,
         );
         return { shouldStop: true, stopReason: errMessage };
+      }
+
+      // Attempt recovery if:
+      // 1. This is a click/element error (not fatal)
+      // 2. We've navigated away before (DOM could have changed)
+      // 3. Haven't already retried this job
+      const jobTitle = searchJobData.title || "";
+      if (
+        isClickError(error) &&
+        hasNavigatedAway &&
+        jobTitle &&
+        !retriedJobTitles.has(jobTitle)
+      ) {
+        console.log(
+          `      🔄 Click failed after navigation, attempting recovery...`,
+        );
+        retriedJobTitles.add(jobTitle);
+
+        try {
+          // Ensure we're on the search page
+          const currentUrl = page.url();
+          if (!currentUrl.includes(new URL(searchUrl).hostname)) {
+            await page.goto(searchUrl, { waitUntil: "domcontentloaded" });
+            await humanWait(page, 1500);
+          }
+
+          // Re-mark and re-extract jobs
+          console.log(`      📍 Re-marking and re-extracting job cards...`);
+          const recoveryResult = await processSearchPage(
+            jobSearchId,
+            page,
+            searchUrl,
+            1,
+            null,
+          );
+
+          if (recoveryResult.jobs.length > 0) {
+            // Find matching job by title
+            const matchingJob = recoveryResult.jobs.find(
+              (j) => j.title === jobTitle,
+            );
+
+            if (matchingJob) {
+              console.log(
+                `      ✓ Found job "${jobTitle}" with new clickable ID ${matchingJob.clickableId}`,
+              );
+              // Update the job data and retry
+              searchJobData.clickableId = matchingJob.clickableId;
+              i--; // Retry same index
+              continue;
+            } else {
+              console.log(
+                `      ⚠️  Could not find job "${jobTitle}" after recovery, skipping`,
+              );
+            }
+          }
+        } catch (recoveryError) {
+          console.error(
+            `      ⚠️  Recovery failed:`,
+            getErrorMessage(recoveryError),
+          );
+        }
+      } else if (isClickError(error) && !hasNavigatedAway) {
+        console.log(
+          `      ⚠️  Click failed on first navigation - not a DOM change issue`,
+        );
       }
 
       stats.consecutiveClosedJobs = 0;
