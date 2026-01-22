@@ -65,7 +65,6 @@
     desire
   - Keep JS and fancy stuff to a minimum for now, just keep it very basic, so I
     can expand on it later
-  - Use @src/lib/email.ts for mailing
   - Use mailchecker to validate the email addresses during sign-up:
     https://github.com/FGRibreau/mailchecker
   - When creating an account, an account for accessing Directus should probably

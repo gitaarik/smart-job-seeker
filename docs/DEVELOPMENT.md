@@ -31,7 +31,6 @@ contributing to Smart Job Seeker.
    - `SJS_APP_URL_HOST` - Public site URL (external access)
    - `SJS_JWT_SECRET` - Secret for JWT tokens
    - `SJS_DATABASE_URL` - PostgreSQL connection string
-   - `SJS_SMTP2GO_API_KEY` - Email service API key
    - `SJS_LLM_API_KEY_GROQ` - Groq API key for AI features
    - Directus admin credentials and configuration
 
@@ -308,7 +307,6 @@ Required in production:
 - `SJS_JWT_SECRET` - Secure random token
 - `SJS_DATABASE_URL` - Production PostgreSQL URL
 - `SJS_LLM_API_KEY_GROQ` - Groq API credentials
-- `SJS_SMTP2GO_API_KEY` - Email service credentials
 - `SJS_WEBHOOK_SECRET` - Webhook authentication
 - Directus configuration (SJS_ADMIN_SECRET, SJS_ADMIN_EMAIL, etc.)
 
@@ -372,7 +370,6 @@ For issues or questions:
 ### External Services
 
 - **Groq API** - High-performance LLM inference
-- **SMTP2GO** - Email delivery
 
 ### DevOps
 

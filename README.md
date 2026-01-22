@@ -180,8 +180,7 @@ Configured for **Vercel** deployment:
 npm run build
 ```
 
-- `SJS_JWT_SECRET`, `SJS_DATABASE_URL`, `SJS_LLM_API_KEY_GROQ`,
-  `SJS_SMTP2GO_API_KEY`
+- `SJS_JWT_SECRET`, `SJS_DATABASE_URL`, `SJS_LLM_API_KEY_GROQ`
 - `SJS_WEBHOOK_SECRET`, Directus configuration
 
 ## Roadmap

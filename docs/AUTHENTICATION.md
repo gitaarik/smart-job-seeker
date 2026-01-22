@@ -9,9 +9,8 @@ registration, login, password reset, and protected routes.
 - ✅ Secure password hashing (bcryptjs)
 - ✅ JWT token authentication
 - ✅ HTTP-only cookie sessions
-- ✅ Password reset via email
+- ✅ Password reset
 - ✅ Protected dashboard route
-- ✅ SMTP2GO API integration
 
 ## Setup Instructions
 
@@ -23,29 +22,11 @@ Update your `.env` file with the following variables:
 # JWT Secret (already configured with secure random key)
 SJS_JWT_SECRET="5e85f7e3c23984bba36951494572bdb98565fac82bd67deaecaf072c6e9a1b5302189020737331a2e32d1ded21d53767d958153d1ec086bedd2efe55bb96b002"
 
-# SMTP2GO API Configuration
-SJS_SMTP2GO_API_KEY="your-smtp2go-api-key"
-SJS_FROM_EMAIL="noreply@yourdomain.com"
-SJS_FROM_NAME="Portfolio App"
-
 # Application URL (_HOST for external access)
 SJS_APP_URL_HOST="http://localhost:5173"
 ```
 
-### 2. SMTP2GO Setup
-
-1. **Sign up for SMTP2GO**: Go to
-   [https://www.smtp2go.com/](https://www.smtp2go.com/)
-2. **Get your API key**:
-   - Log into your SMTP2GO dashboard
-   - Navigate to Settings > API Keys
-   - Create a new API key with "Send Email" permissions
-3. **Update your `.env`**: Replace `your-smtp2go-api-key` with your actual API
-   key
-4. **Configure sender email**: Set `SJS_FROM_EMAIL` to a domain you own or
-   verify with SMTP2GO
-
-### 3. Database
+### 2. Database
 
 The Prisma PostgreSQL server is already running. The user table includes:
 
@@ -123,7 +104,7 @@ const response = await fetch("/api/auth/login", {
 2. **Test authentication**:
    - Navigate to `/auth`
    - Create an account or log in
-   - Test password reset (requires SMTP2GO setup)
+   - Test password reset
    - Visit `/dashboard` (protected route)
 
 3. **Database operations**:
@@ -137,8 +118,6 @@ const response = await fetch("/api/auth/login", {
 1. **Update environment variables**:
    - Set `SJS_APP_URL_HOST` to your production domain
    - Use a production PostgreSQL database
-   - Ensure SMTP2GO API key is configured
-
 2. **Security considerations**:
    - SJS_JWT_SECRET should be a secure random string (already configured)
    - Use HTTPS in production
@@ -151,12 +130,6 @@ const response = await fetch("/api/auth/login", {
 
 - Ensure `SJS_JWT_SECRET` is set in your `.env` file
 - Restart the development server after changing environment variables
-
-### Email not sending
-
-- Verify your SMTP2GO API key is correct
-- Check that `SJS_FROM_EMAIL` is properly configured
-- Ensure you have sending credits in your SMTP2GO account
 
 ### Authentication not working
 
