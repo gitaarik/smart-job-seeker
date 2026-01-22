@@ -57,11 +57,6 @@ class BrowserController:
         """
         start_time = time.time()
 
-        headless_mode = os.getenv("SJS_BROWSER_USE_HEADLESS", "true").lower() == "true"
-
-        logger.info(f"[Browser-Use] Running in {'headless' if headless_mode else 'headed'} mode")
-        print(f"[Browser-Use] Running in {'headless' if headless_mode else 'headed'} mode", flush=True)
-
         # Determine vision usage
         use_vision = use_visual and self.vision_support
         logger.info(f"[Browser-Use] Vision mode: {use_vision}")
@@ -72,8 +67,9 @@ class BrowserController:
         logger.info(f"[Browser-Use] Will navigate to: {start_url}")
         print(f"[Browser-Use] Will navigate to: {start_url}", flush=True)
 
+        # Always run headed for better anti-detection (requires DISPLAY)
         browser = Browser(
-            headless=headless_mode,
+            headless=False,
             minimum_wait_page_load_time=1.0,
             wait_for_network_idle_page_load_time=2.0,
             wait_between_actions=2.0,
