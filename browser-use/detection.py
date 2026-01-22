@@ -7,6 +7,24 @@ Detects CAPTCHA challenges and verification code requirements from page content.
 import re
 from typing import Tuple, Optional
 
+# Patterns that indicate a cookie consent banner (should be dismissed, NOT treated as CAPTCHA)
+COOKIE_BANNER_PATTERNS = [
+    r'cookie',
+    r'consent',
+    r'privacy policy',
+    r'gdpr',
+    r'accept all',
+    r'accept cookies',
+    r'cookie preferences',
+    r'cookie settings',
+    r'we use cookies',
+    r'this site uses cookies',
+    r'manage cookies',
+    r'cookie notice',
+    r'by continuing',
+    r'we value your privacy',
+]
+
 # Patterns that indicate a CAPTCHA challenge (should NOT trigger verification_needed)
 CAPTCHA_PATTERNS = [
     r'verify you are human',
@@ -91,17 +109,42 @@ SUCCESS_URL_PATTERNS = [
 ]
 
 
+def is_cookie_banner_page(page_text: str) -> bool:
+    """
+    Detect if page shows a cookie consent banner.
+
+    Cookie banners should be dismissed automatically, NOT treated as CAPTCHA
+    or verification challenges.
+
+    Args:
+        page_text: Page body text
+
+    Returns:
+        True if cookie banner patterns are detected
+    """
+    page_text_lower = page_text.lower()
+    return any(re.search(pattern, page_text_lower) for pattern in COOKIE_BANNER_PATTERNS)
+
+
 def is_captcha_page(page_text: str) -> bool:
     """
     Detect if page shows a CAPTCHA challenge.
 
+    Note: Cookie banners are explicitly excluded - they should be dismissed,
+    not treated as CAPTCHA challenges requiring manual intervention.
+
     Args:
-        page_text: Lowercase page body text
+        page_text: Page body text
 
     Returns:
-        True if CAPTCHA patterns are detected
+        True if CAPTCHA patterns are detected (and NOT a cookie banner)
     """
     page_text_lower = page_text.lower()
+
+    # First check if this is actually a cookie banner (not a real CAPTCHA)
+    if is_cookie_banner_page(page_text):
+        return False
+
     return any(re.search(pattern, page_text_lower) for pattern in CAPTCHA_PATTERNS)
 
 

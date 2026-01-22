@@ -13,6 +13,7 @@ from browser_use import Agent, Browser
 from chrome_manager import ChromeManager
 from detection import (
     is_captcha_page,
+    is_cookie_banner_page,
     detect_verification_required,
     is_on_success_page,
     check_agent_result_for_captcha,
@@ -110,7 +111,14 @@ class LoginMixin:
             page_text = await ChromeManager.get_page_text(cdp_port)
 
             if page_text:
-                # Check for CAPTCHA page
+                # First check if this is just a cookie banner (not a real challenge)
+                if is_cookie_banner_page(page_text):
+                    logger.info(
+                        "[Browser-Use] Detected cookie banner on page - not a CAPTCHA"
+                    )
+                    # Don't treat as CAPTCHA, continue with normal flow
+
+                # Check for CAPTCHA page (cookie banners are excluded by is_captcha_page)
                 if is_captcha_page(page_text):
                     if solve_captcha:
                         logger.info(
