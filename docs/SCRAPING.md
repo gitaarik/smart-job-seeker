@@ -218,11 +218,11 @@ Create searches in `job_searches`:
 SJS_BROWSER_USE_TIMEOUT=120000               # Max time for Browser-Use tasks
 SJS_BROWSER_USE_VISION=true                  # Enable visual mode (screenshots) for LLM
 
-# CDP Connection (Hybrid)
-SJS_HYBRID_CDP_HOST=localhost                # Chrome host (browser-use in Docker)
-SJS_HYBRID_CDP_PORT=9222                     # Chrome debugging port
-SJS_HYBRID_LOGIN_TIMEOUT=120000              # Max time for login
-SJS_HYBRID_HANDOFF_DELAY=1000                # Delay before Patchright connects
+# CDP Connection
+SJS_CDP_HOST=localhost                       # Chrome host (browser-use in Docker)
+SJS_CDP_PORT=9222                            # Chrome debugging port
+SJS_LOGIN_TIMEOUT=120000                     # Max time for login
+SJS_HANDOFF_DELAY=1000                       # Delay before Patchright connects
 
 # Scraper Behavior
 SJS_SCRAPER_MAX_JOBS_PER_SEARCH=100          # Hard limit per search
@@ -364,7 +364,7 @@ Screenshots saved to `debug-screenshots/` directory.
 **CDP connection failed:**
 
 - Verify Chrome is running on port 9222
-- Check `SJS_HYBRID_CDP_HOST` (use `browser-use` in Docker)
+- Check `SJS_CDP_HOST` (use `browser-use` in Docker)
 - Ensure Browser-Use started successfully
 
 **Browser-Use timeout:**

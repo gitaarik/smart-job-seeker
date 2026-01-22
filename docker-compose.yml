@@ -52,7 +52,7 @@ services:
       # DATABASE_URL is also set for compatibility with standard Prisma tools
       DATABASE_URL: ${SJS_POSTGRES_URL_DOCKER:-postgres://postgres:postgres@database:5432/smartjobseeker}
       # Override CDP host for Playwright connection (browser-use exposes CDP on 9222)
-      SJS_HYBRID_CDP_HOST: browser-use
+      SJS_CDP_HOST: browser-use
   admin:
     extends:
       file: docker-compose.directus.yml
@@ -74,7 +74,7 @@ services:
     ports:
       - ${SJS_BROWSER_USE_PORT:-8000}:8000
       - "5900:5900" # VNC port for viewing browser in headed mode
-      - "9222:9222" # CDP port for hybrid scraper (Patchright connects here)
+      - "9222:9222" # CDP port for scraper (Patchright connects here)
     volumes:
       - ./browser-use:/app
       - browser_use_data:/app/data
