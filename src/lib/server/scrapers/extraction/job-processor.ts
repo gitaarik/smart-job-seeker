@@ -273,9 +273,33 @@ async function clickJobCard(
       });
 
       if (!changeResult.changed) {
-        console.warn(
-          `      ⚠️  Page content didn't change after click`,
-        );
+        // Highlight the element with red border for visual debugging
+        const selector = `[data-extract-clickable-id="${clickableId}"]`;
+        await page.evaluate((sel) => {
+          const el = document.querySelector(sel);
+          if (el) {
+            (el as HTMLElement).style.border = "3px solid red";
+            (el as HTMLElement).style.backgroundColor = "rgba(255,0,0,0.1)";
+          }
+        }, selector);
+
+        // Log the element's HTML for debugging
+        const elementHtml = await page.evaluate((sel) => {
+          const el = document.querySelector(sel);
+          return el?.outerHTML?.substring(0, 500) || "(element not found)";
+        }, selector);
+
+        console.warn(`      ⚠️  Page content didn't change after click`);
+        console.warn(`      🔴 Element marked with red border on page`);
+        console.warn(`      🔍 Clicked element HTML:\n${elementHtml}`);
+
+        return {
+          contentChanged: false,
+          extractionPage,
+          newTab,
+          navigatedAway,
+          originalUrl,
+        };
       }
 
       // Re-check if URL changed during content stabilization (slow navigation)
@@ -381,7 +405,16 @@ export async function processJobCard(
 
   // Open job details (new tab for anchors, click for SPAs)
   const clickResult = await clickJobCard(page, clickableId, elementInfo.href);
-  const { extractionPage, navigatedAway, newTab } = clickResult;
+  const { extractionPage, navigatedAway, newTab, contentChanged } = clickResult;
+
+  // Skip if click didn't change page content (element highlighted for debugging)
+  if (!contentChanged) {
+    return {
+      success: false,
+      skipped: true,
+      skipReason: "Click did not change page content",
+    };
+  }
 
   // Use actual URL if we navigated, otherwise use pseudo URL for SPAs
   const jobSourceUrl = navigatedAway || newTab
