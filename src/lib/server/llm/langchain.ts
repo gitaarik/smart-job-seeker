@@ -555,10 +555,6 @@ export async function generateChatCompletion(
   const cachedResponse = llmCache.get(cacheKey, model);
 
   if (cachedResponse) {
-    errorTracker.logDebug("LLM cache hit", {
-      operation: "generateChatCompletion",
-      metadata: { model, provider: config.llmProvider },
-    });
     return cachedResponse;
   }
 
@@ -589,15 +585,6 @@ export async function generateChatCompletion(
       // Cache the raw response
       llmCache.set(cacheKey, content, model, config.llmCacheTTL);
 
-      errorTracker.logDebug("LLM JSON response parsed and cached", {
-        operation: "generateChatCompletion",
-        metadata: {
-          model,
-          provider: config.llmProvider,
-          contentLength: content.length,
-        },
-      });
-
       return parsed;
     } catch (error) {
       const parseError = new Error(
@@ -613,15 +600,6 @@ export async function generateChatCompletion(
 
   // Cache the successful response
   llmCache.set(cacheKey, content, model, config.llmCacheTTL);
-
-  errorTracker.logDebug("LLM response generated and cached", {
-    operation: "generateChatCompletion",
-    metadata: {
-      model,
-      provider: config.llmProvider,
-      contentLength: content.length,
-    },
-  });
 
   return content;
 }
