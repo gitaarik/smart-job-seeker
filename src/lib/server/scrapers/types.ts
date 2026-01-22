@@ -55,6 +55,8 @@ export interface LoginResult {
   verification_prompt?: string;
   current_url: string;
   cdp_port?: number;
+  cdp_url?: string; // Cloud mode: WebSocket URL for Playwright CDP connection
+  live_url?: string; // Cloud mode: URL to watch the browser session live
   execution_time_ms?: number;
   error?: string;
 }

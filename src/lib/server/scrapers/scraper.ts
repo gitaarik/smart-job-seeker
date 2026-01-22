@@ -83,19 +83,34 @@ async function resolveCdpHost(host: string): Promise<string> {
 /**
  * Handle login result from Browser-Use
  * Consolidates the duplicate logic for processing login attempts
+ *
+ * @param isCloudMode If true, skip manual VNC prompts (Cloud handles CAPTCHA automatically)
  */
 async function handleLoginResult(
   browserUse: BrowserUseClient,
   loginResult: LoginResult,
   platform: Platform,
   searchUrl: string,
+  isCloudMode: boolean = false,
 ): Promise<boolean> {
   if (loginResult.login_success) {
     console.log(`✅ Login successful! URL: ${loginResult.current_url}`);
     return true;
   }
 
+  // In cloud mode, CAPTCHA should be handled automatically
+  // If we still get captcha_needed, something went wrong
   if (loginResult.captcha_needed) {
+    if (isCloudMode) {
+      console.error(
+        `❌ Cloud mode: CAPTCHA was not solved automatically. Check the live URL for details.`,
+      );
+      if (loginResult.live_url) {
+        console.log(`📺 Live URL: ${loginResult.live_url}`);
+      }
+      return false;
+    }
+
     console.log(`\n⚠️ CAPTCHA detected. Manual intervention required.`);
     console.log(`   VNC: localhost:5900`);
     console.log(`   Please solve the CAPTCHA manually.`);
@@ -110,6 +125,14 @@ async function handleLoginResult(
   }
 
   // Login failed for other reason
+  if (isCloudMode) {
+    console.error(`❌ Cloud login failed: ${loginResult.error || "Unknown"}`);
+    if (loginResult.live_url) {
+      console.log(`📺 Live URL: ${loginResult.live_url}`);
+    }
+    return false;
+  }
+
   console.log(`\n⚠️ Login failed. Manual intervention required.`);
   console.log(`   Error: ${loginResult.error || "Unknown"}`);
   return waitForManualIntervention(platform);
@@ -152,6 +175,8 @@ async function buildLoginPrompt(
 /**
  * Execute auto-login with Browser-Use.
  * Builds the login prompt, starts a hybrid session, and handles the result.
+ *
+ * @returns Object with success flag and optional cdp_url (for cloud mode)
  */
 async function attemptAutoLogin(
   browserUse: BrowserUseClient,
@@ -160,7 +185,7 @@ async function attemptAutoLogin(
   searchUrl: string,
   startUrl: string,
   sendScreenshots: boolean | undefined,
-): Promise<boolean> {
+): Promise<{ success: boolean; cdpUrl?: string }> {
   const loginTask = await buildLoginPrompt(platform, credentials, searchUrl);
 
   console.log("📝 Login task preview:");
@@ -174,7 +199,19 @@ async function attemptAutoLogin(
     sendScreenshots,
   });
 
-  return handleLoginResult(browserUse, loginResult, platform, searchUrl);
+  const isCloudMode = !!loginResult.cdp_url;
+  const success = await handleLoginResult(
+    browserUse,
+    loginResult,
+    platform,
+    searchUrl,
+    isCloudMode,
+  );
+
+  return {
+    success,
+    cdpUrl: loginResult.cdp_url,
+  };
 }
 
 /**
@@ -220,6 +257,7 @@ async function scrapeWithLogin(
 
   try {
     let isLoggedIn = false;
+    let cloudCdpUrl: string | undefined; // Track CDP URL from cloud mode
 
     if (hasProactiveLoginConfig) {
       // Proactive login - don't rely on session check for sites that
@@ -230,7 +268,7 @@ async function scrapeWithLogin(
       console.log("   Auto-filling credentials...");
 
       try {
-        isLoggedIn = await attemptAutoLogin(
+        const loginAttempt = await attemptAutoLogin(
           browserUse,
           platform,
           credentials,
@@ -238,6 +276,8 @@ async function scrapeWithLogin(
           platform.login_page_url || platform.url,
           sendScreenshots,
         );
+        isLoggedIn = loginAttempt.success;
+        cloudCdpUrl = loginAttempt.cdpUrl;
       } catch (error) {
         if (isRecoverableBrowserUseError(error)) {
           console.log(
@@ -286,7 +326,7 @@ async function scrapeWithLogin(
           console.log("   Auto-filling credentials...");
 
           try {
-            isLoggedIn = await attemptAutoLogin(
+            const loginAttempt = await attemptAutoLogin(
               browserUse,
               platform,
               credentials,
@@ -294,6 +334,8 @@ async function scrapeWithLogin(
               platform.url,
               sendScreenshots,
             );
+            isLoggedIn = loginAttempt.success;
+            cloudCdpUrl = loginAttempt.cdpUrl;
           } catch (error) {
             if (isRecoverableBrowserUseError(error)) {
               console.log(
@@ -337,20 +379,30 @@ async function scrapeWithLogin(
       throw new Error("Login failed or cancelled");
     }
 
-    // Phase 2: Handoff delay
-    console.log(
-      `\n📌 Phase 2: Handoff delay (${config.hybridHandoffDelay}ms)...`,
-    );
-    await new Promise((resolve) =>
-      setTimeout(resolve, config.hybridHandoffDelay)
-    );
+    // Phase 2: Handoff delay (skip in cloud mode - session is already stable)
+    if (!cloudCdpUrl) {
+      console.log(
+        `\n📌 Phase 2: Handoff delay (${config.hybridHandoffDelay}ms)...`,
+      );
+      await new Promise((resolve) =>
+        setTimeout(resolve, config.hybridHandoffDelay)
+      );
+    }
 
     // Phase 3: Connect Playwright via CDP
     console.log("\n📌 Phase 3: Connecting Playwright via CDP...");
 
-    // Resolve hostname to IP - Chrome DevTools rejects non-IP Host headers
-    const resolvedHost = await resolveCdpHost(CDP_HOST);
-    const cdpUrl = `http://${resolvedHost}:${CDP_PORT}`;
+    // Use cloud CDP URL if available, otherwise construct from local host:port
+    let cdpUrl: string;
+    if (cloudCdpUrl) {
+      cdpUrl = cloudCdpUrl;
+      console.log(`🌐 Using cloud CDP: ${cdpUrl}`);
+    } else {
+      // Resolve hostname to IP - Chrome DevTools rejects non-IP Host headers
+      const resolvedHost = await resolveCdpHost(CDP_HOST);
+      cdpUrl = `http://${resolvedHost}:${CDP_PORT}`;
+      console.log(`🖥️ Using local CDP: ${cdpUrl}`);
+    }
     const browser = await chromium.connectOverCDP(cdpUrl);
     const contexts = browser.contexts();
 

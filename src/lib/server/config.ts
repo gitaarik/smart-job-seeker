@@ -85,6 +85,12 @@ export interface AppConfig {
   hybridLoginTimeout: number; // Max time for Browser-Use login (ms)
   hybridHandoffDelay: number; // Delay before Patchright connects (ms)
 
+  // Browser-Use Cloud (alternative to local Browser-Use)
+  browserUseCloud: boolean; // Use Browser-Use Cloud instead of local
+  browserUseCloudApiKey: string; // API key for Browser-Use Cloud (reuses SJS_LLM_API_KEY_BROWSER_USE)
+  browserUseCloudProfileId: string; // Profile ID for persistent cookies/localStorage
+  browserUseCloudTimeout: number; // Session timeout in minutes (default: 30)
+
   // System Profile
   systemScraperProfileId: number;
 }
@@ -275,6 +281,15 @@ function loadConfig(): AppConfig {
       10,
     ),
 
+    // Browser-Use Cloud (alternative to local Browser-Use)
+    browserUseCloud: getEnv("SJS_BROWSER_USE_CLOUD", "false") === "true",
+    browserUseCloudApiKey: getEnv("SJS_LLM_API_KEY_BROWSER_USE", ""),
+    browserUseCloudProfileId: getEnv("SJS_BROWSER_USE_CLOUD_PROFILE_ID", ""),
+    browserUseCloudTimeout: parseInt(
+      getEnv("SJS_BROWSER_USE_CLOUD_TIMEOUT", "30"),
+      10,
+    ),
+
     // System Profile (0 means not configured)
     systemScraperProfileId: parseInt(
       getEnv("SJS_SYSTEM_SCRAPER_PROFILE_ID", "0"),
@@ -352,9 +367,26 @@ export function validateConfig(): void {
     errors.push("browserUseMaxJobsToClick must be > 0");
   }
 
-  // Browser-Use is always required now
-  if (!config.browserUseUrl) {
-    errors.push("browserUseUrl is required");
+  // Browser-Use is required for local mode
+  if (!config.browserUseCloud && !config.browserUseUrl) {
+    errors.push("browserUseUrl is required when not using Browser-Use Cloud");
+  }
+
+  // Browser-Use Cloud requires API key and profile ID
+  if (config.browserUseCloud) {
+    if (!config.browserUseCloudApiKey) {
+      errors.push(
+        "browserUseCloudApiKey (SJS_LLM_API_KEY_BROWSER_USE) is required when using Browser-Use Cloud",
+      );
+    }
+    if (!config.browserUseCloudProfileId) {
+      errors.push(
+        "browserUseCloudProfileId (SJS_BROWSER_USE_CLOUD_PROFILE_ID) is required when using Browser-Use Cloud",
+      );
+    }
+    if (config.browserUseCloudTimeout <= 0) {
+      errors.push("browserUseCloudTimeout must be > 0");
+    }
   }
 
   // Validate system profile ID

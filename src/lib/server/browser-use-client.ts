@@ -38,8 +38,55 @@ export interface HybridSessionResponse {
   verification_prompt?: string; // User-friendly prompt
   current_url: string;
   cdp_port: number;
+  cdp_url?: string; // Cloud mode: WebSocket URL for Playwright CDP connection
+  live_url?: string; // Cloud mode: URL to watch the browser session live
   execution_time_ms: number;
   error?: string;
+}
+
+// Browser-Use Cloud session
+export interface CloudBrowserSession {
+  id: string;
+  status: "running" | "stopped" | "paused" | "error";
+  cdpUrl: string;
+  liveUrl: string;
+  createdAt: string;
+}
+
+// Browser-Use Cloud task
+export interface CloudTask {
+  id: string;
+  status: "running" | "finished" | "failed" | "stopped";
+  output?: string;
+  error?: string;
+  createdAt: string;
+  finishedAt?: string;
+}
+
+// Cloud API response for creating a browser session
+interface CloudCreateBrowserResponse {
+  id: string;
+  status: string;
+  cdpUrl: string;
+  liveUrl: string;
+  createdAt: string;
+}
+
+// Cloud API response for creating a task
+interface CloudCreateTaskResponse {
+  id: string;
+  status: string;
+  createdAt: string;
+}
+
+// Cloud API response for getting task status
+interface CloudGetTaskResponse {
+  id: string;
+  status: "running" | "finished" | "failed" | "stopped";
+  output?: string;
+  error?: string;
+  createdAt: string;
+  finishedAt?: string;
 }
 
 // Verification code response
@@ -115,6 +162,13 @@ function sanitizeForLogging(obj: any, maxDepth = 3, currentDepth = 0): any {
 
 export class BrowserUseClient {
   private config: BrowserUseConfig;
+  private isCloudMode: boolean;
+  private cloudApiKey?: string;
+  private cloudProfileId?: string;
+  private cloudTimeout: number; // minutes
+  private cloudSessionId?: string; // Track active cloud session for cleanup
+
+  private static readonly CLOUD_API_BASE = "https://api.browser-use.com/api/v1";
 
   constructor(customConfig?: Partial<BrowserUseConfig>) {
     // Use default config if not provided
@@ -124,9 +178,34 @@ export class BrowserUseClient {
       sendScreenshots: customConfig?.sendScreenshots ??
         config.browserUseSendScreenshots,
     };
-    console.log(
-      `[BrowserUseClient] Initialized with sendScreenshots: ${this.config.sendScreenshots} (custom: ${customConfig?.sendScreenshots}, env: ${config.browserUseSendScreenshots})`,
-    );
+
+    // Cloud mode configuration
+    this.isCloudMode = config.browserUseCloud;
+    if (this.isCloudMode) {
+      this.cloudApiKey = config.browserUseCloudApiKey;
+      this.cloudProfileId = config.browserUseCloudProfileId;
+      this.cloudTimeout = config.browserUseCloudTimeout;
+
+      if (!this.cloudApiKey) {
+        throw new Error(
+          "Browser-Use Cloud mode enabled but SJS_LLM_API_KEY_BROWSER_USE not set",
+        );
+      }
+      if (!this.cloudProfileId) {
+        throw new Error(
+          "Browser-Use Cloud mode enabled but SJS_BROWSER_USE_CLOUD_PROFILE_ID not set",
+        );
+      }
+
+      console.log(
+        `[BrowserUseClient] Initialized in CLOUD mode (profile: ${this.cloudProfileId}, timeout: ${this.cloudTimeout}min)`,
+      );
+    } else {
+      this.cloudTimeout = 30; // Default, not used in local mode
+      console.log(
+        `[BrowserUseClient] Initialized in LOCAL mode, sendScreenshots: ${this.config.sendScreenshots}`,
+      );
+    }
   }
 
   /**
@@ -309,16 +388,230 @@ export class BrowserUseClient {
   /**
    * Start a hybrid session: Browser-Use launches Chrome with CDP, performs login,
    * and keeps the browser open for Patchright to connect.
+   *
+   * In cloud mode: Uses Browser-Use Cloud API to create a session and run login task.
+   * In local mode: Uses local Browser-Use server's /hybrid/start endpoint.
+   *
    * @param params Hybrid session parameters
-   * @returns Response with login_success, current_url, cdp_port
+   * @returns Response with login_success, current_url, cdp_port (and cdp_url in cloud mode)
    */
   async startHybridSession(
+    params: HybridSessionParams,
+  ): Promise<HybridSessionResponse> {
+    if (this.isCloudMode) {
+      return this.startCloudHybridSession(params);
+    }
+    return this.startLocalHybridSession(params);
+  }
+
+  /**
+   * Start hybrid session using Browser-Use Cloud.
+   * Creates a cloud browser session with persistent profile, runs login task.
+   */
+  private async startCloudHybridSession(
+    params: HybridSessionParams,
+  ): Promise<HybridSessionResponse> {
+    console.log(`\n🌐 Using Browser-Use Cloud`);
+    const startTime = Date.now();
+
+    // 1. Create cloud browser session with persistent profile
+    const session = await this.createCloudBrowserSession();
+    this.cloudSessionId = session.id;
+
+    console.log(`📺 Live URL: ${session.liveUrl}`);
+    console.log(`   (Open to monitor - CAPTCHA will be solved automatically)`);
+
+    // 2. Run login task
+    console.log(`⏳ Running login task...`);
+    const task = await this.runCloudTask(session.id, params.task);
+
+    // 3. Wait for task completion
+    const completedTask = await this.waitForCloudTask(task.id);
+
+    const executionTime = Date.now() - startTime;
+
+    if (completedTask.status === "failed") {
+      console.error(`❌ Cloud login task failed: ${completedTask.error}`);
+      return {
+        login_success: false,
+        current_url: params.startUrl,
+        cdp_port: 0,
+        cdp_url: session.cdpUrl,
+        live_url: session.liveUrl,
+        execution_time_ms: executionTime,
+        error: completedTask.error || "Cloud login task failed",
+      };
+    }
+
+    console.log(`✅ Login completed in ${(executionTime / 1000).toFixed(1)}s`);
+    console.log(`🔌 CDP URL: ${session.cdpUrl}`);
+
+    return {
+      login_success: true,
+      current_url: params.startUrl,
+      cdp_port: 0, // Not used in cloud mode
+      cdp_url: session.cdpUrl,
+      live_url: session.liveUrl,
+      execution_time_ms: executionTime,
+    };
+  }
+
+  /**
+   * Create a cloud browser session with persistent profile.
+   */
+  private async createCloudBrowserSession(): Promise<CloudBrowserSession> {
+    console.log(
+      `[BrowserUseClient] Creating cloud session with profile: ${this.cloudProfileId}`,
+    );
+
+    const response = await fetch(
+      `${BrowserUseClient.CLOUD_API_BASE}/browsers`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": this.cloudApiKey!,
+        },
+        body: JSON.stringify({
+          persistenceContextId: this.cloudProfileId,
+          sessionTimeout: this.cloudTimeout * 60, // Convert minutes to seconds
+        }),
+        signal: AbortSignal.timeout(60000),
+      },
+    );
+
+    if (!response.ok) {
+      const errorBody = await response.text().catch(() => "");
+      if (response.status === 401) {
+        throw new Error(
+          "Browser-Use Cloud: Invalid API key (SJS_LLM_API_KEY_BROWSER_USE)",
+        );
+      }
+      if (response.status === 429) {
+        throw new Error(
+          "Browser-Use Cloud: Rate limit exceeded. Try again later.",
+        );
+      }
+      throw new Error(
+        `Browser-Use Cloud: Failed to create session (${response.status}): ${errorBody}`,
+      );
+    }
+
+    const data: CloudCreateBrowserResponse = await response.json();
+
+    return {
+      id: data.id,
+      status: "running",
+      cdpUrl: data.cdpUrl,
+      liveUrl: data.liveUrl,
+      createdAt: data.createdAt,
+    };
+  }
+
+  /**
+   * Run a task on a cloud browser session.
+   */
+  private async runCloudTask(
+    sessionId: string,
+    task: string,
+  ): Promise<CloudTask> {
+    console.log(
+      `[BrowserUseClient] Running cloud task on session: ${sessionId}`,
+    );
+
+    const response = await fetch(`${BrowserUseClient.CLOUD_API_BASE}/tasks`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": this.cloudApiKey!,
+      },
+      body: JSON.stringify({
+        browserId: sessionId,
+        task,
+      }),
+      signal: AbortSignal.timeout(60000),
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text().catch(() => "");
+      throw new Error(
+        `Browser-Use Cloud: Failed to create task (${response.status}): ${errorBody}`,
+      );
+    }
+
+    const data: CloudCreateTaskResponse = await response.json();
+
+    return {
+      id: data.id,
+      status: "running",
+      createdAt: data.createdAt,
+    };
+  }
+
+  /**
+   * Wait for a cloud task to complete by polling.
+   */
+  private async waitForCloudTask(
+    taskId: string,
+    pollIntervalMs: number = 2000,
+    maxWaitMs: number = 300000, // 5 minutes
+  ): Promise<CloudTask> {
+    const startTime = Date.now();
+
+    while (Date.now() - startTime < maxWaitMs) {
+      const response = await fetch(
+        `${BrowserUseClient.CLOUD_API_BASE}/tasks/${taskId}`,
+        {
+          method: "GET",
+          headers: {
+            "x-api-key": this.cloudApiKey!,
+          },
+          signal: AbortSignal.timeout(30000),
+        },
+      );
+
+      if (!response.ok) {
+        const errorBody = await response.text().catch(() => "");
+        throw new Error(
+          `Browser-Use Cloud: Failed to get task status (${response.status}): ${errorBody}`,
+        );
+      }
+
+      const data: CloudGetTaskResponse = await response.json();
+
+      if (
+        data.status === "finished" || data.status === "failed" ||
+        data.status === "stopped"
+      ) {
+        return {
+          id: data.id,
+          status: data.status,
+          output: data.output,
+          error: data.error,
+          createdAt: data.createdAt,
+          finishedAt: data.finishedAt,
+        };
+      }
+
+      // Still running, wait before polling again
+      await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+    }
+
+    throw new Error(
+      `Browser-Use Cloud: Task timed out after ${maxWaitMs / 1000}s`,
+    );
+  }
+
+  /**
+   * Start hybrid session using local Browser-Use server.
+   */
+  private async startLocalHybridSession(
     params: HybridSessionParams,
   ): Promise<HybridSessionResponse> {
     const sendScreenshots = params.sendScreenshots ??
       this.config.sendScreenshots;
     console.log(
-      `[BrowserUseClient] Starting hybrid session, CDP port: ${
+      `[BrowserUseClient] Starting local hybrid session, CDP port: ${
         params.cdpPort ?? 9222
       }`,
     );
@@ -369,9 +662,61 @@ export class BrowserUseClient {
   /**
    * Close the hybrid browser session.
    * Call this after Patchright has finished extracting jobs.
+   *
+   * In cloud mode: Stops the cloud browser session.
+   * In local mode: Calls local Browser-Use server to close.
    */
   async closeHybridSession(): Promise<void> {
-    console.log(`[BrowserUseClient] Closing hybrid session...`);
+    if (this.isCloudMode) {
+      return this.closeCloudSession();
+    }
+    return this.closeLocalSession();
+  }
+
+  /**
+   * Close cloud browser session.
+   */
+  private async closeCloudSession(): Promise<void> {
+    if (!this.cloudSessionId) {
+      console.warn(`[BrowserUseClient] No cloud session to close`);
+      return;
+    }
+
+    console.log(
+      `[BrowserUseClient] Closing cloud session: ${this.cloudSessionId}`,
+    );
+
+    try {
+      const response = await fetch(
+        `${BrowserUseClient.CLOUD_API_BASE}/browsers/${this.cloudSessionId}/stop`,
+        {
+          method: "PUT",
+          headers: {
+            "x-api-key": this.cloudApiKey!,
+          },
+          signal: AbortSignal.timeout(10000),
+        },
+      );
+
+      if (response.ok) {
+        console.log(`[BrowserUseClient] Cloud session closed`);
+      } else {
+        console.warn(
+          `[BrowserUseClient] Failed to close cloud session: ${response.status}`,
+        );
+      }
+    } catch (error) {
+      console.warn(`[BrowserUseClient] Error closing cloud session: ${error}`);
+    } finally {
+      this.cloudSessionId = undefined;
+    }
+  }
+
+  /**
+   * Close local hybrid browser session.
+   */
+  private async closeLocalSession(): Promise<void> {
+    console.log(`[BrowserUseClient] Closing local hybrid session...`);
 
     try {
       const response = await fetch(`${this.config.baseUrl}/hybrid/close`, {
@@ -381,15 +726,15 @@ export class BrowserUseClient {
       });
 
       if (response.ok) {
-        console.log(`[BrowserUseClient] Hybrid session closed`);
+        console.log(`[BrowserUseClient] Local hybrid session closed`);
       } else {
         console.warn(
-          `[BrowserUseClient] Failed to close hybrid session: ${response.status}`,
+          `[BrowserUseClient] Failed to close local hybrid session: ${response.status}`,
         );
       }
     } catch (error) {
       console.warn(
-        `[BrowserUseClient] Error closing hybrid session: ${error}`,
+        `[BrowserUseClient] Error closing local hybrid session: ${error}`,
       );
     }
   }
