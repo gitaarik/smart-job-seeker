@@ -267,7 +267,7 @@ async function clickJobCard(
     // Wait for SPA content to change and stabilize
     if (!newTab && !navigatedAway) {
       const changeResult = await waitForContentChange(page, beforeClick, {
-        timeout: config.scraperClickWaitTimeout * 2,
+        timeout: config.scraperClickWaitTimeout,
         changeThreshold: 100,
         stabilizeAfter: true,
       });

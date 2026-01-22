@@ -219,7 +219,7 @@ function loadConfig(): AppConfig {
       10,
     ),
     scraperClickWaitTimeout: parseInt(
-      getEnv("SJS_SCRAPER_CLICK_WAIT_TIMEOUT", "1000"),
+      getEnv("SJS_SCRAPER_CLICK_WAIT_TIMEOUT", "3000"),
       10,
     ),
     scraperRateLimitDelay: parseInt(
