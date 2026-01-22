@@ -1,6 +1,6 @@
 /**
  * LangChain-based LLM utilities for chat completions
- * Supports multiple providers: Groq, Gemini (Google Generative AI), OpenAI, OpenRouter, and DeepSeek
+ * Supports multiple providers: Groq, Gemini (Google Generative AI), OpenAI, DeepSeek, and Cerebras
  */
 
 import { ChatGroq } from "@langchain/groq";
@@ -297,19 +297,6 @@ function createLangChainModel(
         model,
         temperature,
         maxTokens,
-      });
-    }
-
-    case "openrouter": {
-      const apiKey = config.openrouterApiKey;
-      return new ChatOpenAI({
-        apiKey,
-        model,
-        temperature,
-        maxTokens,
-        configuration: {
-          baseURL: "https://openrouter.ai/api/v1",
-        },
       });
     }
 

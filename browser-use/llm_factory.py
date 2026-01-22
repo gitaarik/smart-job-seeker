@@ -22,7 +22,6 @@ DEFAULT_MODELS = {
     "cerebras": "llama-3.3-70b",
     "gemini": "gemini-2.0-flash-exp",
     "openai": "gpt-4o",
-    "openrouter": "anthropic/claude-3.5-sonnet",
     "deepseek": "deepseek-chat",
     "browser_use": None,  # Uses their optimized model automatically
 }
@@ -33,7 +32,6 @@ PROVIDER_MODEL_ENV_VARS = {
     "cerebras": "SJS_LLM_MODEL_CEREBRAS",
     "gemini": "SJS_LLM_MODEL_GEMINI",
     "openai": "SJS_LLM_MODEL_OPENAI",
-    "openrouter": "SJS_LLM_MODEL_OPENROUTER",
     "deepseek": "SJS_LLM_MODEL_DEEPSEEK",
 }
 
@@ -79,21 +77,6 @@ def _create_openai_llm(model: str) -> Tuple[Any, bool]:
         temperature=0.3,
     )
     return llm, True  # GPT-4o supports vision
-
-
-def _create_openrouter_llm(model: str) -> Tuple[Any, bool]:
-    """Create OpenRouter LLM instance."""
-    llm = ChatOpenAI(
-        model=model,
-        base_url="https://openrouter.ai/api/v1",
-        api_key=os.getenv("SJS_LLM_API_KEY_OPENROUTER"),
-        temperature=0.3,
-    )
-    # Vision support depends on model
-    vision_support = any(
-        kw in model for kw in ["claude", "gpt-4", "gemini", "qvq"]
-    )
-    return llm, vision_support
 
 
 def _create_deepseek_llm(model: str) -> Tuple[Any, bool]:
@@ -165,8 +148,6 @@ def create_llm(provider: str | None = None) -> Tuple[Any, bool]:
         return _create_gemini_llm(model)
     elif provider == "openai":
         return _create_openai_llm(model)
-    elif provider == "openrouter":
-        return _create_openrouter_llm(model)
     elif provider == "deepseek":
         return _create_deepseek_llm(model)
     elif provider == "cerebras":

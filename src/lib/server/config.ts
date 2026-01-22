@@ -30,14 +30,12 @@ export interface AppConfig {
     | "groq"
     | "gemini"
     | "openai"
-    | "openrouter"
     | "deepseek"
     | "cerebras";
   llmModel: string; // Configurable model name, with smart defaults per provider
   groqApiKey: string;
   geminiApiKey: string;
   openaiApiKey: string;
-  openrouterApiKey: string;
   deepseekApiKey: string;
   cerebrasApiKey: string;
 
@@ -102,7 +100,6 @@ function getModelForProvider(provider: string): string {
     groq: "meta-llama/llama-4-scout-17b-16e-instruct",
     gemini: "gemini-2.0-flash-exp",
     openai: "gpt-4o",
-    openrouter: "anthropic/claude-3.5-sonnet",
     deepseek: "deepseek-chat",
     cerebras: "llama-3.3-70b",
   };
@@ -112,7 +109,6 @@ function getModelForProvider(provider: string): string {
     groq: "SJS_LLM_MODEL_GROQ",
     gemini: "SJS_LLM_MODEL_GEMINI",
     openai: "SJS_LLM_MODEL_OPENAI",
-    openrouter: "SJS_LLM_MODEL_OPENROUTER",
     deepseek: "SJS_LLM_MODEL_DEEPSEEK",
     cerebras: "SJS_LLM_MODEL_CEREBRAS",
   };
@@ -159,14 +155,12 @@ function loadConfig(): AppConfig {
       | "groq"
       | "gemini"
       | "openai"
-      | "openrouter"
       | "deepseek"
       | "cerebras"),
     llmModel: getModelForProvider(llmProvider),
     groqApiKey: getEnv("SJS_LLM_API_KEY_GROQ", ""),
     geminiApiKey: getEnv("SJS_LLM_API_KEY_GEMINI", ""),
     openaiApiKey: getEnv("SJS_LLM_API_KEY_OPENAI", ""),
-    openrouterApiKey: getEnv("SJS_LLM_API_KEY_OPENROUTER", ""),
     deepseekApiKey: getEnv("SJS_LLM_API_KEY_DEEPSEEK", ""),
     cerebrasApiKey: getEnv("SJS_LLM_API_KEY_CEREBRAS", ""),
 
