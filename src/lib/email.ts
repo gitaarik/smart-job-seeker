@@ -59,7 +59,7 @@ export async function sendPasswordResetEmail(
   resetToken: string,
 ): Promise<boolean> {
   const resetUrl = `${
-    getEnv("SJS_APP_PUBLIC_URL")
+    getEnv("SJS_APP_URL_HOST")
   }/auth/reset-password?token=${resetToken}`;
 
   const html = `

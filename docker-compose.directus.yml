@@ -19,11 +19,11 @@ services:
       ADMIN_TOKEN: ${SJS_ADMIN_TOKEN}
       SECRET: ${SJS_ADMIN_SECRET}
       WEBHOOK_SECRET: ${SJS_WEBHOOK_SECRET}
-      PUBLIC_URL: ${SJS_ADMIN_URL}
+      PUBLIC_URL: ${SJS_ADMIN_URL_DOCKER:-http://admin:8055}
 
       # Database settings:
-      DB_CLIENT: ${SJS_DB_CLIENT}
-      DB_HOST: ${SJS_DB_HOST}
+      DB_CLIENT: ${SJS_DB_CLIENT:-pg}
+      DB_HOST: ${SJS_DB_HOST_DOCKER:-database}
       DB_PORT: 5432
       DB_DATABASE: ${SJS_DB_DATABASE}
       DB_USER: ${SJS_DB_USER}

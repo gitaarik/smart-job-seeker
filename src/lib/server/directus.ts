@@ -10,11 +10,11 @@ export interface DirectusSchema {
 }
 
 function getDirectusUrl(): string {
-  // When running in Docker: use 'admin' as hostname (Docker service name)
-  // When running on host: use 'localhost' to connect to the exposed port
+  // _DOCKER: container-to-container (uses 'admin' hostname)
+  // _HOST: external access (uses 'localhost' with exposed port)
   return isRunningInDocker()
-    ? getEnv("SJS_ADMIN_URL")
-    : getEnv("SJS_ADMIN_PUBLIC_URL");
+    ? getEnv("SJS_ADMIN_URL_DOCKER")
+    : getEnv("SJS_ADMIN_URL_HOST");
 }
 
 function getDirectusToken(): string {

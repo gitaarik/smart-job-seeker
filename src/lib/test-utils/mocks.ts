@@ -63,7 +63,9 @@ export function createMockEnv(
   return {
     SJS_DATABASE_URL: "postgresql://test:test@localhost:5432/test",
     SJS_POSTGRES_URL: "postgresql://test:test@localhost:5432/test",
-    SJS_ADMIN_URL: "http://localhost:8055",
+    SJS_ADMIN_URL_DOCKER: "http://admin:8055",
+    SJS_ADMIN_URL_HOST: "http://localhost:8055",
+    SJS_APP_URL_HOST: "http://localhost:5173",
     SJS_ADMIN_TOKEN: "test-token",
     SJS_LLM_API_KEY_GROQ: "test-groq-key",
     SJS_WEBHOOK_SECRET: "test-webhook-secret",

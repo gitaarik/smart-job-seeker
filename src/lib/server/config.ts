@@ -144,9 +144,10 @@ function loadConfig(): AppConfig {
     databaseUrl: getEnv("SJS_DATABASE_URL"),
 
     // External Services
-    publicSiteUrl: getEnv("SJS_PUBLIC_SITE_URL", "http://localhost:5173"),
-    adminPublicUrl: getEnv("SJS_ADMIN_PUBLIC_URL", "http://localhost:8055"),
-    directusUrl: getEnv("SJS_ADMIN_URL"),
+    // URLs: _HOST = accessible from outside Docker, _DOCKER = container-to-container
+    publicSiteUrl: getEnv("SJS_APP_URL_HOST", "http://localhost:5173"),
+    adminPublicUrl: getEnv("SJS_ADMIN_URL_HOST", "http://localhost:8055"),
+    directusUrl: getEnv("SJS_ADMIN_URL_DOCKER", "http://admin:8055"),
     directusToken: getEnv("SJS_ADMIN_TOKEN"),
     directusWebhookSecret: getEnv("SJS_WEBHOOK_SECRET"),
 

@@ -62,6 +62,6 @@ export const load: LayoutServerLoad = async ({ request, locals }) => {
     actualTheme: themeData.actualTheme,
     systemTheme: themeData.systemTheme,
     user: locals.user || null,
-    adminPublicUrl: getEnv("SJS_ADMIN_URL"),
+    adminPublicUrl: getEnv("SJS_ADMIN_URL_HOST"),
   };
 };
