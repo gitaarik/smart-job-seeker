@@ -41,7 +41,7 @@ class BrowserController:
         task: str,
         start_url: str,
         max_time: int = 120,
-        send_screenshots: bool = True,
+        use_visual: bool = True,
     ):
         """
         Execute an arbitrary browser automation task using natural language.
@@ -50,7 +50,7 @@ class BrowserController:
             task: Natural language description of what to do
             start_url: URL to start from
             max_time: Maximum execution time in seconds
-            send_screenshots: Whether to send screenshots to LLM
+            use_visual: Whether to enable visual mode (screenshots) for LLM
 
         Returns:
             dict with 'result' and 'execution_time_ms'
@@ -63,7 +63,7 @@ class BrowserController:
         print(f"[Browser-Use] Running in {'headless' if headless_mode else 'headed'} mode", flush=True)
 
         # Determine vision usage
-        use_vision = send_screenshots and self.vision_support
+        use_vision = use_visual and self.vision_support
         logger.info(f"[Browser-Use] Vision mode: {use_vision}")
         print(f"[Browser-Use] Vision mode: {use_vision}", flush=True)
 
@@ -140,7 +140,7 @@ class BrowserController:
         start_url: str,
         cdp_port: int = 9222,
         max_time: int = 120,
-        send_screenshots: bool = True,
+        use_visual: bool = True,
         solve_captcha: bool = False,
     ):
         """
@@ -151,7 +151,7 @@ class BrowserController:
             start_url: URL to start from (login page)
             cdp_port: Port for CDP (default 9222)
             max_time: Maximum execution time in seconds
-            send_screenshots: Whether to send screenshots to LLM
+            use_visual: Whether to enable visual mode (screenshots) for LLM
             solve_captcha: If True, Browser-Use attempts to solve CAPTCHAs
 
         Returns:
@@ -162,7 +162,7 @@ class BrowserController:
         logger.info(f"[Browser-Use] Starting hybrid session with CDP on port {cdp_port}")
         print(f"[Browser-Use] Starting hybrid session with CDP on port {cdp_port}", flush=True)
 
-        use_vision = send_screenshots and self.vision_support
+        use_vision = use_visual and self.vision_support
 
         try:
             # Close any existing session
@@ -302,7 +302,7 @@ class BrowserController:
         code: str,
         cdp_port: int = 9222,
         max_time: int = 60,
-        send_screenshots: bool = True,
+        use_visual: bool = True,
     ):
         """
         Submit a verification code and continue the login process.
@@ -312,7 +312,7 @@ class BrowserController:
             code: The verification code to enter
             cdp_port: CDP port (default 9222)
             max_time: Maximum execution time in seconds
-            send_screenshots: Whether to send screenshots to LLM
+            use_visual: Whether to enable visual mode (screenshots) for LLM
 
         Returns:
             dict with 'success', 'login_complete', 'needs_new_code', etc.
@@ -324,7 +324,7 @@ class BrowserController:
         logger.info("[Browser-Use] Submitting verification code")
         print("[Browser-Use] Submitting verification code", flush=True)
 
-        use_vision = send_screenshots and self.vision_support
+        use_vision = use_visual and self.vision_support
 
         try:
             # Verify Chrome is still running
@@ -401,7 +401,7 @@ class BrowserController:
         task: str,
         cdp_port: int = 9222,
         max_time: int = 30,
-        send_screenshots: bool = True,
+        use_visual: bool = True,
     ):
         """
         Click the 'resend code' button on the verification page.
@@ -410,7 +410,7 @@ class BrowserController:
             task: Task prompt from database
             cdp_port: CDP port (default 9222)
             max_time: Maximum execution time in seconds
-            send_screenshots: Whether to send screenshots to LLM
+            use_visual: Whether to enable visual mode (screenshots) for LLM
 
         Returns:
             dict with 'success', 'error'
@@ -422,7 +422,7 @@ class BrowserController:
         logger.info("[Browser-Use] Requesting new verification code")
         print("[Browser-Use] Requesting new verification code", flush=True)
 
-        use_vision = send_screenshots and self.vision_support
+        use_vision = use_visual and self.vision_support
 
         try:
             # Verify Chrome is still running

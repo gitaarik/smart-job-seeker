@@ -217,7 +217,7 @@ Create searches in `job_searches`:
 # Browser-Use Service
 SJS_BROWSER_USE_URL=http://browser-use:8000  # Python service URL
 SJS_BROWSER_USE_TIMEOUT=120000               # Max time for Browser-Use tasks
-SJS_BROWSER_USE_SEND_SCREENSHOTS=true        # Send screenshots to LLM
+SJS_BROWSER_USE_VISUAL=true                  # Enable visual mode (screenshots) for LLM
 SJS_BROWSER_USE_MAX_JOBS_TO_CLICK=5          # Max jobs per page
 
 # CDP Connection (Hybrid)

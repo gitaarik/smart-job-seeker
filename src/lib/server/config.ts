@@ -76,7 +76,7 @@ export interface AppConfig {
   // Browser-Use Integration
   browserUseUrl: string;
   browserUseTimeout: number;
-  browserUseSendScreenshots: boolean;
+  browserUseVisual: boolean;
   browserUseMaxJobsToClick: number; // Max number of jobs to click through and extract details
 
   // Hybrid Scraper (Browser-Use login + Patchright extraction via CDP)
@@ -262,8 +262,7 @@ function loadConfig(): AppConfig {
       getEnv("SJS_BROWSER_USE_TIMEOUT", "120000"),
       10,
     ),
-    browserUseSendScreenshots:
-      getEnv("SJS_BROWSER_USE_SEND_SCREENSHOTS", "true") === "true",
+    browserUseVisual: getEnv("SJS_BROWSER_USE_VISUAL", "true") === "true",
     browserUseMaxJobsToClick: parseInt(
       getEnv("SJS_BROWSER_USE_MAX_JOBS_TO_CLICK", "5"),
       10,

@@ -4,14 +4,14 @@ import { dbDirect } from "$lib/db";
 export interface BrowserUseConfig {
   baseUrl: string;
   timeout: number;
-  sendScreenshots: boolean;
+  useVisual: boolean;
 }
 
 export interface ExecuteTaskParams {
   task: string; // Natural language task description
   startUrl: string; // URL to start from
   maxTime?: number; // Optional max execution time in seconds
-  sendScreenshots?: boolean; // Optional screenshot configuration
+  useVisual?: boolean; // Optional screenshot configuration
 }
 
 export interface ExecuteTaskResponse {
@@ -25,7 +25,7 @@ export interface HybridSessionParams {
   startUrl: string; // URL to start from (login page)
   cdpPort?: number; // Port for CDP (default 9222)
   maxTime?: number; // Max execution time in seconds
-  sendScreenshots?: boolean;
+  useVisual?: boolean;
   solveCaptcha?: boolean; // If true, Browser-Use attempts to solve CAPTCHAs (default: false)
 }
 
@@ -175,8 +175,8 @@ export class BrowserUseClient {
     this.config = {
       baseUrl: customConfig?.baseUrl ?? config.browserUseUrl,
       timeout: customConfig?.timeout ?? config.browserUseTimeout,
-      sendScreenshots: customConfig?.sendScreenshots ??
-        config.browserUseSendScreenshots,
+      useVisual: customConfig?.useVisual ??
+        config.browserUseVisual,
     };
 
     // Cloud mode configuration
@@ -203,7 +203,7 @@ export class BrowserUseClient {
     } else {
       this.cloudTimeout = 30; // Default, not used in local mode
       console.log(
-        `[BrowserUseClient] Initialized in LOCAL mode, sendScreenshots: ${this.config.sendScreenshots}`,
+        `[BrowserUseClient] Initialized in LOCAL mode, useVisual: ${this.config.useVisual}`,
       );
     }
   }
@@ -230,10 +230,10 @@ export class BrowserUseClient {
   }
 
   async executeTask(params: ExecuteTaskParams): Promise<ExecuteTaskResponse> {
-    const sendScreenshots = params.sendScreenshots ??
-      this.config.sendScreenshots;
+    const useVisual = params.useVisual ??
+      this.config.useVisual;
     console.log(
-      `[BrowserUseClient] Sending request with send_screenshots: ${sendScreenshots}`,
+      `[BrowserUseClient] Sending request with use_visual: ${useVisual}`,
     );
 
     let response: Response;
@@ -245,7 +245,7 @@ export class BrowserUseClient {
           task: params.task,
           start_url: params.startUrl,
           max_time: params.maxTime,
-          send_screenshots: sendScreenshots,
+          use_visual: useVisual,
         }),
         signal: AbortSignal.timeout(this.config.timeout),
       });
@@ -316,7 +316,7 @@ export class BrowserUseClient {
       task,
       startUrl: jobUrl,
       maxTime: 60, // 1 minute max for single job
-      sendScreenshots: this.config.sendScreenshots,
+      useVisual: this.config.useVisual,
     });
 
     // Parse the JSON result
@@ -608,8 +608,8 @@ export class BrowserUseClient {
   private async startLocalHybridSession(
     params: HybridSessionParams,
   ): Promise<HybridSessionResponse> {
-    const sendScreenshots = params.sendScreenshots ??
-      this.config.sendScreenshots;
+    const useVisual = params.useVisual ??
+      this.config.useVisual;
     console.log(
       `[BrowserUseClient] Starting local hybrid session, CDP port: ${
         params.cdpPort ?? 9222
@@ -626,7 +626,7 @@ export class BrowserUseClient {
           start_url: params.startUrl,
           cdp_port: params.cdpPort ?? 9222,
           max_time: params.maxTime,
-          send_screenshots: sendScreenshots,
+          use_visual: useVisual,
           solve_captcha: params.solveCaptcha ?? false,
         }),
         signal: AbortSignal.timeout(this.config.timeout),
@@ -782,7 +782,7 @@ export class BrowserUseClient {
           code,
           cdp_port: cdpPort,
           max_time: 60,
-          send_screenshots: this.config.sendScreenshots,
+          use_visual: this.config.useVisual,
         }),
         signal: AbortSignal.timeout(120000),
       });
@@ -863,7 +863,7 @@ export class BrowserUseClient {
           task,
           cdp_port: cdpPort,
           max_time: 30,
-          send_screenshots: this.config.sendScreenshots,
+          use_visual: this.config.useVisual,
         }),
         signal: AbortSignal.timeout(60000),
       });
