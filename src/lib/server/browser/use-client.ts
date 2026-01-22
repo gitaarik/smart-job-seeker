@@ -904,6 +904,69 @@ export class BrowserUseClient {
   // =====================
 
   /**
+   * Navigate to a URL and return the current URL and page content.
+   * Useful for login state detection - navigate to login page and see if redirected.
+   * @param url URL to navigate to
+   * @param cdpPort CDP port (default 9222)
+   * @returns Object with current URL and page text content
+   */
+  async navigateTo(
+    url: string,
+    cdpPort: number = 9222,
+  ): Promise<{
+    success: boolean;
+    current_url: string;
+    page_text: string;
+    cdp_port: number;
+  }> {
+    console.log(`[BrowserUseClient] Navigating to: ${url}`);
+
+    let response: Response;
+    try {
+      response = await fetch(`${this.config.baseUrl}/navigate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          url,
+          cdp_port: cdpPort,
+        }),
+        signal: AbortSignal.timeout(60000),
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.error(`\n❌ Failed to navigate: ${errorMsg}`);
+      return {
+        success: false,
+        current_url: "",
+        page_text: "",
+        cdp_port: cdpPort,
+      };
+    }
+
+    if (!response.ok) {
+      const errorBody = await response.text().catch(() => "");
+      console.error(
+        `\n❌ Navigate API error: ${response.status} ${response.statusText}`,
+      );
+      if (errorBody) {
+        console.error(`   Response: ${errorBody.substring(0, 500)}`);
+      }
+      return {
+        success: false,
+        current_url: "",
+        page_text: "",
+        cdp_port: cdpPort,
+      };
+    }
+
+    const result = await response.json();
+    console.log(
+      `[BrowserUseClient] Navigation complete: ${result.current_url}`,
+    );
+    return result;
+  }
+
+  /**
    * Check if the persistent session is logged in for a platform.
    * @param checkUrl URL to navigate to (e.g., the job search page)
    * @param loginUrlPattern Pattern indicating login page (if URL contains this, not logged in)

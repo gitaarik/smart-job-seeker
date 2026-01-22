@@ -146,34 +146,36 @@ export async function humanClick(
   const timeout = options.timeout ?? 5000;
   const element = page.locator(selector);
 
-  try {
-    const box = await element.boundingBox({ timeout });
-    if (box) {
-      // Calculate target point with slight randomness (not dead center)
-      const paddingX = box.width * 0.1;
-      const paddingY = box.height * 0.1;
-      const targetX = box.x + paddingX +
-        Math.random() * (box.width - 2 * paddingX);
-      const targetY = box.y + paddingY +
-        Math.random() * (box.height - 2 * paddingY);
+  // Scroll element into view first
+  await element.scrollIntoViewIfNeeded({ timeout });
 
-      // Move to element with multiple steps (more human-like than instant teleport)
-      const steps = 10 + Math.floor(Math.random() * 10); // 10-20 steps
-      await page.mouse.move(targetX, targetY, { steps });
+  // Wait for element to be visible
+  await element.waitFor({ state: "visible", timeout });
 
-      // Small pause before clicking (humans don't click instantly)
-      await page.waitForTimeout(50 + Math.random() * 100);
-
-      // Click
-      await page.mouse.click(targetX, targetY);
-    } else {
-      // Fallback if we can't get bounding box
-      await element.click({ timeout });
-    }
-  } catch {
-    // Fallback to regular click on any error
-    await element.click({ timeout });
+  // Get bounding box for coordinate-based click
+  const box = await element.boundingBox({ timeout });
+  if (!box) {
+    throw new Error(`Cannot get bounding box for element: ${selector}`);
   }
+
+  // Calculate target point with slight randomness (not dead center)
+  const paddingX = box.width * 0.1;
+  const paddingY = box.height * 0.1;
+  const targetX = box.x + paddingX +
+    Math.random() * (box.width - 2 * paddingX);
+  const targetY = box.y + paddingY +
+    Math.random() * (box.height - 2 * paddingY);
+
+  // Move to element with multiple steps (more human-like than instant teleport)
+  const steps = 10 + Math.floor(Math.random() * 10); // 10-20 steps
+  await page.mouse.move(targetX, targetY, { steps });
+
+  // Small pause before clicking (humans don't click instantly)
+  await page.waitForTimeout(50 + Math.random() * 100);
+
+  // Click at coordinates - dispatches real mousedown/mouseup/click events
+  // This hits whatever element is actually at those coordinates
+  await page.mouse.click(targetX, targetY);
 }
 
 /**

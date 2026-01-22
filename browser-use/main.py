@@ -294,6 +294,43 @@ class SessionWaitResponse(BaseModel):
     timed_out: bool
 
 
+class NavigateRequest(BaseModel):
+    """Request to navigate to a URL"""
+
+    url: str  # URL to navigate to
+    cdp_port: Optional[int] = 9222
+
+
+class NavigateResponse(BaseModel):
+    """Response from navigation"""
+
+    success: bool
+    current_url: str
+    page_text: str
+    cdp_port: int
+
+
+@app.post("/navigate", response_model=NavigateResponse)
+async def navigate(request: NavigateRequest):
+    """
+    Navigate to a URL and return the current URL and page text.
+
+    Useful for login state detection - navigate to login page and check
+    if redirected and what content is on the page.
+    """
+    try:
+        controller = get_controller()
+        result = await controller.navigate_to(
+            url=request.url,
+            cdp_port=request.cdp_port,
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Error navigating: {str(e)}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/session/check", response_model=SessionCheckResponse)
 async def check_session(request: SessionCheckRequest):
     """

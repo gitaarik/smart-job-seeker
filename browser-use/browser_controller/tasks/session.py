@@ -113,6 +113,39 @@ class SessionMixin:
             "timed_out": True,
         }
 
+    async def navigate_to(
+        self: "BrowserController",
+        url: str,
+        cdp_port: int = 9222,
+    ) -> dict:
+        """
+        Navigate to a URL and return the current URL and page text.
+
+        Useful for login state detection - navigate to login page and check
+        if redirected and what content is on the page.
+        """
+        # Clean up any extra tabs first
+        await ChromeManager.close_extra_tabs(cdp_port)
+
+        # Navigate to URL
+        await ChromeManager.navigate(url, cdp_port)
+
+        # Wait for page to load
+        await asyncio.sleep(3)
+
+        # Get current URL (may have been redirected)
+        current_url = await ChromeManager.get_current_url(cdp_port)
+
+        # Get page text content
+        page_text = await ChromeManager.get_page_text(cdp_port)
+
+        return {
+            "success": True,
+            "current_url": current_url,
+            "page_text": page_text,
+            "cdp_port": cdp_port,
+        }
+
     async def close(self: "BrowserController"):
         """Close the browser session."""
         # Clear browser reference to allow cleanup

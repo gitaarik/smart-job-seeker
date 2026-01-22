@@ -12,6 +12,8 @@ import { config } from "$lib/server/config";
 import { BrowserUseClient } from "$lib/server/browser/use-client";
 import { scrapeJobsWithClicks } from "./extraction";
 import { interpolatePrompt } from "$lib/server/ai-chat/utils";
+import { createJobScrapingAiChat } from "$lib/server/ai-chat/job-utils";
+import { stripHtmlForLlm } from "$lib/server/html/strip";
 import { dbDirect } from "$lib/db";
 import { getPlatformCredentials } from "../auth/platform";
 import { promptUser } from "./utils";
@@ -78,6 +80,82 @@ async function resolveCdpHost(host: string): Promise<string> {
     console.warn(`⚠️ Could not resolve ${host}, using as-is: ${error}`);
     return host;
   }
+}
+
+/**
+ * Check login state by navigating to the login page.
+ *
+ * Logic:
+ * 1. Navigate to login_page_url
+ * 2. Check if URL changed (redirect indicates logged in)
+ * 3. Use LLM to verify by analyzing page content
+ *
+ * @returns Object with isLoggedIn status and current URL
+ */
+async function checkLoginByNavigation(
+  browserUse: BrowserUseClient,
+  loginPageUrl: string,
+  jobSearchId: number,
+  cdpPort: number = CDP_PORT,
+): Promise<{ isLoggedIn: boolean; currentUrl: string }> {
+  console.log(`\n🔍 Checking login state by navigating to: ${loginPageUrl}`);
+
+  // Navigate to login page
+  const navResult = await browserUse.navigateTo(loginPageUrl, cdpPort);
+
+  if (!navResult.success) {
+    console.log(`   ❌ Navigation failed, assuming not logged in`);
+    return { isLoggedIn: false, currentUrl: "" };
+  }
+
+  console.log(`   📍 Current URL after navigation: ${navResult.current_url}`);
+
+  // Check if URL changed (redirect)
+  const originalUrl = new URL(loginPageUrl);
+  const currentUrl = new URL(navResult.current_url);
+  const urlChanged = currentUrl.pathname !== originalUrl.pathname;
+
+  if (urlChanged) {
+    console.log(
+      `   🔀 URL changed - likely redirected (user may be logged in)`,
+    );
+  } else {
+    console.log(`   📍 Still on login page path`);
+  }
+
+  // Use LLM to verify login state by analyzing page content
+  console.log(`   🤖 Asking LLM to verify login state...`);
+
+  const strippedHtml = stripHtmlForLlm(
+    `<html><body>${navResult.page_text}</body></html>`,
+  );
+
+  const llmResult = await createJobScrapingAiChat<{
+    is_logged_in: boolean;
+    confidence: "high" | "medium" | "low";
+    reason: string;
+  }>(jobSearchId, "check_login_state", {
+    loginPageUrl,
+    currentUrl: navResult.current_url,
+    urlChanged: urlChanged ? "yes" : "no",
+    strippedHtml,
+  });
+
+  if (!llmResult.success || !llmResult.response) {
+    // LLM failed, fall back to URL-based detection
+    console.log(`   ⚠️ LLM verification failed, using URL-based fallback`);
+    return { isLoggedIn: urlChanged, currentUrl: navResult.current_url };
+  }
+
+  const { is_logged_in, confidence, reason } = llmResult.response;
+  console.log(
+    `   ${is_logged_in ? "✅" : "❌"} LLM result: ${
+      is_logged_in ? "logged in" : "not logged in"
+    } (${confidence} confidence)`,
+  );
+  console.log(`   📝 Reason: ${reason}`);
+
+  return { isLoggedIn: is_logged_in, currentUrl: navResult.current_url };
 }
 
 /**
@@ -302,20 +380,30 @@ async function scrapeWithLogin(
         }
       }
     } else {
-      // No proactive login config - check session first
-      console.log("\n📌 Phase 1: Checking existing session...");
+      // No proactive login config - check if login is required
+      console.log("\n📌 Phase 1: Checking login state...");
 
-      const sessionCheck = await browserUse.checkSession(
-        searchUrl,
-        loginUrlPattern,
-        CDP_PORT,
-      );
+      if (!platform.login_page_url) {
+        // No login_page_url configured, assume no login required
+        console.log(
+          "   No login_page_url configured, assuming no login required",
+        );
+        isLoggedIn = true;
+      } else {
+        // Navigate to login page and check if redirected
+        const loginCheck = await checkLoginByNavigation(
+          browserUse,
+          platform.login_page_url,
+          jobSearchId,
+          CDP_PORT,
+        );
 
-      console.log(
-        `   Session exists: ${sessionCheck.session_exists}, Logged in: ${sessionCheck.is_logged_in}`,
-      );
+        console.log(
+          `   Login check result: isLoggedIn=${loginCheck.isLoggedIn}`,
+        );
 
-      isLoggedIn = sessionCheck.is_logged_in;
+        isLoggedIn = loginCheck.isLoggedIn;
+      }
 
       // Phase 2: Handle login if not already logged in
       if (!isLoggedIn) {

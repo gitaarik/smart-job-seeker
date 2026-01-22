@@ -116,6 +116,20 @@ export const detectLoginPageSchema = z.object({
 });
 
 /**
+ * Schema for check_login_state prompt
+ * Determines if user is logged in after navigating to login page
+ */
+export const checkLoginStateSchema = z.object({
+  is_logged_in: z
+    .boolean()
+    .describe("True if user appears to be logged in (not on a login page)"),
+  confidence: z
+    .enum(["high", "medium", "low"])
+    .describe("Confidence level in the determination"),
+  reason: z.string().describe("Brief explanation of the determination"),
+});
+
+/**
  * Schema for detect_login_fields prompt
  * Identifies username and password field selectors on login pages
  */
@@ -253,6 +267,7 @@ export const aiPromptSchemas = {
   detect_login_fields: detectLoginFieldsSchema,
   detect_pagination: detectPaginationSchema,
   classify_clickables: classifyClickablesSchema,
+  check_login_state: checkLoginStateSchema,
 } as const;
 
 /**
