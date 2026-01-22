@@ -192,6 +192,7 @@ type JobLinksResponse = AiPromptSchemaOutput<"extract_job_links">;
 // ^ Type is inferred as: { urls: string[] }
 
 const result = await createJobScrapingAiChat<JobLinksResponse>(
+  jobSearchId,
   "extract_job_links",
   { html: strippedHtml },
 );

@@ -7,6 +7,7 @@
 
 import { config } from "./config";
 import { createAndGenerateAiChat } from "./ai-chat-utils";
+import { dbDirect } from "$lib/db";
 
 /**
  * Result type for job scraping AI chat operations
@@ -21,16 +22,17 @@ export interface JobScrapingAiChatResult<T> {
 /**
  * Create AI chat for job scraping operations
  *
- * Uses the system scraper profile for background job scraping operations
- * that aren't tied to a specific user. Automatically saves prompts and
- * responses to the database for debugging and audit purposes.
+ * Looks up the profile from the job_searches record. Automatically saves
+ * prompts and responses to the database for debugging and audit purposes.
  *
+ * @param jobSearchId - ID of the job search (used to lookup profile)
  * @param promptRequest - Template identifier from ai_chat_prompts table
  * @param customVariables - Variables to interpolate into the prompt template
  * @returns Result with parsed response and aiChatId for database linking
  *
  * @example
  * const result = await createJobScrapingAiChat<{ urls: string[] }>(
+ *   jobSearchId,
  *   "extract_job_links",
  *   { html: strippedHtml }
  * );
@@ -41,24 +43,38 @@ export interface JobScrapingAiChatResult<T> {
  * }
  */
 export async function createJobScrapingAiChat<T>(
+  jobSearchId: number,
   promptRequest: string,
   customVariables: Record<string, unknown>,
 ): Promise<JobScrapingAiChatResult<T>> {
-  // Validate system profile is configured
-  if (!config.systemScraperProfileId) {
+  // Look up profile from job_searches
+  const jobSearch = await dbDirect.job_searches.findUnique({
+    where: { id: jobSearchId },
+    select: { profile: true },
+  });
+
+  if (!jobSearch) {
     return {
       success: false,
-      message:
-        "System scraper profile ID not configured. Please set SJS_SYSTEM_SCRAPER_PROFILE_ID in .env",
+      message: `Job search ${jobSearchId} not found`,
+      response: null,
+      aiChatId: null,
+    };
+  }
+
+  if (!jobSearch.profile) {
+    return {
+      success: false,
+      message: `Job search ${jobSearchId} has no profile assigned`,
       response: null,
       aiChatId: null,
     };
   }
 
   try {
-    // Call createAndGenerateAiChat with system profile
+    // Call createAndGenerateAiChat with profile from job_searches
     const result = await createAndGenerateAiChat(
-      config.systemScraperProfileId,
+      jobSearch.profile,
       promptRequest,
       customVariables,
     );

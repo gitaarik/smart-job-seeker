@@ -86,9 +86,6 @@ export interface AppConfig {
   browserUseCloudApiKey: string; // API key for Browser-Use Cloud (reuses SJS_LLM_API_KEY_BROWSER_USE)
   browserUseCloudProfileId: string; // Profile ID for persistent cookies/localStorage
   browserUseCloudTimeout: number; // Session timeout in minutes (default: 30)
-
-  // System Profile
-  systemScraperProfileId: number;
 }
 
 /**
@@ -275,12 +272,6 @@ function loadConfig(): AppConfig {
       getEnv("SJS_BROWSER_USE_CLOUD_TIMEOUT", "30"),
       10,
     ),
-
-    // System Profile (0 means not configured)
-    systemScraperProfileId: parseInt(
-      getEnv("SJS_SYSTEM_SCRAPER_PROFILE_ID", "0"),
-      10,
-    ),
   };
 
   return config;
@@ -302,7 +293,6 @@ export function validateConfig(): void {
     "directusUrl",
     "directusToken",
     "directusWebhookSecret",
-    "systemScraperProfileId",
   ];
 
   const missing = required.filter((key) => !config[key]);
@@ -365,14 +355,6 @@ export function validateConfig(): void {
     if (config.browserUseCloudTimeout <= 0) {
       errors.push("browserUseCloudTimeout must be > 0");
     }
-  }
-
-  // Validate system profile ID
-  if (
-    !Number.isInteger(config.systemScraperProfileId) ||
-    config.systemScraperProfileId <= 0
-  ) {
-    errors.push("systemScraperProfileId must be a positive integer");
   }
 
   // Throw if any validation errors

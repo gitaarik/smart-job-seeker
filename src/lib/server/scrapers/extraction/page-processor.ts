@@ -44,6 +44,7 @@ export interface PageProcessingResult {
  * @returns Cleaned HTML with action clickables stripped, or null if no clickables found
  */
 async function markAndClassifyClickables(
+  jobSearchId: number,
   page: Page,
 ): Promise<{ cleanedHtml: string; clickableCount: number } | null> {
   // Mark all clickable elements using CDP
@@ -70,7 +71,10 @@ async function markAndClassifyClickables(
   if (clickableCount > 1) {
     console.log("   🏷️  Step 1.5/3: Classifying clickables with LLM...");
     const startClassify = Date.now();
-    clickableClassifications = await classifyMarkedClickables(page);
+    clickableClassifications = await classifyMarkedClickables(
+      jobSearchId,
+      page,
+    );
     const actionCount = [...clickableClassifications.values()].filter(
       (v) => v === "action",
     ).length;
@@ -136,10 +140,10 @@ function processHtmlForExtraction(
  * Extract jobs from search page using LLM with retry logic for slow-loading SPAs
  */
 async function extractJobsWithRetry(
+  jobSearchId: number,
   page: Page,
   strippedHtml: string,
   pageNumber: number,
-  jobSearchId: number | undefined,
   savedStrippedHtml: string,
 ): Promise<{
   jobs: SearchPageJob[];
@@ -158,7 +162,10 @@ async function extractJobsWithRetry(
     const startLlm = Date.now();
 
     try {
-      const result = await extractJobsFromSearchPage(currentStrippedHtml);
+      const result = await extractJobsFromSearchPage(
+        jobSearchId,
+        currentStrippedHtml,
+      );
       jobs = result.jobs;
 
       const llmDuration = ((Date.now() - startLlm) / 1000).toFixed(2);
@@ -246,22 +253,22 @@ async function extractJobsWithRetry(
  * Process a search page to extract job cards
  * Handles CDP marking, clickable classification, HTML processing, and LLM extraction
  *
+ * @param jobSearchId Job search ID (required for profile lookup and debug HTML)
  * @param page Playwright page instance
  * @param pageNumber Current page number (1-indexed)
- * @param jobSearchId Optional job search ID for saving debug HTML
  * @param existingSavedHtml Previous saved HTML (for subsequent pages)
  * @returns Extracted jobs, stripped HTML for debugging, and clickable count
  */
 export async function processSearchPage(
+  jobSearchId: number,
   page: Page,
   pageNumber: number,
-  jobSearchId?: number,
   existingSavedHtml?: string,
 ): Promise<PageProcessingResult> {
   console.log(`\n📄 Page ${pageNumber}...`);
 
   // Step 1: Mark and classify clickables
-  const markResult = await markAndClassifyClickables(page);
+  const markResult = await markAndClassifyClickables(jobSearchId, page);
   if (!markResult) {
     return {
       jobs: [],
@@ -292,19 +299,17 @@ export async function processSearchPage(
     savedStrippedHtml = debugHeader + "\n" + strippedHtml;
 
     // Log Directus admin URL for debugging stripped HTML
-    if (jobSearchId) {
-      const directusUrl = process.env.PUBLIC_ADMIN_URL ||
-        "http://localhost:8055";
-      console.log(
-        `      📋 Debug stripped HTML: ${directusUrl}/admin/content/job_searches/${jobSearchId}`,
-      );
+    const directusUrl = process.env.PUBLIC_ADMIN_URL ||
+      "http://localhost:8055";
+    console.log(
+      `      📋 Debug stripped HTML: ${directusUrl}/admin/content/job_searches/${jobSearchId}`,
+    );
 
-      // Save stripped HTML immediately for debugging (before LLM extraction)
-      await dbDirect.job_searches.update({
-        where: { id: jobSearchId },
-        data: { stripped_html: savedStrippedHtml },
-      });
-    }
+    // Save stripped HTML immediately for debugging (before LLM extraction)
+    await dbDirect.job_searches.update({
+      where: { id: jobSearchId },
+      data: { stripped_html: savedStrippedHtml },
+    });
   }
 
   // Step 3: Extract jobs using LLM with retry logic
@@ -313,10 +318,10 @@ export async function processSearchPage(
   );
 
   const extractResult = await extractJobsWithRetry(
+    jobSearchId,
     page,
     strippedHtml,
     pageNumber,
-    jobSearchId,
     savedStrippedHtml,
   );
 

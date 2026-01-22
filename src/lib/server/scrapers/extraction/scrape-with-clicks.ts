@@ -14,7 +14,6 @@ import {
   navigateToNextPage,
   performInfiniteScroll,
 } from "$lib/server/pagination-utils";
-import { performPatchwrightLogin } from "../../patchright-login";
 import { getErrorMessage, promptUser } from "../utils";
 import { humanWait, injectStealthScripts } from "$lib/server/stealth-utils";
 import { processSearchPage, type SearchPageJob } from "./page-processor";
@@ -160,6 +159,7 @@ async function handlePagination(page: Page): Promise<boolean> {
  * Process all jobs on a page
  */
 async function processPageJobs(
+  jobSearchId: number,
   page: Page,
   jobs: SearchPageJob[],
   searchUrl: string,
@@ -177,6 +177,7 @@ async function processPageJobs(
 
     try {
       const result = await processJobCard(
+        jobSearchId,
         page,
         searchJobData,
         jobNumber,
@@ -248,41 +249,19 @@ async function processPageJobs(
  * Marks clickable elements with CDP, uses LLM to identify job cards, then clicks each
  * Extracts and saves jobs immediately during clicking for real-time feedback
  *
+ * @param jobSearchId Job search ID (required for profile lookup and logging)
  * @param page Patchright page instance
  * @param searchUrl URL of the search results page
  * @param platformId Platform ID for job storage
- * @param profileId Optional profile ID for credential-based login
- * @param jobSearchId Optional job search ID for Directus URL logging
  * @returns Object with jobsProcessed count and strippedHtml for debugging
  */
 export async function scrapeJobsWithClicks(
+  jobSearchId: number,
   page: Page,
   searchUrl: string,
   platformId: string,
-  profileId?: number,
-  jobSearchId?: number,
 ): Promise<{ jobsProcessed: number; strippedHtml: string }> {
   console.log("\n🔄 Starting SPA scraping mode (click-based navigation)");
-
-  // Attempt login if credentials provided
-  if (profileId) {
-    const loginSuccess = await performPatchwrightLogin(
-      page,
-      Number(platformId),
-      profileId,
-    );
-    if (loginSuccess) {
-      console.log(`🔙 Navigating back to search URL...`);
-      await page.goto(searchUrl, {
-        waitUntil: "domcontentloaded",
-        timeout: 60000,
-      });
-    } else {
-      console.warn(
-        "⚠️  Login failed, continuing with unauthenticated scraping",
-      );
-    }
-  }
 
   // Inject stealth scripts
   await injectStealthScripts(page);
@@ -308,9 +287,9 @@ export async function scrapeJobsWithClicks(
   while (pageNumber <= config.scraperPaginationMaxPages) {
     // Step 1-2: Process search page (CDP marking, classification, LLM extraction)
     const pageResult = await processSearchPage(
+      jobSearchId,
       page,
       pageNumber,
-      jobSearchId,
       savedStrippedHtml,
     );
 
@@ -371,6 +350,7 @@ export async function scrapeJobsWithClicks(
 
     // Step 3: Process each job
     const processResult = await processPageJobs(
+      jobSearchId,
       page,
       jobs,
       searchUrl,

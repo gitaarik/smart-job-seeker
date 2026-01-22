@@ -232,8 +232,8 @@ async function scrapeWithLogin(
   platformId: string,
   platform: { name: string; url: string; login_page_url?: string | null },
   credentials: { username: string; password: string } | null,
-  useVisual?: boolean,
-  jobSearchId?: number,
+  useVisual: boolean | undefined,
+  jobSearchId: number,
 ): Promise<{ jobsProcessed: number; strippedHtml: string }> {
   if (credentials) {
     console.log(`🔐 Credentials found for ${platform.name}`);
@@ -439,11 +439,10 @@ async function scrapeWithLogin(
     console.log("\n📌 Phase 4: Job extraction...");
 
     const result = await scrapeJobsWithClicks(
+      jobSearchId,
       page,
       searchUrl,
       platformId,
-      undefined, // Don't pass profileId - already logged in
-      jobSearchId,
     );
 
     console.log(
@@ -611,17 +610,15 @@ async function waitForManualIntervention(
  *
  * @param searchUrl URL of the job search results page
  * @param platformId Platform ID for job storage
- * @param profileId Optional profile ID for credentials
+ * @param jobSearchId Job search ID (required for profile lookup and logging)
  * @param useVisual Whether to enable visual mode (screenshots) for LLM (for login)
- * @param jobSearchId Optional job search ID for Directus URL logging
  * @returns Object with jobsProcessed count and strippedHtml from search page
  */
 export async function scrapeJobs(
   searchUrl: string,
   platformId: string,
-  profileId?: number,
+  jobSearchId: number,
   useVisual?: boolean,
-  jobSearchId?: number,
 ): Promise<{ jobsProcessed: number; strippedHtml: string }> {
   console.log(`\n🔍 Starting job scraper (with persistent sessions)...`);
 
@@ -634,11 +631,24 @@ export async function scrapeJobs(
     throw new Error(`Platform with ID ${platformId} not found`);
   }
 
+  // Look up job search to get the profile for credentials
+  const jobSearch = await dbDirect.job_searches.findUnique({
+    where: { id: jobSearchId },
+    select: { profile: true },
+  });
+
+  if (!jobSearch) {
+    throw new Error(`Job search ${jobSearchId} not found`);
+  }
+
   // Check if we have credentials for auto-fill
   let credentials: { username: string; password: string } | null = null;
 
-  if (profileId) {
-    const creds = await getPlatformCredentials(profileId, Number(platformId));
+  if (jobSearch.profile) {
+    const creds = await getPlatformCredentials(
+      jobSearch.profile,
+      Number(platformId),
+    );
     if (creds?.username && creds?.password) {
       credentials = { username: creds.username, password: creds.password };
     }

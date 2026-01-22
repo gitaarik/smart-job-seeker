@@ -319,6 +319,7 @@ async function returnToSearchPage(
 /**
  * Process a single job card: click, extract, validate, and save
  *
+ * @param jobSearchId Job search ID (required for profile lookup)
  * @param page Playwright page instance
  * @param searchJobData Job data from search page extraction
  * @param jobNumber Current job number (1-indexed)
@@ -328,6 +329,7 @@ async function returnToSearchPage(
  * @returns Processing result with job ID if saved
  */
 export async function processJobCard(
+  jobSearchId: number,
   page: Page,
   searchJobData: SearchPageJob,
   jobNumber: number,
@@ -372,6 +374,7 @@ export async function processJobCard(
 
     // Extract job data from page
     const detailJobData = await extractJobData(
+      jobSearchId,
       jobHtml,
       jobSourceUrl,
       searchContext,

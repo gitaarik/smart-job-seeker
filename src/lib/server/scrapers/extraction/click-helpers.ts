@@ -35,6 +35,7 @@ function chunkArray<T>(array: T[], size: number): T[][] {
  * Classify a single batch of clickables using LLM
  */
 async function classifySingleBatch(
+  jobSearchId: number,
   metadata: ClickableMetadata[],
 ): Promise<Map<number, "view-details" | "action">> {
   const clickablesText = metadata
@@ -45,7 +46,7 @@ async function classifySingleBatch(
 
   const result = await createJobScrapingAiChat<{
     clickables: Array<{ id: number; type: "view-details" | "action" }>;
-  }>("classify_clickables", { clickables: clickablesText });
+  }>(jobSearchId, "classify_clickables", { clickables: clickablesText });
 
   const map = new Map<number, "view-details" | "action">();
   if (result.success && result.response?.clickables) {
@@ -62,6 +63,7 @@ async function classifySingleBatch(
  * For large numbers of clickables, batches requests and processes in parallel
  */
 export async function classifyMarkedClickables(
+  jobSearchId: number,
   page: Page,
 ): Promise<Map<number, "view-details" | "action">> {
   // 1. Extract metadata for all marked clickables
@@ -96,7 +98,10 @@ export async function classifyMarkedClickables(
 
   if (clickableMetadata.length <= batchSize) {
     // Single batch - use existing logic
-    classificationMap = await classifySingleBatch(clickableMetadata);
+    classificationMap = await classifySingleBatch(
+      jobSearchId,
+      clickableMetadata,
+    );
   } else {
     // Multiple batches - process in parallel
     const batches = chunkArray(clickableMetadata, batchSize);
@@ -105,7 +110,7 @@ export async function classifyMarkedClickables(
     );
 
     const results = await Promise.all(
-      batches.map((batch) => classifySingleBatch(batch)),
+      batches.map((batch) => classifySingleBatch(jobSearchId, batch)),
     );
 
     // Combine results from all batches

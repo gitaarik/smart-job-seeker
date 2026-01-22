@@ -22,10 +22,12 @@ export function getDirectusJobUrl(jobId: number): string {
  * Extract comprehensive job data from search results page (SPA sites)
  * Extracts core fields: title, company, location, salary, skills, remote, date_posted + clickableId
  * Replaces extractJobClickSelectors with richer data extraction
+ * @param jobSearchId ID of the job search (used to lookup profile for AI chat)
  * @param strippedSearchResultsHtml Already-stripped HTML with data-clickable-id markers
  * @returns Object with jobs array (11 fields per job)
  */
 export async function extractJobsFromSearchPage(
+  jobSearchId: number,
   strippedSearchResultsHtml: string,
 ): Promise<{
   jobs: Array<{
@@ -50,7 +52,7 @@ export async function extractJobsFromSearchPage(
     console.log(`\n📝 Saved stripped HTML to: ${debugPath}\n`);
   }
 
-  // Call AI chat with system profile for job scraping
+  // Call AI chat with profile looked up from job search
 
   const aiResult = await createJobScrapingAiChat<{
     jobs: Array<{
@@ -66,7 +68,9 @@ export async function extractJobsFromSearchPage(
       remote: string | null;
       date_posted: string | null;
     }>;
-  }>("extract_jobs_from_search_page", { html: strippedSearchResultsHtml });
+  }>(jobSearchId, "extract_jobs_from_search_page", {
+    html: strippedSearchResultsHtml,
+  });
 
   if (!aiResult.success || !aiResult.response) {
     console.error(`      ❌ LLM extraction failed: ${aiResult.message}`);
@@ -102,12 +106,14 @@ export async function extractJobsFromSearchPage(
 
 /**
  * Extract job data from job posting HTML using LLM
+ * @param jobSearchId ID of the job search (used to lookup profile for AI chat)
  * @param jobHtml HTML content from individual job page (can be full page or modal)
  * @param sourceUrl URL of the job page
  * @param searchContext Optional context from search page to help identify the correct job
  * @returns Parsed job data
  */
 export async function extractJobData(
+  jobSearchId: number,
   jobHtml: string,
   sourceUrl: string,
   searchContext?: SearchContext,
@@ -182,7 +188,7 @@ export async function extractJobData(
     salary_period?: string | null;
     skills?: string[] | null;
     status?: string | null;
-  }>("extract_job_data", {
+  }>(jobSearchId, "extract_job_data", {
     html: strippedHtml,
     sourceUrl: sourceUrl,
     searchContextHint: searchContextHint,
