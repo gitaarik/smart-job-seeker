@@ -296,9 +296,8 @@ async function processPageJobs(
           const recoveryResult = await processSearchPage(
             jobSearchId,
             page,
-            searchUrl,
-            1,
-            null,
+            1, // pageNumber
+            null, // existingSavedHtml
           );
 
           if (recoveryResult.jobs.length > 0) {
