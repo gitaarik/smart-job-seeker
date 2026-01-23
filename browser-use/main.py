@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from browser_controller import BrowserController
-from typing import Optional, Any
+from typing import Optional
 import traceback
 import logging
 
@@ -11,19 +11,20 @@ logger = logging.getLogger(__name__)
 app = FastAPI(title="Browser-Use API")
 
 
-class ExecuteTaskRequest(BaseModel):
-    """Generic task execution request"""
+class ExecuteRequest(BaseModel):
+    """Run a Browser-Use task on existing session"""
 
-    task: str  # Natural language task description
-    start_url: str  # URL to start from
-    max_time: Optional[int] = 120  # Maximum execution time in seconds
-    use_vision: Optional[bool] = True  # Whether to enable visual mode (screenshots) for LLM
+    task: str  # Full prompt from TypeScript
+    cdp_port: Optional[int] = 9222
+    use_vision: Optional[bool] = True
 
 
-class ExecuteTaskResponse(BaseModel):
-    """Generic task execution response"""
+class ExecuteResponse(BaseModel):
+    """Response from task execution"""
 
-    result: Any  # Whatever the agent returns (string, dict, list, etc.)
+    success: bool
+    current_url: str
+    cdp_port: int
     execution_time_ms: int
 
 
@@ -32,22 +33,17 @@ async def health_check():
     return {"status": "healthy"}
 
 
-@app.post("/execute", response_model=ExecuteTaskResponse)
-async def execute_task(request: ExecuteTaskRequest):
+@app.post("/execute", response_model=ExecuteResponse)
+async def execute(request: ExecuteRequest):
     """
-    Execute an arbitrary browser automation task using natural language.
-
-    Example tasks:
-    - "Navigate to example.com and extract all job titles"
-    - "Find the pricing page and return the prices as JSON"
-    - "Click on the login button and fill in the form"
+    Run a Browser-Use task on the existing browser session.
+    The browser must already be running (via /session/start or /login).
     """
     try:
-        controller = BrowserController()
+        controller = get_controller()
         result = await controller.execute_task(
             task=request.task,
-            start_url=request.start_url,
-            max_time=request.max_time,
+            cdp_port=request.cdp_port,
             use_vision=request.use_vision,
         )
         return result

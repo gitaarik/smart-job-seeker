@@ -83,82 +83,6 @@ async function resolveCdpHost(host: string): Promise<string> {
 }
 
 /**
- * Check login state by navigating to the login page.
- *
- * Logic:
- * 1. Navigate to login_page_url
- * 2. Check if URL changed (redirect indicates logged in)
- * 3. Use LLM to verify by analyzing page content
- *
- * @returns Object with isLoggedIn status and current URL
- */
-async function checkLoginByNavigation(
-  browserUse: BrowserUseClient,
-  loginPageUrl: string,
-  jobSearchId: number,
-  cdpPort: number = CDP_PORT,
-): Promise<{ isLoggedIn: boolean; currentUrl: string }> {
-  console.log(`\n🔍 Checking login state by navigating to: ${loginPageUrl}`);
-
-  // Navigate to login page
-  const navResult = await browserUse.navigateTo(loginPageUrl, cdpPort);
-
-  if (!navResult.success) {
-    console.log(`   ❌ Navigation failed, assuming not logged in`);
-    return { isLoggedIn: false, currentUrl: "" };
-  }
-
-  console.log(`   📍 Current URL after navigation: ${navResult.current_url}`);
-
-  // Check if URL changed (redirect)
-  const originalUrl = new URL(loginPageUrl);
-  const currentUrl = new URL(navResult.current_url);
-  const urlChanged = currentUrl.pathname !== originalUrl.pathname;
-
-  if (urlChanged) {
-    console.log(
-      `   🔀 URL changed - likely redirected (user may be logged in)`,
-    );
-  } else {
-    console.log(`   📍 Still on login page path`);
-  }
-
-  // Use LLM to verify login state by analyzing page content
-  console.log(`   🤖 Asking LLM to verify login state...`);
-
-  const strippedHtml = stripHtmlForLlm(
-    `<html><body>${navResult.page_text}</body></html>`,
-  );
-
-  const llmResult = await createJobScrapingAiChat<{
-    is_logged_in: boolean;
-    confidence: "high" | "medium" | "low";
-    reason: string;
-  }>(jobSearchId, "check_login_state", {
-    loginPageUrl,
-    currentUrl: navResult.current_url,
-    urlChanged: urlChanged ? "yes" : "no",
-    strippedHtml,
-  });
-
-  if (!llmResult.success || !llmResult.response) {
-    // LLM failed, fall back to URL-based detection
-    console.log(`   ⚠️ LLM verification failed, using URL-based fallback`);
-    return { isLoggedIn: urlChanged, currentUrl: navResult.current_url };
-  }
-
-  const { is_logged_in, confidence, reason } = llmResult.response;
-  console.log(
-    `   ${is_logged_in ? "✅" : "❌"} LLM result: ${
-      is_logged_in ? "logged in" : "not logged in"
-    } (${confidence} confidence)`,
-  );
-  console.log(`   📝 Reason: ${reason}`);
-
-  return { isLoggedIn: is_logged_in, currentUrl: navResult.current_url };
-}
-
-/**
  * Handle login result from Browser-Use
  * Consolidates the duplicate logic for processing login attempts
  *
@@ -251,6 +175,26 @@ async function buildLoginPrompt(
 }
 
 /**
+ * Build cookie dismiss task prompt for Browser-Use.
+ * Fetches template from DB and interpolates with startUrl.
+ */
+async function buildCookieDismissPrompt(startUrl: string): Promise<string> {
+  const promptTemplate = await dbDirect.ai_chat_prompts.findUnique({
+    where: { request: "browser_use_dismiss_cookies" },
+  });
+
+  if (!promptTemplate?.user_prompt) {
+    throw new Error(
+      "Prompt 'browser_use_dismiss_cookies' not found in database",
+    );
+  }
+
+  return interpolatePrompt(promptTemplate.user_prompt, {
+    startUrl,
+  });
+}
+
+/**
  * Execute auto-login with Browser-Use.
  * Builds the login prompt, starts a login session, and handles the result.
  *
@@ -326,38 +270,83 @@ async function scrapeWithLogin(
     let isLoggedIn = false;
     let cloudCdpUrl: string | undefined; // Track CDP URL from cloud mode
 
-    // Phase 1: Check if already logged in
-    console.log("\n📌 Phase 1: Checking login state...");
+    // Determine start URL (login page or search URL)
+    const startUrl = platform.login_page_url || searchUrl;
+
+    // Phase 1: Start browser and dismiss cookie banners
+    console.log("\n📌 Phase 1: Starting browser and handling cookie banners...");
+    console.log(`   Starting browser and navigating to: ${startUrl}`);
+
+    // 1a. Start browser and navigate to URL
+    await browserUse.startSession(startUrl, CDP_PORT);
+
+    // 1b. Use Browser-Use to dismiss any cookie banners
+    const cookieTask = await buildCookieDismissPrompt(startUrl);
+    console.log("   Running cookie dismiss task...");
+    const cookieResult = await browserUse.executeTask({
+      task: cookieTask,
+      cdpPort: CDP_PORT,
+      useVision: useVision ?? true,
+    });
+    console.log(`   Cookie task completed, URL: ${cookieResult.current_url}`);
+
+    // Phase 2: Check login state
+    console.log("\n📌 Phase 2: Checking login state...");
 
     if (!platform.login_page_url) {
       // No login_page_url configured, assume no login required
-      console.log(
-        "   No login_page_url configured, assuming no login required",
-      );
-      console.log(`   Starting browser and navigating to: ${searchUrl}`);
-
-      // Still need to start browser and navigate to search URL
-      await browserUse.startSession(searchUrl, CDP_PORT);
+      console.log("   No login_page_url configured, assuming no login required");
       isLoggedIn = true;
     } else {
-      // Navigate to login page and check if redirected (indicates logged in)
-      const loginCheck = await checkLoginByNavigation(
-        browserUse,
+      // Use LLM to check if we're on login page or already logged in
+      // Get page content for LLM check
+      const navResult = await browserUse.navigateTo(
         platform.login_page_url,
-        jobSearchId,
         CDP_PORT,
       );
 
-      console.log(
-        `   Login check result: isLoggedIn=${loginCheck.isLoggedIn}`,
+      const originalUrl = new URL(platform.login_page_url);
+      const currentUrl = new URL(navResult.current_url);
+      const urlChanged = currentUrl.pathname !== originalUrl.pathname;
+
+      console.log(`   Current URL: ${navResult.current_url}`);
+      console.log(`   URL changed: ${urlChanged ? "yes" : "no"}`);
+
+      // Use LLM to verify login state
+      console.log("   🤖 Asking LLM to verify login state...");
+      const strippedHtml = stripHtmlForLlm(
+        `<html><body>${navResult.page_text}</body></html>`,
       );
 
-      isLoggedIn = loginCheck.isLoggedIn;
+      const llmResult = await createJobScrapingAiChat<{
+        is_logged_in: boolean;
+        confidence: "high" | "medium" | "low";
+        reason: string;
+      }>(jobSearchId, "check_login_state", {
+        loginPageUrl: platform.login_page_url,
+        currentUrl: navResult.current_url,
+        urlChanged: urlChanged ? "yes" : "no",
+        strippedHtml,
+      });
+
+      if (!llmResult.success || !llmResult.response) {
+        console.log("   ⚠️ LLM verification failed, using URL-based fallback");
+        isLoggedIn = urlChanged;
+      } else {
+        const { is_logged_in, confidence, reason } = llmResult.response;
+        console.log(
+          `   ${is_logged_in ? "✅" : "❌"} LLM result: ${
+            is_logged_in ? "logged in" : "not logged in"
+          } (${confidence} confidence)`,
+        );
+        console.log(`   📝 Reason: ${reason}`);
+        isLoggedIn = is_logged_in;
+      }
     }
 
-    // Phase 2: Handle login if not already logged in
+    // Phase 3: Handle login if not already logged in
     if (!isLoggedIn) {
-      console.log("\n📌 Phase 2: Login required...");
+      console.log("\n📌 Phase 3: Login required...");
 
       if (credentials) {
         // We have credentials - use Browser-Use to auto-fill
@@ -416,16 +405,16 @@ async function scrapeWithLogin(
       throw new Error("Login failed or cancelled");
     }
 
-    // Phase 2: Handoff delay (skip in cloud mode - session is already stable)
+    // Phase 4: Handoff delay (skip in cloud mode - session is already stable)
     if (!cloudCdpUrl) {
       console.log(
-        `\n📌 Phase 2: Handoff delay (${config.handoffDelay}ms)...`,
+        `\n📌 Phase 4: Handoff delay (${config.handoffDelay}ms)...`,
       );
       await new Promise((resolve) => setTimeout(resolve, config.handoffDelay));
     }
 
-    // Phase 3: Connect Playwright via CDP
-    console.log("\n📌 Phase 3: Connecting Playwright via CDP...");
+    // Phase 5: Connect Playwright via CDP
+    console.log("\n📌 Phase 5: Connecting Playwright via CDP...");
 
     // Use cloud CDP URL if available, otherwise construct from local host:port
     let cdpUrl: string;
@@ -470,8 +459,8 @@ async function scrapeWithLogin(
       timeout: 60000,
     });
 
-    // Phase 4: Playwright extraction
-    console.log("\n📌 Phase 4: Job extraction...");
+    // Phase 6: Playwright extraction
+    console.log("\n📌 Phase 6: Job extraction...");
 
     const result = await scrapeJobsWithClicks(
       jobSearchId,

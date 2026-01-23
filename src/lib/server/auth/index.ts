@@ -5,7 +5,6 @@
 // Platform authentication
 export {
   getPlatformCredentials,
-  loginWithBrowserUse,
   type PlatformCredentials,
   updateLoginError,
 } from "./platform";

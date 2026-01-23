@@ -1,7 +1,7 @@
 """
 Execute Task Mixin for Browser Controller.
 
-Provides the execute_task method for arbitrary browser automation tasks.
+Provides the execute_task method for running Browser-Use tasks on existing sessions.
 """
 
 import time
@@ -9,6 +9,8 @@ import logging
 from typing import TYPE_CHECKING
 
 from browser_use import Agent, Browser
+
+from chrome_manager import ChromeManager
 
 if TYPE_CHECKING:
     from ..base import BrowserController
@@ -22,100 +24,68 @@ class ExecuteTaskMixin:
     async def execute_task(
         self: "BrowserController",
         task: str,
-        start_url: str,
-        max_time: int = 120,
+        cdp_port: int = 9222,
         use_vision: bool = True,
-    ):
+    ) -> dict:
         """
-        Execute an arbitrary browser automation task using natural language.
+        Run a Browser-Use task on the existing browser session.
+
+        The browser must already be running (via /session/start or /login).
 
         Args:
-            task: Natural language description of what to do
-            start_url: URL to start from
-            max_time: Maximum execution time in seconds
+            task: Natural language task to execute
+            cdp_port: CDP port where Chrome is running
             use_vision: Whether to enable visual mode (screenshots) for LLM
 
         Returns:
-            dict with 'result' and 'execution_time_ms'
+            dict with 'success', 'current_url', 'cdp_port', 'execution_time_ms'
         """
         start_time = time.time()
+
+        logger.info(f"[Browser-Use] Executing task on existing session (port {cdp_port})")
+        print(f"[Browser-Use] Executing task on existing session (port {cdp_port})", flush=True)
 
         # Determine vision usage
         vision_enabled = use_vision and self.vision_support
         logger.info(f"[Browser-Use] Vision mode: {vision_enabled}")
-        print(f"[Browser-Use] Vision mode: {vision_enabled}", flush=True)
-
-        # Navigate to start_url before executing task
-        initial_actions = [{"navigate": {"url": start_url}}]
-        logger.info(f"[Browser-Use] Will navigate to: {start_url}")
-        print(f"[Browser-Use] Will navigate to: {start_url}", flush=True)
-
-        # Always run headed for better anti-detection (requires DISPLAY)
-        browser = Browser(
-            headless=False,
-            minimum_wait_page_load_time=1.0,
-            wait_for_network_idle_page_load_time=2.0,
-            wait_between_actions=2.0,
-        )
-
-        agent = Agent(
-            task=task,
-            llm=self.llm,
-            browser=browser,
-            use_vision=vision_enabled,
-            initial_actions=initial_actions,
-        )
 
         try:
-            result = await agent.run()
-        except Exception as e:
-            execution_time = int((time.time() - start_time) * 1000)
-            error_str = str(e)
+            # Connect to existing Chrome via CDP
+            cdp_url = f"http://localhost:{cdp_port}"
+            browser = Browser(cdp_url=cdp_url, keep_alive=True)
+            self._active_browser = browser
 
-            # Detect specific error types
-            if "rate limit" in error_str.lower() or "429" in error_str:
-                error_type = "rate_limit"
-                logger.error(f"[Browser-Use] LLM rate limit exceeded: {error_str}")
-            elif (
-                "context_length" in error_str.lower()
-                or "context length" in error_str.lower()
-            ):
-                error_type = "context_length"
-                logger.error(f"[Browser-Use] LLM context length exceeded: {error_str}")
-            else:
-                error_type = "agent_error"
-                logger.error(f"[Browser-Use] Agent error: {error_str}")
+            # Run Browser-Use agent
+            agent = Agent(
+                task=task,
+                llm=self.llm,
+                browser=browser,
+                use_vision=vision_enabled,
+            )
+
+            await agent.run()
+
+            execution_time = int((time.time() - start_time) * 1000)
+            current_url = await ChromeManager.get_current_url(cdp_port)
+
+            logger.info(f"[Browser-Use] Task completed, current URL: {current_url}")
 
             return {
-                "result": {"error": error_str, "error_type": error_type},
+                "success": True,
+                "current_url": current_url,
+                "cdp_port": cdp_port,
                 "execution_time_ms": execution_time,
             }
 
-        execution_time = int((time.time() - start_time) * 1000)
+        except Exception as e:
+            execution_time = int((time.time() - start_time) * 1000)
+            error_str = str(e)
+            logger.error(f"[Browser-Use] Task execution error: {error_str}")
 
-        # Check for rate limit errors in history
-        if hasattr(result, "history") and result.history:
-            for item in result.history[-3:]:
-                if hasattr(item, "result") and item.result:
-                    for step_result in item.result:
-                        if hasattr(step_result, "error") and step_result.error:
-                            error_str = step_result.error
-                            if "rate limit" in error_str.lower() or "429" in error_str:
-                                logger.error(
-                                    f"[Browser-Use] LLM rate limit in history: {error_str}"
-                                )
-                                return {
-                                    "result": {
-                                        "error": error_str,
-                                        "error_type": "rate_limit",
-                                        "history": result.model_dump()
-                                        if hasattr(result, "model_dump")
-                                        else str(result),
-                                    },
-                                    "execution_time_ms": execution_time,
-                                }
-
-        return {
-            "result": result.model_dump() if hasattr(result, "model_dump") else result,
-            "execution_time_ms": execution_time,
-        }
+            return {
+                "success": False,
+                "current_url": "",
+                "cdp_port": cdp_port,
+                "execution_time_ms": execution_time,
+                "error": error_str,
+            }
