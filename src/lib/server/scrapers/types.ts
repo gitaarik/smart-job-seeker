@@ -127,3 +127,106 @@ export interface UpsertResult {
   id: number;
   created: boolean;
 }
+
+// ============================================================================
+// Browser-Use Agent Response Types
+// ============================================================================
+
+/**
+ * Response from browser_use_login task
+ */
+export interface LoginTaskResult {
+  logged_in: boolean;
+  ready: boolean;
+  captcha_needed: boolean;
+  verification_needed: boolean;
+  verification_type: "email" | "sms" | "2fa" | null;
+  current_url: string;
+  reason: string;
+}
+
+/**
+ * Response from browser_use_navigate_search task
+ */
+export interface NavigateSearchResult {
+  ready: boolean;
+  captcha_needed: boolean;
+  redirected_to_login: boolean;
+  current_url: string;
+  reason: string;
+}
+
+/**
+ * Response from browser_use_prepare_session task
+ */
+export interface PrepareSessionResult {
+  ready: boolean;
+  logged_in: boolean;
+  captcha_needed: boolean;
+  verification_needed: boolean;
+  verification_type: "email" | "sms" | "2fa" | null;
+  current_url: string;
+  reason: string;
+}
+
+/**
+ * Type of manual intervention needed
+ */
+export type InterventionType = "captcha" | "verification" | "login";
+
+/**
+ * Intervention URL type
+ */
+export type InterventionUrlType = "vnc" | "live_url";
+
+// ============================================================================
+// Job Processing Types
+// ============================================================================
+
+/**
+ * Merged job data from search and detail pages
+ */
+export interface MergedJobData {
+  title: string;
+  job_description: string | null;
+  company_description: string | null;
+  job_poster: string | null;
+  date_posted: Date | null;
+  location: string | null;
+  remote: string | null;
+  experience_level: string | null;
+  job_type: string | null;
+  salary_min: number | null;
+  salary_max: number | null;
+  salary_currency: string | null;
+  salary_period: string | null;
+  skills: string[] | null;
+  status: string | null;
+  source_url: string | null;
+}
+
+/**
+ * Element info for debugging click targets
+ */
+export interface ElementInfo {
+  tag: string;
+  text: string;
+  href: string;
+  ariaLabel: string;
+  className: string;
+}
+
+/**
+ * Result of clicking a job card, including navigation state
+ */
+export interface ClickResult {
+  contentChanged: boolean;
+  /** The page to extract job details from (may be a new tab) */
+  extractionPage: unknown; // Page type from Playwright
+  /** If a new tab was opened, reference to close it later */
+  newTab: unknown | null; // Page type from Playwright
+  /** Whether navigation occurred (URL changed in same tab) */
+  navigatedAway: boolean;
+  /** Original URL to return to */
+  originalUrl: string;
+}
