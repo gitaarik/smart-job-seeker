@@ -108,14 +108,12 @@ export async function extractJobsFromSearchPage(
  * Extract job data from job posting HTML using LLM
  * @param jobSearchId ID of the job search (used to lookup profile for AI chat)
  * @param jobHtml HTML content from individual job page (can be full page or modal)
- * @param sourceUrl URL of the job page
  * @param searchContext Optional context from search page to help identify the correct job
- * @returns Parsed job data
+ * @returns Parsed job data including source_url extracted from visible content (apply/share links)
  */
 export async function extractJobData(
   jobSearchId: number,
   jobHtml: string,
-  sourceUrl: string,
   searchContext?: SearchContext,
 ): Promise<{
   title: string | null;
@@ -133,6 +131,7 @@ export async function extractJobData(
   salary_period: string | null;
   skills: string[] | null;
   status: string | null;
+  source_url: string | null;
   source_html_stripped: string;
   ai_chat_extraction: number | null;
 }> {
@@ -188,9 +187,9 @@ export async function extractJobData(
     salary_period?: string | null;
     skills?: string[] | null;
     status?: string | null;
+    source_url?: string | null;
   }>(jobSearchId, "extract_job_data", {
     html: strippedHtml,
-    sourceUrl: sourceUrl,
     searchContextHint: searchContextHint,
   });
 
@@ -251,7 +250,7 @@ export async function extractJobData(
   } catch (error) {
     console.error("Failed to parse job data from LLM response:", error);
     throw new Error(
-      `Failed to extract job data from ${sourceUrl}: ${
+      `Failed to extract job data: ${
         error instanceof Error ? error.message : "Unknown error"
       }`,
     );

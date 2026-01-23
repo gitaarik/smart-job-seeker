@@ -67,6 +67,7 @@ export function mergeJobData(
     salary_period: string | null;
     skills: string[] | null;
     status: string | null;
+    source_url: string | null;
     source_html_stripped: string;
     ai_chat_extraction: number | null;
   },
@@ -78,6 +79,7 @@ export function mergeJobData(
     experience_level: detailData.experience_level,
     job_type: detailData.job_type,
     status: detailData.status,
+    source_url: detailData.source_url,
     source_html_stripped: detailData.source_html_stripped,
     ai_chat_extraction: detailData.ai_chat_extraction,
 

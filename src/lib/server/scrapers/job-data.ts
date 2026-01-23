@@ -135,7 +135,7 @@ export async function getPlatformIdFromUrl(
 /**
  * Create or update job in database
  * @param jobData Job data extracted by Browser-Use
- * @param sourceUrl URL where the job was found
+ * @param sourceUrl URL where the job was found (can be null if not determinable)
  * @param platformId ID of the job platform (from job_platforms table)
  * @returns Object with job ID and whether it was created or updated
  */
@@ -159,11 +159,11 @@ export async function upsertJob(
     source_html_stripped?: string | null;
     ai_chat_extraction?: number | null;
   },
-  sourceUrl: string,
+  sourceUrl: string | null,
   platformId: number | string | null,
 ): Promise<UpsertResult> {
   // Normalize URL for storage (not used for matching)
-  const normalizedUrl = normalizeJobUrl(sourceUrl);
+  const normalizedUrl = sourceUrl ? normalizeJobUrl(sourceUrl) : null;
 
   // Ensure platformId is a number or null
   const numericPlatformId = platformId !== null ? Number(platformId) : null;

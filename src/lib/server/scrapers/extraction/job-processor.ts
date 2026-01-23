@@ -16,6 +16,8 @@ import {
   waitForContentChange,
   waitForSpaContent,
 } from "$lib/server/utils/page-wait";
+import { extractSourceUrlFromMeta } from "$lib/server/html";
+import { BrowserUseClient } from "$lib/server/browser/use-client";
 import { formatSalary, upsertJob, type UpsertResult } from "../job-data";
 import type { SearchContext } from "./types";
 import { mergeJobData } from "./merge";
@@ -99,7 +101,113 @@ type MergedJobData = {
   salary_period: string | null;
   skills: string[] | null;
   status: string | null;
+  source_url: string | null;
 };
+
+/**
+ * Source URL extraction result with method used
+ */
+interface SourceUrlResult {
+  url: string | null;
+  method:
+    | "href"
+    | "address_bar"
+    | "meta_tags"
+    | "llm_extraction"
+    | "browser_use"
+    | "none";
+}
+
+/**
+ * Extract source URL using the priority-based flow:
+ * 1. Anchor href from job card
+ * 2. Address bar URL (if changed after click)
+ * 3. Meta/link tags (canonical, og:url, JSON-LD)
+ * 4. LLM extraction from visible content
+ * 5. Browser-Use to find share button
+ * 6. null if none found
+ */
+async function extractSourceUrl(options: {
+  elementHref: string;
+  originalUrl: string;
+  navigatedAway: boolean;
+  newTab: Page | null;
+  extractionPage: Page;
+  jobHtml: string;
+  llmSourceUrl: string | null;
+  browserUseClient?: BrowserUseClient;
+}): Promise<SourceUrlResult> {
+  const {
+    elementHref,
+    originalUrl,
+    navigatedAway,
+    newTab,
+    extractionPage,
+    jobHtml,
+    llmSourceUrl,
+    browserUseClient,
+  } = options;
+
+  // 1. Anchor href from job card (if navigable)
+  if (elementHref && isNavigableHref(elementHref)) {
+    const fullUrl = new URL(elementHref, originalUrl).href;
+    console.log(`      🔗 Source URL (href): ${fullUrl}`);
+    return { url: fullUrl, method: "href" };
+  }
+
+  // 2. Address bar URL (if navigated away or opened new tab)
+  if (navigatedAway || newTab) {
+    const addressBarUrl = extractionPage.url();
+    console.log(`      🔗 Source URL (address bar): ${addressBarUrl}`);
+    return { url: addressBarUrl, method: "address_bar" };
+  }
+
+  // 3. Meta/link tags (canonical, og:url, JSON-LD)
+  const metaUrl = extractSourceUrlFromMeta(jobHtml);
+  if (metaUrl) {
+    console.log(`      🔗 Source URL (meta tags): ${metaUrl}`);
+    return { url: metaUrl, method: "meta_tags" };
+  }
+
+  // 4. LLM extraction from visible content
+  if (llmSourceUrl) {
+    console.log(`      🔗 Source URL (LLM): ${llmSourceUrl}`);
+    return { url: llmSourceUrl, method: "llm_extraction" };
+  }
+
+  // 5. Browser-Use to find share button (expensive fallback)
+  if (browserUseClient) {
+    try {
+      console.log(`      🔍 Searching for share button via Browser-Use...`);
+      const result = await browserUseClient.executeTask({
+        task:
+          'Find the share URL or direct link to this job posting. Look for share buttons, copy link buttons, or similar UI elements that reveal the job\'s unique URL. Return the URL if found, or "NOT_FOUND" if no share functionality exists.',
+      });
+
+      if (result.success && result.agent_output) {
+        const output = result.agent_output.trim();
+        // Check if it looks like a URL and not the "NOT_FOUND" response
+        if (
+          output !== "NOT_FOUND" &&
+          (output.startsWith("http://") || output.startsWith("https://"))
+        ) {
+          console.log(`      🔗 Source URL (Browser-Use): ${output}`);
+          return { url: output, method: "browser_use" };
+        }
+      }
+    } catch (error) {
+      console.warn(
+        `      ⚠️ Browser-Use share URL search failed: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
+      );
+    }
+  }
+
+  // 6. No source URL found
+  console.log(`      ⚠️ No source URL found`);
+  return { url: null, method: "none" };
+}
 
 /**
  * Format and log job data after save
@@ -107,7 +215,7 @@ type MergedJobData = {
 function formatJobOutput(
   jobData: MergedJobData,
   result: UpsertResult,
-  sourceUrl: string,
+  sourceUrl: string | null,
 ): void {
   const action = result.created ? "✨ Created" : "📝 Updated";
   console.log(`\n      ${action} job #${result.id}`);
@@ -143,7 +251,7 @@ function formatJobOutput(
   }
 
   // URLs
-  console.log(`      🔗 Source:      ${sourceUrl}`);
+  console.log(`      🔗 Source:      ${sourceUrl || "(unknown)"}`);
   console.log(`      🔗 Admin:       ${getDirectusJobUrl(result.id)}`);
 
   // Show changes for updates
@@ -377,6 +485,7 @@ async function returnToSearchPage(
  * @param totalJobs Total number of jobs on this page
  * @param searchUrl Base search URL
  * @param platformId Platform ID for job storage
+ * @param browserUseClient Optional Browser-Use client for share button fallback
  * @returns Processing result with job ID if saved
  */
 export async function processJobCard(
@@ -387,9 +496,9 @@ export async function processJobCard(
   totalJobs: number,
   searchUrl: string,
   platformId: string,
+  browserUseClient?: BrowserUseClient,
 ): Promise<JobProcessingResult> {
   const { clickableId } = searchJobData;
-  const pseudoUrl = `${searchUrl}#spa-job-${jobNumber}`;
 
   // Visual separator for each job
   console.log(`\n   [${"─".repeat(56)}]`);
@@ -405,7 +514,8 @@ export async function processJobCard(
 
   // Open job details (new tab for anchors, click for SPAs)
   const clickResult = await clickJobCard(page, clickableId, elementInfo.href);
-  const { extractionPage, navigatedAway, newTab, contentChanged } = clickResult;
+  const { extractionPage, navigatedAway, newTab, contentChanged, originalUrl } =
+    clickResult;
 
   // Skip if click didn't change page content (element highlighted for debugging)
   if (!contentChanged) {
@@ -415,11 +525,6 @@ export async function processJobCard(
       skipReason: "Click did not change page content",
     };
   }
-
-  // Use actual URL if we navigated, otherwise use pseudo URL for SPAs
-  const jobSourceUrl = navigatedAway || newTab
-    ? extractionPage.url()
-    : pseudoUrl;
 
   try {
     // Get full page HTML from the appropriate page
@@ -432,13 +537,27 @@ export async function processJobCard(
       location: searchJobData.location,
     };
 
-    // Extract job data from page
+    // Extract job data from page (LLM may also extract source_url from content)
     const detailJobData = await extractJobData(
       jobSearchId,
       jobHtml,
-      jobSourceUrl,
       searchContext,
     );
+
+    // Extract source URL using priority-based flow
+    const sourceUrlResult = await extractSourceUrl({
+      elementHref: elementInfo.href,
+      originalUrl,
+      navigatedAway,
+      newTab,
+      extractionPage,
+      jobHtml,
+      llmSourceUrl: detailJobData.source_url,
+      browserUseClient,
+    });
+
+    // Override the LLM-extracted source_url with our determined value
+    detailJobData.source_url = sourceUrlResult.url;
 
     // Merge search page data with detail page data
     const jobData = mergeJobData(searchJobData, detailJobData);
@@ -468,7 +587,7 @@ export async function processJobCard(
     const isClosed = isJobClosed(jobData.status);
 
     // Save job and show formatted output
-    const result = await upsertJob(jobData, jobSourceUrl, platformId);
+    const result = await upsertJob(jobData, jobData.source_url, platformId);
 
     // Handle skipped jobs (missing required uniqueness fields)
     if (result.skipped) {
@@ -481,7 +600,7 @@ export async function processJobCard(
       };
     }
 
-    formatJobOutput(jobData, result, jobSourceUrl);
+    formatJobOutput(jobData, result, jobData.source_url);
 
     // Return to search page for the next job
     await returnToSearchPage(page, clickResult);
