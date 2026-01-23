@@ -12,8 +12,6 @@ import { config } from "$lib/server/config";
 import { BrowserUseClient } from "$lib/server/browser/use-client";
 import { scrapeJobsWithClicks } from "./extraction";
 import { interpolatePrompt } from "$lib/server/ai-chat/utils";
-import { createJobScrapingAiChat } from "$lib/server/ai-chat/job-utils";
-import { stripHtmlForLlm } from "$lib/server/html/strip";
 import { dbDirect } from "$lib/db";
 import { getPlatformCredentials } from "../auth/platform";
 import { promptUser } from "./utils";
@@ -175,18 +173,40 @@ async function buildLoginPrompt(
 }
 
 /**
- * Build cookie dismiss task prompt for Browser-Use.
+ * Result from page init task (cookie handling + login detection)
+ */
+interface PageInitResult {
+  cookies_handled: boolean;
+  login_required: boolean;
+  reason: string;
+}
+
+/**
+ * Parse the agent's JSON output from page init task
+ */
+function parsePageInitResult(agentOutput: string): PageInitResult | null {
+  try {
+    // Find JSON in the output (agent might include extra text)
+    const jsonMatch = agentOutput.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return null;
+    return JSON.parse(jsonMatch[0]);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Build page init task prompt for Browser-Use.
+ * Handles cookie dismissal and login state detection.
  * Fetches template from DB and interpolates with startUrl.
  */
-async function buildCookieDismissPrompt(startUrl: string): Promise<string> {
+async function buildPageInitPrompt(startUrl: string): Promise<string> {
   const promptTemplate = await dbDirect.ai_chat_prompts.findUnique({
-    where: { request: "browser_use_dismiss_cookies" },
+    where: { request: "browser_use_page_init" },
   });
 
   if (!promptTemplate?.user_prompt) {
-    throw new Error(
-      "Prompt 'browser_use_dismiss_cookies' not found in database",
-    );
+    throw new Error("Prompt 'browser_use_page_init' not found in database");
   }
 
   return interpolatePrompt(promptTemplate.user_prompt, {
@@ -274,73 +294,49 @@ async function scrapeWithLogin(
     const startUrl = platform.login_page_url || searchUrl;
 
     // Phase 1: Start browser and dismiss cookie banners
-    console.log("\n📌 Phase 1: Starting browser and handling cookie banners...");
+    console.log(
+      "\n📌 Phase 1: Starting browser and handling cookie banners...",
+    );
     console.log(`   Starting browser and navigating to: ${startUrl}`);
 
     // 1a. Start browser and navigate to URL
     await browserUse.startSession(startUrl, CDP_PORT);
 
-    // 1b. Use Browser-Use to dismiss any cookie banners
-    const cookieTask = await buildCookieDismissPrompt(startUrl);
-    console.log("   Running cookie dismiss task...");
-    const cookieResult = await browserUse.executeTask({
-      task: cookieTask,
+    // 1b. Use Browser-Use to handle cookies and detect login state
+    const pageInitTask = await buildPageInitPrompt(startUrl);
+    console.log("   Running page init task...");
+    const initResult = await browserUse.executeTask({
+      task: pageInitTask,
       cdpPort: CDP_PORT,
       useVision: useVision ?? true,
     });
-    console.log(`   Cookie task completed, URL: ${cookieResult.current_url}`);
+    console.log(`   Page init completed, URL: ${initResult.current_url}`);
 
-    // Phase 2: Check login state
+    // Phase 2: Check login state from AI assessment
     console.log("\n📌 Phase 2: Checking login state...");
 
-    if (!platform.login_page_url) {
-      // No login_page_url configured, assume no login required
-      console.log("   No login_page_url configured, assuming no login required");
-      isLoggedIn = true;
+    const parsed = parsePageInitResult(initResult.agent_output || "");
+
+    if (parsed) {
+      console.log(`   AI assessment: login_required=${parsed.login_required}`);
+      console.log(`   Reason: ${parsed.reason}`);
+      isLoggedIn = !parsed.login_required;
     } else {
-      // Use LLM to check if we're on login page or already logged in
-      // Get page content for LLM check
-      const navResult = await browserUse.navigateTo(
-        platform.login_page_url,
-        CDP_PORT,
-      );
+      // Fallback: if we can't parse AI response
+      console.log(`   ⚠️ Could not parse AI response`);
 
-      const originalUrl = new URL(platform.login_page_url);
-      const currentUrl = new URL(navResult.current_url);
-      const urlChanged = currentUrl.pathname !== originalUrl.pathname;
-
-      console.log(`   Current URL: ${navResult.current_url}`);
-      console.log(`   URL changed: ${urlChanged ? "yes" : "no"}`);
-
-      // Use LLM to verify login state
-      console.log("   🤖 Asking LLM to verify login state...");
-      const strippedHtml = stripHtmlForLlm(
-        `<html><body>${navResult.page_text}</body></html>`,
-      );
-
-      const llmResult = await createJobScrapingAiChat<{
-        is_logged_in: boolean;
-        confidence: "high" | "medium" | "low";
-        reason: string;
-      }>(jobSearchId, "check_login_state", {
-        loginPageUrl: platform.login_page_url,
-        currentUrl: navResult.current_url,
-        urlChanged: urlChanged ? "yes" : "no",
-        strippedHtml,
-      });
-
-      if (!llmResult.success || !llmResult.response) {
-        console.log("   ⚠️ LLM verification failed, using URL-based fallback");
-        isLoggedIn = urlChanged;
+      if (platform.login_page_url) {
+        // Compare current URL against configured login page
+        const loginUrl = new URL(platform.login_page_url);
+        const currentUrl = new URL(initResult.current_url);
+        const onLoginPage = currentUrl.pathname === loginUrl.pathname;
+        isLoggedIn = !onLoginPage;
+        console.log(`   Fallback: comparing to configured login_page_url`);
+        console.log(`   On login page: ${onLoginPage}`);
       } else {
-        const { is_logged_in, confidence, reason } = llmResult.response;
-        console.log(
-          `   ${is_logged_in ? "✅" : "❌"} LLM result: ${
-            is_logged_in ? "logged in" : "not logged in"
-          } (${confidence} confidence)`,
-        );
-        console.log(`   📝 Reason: ${reason}`);
-        isLoggedIn = is_logged_in;
+        // No login_page_url configured, use task success as indicator
+        isLoggedIn = initResult.success;
+        console.log(`   Fallback: using task success=${initResult.success}`);
       }
     }
 

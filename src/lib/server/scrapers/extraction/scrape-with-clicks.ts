@@ -45,6 +45,7 @@ interface ProcessedJobSummary {
   remote: string | null;
   jobType: string | null;
   skills: string[] | null;
+  created: boolean;
 }
 
 /**
@@ -82,7 +83,8 @@ function printFinalSummary(
     console.log(`\n📊 Jobs Summary (${processedJobs.length} processed)`);
     console.log(`${"═".repeat(60)}`);
     for (const job of processedJobs) {
-      console.log(`#${job.id} ${job.title || "(no title)"}`);
+      const status = job.created ? "✨ Created" : "📝 Updated";
+      console.log(`${status} #${job.id} ${job.title || "(no title)"}`);
       const details = [
         job.company ? `🏢 ${job.company}` : null,
         job.location ? `📍 ${job.location}` : null,
@@ -105,6 +107,69 @@ function printFinalSummary(
 }
 
 /**
+ * Format salary range for display (e.g., "$80k-$120k/year")
+ */
+function formatSalaryRange(job: SearchPageJob): string | null {
+  if (!job.salary_min && !job.salary_max) return null;
+
+  const currency = job.salary_currency || "$";
+  const period = job.salary_period || "";
+
+  const formatNum = (n: number) =>
+    n >= 1000 ? `${Math.round(n / 1000)}k` : `${n}`;
+
+  if (job.salary_min && job.salary_max) {
+    return `${currency}${formatNum(job.salary_min)}-${
+      formatNum(job.salary_max)
+    }${period ? "/" + period : ""}`;
+  }
+  if (job.salary_min) {
+    return `${currency}${formatNum(job.salary_min)}+${
+      period ? "/" + period : ""
+    }`;
+  }
+  if (job.salary_max) {
+    return `up to ${currency}${formatNum(job.salary_max)}${
+      period ? "/" + period : ""
+    }`;
+  }
+  return null;
+}
+
+/**
+ * Build a subtitle for job card display from available fields.
+ * Prioritizes: company > location > salary > remote > date_posted
+ */
+function buildJobSubtitle(job: SearchPageJob): string {
+  // Company is preferred
+  if (job.company) {
+    return job.company;
+  }
+
+  // Build from alternative fields
+  const parts: string[] = [];
+
+  if (job.location) {
+    parts.push(job.location);
+  }
+
+  if (job.salary_min || job.salary_max) {
+    const salary = formatSalaryRange(job);
+    if (salary) parts.push(salary);
+  }
+
+  if (job.remote) {
+    parts.push(job.remote);
+  }
+
+  if (job.date_posted) {
+    parts.push(job.date_posted);
+  }
+
+  return parts.length > 0 ? parts.slice(0, 2).join(" | ") : "(no details)";
+}
+
+/**
  * Ask user to confirm before processing jobs (first page only)
  */
 async function confirmWithUser(jobs: SearchPageJob[]): Promise<boolean> {
@@ -113,8 +178,8 @@ async function confirmWithUser(jobs: SearchPageJob[]): Promise<boolean> {
 
   for (const job of jobs) {
     const title = job.title || "(no title)";
-    const company = job.company || "(no company)";
-    console.log(`  #${job.clickableId}: ${title} @ ${company}`);
+    const subtitle = buildJobSubtitle(job);
+    console.log(`  #${job.clickableId}: ${title} @ ${subtitle}`);
   }
 
   console.log(`\n${"=".repeat(60)}`);
@@ -240,6 +305,7 @@ async function processPageJobs(
           remote: result.remote ?? null,
           jobType: result.jobType ?? null,
           skills: result.skills ?? null,
+          created: result.created ?? false,
         });
 
         stats.jobsProcessed++;

@@ -26,6 +26,8 @@ class ExecuteResponse(BaseModel):
     current_url: str
     cdp_port: int
     execution_time_ms: int
+    agent_output: str = ""
+    error: Optional[str] = None
 
 
 @app.get("/health")

@@ -69,6 +69,12 @@ class SessionMixin:
         """
         Start browser with existing persistent session (no login attempt).
         """
+        # Debug: Check initial state
+        pages_initial = await ChromeManager.get_pages_info(cdp_port)
+        print(f"[start_session] Initial pages count: {len(pages_initial)}", flush=True)
+        for p in pages_initial:
+            print(f"[start_session]   - {p.get('url', 'unknown')[:60]}", flush=True)
+
         # Clean up any extra tabs first
         await ChromeManager.close_extra_tabs(cdp_port)
 
@@ -124,20 +130,38 @@ class SessionMixin:
         Useful for login state detection - navigate to login page and check
         if redirected and what content is on the page.
         """
+        # Debug: Check pages before anything
+        pages_before = await ChromeManager.get_pages_info(cdp_port)
+        print(f"[navigate_to] START - pages count: {len(pages_before)}", flush=True)
+        for p in pages_before:
+            print(f"[navigate_to]   - {p.get('url', 'unknown')[:60]}", flush=True)
+
         # Clean up any extra tabs first
-        await ChromeManager.close_extra_tabs(cdp_port)
+        closed = await ChromeManager.close_extra_tabs(cdp_port)
+        print(f"[navigate_to] After close_extra_tabs, closed: {closed}", flush=True)
+
+        # Debug: Check pages after cleanup
+        pages_after_cleanup = await ChromeManager.get_pages_info(cdp_port)
+        print(f"[navigate_to] After cleanup - pages count: {len(pages_after_cleanup)}", flush=True)
 
         # Navigate to URL
+        print(f"[navigate_to] Navigating to: {url}", flush=True)
         await ChromeManager.navigate(url, cdp_port)
 
         # Wait for page to load
         await asyncio.sleep(3)
 
+        # Debug: Check pages after navigation
+        pages_after_nav = await ChromeManager.get_pages_info(cdp_port)
+        print(f"[navigate_to] After navigation + sleep - pages count: {len(pages_after_nav)}", flush=True)
+
         # Get current URL (may have been redirected)
         current_url = await ChromeManager.get_current_url(cdp_port)
+        print(f"[navigate_to] current_url: '{current_url}'", flush=True)
 
         # Get page text content
         page_text = await ChromeManager.get_page_text(cdp_port)
+        print(f"[navigate_to] page_text length: {len(page_text)}", flush=True)
 
         return {
             "success": True,

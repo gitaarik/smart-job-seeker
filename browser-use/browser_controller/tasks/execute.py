@@ -55,6 +55,10 @@ class ExecuteTaskMixin:
             browser = Browser(cdp_url=cdp_url, keep_alive=True)
             self._active_browser = browser
 
+            # Debug: Verify keep_alive is set
+            logger.info(f"[Browser-Use] Browser keep_alive: {browser.browser_profile.keep_alive}")
+            print(f"[Browser-Use] Browser keep_alive: {browser.browser_profile.keep_alive}", flush=True)
+
             # Run Browser-Use agent
             agent = Agent(
                 task=task,
@@ -63,11 +67,40 @@ class ExecuteTaskMixin:
                 use_vision=vision_enabled,
             )
 
-            await agent.run()
+            logger.info("[Browser-Use] Starting agent.run()...")
+            print("[Browser-Use] Starting agent.run()...", flush=True)
+            result = await agent.run()
+            logger.info("[Browser-Use] agent.run() completed")
+            print("[Browser-Use] agent.run() completed", flush=True)
+
+            # Extract agent's final output for structured responses
+            agent_output = ""
+            if result and hasattr(result, 'final_result') and result.final_result:
+                agent_output = str(result.final_result)
+            elif result and hasattr(result, 'history') and result.history:
+                # Get last action's result from history
+                last_action = result.history[-1]
+                if hasattr(last_action, 'result') and last_action.result:
+                    agent_output = str(last_action.result)
+            logger.info(f"[Browser-Use] Agent output: {agent_output[:200]}..." if len(agent_output) > 200 else f"[Browser-Use] Agent output: {agent_output}")
+            print(f"[Browser-Use] Agent output: {agent_output[:200]}..." if len(agent_output) > 200 else f"[Browser-Use] Agent output: {agent_output}", flush=True)
+
+            # Disconnect Browser-Use's session BEFORE using ChromeManager
+            # This keeps Chrome alive but cleanly disconnects the CDP WebSocket
+            # so our ChromeManager can work without interference
+            logger.info("[Browser-Use] Disconnecting Browser-Use session (keep_alive=True)...")
+            print("[Browser-Use] Disconnecting Browser-Use session (keep_alive=True)...", flush=True)
+            await browser.stop()
+            self._active_browser = None
 
             execution_time = int((time.time() - start_time) * 1000)
-            current_url = await ChromeManager.get_current_url(cdp_port)
 
+            # Check if Chrome is still running
+            pages = await ChromeManager.get_pages_info(cdp_port)
+            logger.info(f"[Browser-Use] After disconnect, pages count: {len(pages)}")
+            print(f"[Browser-Use] After disconnect, pages count: {len(pages)}", flush=True)
+
+            current_url = await ChromeManager.get_current_url(cdp_port)
             logger.info(f"[Browser-Use] Task completed, current URL: {current_url}")
 
             return {
@@ -75,6 +108,7 @@ class ExecuteTaskMixin:
                 "current_url": current_url,
                 "cdp_port": cdp_port,
                 "execution_time_ms": execution_time,
+                "agent_output": agent_output,
             }
 
         except Exception as e:
@@ -87,5 +121,6 @@ class ExecuteTaskMixin:
                 "current_url": "",
                 "cdp_port": cdp_port,
                 "execution_time_ms": execution_time,
+                "agent_output": "",
                 "error": error_str,
             }

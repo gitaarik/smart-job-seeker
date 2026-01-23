@@ -18,6 +18,7 @@ export interface ExecuteTaskResponse {
   current_url: string;
   cdp_port: number;
   execution_time_ms: number;
+  agent_output?: string;
   error?: string;
 }
 
@@ -253,7 +254,9 @@ export class BrowserUseClient {
     }
 
     const result = await response.json();
-    console.log(`[BrowserUseClient] Task completed, URL: ${result.current_url}`);
+    console.log(
+      `[BrowserUseClient] Task completed, URL: ${result.current_url}`,
+    );
     return result;
   }
 
