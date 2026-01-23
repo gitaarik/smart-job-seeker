@@ -133,7 +133,7 @@ export async function humanWait(
  * 2. Adds a small random pause
  * 3. Clicks
  *
- * Uses Playwright's native mouse API since ghost-cursor has CDP compatibility issues.
+ * Uses Playwright's native mouse API for human-like cursor movement.
  *
  * @param page - Playwright Page object
  * @param selector - CSS selector for the element to click
@@ -178,26 +178,3 @@ export async function humanClick(
   await page.mouse.click(targetX, targetY);
 }
 
-/**
- * Perform a series of clicks with human-like behavior
- *
- * Adds natural delays between clicks.
- *
- * @param page - Playwright Page object
- * @param selectors - Array of CSS selectors to click in order
- * @param delayBetweenMs - Base delay between clicks (with jitter applied)
- */
-export async function humanClickSequence(
-  page: Page,
-  selectors: string[],
-  delayBetweenMs = 1000,
-): Promise<void> {
-  for (let i = 0; i < selectors.length; i++) {
-    await humanClick(page, selectors[i]);
-
-    // Add delay between clicks (except after the last one)
-    if (i < selectors.length - 1) {
-      await humanWait(page, delayBetweenMs);
-    }
-  }
-}

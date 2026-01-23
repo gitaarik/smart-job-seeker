@@ -7,7 +7,7 @@
  */
 
 import { existsSync } from "fs";
-import { type BrowserContext, chromium, type Page } from "playwright";
+import { type BrowserContext, chromium } from "playwright";
 import { config } from "$lib/server/config";
 
 // Chrome installation paths to check (Linux)
@@ -90,54 +90,3 @@ export async function launchBrowser(
   return context;
 }
 
-/**
- * Wait for dynamic job content to load on LinkedIn and similar sites
- * Handles lazy loading by scrolling and waiting for loading indicators to disappear
- * @param page Playwright page instance
- * @param timeout Maximum time to wait in milliseconds (default: 15000)
- */
-export async function waitForJobContentToLoad(
-  page: Page,
-  timeout = 15000,
-): Promise<void> {
-  try {
-    // Scroll down to trigger lazy loading of company info and other sections
-    await page.evaluate(() => {
-      window.scrollTo(0, document.body.scrollHeight / 2);
-    });
-    await page.waitForTimeout(500);
-
-    // Scroll to bottom to ensure all lazy-loaded content triggers
-    await page.evaluate(() => {
-      window.scrollTo(0, document.body.scrollHeight);
-    });
-    await page.waitForTimeout(500);
-
-    // Wait for common loading indicators to disappear
-    await page.waitForFunction(
-      () => {
-        const text = document.body.textContent || "";
-        // Check for various loading indicators
-        return (
-          !text.includes("Loading job details") &&
-          !text.includes("Loading...") &&
-          // Check for LinkedIn skeleton loaders
-          document.querySelectorAll(
-              ".jobs-details__main-content .artdeco-loader",
-            )
-              .length === 0
-        );
-      },
-      { timeout },
-    );
-
-    // Scroll back to top
-    await page.evaluate(() => window.scrollTo(0, 0));
-
-    // Give content extra time to render after scrolling
-    await page.waitForTimeout(1000);
-  } catch (_e) {
-    // Timeout is not critical - proceed anyway with what we have
-    // Silently continue (caller can log if needed)
-  }
-}

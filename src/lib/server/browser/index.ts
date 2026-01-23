@@ -18,15 +18,7 @@ export {
 } from "./use-client";
 
 // Browser utilities
-export {
-  type BrowserLaunchOptions,
-  findChromeExecutable,
-  launchBrowser,
-  waitForJobContentToLoad,
-} from "./utils";
-
-// Browser with authentication - getPlatformIdFromUrl
-export { getPlatformIdFromUrl } from "./with-auth";
+export { type BrowserLaunchOptions, launchBrowser } from "./utils";
 
 // CDP utilities
 export { markClickableElementsInContainer } from "./cdp-utils";
@@ -34,22 +26,6 @@ export { markClickableElementsInContainer } from "./cdp-utils";
 // Stealth utilities
 export {
   humanClick,
-  humanClickSequence,
-  humanDelay,
   humanWait,
   injectStealthScripts,
 } from "./stealth-utils";
-
-// Fingerprint utilities
-export {
-  type FingerprintOptions,
-  generateFingerprint,
-  generateFingerprintOptions,
-} from "./fingerprint-utils";
-
-// Patchright login
-export {
-  detectLoginFields,
-  fillLoginForm,
-  performPatchwrightLogin,
-} from "./patchright-login";

@@ -130,34 +130,6 @@ export const checkLoginStateSchema = z.object({
 });
 
 /**
- * Schema for detect_login_fields prompt
- * Identifies username and password field selectors on login pages
- */
-export const detectLoginFieldsSchema = z.object({
-  usernameSelector: z
-    .string()
-    .nullable()
-    .describe("CSS selector for username/email input field"),
-  passwordSelector: z
-    .string()
-    .nullable()
-    .describe("CSS selector for password input field"),
-  submitSelector: z
-    .string()
-    .nullable()
-    .describe("CSS selector for login/submit button"),
-  confidence: z
-    .number()
-    .min(0.0)
-    .max(1.0)
-    .describe("Confidence score from 0.0 to 1.0"),
-  warnings: z
-    .array(z.string())
-    .optional()
-    .describe("Warnings (CAPTCHA, 2FA, etc)"),
-});
-
-/**
  * Schema for detect_pagination prompt
  * Identifies pagination mechanisms on job listing pages
  */
@@ -260,7 +232,6 @@ export const aiPromptSchemas = {
   extract_jobs_from_search_page: extractJobsFromSearchPageSchema,
   score_job_match: scoreJobMatchSchema,
   detect_login_page: detectLoginPageSchema,
-  detect_login_fields: detectLoginFieldsSchema,
   detect_pagination: detectPaginationSchema,
   classify_clickables: classifyClickablesSchema,
   check_login_state: checkLoginStateSchema,
