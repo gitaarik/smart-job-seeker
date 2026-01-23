@@ -61,7 +61,7 @@ async function getElementInfo(
   className: string;
 }> {
   return await page
-    .locator(`[data-extract-clickable-id="${clickableId}"]`)
+    .locator(`[data-xxx="${clickableId}"]`)
     .evaluate((el) => {
       const tag = el.tagName.toLowerCase();
       // Normalize whitespace (collapse newlines/spaces) then trim
@@ -346,7 +346,7 @@ async function clickJobCard(
     );
 
     // Use human-like click
-    const selector = `[data-extract-clickable-id="${clickableId}"]`;
+    const selector = `[data-xxx="${clickableId}"]`;
     await humanClick(page, selector);
 
     // Brief initial wait for click handler to fire
@@ -382,7 +382,7 @@ async function clickJobCard(
 
       if (!changeResult.changed) {
         // Highlight the element with red border for visual debugging
-        const selector = `[data-extract-clickable-id="${clickableId}"]`;
+        const selector = `[data-xxx="${clickableId}"]`;
         await page.evaluate((sel) => {
           const el = document.querySelector(sel);
           if (el) {
