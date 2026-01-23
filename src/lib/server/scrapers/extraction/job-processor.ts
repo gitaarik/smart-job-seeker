@@ -469,6 +469,18 @@ export async function processJobCard(
 
     // Save job and show formatted output
     const result = await upsertJob(jobData, jobSourceUrl, platformId);
+
+    // Handle skipped jobs (missing required uniqueness fields)
+    if (result.skipped) {
+      console.log(`      ⚠️ Skipped: ${result.skipReason}`);
+      await returnToSearchPage(page, clickResult);
+      return {
+        success: false,
+        skipped: true,
+        skipReason: result.skipReason,
+      };
+    }
+
     formatJobOutput(jobData, result, jobSourceUrl);
 
     // Return to search page for the next job
@@ -476,7 +488,7 @@ export async function processJobCard(
 
     return {
       success: true,
-      jobId: result.id,
+      jobId: result.id!,
       created: result.created,
       isClosed,
       isStale,

@@ -31,8 +31,10 @@ export function formatSalary(data: {
  * Result of upserting a job
  */
 export interface UpsertResult {
-  id: number;
-  created: boolean;
+  id?: number;
+  created?: boolean;
+  skipped?: boolean;
+  skipReason?: string;
   changes?: {
     status?: { old: string | null; new: string | null };
     description?: boolean;
@@ -160,26 +162,18 @@ export async function upsertJob(
   sourceUrl: string,
   platformId: number | string | null,
 ): Promise<UpsertResult> {
-  // Normalize URL to match jobs regardless of tracking params
+  // Normalize URL for storage (not used for matching)
   const normalizedUrl = normalizeJobUrl(sourceUrl);
 
   // Ensure platformId is a number or null
   const numericPlatformId = platformId !== null ? Number(platformId) : null;
 
-  // Check if job exists by normalized source_url
-  const existing = await db.jobs.findFirst({
-    where: { source_url: normalizedUrl },
-  });
-
   const currentDate = new Date();
 
-  // Use platform name as fallback if job_poster is null/empty
-  let effectiveJobPoster = jobData.job_poster;
+  // Determine job_poster (fallback to platform name)
+  let effectiveJobPoster = jobData.job_poster?.trim() || null;
 
-  if (
-    (!jobData.job_poster || jobData.job_poster.trim() === "") &&
-    numericPlatformId !== null
-  ) {
+  if (!effectiveJobPoster && numericPlatformId !== null) {
     const platform = await db.job_platforms.findUnique({
       where: { id: numericPlatformId },
       select: { name: true },
@@ -187,9 +181,32 @@ export async function upsertJob(
 
     if (platform) {
       effectiveJobPoster = platform.name;
-      console.log(`Using platform name as job_poster: ${platform.name}`);
+      console.log(`      Using platform name as job_poster: ${platform.name}`);
     }
   }
+
+  // Validate required fields for uniqueness
+  const title = jobData.title?.trim();
+  if (!title || !effectiveJobPoster) {
+    return {
+      skipped: true,
+      skipReason: `Missing required fields for uniqueness: ${
+        !title ? "title" : "job_poster"
+      }`,
+    };
+  }
+
+  // Determine date for matching (fallback to date_created for first import)
+  const dateForMatching = jobData.date_posted || currentDate;
+
+  // Match by content: title + job_poster + date_posted
+  const existing = await db.jobs.findFirst({
+    where: {
+      title: title,
+      job_poster: effectiveJobPoster,
+      date_posted: dateForMatching,
+    },
+  });
 
   // Default status to "hiring" if not explicitly set
   // Assumption: if a job is posted and not explicitly closed, it's hiring
@@ -198,10 +215,10 @@ export async function upsertJob(
   // Convert single values to arrays for multi-select JSON fields
   // Explicitly whitelist allowed database fields to avoid Browser-Use metadata
   const baseJobData = {
-    title: jobData.title,
+    title: title, // Use validated title
     job_description: jobData.job_description,
     company_description: jobData.company_description,
-    date_posted: jobData.date_posted,
+    date_posted: dateForMatching, // Use date with fallback (for uniqueness)
     location: jobData.location,
     salary_min: jobData.salary_min,
     salary_max: jobData.salary_max,

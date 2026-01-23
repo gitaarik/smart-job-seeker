@@ -197,7 +197,7 @@ describe("upsertJob", () => {
       title: "Software Engineer",
       job_description: null,
       company_description: null,
-      job_poster: null,
+      job_poster: "Acme Corp", // Need job_poster for uniqueness
       date_posted: null,
       location: null,
       remote: null,
@@ -232,7 +232,7 @@ describe("upsertJob", () => {
       title: "Software Engineer",
       job_description: null,
       company_description: null,
-      job_poster: null,
+      job_poster: "Acme Corp", // Need job_poster for uniqueness
       date_posted: null,
       location: null,
       remote: null,
@@ -281,10 +281,12 @@ describe("upsertJob", () => {
       status: null,
     };
 
-    mockDb.jobs.findFirst.mockResolvedValueOnce(null);
+    // Platform lookup happens FIRST (for job_poster fallback)
     mockDb.job_platforms.findUnique.mockResolvedValueOnce({
       name: "LinkedIn",
     });
+    // Then job matching query happens
+    mockDb.jobs.findFirst.mockResolvedValueOnce(null);
     mockDb.jobs.create.mockResolvedValueOnce({ id: 1 });
 
     await upsertJob(jobData, "https://example.com", 1);
@@ -321,10 +323,12 @@ describe("upsertJob", () => {
       status: null,
     };
 
-    mockDb.jobs.findFirst.mockResolvedValueOnce(null);
+    // Platform lookup happens FIRST (for job_poster fallback)
     mockDb.job_platforms.findUnique.mockResolvedValueOnce({
       name: "Indeed",
     });
+    // Then job matching query happens
+    mockDb.jobs.findFirst.mockResolvedValueOnce(null);
     mockDb.jobs.create.mockResolvedValueOnce({ id: 1 });
 
     await upsertJob(jobData, "https://example.com", 2);
@@ -372,7 +376,7 @@ describe("upsertJob", () => {
     });
   });
 
-  it("should keep job_poster null when platformId is null", async () => {
+  it("should skip job when no job_poster and no platform", async () => {
     const jobData = {
       title: "Software Engineer",
       job_description: null,
@@ -391,23 +395,16 @@ describe("upsertJob", () => {
       status: null,
     };
 
-    mockDb.jobs.findFirst.mockResolvedValueOnce(null);
-    mockDb.jobs.create.mockResolvedValueOnce({ id: 1 });
+    const result = await upsertJob(jobData, "https://example.com", null);
 
-    await upsertJob(jobData, "https://example.com", null);
-
-    // Should NOT call job_platforms.findUnique when platformId is null
-    expect(mockDb.job_platforms.findUnique).not.toHaveBeenCalled();
-
-    expect(mockDb.jobs.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({
-        job_poster: null,
-        status: "hiring", // Should default to hiring when null
-      }),
-    });
+    // Should skip when no job_poster and no platform fallback
+    expect(result.skipped).toBe(true);
+    expect(result.skipReason).toContain("job_poster");
+    expect(mockDb.jobs.create).not.toHaveBeenCalled();
+    expect(mockDb.jobs.update).not.toHaveBeenCalled();
   });
 
-  it("should keep job_poster null when platform not found", async () => {
+  it("should skip job when no job_poster and platform not found", async () => {
     const jobData = {
       title: "Software Engineer",
       job_description: null,
@@ -426,23 +423,19 @@ describe("upsertJob", () => {
       status: null,
     };
 
-    mockDb.jobs.findFirst.mockResolvedValueOnce(null);
     mockDb.job_platforms.findUnique.mockResolvedValueOnce(null);
-    mockDb.jobs.create.mockResolvedValueOnce({ id: 1 });
 
-    await upsertJob(jobData, "https://example.com", 999);
+    const result = await upsertJob(jobData, "https://example.com", 999);
 
     expect(mockDb.job_platforms.findUnique).toHaveBeenCalled();
 
-    expect(mockDb.jobs.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({
-        job_poster: null,
-        status: "hiring", // Should default to hiring when null
-      }),
-    });
+    // Should skip when no job_poster and platform lookup returns null
+    expect(result.skipped).toBe(true);
+    expect(result.skipReason).toContain("job_poster");
+    expect(mockDb.jobs.create).not.toHaveBeenCalled();
   });
 
-  it("should use platform name in update operation when job_poster is null", async () => {
+  it("should use platform name as job_poster fallback and update existing job", async () => {
     const jobData = {
       title: "Software Engineer",
       job_description: null,
@@ -461,12 +454,14 @@ describe("upsertJob", () => {
       status: null,
     };
 
+    // Platform lookup returns Glassdoor as fallback
+    mockDb.job_platforms.findUnique.mockResolvedValueOnce({
+      name: "Glassdoor",
+    });
+    // Job exists with matching title + job_poster (Glassdoor) + date_posted
     mockDb.jobs.findFirst.mockResolvedValueOnce({
       id: 1,
       scrape_count: 1,
-    });
-    mockDb.job_platforms.findUnique.mockResolvedValueOnce({
-      name: "Glassdoor",
     });
 
     await upsertJob(jobData, "https://example.com", 3);
@@ -490,7 +485,7 @@ describe("upsertJob", () => {
       title: "Software Engineer",
       job_description: null,
       company_description: null,
-      job_poster: null,
+      job_poster: "Acme Corp", // Need job_poster for uniqueness
       date_posted: null,
       location: null,
       remote: null,
@@ -521,7 +516,7 @@ describe("upsertJob", () => {
       title: "Software Engineer",
       job_description: null,
       company_description: null,
-      job_poster: null,
+      job_poster: "Acme Corp", // Need job_poster for uniqueness
       date_posted: null,
       location: null,
       remote: null,
@@ -548,6 +543,32 @@ describe("upsertJob", () => {
         status: "closed", // Should preserve explicit status
       }),
     });
+  });
+
+  it("should skip job when title is missing", async () => {
+    const jobData = {
+      title: "",
+      job_description: null,
+      company_description: null,
+      job_poster: "Acme Corp",
+      date_posted: null,
+      location: null,
+      remote: null,
+      experience_level: null,
+      job_type: null,
+      salary_min: null,
+      salary_max: null,
+      salary_currency: null,
+      salary_period: null,
+      skills: null,
+      status: null,
+    };
+
+    const result = await upsertJob(jobData, "https://example.com", null);
+
+    expect(result.skipped).toBe(true);
+    expect(result.skipReason).toContain("title");
+    expect(mockDb.jobs.create).not.toHaveBeenCalled();
   });
 });
 
