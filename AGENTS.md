@@ -59,6 +59,11 @@ Look at the scripts in `package.json` for help executing things in containers.
   - Deno: Configured in `deno.json` with imports mapping
   - Use `$lib/` imports in scripts for consistency with SvelteKit code
 
+## Bug Fixes
+
+- When asked to fix an issue or bug, focus on fixing the actual problem
+- Don't implement workarounds or alternative fixes unless explicitly asked
+
 ## Code Quality
 
 - Keep try/catch blocks as small as possible, so it only contains code that
