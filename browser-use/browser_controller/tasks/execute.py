@@ -88,9 +88,28 @@ class ExecuteTaskMixin:
             logger.info(f"[Browser-Use] Agent output: {agent_output[:200]}..." if len(agent_output) > 200 else f"[Browser-Use] Agent output: {agent_output}")
             print(f"[Browser-Use] Agent output: {agent_output[:200]}..." if len(agent_output) > 200 else f"[Browser-Use] Agent output: {agent_output}", flush=True)
 
-            # Disconnect Browser-Use's session BEFORE using ChromeManager
+            # Get the current page URL from the agent's browser context BEFORE disconnecting
+            # This is the authoritative source - the page the agent was actually working on
+            current_url = ""
+            try:
+                current_page = await agent.browser_context.get_current_page()
+                if current_page:
+                    current_url = current_page.url
+                    logger.info(f"[Browser-Use] Agent's current page URL: {current_url}")
+                    print(f"[Browser-Use] Agent's current page URL: {current_url}", flush=True)
+            except Exception as e:
+                logger.warning(f"[Browser-Use] Could not get current page from agent: {e}")
+
+            # Close other tabs, keeping only the one the agent was working on
+            # This prevents Playwright from connecting to the wrong tab later
+            if current_url:
+                closed = await ChromeManager.close_tabs_except_url(current_url, cdp_port)
+                if closed > 0:
+                    logger.info(f"[Browser-Use] Closed {closed} other tab(s)")
+
+            # Disconnect Browser-Use's session
             # This keeps Chrome alive but cleanly disconnects the CDP WebSocket
-            # so our ChromeManager can work without interference
+            # so Playwright can connect without interference
             logger.info("[Browser-Use] Disconnecting Browser-Use session (keep_alive=True)...")
             print("[Browser-Use] Disconnecting Browser-Use session (keep_alive=True)...", flush=True)
             await browser.stop()
@@ -98,12 +117,12 @@ class ExecuteTaskMixin:
 
             execution_time = int((time.time() - start_time) * 1000)
 
-            # Check if Chrome is still running
+            # Verify Chrome is still running with the correct tab
             pages = await ChromeManager.get_pages_info(cdp_port)
-            logger.info(f"[Browser-Use] After disconnect, pages count: {len(pages)}")
-            print(f"[Browser-Use] After disconnect, pages count: {len(pages)}", flush=True)
+            page_tabs = [p for p in pages if p.get("type") == "page"]
+            logger.info(f"[Browser-Use] After cleanup, tab count: {len(page_tabs)}")
+            print(f"[Browser-Use] After cleanup, tab count: {len(page_tabs)}", flush=True)
 
-            current_url = await ChromeManager.get_current_url(cdp_port)
             logger.info(f"[Browser-Use] Task completed, current URL: {current_url}")
 
             return {

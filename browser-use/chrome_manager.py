@@ -419,6 +419,67 @@ class ChromeManager:
         return closed_count
 
     @classmethod
+    async def close_tabs_except_url(cls, keep_url: str, cdp_port: int = 9222) -> int:
+        """
+        Close all tabs except the one matching the given URL.
+
+        Args:
+            keep_url: URL of the tab to keep (others will be closed)
+            cdp_port: External CDP port
+
+        Returns:
+            Number of tabs closed
+        """
+        pages_info = await cls.get_pages_info(cdp_port)
+
+        # Filter to actual pages (not iframes, workers, service workers)
+        pages = [p for p in pages_info if p.get("type") == "page"]
+
+        if len(pages) <= 1:
+            return 0
+
+        internal_cdp_port = cdp_port + 1
+        cdp_url = f"http://127.0.0.1:{internal_cdp_port}"
+        closed_count = 0
+
+        # Find the tab to keep by matching URL
+        keep_tab_id = None
+        for page in pages:
+            page_url = page.get("url", "")
+            if page_url == keep_url or page_url.rstrip("/") == keep_url.rstrip("/"):
+                keep_tab_id = page.get("id")
+                logger.info(f"[Chrome] Keeping tab: {page_url[:60]}")
+                break
+
+        if not keep_tab_id:
+            logger.warning(f"[Chrome] No tab found matching URL: {keep_url[:60]}")
+            # Fall back to keeping the first page tab
+            keep_tab_id = pages[0].get("id") if pages else None
+
+        # Close all tabs except the one we want to keep
+        for page in pages:
+            target_id = page.get("id")
+            if not target_id or target_id == keep_tab_id:
+                continue
+
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(
+                        f"{cdp_url}/json/close/{target_id}",
+                        timeout=aiohttp.ClientTimeout(total=5)
+                    ) as resp:
+                        if resp.status == 200:
+                            closed_count += 1
+                            logger.info(f"[Chrome] Closed tab: {page.get('url', 'unknown')[:50]}")
+            except Exception as e:
+                logger.warning(f"[Chrome] Error closing tab {target_id}: {e}")
+
+        if closed_count > 0:
+            print(f"[Chrome] Closed {closed_count} other tab(s), kept: {keep_url[:60]}", flush=True)
+
+        return closed_count
+
+    @classmethod
     async def navigate_tab_to_blank(cls, cdp_port: int = 9222) -> bool:
         """
         Navigate the first tab to about:blank.
