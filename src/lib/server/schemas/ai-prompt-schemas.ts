@@ -199,7 +199,7 @@ export const extractJobsFromSearchPageSchema = z.object({
   jobs: z.array(
     z.object({
       clickableId: z.number().int().describe(
-        "EXACT data-extract-clickable-id from HTML - do not invent",
+        "EXACT data-xxx from HTML - do not invent",
       ),
       title: z.string().nullable().describe("Job title/position name"),
       company: z.string().nullable().describe("Company or employer name"),
@@ -238,7 +238,7 @@ export const extractJobsFromSearchPageSchema = z.object({
 export const classifyClickablesSchema = z.object({
   clickables: z.array(
     z.object({
-      id: z.number().int().describe("The data-extract-clickable-id value"),
+      id: z.number().int().describe("The data-xxx value"),
       type: z
         .enum(["view-details", "action"])
         .describe("Clickable classification"),

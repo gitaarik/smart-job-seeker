@@ -141,7 +141,7 @@ const page = browser.contexts()[0].pages()[0];
 ```typescript
 // Mark all clickable elements with CDP
 const clickableCount = await markClickableElementsInContainer(page, "body");
-// Elements get data-extract-clickable-id="1", "2", etc.
+// Elements get data-xxx="1", "2", etc.
 ```
 
 ### Phase 3: LLM Classification
@@ -161,7 +161,7 @@ const jobs = await extractJobsFromSearchPage(strippedHtml);
 
 // Click each job to get full details
 for (const job of jobs) {
-  await page.click(`[data-extract-clickable-id="${job.clickableId}"]`);
+  await page.click(`[data-xxx="${job.clickableId}"]`);
   const detailHtml = await page.content();
   const fullData = await extractJobData(detailHtml);
   await upsertJob(fullData, jobUrl, platformId);
@@ -350,7 +350,7 @@ Screenshots saved to `debug-screenshots/` directory.
 **Wrong elements clicked:**
 
 - LLM may misclassify clickables
-- Check `data-extract-clickable-id` attributes in HTML
+- Check `data-xxx` attributes in HTML
 - Adjust prompts in `ai_chat_prompts` collection
 
 **Pagination not working:**

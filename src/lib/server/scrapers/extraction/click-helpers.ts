@@ -68,14 +68,14 @@ export async function classifyMarkedClickables(
       id: number;
       html: string;
     }> = [];
-    document.querySelectorAll("[data-extract-clickable-id]").forEach((el) => {
+    document.querySelectorAll("[data-xxx]").forEach((el) => {
       // Get outer HTML but truncate to reasonable size for LLM
       const fullHtml = el.outerHTML;
       const html = fullHtml.length > 500
         ? fullHtml.substring(0, 500) + "..."
         : fullHtml;
       clickables.push({
-        id: parseInt(el.getAttribute("data-extract-clickable-id") || "0"),
+        id: parseInt(el.getAttribute("data-xxx") || "0"),
         html,
       });
     });
@@ -130,7 +130,7 @@ export async function classifyMarkedClickables(
 }
 
 /**
- * Strip action clickables from HTML by removing their data-extract-clickable-id attributes
+ * Strip action clickables from HTML by removing their data-xxx attributes
  */
 export function stripActionClickables(
   html: string,
@@ -139,9 +139,9 @@ export function stripActionClickables(
   let result = html;
   for (const [id, type] of classifications) {
     if (type === "action") {
-      // Remove the data-extract-clickable-id attribute for action clickables
+      // Remove the data-xxx attribute for action clickables
       result = result.replace(
-        new RegExp(`data-extract-clickable-id="${id}"`, "g"),
+        new RegExp(`data-xxx="${id}"`, "g"),
         "",
       );
     }

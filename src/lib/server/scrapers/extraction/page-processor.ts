@@ -107,11 +107,11 @@ function processHtmlForExtraction(
   const htmlSize = (cleanedHtml.length / 1024).toFixed(1);
   console.log(`      HTML size (raw): ${htmlSize} KB`);
 
-  // Strip HTML for LLM processing (data-extract-clickable-id attributes survive)
+  // Strip HTML for LLM processing (data-xxx attributes survive)
   const strippedHtml = stripHtmlForLlm(cleanedHtml);
 
   // Count clickable IDs that survived stripping
-  const clickableIdMatches = strippedHtml.match(/data-extract-clickable-id/g);
+  const clickableIdMatches = strippedHtml.match(/data-xxx/g);
   const survivingClickables = clickableIdMatches
     ? clickableIdMatches.length
     : 0;

@@ -73,9 +73,7 @@ export function stripHtmlForLlm(html: string): string {
   const keepAttributes = new Set([
     "href", // Links to jobs
     "type", // Input types (password, email, etc.)
-    "data-extract-role", // Semantic markers for LLM extraction
-    "data-extract-clickable-id", // Clickable markers for SPA navigation
-    "data-extract-click-text", // Click context for SPA navigation
+    "data-xxx", // Clickable markers for SPA navigation
   ]);
 
   // Whitelist of class name patterns to preserve for LLM context

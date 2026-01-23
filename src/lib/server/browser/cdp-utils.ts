@@ -184,25 +184,16 @@ export async function markClickableElementsInContainer(
       `Found ${clickableNodes.length} clickable elements (click listeners + anchor links)`,
     );
 
-    // Mark elements with data-extract-clickable-id attributes
+    // Mark elements with data-xxx attributes
     for (let i = 0; i < clickableNodes.length; i++) {
-      const { nodeId, text } = clickableNodes[i];
+      const { nodeId } = clickableNodes[i];
       try {
-        // Add data-extract-clickable-id attribute
+        // Add data-xxx attribute
         await client.send("DOM.setAttributeValue", {
           nodeId,
-          name: "data-extract-clickable-id",
+          name: "data-xxx",
           value: String(i),
         });
-
-        // Add text content for LLM context if available
-        if (text.length > 0) {
-          await client.send("DOM.setAttributeValue", {
-            nodeId,
-            name: "data-extract-click-text",
-            value: text.substring(0, 50),
-          });
-        }
       } catch (error) {
         console.debug(`Failed to mark node ${i}:`, error);
       }

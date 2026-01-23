@@ -284,13 +284,13 @@ describe("stripHtmlForLlm", () => {
     expect(result).not.toContain("<nav");
   });
 
-  it("should preserve data-extract-* attributes", () => {
+  it("should preserve data-xxx attributes for clickable markers", () => {
     const html = `
       <html>
         <body>
-          <div data-extract-role="job-title" class="title">Senior Engineer</div>
-          <div data-extract-role="company-name" id="company">Acme Corp</div>
-          <div data-extract-clickable-id="1" data-extract-click-text="job-detail-button">View Details</div>
+          <div class="title">Senior Engineer</div>
+          <div id="company">Acme Corp</div>
+          <div data-xxx="1">View Details</div>
           <div data-other-attribute="value" class="other">Some content</div>
         </body>
       </html>
@@ -298,13 +298,10 @@ describe("stripHtmlForLlm", () => {
 
     const result = stripHtmlForLlm(html);
 
-    // data-extract-* attributes should be preserved
-    expect(result).toContain('data-extract-role="job-title"');
-    expect(result).toContain('data-extract-role="company-name"');
-    expect(result).toContain('data-extract-clickable-id="1"');
-    expect(result).toContain('data-extract-click-text="job-detail-button"');
+    // data-xxx attribute should be preserved (clickable marker)
+    expect(result).toContain('data-xxx="1"');
 
-    // Other attributes should be removed
+    // Other data attributes should be removed
     expect(result).not.toContain("data-other-attribute");
     expect(result).not.toContain('id="company"');
 
