@@ -120,9 +120,9 @@ interface SourceUrlResult {
 
 /**
  * Extract source URL using the priority-based flow:
- * 1. Anchor href from job card
- * 2. Address bar URL (if changed after click)
- * 3. Meta/link tags (canonical, og:url, JSON-LD)
+ * 1. Meta/link tags (canonical, og:url, JSON-LD) - most authoritative
+ * 2. Anchor href from job card
+ * 3. Address bar URL (if changed after click)
  * 4. LLM extraction from visible content
  * 5. Browser-Use to find share button
  * 6. null if none found
@@ -148,25 +148,25 @@ async function extractSourceUrl(options: {
     browserUseClient,
   } = options;
 
-  // 1. Anchor href from job card (if navigable)
+  // 1. Meta/link tags (canonical, og:url, JSON-LD) - most authoritative
+  const metaUrl = extractSourceUrlFromMeta(jobHtml);
+  if (metaUrl) {
+    console.log(`      🔗 Source URL (meta tags): ${metaUrl}`);
+    return { url: metaUrl, method: "meta_tags" };
+  }
+
+  // 2. Anchor href from job card (if navigable)
   if (elementHref && isNavigableHref(elementHref)) {
     const fullUrl = new URL(elementHref, originalUrl).href;
     console.log(`      🔗 Source URL (href): ${fullUrl}`);
     return { url: fullUrl, method: "href" };
   }
 
-  // 2. Address bar URL (if navigated away or opened new tab)
+  // 3. Address bar URL (if navigated away or opened new tab)
   if (navigatedAway || newTab) {
     const addressBarUrl = extractionPage.url();
     console.log(`      🔗 Source URL (address bar): ${addressBarUrl}`);
     return { url: addressBarUrl, method: "address_bar" };
-  }
-
-  // 3. Meta/link tags (canonical, og:url, JSON-LD)
-  const metaUrl = extractSourceUrlFromMeta(jobHtml);
-  if (metaUrl) {
-    console.log(`      🔗 Source URL (meta tags): ${metaUrl}`);
-    return { url: metaUrl, method: "meta_tags" };
   }
 
   // 4. LLM extraction from visible content
