@@ -1,9 +1,19 @@
 /**
  * Unified Job Scraper
  *
- * Single entry point for all job scraping:
- * - With credentials: Browser-Use login → Patchright extraction via CDP
- * - Without credentials: Patchright direct browser → extraction
+ * Single entry point for all job scraping with two-phase flow architecture:
+ *
+ * Flow A (when login_page_url configured):
+ *   Phase 1: browser_use_login - Navigate to login page, enter credentials
+ *   Phase 2: browser_use_navigate_search - Navigate to search page, check CAPTCHA
+ *
+ * Flow B (when no login_page_url):
+ *   Single task: browser_use_prepare_session - Handles login detection + navigation
+ *
+ * Both flows support:
+ * - Local mode: VNC for manual intervention
+ * - Cloud mode: Live URL for manual intervention
+ * - Retry loops after CAPTCHA/2FA manual solving
  */
 
 import { chromium } from "playwright";
@@ -15,10 +25,325 @@ import { interpolatePrompt } from "$lib/server/ai-chat/utils";
 import { dbDirect } from "$lib/db";
 import { getPlatformCredentials } from "../auth/platform";
 import { promptUser } from "./utils";
-import type { LoginResult, Platform, PlatformCredentials } from "./types";
+import type { Platform, PlatformCredentials } from "./types";
+
+// ============================================================================
+// Response Types for Browser-Use Tasks
+// ============================================================================
+
+/** Response from browser_use_login task */
+interface LoginTaskResult {
+  logged_in: boolean;
+  ready: boolean;
+  captcha_needed: boolean;
+  verification_needed: boolean;
+  verification_type: "email" | "sms" | "2fa" | null;
+  current_url: string;
+  reason: string;
+}
+
+/** Response from browser_use_navigate_search task */
+interface NavigateSearchResult {
+  ready: boolean;
+  captcha_needed: boolean;
+  redirected_to_login: boolean;
+  current_url: string;
+  reason: string;
+}
+
+/** Response from browser_use_prepare_session task */
+interface PrepareSessionResult {
+  ready: boolean;
+  logged_in: boolean;
+  captcha_needed: boolean;
+  verification_needed: boolean;
+  verification_type: "email" | "sms" | "2fa" | null;
+  current_url: string;
+  reason: string;
+}
+
+/** Type of manual intervention needed */
+type InterventionType = "captcha" | "verification" | "login";
+
+/** Intervention URL type */
+type InterventionUrlType = "vnc" | "live_url";
 
 const CDP_HOST = config.cdpHost;
 const CDP_PORT = config.cdpPort;
+
+// ============================================================================
+// Text Pattern Parsing Helpers
+// ============================================================================
+
+/**
+ * Detect verification type from text.
+ */
+function detectVerificationType(text: string): "email" | "sms" | "2fa" | null {
+  const lower = text.toLowerCase();
+  if (/email.*(code|verification)|verification.*email/i.test(lower)) {
+    return "email";
+  }
+  if (/sms|text message|phone.*code/i.test(lower)) return "sms";
+  if (/2fa|two-factor|authenticator|otp/i.test(lower)) return "2fa";
+  if (/verification.*code|code.*verification/i.test(lower)) return "email"; // default to email
+  return null;
+}
+
+/**
+ * Extract URL from text.
+ */
+function extractUrlFromText(text: string): string {
+  const urlMatch = text.match(/https?:\/\/[^\s"'<>]+/i);
+  return urlMatch ? urlMatch[0] : "";
+}
+
+/**
+ * Parse login task result from agent output text.
+ */
+function parseLoginTaskResult(agentOutput: string): LoginTaskResult {
+  // Match CAPTCHA indicators - but not "cloudflare" alone (auto-verification is not CAPTCHA)
+  // The prompt now tells the agent to say "interactive challenge requires user action"
+  const captcha =
+    /captcha|interactive challenge|verify you are human|i am not a robot/i
+      .test(agentOutput);
+  const verification =
+    /verification.*(code|needed)|2fa|two-factor|enter.*code|authenticator/i
+      .test(
+        agentOutput,
+      );
+  const loggedIn = !captcha &&
+    !verification &&
+    /logged in|login successful|successfully (logged|authenticated)|dashboard|authenticated/i
+      .test(
+        agentOutput,
+      );
+
+  return {
+    logged_in: loggedIn,
+    ready: loggedIn && /job|search|listing|feed/i.test(agentOutput),
+    captcha_needed: captcha,
+    verification_needed: verification,
+    verification_type: verification
+      ? detectVerificationType(agentOutput)
+      : null,
+    current_url: extractUrlFromText(agentOutput),
+    reason: agentOutput.slice(0, 300),
+  };
+}
+
+/**
+ * Parse navigate search result from agent output text.
+ */
+function parseNavigateSearchResult(agentOutput: string): NavigateSearchResult {
+  // Match CAPTCHA indicators - but not "cloudflare" alone (auto-verification is not CAPTCHA)
+  const captcha =
+    /captcha|interactive challenge|verify you are human|i am not a robot/i
+      .test(agentOutput);
+  const redirectedToLogin = /redirected.*login|login.*page|sign.?in.*form/i
+    .test(agentOutput);
+  const ready = !captcha &&
+    !redirectedToLogin &&
+    /job|search|listing|results|ready/i.test(agentOutput);
+
+  return {
+    ready,
+    captcha_needed: captcha,
+    redirected_to_login: redirectedToLogin,
+    current_url: extractUrlFromText(agentOutput),
+    reason: agentOutput.slice(0, 300),
+  };
+}
+
+/**
+ * Parse prepare session result from agent output text.
+ */
+function parsePrepareSessionResult(
+  agentOutput: string,
+): PrepareSessionResult {
+  // Match CAPTCHA indicators - but not "cloudflare" alone (auto-verification is not CAPTCHA)
+  const captcha =
+    /captcha|interactive challenge|verify you are human|i am not a robot/i
+      .test(agentOutput);
+  const verification =
+    /verification.*(code|needed)|2fa|two-factor|enter.*code|authenticator/i
+      .test(
+        agentOutput,
+      );
+  const loggedIn = !captcha &&
+    !verification &&
+    /logged in|login successful|successfully (logged|authenticated)|dashboard|authenticated/i
+      .test(
+        agentOutput,
+      );
+  const ready = loggedIn && /job|search|listing|feed|ready/i.test(agentOutput);
+
+  return {
+    ready,
+    logged_in: loggedIn,
+    captcha_needed: captcha,
+    verification_needed: verification,
+    verification_type: verification
+      ? detectVerificationType(agentOutput)
+      : null,
+    current_url: extractUrlFromText(agentOutput),
+    reason: agentOutput.slice(0, 300),
+  };
+}
+
+// ============================================================================
+// Manual Intervention Handler (DRY for VNC and Live URL)
+// ============================================================================
+
+/**
+ * Wait for user to complete manual intervention (CAPTCHA, 2FA, or login).
+ * Supports both local mode (VNC) and cloud mode (Live URL).
+ *
+ * @param platform Platform information for display
+ * @param interventionType Type of intervention needed
+ * @param urlType VNC for local mode, live_url for cloud mode
+ * @param interventionUrl The URL to display (VNC URL or Live URL)
+ * @returns true if user confirms completion, false if cancelled
+ */
+async function waitForManualIntervention(
+  platform: Platform,
+  interventionType: InterventionType,
+  urlType: InterventionUrlType,
+  interventionUrl: string,
+): Promise<boolean> {
+  const typeLabels: Record<InterventionType, string> = {
+    captcha: "CAPTCHA",
+    verification: "2FA Verification",
+    login: "Manual Login",
+  };
+
+  const urlTypeLabels: Record<InterventionUrlType, string> = {
+    vnc: "VNC",
+    live_url: "Browser-Use Cloud Live URL",
+  };
+
+  console.log(`\n${"=".repeat(60)}`);
+  console.log(
+    `🔐 ${typeLabels[interventionType]} Required for ${platform.name}`,
+  );
+  console.log(`${"=".repeat(60)}`);
+  console.log(
+    `\nPlease complete the ${
+      typeLabels[interventionType].toLowerCase()
+    } manually:`,
+  );
+  console.log(`  - ${urlTypeLabels[urlType]}: ${interventionUrl}`);
+
+  if (urlType === "vnc") {
+    console.log(`  - Connect with a VNC viewer to complete the task`);
+  } else {
+    console.log(`  - Open the URL in your browser to see the session`);
+  }
+
+  let confirm = "";
+  while (confirm !== "c" && confirm !== "q") {
+    confirm = (
+      await promptUser(
+        "\nWhen done, enter 'c' to continue or 'q' to quit: ",
+      )
+    ).toLowerCase();
+  }
+
+  if (confirm === "q") {
+    console.log("❌ Manual intervention cancelled by user");
+    return false;
+  }
+
+  console.log("✅ Continuing after manual intervention...");
+  return true;
+}
+
+/**
+ * Get the intervention URL based on mode.
+ * Returns VNC URL for local mode, Live URL for cloud mode.
+ */
+function getInterventionInfo(
+  browserUse: BrowserUseClient,
+): { urlType: InterventionUrlType; url: string } {
+  if (browserUse.isCloudMode && browserUse.liveUrl) {
+    return { urlType: "live_url", url: browserUse.liveUrl };
+  }
+  return { urlType: "vnc", url: "localhost:5900" };
+}
+
+// ============================================================================
+// Prompt Building Helpers
+// ============================================================================
+
+/**
+ * Build login task prompt (browser_use_login).
+ */
+async function buildLoginTaskPrompt(
+  loginUrl: string,
+  credentials: PlatformCredentials,
+): Promise<string> {
+  const promptTemplate = await dbDirect.ai_chat_prompts.findUnique({
+    where: { request: "browser_use_login" },
+  });
+
+  if (!promptTemplate?.user_prompt) {
+    throw new Error("Prompt 'browser_use_login' not found in database");
+  }
+
+  return interpolatePrompt(promptTemplate.user_prompt, {
+    loginUrl,
+    username: credentials.username,
+    password: credentials.password,
+  });
+}
+
+/**
+ * Build navigate search task prompt (browser_use_navigate_search).
+ */
+async function buildNavigateSearchPrompt(searchUrl: string): Promise<string> {
+  const promptTemplate = await dbDirect.ai_chat_prompts.findUnique({
+    where: { request: "browser_use_navigate_search" },
+  });
+
+  if (!promptTemplate?.user_prompt) {
+    throw new Error(
+      "Prompt 'browser_use_navigate_search' not found in database",
+    );
+  }
+
+  return interpolatePrompt(promptTemplate.user_prompt, {
+    searchUrl,
+  });
+}
+
+/**
+ * Build prepare session task prompt (browser_use_prepare_session).
+ */
+async function buildPrepareSessionPrompt(
+  startUrl: string,
+  searchUrl: string,
+  credentials: PlatformCredentials | null,
+): Promise<string> {
+  const promptTemplate = await dbDirect.ai_chat_prompts.findUnique({
+    where: { request: "browser_use_prepare_session" },
+  });
+
+  if (!promptTemplate?.user_prompt) {
+    throw new Error(
+      "Prompt 'browser_use_prepare_session' not found in database",
+    );
+  }
+
+  return interpolatePrompt(promptTemplate.user_prompt, {
+    startUrl,
+    searchUrl,
+    username: credentials?.username || "(no credentials)",
+    password: credentials?.password || "",
+  });
+}
+
+// ============================================================================
+// Error Recovery
+// ============================================================================
 
 /**
  * Check if an error is a recoverable browser-use error that should trigger manual login fallback.
@@ -80,197 +405,158 @@ async function resolveCdpHost(host: string): Promise<string> {
   }
 }
 
-/**
- * Handle login result from Browser-Use
- * Consolidates the duplicate logic for processing login attempts
- *
- * @param isCloudMode If true, skip manual VNC prompts (Cloud handles CAPTCHA automatically)
- */
-async function handleLoginResult(
-  browserUse: BrowserUseClient,
-  loginResult: LoginResult,
-  platform: Platform,
-  searchUrl: string,
-  isCloudMode: boolean = false,
-): Promise<boolean> {
-  if (loginResult.login_success) {
-    console.log(`✅ Login successful! URL: ${loginResult.current_url}`);
-    return true;
-  }
-
-  // In cloud mode, CAPTCHA should be handled automatically
-  // If we still get captcha_needed, something went wrong
-  if (loginResult.captcha_needed) {
-    if (isCloudMode) {
-      console.error(
-        `❌ Cloud mode: CAPTCHA was not solved automatically. Check the live URL for details.`,
-      );
-      if (loginResult.live_url) {
-        console.log(`📺 Live URL: ${loginResult.live_url}`);
-      }
-      return false;
-    }
-
-    console.log(`\n⚠️ CAPTCHA detected. Manual intervention required.`);
-    console.log(`   VNC: localhost:5900`);
-    console.log(`   Please solve the CAPTCHA manually.`);
-    return waitForManualIntervention(platform);
-  }
-
-  if (loginResult.verification_needed) {
-    console.log(
-      `\n🔐 Verification required: ${loginResult.verification_prompt}`,
-    );
-    return handleVerification(browserUse, loginResult, platform, searchUrl);
-  }
-
-  // Login failed for other reason
-  if (isCloudMode) {
-    console.error(`❌ Cloud login failed: ${loginResult.error || "Unknown"}`);
-    if (loginResult.live_url) {
-      console.log(`📺 Live URL: ${loginResult.live_url}`);
-    }
-    return false;
-  }
-
-  console.log(`\n⚠️ Login failed. Manual intervention required.`);
-  console.log(`   Error: ${loginResult.error || "Unknown"}`);
-  return waitForManualIntervention(platform);
-}
+// ============================================================================
+// Two-Phase Login Flow (when login_page_url configured)
+// ============================================================================
 
 /**
- * Build login-only task prompt for Browser-Use
- * @param solveCaptcha If true, agent attempts to solve CAPTCHAs. If false (default), reports CAPTCHA_NEEDED for manual solving.
+ * Execute Phase A: Login using browser_use_login prompt.
+ * Returns whether login succeeded and if intervention is needed.
  */
-async function buildLoginPrompt(
-  platform: { name: string; url: string; login_page_url?: string | null },
-  credentials: { username: string; password: string },
-  searchUrl: string,
-  solveCaptcha: boolean = false,
-): Promise<string> {
-  const promptKey = solveCaptcha
-    ? "browser_use_login_solve_captcha"
-    : "browser_use_login_report_captcha";
-
-  const promptTemplate = await dbDirect.ai_chat_prompts.findUnique({
-    where: { request: promptKey },
-  });
-
-  if (!promptTemplate?.user_prompt) {
-    throw new Error(`Prompt '${promptKey}' not found in database`);
-  }
-
-  const userPrompt = interpolatePrompt(promptTemplate.user_prompt, {
-    platformUrl: platform.login_page_url || platform.url,
-    platformName: platform.name,
-    username: credentials.username,
-    password: credentials.password,
-    searchUrl,
-  });
-
-  const systemPrompt = promptTemplate.system_prompt || "";
-  return `${systemPrompt}\n\n${userPrompt}`.trim();
-}
-
-/**
- * Result from page init task (cookie handling + login detection)
- */
-interface PageInitResult {
-  cookies_handled: boolean;
-  login_required: boolean;
-  reason: string;
-}
-
-/**
- * Parse the agent's JSON output from page init task
- */
-function parsePageInitResult(agentOutput: string): PageInitResult | null {
-  try {
-    // Find JSON in the output (agent might include extra text)
-    const jsonMatch = agentOutput.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) return null;
-    return JSON.parse(jsonMatch[0]);
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Build page init task prompt for Browser-Use.
- * Handles cookie dismissal and login state detection.
- * Fetches template from DB and interpolates with startUrl.
- */
-async function buildPageInitPrompt(startUrl: string): Promise<string> {
-  const promptTemplate = await dbDirect.ai_chat_prompts.findUnique({
-    where: { request: "browser_use_page_init" },
-  });
-
-  if (!promptTemplate?.user_prompt) {
-    throw new Error("Prompt 'browser_use_page_init' not found in database");
-  }
-
-  return interpolatePrompt(promptTemplate.user_prompt, {
-    startUrl,
-  });
-}
-
-/**
- * Execute auto-login with Browser-Use.
- * Builds the login prompt, starts a login session, and handles the result.
- *
- * @returns Object with success flag and optional cdp_url (for cloud mode)
- */
-async function attemptAutoLogin(
+async function executeLoginPhase(
   browserUse: BrowserUseClient,
   platform: Platform,
   credentials: PlatformCredentials,
-  searchUrl: string,
-  startUrl: string,
-  useVision: boolean | undefined,
-): Promise<{ success: boolean; cdpUrl?: string }> {
-  const loginTask = await buildLoginPrompt(platform, credentials, searchUrl);
+  useVision: boolean,
+): Promise<LoginTaskResult | null> {
+  const loginUrl = platform.login_page_url!;
+  console.log(`\n📌 Phase A: Login to ${platform.name}...`);
+  console.log(`   Login URL: ${loginUrl}`);
 
-  console.log("📝 Login task preview:");
-  console.log(loginTask.substring(0, 300) + "...");
+  const loginTask = await buildLoginTaskPrompt(loginUrl, credentials);
+  console.log("   Running login task...");
 
-  const loginResult = await browserUse.login({
+  const result = await browserUse.executeTask({
     task: loginTask,
-    startUrl,
     cdpPort: CDP_PORT,
-    maxTime: config.loginTimeout / 1000,
     useVision,
   });
 
-  const isCloudMode = !!loginResult.cdp_url;
-  const success = await handleLoginResult(
-    browserUse,
-    loginResult,
-    platform,
-    searchUrl,
-    isCloudMode,
+  console.log(
+    `   Task completed, agent output: ${
+      result.agent_output?.substring(0, 200)
+    }...`,
   );
 
-  return {
-    success,
-    cdpUrl: loginResult.cdp_url,
-  };
+  const parsed = parseLoginTaskResult(result.agent_output || "");
+  if (parsed) {
+    console.log(
+      `   Result: logged_in=${parsed.logged_in}, captcha_needed=${parsed.captcha_needed}`,
+    );
+    console.log(`   Reason: ${parsed.reason}`);
+  }
+
+  return parsed;
 }
 
 /**
- * Scrape jobs with persistent session + Playwright extraction
- * Uses persistent browser session (like a real browser).
+ * Execute Phase B: Navigate to search page using browser_use_navigate_search prompt.
+ * Returns whether search page is ready.
+ */
+async function executeNavigateSearchPhase(
+  browserUse: BrowserUseClient,
+  searchUrl: string,
+  useVision: boolean,
+): Promise<NavigateSearchResult | null> {
+  console.log(`\n📌 Phase B: Navigate to search page...`);
+  console.log(`   Search URL: ${searchUrl}`);
+
+  const navigateTask = await buildNavigateSearchPrompt(searchUrl);
+  console.log("   Running navigate task...");
+
+  const result = await browserUse.executeTask({
+    task: navigateTask,
+    cdpPort: CDP_PORT,
+    useVision,
+  });
+
+  console.log(
+    `   Task completed, agent output: ${
+      result.agent_output?.substring(0, 200)
+    }...`,
+  );
+
+  const parsed = parseNavigateSearchResult(result.agent_output || "");
+  if (parsed) {
+    console.log(
+      `   Result: ready=${parsed.ready}, captcha_needed=${parsed.captcha_needed}`,
+    );
+    console.log(`   Reason: ${parsed.reason}`);
+  }
+
+  return parsed;
+}
+
+// ============================================================================
+// Single-Task Flow (when no login_page_url)
+// ============================================================================
+
+/**
+ * Execute merged flow using browser_use_prepare_session prompt.
+ * Handles login detection, optional login, and navigation in one task.
+ */
+async function executePrepareSessionPhase(
+  browserUse: BrowserUseClient,
+  startUrl: string,
+  searchUrl: string,
+  credentials: PlatformCredentials | null,
+  useVision: boolean,
+): Promise<PrepareSessionResult | null> {
+  console.log(`\n📌 Prepare Session: Login (if needed) and navigate...`);
+  console.log(`   Start URL: ${startUrl}`);
+  console.log(`   Search URL: ${searchUrl}`);
+
+  const prepareTask = await buildPrepareSessionPrompt(
+    startUrl,
+    searchUrl,
+    credentials,
+  );
+  console.log("   Running prepare session task...");
+
+  const result = await browserUse.executeTask({
+    task: prepareTask,
+    cdpPort: CDP_PORT,
+    useVision,
+  });
+
+  console.log(
+    `   Task completed, agent output: ${
+      result.agent_output?.substring(0, 200)
+    }...`,
+  );
+
+  const parsed = parsePrepareSessionResult(result.agent_output || "");
+  if (parsed) {
+    console.log(
+      `   Result: ready=${parsed.ready}, logged_in=${parsed.logged_in}, captcha_needed=${parsed.captcha_needed}`,
+    );
+    console.log(`   Reason: ${parsed.reason}`);
+  }
+
+  return parsed;
+}
+
+// ============================================================================
+// Main Scraper Function
+// ============================================================================
+
+/**
+ * Scrape jobs with two-flow architecture.
  *
- * Flow:
- * 1. Check if already logged in (via login page navigation + redirect detection)
- * 2. If not logged in and credentials available: auto-login via Browser-Use
- * 3. If not logged in and no credentials: manual login via VNC
- * 4. Proceed to scraping
+ * Flow A (when login_page_url configured):
+ *   Phase 1: browser_use_login - Navigate to login page, enter credentials
+ *   Phase 2: browser_use_navigate_search - Navigate to search page
+ *
+ * Flow B (when no login_page_url):
+ *   Single task: browser_use_prepare_session - Combined login detection + navigation
+ *
+ * Both flows include retry loops for manual intervention (CAPTCHA, 2FA).
  */
 async function scrapeWithLogin(
   searchUrl: string,
   platformId: string,
-  platform: { name: string; url: string; login_page_url?: string | null },
-  credentials: { username: string; password: string } | null,
+  platform: Platform,
+  credentials: PlatformCredentials | null,
   useVision: boolean | undefined,
   jobSearchId: number,
 ): Promise<{ jobsProcessed: number; strippedHtml: string }> {
@@ -286,143 +572,249 @@ async function scrapeWithLogin(
     useVision !== undefined ? { useVision } : undefined,
   );
 
+  const visionEnabled = useVision ?? true;
+
   try {
-    let isLoggedIn = false;
-    let cloudCdpUrl: string | undefined; // Track CDP URL from cloud mode
+    let cloudCdpUrl: string | undefined;
+    let sessionReady = false;
 
-    // Determine start URL (login page or search URL)
-    const startUrl = platform.login_page_url || searchUrl;
+    // Start browser session
+    console.log("\n📌 Starting browser session...");
 
-    // Phase 1: Start browser and dismiss cookie banners
-    console.log(
-      "\n📌 Phase 1: Starting browser and handling cookie banners...",
-    );
-    console.log(`   Starting browser and navigating to: ${startUrl}`);
-
-    // 1a. Start browser and navigate to URL
-    await browserUse.startSession(startUrl, CDP_PORT);
-
-    // 1b. Use Browser-Use to handle cookies and detect login state
-    const pageInitTask = await buildPageInitPrompt(startUrl);
-    console.log("   Running page init task...");
-    const initResult = await browserUse.executeTask({
-      task: pageInitTask,
-      cdpPort: CDP_PORT,
-      useVision: useVision ?? true,
-    });
-    console.log(`   Page init completed, URL: ${initResult.current_url}`);
-
-    // Phase 2: Check login state from AI assessment
-    console.log("\n📌 Phase 2: Checking login state...");
-
-    const parsed = parsePageInitResult(initResult.agent_output || "");
-
-    if (parsed) {
-      console.log(`   AI assessment: login_required=${parsed.login_required}`);
-      console.log(`   Reason: ${parsed.reason}`);
-      isLoggedIn = !parsed.login_required;
+    if (browserUse.isCloudMode) {
+      // Cloud mode: Create a cloud session
+      const cloudSession = await browserUse.startCloudSession();
+      cloudCdpUrl = cloudSession.cdp_url;
+      console.log(`🌐 Cloud mode: Live URL: ${cloudSession.live_url}`);
     } else {
-      // Fallback: if we can't parse AI response
-      console.log(`   ⚠️ Could not parse AI response`);
-
-      if (platform.login_page_url) {
-        // Compare current URL against configured login page
-        const loginUrl = new URL(platform.login_page_url);
-        const currentUrl = new URL(initResult.current_url);
-        const onLoginPage = currentUrl.pathname === loginUrl.pathname;
-        isLoggedIn = !onLoginPage;
-        console.log(`   Fallback: comparing to configured login_page_url`);
-        console.log(`   On login page: ${onLoginPage}`);
-      } else {
-        // No login_page_url configured, use task success as indicator
-        isLoggedIn = initResult.success;
-        console.log(`   Fallback: using task success=${initResult.success}`);
-      }
+      // Local mode: Start local browser
+      const startUrl = platform.login_page_url || searchUrl;
+      await browserUse.startSession(startUrl, CDP_PORT);
+      console.log(`🖥️ Local mode: VNC at localhost:5900`);
     }
 
-    // Phase 3: Handle login if not already logged in
-    if (!isLoggedIn) {
-      console.log("\n📌 Phase 3: Login required...");
+    // Determine which flow to use
+    const hasLoginPageUrl = !!platform.login_page_url;
 
-      if (credentials) {
-        // We have credentials - use Browser-Use to auto-fill
-        console.log("   Auto-filling credentials...");
+    if (hasLoginPageUrl && credentials) {
+      // ========================================
+      // FLOW A: Two-phase flow with login_page_url
+      // ========================================
+      console.log("\n🔄 Using Flow A: Two-phase login flow");
 
-        try {
-          const loginAttempt = await attemptAutoLogin(
-            browserUse,
-            platform,
-            credentials,
-            searchUrl,
-            platform.login_page_url || platform.url,
-            useVision,
-          );
-          isLoggedIn = loginAttempt.success;
-          cloudCdpUrl = loginAttempt.cdpUrl;
-        } catch (error) {
-          if (isRecoverableBrowserUseError(error)) {
-            console.log(
-              `\n⚠️ AI login failed with recoverable error: ${
-                error instanceof Error ? error.message : error
-              }`,
-            );
-            console.log("   Falling back to manual login...");
+      // Retry loop for Phase A (Login)
+      let loginRetries = 0;
+      const maxRetries = 3;
 
-            // Close any existing session before starting fresh
-            await browserUse.close();
+      while (!sessionReady && loginRetries < maxRetries) {
+        loginRetries++;
+        console.log(`\n--- Login attempt ${loginRetries}/${maxRetries} ---`);
 
-            // Start browser for manual login
-            await browserUse.startSession(
-              platform.login_page_url || platform.url,
-              CDP_PORT,
-            );
-
-            isLoggedIn = await waitForManualIntervention(platform);
-          } else {
-            throw error;
-          }
-        }
-      } else {
-        // No credentials - start browser for manual login
-        console.log("   Starting browser for manual login...");
-
-        await browserUse.startSession(
-          platform.login_page_url || platform.url,
-          CDP_PORT,
+        // Phase A: Login
+        const loginResult = await executeLoginPhase(
+          browserUse,
+          platform,
+          credentials,
+          visionEnabled,
         );
 
-        isLoggedIn = await waitForManualIntervention(platform);
+        if (!loginResult) {
+          console.log("⚠️ Could not parse login result, retrying...");
+          continue;
+        }
+
+        // Handle login result
+        if (loginResult.captcha_needed) {
+          const { urlType, url } = getInterventionInfo(browserUse);
+          const continued = await waitForManualIntervention(
+            platform,
+            "captcha",
+            urlType,
+            url,
+          );
+          if (!continued) throw new Error("Login cancelled by user");
+          continue; // Retry the login phase
+        }
+
+        if (loginResult.verification_needed) {
+          const { urlType, url } = getInterventionInfo(browserUse);
+          const continued = await waitForManualIntervention(
+            platform,
+            "verification",
+            urlType,
+            url,
+          );
+          if (!continued) throw new Error("Verification cancelled by user");
+          continue; // Retry the login phase
+        }
+
+        if (!loginResult.logged_in) {
+          console.log(`⚠️ Login failed: ${loginResult.reason}`);
+          const { urlType, url } = getInterventionInfo(browserUse);
+          const continued = await waitForManualIntervention(
+            platform,
+            "login",
+            urlType,
+            url,
+          );
+          if (!continued) throw new Error("Login cancelled by user");
+          continue; // Retry the login phase
+        }
+
+        console.log("✅ Login successful!");
+
+        // Phase B: Navigate to search page (also with retry loop)
+        let searchRetries = 0;
+        while (!sessionReady && searchRetries < maxRetries) {
+          searchRetries++;
+          console.log(
+            `\n--- Search navigation attempt ${searchRetries}/${maxRetries} ---`,
+          );
+
+          const searchResult = await executeNavigateSearchPhase(
+            browserUse,
+            searchUrl,
+            visionEnabled,
+          );
+
+          if (!searchResult) {
+            console.log("⚠️ Could not parse search result, retrying...");
+            continue;
+          }
+
+          if (searchResult.captcha_needed) {
+            const { urlType, url } = getInterventionInfo(browserUse);
+            const continued = await waitForManualIntervention(
+              platform,
+              "captcha",
+              urlType,
+              url,
+            );
+            if (!continued) throw new Error("CAPTCHA cancelled by user");
+            continue; // Retry navigation
+          }
+
+          if (searchResult.redirected_to_login) {
+            console.log("⚠️ Redirected to login - session may have expired");
+            break; // Go back to login phase
+          }
+
+          if (searchResult.ready) {
+            console.log("✅ Search page ready!");
+            sessionReady = true;
+          }
+        }
       }
     } else {
-      console.log("✅ Already logged in, skipping login phase");
+      // ========================================
+      // FLOW B: Single-task flow (no login_page_url)
+      // ========================================
+      console.log("\n🔄 Using Flow B: Single-task prepare session flow");
+
+      const startUrl = platform.login_page_url || searchUrl;
+      let retries = 0;
+      const maxRetries = 3;
+
+      while (!sessionReady && retries < maxRetries) {
+        retries++;
+        console.log(
+          `\n--- Prepare session attempt ${retries}/${maxRetries} ---`,
+        );
+
+        const result = await executePrepareSessionPhase(
+          browserUse,
+          startUrl,
+          searchUrl,
+          credentials,
+          visionEnabled,
+        );
+
+        if (!result) {
+          console.log("⚠️ Could not parse prepare result, retrying...");
+          continue;
+        }
+
+        // Handle various states
+        if (result.captcha_needed) {
+          const { urlType, url } = getInterventionInfo(browserUse);
+          const continued = await waitForManualIntervention(
+            platform,
+            "captcha",
+            urlType,
+            url,
+          );
+          if (!continued) throw new Error("CAPTCHA cancelled by user");
+          continue; // Retry
+        }
+
+        if (result.verification_needed) {
+          const { urlType, url } = getInterventionInfo(browserUse);
+          const continued = await waitForManualIntervention(
+            platform,
+            "verification",
+            urlType,
+            url,
+          );
+          if (!continued) throw new Error("Verification cancelled by user");
+          continue; // Retry
+        }
+
+        if (!result.logged_in && credentials) {
+          console.log(`⚠️ Login failed: ${result.reason}`);
+          const { urlType, url } = getInterventionInfo(browserUse);
+          const continued = await waitForManualIntervention(
+            platform,
+            "login",
+            urlType,
+            url,
+          );
+          if (!continued) throw new Error("Login cancelled by user");
+          continue; // Retry
+        }
+
+        if (!result.logged_in && !credentials) {
+          // No credentials provided, need manual login
+          const { urlType, url } = getInterventionInfo(browserUse);
+          const continued = await waitForManualIntervention(
+            platform,
+            "login",
+            urlType,
+            url,
+          );
+          if (!continued) throw new Error("Login cancelled by user");
+          continue; // Retry
+        }
+
+        if (result.ready) {
+          console.log("✅ Session ready for scraping!");
+          sessionReady = true;
+        }
+      }
     }
 
-    if (!isLoggedIn) {
-      throw new Error("Login failed or cancelled");
+    if (!sessionReady) {
+      throw new Error("Failed to prepare session after multiple retries");
     }
 
-    // Phase 4: Handoff delay (skip in cloud mode - session is already stable)
+    // Handoff delay (skip in cloud mode)
     if (!cloudCdpUrl) {
-      console.log(
-        `\n📌 Phase 4: Handoff delay (${config.handoffDelay}ms)...`,
-      );
+      console.log(`\n📌 Handoff delay (${config.handoffDelay}ms)...`);
       await new Promise((resolve) => setTimeout(resolve, config.handoffDelay));
     }
 
-    // Phase 5: Connect Playwright via CDP
-    console.log("\n📌 Phase 5: Connecting Playwright via CDP...");
+    // Connect Playwright via CDP
+    console.log("\n📌 Connecting Playwright via CDP...");
 
-    // Use cloud CDP URL if available, otherwise construct from local host:port
     let cdpUrl: string;
     if (cloudCdpUrl) {
       cdpUrl = cloudCdpUrl;
       console.log(`🌐 Using cloud CDP: ${cdpUrl}`);
     } else {
-      // Resolve hostname to IP - Chrome DevTools rejects non-IP Host headers
       const resolvedHost = await resolveCdpHost(CDP_HOST);
       cdpUrl = `http://${resolvedHost}:${CDP_PORT}`;
       console.log(`🖥️ Using local CDP: ${cdpUrl}`);
     }
+
     const browser = await chromium.connectOverCDP(cdpUrl);
     const contexts = browser.contexts();
 
@@ -437,7 +829,7 @@ async function scrapeWithLogin(
       throw new Error("No pages available in browser context");
     }
 
-    // Close all tabs except the first one to start fresh
+    // Close extra tabs
     if (pages.length > 1) {
       console.log(`🧹 Closing ${pages.length - 1} extra tab(s)...`);
       for (let i = 1; i < pages.length; i++) {
@@ -448,15 +840,17 @@ async function scrapeWithLogin(
     const page = pages[0];
     console.log(`📄 Current page: ${page.url()}`);
 
-    // Always navigate to search URL to ensure we're on the correct site
-    console.log(`🔄 Navigating to search results: ${searchUrl}`);
-    await page.goto(searchUrl, {
-      waitUntil: "domcontentloaded",
-      timeout: 60000,
-    });
+    // Navigate to search URL if not already there
+    if (!page.url().includes(new URL(searchUrl).pathname)) {
+      console.log(`🔄 Navigating to search results: ${searchUrl}`);
+      await page.goto(searchUrl, {
+        waitUntil: "domcontentloaded",
+        timeout: 60000,
+      });
+    }
 
-    // Phase 6: Playwright extraction
-    console.log("\n📌 Phase 6: Job extraction...");
+    // Job extraction
+    console.log("\n📌 Job extraction...");
 
     const result = await scrapeJobsWithClicks(
       jobSearchId,
@@ -469,153 +863,12 @@ async function scrapeWithLogin(
       `\n✅ Scraping complete: ${result.jobsProcessed} jobs processed`,
     );
 
-    // Disconnect Playwright (don't close browser - we'll do that via API)
     await browser.close();
-
     return result;
   } finally {
-    // Always close the browser session
     console.log("\n🧹 Closing browser session...");
     await browserUse.close();
   }
-}
-
-/**
- * Get the login URL pattern for a platform
- * Used to detect if we're on a login page (not logged in)
- */
-function getLoginUrlPattern(platform: {
-  name: string;
-  url: string;
-  login_page_url?: string | null;
-}): string {
-  // Common login URL patterns per platform
-  const name = platform.name.toLowerCase();
-
-  if (name.includes("linkedin")) return "/login";
-  if (name.includes("indeed")) return "/account/login";
-  if (name.includes("glassdoor")) return "/member/signIn";
-  if (name.includes("workday")) return "/login";
-
-  // Default: extract path from login_page_url if available
-  if (platform.login_page_url) {
-    try {
-      return new URL(platform.login_page_url).pathname;
-    } catch {
-      // Ignore parse errors
-    }
-  }
-
-  // Fallback to common patterns
-  return "/login";
-}
-
-/**
- * Handle verification code flow
- */
-async function handleVerification(
-  browserUse: BrowserUseClient,
-  loginResult: { verification_prompt?: string; verification_type?: string },
-  platform: { name: string },
-  searchUrl: string,
-): Promise<boolean> {
-  console.log(`   Type: ${loginResult.verification_type}`);
-
-  while (true) {
-    const code = await promptUser("\n📝 Enter verification code: ");
-
-    if (!code) {
-      const cancel = await promptUser("No code entered. Cancel login? (y/n): ");
-      if (cancel.toLowerCase() === "y") {
-        return false;
-      }
-      continue;
-    }
-
-    console.log("⏳ Submitting verification code...");
-    const verifyResult = await browserUse.submitVerificationCode(
-      code,
-      CDP_PORT,
-    );
-
-    if (verifyResult.login_complete) {
-      console.log("✅ Verification successful!");
-      return true;
-    } else if (verifyResult.captcha_needed) {
-      // CAPTCHA appeared after code submission - need manual intervention
-      console.log(
-        "\n⚠️ CAPTCHA/human verification appeared. Please solve it manually.",
-      );
-      console.log(`   VNC: localhost:5900`);
-      console.log(`   Browser CDP: localhost:9222`);
-
-      let action = "";
-      while (action !== "c" && action !== "q") {
-        action = (await promptUser(
-          "\nAfter solving CAPTCHA, enter 'c' to check login status or 'q' to quit: ",
-        )).toLowerCase();
-      }
-      if (action === "q") return false;
-
-      // Check if login succeeded after manual CAPTCHA solve
-      const searchPath = new URL(searchUrl).pathname;
-      const waitResult = await browserUse.waitForLogin(
-        searchPath,
-        CDP_PORT,
-        10,
-        2,
-      );
-
-      if (waitResult.success) {
-        console.log("✅ Login successful after manual CAPTCHA!");
-        return true;
-      } else {
-        console.log(
-          "⚠️ Still not logged in. Current URL: " + waitResult.current_url,
-        );
-        const retry = await promptUser("Continue waiting? (y/n): ");
-        if (retry.toLowerCase() !== "y") return false;
-        // Loop back to wait for manual intervention
-        return waitForManualIntervention(platform);
-      }
-    } else if (verifyResult.needs_new_code) {
-      const retry = await promptUser("⚠️ Code expired. Resend? (y/n): ");
-      if (retry.toLowerCase() === "y") {
-        console.log("📧 Requesting new code...");
-        await browserUse.resendVerificationCode(CDP_PORT);
-        console.log("✅ New code sent.");
-      } else {
-        return false;
-      }
-    } else {
-      const retry = await promptUser("❌ Code incorrect. Try again? (y/n): ");
-      if (retry.toLowerCase() !== "y") return false;
-    }
-  }
-}
-
-/**
- * Wait for user to complete login manually
- */
-async function waitForManualIntervention(
-  platform: Platform,
-): Promise<boolean> {
-  console.log(`\n${"=".repeat(60)}`);
-  console.log(`🔐 Manual Login Required for ${platform.name}`);
-  console.log(`${"=".repeat(60)}`);
-  console.log(`\nPlease complete login manually:`);
-  console.log(`  - VNC: localhost:5900 (connect with VNC viewer)`);
-  console.log(`  - Browser CDP: localhost:9222`);
-
-  let confirm = "";
-  while (confirm !== "c") {
-    confirm = (await promptUser(
-      "\nWhen you've completed login, enter 'c' to continue: ",
-    )).toLowerCase();
-  }
-
-  console.log("✅ Continuing with scrape...");
-  return true;
 }
 
 /**

@@ -55,31 +55,6 @@ async def execute(request: ExecuteRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-class LoginRequest(BaseModel):
-    """Request to start an AI-powered login session"""
-
-    task: str  # Natural language login task
-    start_url: str  # URL to start from (login page)
-    cdp_port: Optional[int] = 9222  # Port for CDP
-    max_time: Optional[int] = 120  # Maximum execution time in seconds
-    use_vision: Optional[bool] = True  # Whether to enable visual mode (screenshots) for LLM
-    solve_captcha: Optional[bool] = False  # If True, Browser-Use attempts to solve CAPTCHAs
-
-
-class LoginResponse(BaseModel):
-    """Response from login session"""
-
-    login_success: bool
-    captcha_needed: Optional[bool] = False  # True if CAPTCHA needs manual solving
-    verification_needed: Optional[bool] = False  # True if 2FA/verification required
-    verification_type: Optional[str] = None  # "email", "sms", "2fa", "code"
-    verification_prompt: Optional[str] = None  # User-friendly prompt
-    current_url: str
-    cdp_port: int
-    execution_time_ms: int
-    error: Optional[str] = None
-
-
 # Singleton controller for sessions (keeps browser state)
 _controller: Optional[BrowserController] = None
 
@@ -89,37 +64,6 @@ def get_controller() -> BrowserController:
     if _controller is None:
         _controller = BrowserController()
     return _controller
-
-
-@app.post("/login", response_model=LoginResponse)
-async def login(request: LoginRequest):
-    """
-    Start an AI-powered login session: Browser-Use launches Chrome with CDP,
-    performs login, and keeps the browser open for Patchright to connect.
-
-    Flow:
-    1. Browser-Use launches Chrome with CDP enabled on port 9222
-    2. Browser-Use performs the login task
-    3. Browser stays open (not closed)
-    4. Returns success status and CDP port
-    5. Patchright connects to localhost:9222 to extract jobs
-    6. Call /close when done
-    """
-    try:
-        controller = get_controller()
-        result = await controller.login(
-            task=request.task,
-            start_url=request.start_url,
-            cdp_port=request.cdp_port,
-            max_time=request.max_time,
-            use_vision=request.use_vision,
-            solve_captcha=request.solve_captcha,
-        )
-        return result
-    except Exception as e:
-        logger.error(f"Error starting login session: {str(e)}")
-        logger.error(traceback.format_exc())
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/close")

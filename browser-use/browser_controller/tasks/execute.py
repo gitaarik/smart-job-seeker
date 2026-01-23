@@ -75,10 +75,13 @@ class ExecuteTaskMixin:
 
             # Extract agent's final output for structured responses
             agent_output = ""
-            if result and hasattr(result, 'final_result') and result.final_result:
-                agent_output = str(result.final_result)
-            elif result and hasattr(result, 'history') and result.history:
-                # Get last action's result from history
+            if result and hasattr(result, 'final_result'):
+                # final_result is a method in AgentHistoryList, call it
+                final = result.final_result()
+                if final:
+                    agent_output = str(final)
+            if not agent_output and result and hasattr(result, 'history') and result.history:
+                # Fallback: Get last action's result from history
                 last_action = result.history[-1]
                 if hasattr(last_action, 'result') and last_action.result:
                     agent_output = str(last_action.result)

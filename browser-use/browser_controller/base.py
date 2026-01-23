@@ -10,7 +10,6 @@ from browser_use import Browser
 from llm_factory import create_llm
 from .tasks import (
     ExecuteTaskMixin,
-    LoginMixin,
     VerificationMixin,
     SessionMixin,
 )
@@ -18,7 +17,6 @@ from .tasks import (
 
 class BrowserController(
     ExecuteTaskMixin,
-    LoginMixin,
     VerificationMixin,
     SessionMixin,
 ):

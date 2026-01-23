@@ -229,10 +229,6 @@ export const extractJobsFromSearchPageSchema = z.object({
       ),
     }),
   ),
-  pattern: z.string().describe(
-    "Description of the extraction pattern or strategy used",
-  ),
-  jobCount: z.number().int().describe("Total number of jobs extracted"),
 });
 
 /**

@@ -20,31 +20,9 @@ export interface ExecuteTaskResponse {
   execution_time_ms: number;
   agent_output?: string;
   error?: string;
-}
-
-// Login session parameters (Browser-Use launches Chrome, keeps it open)
-export interface LoginParams {
-  task: string; // Natural language login task
-  startUrl: string; // URL to start from (login page)
-  cdpPort?: number; // Port for CDP (default 9222)
-  maxTime?: number; // Max execution time in seconds
-  useVision?: boolean;
-  solveCaptcha?: boolean; // If true, Browser-Use attempts to solve CAPTCHAs (default: false)
-}
-
-// Login session response
-export interface LoginResponse {
-  login_success: boolean;
-  captcha_needed?: boolean; // True if CAPTCHA needs manual solving via VNC
-  verification_needed?: boolean; // True if 2FA/verification required
-  verification_type?: string; // "email", "sms", "2fa", "code"
-  verification_prompt?: string; // User-friendly prompt
-  current_url: string;
-  cdp_port: number;
-  cdp_url?: string; // Cloud mode: WebSocket URL for Playwright CDP connection
-  live_url?: string; // Cloud mode: URL to watch the browser session live
-  execution_time_ms: number;
-  error?: string;
+  // Cloud mode additions
+  cdp_url?: string; // WebSocket URL for Playwright CDP connection
+  live_url?: string; // URL to watch the browser session live
 }
 
 // Browser-Use Cloud session
@@ -132,13 +110,29 @@ export interface JobData {
 
 export class BrowserUseClient {
   private config: BrowserUseConfig;
-  private isCloudMode: boolean;
+  private _isCloudMode: boolean;
   private cloudApiKey?: string;
   private cloudProfileId?: string;
   private cloudTimeout: number; // minutes
   private cloudSessionId?: string; // Track active cloud session for cleanup
+  private _liveUrl?: string; // Track live URL for manual intervention
 
   private static readonly CLOUD_API_BASE = "https://api.browser-use.com/api/v1";
+
+  /**
+   * Check if running in cloud mode.
+   */
+  get isCloudMode(): boolean {
+    return this._isCloudMode;
+  }
+
+  /**
+   * Get the live URL for the current cloud session (for manual intervention).
+   * Returns undefined in local mode or if no session is active.
+   */
+  get liveUrl(): string | undefined {
+    return this._liveUrl;
+  }
 
   constructor(customConfig?: Partial<BrowserUseConfig>) {
     // Use default config if not provided
@@ -151,8 +145,8 @@ export class BrowserUseClient {
     };
 
     // Cloud mode configuration
-    this.isCloudMode = config.browserUseCloud;
-    if (this.isCloudMode) {
+    this._isCloudMode = config.browserUseCloud;
+    if (this._isCloudMode) {
       this.cloudApiKey = config.browserUseCloudApiKey;
       this.cloudProfileId = config.browserUseCloudProfileId;
       this.cloudTimeout = config.browserUseCloudTimeout;
@@ -203,13 +197,28 @@ export class BrowserUseClient {
   /**
    * Execute a Browser-Use task on the existing session.
    * The browser must already be running (via startSession or login).
+   *
+   * In cloud mode: Uses the active cloud session to run the task.
+   * In local mode: Uses local Browser-Use server's /execute endpoint.
    */
   async executeTask(params: ExecuteTaskParams): Promise<ExecuteTaskResponse> {
+    if (this._isCloudMode) {
+      return this.executeCloudTask(params);
+    }
+    return this.executeLocalTask(params);
+  }
+
+  /**
+   * Execute a task on the local Browser-Use server.
+   */
+  private async executeLocalTask(
+    params: ExecuteTaskParams,
+  ): Promise<ExecuteTaskResponse> {
     const useVision = params.useVision ?? this.config.useVision;
     const cdpPort = params.cdpPort ?? 9222;
 
     console.log(
-      `[BrowserUseClient] Executing task on existing session (port ${cdpPort})`,
+      `[BrowserUseClient] Executing task on local session (port ${cdpPort})`,
     );
 
     let response: Response;
@@ -261,74 +270,95 @@ export class BrowserUseClient {
   }
 
   /**
-   * Start an AI-powered login session: Browser-Use launches Chrome with CDP,
-   * performs login, and keeps the browser open for Patchright to connect.
-   *
-   * In cloud mode: Uses Browser-Use Cloud API to create a session and run login task.
-   * In local mode: Uses local Browser-Use server's /login endpoint.
-   *
-   * @param params Login session parameters
-   * @returns Response with login_success, current_url, cdp_port (and cdp_url in cloud mode)
+   * Execute a task on the cloud Browser-Use session.
+   * Requires an active cloud session (cloudSessionId must be set).
    */
-  async login(
-    params: LoginParams,
-  ): Promise<LoginResponse> {
-    if (this.isCloudMode) {
-      return this.startCloudLoginSession(params);
+  private async executeCloudTask(
+    params: ExecuteTaskParams,
+  ): Promise<ExecuteTaskResponse> {
+    if (!this.cloudSessionId) {
+      return {
+        success: false,
+        current_url: "",
+        cdp_port: 0,
+        execution_time_ms: 0,
+        error:
+          "No active cloud session. Call login() or startCloudSession() first.",
+      };
     }
-    return this.startLocalLoginSession(params);
-  }
 
-  /**
-   * Start login session using Browser-Use Cloud.
-   * Creates a cloud browser session with persistent profile, runs login task.
-   */
-  private async startCloudLoginSession(
-    params: LoginParams,
-  ): Promise<LoginResponse> {
-    console.log(`\n🌐 Using Browser-Use Cloud`);
+    console.log(
+      `[BrowserUseClient] Executing task on cloud session: ${this.cloudSessionId}`,
+    );
+
     const startTime = Date.now();
 
-    // 1. Create cloud browser session with persistent profile
-    const session = await this.createCloudBrowserSession();
-    this.cloudSessionId = session.id;
+    // Get session info for live_url and cdp_url
+    const sessionInfo = await this.getCloudSessionInfo();
 
-    console.log(`📺 Live URL: ${session.liveUrl}`);
-    console.log(`   (Open to monitor - CAPTCHA will be solved automatically)`);
-
-    // 2. Run login task
-    console.log(`⏳ Running login task...`);
-    const task = await this.runCloudTask(session.id, params.task);
-
-    // 3. Wait for task completion
+    // Run task
+    const task = await this.runCloudTask(this.cloudSessionId, params.task);
     const completedTask = await this.waitForCloudTask(task.id);
 
     const executionTime = Date.now() - startTime;
 
     if (completedTask.status === "failed") {
-      console.error(`❌ Cloud login task failed: ${completedTask.error}`);
+      console.error(`❌ Cloud task failed: ${completedTask.error}`);
       return {
-        login_success: false,
-        current_url: params.startUrl,
+        success: false,
+        current_url: "",
         cdp_port: 0,
-        cdp_url: session.cdpUrl,
-        live_url: session.liveUrl,
+        cdp_url: sessionInfo?.cdpUrl,
+        live_url: sessionInfo?.liveUrl,
         execution_time_ms: executionTime,
-        error: completedTask.error || "Cloud login task failed",
+        agent_output: completedTask.output || "",
+        error: completedTask.error || "Cloud task failed",
       };
     }
 
-    console.log(`✅ Login completed in ${(executionTime / 1000).toFixed(1)}s`);
-    console.log(`🔌 CDP URL: ${session.cdpUrl}`);
+    console.log(
+      `✅ Cloud task completed in ${(executionTime / 1000).toFixed(1)}s`,
+    );
 
     return {
-      login_success: true,
-      current_url: params.startUrl,
-      cdp_port: 0, // Not used in cloud mode
-      cdp_url: session.cdpUrl,
-      live_url: session.liveUrl,
+      success: true,
+      current_url: "", // Cloud doesn't return current URL directly
+      cdp_port: 0,
+      cdp_url: sessionInfo?.cdpUrl,
+      live_url: sessionInfo?.liveUrl,
       execution_time_ms: executionTime,
+      agent_output: completedTask.output || "",
     };
+  }
+
+  /**
+   * Get info about the current cloud session.
+   */
+  private async getCloudSessionInfo(): Promise<
+    { cdpUrl: string; liveUrl: string } | null
+  > {
+    if (!this.cloudSessionId) return null;
+
+    try {
+      const response = await fetch(
+        `${BrowserUseClient.CLOUD_API_BASE}/browsers/${this.cloudSessionId}`,
+        {
+          method: "GET",
+          headers: {
+            "x-api-key": this.cloudApiKey!,
+          },
+          signal: AbortSignal.timeout(10000),
+        },
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        return { cdpUrl: data.cdpUrl, liveUrl: data.liveUrl };
+      }
+    } catch {
+      // Ignore errors, return null
+    }
+    return null;
   }
 
   /**
@@ -478,63 +508,6 @@ export class BrowserUseClient {
   }
 
   /**
-   * Start login session using local Browser-Use server.
-   */
-  private async startLocalLoginSession(
-    params: LoginParams,
-  ): Promise<LoginResponse> {
-    const useVision = params.useVision ??
-      this.config.useVision;
-    console.log(
-      `[BrowserUseClient] Starting local login session, CDP port: ${
-        params.cdpPort ?? 9222
-      }`,
-    );
-
-    let response: Response;
-    try {
-      response = await fetch(`${this.config.baseUrl}/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          task: params.task,
-          start_url: params.startUrl,
-          cdp_port: params.cdpPort ?? 9222,
-          max_time: params.maxTime,
-          use_vision: useVision,
-          solve_captcha: params.solveCaptcha ?? false,
-        }),
-        signal: AbortSignal.timeout(this.config.timeout),
-      });
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      console.error(`\n❌ Failed to start login session: ${errorMsg}`);
-      throw new Error(`Login session failed: ${errorMsg}`);
-    }
-
-    if (!response.ok) {
-      const errorBody = await response.text().catch(() => "");
-      console.error(
-        `\n❌ Login session API error: ${response.status} ${response.statusText}`,
-      );
-      if (errorBody) {
-        console.error(`   Response: ${errorBody.substring(0, 500)}`);
-      }
-      throw new Error(
-        `Login session API error: ${response.status} ${response.statusText}`,
-      );
-    }
-
-    const result: LoginResponse = await response.json();
-
-    console.log(
-      `[BrowserUseClient] Login session result: success=${result.login_success}, url=${result.current_url}, port=${result.cdp_port}`,
-    );
-
-    return result;
-  }
-
-  /**
    * Close the browser session.
    * Call this after Patchright has finished extracting jobs.
    *
@@ -542,7 +515,7 @@ export class BrowserUseClient {
    * In local mode: Calls local Browser-Use server to close.
    */
   async close(): Promise<void> {
-    if (this.isCloudMode) {
+    if (this._isCloudMode) {
       return this.closeCloudSession();
     }
     return this.closeLocalSession();
@@ -584,6 +557,7 @@ export class BrowserUseClient {
       console.warn(`[BrowserUseClient] Error closing cloud session: ${error}`);
     } finally {
       this.cloudSessionId = undefined;
+      this._liveUrl = undefined;
     }
   }
 
@@ -962,6 +936,45 @@ export class BrowserUseClient {
       `[BrowserUseClient] Session started: ${result.current_url}, VNC: ${result.vnc_url}`,
     );
     return result;
+  }
+
+  /**
+   * Start a cloud browser session without running a task.
+   * Creates a persistent profile session and returns URLs for CDP and live viewing.
+   * Use this when you need to run multiple tasks on the same session.
+   *
+   * @returns Object with cdpUrl for Playwright and liveUrl for manual intervention
+   */
+  async startCloudSession(): Promise<{
+    success: boolean;
+    cdp_url: string;
+    live_url: string;
+    session_id: string;
+  }> {
+    if (!this._isCloudMode) {
+      return {
+        success: false,
+        cdp_url: "",
+        live_url: "",
+        session_id: "",
+      };
+    }
+
+    console.log(`[BrowserUseClient] Starting cloud session...`);
+
+    const session = await this.createCloudBrowserSession();
+    this.cloudSessionId = session.id;
+    this._liveUrl = session.liveUrl;
+
+    console.log(`📺 Live URL: ${session.liveUrl}`);
+    console.log(`🔌 CDP URL: ${session.cdpUrl}`);
+
+    return {
+      success: true,
+      cdp_url: session.cdpUrl,
+      live_url: session.liveUrl,
+      session_id: session.id,
+    };
   }
 
   /**
