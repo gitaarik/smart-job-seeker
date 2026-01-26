@@ -117,7 +117,9 @@
       "WebFetch(domain:lumenalta.com)",
       "Bash(git push:*)",
       "WebFetch(domain:evgeny-kim.github.io)",
-      "Bash(git fetch:*)"
+      "Bash(git fetch:*)",
+      "Bash(tr:*)",
+      "Bash(git tag:*)"
     ],
     "deny": [],
     "ask": []
