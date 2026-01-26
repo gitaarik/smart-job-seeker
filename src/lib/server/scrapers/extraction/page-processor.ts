@@ -16,51 +16,96 @@ import {
 } from "./click-helpers";
 
 /**
- * Scroll through the page to reveal lazy-loaded content
- * Many sites (like LinkedIn) only render job cards as they come into view
- * This ensures all content is loaded before extraction
+ * Scroll through the page using mouse wheel to reveal virtualized content
+ * Positions mouse over a content element and uses wheel scroll like a human
+ * This works with virtualized lists that only render visible items
  */
 async function scrollToRevealLazyContent(page: Page): Promise<void> {
-  const scrollStep = 500; // pixels per scroll
-  const scrollDelay = 300; // ms to wait for lazy content to load
-  const maxScrolls = 20; // safety limit
+  const scrollAmount = 500; // pixels per wheel scroll
+  const scrollDelay = 400; // ms to wait for content to render
+  const maxScrolls = 30; // safety limit
+  const noChangeLimit = 3; // stop after this many scrolls with no new content
 
-  const viewportHeight = await page.evaluate(() => window.innerHeight);
-  const getScrollHeight = () => page.evaluate(() => document.body.scrollHeight);
+  // Find an element to position mouse over (any link or clickable in main content)
+  const contentSelectors = [
+    "main a",
+    "article a",
+    "[role='main'] a",
+    ".jobs-search-results a",
+    "a[href*='job']",
+    "a",
+  ];
 
-  let currentPosition = 0;
+  let targetElement = null;
+  for (const selector of contentSelectors) {
+    const element = page.locator(selector).first();
+    if (await element.isVisible({ timeout: 500 }).catch(() => false)) {
+      targetElement = element;
+      break;
+    }
+  }
+
+  if (!targetElement) {
+    console.log("      ⚠️ No content element found to scroll over");
+    return;
+  }
+
+  // Get element position and move mouse there
+  const box = await targetElement.boundingBox();
+  if (!box) {
+    console.log("      ⚠️ Could not get element position for scrolling");
+    return;
+  }
+
+  const mouseX = box.x + box.width / 2;
+  const mouseY = box.y + box.height / 2;
+  await page.mouse.move(mouseX, mouseY);
+
+  console.log("      📜 Scrolling with mouse wheel to reveal content...");
+
+  // Count elements before scrolling
+  const countElements = () =>
+    page.evaluate(
+      () => document.querySelectorAll("a[href*='job'], [data-job-id]").length,
+    );
+
+  let previousCount = await countElements();
   let scrollCount = 0;
-  let previousHeight = await getScrollHeight();
+  let noChangeCount = 0;
 
-  console.log("      📜 Scrolling to reveal lazy-loaded content...");
-
-  while (scrollCount < maxScrolls) {
-    // Scroll down
-    currentPosition += scrollStep;
-    await page.evaluate((pos) => window.scrollTo(0, pos), currentPosition);
+  while (scrollCount < maxScrolls && noChangeCount < noChangeLimit) {
+    // Scroll down with mouse wheel
+    await page.mouse.wheel(0, scrollAmount);
     await page.waitForTimeout(scrollDelay);
 
-    // Check if we've reached the bottom
-    const scrollHeight = await getScrollHeight();
-    if (currentPosition >= scrollHeight - viewportHeight) {
-      // Check if page grew (more content loaded)
-      if (scrollHeight > previousHeight) {
-        previousHeight = scrollHeight;
-        // Continue scrolling if new content appeared
-      } else {
-        // Reached bottom, no more content loading
-        break;
-      }
+    // Check if new content appeared
+    const currentCount = await countElements();
+    if (currentCount > previousCount) {
+      console.log(
+        `      ↓ Scroll ${scrollCount + 1}: ${currentCount} elements (+${
+          currentCount - previousCount
+        })`,
+      );
+      previousCount = currentCount;
+      noChangeCount = 0;
+    } else {
+      noChangeCount++;
     }
 
     scrollCount++;
   }
 
-  // Scroll back to top for extraction
-  await page.evaluate(() => window.scrollTo(0, 0));
-  await page.waitForTimeout(200);
+  // Scroll back to top
+  console.log("      ↑ Scrolling back to top...");
+  for (let i = 0; i < scrollCount + 5; i++) {
+    await page.mouse.wheel(0, -scrollAmount * 2);
+    await page.waitForTimeout(100);
+  }
+  await page.waitForTimeout(300);
 
-  console.log(`      ✓ Scrolled ${scrollCount} times to load all content`);
+  console.log(
+    `      ✓ Scrolled ${scrollCount} times, found ${previousCount} elements`,
+  );
 }
 
 /**
