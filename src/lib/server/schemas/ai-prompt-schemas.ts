@@ -130,37 +130,23 @@ export const checkLoginStateSchema = z.object({
 });
 
 /**
- * Schema for detect_pagination prompt
- * Identifies pagination mechanisms on job listing pages
+ * Schema for find_next_page_button prompt
+ * Finds pagination button using data-xxx markers
  */
-export const detectPaginationSchema = z.object({
-  hasPagination: z
+export const findNextPageButtonSchema = z.object({
+  found: z
     .boolean()
+    .describe("True if a next page button was found"),
+  dataXxxId: z
+    .number()
+    .int()
+    .nullable()
     .describe(
-      "True if traditional pagination (numbered pages or next/prev buttons) is present",
+      "The data-xxx attribute value of the next button, or null if not found",
     ),
-  hasInfiniteScroll: z
-    .boolean()
-    .describe(
-      "True if the page uses infinite scroll or load more buttons",
-    ),
-  nextButtonSelector: z
-    .string()
-    .optional()
-    .describe("CSS selector for the Next button if pagination is present"),
-  loadMoreSelector: z
-    .string()
-    .optional()
-    .describe("CSS selector for Load More button if present"),
   paginationType: z
-    .enum([
-      "numbered",
-      "next_prev",
-      "load_more",
-      "infinite_scroll",
-      "none",
-    ])
-    .describe("The type of pagination mechanism detected"),
+    .enum(["next_prev", "load_more", "none"])
+    .describe("The type of pagination button found"),
 });
 
 /**
@@ -232,7 +218,7 @@ export const aiPromptSchemas = {
   extract_jobs_from_search_page: extractJobsFromSearchPageSchema,
   score_job_match: scoreJobMatchSchema,
   detect_login_page: detectLoginPageSchema,
-  detect_pagination: detectPaginationSchema,
+  find_next_page_button: findNextPageButtonSchema,
   classify_clickables: classifyClickablesSchema,
   check_login_state: checkLoginStateSchema,
 } as const;

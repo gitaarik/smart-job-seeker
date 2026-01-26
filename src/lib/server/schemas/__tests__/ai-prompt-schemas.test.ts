@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   aiPromptSchemas,
   detectLoginPageSchema,
-  detectPaginationSchema,
   extractJobDataSchema,
+  findNextPageButtonSchema,
   getSchemaForPrompt,
   scoreJobMatchSchema,
 } from "../ai-prompt-schemas";
@@ -15,7 +15,7 @@ describe("AI Prompt Schemas", () => {
       expect(aiPromptSchemas).toHaveProperty("extract_job_data_browser_use");
       expect(aiPromptSchemas).toHaveProperty("score_job_match");
       expect(aiPromptSchemas).toHaveProperty("detect_login_page");
-      expect(aiPromptSchemas).toHaveProperty("detect_pagination");
+      expect(aiPromptSchemas).toHaveProperty("find_next_page_button");
       expect(aiPromptSchemas).toHaveProperty("classify_clickables");
     });
 
@@ -185,25 +185,32 @@ describe("AI Prompt Schemas", () => {
     });
   });
 
-  describe("detectPaginationSchema", () => {
-    it("should validate pagination detection response", () => {
+  describe("findNextPageButtonSchema", () => {
+    it("should validate next page button response", () => {
       const validData = {
-        hasPagination: true,
-        hasInfiniteScroll: false,
-        nextButtonSelector: ".pagination .next",
-        loadMoreSelector: undefined,
+        found: true,
+        dataXxxId: 42,
         paginationType: "next_prev",
       };
-      expect(() => detectPaginationSchema.parse(validData)).not.toThrow();
+      expect(() => findNextPageButtonSchema.parse(validData)).not.toThrow();
+    });
+
+    it("should allow null dataXxxId when not found", () => {
+      const notFoundData = {
+        found: false,
+        dataXxxId: null,
+        paginationType: "none",
+      };
+      expect(() => findNextPageButtonSchema.parse(notFoundData)).not.toThrow();
     });
 
     it("should enforce valid pagination type enum", () => {
       const invalidType = {
-        hasPagination: false,
-        hasInfiniteScroll: false,
+        found: true,
+        dataXxxId: 1,
         paginationType: "unknown", // Invalid enum
       };
-      expect(() => detectPaginationSchema.parse(invalidType)).toThrow();
+      expect(() => findNextPageButtonSchema.parse(invalidType)).toThrow();
     });
   });
 });

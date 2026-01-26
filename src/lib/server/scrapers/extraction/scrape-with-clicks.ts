@@ -10,9 +10,8 @@ import {
   isFatalScraperError,
 } from "$lib/server/job/scrape-filters";
 import {
-  detectPaginationStrategy,
+  findNextPageButton,
   navigateToNextPage,
-  performInfiniteScroll,
 } from "$lib/server/utils/pagination";
 import { getErrorMessage, promptUser } from "../utils";
 import {
@@ -212,41 +211,28 @@ async function confirmWithUser(
 }
 
 /**
- * Handle pagination: infinite scroll or traditional pagination
- * @returns true if there's a next page, false to stop
+ * Handle pagination using LLM-based data-xxx detection
+ * @returns true if navigated to next page, false to stop
  */
 async function handlePagination(page: Page): Promise<boolean> {
-  console.log("\n   🔍 Checking for more pages...");
-  const paginationInfo = await detectPaginationStrategy(page);
+  // Find the next page button using CDP marking + LLM
+  const result = await findNextPageButton(page);
 
-  if (paginationInfo.hasInfiniteScroll || paginationInfo.loadMoreSelector) {
-    console.log("      Infinite scroll detected, scrolling...");
-    const newContent = await performInfiniteScroll(page, {
-      maxScrolls: config.scraperInfiniteScrollMaxScrolls,
-    });
-
-    if (newContent === 0) {
-      console.log("      No new content after scroll, stopping");
-      return false;
-    }
-    return true;
+  if (!result.found || result.dataXxxId === null) {
+    console.log("      No more pages");
+    return false;
   }
 
-  if (paginationInfo.hasPagination) {
-    console.log("      Pagination detected, navigating to next page...");
-    const hasNext = await navigateToNextPage(page, paginationInfo);
+  // Navigate to next page by clicking the identified button
+  const success = await navigateToNextPage(page, result.dataXxxId);
 
-    if (!hasNext) {
-      console.log("      No more pages");
-      return false;
-    }
-
-    await humanWait(page, config.scraperRateLimitDelay);
-    return true;
+  if (!success) {
+    console.log("      Failed to navigate to next page");
+    return false;
   }
 
-  console.log("      No pagination detected, stopping");
-  return false;
+  await humanWait(page, config.scraperRateLimitDelay);
+  return true;
 }
 
 /**
