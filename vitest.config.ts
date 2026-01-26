@@ -14,6 +14,7 @@ export default defineConfig({
   test: {
     environment: "node",
     setupFiles: ["./vitest.setup.ts"],
+    pool: "forks", // Prevents node processes from staying alive after tests
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],

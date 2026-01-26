@@ -177,4 +177,3 @@ export async function humanClick(
   // This hits whatever element is actually at those coordinates
   await page.mouse.click(targetX, targetY);
 }
-

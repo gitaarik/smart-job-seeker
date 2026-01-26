@@ -6403,7 +6403,10 @@ export const Ai_chatScalarFieldEnum = {
   response: 'response',
   context: 'context',
   followup_to: 'followup_to',
-  error: 'error'
+  error: 'error',
+  provider: 'provider',
+  model: 'model',
+  request_type: 'request_type'
 } as const
 
 export type Ai_chatScalarFieldEnum = (typeof Ai_chatScalarFieldEnum)[keyof typeof Ai_chatScalarFieldEnum]

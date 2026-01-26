@@ -24,8 +24,4 @@ export { type BrowserLaunchOptions, launchBrowser } from "./utils";
 export { markClickableElementsInContainer } from "./cdp-utils";
 
 // Stealth utilities
-export {
-  humanClick,
-  humanWait,
-  injectStealthScripts,
-} from "./stealth-utils";
+export { humanClick, humanWait, injectStealthScripts } from "./stealth-utils";
