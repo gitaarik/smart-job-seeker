@@ -62,12 +62,13 @@ export async function markClickableElementsInContainer(
     const clickableNodes: Array<{ nodeId: number; text: string }> = [];
 
     // Exclusion patterns for UI chrome elements
+    // NOTE: "pagination" is NOT excluded - we need pagination buttons to be marked
+    // Filtering of pagination happens in stripHtmlForLlm based on use case
     const excludePatterns = [
       "menu",
       "nav",
       "header",
       "footer",
-      "pagination",
       "filter",
       "sort",
       "dropdown",

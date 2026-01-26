@@ -6,11 +6,25 @@
 import * as cheerio from "cheerio";
 
 /**
+ * Options for HTML stripping
+ */
+export interface StripHtmlOptions {
+  /**
+   * Additional class name patterns to preserve (added to the default whitelist).
+   * E.g., ["pagination"] to preserve pagination-related classes.
+   */
+  extraClassPatterns?: string[];
+}
+
+/**
  * Strip HTML to minimal content for LLM processing
  * Removes: scripts, styles, comments, unnecessary attributes, whitespace
  * Keeps: semantic structure and important attributes (href, src, alt, title)
  */
-export function stripHtmlForLlm(html: string): string {
+export function stripHtmlForLlm(
+  html: string,
+  options: StripHtmlOptions = {},
+): string {
   // Load HTML into Cheerio
   const $ = cheerio.load(html, {
     decodeEntities: true,
@@ -109,6 +123,8 @@ export function stripHtmlForLlm(html: string): string {
     // LinkedIn-specific
     "artdeco",
     "scaffold",
+    // Extra patterns from options
+    ...(options.extraClassPatterns || []),
   ];
 
   const maxAttrLength = 75; // Truncate long URLs (75 chars is enough for domain+path)

@@ -29,7 +29,7 @@ export async function findNextPageButton(
 ): Promise<NextPageResult> {
   console.log("   🔍 Looking for pagination...");
 
-  // Mark all clickable elements
+  // Mark all clickable elements (pagination is now included in marking)
   const clickableCount = await markClickableElementsInContainer(page, "body");
   if (clickableCount === 0) {
     console.log("      No clickable elements found");
@@ -38,9 +38,11 @@ export async function findNextPageButton(
 
   console.log(`      Marked ${clickableCount} clickable elements`);
 
-  // Get marked HTML and strip for LLM
+  // Get marked HTML and strip for LLM, preserving pagination classes
   const markedHtml = await page.content();
-  const strippedHtml = stripHtmlForLlm(markedHtml);
+  const strippedHtml = stripHtmlForLlm(markedHtml, {
+    extraClassPatterns: ["pagination", "pager", "page-nav"],
+  });
 
   // Ask LLM to identify the next page button
   const htmlSizeKb = (strippedHtml.length / 1024).toFixed(1);

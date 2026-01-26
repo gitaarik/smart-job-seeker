@@ -6,4 +6,4 @@
 export { extractLinks, extractSourceUrlFromMeta } from "./extract";
 
 // HTML stripping for LLM
-export { stripHtmlForLlm } from "./strip";
+export { stripHtmlForLlm, type StripHtmlOptions } from "./strip";
