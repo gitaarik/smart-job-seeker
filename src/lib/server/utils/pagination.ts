@@ -100,12 +100,12 @@ export async function navigateToNextPage(
       return false;
     }
 
-    // Scroll element into view first
+    // Scroll element into view and wait for any overlays to settle
     await button.scrollIntoViewIfNeeded();
-    await page.waitForTimeout(200);
+    await page.waitForTimeout(300);
 
-    // Click the button
-    await button.click();
+    // Click the button with force to bypass any header/overlay interception
+    await button.click({ force: true });
 
     // Wait for content to stabilize after click
     const stabilize = await waitForSpaContent(page, {
