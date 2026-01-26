@@ -16,6 +16,54 @@ import {
 } from "./click-helpers";
 
 /**
+ * Scroll through the page to reveal lazy-loaded content
+ * Many sites (like LinkedIn) only render job cards as they come into view
+ * This ensures all content is loaded before extraction
+ */
+async function scrollToRevealLazyContent(page: Page): Promise<void> {
+  const scrollStep = 500; // pixels per scroll
+  const scrollDelay = 300; // ms to wait for lazy content to load
+  const maxScrolls = 20; // safety limit
+
+  const viewportHeight = await page.evaluate(() => window.innerHeight);
+  const getScrollHeight = () => page.evaluate(() => document.body.scrollHeight);
+
+  let currentPosition = 0;
+  let scrollCount = 0;
+  let previousHeight = await getScrollHeight();
+
+  console.log("      📜 Scrolling to reveal lazy-loaded content...");
+
+  while (scrollCount < maxScrolls) {
+    // Scroll down
+    currentPosition += scrollStep;
+    await page.evaluate((pos) => window.scrollTo(0, pos), currentPosition);
+    await page.waitForTimeout(scrollDelay);
+
+    // Check if we've reached the bottom
+    const scrollHeight = await getScrollHeight();
+    if (currentPosition >= scrollHeight - viewportHeight) {
+      // Check if page grew (more content loaded)
+      if (scrollHeight > previousHeight) {
+        previousHeight = scrollHeight;
+        // Continue scrolling if new content appeared
+      } else {
+        // Reached bottom, no more content loading
+        break;
+      }
+    }
+
+    scrollCount++;
+  }
+
+  // Scroll back to top for extraction
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(200);
+
+  console.log(`      ✓ Scrolled ${scrollCount} times to load all content`);
+}
+
+/**
  * Job data extracted from search page
  */
 export interface SearchPageJob {
@@ -266,6 +314,9 @@ export async function processSearchPage(
   existingSavedHtml?: string,
 ): Promise<PageProcessingResult> {
   console.log(`\n📄 Page ${pageNumber}...`);
+
+  // Step 0: Scroll through page to reveal lazy-loaded content
+  await scrollToRevealLazyContent(page);
 
   // Step 1: Mark and classify clickables
   const markResult = await markAndClassifyClickables(jobSearchId, page);
