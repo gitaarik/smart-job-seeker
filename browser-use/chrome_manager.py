@@ -322,7 +322,9 @@ class ChromeManager:
                     timeout=aiohttp.ClientTimeout(total=5)
                 ) as resp:
                     if resp.status == 200:
-                        pages = await resp.json()
+                        all_pages = await resp.json()
+                        # Filter to actual page tabs (not service workers, iframes, etc.)
+                        pages = [p for p in all_pages if p.get("type") == "page"]
                         if pages:
                             return pages[0].get("url", "")
         except Exception as e:
@@ -354,10 +356,12 @@ class ChromeManager:
         """Get page body text via CDP WebSocket."""
         pages_info = await cls.get_pages_info(cdp_port)
 
-        if not pages_info:
+        # Filter to actual page tabs (not service workers, iframes, etc.)
+        pages = [p for p in pages_info if p.get("type") == "page"]
+        if not pages:
             return ""
 
-        page_ws_url = pages_info[0].get("webSocketDebuggerUrl", "")
+        page_ws_url = pages[0].get("webSocketDebuggerUrl", "")
         if not page_ws_url:
             return ""
 
@@ -388,7 +392,10 @@ class ChromeManager:
         """
         pages_info = await cls.get_pages_info(cdp_port)
 
-        if len(pages_info) <= 1:
+        # Filter to actual page tabs (not service workers, iframes, etc.)
+        pages = [p for p in pages_info if p.get("type") == "page"]
+
+        if len(pages) <= 1:
             return 0
 
         internal_cdp_port = cdp_port + 1
@@ -396,7 +403,7 @@ class ChromeManager:
         closed_count = 0
 
         # Close all tabs except the first one
-        for page in pages_info[1:]:
+        for page in pages[1:]:
             target_id = page.get("id")
             if not target_id:
                 continue
@@ -582,10 +589,12 @@ class ChromeManager:
             print(f"[Chrome] Navigating to: {url}", flush=True)
 
             pages_info = await cls.get_pages_info(cdp_port)
-            if not pages_info:
-                logger.warning("[Chrome] No pages found, will relaunch")
+            # Filter to actual page tabs (not service workers, iframes, etc.)
+            pages = [p for p in pages_info if p.get("type") == "page"]
+            if not pages:
+                logger.warning("[Chrome] No page tabs found, will relaunch")
             else:
-                page_ws_url = pages_info[0].get("webSocketDebuggerUrl", "")
+                page_ws_url = pages[0].get("webSocketDebuggerUrl", "")
                 if not page_ws_url:
                     logger.warning("[Chrome] No WebSocket URL found, will relaunch")
                 else:
