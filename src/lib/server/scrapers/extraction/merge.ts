@@ -98,8 +98,8 @@ export function mergeJobData(
     // Salary: Detail wins, search fallback (use ?? to preserve 0 values)
     salary_min: detailData.salary_min ?? searchData.salary_min ?? null,
     salary_max: detailData.salary_max ?? searchData.salary_max ?? null,
-    salary_currency: detailData.salary_currency || searchData.salary_currency ||
-      null,
+    salary_currency: detailData.salary_currency ||
+      searchData.salary_currency || null,
     salary_period: detailData.salary_period || searchData.salary_period || null,
 
     // Skills: MERGE both sources (deduplicate)

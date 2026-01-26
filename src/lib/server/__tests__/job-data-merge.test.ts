@@ -203,22 +203,25 @@ describe("mergeJobData", () => {
     expect(merged.title).toBe("Untitled Position");
   });
 
-  it("should preserve zero salary values using nullish coalescing", () => {
+  it("should use search salary when detail has null (nullish coalescing)", () => {
     const searchData = {
-      salary_min: 0,
-      salary_max: 0,
+      salary_min: 50000,
+      salary_max: 75000,
+      salary_period: "year",
     };
 
     const detailDataWithNullSalary = {
       ...detailData,
       salary_min: null,
       salary_max: null,
+      salary_period: null,
     };
 
     const merged = mergeJobData(searchData, detailDataWithNullSalary);
 
-    expect(merged.salary_min).toBe(0); // Should preserve 0, not treat as falsy
-    expect(merged.salary_max).toBe(0);
+    // Should use search data values when detail is null
+    expect(merged.salary_min).toBe(50000);
+    expect(merged.salary_max).toBe(75000);
   });
 
   it("should keep detail page-only fields unchanged", () => {
