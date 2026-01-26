@@ -21,10 +21,19 @@ import {
  * This works with virtualized lists that only render visible items
  */
 async function scrollToRevealLazyContent(page: Page): Promise<void> {
-  const scrollAmount = 500; // pixels per wheel scroll
-  const scrollDelay = 400; // ms to wait for content to render
+  // Randomized scroll parameters to appear more human-like
+  const baseScrollAmount = 400; // base pixels per wheel scroll
+  const scrollVariation = 200; // +/- variation in scroll amount
+  const baseScrollDelay = 300; // base ms to wait for content to render
+  const delayVariation = 200; // +/- variation in delay
   const maxScrolls = 30; // safety limit
   const noChangeLimit = 3; // stop after this many scrolls with no new content
+
+  // Helper to get randomized scroll amount (300-500 pixels)
+  const getRandomScroll = () =>
+    baseScrollAmount + (Math.random() - 0.5) * 2 * scrollVariation;
+  // Helper to get randomized delay (300-500ms)
+  const getRandomDelay = () => baseScrollDelay + Math.random() * delayVariation;
 
   // Find an element to position mouse over (any link or clickable in main content)
   const contentSelectors = [
@@ -74,9 +83,9 @@ async function scrollToRevealLazyContent(page: Page): Promise<void> {
   let noChangeCount = 0;
 
   while (scrollCount < maxScrolls && noChangeCount < noChangeLimit) {
-    // Scroll down with mouse wheel
-    await page.mouse.wheel(0, scrollAmount);
-    await page.waitForTimeout(scrollDelay);
+    // Scroll down with mouse wheel (randomized for human-like behavior)
+    await page.mouse.wheel(0, getRandomScroll());
+    await page.waitForTimeout(getRandomDelay());
 
     // Check if new content appeared
     const currentCount = await countElements();
@@ -95,13 +104,21 @@ async function scrollToRevealLazyContent(page: Page): Promise<void> {
     scrollCount++;
   }
 
-  // Scroll back to top
+  // Scroll back to top (faster but still randomized)
   console.log("      ↑ Scrolling back to top...");
   for (let i = 0; i < scrollCount + 5; i++) {
-    await page.mouse.wheel(0, -scrollAmount * 2);
-    await page.waitForTimeout(100);
+    await page.mouse.wheel(0, -getRandomScroll() * 2);
+    await page.waitForTimeout(50 + Math.random() * 100);
   }
-  await page.waitForTimeout(300);
+
+  // Wait for content to fully load after scrolling (random delay to appear more human)
+  const stabilizeDelay = 1000 + Math.random() * 1000; // 1-2 seconds
+  console.log(
+    `      ⏳ Waiting ${
+      (stabilizeDelay / 1000).toFixed(1)
+    }s for content to stabilize...`,
+  );
+  await page.waitForTimeout(stabilizeDelay);
 
   console.log(
     `      ✓ Scrolled ${scrollCount} times, found ${previousCount} elements`,
