@@ -19,27 +19,34 @@ export interface DuplicatePageResult {
  * Detect if current page has duplicate jobs from previous page
  * Used to detect SPA pagination false positives
  *
- * @param currentJobIds Clickable IDs from current page
- * @param previousPageJobIds Clickable IDs from previous page
+ * Compares job titles (not clickable IDs) since IDs are regenerated on each page load.
+ *
+ * @param currentJobTitles Job titles from current page
+ * @param previousPageJobTitles Job titles from previous page
  * @returns Whether this appears to be a duplicate page
  */
 export function detectDuplicatePage(
-  currentJobIds: number[],
-  previousPageJobIds: number[],
+  currentJobTitles: string[],
+  previousPageJobTitles: string[],
 ): DuplicatePageResult {
-  if (previousPageJobIds.length === 0 || currentJobIds.length === 0) {
+  if (previousPageJobTitles.length === 0 || currentJobTitles.length === 0) {
     return {
       isDuplicate: false,
       duplicatePercentage: 0,
       duplicateCount: 0,
-      totalJobs: currentJobIds.length,
+      totalJobs: currentJobTitles.length,
     };
   }
 
-  const duplicateCount =
-    currentJobIds.filter((id) => previousPageJobIds.includes(id)).length;
+  // Normalize titles for comparison (lowercase, trim)
+  const normalizedPrevious = new Set(
+    previousPageJobTitles.map((t) => t.toLowerCase().trim()),
+  );
+  const duplicateCount = currentJobTitles.filter((title) =>
+    normalizedPrevious.has(title.toLowerCase().trim())
+  ).length;
 
-  const duplicatePercentage = (duplicateCount / currentJobIds.length) * 100;
+  const duplicatePercentage = (duplicateCount / currentJobTitles.length) * 100;
 
   const isDuplicate =
     duplicatePercentage > SCRAPER_CONSTANTS.DUPLICATE_PAGE_THRESHOLD_PERCENT;
@@ -48,7 +55,7 @@ export function detectDuplicatePage(
     console.log(
       `\n   ⏭️  Stopping: ${
         duplicatePercentage.toFixed(0)
-      }% duplicate jobs (${duplicateCount}/${currentJobIds.length})`,
+      }% duplicate jobs (${duplicateCount}/${currentJobTitles.length})`,
     );
     console.log(
       "   This page has the same jobs as the previous page (SPA pagination artifact)",
@@ -59,7 +66,7 @@ export function detectDuplicatePage(
     isDuplicate,
     duplicatePercentage,
     duplicateCount,
-    totalJobs: currentJobIds.length,
+    totalJobs: currentJobTitles.length,
   };
 }
 

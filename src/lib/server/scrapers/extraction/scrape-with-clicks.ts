@@ -170,11 +170,15 @@ function buildJobSubtitle(job: SearchPageJob): string {
 }
 
 /**
- * Ask user to confirm before processing jobs (first page only)
+ * Ask user to confirm before processing jobs
+ * Returns: "proceed" to process jobs, "skip" to go to next page, "cancel" to stop
  */
-async function confirmWithUser(jobs: SearchPageJob[]): Promise<boolean> {
+async function confirmWithUser(
+  jobs: SearchPageJob[],
+  pageNumber: number,
+): Promise<"proceed" | "skip" | "cancel"> {
   console.log(`\n${"=".repeat(60)}`);
-  console.log(`📋 Found ${jobs.length} job cards to process:\n`);
+  console.log(`📋 Page ${pageNumber}: Found ${jobs.length} job cards:\n`);
 
   for (const job of jobs) {
     const title = job.title || "(no title)";
@@ -185,21 +189,26 @@ async function confirmWithUser(jobs: SearchPageJob[]): Promise<boolean> {
   console.log(`\n${"=".repeat(60)}`);
 
   let answer = "";
-  while (answer !== "y" && answer !== "n") {
+  while (answer !== "y" && answer !== "n" && answer !== "s") {
     answer = (
       await promptUser(
-        `\nProceed with importing these ${jobs.length} jobs? (y/n): `,
+        `\nProceed with importing these ${jobs.length} jobs? (y)es / (n)o / (s)kip to next page: `,
       )
     ).toLowerCase();
   }
 
+  if (answer === "s") {
+    console.log("⏭️  Skipping to next page...\n");
+    return "skip";
+  }
+
   if (answer !== "y") {
     console.log("❌ Scraping cancelled by user");
-    return false;
+    return "cancel";
   }
 
   console.log("✅ Proceeding with import...\n");
-  return true;
+  return "proceed";
 }
 
 /**
@@ -450,7 +459,7 @@ export async function scrapeJobsWithClicks(
   };
   const processedJobs: ProcessedJobSummary[] = [];
   let savedStrippedHtml = "";
-  let previousPageJobIds: number[] = [];
+  let previousPageJobTitles: string[] = [];
   let pageNumber = 1;
 
   // Pagination loop
@@ -483,28 +492,21 @@ export async function scrapeJobsWithClicks(
 
     const { jobs } = pageResult;
 
-    // First page: Ask user confirmation
-    if (pageNumber === 1 && jobs.length > 0) {
-      const confirmed = await confirmWithUser(jobs);
-      if (!confirmed) {
-        return { jobsProcessed: 0, strippedHtml: savedStrippedHtml };
-      }
-    }
-
     // Check for duplicate page (SPA pagination artifact)
-    if (pageNumber > 1 && previousPageJobIds.length > 0) {
-      const currentJobIds = jobs.map((j) => j.clickableId);
+    // Compare job titles since clickable IDs are regenerated on each page
+    if (pageNumber > 1 && previousPageJobTitles.length > 0) {
+      const currentJobTitles = jobs.map((j) => j.title || "");
       const duplicateResult = detectDuplicatePage(
-        currentJobIds,
-        previousPageJobIds,
+        currentJobTitles,
+        previousPageJobTitles,
       );
       if (duplicateResult.isDuplicate) {
         break;
       }
     }
 
-    // Store current page job IDs for next iteration
-    previousPageJobIds = jobs.map((j) => j.clickableId);
+    // Store current page job titles for next iteration
+    previousPageJobTitles = jobs.map((j) => j.title || "");
 
     // Check for login page
     const loginResult = await detectLoginPage(page, jobs.length);
@@ -516,6 +518,25 @@ export async function scrapeJobsWithClicks(
     if (jobs.length === 0) {
       console.log("      ⚠️  No job cards found in the page");
       break;
+    }
+
+    // Ask user confirmation before processing
+    const confirmResult = await confirmWithUser(jobs, pageNumber);
+    if (confirmResult === "cancel") {
+      printFinalSummary(stats, processedJobs);
+      return {
+        jobsProcessed: stats.jobsProcessed,
+        strippedHtml: savedStrippedHtml,
+      };
+    }
+    if (confirmResult === "skip") {
+      const hasMore = await handlePagination(page);
+      if (!hasMore) {
+        console.log("      No more pages to skip to");
+        break;
+      }
+      pageNumber++;
+      continue;
     }
 
     // Step 3: Process each job
