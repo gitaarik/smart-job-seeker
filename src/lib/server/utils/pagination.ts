@@ -6,7 +6,7 @@
 import type { Page } from "playwright";
 import { stripHtmlForLlm } from "../html/strip";
 import { waitForSpaContent } from "./page-wait";
-import { generateAiChatResponse } from "../ai-chat/response-generate";
+import { createJobScrapingAiChat } from "../ai-chat/job-utils";
 import { markClickableElementsInContainer } from "../browser/cdp-utils";
 import { config } from "../config";
 
@@ -23,7 +23,10 @@ export interface NextPageResult {
  * Find the next page button using CDP marking + LLM
  * Marks all clickables, sends to LLM, returns the data-xxx ID of next button
  */
-export async function findNextPageButton(page: Page): Promise<NextPageResult> {
+export async function findNextPageButton(
+  jobSearchId: number,
+  page: Page,
+): Promise<NextPageResult> {
   console.log("   🔍 Looking for pagination...");
 
   // Mark all clickable elements
@@ -45,45 +48,35 @@ export async function findNextPageButton(page: Page): Promise<NextPageResult> {
     `      Asking LLM to identify next page button (${htmlSizeKb} KB)...`,
   );
 
-  let result;
-  try {
-    result = await generateAiChatResponse({
-      request: "find_next_page_button",
-      variables: { html: strippedHtml },
-    });
-  } catch (error) {
-    console.error("      LLM request failed:", error);
-    return { found: false, dataXxxId: null, paginationType: "none" };
-  }
+  const result = await createJobScrapingAiChat<{
+    found: boolean;
+    dataXxxId: number | null;
+    paginationType: "next_prev" | "load_more" | "none";
+  }>(jobSearchId, "find_next_page_button", { html: strippedHtml });
 
-  if (!result.content || result.content === "undefined") {
+  if (!result.success || !result.response) {
     console.log("      LLM returned no result");
-    if (result.error) {
-      console.log("      Error:", result.error);
+    if (result.message) {
+      console.log("      Message:", result.message);
     }
     return { found: false, dataXxxId: null, paginationType: "none" };
   }
 
-  try {
-    const parsed = JSON.parse(result.content);
+  const parsed = result.response;
 
-    if (!parsed.found || parsed.dataXxxId === null) {
-      console.log("      No pagination button found by LLM");
-      return { found: false, dataXxxId: null, paginationType: "none" };
-    }
-
-    console.log(
-      `      ✓ Found ${parsed.paginationType} button: data-xxx="${parsed.dataXxxId}"`,
-    );
-    return {
-      found: true,
-      dataXxxId: parsed.dataXxxId,
-      paginationType: parsed.paginationType || "next_prev",
-    };
-  } catch (error) {
-    console.warn("      Failed to parse LLM response:", result.content);
+  if (!parsed.found || parsed.dataXxxId === null) {
+    console.log("      No pagination button found by LLM");
     return { found: false, dataXxxId: null, paginationType: "none" };
   }
+
+  console.log(
+    `      ✓ Found ${parsed.paginationType} button: data-xxx="${parsed.dataXxxId}"`,
+  );
+  return {
+    found: true,
+    dataXxxId: parsed.dataXxxId,
+    paginationType: parsed.paginationType || "next_prev",
+  };
 }
 
 /**

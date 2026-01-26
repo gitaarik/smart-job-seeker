@@ -214,9 +214,12 @@ async function confirmWithUser(
  * Handle pagination using LLM-based data-xxx detection
  * @returns true if navigated to next page, false to stop
  */
-async function handlePagination(page: Page): Promise<boolean> {
+async function handlePagination(
+  jobSearchId: number,
+  page: Page,
+): Promise<boolean> {
   // Find the next page button using CDP marking + LLM
-  const result = await findNextPageButton(page);
+  const result = await findNextPageButton(jobSearchId, page);
 
   if (!result.found || result.dataXxxId === null) {
     console.log("      No more pages");
@@ -516,7 +519,7 @@ export async function scrapeJobsWithClicks(
       };
     }
     if (confirmResult === "skip") {
-      const hasMore = await handlePagination(page);
+      const hasMore = await handlePagination(jobSearchId, page);
       if (!hasMore) {
         console.log("      No more pages to skip to");
         break;
@@ -545,7 +548,7 @@ export async function scrapeJobsWithClicks(
     }
 
     // Try to load more content
-    const hasMore = await handlePagination(page);
+    const hasMore = await handlePagination(jobSearchId, page);
     if (!hasMore) {
       break;
     }
