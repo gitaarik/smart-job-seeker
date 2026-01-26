@@ -118,7 +118,8 @@ export const ModelName = {
   job_platforms: 'job_platforms',
   config: 'config',
   profile_exports: 'profile_exports',
-  profile_tokens: 'profile_tokens'
+  profile_tokens: 'profile_tokens',
+  api_keys: 'api_keys'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1313,6 +1314,20 @@ export const Profile_tokensScalarFieldEnum = {
 } as const
 
 export type Profile_tokensScalarFieldEnum = (typeof Profile_tokensScalarFieldEnum)[keyof typeof Profile_tokensScalarFieldEnum]
+
+
+export const Api_keysScalarFieldEnum = {
+  id: 'id',
+  profile: 'profile',
+  name: 'name',
+  key_hash: 'key_hash',
+  date_created: 'date_created',
+  expires_at: 'expires_at',
+  last_used: 'last_used',
+  revoked: 'revoked'
+} as const
+
+export type Api_keysScalarFieldEnum = (typeof Api_keysScalarFieldEnum)[keyof typeof Api_keysScalarFieldEnum]
 
 
 export const SortOrder = {

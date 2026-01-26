@@ -379,3 +379,8 @@ export type profile_exports = Prisma.profile_exportsModel
  * 
  */
 export type profile_tokens = Prisma.profile_tokensModel
+/**
+ * Model api_keys
+ * 
+ */
+export type api_keys = Prisma.api_keysModel
