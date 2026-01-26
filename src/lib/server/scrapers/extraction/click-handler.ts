@@ -4,7 +4,11 @@
 
 import type { Page } from "playwright";
 import { config } from "$lib/server/config";
-import { humanClick, humanWait } from "$lib/server/browser/stealth-utils";
+import {
+  humanClick,
+  humanScrollWheel,
+  humanWait,
+} from "$lib/server/browser/stealth-utils";
 import { markClickableElementsInContainer } from "$lib/server/browser/cdp-utils";
 import {
   waitForContentChange,
@@ -64,6 +68,27 @@ export async function getElementInfo(
       ariaLabel: "",
       className: "",
     }));
+}
+
+/**
+ * Scroll through job description content to reveal lazy-loaded content
+ * Uses human-like mouse wheel scrolling
+ */
+async function scrollJobDescription(page: Page): Promise<void> {
+  // Get viewport center for mouse positioning
+  const viewport = page.viewportSize();
+  const mouseX = (viewport?.width ?? 1200) / 2;
+  const mouseY = (viewport?.height ?? 800) / 2;
+
+  // Scroll down through the content, then back to top
+  await humanScrollWheel(page, mouseX, mouseY, {
+    scrollSteps: 6,
+    baseScrollAmount: 350,
+    scrollVariation: 150,
+    baseScrollDelay: 250,
+    delayVariation: 150,
+    scrollBackToTop: true,
+  });
 }
 
 /**
@@ -128,6 +153,7 @@ export async function clickJobCard(
     if (!newTab && page.url() !== originalUrl) {
       navigatedAway = true;
       console.log(`      🔀 Navigated to: ${page.url()}`);
+      await scrollJobDescription(page);
     }
 
     // Wait for SPA content to change and stabilize
@@ -167,6 +193,9 @@ export async function clickJobCard(
           originalUrl,
         };
       }
+
+      // Content changed - scroll through it to reveal lazy-loaded content
+      await scrollJobDescription(page);
 
       // Re-check if URL changed during content stabilization (slow navigation)
       if (page.url() !== originalUrl) {
@@ -228,7 +257,10 @@ export async function returnToSearchPage(
 
     // Re-mark clickable elements (DOM was re-rendered after navigation)
     await markClickableElementsInContainer(page, "body");
+    return;
   }
 
-  // SPA behavior - nothing to do, we're still on the search page
+  // SPA behavior - dismiss any open modal/panel with Escape
+  await page.keyboard.press("Escape").catch(() => {});
+  await humanWait(page, 300);
 }

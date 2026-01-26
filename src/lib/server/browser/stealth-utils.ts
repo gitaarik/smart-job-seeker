@@ -126,6 +126,77 @@ export async function humanWait(
 }
 
 /**
+ * Options for human-like mouse wheel scrolling
+ */
+export interface HumanScrollOptions {
+  /** Base pixels per wheel scroll (default: 400) */
+  baseScrollAmount?: number;
+  /** +/- variation in scroll amount (default: 200) */
+  scrollVariation?: number;
+  /** Base ms between scrolls (default: 300) */
+  baseScrollDelay?: number;
+  /** +/- variation in delay (default: 200) */
+  delayVariation?: number;
+  /** Number of scroll steps to perform (default: 5) */
+  scrollSteps?: number;
+  /** Whether to scroll back to top after scrolling down (default: false) */
+  scrollBackToTop?: boolean;
+}
+
+/**
+ * Scroll using mouse wheel with human-like randomization
+ *
+ * Positions the mouse at the given coordinates and scrolls with randomized
+ * amounts and delays to appear more human-like.
+ *
+ * @param page - Playwright Page object
+ * @param mouseX - X coordinate to position mouse
+ * @param mouseY - Y coordinate to position mouse
+ * @param options - Scroll configuration options
+ * @returns Number of scroll steps performed
+ */
+export async function humanScrollWheel(
+  page: Page,
+  mouseX: number,
+  mouseY: number,
+  options: HumanScrollOptions = {},
+): Promise<number> {
+  const {
+    baseScrollAmount = 400,
+    scrollVariation = 200,
+    baseScrollDelay = 300,
+    delayVariation = 200,
+    scrollSteps = 5,
+    scrollBackToTop = false,
+  } = options;
+
+  // Helper to get randomized scroll amount
+  const getRandomScroll = () =>
+    baseScrollAmount + (Math.random() - 0.5) * 2 * scrollVariation;
+  // Helper to get randomized delay
+  const getRandomDelay = () => baseScrollDelay + Math.random() * delayVariation;
+
+  // Move mouse to scroll position
+  await page.mouse.move(mouseX, mouseY);
+
+  // Scroll down with human-like randomization
+  for (let i = 0; i < scrollSteps; i++) {
+    await page.mouse.wheel(0, getRandomScroll());
+    await page.waitForTimeout(getRandomDelay());
+  }
+
+  // Scroll back to top if requested (faster)
+  if (scrollBackToTop) {
+    for (let i = 0; i < scrollSteps + 3; i++) {
+      await page.mouse.wheel(0, -getRandomScroll() * 2);
+      await page.waitForTimeout(50 + Math.random() * 100);
+    }
+  }
+
+  return scrollSteps;
+}
+
+/**
  * Click an element with human-like mouse movement
  *
  * Instead of instantly clicking, this:

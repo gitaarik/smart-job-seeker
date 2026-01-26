@@ -7,6 +7,7 @@ import { dbDirect } from "$lib/db";
 import { config } from "$lib/server/config";
 import { stripHtmlForLlm } from "$lib/server/html/strip";
 import { markClickableElementsInContainer } from "$lib/server/browser/cdp-utils";
+import { humanScrollWheel } from "$lib/server/browser/stealth-utils";
 import { getErrorMessage } from "../utils";
 import { extractJobsFromSearchPage } from "./llm-extract";
 import {
@@ -21,19 +22,8 @@ import {
  * This works with virtualized lists that only render visible items
  */
 async function scrollToRevealLazyContent(page: Page): Promise<void> {
-  // Randomized scroll parameters to appear more human-like
-  const baseScrollAmount = 400; // base pixels per wheel scroll
-  const scrollVariation = 200; // +/- variation in scroll amount
-  const baseScrollDelay = 300; // base ms to wait for content to render
-  const delayVariation = 200; // +/- variation in delay
   const maxScrolls = 30; // safety limit
   const noChangeLimit = 3; // stop after this many scrolls with no new content
-
-  // Helper to get randomized scroll amount (300-500 pixels)
-  const getRandomScroll = () =>
-    baseScrollAmount + (Math.random() - 0.5) * 2 * scrollVariation;
-  // Helper to get randomized delay (300-500ms)
-  const getRandomDelay = () => baseScrollDelay + Math.random() * delayVariation;
 
   // Find an element to position mouse over (any link or clickable in main content)
   const contentSelectors = [
@@ -68,7 +58,6 @@ async function scrollToRevealLazyContent(page: Page): Promise<void> {
 
   const mouseX = box.x + box.width / 2;
   const mouseY = box.y + box.height / 2;
-  await page.mouse.move(mouseX, mouseY);
 
   console.log("      📜 Scrolling with mouse wheel to reveal content...");
 
@@ -82,10 +71,13 @@ async function scrollToRevealLazyContent(page: Page): Promise<void> {
   let scrollCount = 0;
   let noChangeCount = 0;
 
+  // Scroll incrementally, checking for new content after each scroll
   while (scrollCount < maxScrolls && noChangeCount < noChangeLimit) {
-    // Scroll down with mouse wheel (randomized for human-like behavior)
-    await page.mouse.wheel(0, getRandomScroll());
-    await page.waitForTimeout(getRandomDelay());
+    // Single scroll step using the generic function
+    await humanScrollWheel(page, mouseX, mouseY, {
+      scrollSteps: 1,
+      scrollBackToTop: false,
+    });
 
     // Check if new content appeared
     const currentCount = await countElements();
@@ -104,12 +96,15 @@ async function scrollToRevealLazyContent(page: Page): Promise<void> {
     scrollCount++;
   }
 
-  // Scroll back to top (faster but still randomized)
+  // Scroll back to top
   console.log("      ↑ Scrolling back to top...");
-  for (let i = 0; i < scrollCount + 5; i++) {
-    await page.mouse.wheel(0, -getRandomScroll() * 2);
-    await page.waitForTimeout(50 + Math.random() * 100);
-  }
+  await humanScrollWheel(page, mouseX, mouseY, {
+    baseScrollAmount: -800,
+    scrollSteps: scrollCount + 5,
+    baseScrollDelay: 50,
+    delayVariation: 50,
+    scrollBackToTop: false,
+  });
 
   // Wait for content to fully load after scrolling (random delay to appear more human)
   const stabilizeDelay = 1000 + Math.random() * 1000; // 1-2 seconds
