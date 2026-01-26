@@ -40,14 +40,27 @@ export async function findNextPageButton(page: Page): Promise<NextPageResult> {
   const strippedHtml = stripHtmlForLlm(markedHtml);
 
   // Ask LLM to identify the next page button
-  console.log("      Asking LLM to identify next page button...");
-  const result = await generateAiChatResponse({
-    request: "find_next_page_button",
-    variables: { html: strippedHtml },
-  });
+  const htmlSizeKb = (strippedHtml.length / 1024).toFixed(1);
+  console.log(
+    `      Asking LLM to identify next page button (${htmlSizeKb} KB)...`,
+  );
+
+  let result;
+  try {
+    result = await generateAiChatResponse({
+      request: "find_next_page_button",
+      variables: { html: strippedHtml },
+    });
+  } catch (error) {
+    console.error("      LLM request failed:", error);
+    return { found: false, dataXxxId: null, paginationType: "none" };
+  }
 
   if (!result.content || result.content === "undefined") {
     console.log("      LLM returned no result");
+    if (result.error) {
+      console.log("      Error:", result.error);
+    }
     return { found: false, dataXxxId: null, paginationType: "none" };
   }
 
