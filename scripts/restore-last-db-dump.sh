@@ -15,7 +15,7 @@ then
   psql -U postgres -c "CREATE DATABASE smartjobseeker"
 
   # Import the latest dump
-  psql -U postgres -d smartjobseeker < latest.sql
+  psql -U postgres -d smartjobseeker < smart.sql
 else
   echo "Aborted"
 fi
