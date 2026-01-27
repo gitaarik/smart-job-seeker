@@ -328,30 +328,28 @@ async function scrapeWithLogin(
       throw new Error("No pages available in browser context");
     }
 
-    // Browser-Use should have cleaned up extra tabs, leaving only the active one
-    // Find the page matching the search URL hostname, or use the first non-blank page
+    // Clean up tabs: Browser-Use may have left multiple tabs open during login.
+    // Find the best page (matching search URL, or first non-blank), close the rest.
     const searchHostname = new URL(searchUrl).hostname;
     let page = pages.find((p) => p.url().includes(searchHostname));
 
     if (!page) {
-      // Fallback: find any page that's not blank
       page = pages.find((p) => !p.url().startsWith("about:"));
     }
 
     if (!page) {
-      // Last resort: use first page
       page = pages[0];
     }
 
-    console.log(`📄 Found ${pages.length} page(s), using: ${page.url()}`);
-
-    // Close any other tabs (shouldn't happen if Python cleanup worked)
+    // Close all other tabs so extraction works on a single page
     for (const p of pages) {
       if (p !== page) {
-        console.log(`🧹 Closing stale tab: ${p.url()}`);
+        console.log(`🧹 Closing extra tab: ${p.url()}`);
         await p.close();
       }
     }
+
+    console.log(`📄 Using tab: ${page.url()}`);
 
     // Navigate to search URL if not already there
     if (!page.url().includes(new URL(searchUrl).pathname)) {

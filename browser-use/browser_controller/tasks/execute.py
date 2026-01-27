@@ -100,13 +100,6 @@ class ExecuteTaskMixin:
             except Exception as e:
                 logger.warning(f"[Browser-Use] Could not get current page from agent: {e}")
 
-            # Close other tabs, keeping only the one the agent was working on
-            # This prevents Playwright from connecting to the wrong tab later
-            if current_url:
-                closed = await ChromeManager.close_tabs_except_url(current_url, cdp_port)
-                if closed > 0:
-                    logger.info(f"[Browser-Use] Closed {closed} other tab(s)")
-
             # Disconnect Browser-Use's session
             # This keeps Chrome alive but cleanly disconnects the CDP WebSocket
             # so Playwright can connect without interference
