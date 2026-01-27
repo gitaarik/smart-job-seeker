@@ -76,6 +76,8 @@ export async function markClickableElementsInContainer(
       "modal",
       "dialog",
       "popup",
+      "dislike",
+      "not interested",
     ];
 
     // Exclude action button text patterns
@@ -89,6 +91,10 @@ export async function markClickableElementsInContainer(
       "bookmark",
       "refer",
       "earn",
+      "not interested",
+      "dismiss",
+      "hide",
+      "report",
     ];
 
     // Check each descendant for click listeners
