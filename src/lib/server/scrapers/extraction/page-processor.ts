@@ -68,39 +68,69 @@ async function scrollToRevealLazyContent(page: Page): Promise<void> {
     );
 
   let previousCount = await countElements();
-  let scrollCount = 0;
-  let noChangeCount = 0;
+  let totalScrollCount = 0;
 
-  // Scroll incrementally, checking for new content after each scroll
-  while (scrollCount < maxScrolls && noChangeCount < noChangeLimit) {
-    // Single scroll step using the generic function
-    await humanScrollWheel(page, mouseX, mouseY, {
-      scrollSteps: 1,
-      scrollBackToTop: false,
-    });
+  // Outer loop: handles infinite scroll (new content loading from server at bottom)
+  while (totalScrollCount < maxScrolls) {
+    // Inner loop: fast scroll for virtualized/lazy-rendered content (e.g. LinkedIn)
+    let noChangeCount = 0;
+    while (totalScrollCount < maxScrolls && noChangeCount < noChangeLimit) {
+      await humanScrollWheel(page, mouseX, mouseY, {
+        scrollSteps: 1,
+        scrollBackToTop: false,
+      });
 
-    // Check if new content appeared
-    const currentCount = await countElements();
-    if (currentCount > previousCount) {
-      console.log(
-        `      ↓ Scroll ${scrollCount + 1}: ${currentCount} elements (+${
-          currentCount - previousCount
-        })`,
-      );
-      previousCount = currentCount;
-      noChangeCount = 0;
-    } else {
-      noChangeCount++;
+      const currentCount = await countElements();
+      if (currentCount > previousCount) {
+        console.log(
+          `      ↓ Scroll ${totalScrollCount + 1}: ${currentCount} elements (+${
+            currentCount - previousCount
+          })`,
+        );
+        previousCount = currentCount;
+        noChangeCount = 0;
+      } else {
+        noChangeCount++;
+      }
+
+      totalScrollCount++;
     }
 
-    scrollCount++;
+    // Reached bottom of current content — wait for infinite scroll to load more
+    console.log(
+      "      ⏳ Waiting for infinite scroll to load more content...",
+    );
+    let newContentLoaded = false;
+    const maxWaitMs = 3000;
+    const pollMs = 300;
+    const deadline = Date.now() + maxWaitMs;
+
+    while (Date.now() < deadline) {
+      await page.waitForTimeout(pollMs);
+      const currentCount = await countElements();
+      if (currentCount > previousCount) {
+        console.log(
+          `      ↓ Infinite scroll: ${currentCount} elements (+${
+            currentCount - previousCount
+          })`,
+        );
+        previousCount = currentCount;
+        newContentLoaded = true;
+        break;
+      }
+    }
+
+    if (!newContentLoaded) {
+      console.log("      ✓ No more content to load");
+      break;
+    }
   }
 
   // Scroll back to top
   console.log("      ↑ Scrolling back to top...");
   await humanScrollWheel(page, mouseX, mouseY, {
     baseScrollAmount: -800,
-    scrollSteps: scrollCount + 5,
+    scrollSteps: totalScrollCount + 5,
     baseScrollDelay: 50,
     delayVariation: 50,
     scrollBackToTop: false,
@@ -116,7 +146,7 @@ async function scrollToRevealLazyContent(page: Page): Promise<void> {
   await page.waitForTimeout(stabilizeDelay);
 
   console.log(
-    `      ✓ Scrolled ${scrollCount} times, found ${previousCount} elements`,
+    `      ✓ Scrolled ${totalScrollCount} times, found ${previousCount} elements`,
   );
 }
 
