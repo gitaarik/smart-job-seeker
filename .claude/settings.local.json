@@ -119,7 +119,8 @@
       "WebFetch(domain:evgeny-kim.github.io)",
       "Bash(git fetch:*)",
       "Bash(tr:*)",
-      "Bash(git tag:*)"
+      "Bash(git tag:*)",
+      "Bash(git merge:*)"
     ],
     "deny": [],
     "ask": []
