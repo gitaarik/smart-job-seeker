@@ -64,6 +64,11 @@ Look at the scripts in `package.json` for help executing things in containers.
 - When asked to fix an issue or bug, focus on fixing the actual problem
 - Don't implement workarounds or alternative fixes unless explicitly asked
 
+## Code Removal
+
+- When removing old code, don't leave comments explaining why it was removed
+- If you think a removal comment would be useful, ask first before adding it
+
 ## Code Quality
 
 - Keep try/catch blocks as small as possible, so it only contains code that
