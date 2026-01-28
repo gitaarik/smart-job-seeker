@@ -3,7 +3,7 @@
  * Implements exponential backoff with jitter
  */
 
-import { errorTracker } from "../monitoring/error-tracker";
+import { errorTracker } from "$lib/server/monitoring/error-tracker";
 
 export interface RetryOptions {
   maxAttempts?: number;

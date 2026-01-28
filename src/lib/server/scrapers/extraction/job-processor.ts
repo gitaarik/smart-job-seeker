@@ -91,7 +91,7 @@ function formatJobOutput(
 
   // URLs
   console.log(`      🔗 Source:      ${sourceUrl || "(unknown)"}`);
-  console.log(`      🔗 Admin:       ${getDirectusJobUrl(result.id)}`);
+  console.log(`      🔗 Admin:       ${getDirectusJobUrl(result.id!)}`);
 
   // Show changes for updates
   if (!result.created && result.changes) {
@@ -218,7 +218,7 @@ export async function processJobCard(
       return {
         success: false,
         skipped: true,
-        skipReason: reason,
+        skipReason: reason ?? undefined,
         navigatedAway,
       };
     }

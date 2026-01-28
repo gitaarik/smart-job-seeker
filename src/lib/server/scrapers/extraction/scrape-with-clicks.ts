@@ -361,7 +361,7 @@ async function processPageJobs(
             jobSearchId,
             page,
             1, // pageNumber
-            null, // existingSavedHtml
+            undefined, // existingSavedHtml
           );
 
           if (recoveryResult.jobs.length > 0) {

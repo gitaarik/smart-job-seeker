@@ -162,6 +162,9 @@ export interface SearchPageJob {
   salary_max?: number | null;
   salary_currency?: string | null;
   salary_period?: string | null;
+  skills?: string[] | null;
+  remote?: string | null;
+  date_posted?: string | null;
 }
 
 /**

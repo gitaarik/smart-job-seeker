@@ -4,11 +4,11 @@
  */
 
 import type { Page } from "playwright";
-import { stripHtmlForLlm } from "../html/strip";
+import { stripHtmlForLlm } from "$lib/server/html/strip";
 import { waitForSpaContent } from "./page-wait";
-import { createJobScrapingAiChat } from "../ai-chat/job-utils";
-import { markClickableElementsInContainer } from "../browser/cdp-utils";
-import { config } from "../config";
+import { createJobScrapingAiChat } from "$lib/server/ai-chat/job-utils";
+import { markClickableElementsInContainer } from "$lib/server/browser/cdp-utils";
+import { config } from "$lib/server/config";
 
 /**
  * Result of finding the next page button

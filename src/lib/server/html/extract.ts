@@ -3,6 +3,7 @@
  */
 
 import * as cheerio from "cheerio";
+import type { Element } from "domhandler";
 
 /**
  * Extract all links matching a pattern from HTML
@@ -17,7 +18,7 @@ export function extractLinks(
   const links: string[] = [];
   const $ = cheerio.load(html);
 
-  $("a[href]").each((_: number, elem: cheerio.Element) => {
+  $("a[href]").each((_: number, elem: Element) => {
     const url = $(elem).attr("href");
 
     if (!url) return;

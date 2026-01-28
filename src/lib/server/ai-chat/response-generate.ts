@@ -10,7 +10,7 @@ import {
   LLMAuthenticationError,
   LLMQuotaExceededError,
   LLMRateLimitError,
-} from "../llm";
+} from "$lib/server/llm";
 
 /**
  * Generate response for a single AI chat using LLM provider

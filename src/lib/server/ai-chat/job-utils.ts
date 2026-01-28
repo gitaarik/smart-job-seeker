@@ -5,7 +5,7 @@
  * specifically designed for job scraping and matching operations.
  */
 
-import { config } from "../config";
+import { config } from "$lib/server/config";
 import { createAndGenerateAiChat } from "./utils";
 import { dbDirect } from "$lib/db";
 

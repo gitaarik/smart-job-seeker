@@ -4,6 +4,7 @@
  */
 
 import * as cheerio from "cheerio";
+import type { AnyNode } from "domhandler";
 
 /**
  * Options for HTML stripping
@@ -26,10 +27,7 @@ export function stripHtmlForLlm(
   options: StripHtmlOptions = {},
 ): string {
   // Load HTML into Cheerio
-  const $ = cheerio.load(html, {
-    decodeEntities: true,
-    normalizeWhitespace: true,
-  });
+  const $ = cheerio.load(html);
 
   // 1. Remove unwanted elements
   $("script").remove();
@@ -129,7 +127,7 @@ export function stripHtmlForLlm(
 
   const maxAttrLength = 75; // Truncate long URLs (75 chars is enough for domain+path)
 
-  $("*").each((_: number, elem: cheerio.Element) => {
+  $("*").each((_: number, elem: AnyNode) => {
     const element = $(elem);
     const attrs = element.attr();
 
@@ -171,7 +169,7 @@ export function stripHtmlForLlm(
     changesMade = false;
     flattenIterations++;
 
-    $("div, span").each((_: number, elem: cheerio.Element) => {
+    $("div, span").each((_: number, elem: AnyNode) => {
       const element = $(elem);
       const attrs = element.attr();
       const hasAttrs = attrs && Object.keys(attrs).length > 0;
@@ -231,7 +229,7 @@ export function stripHtmlForLlm(
     changed = false;
     iterations++;
 
-    $("*").each((_: number, elem: cheerio.Element) => {
+    $("*").each((_: number, elem: AnyNode) => {
       const element = $(elem);
       const tagName = (elem as any).tagName?.toLowerCase();
 

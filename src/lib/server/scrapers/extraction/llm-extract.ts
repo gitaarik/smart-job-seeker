@@ -221,18 +221,16 @@ export async function extractJobData(
 
     // 8. Parse and validate date_posted
     const parsedDate = parseRelativeDate(data.date_posted);
+    let finalDatePosted: Date | null = null;
 
     // Validate the parsed date
     if (parsedDate && isValidJobPostingDate(parsedDate)) {
-      data.date_posted = parsedDate;
-    } else {
-      // Invalid or unparseable date - log warning and set to null
-      if (data.date_posted) {
-        console.warn(
-          `Invalid date_posted for job "${data.title}": "${data.date_posted}" - setting to null`,
-        );
-      }
-      data.date_posted = null;
+      finalDatePosted = parsedDate;
+    } else if (data.date_posted) {
+      // Invalid or unparseable date - log warning
+      console.warn(
+        `Invalid date_posted for job "${data.title}": "${data.date_posted}" - setting to null`,
+      );
     }
 
     // 9. Normalize title: convert empty strings to null, keep valid titles as-is
@@ -242,8 +240,22 @@ export async function extractJobData(
 
     // 10. Include stripped HTML and AI chat ID in return value for database storage
     return {
-      ...data,
       title: normalizedTitle,
+      job_description: data.job_description ?? null,
+      company_description: data.company_description ?? null,
+      job_poster: data.job_poster ?? null,
+      date_posted: finalDatePosted,
+      location: data.location ?? null,
+      remote: data.remote ?? null,
+      experience_level: data.experience_level ?? null,
+      job_type: data.job_type ?? null,
+      salary_min: data.salary_min ?? null,
+      salary_max: data.salary_max ?? null,
+      salary_currency: data.salary_currency ?? null,
+      salary_period: data.salary_period ?? null,
+      skills: data.skills ?? null,
+      status: data.status ?? null,
+      source_url: data.source_url ?? null,
       source_html_stripped: strippedHtml,
       ai_chat_extraction: aiResult.aiChatId,
     };

@@ -1,4 +1,4 @@
-import { config } from "../config";
+import { config } from "$lib/server/config";
 import { dbDirect } from "$lib/db";
 
 export interface BrowserUseConfig {

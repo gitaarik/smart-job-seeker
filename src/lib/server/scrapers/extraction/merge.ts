@@ -71,7 +71,7 @@ export function mergeJobData(
     source_html_stripped: string;
     ai_chat_extraction: number | null;
   },
-): typeof detailData {
+): Omit<typeof detailData, "title"> & { title: string } {
   return {
     // Always from detail (not extracted from search)
     job_description: detailData.job_description,
@@ -84,6 +84,7 @@ export function mergeJobData(
     ai_chat_extraction: detailData.ai_chat_extraction,
 
     // Detail wins, search fallback (using || for strings, ?? for numbers)
+    // Note: Always returns a string due to "Untitled Position" fallback
     title: detailData.title || searchData.title || "Untitled Position",
     job_poster: detailData.job_poster || searchData.company || null,
     location: detailData.location || searchData.location || null,

@@ -27,7 +27,8 @@ export async function markClickableElementsInContainer(
 
     // Try to enable DOMDebugger (might not be available in all Chrome versions)
     try {
-      await client.send("DOMDebugger.enable");
+      // Cast needed: DOMDebugger.enable not in Playwright's CDP types but exists in Chrome
+      await client.send("DOMDebugger.enable" as "DOM.enable");
     } catch (error) {
       console.warn(
         "⚠️  DOMDebugger.enable not available - will use basic DOM inspection",
@@ -163,6 +164,11 @@ export async function markClickableElementsInContainer(
 
         // Resolve node to remote object
         const { object } = await client.send("DOM.resolveNode", { nodeId });
+
+        // Skip if no objectId (shouldn't happen for valid nodes)
+        if (!object.objectId) {
+          continue;
+        }
 
         // Get event listeners for this element
         const { listeners } = await client.send(
