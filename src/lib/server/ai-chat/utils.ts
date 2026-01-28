@@ -238,6 +238,9 @@ export async function createAndGenerateAiChat(
         context: JSON.parse(JSON.stringify(context)),
         followup_to: followupTo,
         date_created: new Date(),
+        provider: config.llmProvider,
+        model: config.llmModel,
+        request_type: "llm",
       },
     });
     aiChatId = aiChat.id;

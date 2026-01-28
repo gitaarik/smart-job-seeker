@@ -115,6 +115,7 @@ async function scrapeWithLogin(
           platform,
           credentials,
           visionEnabled,
+          jobSearchId,
         );
 
         if (!loginResult) {
@@ -174,6 +175,7 @@ async function scrapeWithLogin(
             browserUse,
             searchUrl,
             visionEnabled,
+            jobSearchId,
           );
 
           if (!searchResult) {
@@ -226,6 +228,7 @@ async function scrapeWithLogin(
           searchUrl,
           credentials,
           visionEnabled,
+          jobSearchId,
         );
 
         if (!result) {

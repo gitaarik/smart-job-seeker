@@ -21,6 +21,10 @@ import {
   buildNavigateSearchPrompt,
   buildPrepareSessionPrompt,
 } from "./prompts";
+import {
+  createBrowserUseAiChat,
+  getProfileFromJobSearch,
+} from "$lib/server/ai-chat/browser-use";
 
 const CDP_PORT = config.cdpPort;
 
@@ -33,6 +37,7 @@ export async function executeLoginPhase(
   platform: Platform,
   credentials: PlatformCredentials,
   useVision: boolean,
+  jobSearchId: number,
 ): Promise<LoginTaskResult | null> {
   const loginUrl = platform.login_page_url!;
   console.log(`\n📌 Phase A: Login to ${platform.name}...`);
@@ -53,6 +58,18 @@ export async function executeLoginPhase(
     }...`,
   );
 
+  // Log to ai_chat
+  const profileId = await getProfileFromJobSearch(jobSearchId);
+  if (profileId) {
+    await createBrowserUseAiChat({
+      profileId,
+      taskPrompt: loginTask,
+      agentOutput: result.agent_output ?? null,
+      error: result.error ?? null,
+      isCloudMode: browserUse.isCloudMode,
+    });
+  }
+
   const parsed = parseLoginTaskResult(result.agent_output || "");
   if (parsed) {
     console.log(
@@ -72,6 +89,7 @@ export async function executeNavigateSearchPhase(
   browserUse: BrowserUseClient,
   searchUrl: string,
   useVision: boolean,
+  jobSearchId: number,
 ): Promise<NavigateSearchResult | null> {
   console.log(`\n📌 Phase B: Navigate to search page...`);
   console.log(`   Search URL: ${searchUrl}`);
@@ -90,6 +108,18 @@ export async function executeNavigateSearchPhase(
       result.agent_output?.substring(0, 200)
     }...`,
   );
+
+  // Log to ai_chat
+  const profileId = await getProfileFromJobSearch(jobSearchId);
+  if (profileId) {
+    await createBrowserUseAiChat({
+      profileId,
+      taskPrompt: navigateTask,
+      agentOutput: result.agent_output ?? null,
+      error: result.error ?? null,
+      isCloudMode: browserUse.isCloudMode,
+    });
+  }
 
   const parsed = parseNavigateSearchResult(result.agent_output || "");
   if (parsed) {
@@ -112,6 +142,7 @@ export async function executePrepareSessionPhase(
   searchUrl: string,
   credentials: PlatformCredentials | null,
   useVision: boolean,
+  jobSearchId: number,
 ): Promise<PrepareSessionResult | null> {
   console.log(`\n📌 Prepare Session: Login (if needed) and navigate...`);
   console.log(`   Start URL: ${startUrl}`);
@@ -135,6 +166,18 @@ export async function executePrepareSessionPhase(
       result.agent_output?.substring(0, 200)
     }...`,
   );
+
+  // Log to ai_chat
+  const profileId = await getProfileFromJobSearch(jobSearchId);
+  if (profileId) {
+    await createBrowserUseAiChat({
+      profileId,
+      taskPrompt: prepareTask,
+      agentOutput: result.agent_output ?? null,
+      error: result.error ?? null,
+      isCloudMode: browserUse.isCloudMode,
+    });
+  }
 
   const parsed = parsePrepareSessionResult(result.agent_output || "");
   if (parsed) {
