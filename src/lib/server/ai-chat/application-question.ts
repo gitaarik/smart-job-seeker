@@ -3,7 +3,7 @@
  * Creates an ai_chat record with context from collected_data, job description, and the question
  */
 
-import { db } from "$lib/db";
+import { db } from "$lib/server/db";
 import { createAndGenerateAiChat } from "./utils";
 
 /**

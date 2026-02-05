@@ -3,7 +3,7 @@
  * Handles exporting profile schema and data to collected_data collection
  */
 
-import { db } from "$lib/db";
+import { db } from "$lib/server/db";
 import removeMd from "remove-markdown";
 
 interface SchemaNode {

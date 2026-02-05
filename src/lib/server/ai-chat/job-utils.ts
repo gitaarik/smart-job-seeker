@@ -7,7 +7,7 @@
 
 import { config } from "$lib/server/config";
 import { createAndGenerateAiChat } from "./utils";
-import { dbDirect } from "$lib/db";
+import { dbDirect } from "$lib/server/db";
 
 /**
  * Result type for job scraping AI chat operations

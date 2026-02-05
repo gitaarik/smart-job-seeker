@@ -3,7 +3,7 @@
  * Creates an ai_chat record with applicant context in system prompt and job context in user prompt
  */
 
-import { db } from "$lib/db";
+import { db } from "$lib/server/db";
 import { createAndGenerateAiChat } from "./utils";
 import { getFieldChoiceLabel } from "../directus/field-labels";
 

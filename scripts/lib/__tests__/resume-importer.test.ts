@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ResumeData } from "../types/resume-import.types";
 
 // Mock the database
-vi.mock("$lib/db", () => ({
+vi.mock("$lib/server/db", () => ({
   dbDirect: {
     profiles: {
       create: vi.fn(),
@@ -49,7 +49,7 @@ vi.mock("$lib/db", () => ({
 }));
 
 import { createProfileFromResume } from "../resume-importer";
-import { dbDirect } from "$lib/db";
+import { dbDirect } from "$lib/server/db";
 
 describe("createProfileFromResume", () => {
   beforeEach(() => {

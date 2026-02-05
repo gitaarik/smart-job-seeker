@@ -9,7 +9,7 @@
 import { launchBrowser } from "$lib/server/browser/utils";
 import path from "path";
 import fs from "fs";
-import { dbDirect } from "$lib/db";
+import { dbDirect } from "$lib/server/db";
 import { getEnv } from "$lib/tools/get-env";
 import { getDefaultProfileId } from "$lib/server/profile/default";
 import { createProfileExport } from "$lib/server/profile/exports";

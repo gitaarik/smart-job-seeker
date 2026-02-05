@@ -1,4 +1,4 @@
-import { dbDirect as db } from "$lib/db";
+import { dbDirect as db } from "$lib/server/db";
 
 export function generateSlug(text: string): string {
   return text

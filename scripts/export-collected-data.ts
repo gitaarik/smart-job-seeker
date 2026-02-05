@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { dbDirect } from "$lib/db";
+import { dbDirect } from "$lib/server/db";
 import { getDefaultProfileId } from "$lib/server/profile/default";
 import removeMd from "remove-markdown";
 

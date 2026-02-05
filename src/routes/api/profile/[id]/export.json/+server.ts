@@ -1,6 +1,6 @@
 import type { RequestHandler } from "./$types";
 import { error, json } from "@sveltejs/kit";
-import { dbDirect } from "$lib/db";
+import { dbDirect } from "$lib/server/db";
 
 interface ExportedProfile {
   profile: {

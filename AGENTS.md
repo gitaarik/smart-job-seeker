@@ -22,30 +22,6 @@ This project uses Docker Compose with these containers:
 
 - **PostgreSQL** server that is used by `admin` and `app`
 
-## `browser-use`
-
-- **Browser-Use** Python service for AI-powered browser automation
-- Handles login/authentication for job platforms via AI agent
-- Exposes Chrome on port 9222 (CDP) for Patchright to connect
-- Exposes noVNC on port 6080 for manual intervention (CAPTCHA, 2FA)
-
-## Job Scraping Architecture
-
-The scraper uses a **hybrid approach** (see `docs/SCRAPING.md` for details):
-
-1. **Browser-Use (Python)** handles login via AI agent
-2. **Patchright (TypeScript)** connects via CDP for extraction
-3. **LLM** extracts structured job data from HTML
-
-Key files:
-
-- `src/lib/server/scrapers/scraper.ts` - Entry point, login orchestration
-- `src/lib/server/scrapers/extraction.ts` - CDP marking, LLM extraction
-- `src/lib/server/scrapers/job-data.ts` - Job data processing, DB operations
-- `scripts/scrape-job-sites.ts` - CLI script
-
-Run scraper: `npm run docker:scrape:jobs -- --search-id <id>`
-
 Look at the scripts in `package.json` for help executing things in containers.
 
 ### Development Notes

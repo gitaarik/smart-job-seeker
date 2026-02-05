@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { dbDirect } from "$lib/db";
+import { dbDirect } from "$lib/server/db";
 import { getDefaultProfileId } from "$lib/server/profile/default";
 import { createProfileExport } from "$lib/server/profile/exports";
 import { buildExportUrl } from "$lib/server/utils/export-url-builder";

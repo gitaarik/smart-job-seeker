@@ -3,7 +3,7 @@
  * Used by both JSON Resume and PDF resume importers
  */
 
-import { dbDirect } from "$lib/db";
+import { dbDirect } from "$lib/server/db";
 import type {
   Education,
   Language,

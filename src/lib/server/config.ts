@@ -46,49 +46,6 @@ export interface AppConfig {
   retryMaxAttempts: number;
   retryInitialDelay: number;
   retryMaxDelay: number;
-
-  // Scraper Configuration
-  scraperDefaultTimeout: number;
-  scraperNetworkIdleTimeout: number;
-  scraperMaxRetries: number;
-  scraperDebugMode: boolean;
-  scraperSaveDebugScreenshots: boolean;
-
-  // Pagination & Filtering
-  scraperMaxJobsPerSearch: number; // Hard limit on jobs per search
-  scraperMaxJobAge: number; // Max days old for jobs
-  scraperConsecutiveClosedLimit: number; // Stop after N consecutive closed jobs
-  scraperPaginationMaxPages: number; // Safety limit for pagination
-  scraperInfiniteScrollMaxScrolls: number; // Safety limit for scrolling
-
-  // Timing & Rate Limiting
-  scraperPageLoadTimeout: number; // Wait time after page navigation (ms)
-  scraperClickWaitTimeout: number; // Wait time after clicking elements (ms)
-  scraperRateLimitDelay: number; // Delay between requests to avoid rate limiting (ms)
-  scraperCaptchaCheckInterval: number; // Interval for checking CAPTCHA status (ms)
-
-  // SPA Content Loading Detection
-  scraperSpaContentPollAttempts: number; // Max polls for content growth detection
-  scraperSpaContentPollInterval: number; // Interval between content polls (ms)
-  scraperSpaMinContentGrowth: number; // Min chars growth to consider "still loading"
-  scraperSpaLlmRetryAttempts: number; // Max LLM retry attempts when no jobs found
-  scraperClickableClassifyBatchSize: number; // Max clickables per LLM classification batch
-
-  // Browser-Use Integration
-  browserUseTimeout: number;
-  browserUseVision: boolean;
-
-  // CDP connection for Browser-Use login + Patchright extraction
-  cdpHost: string; // Host for Chrome debugging (default: localhost, use browser-use in Docker)
-  cdpPort: number; // Port for Chrome debugging (default: 9222)
-  loginTimeout: number; // Max time for Browser-Use login (ms)
-  handoffDelay: number; // Delay before Patchright connects (ms)
-
-  // Browser-Use Cloud (alternative to local Browser-Use)
-  browserUseCloud: boolean; // Use Browser-Use Cloud instead of local
-  browserUseCloudApiKey: string; // API key for Browser-Use Cloud (reuses SJS_LLM_API_KEY_BROWSER_USE)
-  browserUseCloudProfileId: string; // Profile ID for persistent cookies/localStorage
-  browserUseCloudTimeout: number; // Session timeout in minutes (default: 30)
 }
 
 /**
@@ -144,8 +101,8 @@ function loadConfig(): AppConfig {
     publicSiteUrl: getEnv("SJS_APP_URL_HOST", "http://localhost:5173"),
     adminPublicUrl: getEnv("SJS_ADMIN_URL_HOST", "http://localhost:8055"),
     directusUrl: getEnv("SJS_ADMIN_URL_DOCKER", "http://admin:8055"),
-    directusToken: getEnv("SJS_ADMIN_TOKEN"),
-    directusWebhookSecret: getEnv("SJS_WEBHOOK_SECRET"),
+    directusToken: getEnv("SJS_ADMIN_TOKEN", ""),
+    directusWebhookSecret: getEnv("SJS_WEBHOOK_SECRET", ""),
 
     // Browser
     chromePath: getEnv("SJS_CHROME_PATH", ""),
@@ -177,109 +134,6 @@ function loadConfig(): AppConfig {
       10,
     ),
     retryMaxDelay: parseInt(getEnv("SJS_LLM_RETRY_MAX_DELAY", "10000"), 10),
-
-    // Scraper
-    scraperDefaultTimeout: parseInt(
-      getEnv("SJS_SCRAPER_DEFAULT_TIMEOUT", "30000"),
-      10,
-    ),
-    scraperNetworkIdleTimeout: parseInt(
-      getEnv("SJS_SCRAPER_NETWORK_IDLE_TIMEOUT", "45000"),
-      10,
-    ),
-    scraperMaxRetries: parseInt(getEnv("SJS_SCRAPER_MAX_RETRIES", "2"), 10),
-    scraperDebugMode: getEnv("SJS_SCRAPER_DEBUG_MODE", "false") === "true",
-    scraperSaveDebugScreenshots: getEnv(
-      "SJS_SCRAPER_SAVE_DEBUG_SCREENSHOTS",
-      "false",
-    ) === "true",
-
-    // Pagination & Filtering
-    scraperMaxJobsPerSearch: parseInt(
-      getEnv("SJS_SCRAPER_MAX_JOBS_PER_SEARCH", "100"),
-      10,
-    ),
-    scraperMaxJobAge: parseInt(getEnv("SJS_SCRAPER_MAX_JOB_AGE", "60"), 10),
-    scraperConsecutiveClosedLimit: parseInt(
-      getEnv("SJS_SCRAPER_CONSECUTIVE_CLOSED_LIMIT", "5"),
-      10,
-    ),
-    scraperPaginationMaxPages: parseInt(
-      getEnv("SJS_SCRAPER_PAGINATION_MAX_PAGES", "10"),
-      10,
-    ),
-    scraperInfiniteScrollMaxScrolls: parseInt(
-      getEnv("SJS_SCRAPER_INFINITE_SCROLL_MAX_SCROLLS", "5"),
-      10,
-    ),
-
-    // Timing & Rate Limiting
-    scraperPageLoadTimeout: parseInt(
-      getEnv("SJS_SCRAPER_PAGE_LOAD_TIMEOUT", "3000"),
-      10,
-    ),
-    scraperClickWaitTimeout: parseInt(
-      getEnv("SJS_SCRAPER_CLICK_WAIT_TIMEOUT", "3000"),
-      10,
-    ),
-    scraperRateLimitDelay: parseInt(
-      getEnv("SJS_SCRAPER_RATE_LIMIT_DELAY", "2000"),
-      10,
-    ),
-    scraperCaptchaCheckInterval: parseInt(
-      getEnv("SJS_SCRAPER_CAPTCHA_CHECK_INTERVAL", "3000"),
-      10,
-    ),
-
-    // SPA Content Loading Detection
-    scraperSpaContentPollAttempts: parseInt(
-      getEnv("SJS_SCRAPER_SPA_CONTENT_POLL_ATTEMPTS", "3"),
-      10,
-    ),
-    scraperSpaContentPollInterval: parseInt(
-      getEnv("SJS_SCRAPER_SPA_CONTENT_POLL_INTERVAL", "2000"),
-      10,
-    ),
-    scraperSpaMinContentGrowth: parseInt(
-      getEnv("SJS_SCRAPER_SPA_MIN_CONTENT_GROWTH", "500"),
-      10,
-    ),
-    scraperSpaLlmRetryAttempts: parseInt(
-      getEnv("SJS_SCRAPER_SPA_LLM_RETRY_ATTEMPTS", "2"),
-      10,
-    ),
-    scraperClickableClassifyBatchSize: parseInt(
-      getEnv("SJS_SCRAPER_CLICKABLE_CLASSIFY_BATCH_SIZE", "50"),
-      10,
-    ),
-
-    // Browser-Use Integration
-    browserUseTimeout: parseInt(
-      getEnv("SJS_BROWSER_USE_TIMEOUT", "120000"),
-      10,
-    ),
-    browserUseVision: getEnv("SJS_BROWSER_USE_VISION", "true") === "true",
-
-    // CDP connection for Browser-Use login + Patchright extraction
-    cdpHost: getEnv("SJS_CDP_HOST", "localhost"),
-    cdpPort: parseInt(getEnv("SJS_CDP_PORT", "9222"), 10),
-    loginTimeout: parseInt(
-      getEnv("SJS_LOGIN_TIMEOUT", "120000"),
-      10,
-    ),
-    handoffDelay: parseInt(
-      getEnv("SJS_HANDOFF_DELAY", "1000"),
-      10,
-    ),
-
-    // Browser-Use Cloud (alternative to local Browser-Use)
-    browserUseCloud: getEnv("SJS_BROWSER_USE_CLOUD", "false") === "true",
-    browserUseCloudApiKey: getEnv("SJS_LLM_API_KEY_BROWSER_USE", ""),
-    browserUseCloudProfileId: getEnv("SJS_BROWSER_USE_CLOUD_PROFILE_ID", ""),
-    browserUseCloudTimeout: parseInt(
-      getEnv("SJS_BROWSER_USE_CLOUD_TIMEOUT", "30"),
-      10,
-    ),
   };
 
   return config;
@@ -306,63 +160,6 @@ export function validateConfig(): void {
   const missing = required.filter((key) => !config[key]);
   if (missing.length > 0) {
     errors.push(`Missing required configuration: ${missing.join(", ")}`);
-  }
-
-  // Validate positive numbers
-  if (config.scraperMaxJobsPerSearch <= 0) {
-    errors.push("scraperMaxJobsPerSearch must be > 0");
-  }
-  if (config.scraperMaxJobAge <= 0) {
-    errors.push("scraperMaxJobAge must be > 0");
-  }
-  if (config.scraperConsecutiveClosedLimit <= 0) {
-    errors.push("scraperConsecutiveClosedLimit must be > 0");
-  }
-  if (config.scraperPaginationMaxPages <= 0) {
-    errors.push("scraperPaginationMaxPages must be > 0");
-  }
-  if (config.scraperInfiniteScrollMaxScrolls <= 0) {
-    errors.push("scraperInfiniteScrollMaxScrolls must be > 0");
-  }
-
-  // Validate timeouts are positive
-  if (config.scraperDefaultTimeout <= 0) {
-    errors.push("scraperDefaultTimeout must be > 0");
-  }
-  if (config.scraperNetworkIdleTimeout <= 0) {
-    errors.push("scraperNetworkIdleTimeout must be > 0");
-  }
-  if (config.scraperPageLoadTimeout <= 0) {
-    errors.push("scraperPageLoadTimeout must be > 0");
-  }
-  if (config.scraperClickWaitTimeout <= 0) {
-    errors.push("scraperClickWaitTimeout must be > 0");
-  }
-  if (config.scraperRateLimitDelay <= 0) {
-    errors.push("scraperRateLimitDelay must be > 0");
-  }
-  if (config.scraperCaptchaCheckInterval <= 0) {
-    errors.push("scraperCaptchaCheckInterval must be > 0");
-  }
-  if (config.browserUseTimeout <= 0) {
-    errors.push("browserUseTimeout must be > 0");
-  }
-
-  // Browser-Use Cloud requires API key and profile ID
-  if (config.browserUseCloud) {
-    if (!config.browserUseCloudApiKey) {
-      errors.push(
-        "browserUseCloudApiKey (SJS_LLM_API_KEY_BROWSER_USE) is required when using Browser-Use Cloud",
-      );
-    }
-    if (!config.browserUseCloudProfileId) {
-      errors.push(
-        "browserUseCloudProfileId (SJS_BROWSER_USE_CLOUD_PROFILE_ID) is required when using Browser-Use Cloud",
-      );
-    }
-    if (config.browserUseCloudTimeout <= 0) {
-      errors.push("browserUseCloudTimeout must be > 0");
-    }
   }
 
   // Throw if any validation errors

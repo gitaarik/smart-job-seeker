@@ -2,7 +2,7 @@
  * Shared utilities for AI chat prompt handling
  */
 
-import { db } from "$lib/db";
+import { db } from "$lib/server/db";
 import { config } from "$lib/server/config";
 import {
   generateChatCompletion,

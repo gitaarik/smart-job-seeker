@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getInterpolatedPrompts, interpolatePrompt } from "../ai-chat/utils";
 
 // Mock the Prisma client
-vi.mock("$lib/db", () => ({
+vi.mock("$lib/server/db", () => ({
   db: {
     ai_chat: {
       findUnique: vi.fn(),
@@ -18,7 +18,7 @@ vi.mock("$lib/db", () => ({
   },
 }));
 
-import { db } from "$lib/db";
+import { db } from "$lib/server/db";
 
 describe("interpolatePrompt", () => {
   it("should replace single variable occurrence", () => {

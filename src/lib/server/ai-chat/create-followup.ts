@@ -2,7 +2,7 @@
  * Create follow-up ai_chat instances for iterative refinement
  */
 
-import { db } from "$lib/db";
+import { db } from "$lib/server/db";
 import { createAndGenerateAiChat, interpolatePrompt } from "./utils";
 
 /**

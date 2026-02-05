@@ -3,7 +3,7 @@
  * Handles login automation for job platforms
  */
 
-import { dbDirect } from "$lib/db";
+import { dbDirect } from "$lib/server/db";
 
 export interface PlatformCredentials {
   platformId: number;

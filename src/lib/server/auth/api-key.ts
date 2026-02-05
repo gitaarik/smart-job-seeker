@@ -4,7 +4,7 @@
  */
 
 import crypto from "crypto";
-import { db } from "$lib/db";
+import { db } from "$lib/server/db";
 
 /**
  * API key prefix for identification

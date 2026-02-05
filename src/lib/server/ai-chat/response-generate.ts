@@ -3,7 +3,7 @@
  * Handles generating responses for AI chats using the generic LLM interface
  */
 
-import { db } from "$lib/db";
+import { db } from "$lib/server/db";
 import { getInterpolatedPrompts } from "./utils";
 import {
   generateChatCompletion,

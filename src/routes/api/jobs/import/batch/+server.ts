@@ -8,7 +8,7 @@
 
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "@sveltejs/kit";
-import { db } from "$lib/db";
+import { db } from "$lib/server/db";
 import { verifyApiKey } from "$lib/server/auth/api-key";
 import { normalizeJobUrl } from "$lib/server/job/normalize-url";
 import {

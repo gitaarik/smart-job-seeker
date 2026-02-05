@@ -3,7 +3,7 @@
  * Centralized functions for default profile logic
  */
 
-import { dbDirect as db } from "$lib/db";
+import { dbDirect as db } from "$lib/server/db";
 
 /**
  * Standard include structure used across all profile queries

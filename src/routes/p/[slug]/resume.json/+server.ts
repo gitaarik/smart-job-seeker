@@ -2,7 +2,7 @@ import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { getProfileByIdentifier } from "$lib/server/profile/default";
 import { getLatestExportWithFile } from "$lib/server/profile/export-files";
-import { dbDirect } from "$lib/db";
+import { dbDirect } from "$lib/server/db";
 import { exportProfileToJsonResume } from "../../../../../scripts/lib/json-resume-exporter";
 
 export const GET: RequestHandler = async ({ params }) => {

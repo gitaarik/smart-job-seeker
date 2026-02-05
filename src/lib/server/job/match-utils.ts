@@ -2,7 +2,7 @@
  * Utility functions for job matching
  */
 
-import { dbDirect as db } from "$lib/db";
+import { dbDirect as db } from "$lib/server/db";
 import type { jobs } from "../../../generated/prisma/client";
 
 /**

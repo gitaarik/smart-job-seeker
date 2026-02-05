@@ -13,7 +13,7 @@ vi.mock("$lib/tools/get-env", () => ({
 }));
 
 // Mock the database module globally
-vi.mock("$lib/db", () => ({
+vi.mock("$lib/server/db", () => ({
   db: {
     ai_chat: {
       update: vi.fn(),

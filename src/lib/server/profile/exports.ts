@@ -1,4 +1,4 @@
-import { dbDirect as db } from "$lib/db";
+import { dbDirect as db } from "$lib/server/db";
 import {
   deleteFileFromDirectus,
   uploadFileToDirectus,

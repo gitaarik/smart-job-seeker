@@ -1,5 +1,5 @@
 import type { profiles } from "generated/prisma";
-import { db } from "$lib/db";
+import { db } from "$lib/server/db";
 import { validateToken } from "../auth/token-validation";
 
 export interface AccessControlOptions {

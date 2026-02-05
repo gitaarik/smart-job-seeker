@@ -51,8 +51,6 @@ services:
       SJS_DATABASE_URL: ${SJS_POSTGRES_URL_DOCKER:-postgres://postgres:postgres@database:5432/smartjobseeker}
       # DATABASE_URL is also set for compatibility with standard Prisma tools
       DATABASE_URL: ${SJS_POSTGRES_URL_DOCKER:-postgres://postgres:postgres@database:5432/smartjobseeker}
-      # Override CDP host for Playwright connection (browser-use exposes CDP on 9222)
-      SJS_CDP_HOST: browser-use
   admin:
     extends:
       file: docker-compose.directus.yml
@@ -66,56 +64,5 @@ services:
     extends:
       file: docker-compose.directus.yml
       service: admin-cache
-  browser-use:
-    build: ./browser-use
-    restart: unless-stopped
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    ports:
-      - ${SJS_BROWSER_USE_PORT:-8000}:8000
-      - "5900:5900" # VNC port for viewing browser in headed mode
-      - "9222:9222" # CDP port for scraper (Patchright connects here)
-    volumes:
-      - ./browser-use:/app
-      - browser_use_data:/app/data
-    environment:
-      DISPLAY: ":99" # Tell Playwright to use the VNC-visible display
-      SJS_LLM_PROVIDER: ${SJS_LLM_PROVIDER}
-      SJS_LLM_API_KEY_GROQ: ${SJS_LLM_API_KEY_GROQ:-}
-      SJS_LLM_API_KEY_GEMINI: ${SJS_LLM_API_KEY_GEMINI:-}
-      SJS_LLM_API_KEY_OPENAI: ${SJS_LLM_API_KEY_OPENAI:-}
-      SJS_LLM_API_KEY_DEEPSEEK: ${SJS_LLM_API_KEY_DEEPSEEK:-}
-      SJS_LLM_MODEL_GROQ: ${SJS_LLM_MODEL_GROQ:-}
-      SJS_LLM_MODEL_GEMINI: ${SJS_LLM_MODEL_GEMINI:-}
-      SJS_LLM_MODEL_OPENAI: ${SJS_LLM_MODEL_OPENAI:-}
-      SJS_LLM_MODEL_DEEPSEEK: ${SJS_LLM_MODEL_DEEPSEEK:-}
-      SJS_LLM_PROVIDER_BROWSER_USE: ${SJS_LLM_PROVIDER_BROWSER_USE}
-      SJS_LLM_MODEL_BROWSER_USE: ${SJS_LLM_MODEL_BROWSER_USE:-}
-      SJS_BROWSER_USE_TIMEOUT: ${SJS_BROWSER_USE_TIMEOUT:-30000}
-      BROWSER_USE_API_KEY: ${SJS_LLM_API_KEY_BROWSER_USE}
-      SJS_LOG_LEVEL: ${SJS_BROWSER_USE_LOG_LEVEL:-INFO}
-    depends_on:
-      - database
-    healthcheck:
-      test:
-        - CMD
-        - curl
-        - -f
-        - http://localhost:8000/health
-      interval: 10s
-      timeout: 5s
-      retries: 5
-  novnc:
-    image: bonigarcia/novnc:1.3.0
-    restart: unless-stopped
-    ports:
-      - "6080:6080"
-    environment:
-      - AUTOCONNECT=true
-      - VNC_PASSWORD=secret
-      - VNC_SERVER=browser-use:5900
-    depends_on:
-      - browser-use
 volumes:
   postgres_data:
-  browser_use_data:

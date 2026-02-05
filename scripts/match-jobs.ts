@@ -5,7 +5,7 @@
  * Matches jobs against profile preferences and generates LLM-based match scores
  */
 
-import { dbDirect } from "$lib/db";
+import { dbDirect } from "$lib/server/db";
 import {
   calculateMatch,
   filterEligibleJobs,

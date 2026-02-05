@@ -6,7 +6,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock dependencies
-vi.mock("$lib/db", () => ({
+vi.mock("$lib/server/db", () => ({
   db: {
     ai_chat: {
       update: vi.fn(),
@@ -54,7 +54,7 @@ vi.mock("@langchain/groq", () => ({
   },
 }));
 
-import { db } from "$lib/db";
+import { db } from "$lib/server/db";
 import { getInterpolatedPrompts } from "../ai-chat/utils";
 import { generateAiChatResponse } from "../ai-chat/response-generate";
 import { AIMessage } from "@langchain/core/messages";

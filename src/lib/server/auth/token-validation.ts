@@ -1,4 +1,4 @@
-import { db } from "$lib/db";
+import { db } from "$lib/server/db";
 import { hashToken } from "./token-generator";
 
 export interface TokenValidationResult {

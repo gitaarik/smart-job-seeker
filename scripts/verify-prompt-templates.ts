@@ -1,5 +1,5 @@
 #!/usr/bin/env npx tsx
-import { db } from "$lib/db";
+import { db } from "$lib/server/db";
 
 async function main() {
   const requiredTemplates = [

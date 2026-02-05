@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { dbDirect } from "$lib/db";
+import { dbDirect } from "$lib/server/db";
 import { generateUniqueSlug } from "$lib/server/slug-generator";
 
 async function generateSlugsForExistingProfiles() {

@@ -3,7 +3,7 @@
  * Handles generating and updating full prompts for AI chats by combining system and user prompts
  */
 
-import { db } from "$lib/db";
+import { db } from "$lib/server/db";
 import { getInterpolatedPrompts, makeFullPrompt } from "./utils";
 
 /**

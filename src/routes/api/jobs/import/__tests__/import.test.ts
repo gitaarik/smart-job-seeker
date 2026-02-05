@@ -6,7 +6,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock the database module
-vi.mock("$lib/db", () => ({
+vi.mock("$lib/server/db", () => ({
   db: {
     profiles: {
       findFirst: vi.fn(),
@@ -28,7 +28,7 @@ vi.mock("$lib/server/auth/api-key", () => ({
   verifyApiKey: vi.fn(),
 }));
 
-import { db } from "$lib/db";
+import { db } from "$lib/server/db";
 import { verifyApiKey } from "$lib/server/auth/api-key";
 import { POST as importSingle } from "../+server";
 import { POST as importBatch } from "../batch/+server";

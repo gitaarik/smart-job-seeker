@@ -4,7 +4,7 @@
  * the core follow-up creation to the reusable createFollowupAiChat function
  */
 
-import { db } from "$lib/db";
+import { db } from "$lib/server/db";
 import { createFollowupAiChat } from "./create-followup";
 
 /**

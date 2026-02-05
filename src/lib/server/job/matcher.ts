@@ -4,7 +4,7 @@
  */
 
 import { Prisma } from "../../../generated/prisma/client";
-import { dbDirect as db } from "$lib/db";
+import { dbDirect as db } from "$lib/server/db";
 import { createJobMatchingAiChat } from "$lib/server/ai-chat/job-utils";
 import { hasArrayOverlap, matchesLocation } from "./match-utils";
 import type {

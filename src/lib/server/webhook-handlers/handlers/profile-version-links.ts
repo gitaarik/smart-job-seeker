@@ -3,7 +3,7 @@
  * Called to generate preview link HTML for profile versions
  */
 
-import { db } from "$lib/db";
+import { db } from "$lib/server/db";
 import { config } from "$lib/server/config";
 import type { WebhookHandler, WebhookHandlerResult } from "../types";
 

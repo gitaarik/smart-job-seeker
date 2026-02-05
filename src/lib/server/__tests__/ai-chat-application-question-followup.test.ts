@@ -6,7 +6,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock the database
-vi.mock("$lib/db", () => ({
+vi.mock("$lib/server/db", () => ({
   db: {
     application_questions: {
       findUnique: vi.fn(),
@@ -20,7 +20,7 @@ vi.mock("$lib/server/ai-chat/create-followup", () => ({
   createFollowupAiChat: vi.fn(),
 }));
 
-import { db } from "$lib/db";
+import { db } from "$lib/server/db";
 import { createFollowupAiChat } from "$lib/server/ai-chat/create-followup";
 import { createApplicationQuestionFollowup } from "../ai-chat/application-question-followup";
 

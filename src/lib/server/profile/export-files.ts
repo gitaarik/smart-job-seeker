@@ -3,7 +3,7 @@
  * Handles querying profile_exports table and retrieving files from Directus
  */
 
-import { dbDirect as db } from "$lib/db";
+import { dbDirect as db } from "$lib/server/db";
 import { getFileFromDirectus } from "../directus/files";
 
 /**
