@@ -46,16 +46,16 @@ export function extractLinks(
 export function extractSourceUrlFromMeta(html: string): string | null {
   const $ = cheerio.load(html);
 
-  // 1. Check <link rel="canonical">
-  const canonical = $('link[rel="canonical"]').attr("href");
-  if (canonical && isValidUrl(canonical)) {
-    return canonical;
-  }
-
-  // 2. Check <meta property="og:url">
+  // 1. Check <meta property="og:url"> - usually contains the full URL with params
   const ogUrl = $('meta[property="og:url"]').attr("content");
   if (ogUrl && isValidUrl(ogUrl)) {
     return ogUrl;
+  }
+
+  // 2. Check <link rel="canonical">
+  const canonical = $('link[rel="canonical"]').attr("href");
+  if (canonical && isValidUrl(canonical)) {
+    return canonical;
   }
 
   // 3. Check JSON-LD structured data for JobPosting URL

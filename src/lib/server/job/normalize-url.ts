@@ -32,19 +32,10 @@ const TRACKING_PARAMS = [
 ];
 
 /**
- * Hostnames that should have all query parameters removed
- * These platforms don't use query params for job identification
- */
-const STRIP_ALL_PARAMS_HOSTS = [
-  "linkedin.com",
-  "www.linkedin.com",
-];
-
-/**
  * Normalize a job URL for deduplication purposes
  *
  * - Removes tracking parameters (utm_*, fbclid, gclid, etc.)
- * - For LinkedIn: removes all query parameters
+ * - Preserves all other query parameters (including job identifiers)
  * - Normalizes URL format
  *
  * @param url - The job URL to normalize
@@ -54,20 +45,16 @@ export function normalizeJobUrl(url: string): string {
   try {
     const parsed = new URL(url);
 
-    // Check if we should strip all query params for this host
-    const shouldStripAll = STRIP_ALL_PARAMS_HOSTS.some(
-      (host) =>
-        parsed.hostname === host || parsed.hostname.endsWith(`.${host}`),
-    );
+    // For SPA pseudo-URLs (e.g., #job-1, #spa-job-1), preserve the hash fragment
+    // These are synthetic identifiers for jobs that appear in modals without real URLs
+    const isPseudoUrl = parsed.hash.match(/^#(?:spa-)?job-\d+$/);
+    if (isPseudoUrl) {
+      return `${parsed.origin}${parsed.pathname}${parsed.hash}`;
+    }
 
-    if (shouldStripAll) {
-      // Remove all query parameters for platforms like LinkedIn
-      parsed.search = "";
-    } else {
-      // Only remove tracking parameters
-      for (const param of TRACKING_PARAMS) {
-        parsed.searchParams.delete(param);
-      }
+    // Remove only known tracking parameters
+    for (const param of TRACKING_PARAMS) {
+      parsed.searchParams.delete(param);
     }
 
     // Remove hash fragment (typically not needed for job identification)

@@ -109,7 +109,7 @@ export async function withRetry<T>(
 }
 
 /**
- * Check if error is retryable (network errors, timeouts, 5xx responses)
+ * Check if error is retryable (network errors, timeouts, 5xx responses, transient LLM errors)
  */
 export function isRetryableError(error: Error): boolean {
   const message = error.message.toLowerCase();
@@ -131,6 +131,12 @@ export function isRetryableError(error: Error): boolean {
 
   // Rate limit errors (429)
   if ("status" in error && error.status === 429) {
+    return true;
+  }
+
+  // Groq JSON generation failures (transient - can succeed on retry)
+  // Error format: 400 {"error":{"code":"json_validate_failed",...}}
+  if (message.includes("json_validate_failed")) {
     return true;
   }
 

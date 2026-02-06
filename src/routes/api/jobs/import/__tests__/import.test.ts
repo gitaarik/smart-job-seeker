@@ -268,7 +268,7 @@ describe("POST /api/jobs/import - Single Job Import", () => {
       expect(data.jobId).toBe(99);
     });
 
-    it("should normalize LinkedIn URLs for deduplication", async () => {
+    it("should normalize URLs by removing only tracking params", async () => {
       const mockDbJobs = db.jobs as any;
       mockDbJobs.findFirst.mockResolvedValueOnce(null);
       mockDbJobs.create.mockResolvedValueOnce({ id: 42 });
@@ -276,7 +276,7 @@ describe("POST /api/jobs/import - Single Job Import", () => {
       const linkedInJob = {
         ...validJob,
         sourceUrl:
-          "https://www.linkedin.com/jobs/view/123456?utm_source=google&trackingId=abc",
+          "https://www.linkedin.com/jobs/view/123456?utm_source=google&currentJobId=789",
       };
 
       const request = createMockRequest(linkedInJob, "sjs_valid_key");
@@ -284,11 +284,12 @@ describe("POST /api/jobs/import - Single Job Import", () => {
 
       await importSingle(event);
 
-      // Check that the normalized URL was used (without query params for LinkedIn)
+      // Check that only tracking params were removed, job identifiers preserved
       expect(mockDbJobs.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            source_url: "https://www.linkedin.com/jobs/view/123456",
+            source_url:
+              "https://www.linkedin.com/jobs/view/123456?currentJobId=789",
           }),
         }),
       );

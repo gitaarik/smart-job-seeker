@@ -46,26 +46,28 @@ describe("normalizeJobUrl", () => {
   });
 
   describe("LinkedIn URL handling", () => {
-    it("should remove all query params from LinkedIn URLs", () => {
+    it("should preserve job identifiers in LinkedIn URLs", () => {
       const url =
         "https://www.linkedin.com/jobs/view/123456?trackingId=abc&refId=xyz";
+      // trackingId and refId are not in our tracking params list, so they're preserved
       expect(normalizeJobUrl(url)).toBe(
-        "https://www.linkedin.com/jobs/view/123456",
+        "https://www.linkedin.com/jobs/view/123456?trackingId=abc&refId=xyz",
       );
     });
 
-    it("should handle LinkedIn URLs without www", () => {
-      const url = "https://linkedin.com/jobs/view/123456?tracking=abc";
+    it("should remove tracking params from LinkedIn URLs", () => {
+      const url =
+        "https://linkedin.com/jobs/view/123456?tracking=abc&utm_source=google";
       expect(normalizeJobUrl(url)).toBe(
         "https://linkedin.com/jobs/view/123456",
       );
     });
 
-    it("should normalize LinkedIn job collection URLs", () => {
+    it("should preserve currentJobId in LinkedIn search URLs", () => {
       const url =
-        "https://www.linkedin.com/jobs/collections/recommended/?currentJobId=123";
+        "https://www.linkedin.com/jobs/search/?currentJobId=123&f_E=3%2C4&keywords=developer";
       expect(normalizeJobUrl(url)).toBe(
-        "https://www.linkedin.com/jobs/collections/recommended",
+        "https://www.linkedin.com/jobs/search/?currentJobId=123&f_E=3%2C4&keywords=developer",
       );
     });
   });
@@ -127,11 +129,15 @@ describe("areJobUrlsEqual", () => {
     expect(areJobUrlsEqual(url1, url2)).toBe(false);
   });
 
-  it("should match LinkedIn URLs with different tracking params", () => {
-    const url1 =
-      "https://www.linkedin.com/jobs/view/123456?trackingId=abc&refId=xyz";
-    const url2 =
-      "https://www.linkedin.com/jobs/view/123456?trackingId=def&origin=search";
+  it("should match LinkedIn URLs that differ only by tracking params", () => {
+    const url1 = "https://www.linkedin.com/jobs/view/123456?utm_source=google";
+    const url2 = "https://www.linkedin.com/jobs/view/123456?utm_source=email";
     expect(areJobUrlsEqual(url1, url2)).toBe(true);
+  });
+
+  it("should not match LinkedIn URLs with different job identifiers", () => {
+    const url1 = "https://www.linkedin.com/jobs/search/?currentJobId=123";
+    const url2 = "https://www.linkedin.com/jobs/search/?currentJobId=456";
+    expect(areJobUrlsEqual(url1, url2)).toBe(false);
   });
 });
