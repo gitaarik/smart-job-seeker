@@ -64,7 +64,7 @@ variable.
 
 ```json
 {
-  "eventType": "profile.export|ai_chat.generate_full_prompt|ai_chat.generate_response|ai_chat.create_followup|application_letter.generate|application_letter.create_followup|application_interview_question.generate_ai_answer|application_questions.create_followup|profile_version.generate_preview_links|item.create|item.update|item.delete|custom.event",
+  "eventType": "profile.export|ai_chats.generate_full_prompt|ai_chats.generate_response|ai_chats.create_followup|application_letter.generate|application_letter.create_followup|application_interview_question.generate_ai_answer|application_questions.create_followup|profile_version.generate_preview_links|item.create|item.update|item.delete|custom.event",
   "data": {
     "id": "some-id",
     "field1": "value1",
@@ -275,7 +275,7 @@ and `export-profile-data.ts` scripts.
 - `exportProfileSchema(profileId)` - Exports schema only
 - `exportProfileData(profileId)` - Exports data only
 
-### ai_chat.generate_full_prompt
+### ai_chats.generate_full_prompt
 
 Generates the `full_prompt` field for AI chat instances by combining
 `system_prompt` and `user_prompt` with variable interpolation. Supports template
@@ -285,7 +285,7 @@ variables like `${schema}`, `${data}`, and `${jobDescription}`.
 
 ```json
 {
-  "eventType": "ai_chat.generate_full_prompt",
+  "eventType": "ai_chats.generate_full_prompt",
   "data": {
     "aiChatIds": [123, 456, 789]
   }
@@ -338,14 +338,14 @@ variables like `${schema}`, `${data}`, and `${jobDescription}`.
 
 **Use Case:** Automatically prepare AI prompts when users create new AI chat
 instances from templates. The generated `full_prompt` is then used by the
-`ai_chat.generate_response` event.
+`ai_chats.generate_response` event.
 
 **Handler Location:** `src/routes/api/webhook/+server.ts` →
 `handleAiChatGenerateFullPrompt()`
 
 **Utility Functions:** `src/lib/server/ai-chat-full-prompt-generate.ts`
 
-### ai_chat.generate_response
+### ai_chats.generate_response
 
 Generates AI responses using the Groq API based on the `full_prompt` field.
 Requires `SJS_LLM_API_KEY_GROQ` environment variable to be set.
@@ -354,7 +354,7 @@ Requires `SJS_LLM_API_KEY_GROQ` environment variable to be set.
 
 ```json
 {
-  "eventType": "ai_chat.generate_response",
+  "eventType": "ai_chats.generate_response",
   "data": {
     "aiChatIds": [123, 456]
   }
@@ -404,7 +404,7 @@ workflow.
 
 **Prerequisites:**
 
-- AI chat must have `full_prompt` populated (use `ai_chat.generate_full_prompt`
+- AI chat must have `full_prompt` populated (use `ai_chats.generate_full_prompt`
   first)
 - `SJS_LLM_API_KEY_GROQ` environment variable must be configured
 
@@ -413,7 +413,7 @@ workflow.
 
 **Utility Functions:** `src/lib/server/ai-chat-response-generate.ts`
 
-### ai_chat.create_followup
+### ai_chats.create_followup
 
 Creates follow-up AI chat instances for iterative refinement of AI-generated
 content. Allows users to request modifications (tone, length, emphasis) to
@@ -423,7 +423,7 @@ existing AI responses.
 
 ```json
 {
-  "eventType": "ai_chat.create_followup",
+  "eventType": "ai_chats.create_followup",
   "data": {
     "keys": [123, 456],
     "followup_request": "Make it more formal and concise",

@@ -264,16 +264,6 @@ export type configUncheckedUpdateManyInput = {
   default_profile?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
-export type ConfigListRelationFilter = {
-  every?: Prisma.configWhereInput
-  some?: Prisma.configWhereInput
-  none?: Prisma.configWhereInput
-}
-
-export type configOrderByRelationAggregateInput = {
-  _count?: Prisma.SortOrder
-}
-
 export type configCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   default_profile?: Prisma.SortOrder
@@ -297,6 +287,16 @@ export type configMinOrderByAggregateInput = {
 export type configSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
   default_profile?: Prisma.SortOrder
+}
+
+export type ConfigListRelationFilter = {
+  every?: Prisma.configWhereInput
+  some?: Prisma.configWhereInput
+  none?: Prisma.configWhereInput
+}
+
+export type configOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
 }
 
 export type configCreateNestedManyWithoutProfilesInput = {

@@ -948,6 +948,22 @@ export type directus_filesUpdateOneWithoutApplicationsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.directus_filesUpdateToOneWithWhereWithoutApplicationsInput, Prisma.directus_filesUpdateWithoutApplicationsInput>, Prisma.directus_filesUncheckedUpdateWithoutApplicationsInput>
 }
 
+export type directus_filesCreateNestedOneWithoutApplications_filesInput = {
+  create?: Prisma.XOR<Prisma.directus_filesCreateWithoutApplications_filesInput, Prisma.directus_filesUncheckedCreateWithoutApplications_filesInput>
+  connectOrCreate?: Prisma.directus_filesCreateOrConnectWithoutApplications_filesInput
+  connect?: Prisma.directus_filesWhereUniqueInput
+}
+
+export type directus_filesUpdateOneWithoutApplications_filesNestedInput = {
+  create?: Prisma.XOR<Prisma.directus_filesCreateWithoutApplications_filesInput, Prisma.directus_filesUncheckedCreateWithoutApplications_filesInput>
+  connectOrCreate?: Prisma.directus_filesCreateOrConnectWithoutApplications_filesInput
+  upsert?: Prisma.directus_filesUpsertWithoutApplications_filesInput
+  disconnect?: Prisma.directus_filesWhereInput | boolean
+  delete?: Prisma.directus_filesWhereInput | boolean
+  connect?: Prisma.directus_filesWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.directus_filesUpdateToOneWithWhereWithoutApplications_filesInput, Prisma.directus_filesUpdateWithoutApplications_filesInput>, Prisma.directus_filesUncheckedUpdateWithoutApplications_filesInput>
+}
+
 export type NullableBigIntFieldUpdateOperationsInput = {
   set?: bigint | number | null
   increment?: bigint | number
@@ -1162,6 +1178,36 @@ export type directus_filesUpdateOneWithoutEducationNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.directus_filesUpdateToOneWithWhereWithoutEducationInput, Prisma.directus_filesUpdateWithoutEducationInput>, Prisma.directus_filesUncheckedUpdateWithoutEducationInput>
 }
 
+export type directus_filesCreateNestedOneWithoutJob_resourcesInput = {
+  create?: Prisma.XOR<Prisma.directus_filesCreateWithoutJob_resourcesInput, Prisma.directus_filesUncheckedCreateWithoutJob_resourcesInput>
+  connectOrCreate?: Prisma.directus_filesCreateOrConnectWithoutJob_resourcesInput
+  connect?: Prisma.directus_filesWhereUniqueInput
+}
+
+export type directus_filesUpdateOneWithoutJob_resourcesNestedInput = {
+  create?: Prisma.XOR<Prisma.directus_filesCreateWithoutJob_resourcesInput, Prisma.directus_filesUncheckedCreateWithoutJob_resourcesInput>
+  connectOrCreate?: Prisma.directus_filesCreateOrConnectWithoutJob_resourcesInput
+  upsert?: Prisma.directus_filesUpsertWithoutJob_resourcesInput
+  disconnect?: Prisma.directus_filesWhereInput | boolean
+  delete?: Prisma.directus_filesWhereInput | boolean
+  connect?: Prisma.directus_filesWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.directus_filesUpdateToOneWithWhereWithoutJob_resourcesInput, Prisma.directus_filesUpdateWithoutJob_resourcesInput>, Prisma.directus_filesUncheckedUpdateWithoutJob_resourcesInput>
+}
+
+export type directus_filesCreateNestedOneWithoutProfile_exportsInput = {
+  create?: Prisma.XOR<Prisma.directus_filesCreateWithoutProfile_exportsInput, Prisma.directus_filesUncheckedCreateWithoutProfile_exportsInput>
+  connectOrCreate?: Prisma.directus_filesCreateOrConnectWithoutProfile_exportsInput
+  connect?: Prisma.directus_filesWhereUniqueInput
+}
+
+export type directus_filesUpdateOneRequiredWithoutProfile_exportsNestedInput = {
+  create?: Prisma.XOR<Prisma.directus_filesCreateWithoutProfile_exportsInput, Prisma.directus_filesUncheckedCreateWithoutProfile_exportsInput>
+  connectOrCreate?: Prisma.directus_filesCreateOrConnectWithoutProfile_exportsInput
+  upsert?: Prisma.directus_filesUpsertWithoutProfile_exportsInput
+  connect?: Prisma.directus_filesWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.directus_filesUpdateToOneWithWhereWithoutProfile_exportsInput, Prisma.directus_filesUpdateWithoutProfile_exportsInput>, Prisma.directus_filesUncheckedUpdateWithoutProfile_exportsInput>
+}
+
 export type directus_filesCreateNestedOneWithoutProfilesInput = {
   create?: Prisma.XOR<Prisma.directus_filesCreateWithoutProfilesInput, Prisma.directus_filesUncheckedCreateWithoutProfilesInput>
   connectOrCreate?: Prisma.directus_filesCreateOrConnectWithoutProfilesInput
@@ -1192,52 +1238,6 @@ export type directus_filesUpdateOneWithoutWork_experiencesNestedInput = {
   delete?: Prisma.directus_filesWhereInput | boolean
   connect?: Prisma.directus_filesWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.directus_filesUpdateToOneWithWhereWithoutWork_experiencesInput, Prisma.directus_filesUpdateWithoutWork_experiencesInput>, Prisma.directus_filesUncheckedUpdateWithoutWork_experiencesInput>
-}
-
-export type directus_filesCreateNestedOneWithoutApplications_filesInput = {
-  create?: Prisma.XOR<Prisma.directus_filesCreateWithoutApplications_filesInput, Prisma.directus_filesUncheckedCreateWithoutApplications_filesInput>
-  connectOrCreate?: Prisma.directus_filesCreateOrConnectWithoutApplications_filesInput
-  connect?: Prisma.directus_filesWhereUniqueInput
-}
-
-export type directus_filesUpdateOneWithoutApplications_filesNestedInput = {
-  create?: Prisma.XOR<Prisma.directus_filesCreateWithoutApplications_filesInput, Prisma.directus_filesUncheckedCreateWithoutApplications_filesInput>
-  connectOrCreate?: Prisma.directus_filesCreateOrConnectWithoutApplications_filesInput
-  upsert?: Prisma.directus_filesUpsertWithoutApplications_filesInput
-  disconnect?: Prisma.directus_filesWhereInput | boolean
-  delete?: Prisma.directus_filesWhereInput | boolean
-  connect?: Prisma.directus_filesWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.directus_filesUpdateToOneWithWhereWithoutApplications_filesInput, Prisma.directus_filesUpdateWithoutApplications_filesInput>, Prisma.directus_filesUncheckedUpdateWithoutApplications_filesInput>
-}
-
-export type directus_filesCreateNestedOneWithoutJob_resourcesInput = {
-  create?: Prisma.XOR<Prisma.directus_filesCreateWithoutJob_resourcesInput, Prisma.directus_filesUncheckedCreateWithoutJob_resourcesInput>
-  connectOrCreate?: Prisma.directus_filesCreateOrConnectWithoutJob_resourcesInput
-  connect?: Prisma.directus_filesWhereUniqueInput
-}
-
-export type directus_filesUpdateOneWithoutJob_resourcesNestedInput = {
-  create?: Prisma.XOR<Prisma.directus_filesCreateWithoutJob_resourcesInput, Prisma.directus_filesUncheckedCreateWithoutJob_resourcesInput>
-  connectOrCreate?: Prisma.directus_filesCreateOrConnectWithoutJob_resourcesInput
-  upsert?: Prisma.directus_filesUpsertWithoutJob_resourcesInput
-  disconnect?: Prisma.directus_filesWhereInput | boolean
-  delete?: Prisma.directus_filesWhereInput | boolean
-  connect?: Prisma.directus_filesWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.directus_filesUpdateToOneWithWhereWithoutJob_resourcesInput, Prisma.directus_filesUpdateWithoutJob_resourcesInput>, Prisma.directus_filesUncheckedUpdateWithoutJob_resourcesInput>
-}
-
-export type directus_filesCreateNestedOneWithoutProfile_exportsInput = {
-  create?: Prisma.XOR<Prisma.directus_filesCreateWithoutProfile_exportsInput, Prisma.directus_filesUncheckedCreateWithoutProfile_exportsInput>
-  connectOrCreate?: Prisma.directus_filesCreateOrConnectWithoutProfile_exportsInput
-  connect?: Prisma.directus_filesWhereUniqueInput
-}
-
-export type directus_filesUpdateOneRequiredWithoutProfile_exportsNestedInput = {
-  create?: Prisma.XOR<Prisma.directus_filesCreateWithoutProfile_exportsInput, Prisma.directus_filesUncheckedCreateWithoutProfile_exportsInput>
-  connectOrCreate?: Prisma.directus_filesCreateOrConnectWithoutProfile_exportsInput
-  upsert?: Prisma.directus_filesUpsertWithoutProfile_exportsInput
-  connect?: Prisma.directus_filesWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.directus_filesUpdateToOneWithWhereWithoutProfile_exportsInput, Prisma.directus_filesUpdateWithoutProfile_exportsInput>, Prisma.directus_filesUncheckedUpdateWithoutProfile_exportsInput>
 }
 
 export type directus_filesCreateWithoutApplicationsInput = {
@@ -1401,6 +1401,178 @@ export type directus_filesUncheckedUpdateWithoutApplicationsInput = {
   tus_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   uploaded_on?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   applications_files?: Prisma.applications_filesUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  directus_settings_directus_settings_project_logoTodirectus_files?: Prisma.directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_project_logoTodirectus_filesNestedInput
+  directus_settings_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesNestedInput
+  directus_settings_directus_settings_public_faviconTodirectus_files?: Prisma.directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_public_faviconTodirectus_filesNestedInput
+  directus_settings_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_public_foregroundTodirectus_filesNestedInput
+  education?: Prisma.educationUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  job_resources?: Prisma.job_resourcesUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  profile_exports?: Prisma.profile_exportsUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  profiles?: Prisma.profilesUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  work_experiences?: Prisma.work_experiencesUncheckedUpdateManyWithoutDirectus_filesNestedInput
+}
+
+export type directus_filesCreateWithoutApplications_filesInput = {
+  id: string
+  storage: string
+  filename_disk?: string | null
+  filename_download: string
+  title?: string | null
+  type?: string | null
+  created_on?: Date | string
+  modified_on?: Date | string
+  charset?: string | null
+  filesize?: bigint | number | null
+  width?: number | null
+  height?: number | null
+  duration?: number | null
+  embed?: string | null
+  description?: string | null
+  location?: string | null
+  tags?: string | null
+  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  focal_point_x?: number | null
+  focal_point_y?: number | null
+  tus_id?: string | null
+  tus_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  uploaded_on?: Date | string | null
+  applications?: Prisma.applicationsCreateNestedManyWithoutDirectus_filesInput
+  directus_folders?: Prisma.directus_foldersCreateNestedOneWithoutDirectus_filesInput
+  directus_users_directus_files_modified_byTodirectus_users?: Prisma.directus_usersCreateNestedOneWithoutDirectus_files_directus_files_modified_byTodirectus_usersInput
+  directus_users_directus_files_uploaded_byTodirectus_users?: Prisma.directus_usersCreateNestedOneWithoutDirectus_files_directus_files_uploaded_byTodirectus_usersInput
+  directus_settings_directus_settings_project_logoTodirectus_files?: Prisma.directus_settingsCreateNestedManyWithoutDirectus_files_directus_settings_project_logoTodirectus_filesInput
+  directus_settings_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_settingsCreateNestedManyWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesInput
+  directus_settings_directus_settings_public_faviconTodirectus_files?: Prisma.directus_settingsCreateNestedManyWithoutDirectus_files_directus_settings_public_faviconTodirectus_filesInput
+  directus_settings_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_settingsCreateNestedManyWithoutDirectus_files_directus_settings_public_foregroundTodirectus_filesInput
+  education?: Prisma.educationCreateNestedManyWithoutDirectus_filesInput
+  job_resources?: Prisma.job_resourcesCreateNestedManyWithoutDirectus_filesInput
+  profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutDirectus_filesInput
+  profiles?: Prisma.profilesCreateNestedManyWithoutDirectus_filesInput
+  work_experiences?: Prisma.work_experiencesCreateNestedManyWithoutDirectus_filesInput
+}
+
+export type directus_filesUncheckedCreateWithoutApplications_filesInput = {
+  id: string
+  storage: string
+  filename_disk?: string | null
+  filename_download: string
+  title?: string | null
+  type?: string | null
+  folder?: string | null
+  uploaded_by?: string | null
+  created_on?: Date | string
+  modified_by?: string | null
+  modified_on?: Date | string
+  charset?: string | null
+  filesize?: bigint | number | null
+  width?: number | null
+  height?: number | null
+  duration?: number | null
+  embed?: string | null
+  description?: string | null
+  location?: string | null
+  tags?: string | null
+  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  focal_point_x?: number | null
+  focal_point_y?: number | null
+  tus_id?: string | null
+  tus_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  uploaded_on?: Date | string | null
+  applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutDirectus_filesInput
+  directus_settings_directus_settings_project_logoTodirectus_files?: Prisma.directus_settingsUncheckedCreateNestedManyWithoutDirectus_files_directus_settings_project_logoTodirectus_filesInput
+  directus_settings_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_settingsUncheckedCreateNestedManyWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesInput
+  directus_settings_directus_settings_public_faviconTodirectus_files?: Prisma.directus_settingsUncheckedCreateNestedManyWithoutDirectus_files_directus_settings_public_faviconTodirectus_filesInput
+  directus_settings_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_settingsUncheckedCreateNestedManyWithoutDirectus_files_directus_settings_public_foregroundTodirectus_filesInput
+  education?: Prisma.educationUncheckedCreateNestedManyWithoutDirectus_filesInput
+  job_resources?: Prisma.job_resourcesUncheckedCreateNestedManyWithoutDirectus_filesInput
+  profile_exports?: Prisma.profile_exportsUncheckedCreateNestedManyWithoutDirectus_filesInput
+  profiles?: Prisma.profilesUncheckedCreateNestedManyWithoutDirectus_filesInput
+  work_experiences?: Prisma.work_experiencesUncheckedCreateNestedManyWithoutDirectus_filesInput
+}
+
+export type directus_filesCreateOrConnectWithoutApplications_filesInput = {
+  where: Prisma.directus_filesWhereUniqueInput
+  create: Prisma.XOR<Prisma.directus_filesCreateWithoutApplications_filesInput, Prisma.directus_filesUncheckedCreateWithoutApplications_filesInput>
+}
+
+export type directus_filesUpsertWithoutApplications_filesInput = {
+  update: Prisma.XOR<Prisma.directus_filesUpdateWithoutApplications_filesInput, Prisma.directus_filesUncheckedUpdateWithoutApplications_filesInput>
+  create: Prisma.XOR<Prisma.directus_filesCreateWithoutApplications_filesInput, Prisma.directus_filesUncheckedCreateWithoutApplications_filesInput>
+  where?: Prisma.directus_filesWhereInput
+}
+
+export type directus_filesUpdateToOneWithWhereWithoutApplications_filesInput = {
+  where?: Prisma.directus_filesWhereInput
+  data: Prisma.XOR<Prisma.directus_filesUpdateWithoutApplications_filesInput, Prisma.directus_filesUncheckedUpdateWithoutApplications_filesInput>
+}
+
+export type directus_filesUpdateWithoutApplications_filesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  storage?: Prisma.StringFieldUpdateOperationsInput | string
+  filename_disk?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  filename_download?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_on?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  modified_on?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  charset?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  filesize?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  width?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  height?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  duration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  embed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tags?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  focal_point_x?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  focal_point_y?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tus_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tus_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  uploaded_on?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  applications?: Prisma.applicationsUpdateManyWithoutDirectus_filesNestedInput
+  directus_folders?: Prisma.directus_foldersUpdateOneWithoutDirectus_filesNestedInput
+  directus_users_directus_files_modified_byTodirectus_users?: Prisma.directus_usersUpdateOneWithoutDirectus_files_directus_files_modified_byTodirectus_usersNestedInput
+  directus_users_directus_files_uploaded_byTodirectus_users?: Prisma.directus_usersUpdateOneWithoutDirectus_files_directus_files_uploaded_byTodirectus_usersNestedInput
+  directus_settings_directus_settings_project_logoTodirectus_files?: Prisma.directus_settingsUpdateManyWithoutDirectus_files_directus_settings_project_logoTodirectus_filesNestedInput
+  directus_settings_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_settingsUpdateManyWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesNestedInput
+  directus_settings_directus_settings_public_faviconTodirectus_files?: Prisma.directus_settingsUpdateManyWithoutDirectus_files_directus_settings_public_faviconTodirectus_filesNestedInput
+  directus_settings_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_settingsUpdateManyWithoutDirectus_files_directus_settings_public_foregroundTodirectus_filesNestedInput
+  education?: Prisma.educationUpdateManyWithoutDirectus_filesNestedInput
+  job_resources?: Prisma.job_resourcesUpdateManyWithoutDirectus_filesNestedInput
+  profile_exports?: Prisma.profile_exportsUpdateManyWithoutDirectus_filesNestedInput
+  profiles?: Prisma.profilesUpdateManyWithoutDirectus_filesNestedInput
+  work_experiences?: Prisma.work_experiencesUpdateManyWithoutDirectus_filesNestedInput
+}
+
+export type directus_filesUncheckedUpdateWithoutApplications_filesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  storage?: Prisma.StringFieldUpdateOperationsInput | string
+  filename_disk?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  filename_download?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  folder?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  uploaded_by?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_on?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  modified_by?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  modified_on?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  charset?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  filesize?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  width?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  height?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  duration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  embed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tags?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  focal_point_x?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  focal_point_y?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tus_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tus_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  uploaded_on?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  applications?: Prisma.applicationsUncheckedUpdateManyWithoutDirectus_filesNestedInput
   directus_settings_directus_settings_project_logoTodirectus_files?: Prisma.directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_project_logoTodirectus_filesNestedInput
   directus_settings_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesNestedInput
   directus_settings_directus_settings_public_faviconTodirectus_files?: Prisma.directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_public_faviconTodirectus_filesNestedInput
@@ -2616,522 +2788,6 @@ export type directus_filesUncheckedUpdateWithoutEducationInput = {
   work_experiences?: Prisma.work_experiencesUncheckedUpdateManyWithoutDirectus_filesNestedInput
 }
 
-export type directus_filesCreateWithoutProfilesInput = {
-  id: string
-  storage: string
-  filename_disk?: string | null
-  filename_download: string
-  title?: string | null
-  type?: string | null
-  created_on?: Date | string
-  modified_on?: Date | string
-  charset?: string | null
-  filesize?: bigint | number | null
-  width?: number | null
-  height?: number | null
-  duration?: number | null
-  embed?: string | null
-  description?: string | null
-  location?: string | null
-  tags?: string | null
-  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  focal_point_x?: number | null
-  focal_point_y?: number | null
-  tus_id?: string | null
-  tus_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  uploaded_on?: Date | string | null
-  applications?: Prisma.applicationsCreateNestedManyWithoutDirectus_filesInput
-  applications_files?: Prisma.applications_filesCreateNestedManyWithoutDirectus_filesInput
-  directus_folders?: Prisma.directus_foldersCreateNestedOneWithoutDirectus_filesInput
-  directus_users_directus_files_modified_byTodirectus_users?: Prisma.directus_usersCreateNestedOneWithoutDirectus_files_directus_files_modified_byTodirectus_usersInput
-  directus_users_directus_files_uploaded_byTodirectus_users?: Prisma.directus_usersCreateNestedOneWithoutDirectus_files_directus_files_uploaded_byTodirectus_usersInput
-  directus_settings_directus_settings_project_logoTodirectus_files?: Prisma.directus_settingsCreateNestedManyWithoutDirectus_files_directus_settings_project_logoTodirectus_filesInput
-  directus_settings_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_settingsCreateNestedManyWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesInput
-  directus_settings_directus_settings_public_faviconTodirectus_files?: Prisma.directus_settingsCreateNestedManyWithoutDirectus_files_directus_settings_public_faviconTodirectus_filesInput
-  directus_settings_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_settingsCreateNestedManyWithoutDirectus_files_directus_settings_public_foregroundTodirectus_filesInput
-  education?: Prisma.educationCreateNestedManyWithoutDirectus_filesInput
-  job_resources?: Prisma.job_resourcesCreateNestedManyWithoutDirectus_filesInput
-  profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutDirectus_filesInput
-  work_experiences?: Prisma.work_experiencesCreateNestedManyWithoutDirectus_filesInput
-}
-
-export type directus_filesUncheckedCreateWithoutProfilesInput = {
-  id: string
-  storage: string
-  filename_disk?: string | null
-  filename_download: string
-  title?: string | null
-  type?: string | null
-  folder?: string | null
-  uploaded_by?: string | null
-  created_on?: Date | string
-  modified_by?: string | null
-  modified_on?: Date | string
-  charset?: string | null
-  filesize?: bigint | number | null
-  width?: number | null
-  height?: number | null
-  duration?: number | null
-  embed?: string | null
-  description?: string | null
-  location?: string | null
-  tags?: string | null
-  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  focal_point_x?: number | null
-  focal_point_y?: number | null
-  tus_id?: string | null
-  tus_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  uploaded_on?: Date | string | null
-  applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutDirectus_filesInput
-  applications_files?: Prisma.applications_filesUncheckedCreateNestedManyWithoutDirectus_filesInput
-  directus_settings_directus_settings_project_logoTodirectus_files?: Prisma.directus_settingsUncheckedCreateNestedManyWithoutDirectus_files_directus_settings_project_logoTodirectus_filesInput
-  directus_settings_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_settingsUncheckedCreateNestedManyWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesInput
-  directus_settings_directus_settings_public_faviconTodirectus_files?: Prisma.directus_settingsUncheckedCreateNestedManyWithoutDirectus_files_directus_settings_public_faviconTodirectus_filesInput
-  directus_settings_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_settingsUncheckedCreateNestedManyWithoutDirectus_files_directus_settings_public_foregroundTodirectus_filesInput
-  education?: Prisma.educationUncheckedCreateNestedManyWithoutDirectus_filesInput
-  job_resources?: Prisma.job_resourcesUncheckedCreateNestedManyWithoutDirectus_filesInput
-  profile_exports?: Prisma.profile_exportsUncheckedCreateNestedManyWithoutDirectus_filesInput
-  work_experiences?: Prisma.work_experiencesUncheckedCreateNestedManyWithoutDirectus_filesInput
-}
-
-export type directus_filesCreateOrConnectWithoutProfilesInput = {
-  where: Prisma.directus_filesWhereUniqueInput
-  create: Prisma.XOR<Prisma.directus_filesCreateWithoutProfilesInput, Prisma.directus_filesUncheckedCreateWithoutProfilesInput>
-}
-
-export type directus_filesUpsertWithoutProfilesInput = {
-  update: Prisma.XOR<Prisma.directus_filesUpdateWithoutProfilesInput, Prisma.directus_filesUncheckedUpdateWithoutProfilesInput>
-  create: Prisma.XOR<Prisma.directus_filesCreateWithoutProfilesInput, Prisma.directus_filesUncheckedCreateWithoutProfilesInput>
-  where?: Prisma.directus_filesWhereInput
-}
-
-export type directus_filesUpdateToOneWithWhereWithoutProfilesInput = {
-  where?: Prisma.directus_filesWhereInput
-  data: Prisma.XOR<Prisma.directus_filesUpdateWithoutProfilesInput, Prisma.directus_filesUncheckedUpdateWithoutProfilesInput>
-}
-
-export type directus_filesUpdateWithoutProfilesInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  storage?: Prisma.StringFieldUpdateOperationsInput | string
-  filename_disk?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  filename_download?: Prisma.StringFieldUpdateOperationsInput | string
-  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  created_on?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  modified_on?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  charset?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  filesize?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  width?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  height?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  duration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  embed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tags?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  focal_point_x?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  focal_point_y?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  tus_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tus_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  uploaded_on?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  applications?: Prisma.applicationsUpdateManyWithoutDirectus_filesNestedInput
-  applications_files?: Prisma.applications_filesUpdateManyWithoutDirectus_filesNestedInput
-  directus_folders?: Prisma.directus_foldersUpdateOneWithoutDirectus_filesNestedInput
-  directus_users_directus_files_modified_byTodirectus_users?: Prisma.directus_usersUpdateOneWithoutDirectus_files_directus_files_modified_byTodirectus_usersNestedInput
-  directus_users_directus_files_uploaded_byTodirectus_users?: Prisma.directus_usersUpdateOneWithoutDirectus_files_directus_files_uploaded_byTodirectus_usersNestedInput
-  directus_settings_directus_settings_project_logoTodirectus_files?: Prisma.directus_settingsUpdateManyWithoutDirectus_files_directus_settings_project_logoTodirectus_filesNestedInput
-  directus_settings_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_settingsUpdateManyWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesNestedInput
-  directus_settings_directus_settings_public_faviconTodirectus_files?: Prisma.directus_settingsUpdateManyWithoutDirectus_files_directus_settings_public_faviconTodirectus_filesNestedInput
-  directus_settings_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_settingsUpdateManyWithoutDirectus_files_directus_settings_public_foregroundTodirectus_filesNestedInput
-  education?: Prisma.educationUpdateManyWithoutDirectus_filesNestedInput
-  job_resources?: Prisma.job_resourcesUpdateManyWithoutDirectus_filesNestedInput
-  profile_exports?: Prisma.profile_exportsUpdateManyWithoutDirectus_filesNestedInput
-  work_experiences?: Prisma.work_experiencesUpdateManyWithoutDirectus_filesNestedInput
-}
-
-export type directus_filesUncheckedUpdateWithoutProfilesInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  storage?: Prisma.StringFieldUpdateOperationsInput | string
-  filename_disk?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  filename_download?: Prisma.StringFieldUpdateOperationsInput | string
-  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  folder?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  uploaded_by?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  created_on?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  modified_by?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  modified_on?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  charset?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  filesize?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  width?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  height?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  duration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  embed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tags?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  focal_point_x?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  focal_point_y?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  tus_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tus_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  uploaded_on?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  applications?: Prisma.applicationsUncheckedUpdateManyWithoutDirectus_filesNestedInput
-  applications_files?: Prisma.applications_filesUncheckedUpdateManyWithoutDirectus_filesNestedInput
-  directus_settings_directus_settings_project_logoTodirectus_files?: Prisma.directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_project_logoTodirectus_filesNestedInput
-  directus_settings_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesNestedInput
-  directus_settings_directus_settings_public_faviconTodirectus_files?: Prisma.directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_public_faviconTodirectus_filesNestedInput
-  directus_settings_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_public_foregroundTodirectus_filesNestedInput
-  education?: Prisma.educationUncheckedUpdateManyWithoutDirectus_filesNestedInput
-  job_resources?: Prisma.job_resourcesUncheckedUpdateManyWithoutDirectus_filesNestedInput
-  profile_exports?: Prisma.profile_exportsUncheckedUpdateManyWithoutDirectus_filesNestedInput
-  work_experiences?: Prisma.work_experiencesUncheckedUpdateManyWithoutDirectus_filesNestedInput
-}
-
-export type directus_filesCreateWithoutWork_experiencesInput = {
-  id: string
-  storage: string
-  filename_disk?: string | null
-  filename_download: string
-  title?: string | null
-  type?: string | null
-  created_on?: Date | string
-  modified_on?: Date | string
-  charset?: string | null
-  filesize?: bigint | number | null
-  width?: number | null
-  height?: number | null
-  duration?: number | null
-  embed?: string | null
-  description?: string | null
-  location?: string | null
-  tags?: string | null
-  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  focal_point_x?: number | null
-  focal_point_y?: number | null
-  tus_id?: string | null
-  tus_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  uploaded_on?: Date | string | null
-  applications?: Prisma.applicationsCreateNestedManyWithoutDirectus_filesInput
-  applications_files?: Prisma.applications_filesCreateNestedManyWithoutDirectus_filesInput
-  directus_folders?: Prisma.directus_foldersCreateNestedOneWithoutDirectus_filesInput
-  directus_users_directus_files_modified_byTodirectus_users?: Prisma.directus_usersCreateNestedOneWithoutDirectus_files_directus_files_modified_byTodirectus_usersInput
-  directus_users_directus_files_uploaded_byTodirectus_users?: Prisma.directus_usersCreateNestedOneWithoutDirectus_files_directus_files_uploaded_byTodirectus_usersInput
-  directus_settings_directus_settings_project_logoTodirectus_files?: Prisma.directus_settingsCreateNestedManyWithoutDirectus_files_directus_settings_project_logoTodirectus_filesInput
-  directus_settings_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_settingsCreateNestedManyWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesInput
-  directus_settings_directus_settings_public_faviconTodirectus_files?: Prisma.directus_settingsCreateNestedManyWithoutDirectus_files_directus_settings_public_faviconTodirectus_filesInput
-  directus_settings_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_settingsCreateNestedManyWithoutDirectus_files_directus_settings_public_foregroundTodirectus_filesInput
-  education?: Prisma.educationCreateNestedManyWithoutDirectus_filesInput
-  job_resources?: Prisma.job_resourcesCreateNestedManyWithoutDirectus_filesInput
-  profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutDirectus_filesInput
-  profiles?: Prisma.profilesCreateNestedManyWithoutDirectus_filesInput
-}
-
-export type directus_filesUncheckedCreateWithoutWork_experiencesInput = {
-  id: string
-  storage: string
-  filename_disk?: string | null
-  filename_download: string
-  title?: string | null
-  type?: string | null
-  folder?: string | null
-  uploaded_by?: string | null
-  created_on?: Date | string
-  modified_by?: string | null
-  modified_on?: Date | string
-  charset?: string | null
-  filesize?: bigint | number | null
-  width?: number | null
-  height?: number | null
-  duration?: number | null
-  embed?: string | null
-  description?: string | null
-  location?: string | null
-  tags?: string | null
-  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  focal_point_x?: number | null
-  focal_point_y?: number | null
-  tus_id?: string | null
-  tus_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  uploaded_on?: Date | string | null
-  applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutDirectus_filesInput
-  applications_files?: Prisma.applications_filesUncheckedCreateNestedManyWithoutDirectus_filesInput
-  directus_settings_directus_settings_project_logoTodirectus_files?: Prisma.directus_settingsUncheckedCreateNestedManyWithoutDirectus_files_directus_settings_project_logoTodirectus_filesInput
-  directus_settings_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_settingsUncheckedCreateNestedManyWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesInput
-  directus_settings_directus_settings_public_faviconTodirectus_files?: Prisma.directus_settingsUncheckedCreateNestedManyWithoutDirectus_files_directus_settings_public_faviconTodirectus_filesInput
-  directus_settings_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_settingsUncheckedCreateNestedManyWithoutDirectus_files_directus_settings_public_foregroundTodirectus_filesInput
-  education?: Prisma.educationUncheckedCreateNestedManyWithoutDirectus_filesInput
-  job_resources?: Prisma.job_resourcesUncheckedCreateNestedManyWithoutDirectus_filesInput
-  profile_exports?: Prisma.profile_exportsUncheckedCreateNestedManyWithoutDirectus_filesInput
-  profiles?: Prisma.profilesUncheckedCreateNestedManyWithoutDirectus_filesInput
-}
-
-export type directus_filesCreateOrConnectWithoutWork_experiencesInput = {
-  where: Prisma.directus_filesWhereUniqueInput
-  create: Prisma.XOR<Prisma.directus_filesCreateWithoutWork_experiencesInput, Prisma.directus_filesUncheckedCreateWithoutWork_experiencesInput>
-}
-
-export type directus_filesUpsertWithoutWork_experiencesInput = {
-  update: Prisma.XOR<Prisma.directus_filesUpdateWithoutWork_experiencesInput, Prisma.directus_filesUncheckedUpdateWithoutWork_experiencesInput>
-  create: Prisma.XOR<Prisma.directus_filesCreateWithoutWork_experiencesInput, Prisma.directus_filesUncheckedCreateWithoutWork_experiencesInput>
-  where?: Prisma.directus_filesWhereInput
-}
-
-export type directus_filesUpdateToOneWithWhereWithoutWork_experiencesInput = {
-  where?: Prisma.directus_filesWhereInput
-  data: Prisma.XOR<Prisma.directus_filesUpdateWithoutWork_experiencesInput, Prisma.directus_filesUncheckedUpdateWithoutWork_experiencesInput>
-}
-
-export type directus_filesUpdateWithoutWork_experiencesInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  storage?: Prisma.StringFieldUpdateOperationsInput | string
-  filename_disk?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  filename_download?: Prisma.StringFieldUpdateOperationsInput | string
-  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  created_on?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  modified_on?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  charset?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  filesize?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  width?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  height?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  duration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  embed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tags?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  focal_point_x?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  focal_point_y?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  tus_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tus_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  uploaded_on?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  applications?: Prisma.applicationsUpdateManyWithoutDirectus_filesNestedInput
-  applications_files?: Prisma.applications_filesUpdateManyWithoutDirectus_filesNestedInput
-  directus_folders?: Prisma.directus_foldersUpdateOneWithoutDirectus_filesNestedInput
-  directus_users_directus_files_modified_byTodirectus_users?: Prisma.directus_usersUpdateOneWithoutDirectus_files_directus_files_modified_byTodirectus_usersNestedInput
-  directus_users_directus_files_uploaded_byTodirectus_users?: Prisma.directus_usersUpdateOneWithoutDirectus_files_directus_files_uploaded_byTodirectus_usersNestedInput
-  directus_settings_directus_settings_project_logoTodirectus_files?: Prisma.directus_settingsUpdateManyWithoutDirectus_files_directus_settings_project_logoTodirectus_filesNestedInput
-  directus_settings_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_settingsUpdateManyWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesNestedInput
-  directus_settings_directus_settings_public_faviconTodirectus_files?: Prisma.directus_settingsUpdateManyWithoutDirectus_files_directus_settings_public_faviconTodirectus_filesNestedInput
-  directus_settings_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_settingsUpdateManyWithoutDirectus_files_directus_settings_public_foregroundTodirectus_filesNestedInput
-  education?: Prisma.educationUpdateManyWithoutDirectus_filesNestedInput
-  job_resources?: Prisma.job_resourcesUpdateManyWithoutDirectus_filesNestedInput
-  profile_exports?: Prisma.profile_exportsUpdateManyWithoutDirectus_filesNestedInput
-  profiles?: Prisma.profilesUpdateManyWithoutDirectus_filesNestedInput
-}
-
-export type directus_filesUncheckedUpdateWithoutWork_experiencesInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  storage?: Prisma.StringFieldUpdateOperationsInput | string
-  filename_disk?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  filename_download?: Prisma.StringFieldUpdateOperationsInput | string
-  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  folder?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  uploaded_by?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  created_on?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  modified_by?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  modified_on?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  charset?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  filesize?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  width?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  height?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  duration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  embed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tags?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  focal_point_x?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  focal_point_y?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  tus_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tus_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  uploaded_on?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  applications?: Prisma.applicationsUncheckedUpdateManyWithoutDirectus_filesNestedInput
-  applications_files?: Prisma.applications_filesUncheckedUpdateManyWithoutDirectus_filesNestedInput
-  directus_settings_directus_settings_project_logoTodirectus_files?: Prisma.directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_project_logoTodirectus_filesNestedInput
-  directus_settings_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesNestedInput
-  directus_settings_directus_settings_public_faviconTodirectus_files?: Prisma.directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_public_faviconTodirectus_filesNestedInput
-  directus_settings_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_public_foregroundTodirectus_filesNestedInput
-  education?: Prisma.educationUncheckedUpdateManyWithoutDirectus_filesNestedInput
-  job_resources?: Prisma.job_resourcesUncheckedUpdateManyWithoutDirectus_filesNestedInput
-  profile_exports?: Prisma.profile_exportsUncheckedUpdateManyWithoutDirectus_filesNestedInput
-  profiles?: Prisma.profilesUncheckedUpdateManyWithoutDirectus_filesNestedInput
-}
-
-export type directus_filesCreateWithoutApplications_filesInput = {
-  id: string
-  storage: string
-  filename_disk?: string | null
-  filename_download: string
-  title?: string | null
-  type?: string | null
-  created_on?: Date | string
-  modified_on?: Date | string
-  charset?: string | null
-  filesize?: bigint | number | null
-  width?: number | null
-  height?: number | null
-  duration?: number | null
-  embed?: string | null
-  description?: string | null
-  location?: string | null
-  tags?: string | null
-  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  focal_point_x?: number | null
-  focal_point_y?: number | null
-  tus_id?: string | null
-  tus_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  uploaded_on?: Date | string | null
-  applications?: Prisma.applicationsCreateNestedManyWithoutDirectus_filesInput
-  directus_folders?: Prisma.directus_foldersCreateNestedOneWithoutDirectus_filesInput
-  directus_users_directus_files_modified_byTodirectus_users?: Prisma.directus_usersCreateNestedOneWithoutDirectus_files_directus_files_modified_byTodirectus_usersInput
-  directus_users_directus_files_uploaded_byTodirectus_users?: Prisma.directus_usersCreateNestedOneWithoutDirectus_files_directus_files_uploaded_byTodirectus_usersInput
-  directus_settings_directus_settings_project_logoTodirectus_files?: Prisma.directus_settingsCreateNestedManyWithoutDirectus_files_directus_settings_project_logoTodirectus_filesInput
-  directus_settings_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_settingsCreateNestedManyWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesInput
-  directus_settings_directus_settings_public_faviconTodirectus_files?: Prisma.directus_settingsCreateNestedManyWithoutDirectus_files_directus_settings_public_faviconTodirectus_filesInput
-  directus_settings_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_settingsCreateNestedManyWithoutDirectus_files_directus_settings_public_foregroundTodirectus_filesInput
-  education?: Prisma.educationCreateNestedManyWithoutDirectus_filesInput
-  job_resources?: Prisma.job_resourcesCreateNestedManyWithoutDirectus_filesInput
-  profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutDirectus_filesInput
-  profiles?: Prisma.profilesCreateNestedManyWithoutDirectus_filesInput
-  work_experiences?: Prisma.work_experiencesCreateNestedManyWithoutDirectus_filesInput
-}
-
-export type directus_filesUncheckedCreateWithoutApplications_filesInput = {
-  id: string
-  storage: string
-  filename_disk?: string | null
-  filename_download: string
-  title?: string | null
-  type?: string | null
-  folder?: string | null
-  uploaded_by?: string | null
-  created_on?: Date | string
-  modified_by?: string | null
-  modified_on?: Date | string
-  charset?: string | null
-  filesize?: bigint | number | null
-  width?: number | null
-  height?: number | null
-  duration?: number | null
-  embed?: string | null
-  description?: string | null
-  location?: string | null
-  tags?: string | null
-  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  focal_point_x?: number | null
-  focal_point_y?: number | null
-  tus_id?: string | null
-  tus_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  uploaded_on?: Date | string | null
-  applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutDirectus_filesInput
-  directus_settings_directus_settings_project_logoTodirectus_files?: Prisma.directus_settingsUncheckedCreateNestedManyWithoutDirectus_files_directus_settings_project_logoTodirectus_filesInput
-  directus_settings_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_settingsUncheckedCreateNestedManyWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesInput
-  directus_settings_directus_settings_public_faviconTodirectus_files?: Prisma.directus_settingsUncheckedCreateNestedManyWithoutDirectus_files_directus_settings_public_faviconTodirectus_filesInput
-  directus_settings_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_settingsUncheckedCreateNestedManyWithoutDirectus_files_directus_settings_public_foregroundTodirectus_filesInput
-  education?: Prisma.educationUncheckedCreateNestedManyWithoutDirectus_filesInput
-  job_resources?: Prisma.job_resourcesUncheckedCreateNestedManyWithoutDirectus_filesInput
-  profile_exports?: Prisma.profile_exportsUncheckedCreateNestedManyWithoutDirectus_filesInput
-  profiles?: Prisma.profilesUncheckedCreateNestedManyWithoutDirectus_filesInput
-  work_experiences?: Prisma.work_experiencesUncheckedCreateNestedManyWithoutDirectus_filesInput
-}
-
-export type directus_filesCreateOrConnectWithoutApplications_filesInput = {
-  where: Prisma.directus_filesWhereUniqueInput
-  create: Prisma.XOR<Prisma.directus_filesCreateWithoutApplications_filesInput, Prisma.directus_filesUncheckedCreateWithoutApplications_filesInput>
-}
-
-export type directus_filesUpsertWithoutApplications_filesInput = {
-  update: Prisma.XOR<Prisma.directus_filesUpdateWithoutApplications_filesInput, Prisma.directus_filesUncheckedUpdateWithoutApplications_filesInput>
-  create: Prisma.XOR<Prisma.directus_filesCreateWithoutApplications_filesInput, Prisma.directus_filesUncheckedCreateWithoutApplications_filesInput>
-  where?: Prisma.directus_filesWhereInput
-}
-
-export type directus_filesUpdateToOneWithWhereWithoutApplications_filesInput = {
-  where?: Prisma.directus_filesWhereInput
-  data: Prisma.XOR<Prisma.directus_filesUpdateWithoutApplications_filesInput, Prisma.directus_filesUncheckedUpdateWithoutApplications_filesInput>
-}
-
-export type directus_filesUpdateWithoutApplications_filesInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  storage?: Prisma.StringFieldUpdateOperationsInput | string
-  filename_disk?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  filename_download?: Prisma.StringFieldUpdateOperationsInput | string
-  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  created_on?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  modified_on?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  charset?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  filesize?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  width?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  height?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  duration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  embed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tags?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  focal_point_x?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  focal_point_y?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  tus_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tus_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  uploaded_on?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  applications?: Prisma.applicationsUpdateManyWithoutDirectus_filesNestedInput
-  directus_folders?: Prisma.directus_foldersUpdateOneWithoutDirectus_filesNestedInput
-  directus_users_directus_files_modified_byTodirectus_users?: Prisma.directus_usersUpdateOneWithoutDirectus_files_directus_files_modified_byTodirectus_usersNestedInput
-  directus_users_directus_files_uploaded_byTodirectus_users?: Prisma.directus_usersUpdateOneWithoutDirectus_files_directus_files_uploaded_byTodirectus_usersNestedInput
-  directus_settings_directus_settings_project_logoTodirectus_files?: Prisma.directus_settingsUpdateManyWithoutDirectus_files_directus_settings_project_logoTodirectus_filesNestedInput
-  directus_settings_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_settingsUpdateManyWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesNestedInput
-  directus_settings_directus_settings_public_faviconTodirectus_files?: Prisma.directus_settingsUpdateManyWithoutDirectus_files_directus_settings_public_faviconTodirectus_filesNestedInput
-  directus_settings_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_settingsUpdateManyWithoutDirectus_files_directus_settings_public_foregroundTodirectus_filesNestedInput
-  education?: Prisma.educationUpdateManyWithoutDirectus_filesNestedInput
-  job_resources?: Prisma.job_resourcesUpdateManyWithoutDirectus_filesNestedInput
-  profile_exports?: Prisma.profile_exportsUpdateManyWithoutDirectus_filesNestedInput
-  profiles?: Prisma.profilesUpdateManyWithoutDirectus_filesNestedInput
-  work_experiences?: Prisma.work_experiencesUpdateManyWithoutDirectus_filesNestedInput
-}
-
-export type directus_filesUncheckedUpdateWithoutApplications_filesInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  storage?: Prisma.StringFieldUpdateOperationsInput | string
-  filename_disk?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  filename_download?: Prisma.StringFieldUpdateOperationsInput | string
-  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  folder?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  uploaded_by?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  created_on?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  modified_by?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  modified_on?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  charset?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  filesize?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
-  width?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  height?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  duration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  embed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tags?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  focal_point_x?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  focal_point_y?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  tus_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tus_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  uploaded_on?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  applications?: Prisma.applicationsUncheckedUpdateManyWithoutDirectus_filesNestedInput
-  directus_settings_directus_settings_project_logoTodirectus_files?: Prisma.directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_project_logoTodirectus_filesNestedInput
-  directus_settings_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesNestedInput
-  directus_settings_directus_settings_public_faviconTodirectus_files?: Prisma.directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_public_faviconTodirectus_filesNestedInput
-  directus_settings_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_public_foregroundTodirectus_filesNestedInput
-  education?: Prisma.educationUncheckedUpdateManyWithoutDirectus_filesNestedInput
-  job_resources?: Prisma.job_resourcesUncheckedUpdateManyWithoutDirectus_filesNestedInput
-  profile_exports?: Prisma.profile_exportsUncheckedUpdateManyWithoutDirectus_filesNestedInput
-  profiles?: Prisma.profilesUncheckedUpdateManyWithoutDirectus_filesNestedInput
-  work_experiences?: Prisma.work_experiencesUncheckedUpdateManyWithoutDirectus_filesNestedInput
-}
-
 export type directus_filesCreateWithoutJob_resourcesInput = {
   id: string
   storage: string
@@ -3474,6 +3130,350 @@ export type directus_filesUncheckedUpdateWithoutProfile_exportsInput = {
   job_resources?: Prisma.job_resourcesUncheckedUpdateManyWithoutDirectus_filesNestedInput
   profiles?: Prisma.profilesUncheckedUpdateManyWithoutDirectus_filesNestedInput
   work_experiences?: Prisma.work_experiencesUncheckedUpdateManyWithoutDirectus_filesNestedInput
+}
+
+export type directus_filesCreateWithoutProfilesInput = {
+  id: string
+  storage: string
+  filename_disk?: string | null
+  filename_download: string
+  title?: string | null
+  type?: string | null
+  created_on?: Date | string
+  modified_on?: Date | string
+  charset?: string | null
+  filesize?: bigint | number | null
+  width?: number | null
+  height?: number | null
+  duration?: number | null
+  embed?: string | null
+  description?: string | null
+  location?: string | null
+  tags?: string | null
+  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  focal_point_x?: number | null
+  focal_point_y?: number | null
+  tus_id?: string | null
+  tus_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  uploaded_on?: Date | string | null
+  applications?: Prisma.applicationsCreateNestedManyWithoutDirectus_filesInput
+  applications_files?: Prisma.applications_filesCreateNestedManyWithoutDirectus_filesInput
+  directus_folders?: Prisma.directus_foldersCreateNestedOneWithoutDirectus_filesInput
+  directus_users_directus_files_modified_byTodirectus_users?: Prisma.directus_usersCreateNestedOneWithoutDirectus_files_directus_files_modified_byTodirectus_usersInput
+  directus_users_directus_files_uploaded_byTodirectus_users?: Prisma.directus_usersCreateNestedOneWithoutDirectus_files_directus_files_uploaded_byTodirectus_usersInput
+  directus_settings_directus_settings_project_logoTodirectus_files?: Prisma.directus_settingsCreateNestedManyWithoutDirectus_files_directus_settings_project_logoTodirectus_filesInput
+  directus_settings_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_settingsCreateNestedManyWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesInput
+  directus_settings_directus_settings_public_faviconTodirectus_files?: Prisma.directus_settingsCreateNestedManyWithoutDirectus_files_directus_settings_public_faviconTodirectus_filesInput
+  directus_settings_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_settingsCreateNestedManyWithoutDirectus_files_directus_settings_public_foregroundTodirectus_filesInput
+  education?: Prisma.educationCreateNestedManyWithoutDirectus_filesInput
+  job_resources?: Prisma.job_resourcesCreateNestedManyWithoutDirectus_filesInput
+  profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutDirectus_filesInput
+  work_experiences?: Prisma.work_experiencesCreateNestedManyWithoutDirectus_filesInput
+}
+
+export type directus_filesUncheckedCreateWithoutProfilesInput = {
+  id: string
+  storage: string
+  filename_disk?: string | null
+  filename_download: string
+  title?: string | null
+  type?: string | null
+  folder?: string | null
+  uploaded_by?: string | null
+  created_on?: Date | string
+  modified_by?: string | null
+  modified_on?: Date | string
+  charset?: string | null
+  filesize?: bigint | number | null
+  width?: number | null
+  height?: number | null
+  duration?: number | null
+  embed?: string | null
+  description?: string | null
+  location?: string | null
+  tags?: string | null
+  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  focal_point_x?: number | null
+  focal_point_y?: number | null
+  tus_id?: string | null
+  tus_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  uploaded_on?: Date | string | null
+  applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutDirectus_filesInput
+  applications_files?: Prisma.applications_filesUncheckedCreateNestedManyWithoutDirectus_filesInput
+  directus_settings_directus_settings_project_logoTodirectus_files?: Prisma.directus_settingsUncheckedCreateNestedManyWithoutDirectus_files_directus_settings_project_logoTodirectus_filesInput
+  directus_settings_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_settingsUncheckedCreateNestedManyWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesInput
+  directus_settings_directus_settings_public_faviconTodirectus_files?: Prisma.directus_settingsUncheckedCreateNestedManyWithoutDirectus_files_directus_settings_public_faviconTodirectus_filesInput
+  directus_settings_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_settingsUncheckedCreateNestedManyWithoutDirectus_files_directus_settings_public_foregroundTodirectus_filesInput
+  education?: Prisma.educationUncheckedCreateNestedManyWithoutDirectus_filesInput
+  job_resources?: Prisma.job_resourcesUncheckedCreateNestedManyWithoutDirectus_filesInput
+  profile_exports?: Prisma.profile_exportsUncheckedCreateNestedManyWithoutDirectus_filesInput
+  work_experiences?: Prisma.work_experiencesUncheckedCreateNestedManyWithoutDirectus_filesInput
+}
+
+export type directus_filesCreateOrConnectWithoutProfilesInput = {
+  where: Prisma.directus_filesWhereUniqueInput
+  create: Prisma.XOR<Prisma.directus_filesCreateWithoutProfilesInput, Prisma.directus_filesUncheckedCreateWithoutProfilesInput>
+}
+
+export type directus_filesUpsertWithoutProfilesInput = {
+  update: Prisma.XOR<Prisma.directus_filesUpdateWithoutProfilesInput, Prisma.directus_filesUncheckedUpdateWithoutProfilesInput>
+  create: Prisma.XOR<Prisma.directus_filesCreateWithoutProfilesInput, Prisma.directus_filesUncheckedCreateWithoutProfilesInput>
+  where?: Prisma.directus_filesWhereInput
+}
+
+export type directus_filesUpdateToOneWithWhereWithoutProfilesInput = {
+  where?: Prisma.directus_filesWhereInput
+  data: Prisma.XOR<Prisma.directus_filesUpdateWithoutProfilesInput, Prisma.directus_filesUncheckedUpdateWithoutProfilesInput>
+}
+
+export type directus_filesUpdateWithoutProfilesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  storage?: Prisma.StringFieldUpdateOperationsInput | string
+  filename_disk?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  filename_download?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_on?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  modified_on?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  charset?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  filesize?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  width?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  height?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  duration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  embed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tags?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  focal_point_x?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  focal_point_y?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tus_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tus_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  uploaded_on?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  applications?: Prisma.applicationsUpdateManyWithoutDirectus_filesNestedInput
+  applications_files?: Prisma.applications_filesUpdateManyWithoutDirectus_filesNestedInput
+  directus_folders?: Prisma.directus_foldersUpdateOneWithoutDirectus_filesNestedInput
+  directus_users_directus_files_modified_byTodirectus_users?: Prisma.directus_usersUpdateOneWithoutDirectus_files_directus_files_modified_byTodirectus_usersNestedInput
+  directus_users_directus_files_uploaded_byTodirectus_users?: Prisma.directus_usersUpdateOneWithoutDirectus_files_directus_files_uploaded_byTodirectus_usersNestedInput
+  directus_settings_directus_settings_project_logoTodirectus_files?: Prisma.directus_settingsUpdateManyWithoutDirectus_files_directus_settings_project_logoTodirectus_filesNestedInput
+  directus_settings_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_settingsUpdateManyWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesNestedInput
+  directus_settings_directus_settings_public_faviconTodirectus_files?: Prisma.directus_settingsUpdateManyWithoutDirectus_files_directus_settings_public_faviconTodirectus_filesNestedInput
+  directus_settings_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_settingsUpdateManyWithoutDirectus_files_directus_settings_public_foregroundTodirectus_filesNestedInput
+  education?: Prisma.educationUpdateManyWithoutDirectus_filesNestedInput
+  job_resources?: Prisma.job_resourcesUpdateManyWithoutDirectus_filesNestedInput
+  profile_exports?: Prisma.profile_exportsUpdateManyWithoutDirectus_filesNestedInput
+  work_experiences?: Prisma.work_experiencesUpdateManyWithoutDirectus_filesNestedInput
+}
+
+export type directus_filesUncheckedUpdateWithoutProfilesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  storage?: Prisma.StringFieldUpdateOperationsInput | string
+  filename_disk?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  filename_download?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  folder?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  uploaded_by?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_on?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  modified_by?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  modified_on?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  charset?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  filesize?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  width?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  height?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  duration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  embed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tags?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  focal_point_x?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  focal_point_y?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tus_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tus_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  uploaded_on?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  applications?: Prisma.applicationsUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  applications_files?: Prisma.applications_filesUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  directus_settings_directus_settings_project_logoTodirectus_files?: Prisma.directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_project_logoTodirectus_filesNestedInput
+  directus_settings_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesNestedInput
+  directus_settings_directus_settings_public_faviconTodirectus_files?: Prisma.directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_public_faviconTodirectus_filesNestedInput
+  directus_settings_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_public_foregroundTodirectus_filesNestedInput
+  education?: Prisma.educationUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  job_resources?: Prisma.job_resourcesUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  profile_exports?: Prisma.profile_exportsUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  work_experiences?: Prisma.work_experiencesUncheckedUpdateManyWithoutDirectus_filesNestedInput
+}
+
+export type directus_filesCreateWithoutWork_experiencesInput = {
+  id: string
+  storage: string
+  filename_disk?: string | null
+  filename_download: string
+  title?: string | null
+  type?: string | null
+  created_on?: Date | string
+  modified_on?: Date | string
+  charset?: string | null
+  filesize?: bigint | number | null
+  width?: number | null
+  height?: number | null
+  duration?: number | null
+  embed?: string | null
+  description?: string | null
+  location?: string | null
+  tags?: string | null
+  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  focal_point_x?: number | null
+  focal_point_y?: number | null
+  tus_id?: string | null
+  tus_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  uploaded_on?: Date | string | null
+  applications?: Prisma.applicationsCreateNestedManyWithoutDirectus_filesInput
+  applications_files?: Prisma.applications_filesCreateNestedManyWithoutDirectus_filesInput
+  directus_folders?: Prisma.directus_foldersCreateNestedOneWithoutDirectus_filesInput
+  directus_users_directus_files_modified_byTodirectus_users?: Prisma.directus_usersCreateNestedOneWithoutDirectus_files_directus_files_modified_byTodirectus_usersInput
+  directus_users_directus_files_uploaded_byTodirectus_users?: Prisma.directus_usersCreateNestedOneWithoutDirectus_files_directus_files_uploaded_byTodirectus_usersInput
+  directus_settings_directus_settings_project_logoTodirectus_files?: Prisma.directus_settingsCreateNestedManyWithoutDirectus_files_directus_settings_project_logoTodirectus_filesInput
+  directus_settings_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_settingsCreateNestedManyWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesInput
+  directus_settings_directus_settings_public_faviconTodirectus_files?: Prisma.directus_settingsCreateNestedManyWithoutDirectus_files_directus_settings_public_faviconTodirectus_filesInput
+  directus_settings_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_settingsCreateNestedManyWithoutDirectus_files_directus_settings_public_foregroundTodirectus_filesInput
+  education?: Prisma.educationCreateNestedManyWithoutDirectus_filesInput
+  job_resources?: Prisma.job_resourcesCreateNestedManyWithoutDirectus_filesInput
+  profile_exports?: Prisma.profile_exportsCreateNestedManyWithoutDirectus_filesInput
+  profiles?: Prisma.profilesCreateNestedManyWithoutDirectus_filesInput
+}
+
+export type directus_filesUncheckedCreateWithoutWork_experiencesInput = {
+  id: string
+  storage: string
+  filename_disk?: string | null
+  filename_download: string
+  title?: string | null
+  type?: string | null
+  folder?: string | null
+  uploaded_by?: string | null
+  created_on?: Date | string
+  modified_by?: string | null
+  modified_on?: Date | string
+  charset?: string | null
+  filesize?: bigint | number | null
+  width?: number | null
+  height?: number | null
+  duration?: number | null
+  embed?: string | null
+  description?: string | null
+  location?: string | null
+  tags?: string | null
+  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  focal_point_x?: number | null
+  focal_point_y?: number | null
+  tus_id?: string | null
+  tus_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  uploaded_on?: Date | string | null
+  applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutDirectus_filesInput
+  applications_files?: Prisma.applications_filesUncheckedCreateNestedManyWithoutDirectus_filesInput
+  directus_settings_directus_settings_project_logoTodirectus_files?: Prisma.directus_settingsUncheckedCreateNestedManyWithoutDirectus_files_directus_settings_project_logoTodirectus_filesInput
+  directus_settings_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_settingsUncheckedCreateNestedManyWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesInput
+  directus_settings_directus_settings_public_faviconTodirectus_files?: Prisma.directus_settingsUncheckedCreateNestedManyWithoutDirectus_files_directus_settings_public_faviconTodirectus_filesInput
+  directus_settings_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_settingsUncheckedCreateNestedManyWithoutDirectus_files_directus_settings_public_foregroundTodirectus_filesInput
+  education?: Prisma.educationUncheckedCreateNestedManyWithoutDirectus_filesInput
+  job_resources?: Prisma.job_resourcesUncheckedCreateNestedManyWithoutDirectus_filesInput
+  profile_exports?: Prisma.profile_exportsUncheckedCreateNestedManyWithoutDirectus_filesInput
+  profiles?: Prisma.profilesUncheckedCreateNestedManyWithoutDirectus_filesInput
+}
+
+export type directus_filesCreateOrConnectWithoutWork_experiencesInput = {
+  where: Prisma.directus_filesWhereUniqueInput
+  create: Prisma.XOR<Prisma.directus_filesCreateWithoutWork_experiencesInput, Prisma.directus_filesUncheckedCreateWithoutWork_experiencesInput>
+}
+
+export type directus_filesUpsertWithoutWork_experiencesInput = {
+  update: Prisma.XOR<Prisma.directus_filesUpdateWithoutWork_experiencesInput, Prisma.directus_filesUncheckedUpdateWithoutWork_experiencesInput>
+  create: Prisma.XOR<Prisma.directus_filesCreateWithoutWork_experiencesInput, Prisma.directus_filesUncheckedCreateWithoutWork_experiencesInput>
+  where?: Prisma.directus_filesWhereInput
+}
+
+export type directus_filesUpdateToOneWithWhereWithoutWork_experiencesInput = {
+  where?: Prisma.directus_filesWhereInput
+  data: Prisma.XOR<Prisma.directus_filesUpdateWithoutWork_experiencesInput, Prisma.directus_filesUncheckedUpdateWithoutWork_experiencesInput>
+}
+
+export type directus_filesUpdateWithoutWork_experiencesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  storage?: Prisma.StringFieldUpdateOperationsInput | string
+  filename_disk?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  filename_download?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_on?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  modified_on?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  charset?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  filesize?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  width?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  height?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  duration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  embed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tags?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  focal_point_x?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  focal_point_y?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tus_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tus_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  uploaded_on?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  applications?: Prisma.applicationsUpdateManyWithoutDirectus_filesNestedInput
+  applications_files?: Prisma.applications_filesUpdateManyWithoutDirectus_filesNestedInput
+  directus_folders?: Prisma.directus_foldersUpdateOneWithoutDirectus_filesNestedInput
+  directus_users_directus_files_modified_byTodirectus_users?: Prisma.directus_usersUpdateOneWithoutDirectus_files_directus_files_modified_byTodirectus_usersNestedInput
+  directus_users_directus_files_uploaded_byTodirectus_users?: Prisma.directus_usersUpdateOneWithoutDirectus_files_directus_files_uploaded_byTodirectus_usersNestedInput
+  directus_settings_directus_settings_project_logoTodirectus_files?: Prisma.directus_settingsUpdateManyWithoutDirectus_files_directus_settings_project_logoTodirectus_filesNestedInput
+  directus_settings_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_settingsUpdateManyWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesNestedInput
+  directus_settings_directus_settings_public_faviconTodirectus_files?: Prisma.directus_settingsUpdateManyWithoutDirectus_files_directus_settings_public_faviconTodirectus_filesNestedInput
+  directus_settings_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_settingsUpdateManyWithoutDirectus_files_directus_settings_public_foregroundTodirectus_filesNestedInput
+  education?: Prisma.educationUpdateManyWithoutDirectus_filesNestedInput
+  job_resources?: Prisma.job_resourcesUpdateManyWithoutDirectus_filesNestedInput
+  profile_exports?: Prisma.profile_exportsUpdateManyWithoutDirectus_filesNestedInput
+  profiles?: Prisma.profilesUpdateManyWithoutDirectus_filesNestedInput
+}
+
+export type directus_filesUncheckedUpdateWithoutWork_experiencesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  storage?: Prisma.StringFieldUpdateOperationsInput | string
+  filename_disk?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  filename_download?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  folder?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  uploaded_by?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_on?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  modified_by?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  modified_on?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  charset?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  filesize?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+  width?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  height?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  duration?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  embed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tags?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  focal_point_x?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  focal_point_y?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tus_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tus_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  uploaded_on?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  applications?: Prisma.applicationsUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  applications_files?: Prisma.applications_filesUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  directus_settings_directus_settings_project_logoTodirectus_files?: Prisma.directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_project_logoTodirectus_filesNestedInput
+  directus_settings_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesNestedInput
+  directus_settings_directus_settings_public_faviconTodirectus_files?: Prisma.directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_public_faviconTodirectus_filesNestedInput
+  directus_settings_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_public_foregroundTodirectus_filesNestedInput
+  education?: Prisma.educationUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  job_resources?: Prisma.job_resourcesUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  profile_exports?: Prisma.profile_exportsUncheckedUpdateManyWithoutDirectus_filesNestedInput
+  profiles?: Prisma.profilesUncheckedUpdateManyWithoutDirectus_filesNestedInput
 }
 
 export type directus_filesCreateManyDirectus_foldersInput = {

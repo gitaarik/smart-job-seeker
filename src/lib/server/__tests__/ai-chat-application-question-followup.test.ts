@@ -68,7 +68,7 @@ describe("createApplicationQuestionFollowup", () => {
       });
     });
 
-    it("should return error if question has no ai_chat", async () => {
+    it("should return error if question has no ai_chats", async () => {
       const mockFindUnique = db.application_questions.findUnique as any;
       mockFindUnique.mockResolvedValueOnce({
         id: 200,
@@ -81,7 +81,7 @@ describe("createApplicationQuestionFollowup", () => {
       );
 
       expect(result.success).toBe(false);
-      expect(result.message).toContain("does not have an ai_chat yet");
+      expect(result.message).toContain("does not have an ai_chats yet");
       expect(result.message).toContain("Generate the initial answer first");
     });
   });
@@ -119,7 +119,7 @@ describe("createApplicationQuestionFollowup", () => {
 
       // Verify createFollowupAiChat was called correctly
       expect(mockCreateFollowup).toHaveBeenCalledWith(
-        5, // parent ai_chat id
+        5, // parent ai_chats id
         "Add specific examples",
         { includeOriginalContext: undefined },
       );
@@ -161,7 +161,7 @@ describe("createApplicationQuestionFollowup", () => {
       );
     });
 
-    it("should update both ai_chat and ai_chat_response fields", async () => {
+    it("should update both ai_chats and ai_chat_response fields", async () => {
       const mockFindUnique = db.application_questions.findUnique as any;
       mockFindUnique.mockResolvedValueOnce(mockQuestion);
 
@@ -195,13 +195,13 @@ describe("createApplicationQuestionFollowup", () => {
       const mockCreateFollowup = createFollowupAiChat as any;
       mockCreateFollowup.mockResolvedValueOnce({
         success: false,
-        message: "Parent ai_chat not found",
+        message: "Parent ai_chats not found",
       });
 
       const result = await createApplicationQuestionFollowup(200, "Refine");
 
       expect(result.success).toBe(false);
-      expect(result.message).toBe("Parent ai_chat not found");
+      expect(result.message).toBe("Parent ai_chats not found");
       expect(result.aiChat).toBeUndefined();
 
       // Question should not be updated
@@ -332,7 +332,7 @@ describe("createApplicationQuestionFollowup", () => {
       );
     });
 
-    it("should handle question with ai_chat = 0", async () => {
+    it("should handle question with ai_chats = 0", async () => {
       const mockFindUnique = db.application_questions.findUnique as any;
       mockFindUnique.mockResolvedValueOnce({
         id: 200,
@@ -341,9 +341,9 @@ describe("createApplicationQuestionFollowup", () => {
 
       const result = await createApplicationQuestionFollowup(200, "Refine");
 
-      // 0 is falsy, so should be treated as no ai_chat
+      // 0 is falsy, so should be treated as no ai_chats
       expect(result.success).toBe(false);
-      expect(result.message).toContain("does not have an ai_chat yet");
+      expect(result.message).toContain("does not have an ai_chats yet");
     });
   });
 });

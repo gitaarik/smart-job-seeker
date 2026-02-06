@@ -8,7 +8,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // Mock the database
 vi.mock("$lib/server/db", () => ({
   db: {
-    ai_chat: {
+    ai_chats: {
       findUnique: vi.fn(),
     },
     application_letters: {
@@ -75,8 +75,8 @@ describe("createFollowupAiChat", () => {
   });
 
   describe("validation", () => {
-    it("should return error if parent ai_chat not found", async () => {
-      const mockFindUnique = db.ai_chat.findUnique as any;
+    it("should return error if parent ai_chats not found", async () => {
+      const mockFindUnique = db.ai_chats.findUnique as any;
       mockFindUnique.mockResolvedValueOnce(null);
 
       const result = await createFollowupAiChat(
@@ -85,7 +85,7 @@ describe("createFollowupAiChat", () => {
       );
 
       expect(result.success).toBe(false);
-      expect(result.message).toContain("Parent ai_chat with ID 999 not found");
+      expect(result.message).toContain("Parent ai_chats with ID 999 not found");
       expect(mockFindUnique).toHaveBeenCalledWith({
         where: { id: 999 },
         select: {
@@ -99,7 +99,7 @@ describe("createFollowupAiChat", () => {
     });
 
     it("should return error if parent has no response", async () => {
-      const mockFindUnique = db.ai_chat.findUnique as any;
+      const mockFindUnique = db.ai_chats.findUnique as any;
       mockFindUnique.mockResolvedValueOnce({
         ...mockParentAiChat,
         response: null,
@@ -117,7 +117,7 @@ describe("createFollowupAiChat", () => {
     });
 
     it("should return error if parent has empty response", async () => {
-      const mockFindUnique = db.ai_chat.findUnique as any;
+      const mockFindUnique = db.ai_chats.findUnique as any;
       mockFindUnique.mockResolvedValueOnce({
         ...mockParentAiChat,
         response: "",
@@ -135,7 +135,7 @@ describe("createFollowupAiChat", () => {
 
   describe("followup creation without original context", () => {
     it("should create followup with escaped placeholders by default", async () => {
-      const mockFindUnique = db.ai_chat.findUnique as any;
+      const mockFindUnique = db.ai_chats.findUnique as any;
       mockFindUnique.mockResolvedValueOnce(mockParentAiChat);
 
       const mockCreateAndGenerateAiChat = createAndGenerateAiChat as any;
@@ -166,12 +166,12 @@ describe("createFollowupAiChat", () => {
           originalSystemPrompt: expect.stringContaining("\\${jobTitle}"),
           originalUserPrompt: expect.stringContaining("\\${company}"),
         }),
-        1, // parent ai_chat id
+        1, // parent ai_chats id
       );
     });
 
     it("should include previous response in custom variables", async () => {
-      const mockFindUnique = db.ai_chat.findUnique as any;
+      const mockFindUnique = db.ai_chats.findUnique as any;
       mockFindUnique.mockResolvedValueOnce(mockParentAiChat);
 
       const mockCreateAndGenerateAiChat = createAndGenerateAiChat as any;
@@ -202,7 +202,7 @@ describe("createFollowupAiChat", () => {
 
   describe("followup creation with original context", () => {
     it("should interpolate original context when includeOriginalContext is true", async () => {
-      const mockFindUnique = db.ai_chat.findUnique as any;
+      const mockFindUnique = db.ai_chats.findUnique as any;
       mockFindUnique.mockResolvedValueOnce(mockParentAiChat);
 
       const mockCreateAndGenerateAiChat = createAndGenerateAiChat as any;
@@ -247,7 +247,7 @@ describe("createFollowupAiChat", () => {
         salary: { min: 80000, max: 120000 },
       };
 
-      const mockFindUnique = db.ai_chat.findUnique as any;
+      const mockFindUnique = db.ai_chats.findUnique as any;
       mockFindUnique.mockResolvedValueOnce({
         ...mockParentAiChat,
         context: complexContext,
@@ -282,8 +282,8 @@ describe("createFollowupAiChat", () => {
   });
 
   describe("auto-update linked records", () => {
-    it("should update linked application_letters with new ai_chat reference", async () => {
-      const mockFindUnique = db.ai_chat.findUnique as any;
+    it("should update linked application_letters with new ai_chats reference", async () => {
+      const mockFindUnique = db.ai_chats.findUnique as any;
       mockFindUnique.mockResolvedValueOnce(mockParentAiChat);
 
       const mockCreateAndGenerateAiChat = createAndGenerateAiChat as any;
@@ -311,8 +311,8 @@ describe("createFollowupAiChat", () => {
       expect(result.message).toContain("Updated 2 letter(s)");
     });
 
-    it("should update linked application_questions with new ai_chat reference", async () => {
-      const mockFindUnique = db.ai_chat.findUnique as any;
+    it("should update linked application_questions with new ai_chats reference", async () => {
+      const mockFindUnique = db.ai_chats.findUnique as any;
       mockFindUnique.mockResolvedValueOnce(mockParentAiChat);
 
       const mockCreateAndGenerateAiChat = createAndGenerateAiChat as any;
@@ -342,7 +342,7 @@ describe("createFollowupAiChat", () => {
     });
 
     it("should update both letters and questions if linked", async () => {
-      const mockFindUnique = db.ai_chat.findUnique as any;
+      const mockFindUnique = db.ai_chats.findUnique as any;
       mockFindUnique.mockResolvedValueOnce(mockParentAiChat);
 
       const mockCreateAndGenerateAiChat = createAndGenerateAiChat as any;
@@ -365,7 +365,7 @@ describe("createFollowupAiChat", () => {
     });
 
     it("should not mention updates if no linked records", async () => {
-      const mockFindUnique = db.ai_chat.findUnique as any;
+      const mockFindUnique = db.ai_chats.findUnique as any;
       mockFindUnique.mockResolvedValueOnce(mockParentAiChat);
 
       const mockCreateAndGenerateAiChat = createAndGenerateAiChat as any;
@@ -385,14 +385,14 @@ describe("createFollowupAiChat", () => {
 
       expect(result.success).toBe(true);
       expect(result.message).toBe(
-        "Follow-up ai_chat created successfully (ID: 2)",
+        "Follow-up ai_chats created successfully (ID: 2)",
       );
     });
   });
 
   describe("error handling", () => {
     it("should handle createAndGenerateAiChat failure", async () => {
-      const mockFindUnique = db.ai_chat.findUnique as any;
+      const mockFindUnique = db.ai_chats.findUnique as any;
       mockFindUnique.mockResolvedValueOnce(mockParentAiChat);
 
       const mockCreateAndGenerateAiChat = createAndGenerateAiChat as any;
@@ -408,7 +408,7 @@ describe("createFollowupAiChat", () => {
     });
 
     it("should handle database errors", async () => {
-      const mockFindUnique = db.ai_chat.findUnique as any;
+      const mockFindUnique = db.ai_chats.findUnique as any;
       mockFindUnique.mockRejectedValueOnce(
         new Error("Database connection failed"),
       );
@@ -420,7 +420,7 @@ describe("createFollowupAiChat", () => {
     });
 
     it("should handle unknown errors", async () => {
-      const mockFindUnique = db.ai_chat.findUnique as any;
+      const mockFindUnique = db.ai_chats.findUnique as any;
       mockFindUnique.mockRejectedValueOnce("Unexpected error");
 
       const result = await createFollowupAiChat(1, "Refine");
@@ -432,7 +432,7 @@ describe("createFollowupAiChat", () => {
 
   describe("return values", () => {
     it("should return created aiChat on success", async () => {
-      const mockFindUnique = db.ai_chat.findUnique as any;
+      const mockFindUnique = db.ai_chats.findUnique as any;
       mockFindUnique.mockResolvedValueOnce(mockParentAiChat);
 
       const mockCreateAndGenerateAiChat = createAndGenerateAiChat as any;
@@ -456,7 +456,7 @@ describe("createFollowupAiChat", () => {
     });
 
     it("should not return aiChat on failure", async () => {
-      const mockFindUnique = db.ai_chat.findUnique as any;
+      const mockFindUnique = db.ai_chats.findUnique as any;
       mockFindUnique.mockResolvedValueOnce(null);
 
       const result = await createFollowupAiChat(999, "Refine");

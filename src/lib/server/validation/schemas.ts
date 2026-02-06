@@ -31,14 +31,14 @@ export const profileExportSchema = z.object({
  * AI chat generation schemas
  */
 export const aiChatGeneratePromptSchema = z.object({
-  event: z.literal("ai_chat.generate_full_prompt"),
+  event: z.literal("ai_chats.generate_full_prompt"),
   payload: z.object({
     aiChatIds: z.array(z.union([z.string(), z.number()])).optional(),
   }).optional(),
 });
 
 export const aiChatGenerateResponseSchema = z.object({
-  event: z.literal("ai_chat.generate_response"),
+  event: z.literal("ai_chats.generate_response"),
   payload: z.object({
     aiChatIds: z.array(z.union([z.string(), z.number()])).optional(),
   }).optional(),
@@ -113,8 +113,8 @@ export function validateEventPayload(
 ): unknown {
   const schemas: Record<string, z.ZodSchema> = {
     "profile.export": profileExportSchema,
-    "ai_chat.generate_full_prompt": aiChatGeneratePromptSchema,
-    "ai_chat.generate_response": aiChatGenerateResponseSchema,
+    "ai_chats.generate_full_prompt": aiChatGeneratePromptSchema,
+    "ai_chats.generate_response": aiChatGenerateResponseSchema,
     "application_interview_question.generate_ai_answer":
       applicationQuestionGenerateSchema,
     "application_questions.create_followup": applicationQuestionFollowupSchema,

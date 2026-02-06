@@ -308,7 +308,7 @@ export type job_matchesWhereInput = {
   profile?: Prisma.IntFilter<"job_matches"> | number
   llm_prompt?: Prisma.StringNullableFilter<"job_matches"> | string | null
   ai_chat_scoring?: Prisma.IntNullableFilter<"job_matches"> | number | null
-  ai_chat?: Prisma.XOR<Prisma.Ai_chatNullableScalarRelationFilter, Prisma.ai_chatWhereInput> | null
+  ai_chat?: Prisma.XOR<Prisma.Ai_chatsNullableScalarRelationFilter, Prisma.ai_chatsWhereInput> | null
   jobs?: Prisma.XOR<Prisma.JobsScalarRelationFilter, Prisma.jobsWhereInput>
   profiles?: Prisma.XOR<Prisma.ProfilesScalarRelationFilter, Prisma.profilesWhereInput>
 }
@@ -329,7 +329,7 @@ export type job_matchesOrderByWithRelationInput = {
   profile?: Prisma.SortOrder
   llm_prompt?: Prisma.SortOrderInput | Prisma.SortOrder
   ai_chat_scoring?: Prisma.SortOrderInput | Prisma.SortOrder
-  ai_chat?: Prisma.ai_chatOrderByWithRelationInput
+  ai_chat?: Prisma.ai_chatsOrderByWithRelationInput
   jobs?: Prisma.jobsOrderByWithRelationInput
   profiles?: Prisma.profilesOrderByWithRelationInput
 }
@@ -353,7 +353,7 @@ export type job_matchesWhereUniqueInput = Prisma.AtLeast<{
   profile?: Prisma.IntFilter<"job_matches"> | number
   llm_prompt?: Prisma.StringNullableFilter<"job_matches"> | string | null
   ai_chat_scoring?: Prisma.IntNullableFilter<"job_matches"> | number | null
-  ai_chat?: Prisma.XOR<Prisma.Ai_chatNullableScalarRelationFilter, Prisma.ai_chatWhereInput> | null
+  ai_chat?: Prisma.XOR<Prisma.Ai_chatsNullableScalarRelationFilter, Prisma.ai_chatsWhereInput> | null
   jobs?: Prisma.XOR<Prisma.JobsScalarRelationFilter, Prisma.jobsWhereInput>
   profiles?: Prisma.XOR<Prisma.ProfilesScalarRelationFilter, Prisma.profilesWhereInput>
 }, "id">
@@ -414,7 +414,7 @@ export type job_matchesCreateInput = {
   date_created?: Date | string | null
   date_updated?: Date | string | null
   llm_prompt?: string | null
-  ai_chat?: Prisma.ai_chatCreateNestedOneWithoutJob_matches_scoredInput
+  ai_chat?: Prisma.ai_chatsCreateNestedOneWithoutJob_matchesInput
   jobs: Prisma.jobsCreateNestedOneWithoutJob_matchesInput
   profiles: Prisma.profilesCreateNestedOneWithoutJob_matchesInput
 }
@@ -449,7 +449,7 @@ export type job_matchesUpdateInput = {
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   llm_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ai_chat?: Prisma.ai_chatUpdateOneWithoutJob_matches_scoredNestedInput
+  ai_chat?: Prisma.ai_chatsUpdateOneWithoutJob_matchesNestedInput
   jobs?: Prisma.jobsUpdateOneRequiredWithoutJob_matchesNestedInput
   profiles?: Prisma.profilesUpdateOneRequiredWithoutJob_matchesNestedInput
 }
@@ -522,16 +522,6 @@ export type job_matchesUncheckedUpdateManyInput = {
   ai_chat_scoring?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
-export type Job_matchesListRelationFilter = {
-  every?: Prisma.job_matchesWhereInput
-  some?: Prisma.job_matchesWhereInput
-  none?: Prisma.job_matchesWhereInput
-}
-
-export type job_matchesOrderByRelationAggregateInput = {
-  _count?: Prisma.SortOrder
-}
-
 export type job_matchesCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   score?: Prisma.SortOrder
@@ -598,6 +588,58 @@ export type job_matchesSumOrderByAggregateInput = {
   job?: Prisma.SortOrder
   profile?: Prisma.SortOrder
   ai_chat_scoring?: Prisma.SortOrder
+}
+
+export type Job_matchesListRelationFilter = {
+  every?: Prisma.job_matchesWhereInput
+  some?: Prisma.job_matchesWhereInput
+  none?: Prisma.job_matchesWhereInput
+}
+
+export type job_matchesOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
+}
+
+export type job_matchesCreateNestedManyWithoutJobsInput = {
+  create?: Prisma.XOR<Prisma.job_matchesCreateWithoutJobsInput, Prisma.job_matchesUncheckedCreateWithoutJobsInput> | Prisma.job_matchesCreateWithoutJobsInput[] | Prisma.job_matchesUncheckedCreateWithoutJobsInput[]
+  connectOrCreate?: Prisma.job_matchesCreateOrConnectWithoutJobsInput | Prisma.job_matchesCreateOrConnectWithoutJobsInput[]
+  createMany?: Prisma.job_matchesCreateManyJobsInputEnvelope
+  connect?: Prisma.job_matchesWhereUniqueInput | Prisma.job_matchesWhereUniqueInput[]
+}
+
+export type job_matchesUncheckedCreateNestedManyWithoutJobsInput = {
+  create?: Prisma.XOR<Prisma.job_matchesCreateWithoutJobsInput, Prisma.job_matchesUncheckedCreateWithoutJobsInput> | Prisma.job_matchesCreateWithoutJobsInput[] | Prisma.job_matchesUncheckedCreateWithoutJobsInput[]
+  connectOrCreate?: Prisma.job_matchesCreateOrConnectWithoutJobsInput | Prisma.job_matchesCreateOrConnectWithoutJobsInput[]
+  createMany?: Prisma.job_matchesCreateManyJobsInputEnvelope
+  connect?: Prisma.job_matchesWhereUniqueInput | Prisma.job_matchesWhereUniqueInput[]
+}
+
+export type job_matchesUpdateManyWithoutJobsNestedInput = {
+  create?: Prisma.XOR<Prisma.job_matchesCreateWithoutJobsInput, Prisma.job_matchesUncheckedCreateWithoutJobsInput> | Prisma.job_matchesCreateWithoutJobsInput[] | Prisma.job_matchesUncheckedCreateWithoutJobsInput[]
+  connectOrCreate?: Prisma.job_matchesCreateOrConnectWithoutJobsInput | Prisma.job_matchesCreateOrConnectWithoutJobsInput[]
+  upsert?: Prisma.job_matchesUpsertWithWhereUniqueWithoutJobsInput | Prisma.job_matchesUpsertWithWhereUniqueWithoutJobsInput[]
+  createMany?: Prisma.job_matchesCreateManyJobsInputEnvelope
+  set?: Prisma.job_matchesWhereUniqueInput | Prisma.job_matchesWhereUniqueInput[]
+  disconnect?: Prisma.job_matchesWhereUniqueInput | Prisma.job_matchesWhereUniqueInput[]
+  delete?: Prisma.job_matchesWhereUniqueInput | Prisma.job_matchesWhereUniqueInput[]
+  connect?: Prisma.job_matchesWhereUniqueInput | Prisma.job_matchesWhereUniqueInput[]
+  update?: Prisma.job_matchesUpdateWithWhereUniqueWithoutJobsInput | Prisma.job_matchesUpdateWithWhereUniqueWithoutJobsInput[]
+  updateMany?: Prisma.job_matchesUpdateManyWithWhereWithoutJobsInput | Prisma.job_matchesUpdateManyWithWhereWithoutJobsInput[]
+  deleteMany?: Prisma.job_matchesScalarWhereInput | Prisma.job_matchesScalarWhereInput[]
+}
+
+export type job_matchesUncheckedUpdateManyWithoutJobsNestedInput = {
+  create?: Prisma.XOR<Prisma.job_matchesCreateWithoutJobsInput, Prisma.job_matchesUncheckedCreateWithoutJobsInput> | Prisma.job_matchesCreateWithoutJobsInput[] | Prisma.job_matchesUncheckedCreateWithoutJobsInput[]
+  connectOrCreate?: Prisma.job_matchesCreateOrConnectWithoutJobsInput | Prisma.job_matchesCreateOrConnectWithoutJobsInput[]
+  upsert?: Prisma.job_matchesUpsertWithWhereUniqueWithoutJobsInput | Prisma.job_matchesUpsertWithWhereUniqueWithoutJobsInput[]
+  createMany?: Prisma.job_matchesCreateManyJobsInputEnvelope
+  set?: Prisma.job_matchesWhereUniqueInput | Prisma.job_matchesWhereUniqueInput[]
+  disconnect?: Prisma.job_matchesWhereUniqueInput | Prisma.job_matchesWhereUniqueInput[]
+  delete?: Prisma.job_matchesWhereUniqueInput | Prisma.job_matchesWhereUniqueInput[]
+  connect?: Prisma.job_matchesWhereUniqueInput | Prisma.job_matchesWhereUniqueInput[]
+  update?: Prisma.job_matchesUpdateWithWhereUniqueWithoutJobsInput | Prisma.job_matchesUpdateWithWhereUniqueWithoutJobsInput[]
+  updateMany?: Prisma.job_matchesUpdateManyWithWhereWithoutJobsInput | Prisma.job_matchesUpdateManyWithWhereWithoutJobsInput[]
+  deleteMany?: Prisma.job_matchesScalarWhereInput | Prisma.job_matchesScalarWhereInput[]
 }
 
 export type job_matchesCreateNestedManyWithoutProfilesInput = {
@@ -684,46 +726,84 @@ export type job_matchesUncheckedUpdateManyWithoutAi_chatNestedInput = {
   deleteMany?: Prisma.job_matchesScalarWhereInput | Prisma.job_matchesScalarWhereInput[]
 }
 
-export type job_matchesCreateNestedManyWithoutJobsInput = {
-  create?: Prisma.XOR<Prisma.job_matchesCreateWithoutJobsInput, Prisma.job_matchesUncheckedCreateWithoutJobsInput> | Prisma.job_matchesCreateWithoutJobsInput[] | Prisma.job_matchesUncheckedCreateWithoutJobsInput[]
-  connectOrCreate?: Prisma.job_matchesCreateOrConnectWithoutJobsInput | Prisma.job_matchesCreateOrConnectWithoutJobsInput[]
-  createMany?: Prisma.job_matchesCreateManyJobsInputEnvelope
-  connect?: Prisma.job_matchesWhereUniqueInput | Prisma.job_matchesWhereUniqueInput[]
+export type job_matchesCreateWithoutJobsInput = {
+  score?: number
+  reasoning?: string | null
+  skill_match_percentage?: number | null
+  strengths?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  gaps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recommendation?: string | null
+  job_date_updated_when_matched?: Date | string | null
+  status?: string
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  llm_prompt?: string | null
+  ai_chat?: Prisma.ai_chatsCreateNestedOneWithoutJob_matchesInput
+  profiles: Prisma.profilesCreateNestedOneWithoutJob_matchesInput
 }
 
-export type job_matchesUncheckedCreateNestedManyWithoutJobsInput = {
-  create?: Prisma.XOR<Prisma.job_matchesCreateWithoutJobsInput, Prisma.job_matchesUncheckedCreateWithoutJobsInput> | Prisma.job_matchesCreateWithoutJobsInput[] | Prisma.job_matchesUncheckedCreateWithoutJobsInput[]
-  connectOrCreate?: Prisma.job_matchesCreateOrConnectWithoutJobsInput | Prisma.job_matchesCreateOrConnectWithoutJobsInput[]
-  createMany?: Prisma.job_matchesCreateManyJobsInputEnvelope
-  connect?: Prisma.job_matchesWhereUniqueInput | Prisma.job_matchesWhereUniqueInput[]
+export type job_matchesUncheckedCreateWithoutJobsInput = {
+  id?: number
+  score?: number
+  reasoning?: string | null
+  skill_match_percentage?: number | null
+  strengths?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  gaps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recommendation?: string | null
+  job_date_updated_when_matched?: Date | string | null
+  status?: string
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  profile: number
+  llm_prompt?: string | null
+  ai_chat_scoring?: number | null
 }
 
-export type job_matchesUpdateManyWithoutJobsNestedInput = {
-  create?: Prisma.XOR<Prisma.job_matchesCreateWithoutJobsInput, Prisma.job_matchesUncheckedCreateWithoutJobsInput> | Prisma.job_matchesCreateWithoutJobsInput[] | Prisma.job_matchesUncheckedCreateWithoutJobsInput[]
-  connectOrCreate?: Prisma.job_matchesCreateOrConnectWithoutJobsInput | Prisma.job_matchesCreateOrConnectWithoutJobsInput[]
-  upsert?: Prisma.job_matchesUpsertWithWhereUniqueWithoutJobsInput | Prisma.job_matchesUpsertWithWhereUniqueWithoutJobsInput[]
-  createMany?: Prisma.job_matchesCreateManyJobsInputEnvelope
-  set?: Prisma.job_matchesWhereUniqueInput | Prisma.job_matchesWhereUniqueInput[]
-  disconnect?: Prisma.job_matchesWhereUniqueInput | Prisma.job_matchesWhereUniqueInput[]
-  delete?: Prisma.job_matchesWhereUniqueInput | Prisma.job_matchesWhereUniqueInput[]
-  connect?: Prisma.job_matchesWhereUniqueInput | Prisma.job_matchesWhereUniqueInput[]
-  update?: Prisma.job_matchesUpdateWithWhereUniqueWithoutJobsInput | Prisma.job_matchesUpdateWithWhereUniqueWithoutJobsInput[]
-  updateMany?: Prisma.job_matchesUpdateManyWithWhereWithoutJobsInput | Prisma.job_matchesUpdateManyWithWhereWithoutJobsInput[]
-  deleteMany?: Prisma.job_matchesScalarWhereInput | Prisma.job_matchesScalarWhereInput[]
+export type job_matchesCreateOrConnectWithoutJobsInput = {
+  where: Prisma.job_matchesWhereUniqueInput
+  create: Prisma.XOR<Prisma.job_matchesCreateWithoutJobsInput, Prisma.job_matchesUncheckedCreateWithoutJobsInput>
 }
 
-export type job_matchesUncheckedUpdateManyWithoutJobsNestedInput = {
-  create?: Prisma.XOR<Prisma.job_matchesCreateWithoutJobsInput, Prisma.job_matchesUncheckedCreateWithoutJobsInput> | Prisma.job_matchesCreateWithoutJobsInput[] | Prisma.job_matchesUncheckedCreateWithoutJobsInput[]
-  connectOrCreate?: Prisma.job_matchesCreateOrConnectWithoutJobsInput | Prisma.job_matchesCreateOrConnectWithoutJobsInput[]
-  upsert?: Prisma.job_matchesUpsertWithWhereUniqueWithoutJobsInput | Prisma.job_matchesUpsertWithWhereUniqueWithoutJobsInput[]
-  createMany?: Prisma.job_matchesCreateManyJobsInputEnvelope
-  set?: Prisma.job_matchesWhereUniqueInput | Prisma.job_matchesWhereUniqueInput[]
-  disconnect?: Prisma.job_matchesWhereUniqueInput | Prisma.job_matchesWhereUniqueInput[]
-  delete?: Prisma.job_matchesWhereUniqueInput | Prisma.job_matchesWhereUniqueInput[]
-  connect?: Prisma.job_matchesWhereUniqueInput | Prisma.job_matchesWhereUniqueInput[]
-  update?: Prisma.job_matchesUpdateWithWhereUniqueWithoutJobsInput | Prisma.job_matchesUpdateWithWhereUniqueWithoutJobsInput[]
-  updateMany?: Prisma.job_matchesUpdateManyWithWhereWithoutJobsInput | Prisma.job_matchesUpdateManyWithWhereWithoutJobsInput[]
-  deleteMany?: Prisma.job_matchesScalarWhereInput | Prisma.job_matchesScalarWhereInput[]
+export type job_matchesCreateManyJobsInputEnvelope = {
+  data: Prisma.job_matchesCreateManyJobsInput | Prisma.job_matchesCreateManyJobsInput[]
+  skipDuplicates?: boolean
+}
+
+export type job_matchesUpsertWithWhereUniqueWithoutJobsInput = {
+  where: Prisma.job_matchesWhereUniqueInput
+  update: Prisma.XOR<Prisma.job_matchesUpdateWithoutJobsInput, Prisma.job_matchesUncheckedUpdateWithoutJobsInput>
+  create: Prisma.XOR<Prisma.job_matchesCreateWithoutJobsInput, Prisma.job_matchesUncheckedCreateWithoutJobsInput>
+}
+
+export type job_matchesUpdateWithWhereUniqueWithoutJobsInput = {
+  where: Prisma.job_matchesWhereUniqueInput
+  data: Prisma.XOR<Prisma.job_matchesUpdateWithoutJobsInput, Prisma.job_matchesUncheckedUpdateWithoutJobsInput>
+}
+
+export type job_matchesUpdateManyWithWhereWithoutJobsInput = {
+  where: Prisma.job_matchesScalarWhereInput
+  data: Prisma.XOR<Prisma.job_matchesUpdateManyMutationInput, Prisma.job_matchesUncheckedUpdateManyWithoutJobsInput>
+}
+
+export type job_matchesScalarWhereInput = {
+  AND?: Prisma.job_matchesScalarWhereInput | Prisma.job_matchesScalarWhereInput[]
+  OR?: Prisma.job_matchesScalarWhereInput[]
+  NOT?: Prisma.job_matchesScalarWhereInput | Prisma.job_matchesScalarWhereInput[]
+  id?: Prisma.IntFilter<"job_matches"> | number
+  score?: Prisma.IntFilter<"job_matches"> | number
+  reasoning?: Prisma.StringNullableFilter<"job_matches"> | string | null
+  skill_match_percentage?: Prisma.IntNullableFilter<"job_matches"> | number | null
+  strengths?: Prisma.JsonNullableFilter<"job_matches">
+  gaps?: Prisma.JsonNullableFilter<"job_matches">
+  recommendation?: Prisma.StringNullableFilter<"job_matches"> | string | null
+  job_date_updated_when_matched?: Prisma.DateTimeNullableFilter<"job_matches"> | Date | string | null
+  status?: Prisma.StringFilter<"job_matches"> | string
+  date_created?: Prisma.DateTimeNullableFilter<"job_matches"> | Date | string | null
+  date_updated?: Prisma.DateTimeNullableFilter<"job_matches"> | Date | string | null
+  job?: Prisma.IntFilter<"job_matches"> | number
+  profile?: Prisma.IntFilter<"job_matches"> | number
+  llm_prompt?: Prisma.StringNullableFilter<"job_matches"> | string | null
+  ai_chat_scoring?: Prisma.IntNullableFilter<"job_matches"> | number | null
 }
 
 export type job_matchesCreateWithoutProfilesInput = {
@@ -738,7 +818,7 @@ export type job_matchesCreateWithoutProfilesInput = {
   date_created?: Date | string | null
   date_updated?: Date | string | null
   llm_prompt?: string | null
-  ai_chat?: Prisma.ai_chatCreateNestedOneWithoutJob_matches_scoredInput
+  ai_chat?: Prisma.ai_chatsCreateNestedOneWithoutJob_matchesInput
   jobs: Prisma.jobsCreateNestedOneWithoutJob_matchesInput
 }
 
@@ -783,27 +863,6 @@ export type job_matchesUpdateWithWhereUniqueWithoutProfilesInput = {
 export type job_matchesUpdateManyWithWhereWithoutProfilesInput = {
   where: Prisma.job_matchesScalarWhereInput
   data: Prisma.XOR<Prisma.job_matchesUpdateManyMutationInput, Prisma.job_matchesUncheckedUpdateManyWithoutProfilesInput>
-}
-
-export type job_matchesScalarWhereInput = {
-  AND?: Prisma.job_matchesScalarWhereInput | Prisma.job_matchesScalarWhereInput[]
-  OR?: Prisma.job_matchesScalarWhereInput[]
-  NOT?: Prisma.job_matchesScalarWhereInput | Prisma.job_matchesScalarWhereInput[]
-  id?: Prisma.IntFilter<"job_matches"> | number
-  score?: Prisma.IntFilter<"job_matches"> | number
-  reasoning?: Prisma.StringNullableFilter<"job_matches"> | string | null
-  skill_match_percentage?: Prisma.IntNullableFilter<"job_matches"> | number | null
-  strengths?: Prisma.JsonNullableFilter<"job_matches">
-  gaps?: Prisma.JsonNullableFilter<"job_matches">
-  recommendation?: Prisma.StringNullableFilter<"job_matches"> | string | null
-  job_date_updated_when_matched?: Prisma.DateTimeNullableFilter<"job_matches"> | Date | string | null
-  status?: Prisma.StringFilter<"job_matches"> | string
-  date_created?: Prisma.DateTimeNullableFilter<"job_matches"> | Date | string | null
-  date_updated?: Prisma.DateTimeNullableFilter<"job_matches"> | Date | string | null
-  job?: Prisma.IntFilter<"job_matches"> | number
-  profile?: Prisma.IntFilter<"job_matches"> | number
-  llm_prompt?: Prisma.StringNullableFilter<"job_matches"> | string | null
-  ai_chat_scoring?: Prisma.IntNullableFilter<"job_matches"> | number | null
 }
 
 export type job_matchesCreateWithoutAi_chatInput = {
@@ -865,23 +924,7 @@ export type job_matchesUpdateManyWithWhereWithoutAi_chatInput = {
   data: Prisma.XOR<Prisma.job_matchesUpdateManyMutationInput, Prisma.job_matchesUncheckedUpdateManyWithoutAi_chatInput>
 }
 
-export type job_matchesCreateWithoutJobsInput = {
-  score?: number
-  reasoning?: string | null
-  skill_match_percentage?: number | null
-  strengths?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  gaps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  recommendation?: string | null
-  job_date_updated_when_matched?: Date | string | null
-  status?: string
-  date_created?: Date | string | null
-  date_updated?: Date | string | null
-  llm_prompt?: string | null
-  ai_chat?: Prisma.ai_chatCreateNestedOneWithoutJob_matches_scoredInput
-  profiles: Prisma.profilesCreateNestedOneWithoutJob_matchesInput
-}
-
-export type job_matchesUncheckedCreateWithoutJobsInput = {
+export type job_matchesCreateManyJobsInput = {
   id?: number
   score?: number
   reasoning?: string | null
@@ -898,30 +941,54 @@ export type job_matchesUncheckedCreateWithoutJobsInput = {
   ai_chat_scoring?: number | null
 }
 
-export type job_matchesCreateOrConnectWithoutJobsInput = {
-  where: Prisma.job_matchesWhereUniqueInput
-  create: Prisma.XOR<Prisma.job_matchesCreateWithoutJobsInput, Prisma.job_matchesUncheckedCreateWithoutJobsInput>
+export type job_matchesUpdateWithoutJobsInput = {
+  score?: Prisma.IntFieldUpdateOperationsInput | number
+  reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  skill_match_percentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  strengths?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  gaps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recommendation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  job_date_updated_when_matched?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  llm_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_chat?: Prisma.ai_chatsUpdateOneWithoutJob_matchesNestedInput
+  profiles?: Prisma.profilesUpdateOneRequiredWithoutJob_matchesNestedInput
 }
 
-export type job_matchesCreateManyJobsInputEnvelope = {
-  data: Prisma.job_matchesCreateManyJobsInput | Prisma.job_matchesCreateManyJobsInput[]
-  skipDuplicates?: boolean
+export type job_matchesUncheckedUpdateWithoutJobsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  score?: Prisma.IntFieldUpdateOperationsInput | number
+  reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  skill_match_percentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  strengths?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  gaps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recommendation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  job_date_updated_when_matched?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profile?: Prisma.IntFieldUpdateOperationsInput | number
+  llm_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_chat_scoring?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
-export type job_matchesUpsertWithWhereUniqueWithoutJobsInput = {
-  where: Prisma.job_matchesWhereUniqueInput
-  update: Prisma.XOR<Prisma.job_matchesUpdateWithoutJobsInput, Prisma.job_matchesUncheckedUpdateWithoutJobsInput>
-  create: Prisma.XOR<Prisma.job_matchesCreateWithoutJobsInput, Prisma.job_matchesUncheckedCreateWithoutJobsInput>
-}
-
-export type job_matchesUpdateWithWhereUniqueWithoutJobsInput = {
-  where: Prisma.job_matchesWhereUniqueInput
-  data: Prisma.XOR<Prisma.job_matchesUpdateWithoutJobsInput, Prisma.job_matchesUncheckedUpdateWithoutJobsInput>
-}
-
-export type job_matchesUpdateManyWithWhereWithoutJobsInput = {
-  where: Prisma.job_matchesScalarWhereInput
-  data: Prisma.XOR<Prisma.job_matchesUpdateManyMutationInput, Prisma.job_matchesUncheckedUpdateManyWithoutJobsInput>
+export type job_matchesUncheckedUpdateManyWithoutJobsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  score?: Prisma.IntFieldUpdateOperationsInput | number
+  reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  skill_match_percentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  strengths?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  gaps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  recommendation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  job_date_updated_when_matched?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  profile?: Prisma.IntFieldUpdateOperationsInput | number
+  llm_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_chat_scoring?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 export type job_matchesCreateManyProfilesInput = {
@@ -953,7 +1020,7 @@ export type job_matchesUpdateWithoutProfilesInput = {
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   llm_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ai_chat?: Prisma.ai_chatUpdateOneWithoutJob_matches_scoredNestedInput
+  ai_chat?: Prisma.ai_chatsUpdateOneWithoutJob_matchesNestedInput
   jobs?: Prisma.jobsUpdateOneRequiredWithoutJob_matchesNestedInput
 }
 
@@ -1056,73 +1123,6 @@ export type job_matchesUncheckedUpdateManyWithoutAi_chatInput = {
   job?: Prisma.IntFieldUpdateOperationsInput | number
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   llm_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-}
-
-export type job_matchesCreateManyJobsInput = {
-  id?: number
-  score?: number
-  reasoning?: string | null
-  skill_match_percentage?: number | null
-  strengths?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  gaps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  recommendation?: string | null
-  job_date_updated_when_matched?: Date | string | null
-  status?: string
-  date_created?: Date | string | null
-  date_updated?: Date | string | null
-  profile: number
-  llm_prompt?: string | null
-  ai_chat_scoring?: number | null
-}
-
-export type job_matchesUpdateWithoutJobsInput = {
-  score?: Prisma.IntFieldUpdateOperationsInput | number
-  reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  skill_match_percentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  strengths?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  gaps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  recommendation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  job_date_updated_when_matched?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  llm_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ai_chat?: Prisma.ai_chatUpdateOneWithoutJob_matches_scoredNestedInput
-  profiles?: Prisma.profilesUpdateOneRequiredWithoutJob_matchesNestedInput
-}
-
-export type job_matchesUncheckedUpdateWithoutJobsInput = {
-  id?: Prisma.IntFieldUpdateOperationsInput | number
-  score?: Prisma.IntFieldUpdateOperationsInput | number
-  reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  skill_match_percentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  strengths?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  gaps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  recommendation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  job_date_updated_when_matched?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  profile?: Prisma.IntFieldUpdateOperationsInput | number
-  llm_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ai_chat_scoring?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-}
-
-export type job_matchesUncheckedUpdateManyWithoutJobsInput = {
-  id?: Prisma.IntFieldUpdateOperationsInput | number
-  score?: Prisma.IntFieldUpdateOperationsInput | number
-  reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  skill_match_percentage?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  strengths?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  gaps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  recommendation?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  job_date_updated_when_matched?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  profile?: Prisma.IntFieldUpdateOperationsInput | number
-  llm_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ai_chat_scoring?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 
@@ -1228,7 +1228,7 @@ export type job_matchesIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.
 export type $job_matchesPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "job_matches"
   objects: {
-    ai_chat: Prisma.$ai_chatPayload<ExtArgs> | null
+    ai_chat: Prisma.$ai_chatsPayload<ExtArgs> | null
     jobs: Prisma.$jobsPayload<ExtArgs>
     profiles: Prisma.$profilesPayload<ExtArgs>
   }
@@ -1642,7 +1642,7 @@ readonly fields: job_matchesFieldRefs;
  */
 export interface Prisma__job_matchesClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  ai_chat<T extends Prisma.job_matches$ai_chatArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.job_matches$ai_chatArgs<ExtArgs>>): Prisma.Prisma__ai_chatClient<runtime.Types.Result.GetResult<Prisma.$ai_chatPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  ai_chat<T extends Prisma.job_matches$ai_chatArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.job_matches$ai_chatArgs<ExtArgs>>): Prisma.Prisma__ai_chatsClient<runtime.Types.Result.GetResult<Prisma.$ai_chatsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   jobs<T extends Prisma.jobsDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.jobsDefaultArgs<ExtArgs>>): Prisma.Prisma__jobsClient<runtime.Types.Result.GetResult<Prisma.$jobsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   profiles<T extends Prisma.profilesDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.profilesDefaultArgs<ExtArgs>>): Prisma.Prisma__profilesClient<runtime.Types.Result.GetResult<Prisma.$profilesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
@@ -2089,18 +2089,18 @@ export type job_matchesDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.I
  */
 export type job_matches$ai_chatArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
-   * Select specific fields to fetch from the ai_chat
+   * Select specific fields to fetch from the ai_chats
    */
-  select?: Prisma.ai_chatSelect<ExtArgs> | null
+  select?: Prisma.ai_chatsSelect<ExtArgs> | null
   /**
-   * Omit specific fields from the ai_chat
+   * Omit specific fields from the ai_chats
    */
-  omit?: Prisma.ai_chatOmit<ExtArgs> | null
+  omit?: Prisma.ai_chatsOmit<ExtArgs> | null
   /**
    * Choose, which related nodes to fetch as well
    */
-  include?: Prisma.ai_chatInclude<ExtArgs> | null
-  where?: Prisma.ai_chatWhereInput
+  include?: Prisma.ai_chatsInclude<ExtArgs> | null
+  where?: Prisma.ai_chatsWhereInput
 }
 
 /**

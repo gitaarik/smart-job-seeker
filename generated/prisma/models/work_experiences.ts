@@ -567,6 +567,11 @@ export type Work_experiencesScalarRelationFilter = {
   isNot?: Prisma.work_experiencesWhereInput
 }
 
+export type Work_experiencesNullableScalarRelationFilter = {
+  is?: Prisma.work_experiencesWhereInput | null
+  isNot?: Prisma.work_experiencesWhereInput | null
+}
+
 export type work_experiencesCountOrderByAggregateInput = {
   name?: Prisma.SortOrder
   location?: Prisma.SortOrder
@@ -632,11 +637,6 @@ export type work_experiencesSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
   sort?: Prisma.SortOrder
   profile?: Prisma.SortOrder
-}
-
-export type Work_experiencesNullableScalarRelationFilter = {
-  is?: Prisma.work_experiencesWhereInput | null
-  isNot?: Prisma.work_experiencesWhereInput | null
 }
 
 export type work_experiencesCreateNestedManyWithoutDirectus_filesInput = {
@@ -737,20 +737,6 @@ export type work_experiencesUpdateOneRequiredWithoutWork_experience_achievements
   update?: Prisma.XOR<Prisma.XOR<Prisma.work_experiencesUpdateToOneWithWhereWithoutWork_experience_achievementsInput, Prisma.work_experiencesUpdateWithoutWork_experience_achievementsInput>, Prisma.work_experiencesUncheckedUpdateWithoutWork_experience_achievementsInput>
 }
 
-export type work_experiencesCreateNestedOneWithoutWork_experience_technologiesInput = {
-  create?: Prisma.XOR<Prisma.work_experiencesCreateWithoutWork_experience_technologiesInput, Prisma.work_experiencesUncheckedCreateWithoutWork_experience_technologiesInput>
-  connectOrCreate?: Prisma.work_experiencesCreateOrConnectWithoutWork_experience_technologiesInput
-  connect?: Prisma.work_experiencesWhereUniqueInput
-}
-
-export type work_experiencesUpdateOneRequiredWithoutWork_experience_technologiesNestedInput = {
-  create?: Prisma.XOR<Prisma.work_experiencesCreateWithoutWork_experience_technologiesInput, Prisma.work_experiencesUncheckedCreateWithoutWork_experience_technologiesInput>
-  connectOrCreate?: Prisma.work_experiencesCreateOrConnectWithoutWork_experience_technologiesInput
-  upsert?: Prisma.work_experiencesUpsertWithoutWork_experience_technologiesInput
-  connect?: Prisma.work_experiencesWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.work_experiencesUpdateToOneWithWhereWithoutWork_experience_technologiesInput, Prisma.work_experiencesUpdateWithoutWork_experience_technologiesInput>, Prisma.work_experiencesUncheckedUpdateWithoutWork_experience_technologiesInput>
-}
-
 export type work_experiencesCreateNestedOneWithoutWork_experience_projectsInput = {
   create?: Prisma.XOR<Prisma.work_experiencesCreateWithoutWork_experience_projectsInput, Prisma.work_experiencesUncheckedCreateWithoutWork_experience_projectsInput>
   connectOrCreate?: Prisma.work_experiencesCreateOrConnectWithoutWork_experience_projectsInput
@@ -765,6 +751,20 @@ export type work_experiencesUpdateOneWithoutWork_experience_projectsNestedInput 
   delete?: Prisma.work_experiencesWhereInput | boolean
   connect?: Prisma.work_experiencesWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.work_experiencesUpdateToOneWithWhereWithoutWork_experience_projectsInput, Prisma.work_experiencesUpdateWithoutWork_experience_projectsInput>, Prisma.work_experiencesUncheckedUpdateWithoutWork_experience_projectsInput>
+}
+
+export type work_experiencesCreateNestedOneWithoutWork_experience_technologiesInput = {
+  create?: Prisma.XOR<Prisma.work_experiencesCreateWithoutWork_experience_technologiesInput, Prisma.work_experiencesUncheckedCreateWithoutWork_experience_technologiesInput>
+  connectOrCreate?: Prisma.work_experiencesCreateOrConnectWithoutWork_experience_technologiesInput
+  connect?: Prisma.work_experiencesWhereUniqueInput
+}
+
+export type work_experiencesUpdateOneRequiredWithoutWork_experience_technologiesNestedInput = {
+  create?: Prisma.XOR<Prisma.work_experiencesCreateWithoutWork_experience_technologiesInput, Prisma.work_experiencesUncheckedCreateWithoutWork_experience_technologiesInput>
+  connectOrCreate?: Prisma.work_experiencesCreateOrConnectWithoutWork_experience_technologiesInput
+  upsert?: Prisma.work_experiencesUpsertWithoutWork_experience_technologiesInput
+  connect?: Prisma.work_experiencesWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.work_experiencesUpdateToOneWithWhereWithoutWork_experience_technologiesInput, Prisma.work_experiencesUpdateWithoutWork_experience_technologiesInput>, Prisma.work_experiencesUncheckedUpdateWithoutWork_experience_technologiesInput>
 }
 
 export type work_experiencesCreateWithoutDirectus_filesInput = {
@@ -1021,104 +1021,6 @@ export type work_experiencesUncheckedUpdateWithoutWork_experience_achievementsIn
   work_experience_technologies?: Prisma.work_experience_technologiesUncheckedUpdateManyWithoutWork_experiencesNestedInput
 }
 
-export type work_experiencesCreateWithoutWork_experience_technologiesInput = {
-  name: string
-  location: string
-  description: string
-  position: string
-  summary: string
-  status?: string
-  sort?: number | null
-  date_created?: Date | string | null
-  date_updated?: Date | string | null
-  start_date?: Date | string | null
-  end_date?: Date | string | null
-  website?: string | null
-  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  work_experience_achievements?: Prisma.work_experience_achievementsCreateNestedManyWithoutWork_experiencesInput
-  work_experience_projects?: Prisma.work_experience_projectsCreateNestedManyWithoutWork_experiencesInput
-  directus_files?: Prisma.directus_filesCreateNestedOneWithoutWork_experiencesInput
-  profiles: Prisma.profilesCreateNestedOneWithoutWork_experiencesInput
-}
-
-export type work_experiencesUncheckedCreateWithoutWork_experience_technologiesInput = {
-  name: string
-  location: string
-  description: string
-  position: string
-  summary: string
-  id?: number
-  logo?: string | null
-  status?: string
-  sort?: number | null
-  profile: number
-  date_created?: Date | string | null
-  date_updated?: Date | string | null
-  start_date?: Date | string | null
-  end_date?: Date | string | null
-  website?: string | null
-  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  work_experience_achievements?: Prisma.work_experience_achievementsUncheckedCreateNestedManyWithoutWork_experiencesInput
-  work_experience_projects?: Prisma.work_experience_projectsUncheckedCreateNestedManyWithoutWork_experiencesInput
-}
-
-export type work_experiencesCreateOrConnectWithoutWork_experience_technologiesInput = {
-  where: Prisma.work_experiencesWhereUniqueInput
-  create: Prisma.XOR<Prisma.work_experiencesCreateWithoutWork_experience_technologiesInput, Prisma.work_experiencesUncheckedCreateWithoutWork_experience_technologiesInput>
-}
-
-export type work_experiencesUpsertWithoutWork_experience_technologiesInput = {
-  update: Prisma.XOR<Prisma.work_experiencesUpdateWithoutWork_experience_technologiesInput, Prisma.work_experiencesUncheckedUpdateWithoutWork_experience_technologiesInput>
-  create: Prisma.XOR<Prisma.work_experiencesCreateWithoutWork_experience_technologiesInput, Prisma.work_experiencesUncheckedCreateWithoutWork_experience_technologiesInput>
-  where?: Prisma.work_experiencesWhereInput
-}
-
-export type work_experiencesUpdateToOneWithWhereWithoutWork_experience_technologiesInput = {
-  where?: Prisma.work_experiencesWhereInput
-  data: Prisma.XOR<Prisma.work_experiencesUpdateWithoutWork_experience_technologiesInput, Prisma.work_experiencesUncheckedUpdateWithoutWork_experience_technologiesInput>
-}
-
-export type work_experiencesUpdateWithoutWork_experience_technologiesInput = {
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  location?: Prisma.StringFieldUpdateOperationsInput | string
-  description?: Prisma.StringFieldUpdateOperationsInput | string
-  position?: Prisma.StringFieldUpdateOperationsInput | string
-  summary?: Prisma.StringFieldUpdateOperationsInput | string
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  start_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  end_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  work_experience_achievements?: Prisma.work_experience_achievementsUpdateManyWithoutWork_experiencesNestedInput
-  work_experience_projects?: Prisma.work_experience_projectsUpdateManyWithoutWork_experiencesNestedInput
-  directus_files?: Prisma.directus_filesUpdateOneWithoutWork_experiencesNestedInput
-  profiles?: Prisma.profilesUpdateOneRequiredWithoutWork_experiencesNestedInput
-}
-
-export type work_experiencesUncheckedUpdateWithoutWork_experience_technologiesInput = {
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  location?: Prisma.StringFieldUpdateOperationsInput | string
-  description?: Prisma.StringFieldUpdateOperationsInput | string
-  position?: Prisma.StringFieldUpdateOperationsInput | string
-  summary?: Prisma.StringFieldUpdateOperationsInput | string
-  id?: Prisma.IntFieldUpdateOperationsInput | number
-  logo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  profile?: Prisma.IntFieldUpdateOperationsInput | number
-  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  start_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  end_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  work_experience_achievements?: Prisma.work_experience_achievementsUncheckedUpdateManyWithoutWork_experiencesNestedInput
-  work_experience_projects?: Prisma.work_experience_projectsUncheckedUpdateManyWithoutWork_experiencesNestedInput
-}
-
 export type work_experiencesCreateWithoutWork_experience_projectsInput = {
   name: string
   location: string
@@ -1215,6 +1117,104 @@ export type work_experiencesUncheckedUpdateWithoutWork_experience_projectsInput 
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   work_experience_achievements?: Prisma.work_experience_achievementsUncheckedUpdateManyWithoutWork_experiencesNestedInput
   work_experience_technologies?: Prisma.work_experience_technologiesUncheckedUpdateManyWithoutWork_experiencesNestedInput
+}
+
+export type work_experiencesCreateWithoutWork_experience_technologiesInput = {
+  name: string
+  location: string
+  description: string
+  position: string
+  summary: string
+  status?: string
+  sort?: number | null
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  start_date?: Date | string | null
+  end_date?: Date | string | null
+  website?: string | null
+  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  work_experience_achievements?: Prisma.work_experience_achievementsCreateNestedManyWithoutWork_experiencesInput
+  work_experience_projects?: Prisma.work_experience_projectsCreateNestedManyWithoutWork_experiencesInput
+  directus_files?: Prisma.directus_filesCreateNestedOneWithoutWork_experiencesInput
+  profiles: Prisma.profilesCreateNestedOneWithoutWork_experiencesInput
+}
+
+export type work_experiencesUncheckedCreateWithoutWork_experience_technologiesInput = {
+  name: string
+  location: string
+  description: string
+  position: string
+  summary: string
+  id?: number
+  logo?: string | null
+  status?: string
+  sort?: number | null
+  profile: number
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  start_date?: Date | string | null
+  end_date?: Date | string | null
+  website?: string | null
+  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  work_experience_achievements?: Prisma.work_experience_achievementsUncheckedCreateNestedManyWithoutWork_experiencesInput
+  work_experience_projects?: Prisma.work_experience_projectsUncheckedCreateNestedManyWithoutWork_experiencesInput
+}
+
+export type work_experiencesCreateOrConnectWithoutWork_experience_technologiesInput = {
+  where: Prisma.work_experiencesWhereUniqueInput
+  create: Prisma.XOR<Prisma.work_experiencesCreateWithoutWork_experience_technologiesInput, Prisma.work_experiencesUncheckedCreateWithoutWork_experience_technologiesInput>
+}
+
+export type work_experiencesUpsertWithoutWork_experience_technologiesInput = {
+  update: Prisma.XOR<Prisma.work_experiencesUpdateWithoutWork_experience_technologiesInput, Prisma.work_experiencesUncheckedUpdateWithoutWork_experience_technologiesInput>
+  create: Prisma.XOR<Prisma.work_experiencesCreateWithoutWork_experience_technologiesInput, Prisma.work_experiencesUncheckedCreateWithoutWork_experience_technologiesInput>
+  where?: Prisma.work_experiencesWhereInput
+}
+
+export type work_experiencesUpdateToOneWithWhereWithoutWork_experience_technologiesInput = {
+  where?: Prisma.work_experiencesWhereInput
+  data: Prisma.XOR<Prisma.work_experiencesUpdateWithoutWork_experience_technologiesInput, Prisma.work_experiencesUncheckedUpdateWithoutWork_experience_technologiesInput>
+}
+
+export type work_experiencesUpdateWithoutWork_experience_technologiesInput = {
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  location?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  position?: Prisma.StringFieldUpdateOperationsInput | string
+  summary?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  start_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  end_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  work_experience_achievements?: Prisma.work_experience_achievementsUpdateManyWithoutWork_experiencesNestedInput
+  work_experience_projects?: Prisma.work_experience_projectsUpdateManyWithoutWork_experiencesNestedInput
+  directus_files?: Prisma.directus_filesUpdateOneWithoutWork_experiencesNestedInput
+  profiles?: Prisma.profilesUpdateOneRequiredWithoutWork_experiencesNestedInput
+}
+
+export type work_experiencesUncheckedUpdateWithoutWork_experience_technologiesInput = {
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  location?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.StringFieldUpdateOperationsInput | string
+  position?: Prisma.StringFieldUpdateOperationsInput | string
+  summary?: Prisma.StringFieldUpdateOperationsInput | string
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  logo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  profile?: Prisma.IntFieldUpdateOperationsInput | number
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  start_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  end_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  work_experience_achievements?: Prisma.work_experience_achievementsUncheckedUpdateManyWithoutWork_experiencesNestedInput
+  work_experience_projects?: Prisma.work_experience_projectsUncheckedUpdateManyWithoutWork_experiencesNestedInput
 }
 
 export type work_experiencesCreateManyDirectus_filesInput = {

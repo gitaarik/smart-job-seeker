@@ -289,16 +289,6 @@ export type profile_version_extensionsUncheckedUpdateManyInput = {
   extended?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
-export type Profile_version_extensionsListRelationFilter = {
-  every?: Prisma.profile_version_extensionsWhereInput
-  some?: Prisma.profile_version_extensionsWhereInput
-  none?: Prisma.profile_version_extensionsWhereInput
-}
-
-export type profile_version_extensionsOrderByRelationAggregateInput = {
-  _count?: Prisma.SortOrder
-}
-
 export type profile_version_extensionsCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   extender?: Prisma.SortOrder
@@ -327,6 +317,16 @@ export type profile_version_extensionsSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
   extender?: Prisma.SortOrder
   extended?: Prisma.SortOrder
+}
+
+export type Profile_version_extensionsListRelationFilter = {
+  every?: Prisma.profile_version_extensionsWhereInput
+  some?: Prisma.profile_version_extensionsWhereInput
+  none?: Prisma.profile_version_extensionsWhereInput
+}
+
+export type profile_version_extensionsOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
 }
 
 export type profile_version_extensionsCreateNestedManyWithoutProfile_versions_profile_version_extensions_extendedToprofile_versionsInput = {

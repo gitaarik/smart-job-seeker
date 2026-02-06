@@ -1,5 +1,5 @@
 /**
- * Handle ai_chat.generate_response events
+ * Handle ai_chats.generate_response events
  * Called to generate AI responses using Groq API
  */
 
@@ -8,7 +8,7 @@ import { LLMAuthenticationError, LLMQuotaExceededError } from "$lib/server/llm";
 import type { WebhookHandler, WebhookHandlerResult } from "../types";
 
 export const aiChatGenerateResponseHandler: WebhookHandler = {
-  eventType: "ai_chat.generate_response",
+  eventType: "ai_chats.generate_response",
 
   async handle(data: Record<string, unknown>): Promise<WebhookHandlerResult> {
     let aiChatIds: number[] = [];
@@ -116,7 +116,7 @@ export const aiChatGenerateResponseHandler: WebhookHandler = {
         ? error.message
         : "Unknown error";
       console.error(
-        `[Webhook] ai_chat.generate_response failed:`,
+        `[Webhook] ai_chats.generate_response failed:`,
         errorMessage,
       );
       return {

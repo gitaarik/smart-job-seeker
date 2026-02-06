@@ -95,7 +95,7 @@ Webhooks are handled through a modular registry system:
 // src/lib/server/webhook-handlers/index.ts
 const handlers = new Map<string, WebhookHandler>([
   ["profile.export", profileExportHandler],
-  ["ai_chat.generate_full_prompt", aiChatGeneratePromptHandler],
+  ["ai_chats.generate_full_prompt", aiChatGeneratePromptHandler],
   // ... more handlers
 ]);
 ```

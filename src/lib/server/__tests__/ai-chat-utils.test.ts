@@ -9,7 +9,7 @@ import { getInterpolatedPrompts, interpolatePrompt } from "../ai-chat/utils";
 // Mock the Prisma client
 vi.mock("$lib/server/db", () => ({
   db: {
-    ai_chat: {
+    ai_chats: {
       findUnique: vi.fn(),
     },
     collected_data: {
@@ -103,14 +103,14 @@ describe("getInterpolatedPrompts", () => {
     vi.clearAllMocks();
   });
 
-  it("should return null if ai_chat not found", async () => {
+  it("should return null if ai_chats not found", async () => {
     const dbClient = db as any;
-    dbClient.ai_chat.findUnique.mockResolvedValueOnce(null);
+    dbClient.ai_chats.findUnique.mockResolvedValueOnce(null);
 
     const result = await getInterpolatedPrompts(999);
 
     expect(result).toBeNull();
-    expect(dbClient.ai_chat.findUnique).toHaveBeenCalledWith({
+    expect(dbClient.ai_chats.findUnique).toHaveBeenCalledWith({
       where: { id: 999 },
       select: { system_prompt: true, user_prompt: true, profile: true },
     });
@@ -130,7 +130,7 @@ describe("getInterpolatedPrompts", () => {
       data: '{"name": "John"}',
     };
 
-    dbClient.ai_chat.findUnique.mockResolvedValueOnce(mockAiChat);
+    dbClient.ai_chats.findUnique.mockResolvedValueOnce(mockAiChat);
     dbClient.collected_data.findFirst.mockResolvedValueOnce(
       mockCollectedData,
     );
@@ -151,7 +151,7 @@ describe("getInterpolatedPrompts", () => {
       profile: 1,
     };
 
-    dbClient.ai_chat.findUnique.mockResolvedValueOnce(mockAiChat);
+    dbClient.ai_chats.findUnique.mockResolvedValueOnce(mockAiChat);
     dbClient.collected_data.findFirst.mockResolvedValueOnce(null);
     const result = await getInterpolatedPrompts(1);
 
@@ -175,7 +175,7 @@ describe("getInterpolatedPrompts", () => {
       data: null,
     };
 
-    dbClient.ai_chat.findUnique.mockResolvedValueOnce(mockAiChat);
+    dbClient.ai_chats.findUnique.mockResolvedValueOnce(mockAiChat);
     dbClient.collected_data.findFirst.mockResolvedValueOnce(
       mockCollectedData,
     );
@@ -191,7 +191,7 @@ describe("getInterpolatedPrompts", () => {
     const dbClient = db as any;
     const profileId = 42;
 
-    dbClient.ai_chat.findUnique.mockResolvedValueOnce({
+    dbClient.ai_chats.findUnique.mockResolvedValueOnce({
       system_prompt: "${schema}",
       user_prompt: "${data}",
       profile: profileId,
@@ -225,7 +225,7 @@ describe("getInterpolatedPrompts", () => {
       data: "DATA_VALUE",
     };
 
-    dbClient.ai_chat.findUnique.mockResolvedValueOnce(mockAiChat);
+    dbClient.ai_chats.findUnique.mockResolvedValueOnce(mockAiChat);
     dbClient.collected_data.findFirst.mockResolvedValueOnce(
       mockCollectedData,
     );

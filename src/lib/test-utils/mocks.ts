@@ -19,7 +19,7 @@ export function createMockDb() {
       update: vi.fn(),
       delete: vi.fn(),
     },
-    ai_chat: {
+    ai_chats: {
       findUnique: vi.fn(),
       findMany: vi.fn(),
       findFirst: vi.fn(),

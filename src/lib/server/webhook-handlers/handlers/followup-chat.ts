@@ -1,13 +1,13 @@
 /**
- * Handle ai_chat.create_followup events
- * Called to create follow-up ai_chat instances for iterative refinement
+ * Handle ai_chats.create_followup events
+ * Called to create follow-up ai_chats instances for iterative refinement
  */
 
 import { createFollowupAiChat } from "$lib/server/ai-chat/create-followup";
 import type { WebhookHandler, WebhookHandlerResult } from "../types";
 
 export const followupChatHandler: WebhookHandler = {
-  eventType: "ai_chat.create_followup",
+  eventType: "ai_chats.create_followup",
 
   async handle(data: Record<string, unknown>): Promise<WebhookHandlerResult> {
     let parentAiChatIds: number[] = [];
@@ -25,7 +25,7 @@ export const followupChatHandler: WebhookHandler = {
       return {
         processed: false,
         error:
-          "Missing or invalid keys in data (expected array of ai_chat IDs)",
+          "Missing or invalid keys in data (expected array of ai_chats IDs)",
       };
     }
 
@@ -66,7 +66,7 @@ export const followupChatHandler: WebhookHandler = {
         ? error.message
         : "Unknown error";
       console.error(
-        `[Webhook] ai_chat.create_followup failed:`,
+        `[Webhook] ai_chats.create_followup failed:`,
         errorMessage,
       );
       return {

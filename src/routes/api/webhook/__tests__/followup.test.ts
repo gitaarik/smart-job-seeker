@@ -1,7 +1,7 @@
 /**
  * Unit tests for webhook followup event handlers
  * Tests the application_letter.create_followup, application_questions.create_followup,
- * and ai_chat.create_followup webhook endpoints
+ * and ai_chats.create_followup webhook endpoints
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -518,11 +518,11 @@ describe(
   },
 );
 
-describe("POST /api/webhook - ai_chat.create_followup event", () => {
+describe("POST /api/webhook - ai_chats.create_followup event", () => {
   const secret = "test-webhook-secret-key-1234567890123456";
 
   const validPayload: WebhookPayload = {
-    eventType: "ai_chat.create_followup",
+    eventType: "ai_chats.create_followup",
     data: {
       keys: ["1", "2", "3"],
       followup_request: "Make it more concise",
@@ -531,7 +531,7 @@ describe("POST /api/webhook - ai_chat.create_followup event", () => {
   };
 
   const singlePayload: WebhookPayload = {
-    eventType: "ai_chat.create_followup",
+    eventType: "ai_chats.create_followup",
     data: {
       keys: ["1"],
       followup_request: "Expand this",
@@ -556,7 +556,7 @@ describe("POST /api/webhook - ai_chat.create_followup event", () => {
   describe("validation", () => {
     it("should reject payload with missing keys", async () => {
       const invalidPayload: WebhookPayload = {
-        eventType: "ai_chat.create_followup",
+        eventType: "ai_chats.create_followup",
         data: {
           followup_request: "Refine",
         },
@@ -574,7 +574,7 @@ describe("POST /api/webhook - ai_chat.create_followup event", () => {
 
     it("should reject payload with empty keys array", async () => {
       const invalidPayload: WebhookPayload = {
-        eventType: "ai_chat.create_followup",
+        eventType: "ai_chats.create_followup",
         data: {
           keys: [],
           followup_request: "Refine",
@@ -593,7 +593,7 @@ describe("POST /api/webhook - ai_chat.create_followup event", () => {
 
     it("should reject payload with invalid keys type", async () => {
       const invalidPayload: WebhookPayload = {
-        eventType: "ai_chat.create_followup",
+        eventType: "ai_chats.create_followup",
         data: {
           keys: "not-an-array",
           followup_request: "Refine",
@@ -612,7 +612,7 @@ describe("POST /api/webhook - ai_chat.create_followup event", () => {
 
     it("should reject payload with missing followup_request", async () => {
       const invalidPayload: WebhookPayload = {
-        eventType: "ai_chat.create_followup",
+        eventType: "ai_chats.create_followup",
         data: {
           keys: ["1"],
         },
@@ -630,7 +630,7 @@ describe("POST /api/webhook - ai_chat.create_followup event", () => {
 
     it("should reject payload with empty followup_request", async () => {
       const invalidPayload: WebhookPayload = {
-        eventType: "ai_chat.create_followup",
+        eventType: "ai_chats.create_followup",
         data: {
           keys: ["1"],
           followup_request: "   ",
@@ -689,7 +689,7 @@ describe("POST /api/webhook - ai_chat.create_followup event", () => {
       );
     });
 
-    it("should handle single ai_chat", async () => {
+    it("should handle single ai_chats", async () => {
       const request = createMockRequest(singlePayload, secret);
       const event = createMockEvent(request);
 
@@ -711,7 +711,7 @@ describe("POST /api/webhook - ai_chat.create_followup event", () => {
 
     it("should parse includeOriginalContext from 'true' string", async () => {
       const payloadWithContext: WebhookPayload = {
-        eventType: "ai_chat.create_followup",
+        eventType: "ai_chats.create_followup",
         data: {
           keys: ["1"],
           followup_request: "Refine",
@@ -750,7 +750,7 @@ describe("POST /api/webhook - ai_chat.create_followup event", () => {
         })
         .mockResolvedValueOnce({
           success: false,
-          message: "Parent ai_chat not found",
+          message: "Parent ai_chats not found",
         })
         .mockResolvedValueOnce({
           success: true,
@@ -797,7 +797,7 @@ describe("POST /api/webhook - ai_chat.create_followup event", () => {
 
     it("should filter out invalid string IDs", async () => {
       const payloadWithInvalidIds: WebhookPayload = {
-        eventType: "ai_chat.create_followup",
+        eventType: "ai_chats.create_followup",
         data: {
           keys: ["1", "invalid", "2"],
           followup_request: "Refine",

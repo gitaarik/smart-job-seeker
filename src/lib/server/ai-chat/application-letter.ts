@@ -1,6 +1,6 @@
 /**
  * Generate AI-assisted letters for job applications
- * Creates an ai_chat record with applicant context in system prompt and job context in user prompt
+ * Creates an ai_chats record with applicant context in system prompt and job context in user prompt
  */
 
 import { db } from "$lib/server/db";
@@ -23,12 +23,12 @@ const LETTER_TYPE_TO_PROMPT: Record<string, string> = {
  * 1. Fetch the application_letter with related application and job details
  * 2. Skip if application_letter doesn't have a linked application or job
  * 3. Determine the appropriate AI prompt based on letter_type
- * 4. Create an ai_chat record with:
+ * 4. Create an ai_chats record with:
  *    - system_prompt: applicant context (${schema}, ${data})
  *    - user_prompt: job context and job description (${jobDescription})
  * 5. Generate the full prompt (variables will be replaced including job description)
  * 6. Generate the AI response
- * 7. Update the application_letter record with the ai_chat reference
+ * 7. Update the application_letter record with the ai_chats reference
  * 8. If application_letter.content is empty, populate it with the generated response
  */
 export async function generateApplicationLetter(

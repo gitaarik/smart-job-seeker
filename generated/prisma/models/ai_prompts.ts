@@ -431,16 +431,6 @@ export type ai_promptsUncheckedUpdateManyInput = {
   messages?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
-export type Ai_promptsListRelationFilter = {
-  every?: Prisma.ai_promptsWhereInput
-  some?: Prisma.ai_promptsWhereInput
-  none?: Prisma.ai_promptsWhereInput
-}
-
-export type ai_promptsOrderByRelationAggregateInput = {
-  _count?: Prisma.SortOrder
-}
-
 export type ai_promptsCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   sort?: Prisma.SortOrder
@@ -487,6 +477,24 @@ export type ai_promptsMinOrderByAggregateInput = {
 
 export type ai_promptsSumOrderByAggregateInput = {
   sort?: Prisma.SortOrder
+}
+
+export type Ai_promptsListRelationFilter = {
+  every?: Prisma.ai_promptsWhereInput
+  some?: Prisma.ai_promptsWhereInput
+  none?: Prisma.ai_promptsWhereInput
+}
+
+export type ai_promptsOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
+}
+
+export type NullableIntFieldUpdateOperationsInput = {
+  set?: number | null
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
 }
 
 export type ai_promptsCreateNestedManyWithoutDirectus_users_ai_prompts_user_createdTodirectus_usersInput = {

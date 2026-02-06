@@ -227,7 +227,7 @@ export async function calculateMatch(
     gaps: result.gaps,
     recommendation: result.recommendation,
     jobDateUpdated: job.date_updated,
-    llmPrompt: "", // Prompt is stored in ai_chat table via ai_chat_scoring link
+    llmPrompt: "", // Prompt is stored in ai_chats table via ai_chat_scoring link
     ai_chat_scoring: aiResult.aiChatId,
   };
 }

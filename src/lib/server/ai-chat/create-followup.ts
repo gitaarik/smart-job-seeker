@@ -1,5 +1,5 @@
 /**
- * Create follow-up ai_chat instances for iterative refinement
+ * Create follow-up ai_chats instances for iterative refinement
  */
 
 import { db } from "$lib/server/db";
@@ -14,18 +14,18 @@ function escapePlaceholders(text: string): string {
 }
 
 /**
- * Create a follow-up ai_chat instance to refine a previous AI-generated response
+ * Create a follow-up ai_chats instance to refine a previous AI-generated response
  *
  * The follow-up will include:
  * - The previous response (so AI knows what to refine)
  * - The follow-up request (what the user wants to change)
  * - Optionally, the original context (schema, data, jobDescription, etc.)
  *
- * @param parentAiChatId - The ID of the parent ai_chat record to follow up on
+ * @param parentAiChatId - The ID of the parent ai_chats record to follow up on
  * @param followupRequest - The user's follow-up request describing what to refine
  * @param options - Configuration options
  * @param options.includeOriginalContext - If true, interpolate parent's context variables into the prompts (default: false)
- * @returns Object with success status, message, and the created ai_chat record (if successful)
+ * @returns Object with success status, message, and the created ai_chats record (if successful)
  */
 export async function createFollowupAiChat(
   parentAiChatId: number,
@@ -49,10 +49,10 @@ export async function createFollowupAiChat(
 }> {
   const includeOriginalContext = options?.includeOriginalContext ?? false;
 
-  // Step 1: Fetch parent ai_chat record (try block for database query)
+  // Step 1: Fetch parent ai_chats record (try block for database query)
   let parent;
   try {
-    parent = await db.ai_chat.findUnique({
+    parent = await db.ai_chats.findUnique({
       where: { id: parentAiChatId },
       select: {
         profile: true,
@@ -68,7 +68,7 @@ export async function createFollowupAiChat(
       : "Unknown error";
     return {
       success: false,
-      message: `Database error fetching parent ai_chat: ${errorMessage}`,
+      message: `Database error fetching parent ai_chats: ${errorMessage}`,
     };
   }
 
@@ -76,7 +76,7 @@ export async function createFollowupAiChat(
   if (!parent) {
     return {
       success: false,
-      message: `Parent ai_chat with ID ${parentAiChatId} not found`,
+      message: `Parent ai_chats with ID ${parentAiChatId} not found`,
     };
   }
 
@@ -84,7 +84,7 @@ export async function createFollowupAiChat(
     return {
       success: false,
       message:
-        `Parent ai_chat ${parentAiChatId} does not have a response yet. Cannot create follow-up.`,
+        `Parent ai_chats ${parentAiChatId} does not have a response yet. Cannot create follow-up.`,
     };
   }
 
@@ -226,9 +226,9 @@ export async function createFollowupAiChat(
   // Final result construction outside try block
   return {
     success: true,
-    message: `Follow-up ai_chat created successfully (ID: ${newAiChatId})${
+    message: `Follow-up ai_chats created successfully (ID: ${newAiChatId})${
       linkedLetters.length > 0 || linkedQuestions.length > 0
-        ? `. Updated ${linkedLetters.length} letter(s) and ${linkedQuestions.length} question(s) to reference the new ai_chat.`
+        ? `. Updated ${linkedLetters.length} letter(s) and ${linkedQuestions.length} question(s) to reference the new ai_chats.`
         : ""
     }`,
     aiChat: result.aiChat,

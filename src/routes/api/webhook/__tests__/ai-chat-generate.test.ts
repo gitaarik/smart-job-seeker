@@ -1,5 +1,5 @@
 /**
- * Unit tests for webhook ai_chat.generate_full_prompt event handler
+ * Unit tests for webhook ai_chats.generate_full_prompt event handler
  * Tests secret verification, event routing, full prompt generation, and error handling
  */
 
@@ -58,16 +58,16 @@ beforeEach(() => {
   webhookRateLimiter.reset();
 });
 
-describe("POST /api/webhook - ai_chat.generate_full_prompt event", () => {
+describe("POST /api/webhook - ai_chats.generate_full_prompt event", () => {
   const secret = "test-webhook-secret-key-1234567890123456";
   const validPayload: WebhookPayload = {
-    eventType: "ai_chat.generate_full_prompt",
+    eventType: "ai_chats.generate_full_prompt",
     data: {
       aiChatIds: ["1", "2", "3"],
     },
   };
   const singleAiChatPayload: WebhookPayload = {
-    eventType: "ai_chat.generate_full_prompt",
+    eventType: "ai_chats.generate_full_prompt",
     data: {
       aiChatIds: ["1"],
     },
@@ -150,7 +150,7 @@ describe("POST /api/webhook - ai_chat.generate_full_prompt event", () => {
 
     it("should reject payload missing required fields", async () => {
       const incompletePayload = {
-        eventType: "ai_chat.generate_full_prompt",
+        eventType: "ai_chats.generate_full_prompt",
         // missing data field
       };
 
@@ -167,7 +167,7 @@ describe("POST /api/webhook - ai_chat.generate_full_prompt event", () => {
 
     it("should reject payload with invalid aiChatIds type (not an array)", async () => {
       const payloadInvalidAiChatIds: WebhookPayload = {
-        eventType: "ai_chat.generate_full_prompt",
+        eventType: "ai_chats.generate_full_prompt",
         data: {
           aiChatIds: "not-an-array",
         },
@@ -186,7 +186,7 @@ describe("POST /api/webhook - ai_chat.generate_full_prompt event", () => {
 
     it("should reject payload with missing aiChatIds", async () => {
       const payloadNoAiChatIds: WebhookPayload = {
-        eventType: "ai_chat.generate_full_prompt",
+        eventType: "ai_chats.generate_full_prompt",
         data: {
           // missing aiChatIds
         },
@@ -204,9 +204,9 @@ describe("POST /api/webhook - ai_chat.generate_full_prompt event", () => {
     });
   });
 
-  describe("ai_chat.generate_full_prompt event processing", () => {
+  describe("ai_chats.generate_full_prompt event processing", () => {
     it(
-      "should successfully process valid ai_chat.generate_full_prompt event with multiple AI chats",
+      "should successfully process valid ai_chats.generate_full_prompt event with multiple AI chats",
       async () => {
         const request = createMockRequest(validPayload, secret);
         const event = createMockEvent(request);
@@ -409,7 +409,7 @@ describe("POST /api/webhook - ai_chat.generate_full_prompt event", () => {
       "should handle string IDs that cannot be parsed to integers",
       async () => {
         const payloadInvalidIds: WebhookPayload = {
-          eventType: "ai_chat.generate_full_prompt",
+          eventType: "ai_chats.generate_full_prompt",
           data: {
             aiChatIds: ["abc", "def", "xyz"],
           },
@@ -429,7 +429,7 @@ describe("POST /api/webhook - ai_chat.generate_full_prompt event", () => {
 
     it("should handle mixed valid and invalid string IDs", async () => {
       const payloadMixedIds: WebhookPayload = {
-        eventType: "ai_chat.generate_full_prompt",
+        eventType: "ai_chats.generate_full_prompt",
         data: {
           aiChatIds: ["1", "abc", "2"],
         },
@@ -460,16 +460,16 @@ describe("POST /api/webhook - ai_chat.generate_full_prompt event", () => {
   });
 });
 
-describe("POST /api/webhook - ai_chat.generate_response event", () => {
+describe("POST /api/webhook - ai_chats.generate_response event", () => {
   const secret = "test-webhook-secret-key-1234567890123456";
   const validPayload: WebhookPayload = {
-    eventType: "ai_chat.generate_response",
+    eventType: "ai_chats.generate_response",
     data: {
       aiChatIds: ["1", "2", "3"],
     },
   };
   const singleAiChatPayload: WebhookPayload = {
-    eventType: "ai_chat.generate_response",
+    eventType: "ai_chats.generate_response",
     data: {
       aiChatIds: ["1"],
     },
@@ -479,9 +479,9 @@ describe("POST /api/webhook - ai_chat.generate_response event", () => {
     vi.clearAllMocks();
   });
 
-  describe("ai_chat.generate_response event processing", () => {
+  describe("ai_chats.generate_response event processing", () => {
     it(
-      "should successfully process valid ai_chat.generate_response event with multiple AI chats",
+      "should successfully process valid ai_chats.generate_response event with multiple AI chats",
       async () => {
         const request = createMockRequest(validPayload, secret);
         const event = createMockEvent(request);
@@ -614,7 +614,7 @@ describe("POST /api/webhook - ai_chat.generate_response event", () => {
 
     it("should reject invalid payload for response generation", async () => {
       const payloadNoAiChatIds: WebhookPayload = {
-        eventType: "ai_chat.generate_response",
+        eventType: "ai_chats.generate_response",
         data: {
           // missing aiChatIds
         },

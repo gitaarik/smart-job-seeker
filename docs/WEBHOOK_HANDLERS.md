@@ -15,8 +15,8 @@ The central registry maps event types to their handlers:
 ```typescript
 const handlers = new Map<string, WebhookHandler>([
   ["profile.export", profileExportHandler],
-  ["ai_chat.generate_full_prompt", aiChatGeneratePromptHandler],
-  ["ai_chat.generate_response", aiChatGenerateResponseHandler],
+  ["ai_chats.generate_full_prompt", aiChatGeneratePromptHandler],
+  ["ai_chats.generate_response", aiChatGenerateResponseHandler],
   [
     "application_interview_question.generate_ai_answer",
     applicationQuestionHandler,
@@ -24,7 +24,7 @@ const handlers = new Map<string, WebhookHandler>([
   ["application_letter.generate", applicationLetterHandler],
   ["application_letter.create_followup", followupLetterHandler],
   ["application_questions.create_followup", followupQuestionHandler],
-  ["ai_chat.create_followup", followupChatHandler],
+  ["ai_chats.create_followup", followupChatHandler],
   ["profile_version.generate_preview_links", profileVersionLinksHandler],
 ]);
 ```
@@ -114,7 +114,7 @@ Return JSON Response
 }
 ```
 
-### 2. AI Chat - Generate Prompt (`ai_chat.generate_full_prompt`)
+### 2. AI Chat - Generate Prompt (`ai_chats.generate_full_prompt`)
 
 **File:** `handlers/ai-chat-generate-prompt.ts`
 
@@ -124,7 +124,7 @@ Return JSON Response
 
 ```json
 {
-  "event": "ai_chat.generate_full_prompt",
+  "event": "ai_chats.generate_full_prompt",
   "payload": {
     "aiChatIds": [1, 2, 3]
   }
@@ -142,7 +142,7 @@ Return JSON Response
 }
 ```
 
-### 3. AI Chat - Generate Response (`ai_chat.generate_response`)
+### 3. AI Chat - Generate Response (`ai_chats.generate_response`)
 
 **File:** `handlers/ai-chat-generate-response.ts`
 
@@ -152,7 +152,7 @@ Return JSON Response
 
 ```json
 {
-  "event": "ai_chat.generate_response",
+  "event": "ai_chats.generate_response",
   "payload": {
     "aiChatIds": [1, 2, 3]
   }
@@ -233,7 +233,7 @@ Return JSON Response
 }
 ```
 
-### 8. AI Chat - Create Followup (`ai_chat.create_followup`)
+### 8. AI Chat - Create Followup (`ai_chats.create_followup`)
 
 **File:** `handlers/followup-chat.ts`
 
@@ -243,7 +243,7 @@ Return JSON Response
 
 ```json
 {
-  "event": "ai_chat.create_followup",
+  "event": "ai_chats.create_followup",
   "keys": [1], // Parent chat ID
   "payload": {
     "followup_request": "Expand on the first point",

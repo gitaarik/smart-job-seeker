@@ -260,7 +260,7 @@ export type application_questionsWhereInput = {
   answer?: Prisma.StringNullableFilter<"application_questions"> | string | null
   ai_chat?: Prisma.IntNullableFilter<"application_questions"> | number | null
   ai_chat_response?: Prisma.StringNullableFilter<"application_questions"> | string | null
-  ai_chat_application_questions_ai_chatToai_chat?: Prisma.XOR<Prisma.Ai_chatNullableScalarRelationFilter, Prisma.ai_chatWhereInput> | null
+  ai_chat_application_questions_ai_chatToai_chat?: Prisma.XOR<Prisma.Ai_chatsNullableScalarRelationFilter, Prisma.ai_chatsWhereInput> | null
   applications?: Prisma.XOR<Prisma.ApplicationsScalarRelationFilter, Prisma.applicationsWhereInput>
 }
 
@@ -274,7 +274,7 @@ export type application_questionsOrderByWithRelationInput = {
   answer?: Prisma.SortOrderInput | Prisma.SortOrder
   ai_chat?: Prisma.SortOrderInput | Prisma.SortOrder
   ai_chat_response?: Prisma.SortOrderInput | Prisma.SortOrder
-  ai_chat_application_questions_ai_chatToai_chat?: Prisma.ai_chatOrderByWithRelationInput
+  ai_chat_application_questions_ai_chatToai_chat?: Prisma.ai_chatsOrderByWithRelationInput
   applications?: Prisma.applicationsOrderByWithRelationInput
 }
 
@@ -291,7 +291,7 @@ export type application_questionsWhereUniqueInput = Prisma.AtLeast<{
   answer?: Prisma.StringNullableFilter<"application_questions"> | string | null
   ai_chat?: Prisma.IntNullableFilter<"application_questions"> | number | null
   ai_chat_response?: Prisma.StringNullableFilter<"application_questions"> | string | null
-  ai_chat_application_questions_ai_chatToai_chat?: Prisma.XOR<Prisma.Ai_chatNullableScalarRelationFilter, Prisma.ai_chatWhereInput> | null
+  ai_chat_application_questions_ai_chatToai_chat?: Prisma.XOR<Prisma.Ai_chatsNullableScalarRelationFilter, Prisma.ai_chatsWhereInput> | null
   applications?: Prisma.XOR<Prisma.ApplicationsScalarRelationFilter, Prisma.applicationsWhereInput>
 }, "id">
 
@@ -334,7 +334,7 @@ export type application_questionsCreateInput = {
   question: string
   answer?: string | null
   ai_chat_response?: string | null
-  ai_chat_application_questions_ai_chatToai_chat?: Prisma.ai_chatCreateNestedOneWithoutApplication_questions_application_questions_ai_chatToai_chatInput
+  ai_chat_application_questions_ai_chatToai_chat?: Prisma.ai_chatsCreateNestedOneWithoutApplication_questions_application_questions_ai_chatToai_chatInput
   applications: Prisma.applicationsCreateNestedOneWithoutApplication_questionsInput
 }
 
@@ -357,7 +357,7 @@ export type application_questionsUpdateInput = {
   question?: Prisma.StringFieldUpdateOperationsInput | string
   answer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat_response?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ai_chat_application_questions_ai_chatToai_chat?: Prisma.ai_chatUpdateOneWithoutApplication_questions_application_questions_ai_chatToai_chatNestedInput
+  ai_chat_application_questions_ai_chatToai_chat?: Prisma.ai_chatsUpdateOneWithoutApplication_questions_application_questions_ai_chatToai_chatNestedInput
   applications?: Prisma.applicationsUpdateOneRequiredWithoutApplication_questionsNestedInput
 }
 
@@ -404,16 +404,6 @@ export type application_questionsUncheckedUpdateManyInput = {
   answer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat_response?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-}
-
-export type Application_questionsListRelationFilter = {
-  every?: Prisma.application_questionsWhereInput
-  some?: Prisma.application_questionsWhereInput
-  none?: Prisma.application_questionsWhereInput
-}
-
-export type application_questionsOrderByRelationAggregateInput = {
-  _count?: Prisma.SortOrder
 }
 
 export type application_questionsCountOrderByAggregateInput = {
@@ -464,6 +454,16 @@ export type application_questionsSumOrderByAggregateInput = {
   sort?: Prisma.SortOrder
   application?: Prisma.SortOrder
   ai_chat?: Prisma.SortOrder
+}
+
+export type Application_questionsListRelationFilter = {
+  every?: Prisma.application_questionsWhereInput
+  some?: Prisma.application_questionsWhereInput
+  none?: Prisma.application_questionsWhereInput
+}
+
+export type application_questionsOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
 }
 
 export type application_questionsCreateNestedManyWithoutApplicationsInput = {
@@ -557,7 +557,7 @@ export type application_questionsCreateWithoutApplicationsInput = {
   question: string
   answer?: string | null
   ai_chat_response?: string | null
-  ai_chat_application_questions_ai_chatToai_chat?: Prisma.ai_chatCreateNestedOneWithoutApplication_questions_application_questions_ai_chatToai_chatInput
+  ai_chat_application_questions_ai_chatToai_chat?: Prisma.ai_chatsCreateNestedOneWithoutApplication_questions_application_questions_ai_chatToai_chatInput
 }
 
 export type application_questionsUncheckedCreateWithoutApplicationsInput = {
@@ -677,7 +677,7 @@ export type application_questionsUpdateWithoutApplicationsInput = {
   question?: Prisma.StringFieldUpdateOperationsInput | string
   answer?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat_response?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ai_chat_application_questions_ai_chatToai_chat?: Prisma.ai_chatUpdateOneWithoutApplication_questions_application_questions_ai_chatToai_chatNestedInput
+  ai_chat_application_questions_ai_chatToai_chat?: Prisma.ai_chatsUpdateOneWithoutApplication_questions_application_questions_ai_chatToai_chatNestedInput
 }
 
 export type application_questionsUncheckedUpdateWithoutApplicationsInput = {
@@ -818,7 +818,7 @@ export type application_questionsIncludeUpdateManyAndReturn<ExtArgs extends runt
 export type $application_questionsPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "application_questions"
   objects: {
-    ai_chat_application_questions_ai_chatToai_chat: Prisma.$ai_chatPayload<ExtArgs> | null
+    ai_chat_application_questions_ai_chatToai_chat: Prisma.$ai_chatsPayload<ExtArgs> | null
     applications: Prisma.$applicationsPayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
@@ -1225,7 +1225,7 @@ readonly fields: application_questionsFieldRefs;
  */
 export interface Prisma__application_questionsClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  ai_chat_application_questions_ai_chatToai_chat<T extends Prisma.application_questions$ai_chat_application_questions_ai_chatToai_chatArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.application_questions$ai_chat_application_questions_ai_chatToai_chatArgs<ExtArgs>>): Prisma.Prisma__ai_chatClient<runtime.Types.Result.GetResult<Prisma.$ai_chatPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  ai_chat_application_questions_ai_chatToai_chat<T extends Prisma.application_questions$ai_chat_application_questions_ai_chatToai_chatArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.application_questions$ai_chat_application_questions_ai_chatToai_chatArgs<ExtArgs>>): Prisma.Prisma__ai_chatsClient<runtime.Types.Result.GetResult<Prisma.$ai_chatsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   applications<T extends Prisma.applicationsDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.applicationsDefaultArgs<ExtArgs>>): Prisma.Prisma__applicationsClient<runtime.Types.Result.GetResult<Prisma.$applicationsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -1665,18 +1665,18 @@ export type application_questionsDeleteManyArgs<ExtArgs extends runtime.Types.Ex
  */
 export type application_questions$ai_chat_application_questions_ai_chatToai_chatArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
-   * Select specific fields to fetch from the ai_chat
+   * Select specific fields to fetch from the ai_chats
    */
-  select?: Prisma.ai_chatSelect<ExtArgs> | null
+  select?: Prisma.ai_chatsSelect<ExtArgs> | null
   /**
-   * Omit specific fields from the ai_chat
+   * Omit specific fields from the ai_chats
    */
-  omit?: Prisma.ai_chatOmit<ExtArgs> | null
+  omit?: Prisma.ai_chatsOmit<ExtArgs> | null
   /**
    * Choose, which related nodes to fetch as well
    */
-  include?: Prisma.ai_chatInclude<ExtArgs> | null
-  where?: Prisma.ai_chatWhereInput
+  include?: Prisma.ai_chatsInclude<ExtArgs> | null
+  where?: Prisma.ai_chatsWhereInput
 }
 
 /**

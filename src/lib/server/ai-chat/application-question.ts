@@ -1,6 +1,6 @@
 /**
  * Generate AI-assisted answers for application questions
- * Creates an ai_chat record with context from collected_data, job description, and the question
+ * Creates an ai_chats record with context from collected_data, job description, and the question
  */
 
 import { db } from "$lib/server/db";
@@ -10,10 +10,10 @@ import { createAndGenerateAiChat } from "./utils";
  * Generate answer for a single application question
  * Steps:
  * 1. Fetch the question, application, and related data
- * 2. Create an ai_chat record with system_prompt including ${jobDescription} placeholder
+ * 2. Create an ai_chats record with system_prompt including ${jobDescription} placeholder
  * 3. Generate the full prompt (variables will be replaced including job description)
  * 4. Generate the AI response
- * 5. Update the application_questions record with the ai_chat reference
+ * 5. Update the application_questions record with the ai_chats reference
  */
 export async function generateApplicationQuestionAnswer(
   questionId: number,

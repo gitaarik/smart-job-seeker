@@ -7,6 +7,73 @@ datasource db {
   provider = "postgresql"
 }
 
+model ai_chat_prompts {
+  id            Int       @id @default(autoincrement())
+  date_created  DateTime? @db.Timestamptz(6)
+  date_updated  DateTime? @db.Timestamptz(6)
+  request       String    @unique(map: "ai_chat_prompts_request_unique") @db.VarChar(255)
+  system_prompt String?
+  user_prompt   String?
+  format        Json?     @db.Json
+}
+
+model ai_prompts {
+  id                                                     String          @id @db.Uuid
+  sort                                                   Int?
+  date_created                                           DateTime?       @default(now()) @db.Timestamptz(6)
+  user_created                                           String?         @db.Uuid
+  date_updated                                           DateTime?       @db.Timestamptz(6)
+  user_updated                                           String?         @db.Uuid
+  name                                                   String?         @unique(map: "ai_prompts_name_unique") @db.VarChar(255)
+  status                                                 String?         @default("draft") @db.VarChar(255)
+  description                                            String?
+  system_prompt                                          String?
+  messages                                               Json?           @db.Json
+  directus_users_ai_prompts_user_createdTodirectus_users directus_users? @relation("ai_prompts_user_createdTodirectus_users", fields: [user_created], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ai_prompts_user_created_foreign")
+  directus_users_ai_prompts_user_updatedTodirectus_users directus_users? @relation("ai_prompts_user_updatedTodirectus_users", fields: [user_updated], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ai_prompts_user_updated_foreign")
+
+  @@index([name], map: "ai_prompts_name_index")
+}
+
+model application_activity_log {
+  id           Int           @id @default(autoincrement())
+  date_created DateTime?     @db.Timestamptz(6)
+  date_updated DateTime?     @db.Timestamptz(6)
+  date         DateTime?     @db.Date
+  title        String?       @db.VarChar(255)
+  note         String?
+  application  Int?
+  applications applications? @relation(fields: [application], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "application_activity_log_application_foreign")
+}
+
+model application_letters {
+  id                                           Int          @id @default(autoincrement())
+  date_created                                 DateTime?    @db.Timestamptz(6)
+  date_updated                                 DateTime?    @db.Timestamptz(6)
+  application                                  Int
+  letter_type                                  String       @default("cover_letter") @db.VarChar(255)
+  content                                      String?
+  ai_chat                                      Int?
+  status                                       String       @default("draft") @db.VarChar(255)
+  ai_chat_response                             String?
+  ai_chat_application_letters_ai_chatToai_chat ai_chats?    @relation("application_letters_ai_chatToai_chat", fields: [ai_chat], references: [id], onUpdate: NoAction, map: "application_letters_ai_chat_foreign")
+  applications                                 applications @relation(fields: [application], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "application_letters_application_foreign")
+}
+
+model application_questions {
+  id                                             Int          @id @default(autoincrement())
+  sort                                           Int?
+  date_created                                   DateTime?    @db.Timestamptz(6)
+  date_updated                                   DateTime?    @db.Timestamptz(6)
+  application                                    Int
+  question                                       String
+  answer                                         String?
+  ai_chat                                        Int?
+  ai_chat_response                               String?
+  ai_chat_application_questions_ai_chatToai_chat ai_chats?    @relation("application_questions_ai_chatToai_chat", fields: [ai_chat], references: [id], onUpdate: NoAction, map: "application_questions_ai_chat_foreign")
+  applications                                   applications @relation(fields: [application], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "application_questions_application_foreign")
+}
+
 model applications {
   id                       Int                        @id @default(autoincrement())
   status                   String                     @default("draft") @db.VarChar(255)
@@ -33,6 +100,14 @@ model applications {
   applications_files       applications_files[]
 }
 
+model applications_files {
+  id                Int             @id @default(autoincrement())
+  applications_id   Int?
+  directus_files_id String?         @db.Uuid
+  applications      applications?   @relation(fields: [applications_id], references: [id], onUpdate: NoAction, map: "applications_files_applications_id_foreign")
+  directus_files    directus_files? @relation(fields: [directus_files_id], references: [id], onUpdate: NoAction, map: "applications_files_directus_files_id_foreign")
+}
+
 model cheat_sheets {
   id           Int       @id @default(autoincrement())
   sort         Int?
@@ -51,6 +126,12 @@ model collected_data {
   data         String?
   profile      Int?
   profiles     profiles? @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "collected_data_profile_foreign")
+}
+
+model config {
+  id              Int       @id @default(autoincrement())
+  default_profile Int?
+  profiles        profiles? @relation(fields: [default_profile], references: [id], onUpdate: NoAction, map: "config_default_profile_foreign")
 }
 
 model directus_access {
@@ -363,8 +444,8 @@ model directus_revisions {
   other_directus_revisions directus_revisions[] @relation("directus_revisionsTodirectus_revisions")
   directus_versions        directus_versions?   @relation(fields: [version], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "directus_revisions_version_foreign")
 
-  @@index([parent], map: "directus_revisions_parent_index")
   @@index([activity], map: "directus_revisions_activity_index")
+  @@index([parent], map: "directus_revisions_parent_index")
 }
 
 model directus_roles {
@@ -582,6 +663,127 @@ model highlights {
   profiles     profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "highlights_profile_foreign")
 }
 
+model job_match_preferences {
+  id                Int       @id @default(autoincrement())
+  date_created      DateTime? @db.Timestamptz(6)
+  date_updated      DateTime? @db.Timestamptz(6)
+  job_types         Json?     @db.Json
+  experience_levels Json?     @db.Json
+  remote_options    Json?     @db.Json
+  locations         Json?     @db.Json
+  profile           Int
+  name              String?   @db.VarChar(255)
+  profiles          profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_match_preferences_profile_foreign")
+}
+
+model job_matches {
+  id                            Int       @id @default(autoincrement())
+  score                         Int       @default(0)
+  reasoning                     String?
+  skill_match_percentage        Int?
+  strengths                     Json?     @db.Json
+  gaps                          Json?     @db.Json
+  recommendation                String?   @default("consider") @db.VarChar(255)
+  job_date_updated_when_matched DateTime? @db.Timestamptz(6)
+  status                        String    @default("new") @db.VarChar(255)
+  date_created                  DateTime? @db.Timestamptz(6)
+  date_updated                  DateTime? @db.Timestamptz(6)
+  job                           Int
+  profile                       Int
+  llm_prompt                    String?
+  ai_chat_scoring               Int?
+  ai_chat                       ai_chats? @relation(fields: [ai_chat_scoring], references: [id], onUpdate: NoAction, map: "job_matches_ai_chat_scoring_foreign")
+  jobs                          jobs      @relation(fields: [job], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_matches_job_foreign")
+  profiles                      profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_matches_profile_foreign")
+}
+
+model job_platforms {
+  id                Int                 @id @default(autoincrement())
+  status            String              @default("draft") @db.VarChar(255)
+  sort              Int?
+  date_created      DateTime?           @db.Timestamptz(6)
+  date_updated      DateTime?           @db.Timestamptz(6)
+  name              String              @db.VarChar(255)
+  url               String              @db.VarChar(255)
+  type              String?             @db.VarChar(255)
+  key               String              @unique(map: "job_platforms_key_unique") @db.VarChar(255)
+  login_page_url    String?             @db.VarChar(255)
+  job_searches      job_searches[]
+  jobs              jobs[]
+  platform_profiles platform_profiles[]
+}
+
+model job_resources {
+  id             Int             @id @default(autoincrement())
+  sort           Int?
+  date_created   DateTime?       @db.Timestamptz(6)
+  date_updated   DateTime?       @db.Timestamptz(6)
+  name           String?         @db.VarChar(255)
+  url            String?         @db.VarChar(255)
+  file           String?         @db.Uuid
+  job            Int
+  directus_files directus_files? @relation(fields: [file], references: [id], onUpdate: NoAction, map: "job_resources_file_foreign")
+  jobs           jobs            @relation(fields: [job], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_resources_job_foreign")
+}
+
+model job_searches {
+  id                     Int                      @id @default(autoincrement())
+  status                 String                   @default("active") @db.VarChar(255)
+  date_created           DateTime?                @db.Timestamptz(6)
+  date_updated           DateTime?                @db.Timestamptz(6)
+  name                   String                   @db.VarChar(255)
+  profile                Int
+  last_run               DateTime?                @db.Timestamptz(6)
+  search_url             String?
+  platform               Int?
+  navigation_type        String?                  @db.VarChar(255)
+  stripped_html          String?
+  job_platforms          job_platforms?           @relation(fields: [platform], references: [id], onUpdate: NoAction, map: "job_searches_platform_foreign")
+  profiles               profiles                 @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_searches_profile_foreign")
+  job_searches_job_sites job_searches_job_sites[]
+}
+
+model job_searches_job_sites {
+  id              Int           @id @default(autoincrement())
+  job_searches_id Int?
+  job_searches    job_searches? @relation(fields: [job_searches_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_searches_job_sites_job_searches_id_foreign")
+}
+
+model jobs {
+  id                   Int             @id @default(autoincrement())
+  status               String          @default("draft") @db.VarChar(255)
+  date_created         DateTime?       @db.Timestamptz(6)
+  date_updated         DateTime?       @db.Timestamptz(6)
+  source_url           String?         @db.VarChar(255)
+  title                String?         @db.VarChar(255)
+  job_description      String?
+  job_poster           String?         @db.VarChar(255)
+  company_description  String?
+  date_posted          DateTime?       @db.Date
+  salary_min           Int?
+  salary_max           Int?
+  salary_currency      String?         @db.VarChar(255)
+  salary_period        String?         @db.VarChar(255)
+  import_error         String?
+  last_scraped         DateTime?       @db.Timestamptz(6)
+  location             String?         @db.VarChar(255)
+  scrape_count         Int?            @default(0)
+  job_types            Json?           @db.Json
+  experience_levels    Json?           @db.Json
+  remote_options       Json?           @db.Json
+  skills               Json?           @db.Json
+  source_html_stripped String?
+  job_platform         Int?
+  ai_chat_extraction   Int?
+  applications         applications[]
+  job_matches          job_matches[]
+  job_resources        job_resources[]
+  ai_chat              ai_chats?       @relation(fields: [ai_chat_extraction], references: [id], onUpdate: NoAction, map: "jobs_ai_chat_extraction_foreign")
+  job_platforms        job_platforms?  @relation(fields: [job_platform], references: [id], onUpdate: NoAction, map: "jobs_job_platform_foreign")
+
+  @@index([title, job_poster, date_posted], map: "idx_jobs_uniqueness")
+}
+
 model languages {
   id            Int       @id @default(autoincrement())
   status        String    @default("draft") @db.VarChar(255)
@@ -593,6 +795,22 @@ model languages {
   profile       Int
   sort          Int?
   profiles      profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "languages_profile_foreign")
+}
+
+model os_contributions {
+  id                Int       @id @default(autoincrement())
+  status            String    @default("draft") @db.VarChar(255)
+  date_created      DateTime? @db.Timestamptz(6)
+  date_updated      DateTime? @db.Timestamptz(6)
+  title             String?   @db.VarChar(255)
+  description       String?
+  project_name      String?   @db.VarChar(255)
+  profile           Int?
+  merged_date       DateTime? @db.Date
+  issue_url         String?   @db.VarChar(255)
+  pull_request_url  String?   @db.VarChar(255)
+  contribution_type String?   @db.VarChar(255)
+  profiles          profiles? @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "os_contributions_profile_foreign")
 }
 
 model platform_profiles {
@@ -612,6 +830,49 @@ model platform_profiles {
   profiles      profiles       @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "platform_profiles_profile_foreign")
 }
 
+model profile_exports {
+  id             Int            @id @default(autoincrement())
+  status         String         @default("published") @db.VarChar(255)
+  sort           Int?
+  date_created   DateTime?      @db.Timestamptz(6)
+  date_updated   DateTime?      @db.Timestamptz(6)
+  profile        Int
+  file           String         @db.Uuid
+  file_type      String         @db.VarChar(255)
+  export_type    String         @db.VarChar(255)
+  export_format  String?        @db.VarChar(255)
+  description    String?
+  source_url     String?        @db.VarChar(512)
+  directus_files directus_files @relation(fields: [file], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "profile_exports_file_foreign")
+  profiles       profiles       @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "profile_exports_profile_foreign")
+}
+
+model profile_tokens {
+  id               Int       @id @default(autoincrement())
+  status           String    @default("published") @db.VarChar(255)
+  sort             Int?
+  date_created     DateTime? @db.Timestamptz(6)
+  date_updated     DateTime? @db.Timestamptz(6)
+  token            String    @unique(map: "profile_tokens_token_unique") @db.VarChar(255)
+  token_hash       String    @unique(map: "profile_tokens_token_hash_unique") @db.VarChar(255)
+  profile_version  Int
+  visit_count      Int       @default(0)
+  visit_limit      Int?
+  expires_at       DateTime? @db.Timestamptz(6)
+  name             String?   @db.VarChar(255)
+  notes            String?
+  last_accessed_at DateTime? @db.Timestamptz(6)
+  last_accessed_ip String?   @db.VarChar(45)
+}
+
+model profile_version_extensions {
+  id                                                                     Int               @id @default(autoincrement())
+  extender                                                               Int?
+  extended                                                               Int?
+  profile_versions_profile_version_extensions_extendedToprofile_versions profile_versions? @relation("profile_version_extensions_extendedToprofile_versions", fields: [extended], references: [id], onUpdate: NoAction, map: "profile_version_extensions_extended_foreign")
+  profile_versions_profile_version_extensions_extenderToprofile_versions profile_versions? @relation("profile_version_extensions_extenderToprofile_versions", fields: [extender], references: [id], onUpdate: NoAction, map: "profile_version_extensions_extender_foreign")
+}
+
 model profile_versions {
   id                                                                               Int                          @id @default(autoincrement())
   status                                                                           String                       @default("draft") @db.VarChar(255)
@@ -625,7 +886,7 @@ model profile_versions {
   preview_links                                                                    String?
   profile_version_extensions_profile_version_extensions_extendedToprofile_versions profile_version_extensions[] @relation("profile_version_extensions_extendedToprofile_versions")
   profile_version_extensions_profile_version_extensions_extenderToprofile_versions profile_version_extensions[] @relation("profile_version_extensions_extenderToprofile_versions")
-  profiles                                                                         profiles                     @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "profile_versions_profile_foreign")
+  profiles_profile_versions_profileToprofiles                                      profiles                     @relation("profile_versions_profileToprofiles", fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "profile_versions_profile_foreign")
   profiles_profiles_public_cv_versionToprofile_versions                            profiles[]                   @relation("profiles_public_cv_versionToprofile_versions")
   profiles_profiles_public_resume_versionToprofile_versions                        profiles[]                   @relation("profiles_public_resume_versionToprofile_versions")
 }
@@ -677,8 +938,7 @@ model profiles {
   user_id                                                           String?                 @db.Uuid
   public_cv_version                                                 Int?
   public_resume_version                                             Int?
-  ai_chat                                                           ai_chat[]
-  api_keys                                                          api_keys[]
+  ai_chats                                                          ai_chats[]
   applications                                                      applications[]
   cheat_sheets                                                      cheat_sheets[]
   collected_data                                                    collected_data[]
@@ -692,7 +952,7 @@ model profiles {
   os_contributions                                                  os_contributions[]
   platform_profiles                                                 platform_profiles[]
   profile_exports                                                   profile_exports[]
-  profile_versions                                                  profile_versions[]
+  profile_versions_profile_versions_profileToprofiles               profile_versions[]      @relation("profile_versions_profileToprofiles")
   directus_files                                                    directus_files?         @relation(fields: [profile_picture], references: [id], onUpdate: NoAction, map: "profiles_profile_picture_foreign")
   profile_versions_profiles_public_cv_versionToprofile_versions     profile_versions?       @relation("profiles_public_cv_versionToprofile_versions", fields: [public_cv_version], references: [id], onUpdate: NoAction, map: "profiles_public_cv_version_foreign")
   profile_versions_profiles_public_resume_versionToprofile_versions profile_versions?       @relation("profiles_public_resume_versionToprofile_versions", fields: [public_resume_version], references: [id], onUpdate: NoAction, map: "profiles_public_resume_version_foreign")
@@ -846,6 +1106,33 @@ model work_experience_achievements {
   work_experiences work_experiences @relation(fields: [work_experience], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "work_experience_achievements_work_experience_foreign")
 }
 
+model work_experience_project_technologies {
+  id                       Int                       @id @default(autoincrement())
+  sort                     Int?
+  date_created             DateTime?                 @db.Timestamptz(6)
+  date_updated             DateTime?                 @db.Timestamptz(6)
+  work_experience_project  Int?
+  name                     String?                   @db.VarChar(255)
+  work_experience_projects work_experience_projects? @relation(fields: [work_experience_project], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "work_experience_project_technologies_work___27d59b1f_foreign")
+}
+
+model work_experience_projects {
+  id                                   Int                                    @id @default(autoincrement())
+  status                               String                                 @default("draft") @db.VarChar(255)
+  sort                                 Int?
+  date_created                         DateTime?                              @db.Timestamptz(6)
+  date_updated                         DateTime?                              @db.Timestamptz(6)
+  work_experience                      Int?
+  name                                 String?                                @db.VarChar(255)
+  url                                  String?                                @db.VarChar(255)
+  start_date                           DateTime?                              @db.Date
+  end_date                             DateTime?                              @db.Date
+  description                          String?
+  outcome                              String?
+  work_experience_project_technologies work_experience_project_technologies[]
+  work_experiences                     work_experiences?                      @relation(fields: [work_experience], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "work_experience_projects_work_experience_foreign")
+}
+
 model work_experience_technologies {
   id               Int              @id @default(autoincrement())
   status           String           @default("draft") @db.VarChar(255)
@@ -881,331 +1168,28 @@ model work_experiences {
   profiles                     profiles                       @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "work_experiences_profile_foreign")
 }
 
-model ai_chat {
+model ai_chats {
   id                                                           Int                     @id @default(autoincrement())
   date_created                                                 DateTime?               @db.Timestamptz(6)
   date_updated                                                 DateTime?               @db.Timestamptz(6)
   profile                                                      Int
-  system_prompt                                                String                  @default("Act as a helpful assistant for a SWE job seeker & applicant. Help answer questions about job descriptions, answer application questions, write cover letters etc. Below is the information about the applicant. First the schema in JSON, after that actual data in JSON. You can use the schema to find the descriptions of certain objects / fields in the data. Be brief and concise in your answer. Max 3 short paragraphs. Hiring managers usually do not have a lot of time to extensively review every text. Do not add or list any skills or knowledge which is not in the data of the applicant. You can maybe add some skills the job requires that are closely connected to skills the applicant has. Keep the story close to the real work/project experience of the applicant. Do not make up anything that is not obvious from the original info of the applicant. Don''t necessarily generate complete copy-and-paste answers, but rather give suggestions for what kind of things the applicant could write. If there are multiple suitable answers, give them all, so the applicant can choose and customize to their choice.\n\n## The schema:\n\n${schema}\n\n## The data:\n\n${data}")
+  system_prompt                                                String
   user_prompt                                                  String
   full_prompt                                                  String?
   response                                                     String?
   context                                                      Json?                   @db.Json
   followup_to                                                  Int?
   error                                                        String?
-  provider                                                     String?                 @db.VarChar(50)
-  model                                                        String?                 @db.VarChar(100)
-  request_type                                                 String?                 @db.VarChar(50)
-  ai_chat                                                      ai_chat?                @relation("ai_chatToai_chat", fields: [followup_to], references: [id], onUpdate: NoAction, map: "ai_chat_followup_to_foreign")
-  other_ai_chat                                                ai_chat[]               @relation("ai_chatToai_chat")
-  profiles                                                     profiles                @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "ai_chat_profile_foreign")
+  provider                                                     String?                 @db.VarChar(255)
+  model                                                        String?                 @db.VarChar(255)
+  request_type                                                 String?                 @db.VarChar(255)
+  ai_chats                                                     ai_chats?               @relation("ai_chatsToai_chats", fields: [followup_to], references: [id], onUpdate: NoAction, map: "ai_chats_followup_to_foreign")
+  other_ai_chats                                               ai_chats[]              @relation("ai_chatsToai_chats")
+  profiles                                                     profiles                @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "ai_chats_profile_foreign")
   application_letters_application_letters_ai_chatToai_chat     application_letters[]   @relation("application_letters_ai_chatToai_chat")
   application_questions_application_questions_ai_chatToai_chat application_questions[] @relation("application_questions_ai_chatToai_chat")
-  job_matches_scored                                           job_matches[]           @relation("job_match_scoring")
-  jobs_extracted                                               jobs[]                  @relation("job_extraction")
-}
-
-model os_contributions {
-  id                Int       @id @default(autoincrement())
-  status            String    @default("draft") @db.VarChar(255)
-  date_created      DateTime? @db.Timestamptz(6)
-  date_updated      DateTime? @db.Timestamptz(6)
-  title             String?   @db.VarChar(255)
-  description       String?
-  project_name      String?   @db.VarChar(255)
-  profile           Int?
-  merged_date       DateTime? @db.Date
-  issue_url         String?   @db.VarChar(255)
-  pull_request_url  String?   @db.VarChar(255)
-  contribution_type String?   @db.VarChar(255)
-  profiles          profiles? @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "os_contributions_profile_foreign")
-}
-
-model work_experience_project_technologies {
-  id                       Int                       @id @default(autoincrement())
-  sort                     Int?
-  date_created             DateTime?                 @db.Timestamptz(6)
-  date_updated             DateTime?                 @db.Timestamptz(6)
-  work_experience_project  Int?
-  name                     String?                   @db.VarChar(255)
-  work_experience_projects work_experience_projects? @relation(fields: [work_experience_project], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "work_experience_project_technologies_work___27d59b1f_foreign")
-}
-
-model work_experience_projects {
-  id                                   Int                                    @id @default(autoincrement())
-  status                               String                                 @default("draft") @db.VarChar(255)
-  sort                                 Int?
-  date_created                         DateTime?                              @db.Timestamptz(6)
-  date_updated                         DateTime?                              @db.Timestamptz(6)
-  work_experience                      Int?
-  name                                 String?                                @db.VarChar(255)
-  url                                  String?                                @db.VarChar(255)
-  start_date                           DateTime?                              @db.Date
-  end_date                             DateTime?                              @db.Date
-  description                          String?
-  outcome                              String?
-  work_experience_project_technologies work_experience_project_technologies[]
-  work_experiences                     work_experiences?                      @relation(fields: [work_experience], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "work_experience_projects_work_experience_foreign")
-}
-
-model ai_prompts {
-  id                                                     String          @id @db.Uuid
-  sort                                                   Int?
-  date_created                                           DateTime?       @default(now()) @db.Timestamptz(6)
-  user_created                                           String?         @db.Uuid
-  date_updated                                           DateTime?       @db.Timestamptz(6)
-  user_updated                                           String?         @db.Uuid
-  name                                                   String?         @unique(map: "ai_prompts_name_unique") @db.VarChar(255)
-  status                                                 String?         @default("draft") @db.VarChar(255)
-  description                                            String?
-  system_prompt                                          String?
-  messages                                               Json?           @db.Json
-  directus_users_ai_prompts_user_createdTodirectus_users directus_users? @relation("ai_prompts_user_createdTodirectus_users", fields: [user_created], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ai_prompts_user_created_foreign")
-  directus_users_ai_prompts_user_updatedTodirectus_users directus_users? @relation("ai_prompts_user_updatedTodirectus_users", fields: [user_updated], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ai_prompts_user_updated_foreign")
-
-  @@index([name], map: "ai_prompts_name_index")
-}
-
-model application_questions {
-  id                                             Int          @id @default(autoincrement())
-  sort                                           Int?
-  date_created                                   DateTime?    @db.Timestamptz(6)
-  date_updated                                   DateTime?    @db.Timestamptz(6)
-  application                                    Int
-  question                                       String
-  answer                                         String?
-  ai_chat                                        Int?
-  ai_chat_response                               String?
-  ai_chat_application_questions_ai_chatToai_chat ai_chat?     @relation("application_questions_ai_chatToai_chat", fields: [ai_chat], references: [id], onUpdate: NoAction, map: "application_questions_ai_chat_foreign")
-  applications                                   applications @relation(fields: [application], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "application_questions_application_foreign")
-}
-
-model application_activity_log {
-  id           Int           @id @default(autoincrement())
-  date_created DateTime?     @db.Timestamptz(6)
-  date_updated DateTime?     @db.Timestamptz(6)
-  date         DateTime?     @db.Date
-  title        String?       @db.VarChar(255)
-  note         String?
-  application  Int?
-  applications applications? @relation(fields: [application], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "application_activity_log_application_foreign")
-}
-
-model applications_files {
-  id                Int             @id @default(autoincrement())
-  applications_id   Int?
-  directus_files_id String?         @db.Uuid
-  applications      applications?   @relation(fields: [applications_id], references: [id], onUpdate: NoAction, map: "applications_files_applications_id_foreign")
-  directus_files    directus_files? @relation(fields: [directus_files_id], references: [id], onUpdate: NoAction, map: "applications_files_directus_files_id_foreign")
-}
-
-model ai_chat_prompts {
-  id            Int       @id @default(autoincrement())
-  date_created  DateTime? @db.Timestamptz(6)
-  date_updated  DateTime? @db.Timestamptz(6)
-  request       String    @unique(map: "ai_chat_prompts_request_unique") @db.VarChar(255)
-  system_prompt String?
-  user_prompt   String?
-  format        Json?     @db.Json
-}
-
-model profile_version_extensions {
-  id                                                                     Int               @id @default(autoincrement())
-  extender                                                               Int?
-  extended                                                               Int?
-  profile_versions_profile_version_extensions_extendedToprofile_versions profile_versions? @relation("profile_version_extensions_extendedToprofile_versions", fields: [extended], references: [id], onUpdate: NoAction, map: "profile_version_extensions_extended_foreign")
-  profile_versions_profile_version_extensions_extenderToprofile_versions profile_versions? @relation("profile_version_extensions_extenderToprofile_versions", fields: [extender], references: [id], onUpdate: NoAction, map: "profile_version_extensions_extender_foreign")
-}
-
-model application_letters {
-  id                                           Int          @id @default(autoincrement())
-  date_created                                 DateTime?    @db.Timestamptz(6)
-  date_updated                                 DateTime?    @db.Timestamptz(6)
-  application                                  Int
-  letter_type                                  String       @default("cover_letter") @db.VarChar(255)
-  content                                      String?
-  ai_chat                                      Int?
-  status                                       String       @default("draft") @db.VarChar(255)
-  ai_chat_response                             String?
-  ai_chat_application_letters_ai_chatToai_chat ai_chat?     @relation("application_letters_ai_chatToai_chat", fields: [ai_chat], references: [id], onUpdate: NoAction, map: "application_letters_ai_chat_foreign")
-  applications                                 applications @relation(fields: [application], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "application_letters_application_foreign")
-}
-
-model job_resources {
-  id             Int             @id @default(autoincrement())
-  sort           Int?
-  date_created   DateTime?       @db.Timestamptz(6)
-  date_updated   DateTime?       @db.Timestamptz(6)
-  name           String?         @db.VarChar(255)
-  url            String?         @db.VarChar(255)
-  file           String?         @db.Uuid
-  job            Int
-  directus_files directus_files? @relation(fields: [file], references: [id], onUpdate: NoAction, map: "job_resources_file_foreign")
-  jobs           jobs            @relation(fields: [job], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_resources_job_foreign")
-}
-
-model jobs {
-  id                   Int             @id @default(autoincrement())
-  status               String          @default("draft") @db.VarChar(255)
-  date_created         DateTime?       @db.Timestamptz(6)
-  date_updated         DateTime?       @db.Timestamptz(6)
-  source_url           String?         @db.VarChar(255)
-  title                String?         @db.VarChar(255)
-  job_description      String?
-  job_poster           String?         @db.VarChar(255)
-  company_description  String?
-  date_posted          DateTime?       @db.Date
-  salary_min           Int?
-  salary_max           Int?
-  salary_currency      String?         @db.VarChar(255)
-  salary_period        String?         @db.VarChar(255)
-  import_error         String?
-  last_scraped         DateTime?       @db.Timestamptz(6)
-  location             String?         @db.VarChar(255)
-  scrape_count         Int?            @default(0)
-  job_types            Json?           @db.Json
-  experience_levels    Json?           @db.Json
-  remote_options       Json?           @db.Json
-  skills               Json?           @db.Json
-  source_html_stripped String?
-  job_platform         Int?
-  ai_chat_extraction   Int?
-  applications         applications[]
-  job_matches          job_matches[]
-  job_resources        job_resources[]
-  ai_chat              ai_chat?        @relation("job_extraction", fields: [ai_chat_extraction], references: [id], onUpdate: NoAction, map: "jobs_ai_chat_extraction_foreign")
-  job_platforms        job_platforms?  @relation(fields: [job_platform], references: [id], onUpdate: NoAction, map: "jobs_job_platform_foreign")
-
-  @@index([title, job_poster, date_posted], map: "idx_jobs_uniqueness")
-}
-
-model job_searches {
-  id                     Int                      @id @default(autoincrement())
-  status                 String                   @default("active") @db.VarChar(255)
-  date_created           DateTime?                @db.Timestamptz(6)
-  date_updated           DateTime?                @db.Timestamptz(6)
-  name                   String                   @db.VarChar(255)
-  profile                Int
-  last_run               DateTime?                @db.Timestamptz(6)
-  search_url             String?
-  platform               Int?
-  navigation_type        String?                  @db.VarChar(255)
-  stripped_html          String?
-  job_platforms          job_platforms?           @relation(fields: [platform], references: [id], onUpdate: NoAction, map: "job_searches_platform_foreign")
-  profiles               profiles                 @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_searches_profile_foreign")
-  job_searches_job_sites job_searches_job_sites[]
-}
-
-model job_searches_job_sites {
-  id              Int           @id @default(autoincrement())
-  job_searches_id Int?
-  job_searches    job_searches? @relation(fields: [job_searches_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_searches_job_sites_job_searches_id_foreign")
-}
-
-model job_match_preferences {
-  id                Int       @id @default(autoincrement())
-  date_created      DateTime? @db.Timestamptz(6)
-  date_updated      DateTime? @db.Timestamptz(6)
-  job_types         Json?     @db.Json
-  experience_levels Json?     @db.Json
-  remote_options    Json?     @db.Json
-  locations         Json?     @db.Json
-  profile           Int
-  name              String?   @db.VarChar(255)
-  profiles          profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_match_preferences_profile_foreign")
-}
-
-model job_matches {
-  id                            Int       @id @default(autoincrement())
-  score                         Int       @default(0)
-  reasoning                     String?
-  skill_match_percentage        Int?
-  strengths                     Json?     @db.Json
-  gaps                          Json?     @db.Json
-  recommendation                String?   @default("consider") @db.VarChar(255)
-  job_date_updated_when_matched DateTime? @db.Timestamptz(6)
-  status                        String    @default("new") @db.VarChar(255)
-  date_created                  DateTime? @db.Timestamptz(6)
-  date_updated                  DateTime? @db.Timestamptz(6)
-  job                           Int
-  profile                       Int
-  llm_prompt                    String?
-  ai_chat_scoring               Int?
-  ai_chat                       ai_chat?  @relation("job_match_scoring", fields: [ai_chat_scoring], references: [id], onUpdate: NoAction, map: "job_matches_ai_chat_scoring_foreign")
-  jobs                          jobs      @relation(fields: [job], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_matches_job_foreign")
-  profiles                      profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_matches_profile_foreign")
-}
-
-model job_platforms {
-  id                Int                 @id @default(autoincrement())
-  status            String              @default("draft") @db.VarChar(255)
-  sort              Int?
-  date_created      DateTime?           @db.Timestamptz(6)
-  date_updated      DateTime?           @db.Timestamptz(6)
-  name              String              @db.VarChar(255)
-  url               String              @db.VarChar(255)
-  type              String?             @db.VarChar(255)
-  key               String              @unique(map: "job_platforms_key_unique") @db.VarChar(255)
-  login_page_url    String?             @db.VarChar(255)
-  job_searches      job_searches[]
-  jobs              jobs[]
-  platform_profiles platform_profiles[]
-}
-
-model config {
-  id              Int       @id @default(autoincrement())
-  default_profile Int?
-  profiles        profiles? @relation(fields: [default_profile], references: [id], onUpdate: NoAction, map: "config_default_profile_foreign")
-}
-
-model profile_exports {
-  id             Int            @id @default(autoincrement())
-  status         String         @default("published") @db.VarChar(255)
-  sort           Int?
-  date_created   DateTime?      @db.Timestamptz(6)
-  date_updated   DateTime?      @db.Timestamptz(6)
-  profile        Int
-  file           String         @db.Uuid
-  file_type      String         @db.VarChar(255)
-  export_type    String         @db.VarChar(255)
-  export_format  String?        @db.VarChar(255)
-  description    String?
-  source_url     String?        @db.VarChar(512)
-  directus_files directus_files @relation(fields: [file], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "profile_exports_file_foreign")
-  profiles       profiles       @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "profile_exports_profile_foreign")
-}
-
-model profile_tokens {
-  id               Int       @id @default(autoincrement())
-  status           String    @default("published") @db.VarChar(255)
-  sort             Int?
-  date_created     DateTime? @db.Timestamptz(6)
-  date_updated     DateTime? @db.Timestamptz(6)
-  token            String    @unique(map: "profile_tokens_token_unique") @db.VarChar(255)
-  token_hash       String    @unique(map: "profile_tokens_token_hash_unique") @db.VarChar(255)
-  profile_version  Int
-  visit_count      Int       @default(0)
-  visit_limit      Int?
-  expires_at       DateTime? @db.Timestamptz(6)
-  name             String?   @db.VarChar(255)
-  notes            String?
-  last_accessed_at DateTime? @db.Timestamptz(6)
-  last_accessed_ip String?   @db.VarChar(45)
-}
-
-model api_keys {
-  id           Int       @id @default(autoincrement())
-  profile      Int
-  name         String    @db.VarChar(255)
-  key_hash     String    @unique @db.VarChar(64)
-  date_created DateTime? @default(now()) @db.Timestamptz(6)
-  expires_at   DateTime? @db.Timestamptz(6)
-  last_used    DateTime? @db.Timestamptz(6)
-  revoked      Boolean   @default(false)
-  profiles     profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "api_keys_profile_foreign")
-
-  @@index([key_hash], map: "idx_api_keys_hash")
-  @@index([profile], map: "idx_api_keys_profile")
+  job_matches                                                  job_matches[]
+  jobs                                                         jobs[]
 }
 
 enum Role {

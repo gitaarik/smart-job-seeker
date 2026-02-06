@@ -358,16 +358,6 @@ export type application_activity_logUncheckedUpdateManyInput = {
   application?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
-export type Application_activity_logListRelationFilter = {
-  every?: Prisma.application_activity_logWhereInput
-  some?: Prisma.application_activity_logWhereInput
-  none?: Prisma.application_activity_logWhereInput
-}
-
-export type application_activity_logOrderByRelationAggregateInput = {
-  _count?: Prisma.SortOrder
-}
-
 export type application_activity_logCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   date_created?: Prisma.SortOrder
@@ -406,6 +396,16 @@ export type application_activity_logMinOrderByAggregateInput = {
 export type application_activity_logSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
   application?: Prisma.SortOrder
+}
+
+export type Application_activity_logListRelationFilter = {
+  every?: Prisma.application_activity_logWhereInput
+  some?: Prisma.application_activity_logWhereInput
+  none?: Prisma.application_activity_logWhereInput
+}
+
+export type application_activity_logOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
 }
 
 export type application_activity_logCreateNestedManyWithoutApplicationsInput = {

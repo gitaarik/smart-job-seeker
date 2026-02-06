@@ -920,6 +920,38 @@ export type directus_usersMinOrderByAggregateInput = {
   text_direction?: Prisma.SortOrder
 }
 
+export type directus_usersCreateNestedOneWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput = {
+  create?: Prisma.XOR<Prisma.directus_usersCreateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput, Prisma.directus_usersUncheckedCreateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput>
+  connectOrCreate?: Prisma.directus_usersCreateOrConnectWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput
+  connect?: Prisma.directus_usersWhereUniqueInput
+}
+
+export type directus_usersCreateNestedOneWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput = {
+  create?: Prisma.XOR<Prisma.directus_usersCreateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput, Prisma.directus_usersUncheckedCreateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput>
+  connectOrCreate?: Prisma.directus_usersCreateOrConnectWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput
+  connect?: Prisma.directus_usersWhereUniqueInput
+}
+
+export type directus_usersUpdateOneWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersNestedInput = {
+  create?: Prisma.XOR<Prisma.directus_usersCreateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput, Prisma.directus_usersUncheckedCreateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput>
+  connectOrCreate?: Prisma.directus_usersCreateOrConnectWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput
+  upsert?: Prisma.directus_usersUpsertWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput
+  disconnect?: Prisma.directus_usersWhereInput | boolean
+  delete?: Prisma.directus_usersWhereInput | boolean
+  connect?: Prisma.directus_usersWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.directus_usersUpdateToOneWithWhereWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput, Prisma.directus_usersUpdateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput>, Prisma.directus_usersUncheckedUpdateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput>
+}
+
+export type directus_usersUpdateOneWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersNestedInput = {
+  create?: Prisma.XOR<Prisma.directus_usersCreateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput, Prisma.directus_usersUncheckedCreateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput>
+  connectOrCreate?: Prisma.directus_usersCreateOrConnectWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput
+  upsert?: Prisma.directus_usersUpsertWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput
+  disconnect?: Prisma.directus_usersWhereInput | boolean
+  delete?: Prisma.directus_usersWhereInput | boolean
+  connect?: Prisma.directus_usersWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.directus_usersUpdateToOneWithWhereWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput, Prisma.directus_usersUpdateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput>, Prisma.directus_usersUncheckedUpdateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput>
+}
+
 export type directus_usersCreateNestedOneWithoutDirectus_accessInput = {
   create?: Prisma.XOR<Prisma.directus_usersCreateWithoutDirectus_accessInput, Prisma.directus_usersUncheckedCreateWithoutDirectus_accessInput>
   connectOrCreate?: Prisma.directus_usersCreateOrConnectWithoutDirectus_accessInput
@@ -1232,36 +1264,420 @@ export type directus_usersUpdateOneWithoutProfilesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.directus_usersUpdateToOneWithWhereWithoutProfilesInput, Prisma.directus_usersUpdateWithoutProfilesInput>, Prisma.directus_usersUncheckedUpdateWithoutProfilesInput>
 }
 
-export type directus_usersCreateNestedOneWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput = {
-  create?: Prisma.XOR<Prisma.directus_usersCreateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput, Prisma.directus_usersUncheckedCreateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput>
-  connectOrCreate?: Prisma.directus_usersCreateOrConnectWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput
-  connect?: Prisma.directus_usersWhereUniqueInput
+export type directus_usersCreateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput = {
+  id: string
+  first_name?: string | null
+  last_name?: string | null
+  email?: string | null
+  password?: string | null
+  location?: string | null
+  title?: string | null
+  description?: string | null
+  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  avatar?: string | null
+  language?: string | null
+  tfa_secret?: string | null
+  status?: string
+  token?: string | null
+  last_access?: Date | string | null
+  last_page?: string | null
+  provider?: string
+  external_identifier?: string | null
+  auth_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  email_notifications?: boolean | null
+  appearance?: string | null
+  theme_dark?: string | null
+  theme_light?: string | null
+  theme_light_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  theme_dark_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  text_direction?: string
+  ai_prompts_ai_prompts_user_updatedTodirectus_users?: Prisma.ai_promptsCreateNestedManyWithoutDirectus_users_ai_prompts_user_updatedTodirectus_usersInput
+  directus_access?: Prisma.directus_accessCreateNestedManyWithoutDirectus_usersInput
+  directus_comments_directus_comments_user_createdTodirectus_users?: Prisma.directus_commentsCreateNestedManyWithoutDirectus_users_directus_comments_user_createdTodirectus_usersInput
+  directus_comments_directus_comments_user_updatedTodirectus_users?: Prisma.directus_commentsCreateNestedManyWithoutDirectus_users_directus_comments_user_updatedTodirectus_usersInput
+  directus_dashboards?: Prisma.directus_dashboardsCreateNestedManyWithoutDirectus_usersInput
+  directus_files_directus_files_modified_byTodirectus_users?: Prisma.directus_filesCreateNestedManyWithoutDirectus_users_directus_files_modified_byTodirectus_usersInput
+  directus_files_directus_files_uploaded_byTodirectus_users?: Prisma.directus_filesCreateNestedManyWithoutDirectus_users_directus_files_uploaded_byTodirectus_usersInput
+  directus_flows?: Prisma.directus_flowsCreateNestedManyWithoutDirectus_usersInput
+  directus_notifications_directus_notifications_recipientTodirectus_users?: Prisma.directus_notificationsCreateNestedManyWithoutDirectus_users_directus_notifications_recipientTodirectus_usersInput
+  directus_notifications_directus_notifications_senderTodirectus_users?: Prisma.directus_notificationsCreateNestedManyWithoutDirectus_users_directus_notifications_senderTodirectus_usersInput
+  directus_operations?: Prisma.directus_operationsCreateNestedManyWithoutDirectus_usersInput
+  directus_panels?: Prisma.directus_panelsCreateNestedManyWithoutDirectus_usersInput
+  directus_presets?: Prisma.directus_presetsCreateNestedManyWithoutDirectus_usersInput
+  directus_sessions?: Prisma.directus_sessionsCreateNestedManyWithoutDirectus_usersInput
+  directus_shares?: Prisma.directus_sharesCreateNestedManyWithoutDirectus_usersInput
+  directus_roles?: Prisma.directus_rolesCreateNestedOneWithoutDirectus_usersInput
+  directus_versions_directus_versions_user_createdTodirectus_users?: Prisma.directus_versionsCreateNestedManyWithoutDirectus_users_directus_versions_user_createdTodirectus_usersInput
+  directus_versions_directus_versions_user_updatedTodirectus_users?: Prisma.directus_versionsCreateNestedManyWithoutDirectus_users_directus_versions_user_updatedTodirectus_usersInput
+  profiles?: Prisma.profilesCreateNestedManyWithoutDirectus_usersInput
 }
 
-export type directus_usersCreateNestedOneWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput = {
-  create?: Prisma.XOR<Prisma.directus_usersCreateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput, Prisma.directus_usersUncheckedCreateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput>
-  connectOrCreate?: Prisma.directus_usersCreateOrConnectWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput
-  connect?: Prisma.directus_usersWhereUniqueInput
+export type directus_usersUncheckedCreateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput = {
+  id: string
+  first_name?: string | null
+  last_name?: string | null
+  email?: string | null
+  password?: string | null
+  location?: string | null
+  title?: string | null
+  description?: string | null
+  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  avatar?: string | null
+  language?: string | null
+  tfa_secret?: string | null
+  status?: string
+  role?: string | null
+  token?: string | null
+  last_access?: Date | string | null
+  last_page?: string | null
+  provider?: string
+  external_identifier?: string | null
+  auth_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  email_notifications?: boolean | null
+  appearance?: string | null
+  theme_dark?: string | null
+  theme_light?: string | null
+  theme_light_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  theme_dark_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  text_direction?: string
+  ai_prompts_ai_prompts_user_updatedTodirectus_users?: Prisma.ai_promptsUncheckedCreateNestedManyWithoutDirectus_users_ai_prompts_user_updatedTodirectus_usersInput
+  directus_access?: Prisma.directus_accessUncheckedCreateNestedManyWithoutDirectus_usersInput
+  directus_comments_directus_comments_user_createdTodirectus_users?: Prisma.directus_commentsUncheckedCreateNestedManyWithoutDirectus_users_directus_comments_user_createdTodirectus_usersInput
+  directus_comments_directus_comments_user_updatedTodirectus_users?: Prisma.directus_commentsUncheckedCreateNestedManyWithoutDirectus_users_directus_comments_user_updatedTodirectus_usersInput
+  directus_dashboards?: Prisma.directus_dashboardsUncheckedCreateNestedManyWithoutDirectus_usersInput
+  directus_files_directus_files_modified_byTodirectus_users?: Prisma.directus_filesUncheckedCreateNestedManyWithoutDirectus_users_directus_files_modified_byTodirectus_usersInput
+  directus_files_directus_files_uploaded_byTodirectus_users?: Prisma.directus_filesUncheckedCreateNestedManyWithoutDirectus_users_directus_files_uploaded_byTodirectus_usersInput
+  directus_flows?: Prisma.directus_flowsUncheckedCreateNestedManyWithoutDirectus_usersInput
+  directus_notifications_directus_notifications_recipientTodirectus_users?: Prisma.directus_notificationsUncheckedCreateNestedManyWithoutDirectus_users_directus_notifications_recipientTodirectus_usersInput
+  directus_notifications_directus_notifications_senderTodirectus_users?: Prisma.directus_notificationsUncheckedCreateNestedManyWithoutDirectus_users_directus_notifications_senderTodirectus_usersInput
+  directus_operations?: Prisma.directus_operationsUncheckedCreateNestedManyWithoutDirectus_usersInput
+  directus_panels?: Prisma.directus_panelsUncheckedCreateNestedManyWithoutDirectus_usersInput
+  directus_presets?: Prisma.directus_presetsUncheckedCreateNestedManyWithoutDirectus_usersInput
+  directus_sessions?: Prisma.directus_sessionsUncheckedCreateNestedManyWithoutDirectus_usersInput
+  directus_shares?: Prisma.directus_sharesUncheckedCreateNestedManyWithoutDirectus_usersInput
+  directus_versions_directus_versions_user_createdTodirectus_users?: Prisma.directus_versionsUncheckedCreateNestedManyWithoutDirectus_users_directus_versions_user_createdTodirectus_usersInput
+  directus_versions_directus_versions_user_updatedTodirectus_users?: Prisma.directus_versionsUncheckedCreateNestedManyWithoutDirectus_users_directus_versions_user_updatedTodirectus_usersInput
+  profiles?: Prisma.profilesUncheckedCreateNestedManyWithoutDirectus_usersInput
 }
 
-export type directus_usersUpdateOneWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersNestedInput = {
-  create?: Prisma.XOR<Prisma.directus_usersCreateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput, Prisma.directus_usersUncheckedCreateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput>
-  connectOrCreate?: Prisma.directus_usersCreateOrConnectWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput
-  upsert?: Prisma.directus_usersUpsertWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput
-  disconnect?: Prisma.directus_usersWhereInput | boolean
-  delete?: Prisma.directus_usersWhereInput | boolean
-  connect?: Prisma.directus_usersWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.directus_usersUpdateToOneWithWhereWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput, Prisma.directus_usersUpdateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput>, Prisma.directus_usersUncheckedUpdateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput>
+export type directus_usersCreateOrConnectWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput = {
+  where: Prisma.directus_usersWhereUniqueInput
+  create: Prisma.XOR<Prisma.directus_usersCreateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput, Prisma.directus_usersUncheckedCreateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput>
 }
 
-export type directus_usersUpdateOneWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersNestedInput = {
-  create?: Prisma.XOR<Prisma.directus_usersCreateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput, Prisma.directus_usersUncheckedCreateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput>
-  connectOrCreate?: Prisma.directus_usersCreateOrConnectWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput
-  upsert?: Prisma.directus_usersUpsertWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput
-  disconnect?: Prisma.directus_usersWhereInput | boolean
-  delete?: Prisma.directus_usersWhereInput | boolean
-  connect?: Prisma.directus_usersWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.directus_usersUpdateToOneWithWhereWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput, Prisma.directus_usersUpdateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput>, Prisma.directus_usersUncheckedUpdateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput>
+export type directus_usersCreateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput = {
+  id: string
+  first_name?: string | null
+  last_name?: string | null
+  email?: string | null
+  password?: string | null
+  location?: string | null
+  title?: string | null
+  description?: string | null
+  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  avatar?: string | null
+  language?: string | null
+  tfa_secret?: string | null
+  status?: string
+  token?: string | null
+  last_access?: Date | string | null
+  last_page?: string | null
+  provider?: string
+  external_identifier?: string | null
+  auth_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  email_notifications?: boolean | null
+  appearance?: string | null
+  theme_dark?: string | null
+  theme_light?: string | null
+  theme_light_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  theme_dark_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  text_direction?: string
+  ai_prompts_ai_prompts_user_createdTodirectus_users?: Prisma.ai_promptsCreateNestedManyWithoutDirectus_users_ai_prompts_user_createdTodirectus_usersInput
+  directus_access?: Prisma.directus_accessCreateNestedManyWithoutDirectus_usersInput
+  directus_comments_directus_comments_user_createdTodirectus_users?: Prisma.directus_commentsCreateNestedManyWithoutDirectus_users_directus_comments_user_createdTodirectus_usersInput
+  directus_comments_directus_comments_user_updatedTodirectus_users?: Prisma.directus_commentsCreateNestedManyWithoutDirectus_users_directus_comments_user_updatedTodirectus_usersInput
+  directus_dashboards?: Prisma.directus_dashboardsCreateNestedManyWithoutDirectus_usersInput
+  directus_files_directus_files_modified_byTodirectus_users?: Prisma.directus_filesCreateNestedManyWithoutDirectus_users_directus_files_modified_byTodirectus_usersInput
+  directus_files_directus_files_uploaded_byTodirectus_users?: Prisma.directus_filesCreateNestedManyWithoutDirectus_users_directus_files_uploaded_byTodirectus_usersInput
+  directus_flows?: Prisma.directus_flowsCreateNestedManyWithoutDirectus_usersInput
+  directus_notifications_directus_notifications_recipientTodirectus_users?: Prisma.directus_notificationsCreateNestedManyWithoutDirectus_users_directus_notifications_recipientTodirectus_usersInput
+  directus_notifications_directus_notifications_senderTodirectus_users?: Prisma.directus_notificationsCreateNestedManyWithoutDirectus_users_directus_notifications_senderTodirectus_usersInput
+  directus_operations?: Prisma.directus_operationsCreateNestedManyWithoutDirectus_usersInput
+  directus_panels?: Prisma.directus_panelsCreateNestedManyWithoutDirectus_usersInput
+  directus_presets?: Prisma.directus_presetsCreateNestedManyWithoutDirectus_usersInput
+  directus_sessions?: Prisma.directus_sessionsCreateNestedManyWithoutDirectus_usersInput
+  directus_shares?: Prisma.directus_sharesCreateNestedManyWithoutDirectus_usersInput
+  directus_roles?: Prisma.directus_rolesCreateNestedOneWithoutDirectus_usersInput
+  directus_versions_directus_versions_user_createdTodirectus_users?: Prisma.directus_versionsCreateNestedManyWithoutDirectus_users_directus_versions_user_createdTodirectus_usersInput
+  directus_versions_directus_versions_user_updatedTodirectus_users?: Prisma.directus_versionsCreateNestedManyWithoutDirectus_users_directus_versions_user_updatedTodirectus_usersInput
+  profiles?: Prisma.profilesCreateNestedManyWithoutDirectus_usersInput
+}
+
+export type directus_usersUncheckedCreateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput = {
+  id: string
+  first_name?: string | null
+  last_name?: string | null
+  email?: string | null
+  password?: string | null
+  location?: string | null
+  title?: string | null
+  description?: string | null
+  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  avatar?: string | null
+  language?: string | null
+  tfa_secret?: string | null
+  status?: string
+  role?: string | null
+  token?: string | null
+  last_access?: Date | string | null
+  last_page?: string | null
+  provider?: string
+  external_identifier?: string | null
+  auth_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  email_notifications?: boolean | null
+  appearance?: string | null
+  theme_dark?: string | null
+  theme_light?: string | null
+  theme_light_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  theme_dark_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  text_direction?: string
+  ai_prompts_ai_prompts_user_createdTodirectus_users?: Prisma.ai_promptsUncheckedCreateNestedManyWithoutDirectus_users_ai_prompts_user_createdTodirectus_usersInput
+  directus_access?: Prisma.directus_accessUncheckedCreateNestedManyWithoutDirectus_usersInput
+  directus_comments_directus_comments_user_createdTodirectus_users?: Prisma.directus_commentsUncheckedCreateNestedManyWithoutDirectus_users_directus_comments_user_createdTodirectus_usersInput
+  directus_comments_directus_comments_user_updatedTodirectus_users?: Prisma.directus_commentsUncheckedCreateNestedManyWithoutDirectus_users_directus_comments_user_updatedTodirectus_usersInput
+  directus_dashboards?: Prisma.directus_dashboardsUncheckedCreateNestedManyWithoutDirectus_usersInput
+  directus_files_directus_files_modified_byTodirectus_users?: Prisma.directus_filesUncheckedCreateNestedManyWithoutDirectus_users_directus_files_modified_byTodirectus_usersInput
+  directus_files_directus_files_uploaded_byTodirectus_users?: Prisma.directus_filesUncheckedCreateNestedManyWithoutDirectus_users_directus_files_uploaded_byTodirectus_usersInput
+  directus_flows?: Prisma.directus_flowsUncheckedCreateNestedManyWithoutDirectus_usersInput
+  directus_notifications_directus_notifications_recipientTodirectus_users?: Prisma.directus_notificationsUncheckedCreateNestedManyWithoutDirectus_users_directus_notifications_recipientTodirectus_usersInput
+  directus_notifications_directus_notifications_senderTodirectus_users?: Prisma.directus_notificationsUncheckedCreateNestedManyWithoutDirectus_users_directus_notifications_senderTodirectus_usersInput
+  directus_operations?: Prisma.directus_operationsUncheckedCreateNestedManyWithoutDirectus_usersInput
+  directus_panels?: Prisma.directus_panelsUncheckedCreateNestedManyWithoutDirectus_usersInput
+  directus_presets?: Prisma.directus_presetsUncheckedCreateNestedManyWithoutDirectus_usersInput
+  directus_sessions?: Prisma.directus_sessionsUncheckedCreateNestedManyWithoutDirectus_usersInput
+  directus_shares?: Prisma.directus_sharesUncheckedCreateNestedManyWithoutDirectus_usersInput
+  directus_versions_directus_versions_user_createdTodirectus_users?: Prisma.directus_versionsUncheckedCreateNestedManyWithoutDirectus_users_directus_versions_user_createdTodirectus_usersInput
+  directus_versions_directus_versions_user_updatedTodirectus_users?: Prisma.directus_versionsUncheckedCreateNestedManyWithoutDirectus_users_directus_versions_user_updatedTodirectus_usersInput
+  profiles?: Prisma.profilesUncheckedCreateNestedManyWithoutDirectus_usersInput
+}
+
+export type directus_usersCreateOrConnectWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput = {
+  where: Prisma.directus_usersWhereUniqueInput
+  create: Prisma.XOR<Prisma.directus_usersCreateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput, Prisma.directus_usersUncheckedCreateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput>
+}
+
+export type directus_usersUpsertWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput = {
+  update: Prisma.XOR<Prisma.directus_usersUpdateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput, Prisma.directus_usersUncheckedUpdateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput>
+  create: Prisma.XOR<Prisma.directus_usersCreateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput, Prisma.directus_usersUncheckedCreateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput>
+  where?: Prisma.directus_usersWhereInput
+}
+
+export type directus_usersUpdateToOneWithWhereWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput = {
+  where?: Prisma.directus_usersWhereInput
+  data: Prisma.XOR<Prisma.directus_usersUpdateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput, Prisma.directus_usersUncheckedUpdateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput>
+}
+
+export type directus_usersUpdateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  first_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  last_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tfa_secret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  last_access?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  last_page?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  provider?: Prisma.StringFieldUpdateOperationsInput | string
+  external_identifier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  auth_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  email_notifications?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  appearance?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  theme_dark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  theme_light?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  theme_light_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  theme_dark_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  text_direction?: Prisma.StringFieldUpdateOperationsInput | string
+  ai_prompts_ai_prompts_user_updatedTodirectus_users?: Prisma.ai_promptsUpdateManyWithoutDirectus_users_ai_prompts_user_updatedTodirectus_usersNestedInput
+  directus_access?: Prisma.directus_accessUpdateManyWithoutDirectus_usersNestedInput
+  directus_comments_directus_comments_user_createdTodirectus_users?: Prisma.directus_commentsUpdateManyWithoutDirectus_users_directus_comments_user_createdTodirectus_usersNestedInput
+  directus_comments_directus_comments_user_updatedTodirectus_users?: Prisma.directus_commentsUpdateManyWithoutDirectus_users_directus_comments_user_updatedTodirectus_usersNestedInput
+  directus_dashboards?: Prisma.directus_dashboardsUpdateManyWithoutDirectus_usersNestedInput
+  directus_files_directus_files_modified_byTodirectus_users?: Prisma.directus_filesUpdateManyWithoutDirectus_users_directus_files_modified_byTodirectus_usersNestedInput
+  directus_files_directus_files_uploaded_byTodirectus_users?: Prisma.directus_filesUpdateManyWithoutDirectus_users_directus_files_uploaded_byTodirectus_usersNestedInput
+  directus_flows?: Prisma.directus_flowsUpdateManyWithoutDirectus_usersNestedInput
+  directus_notifications_directus_notifications_recipientTodirectus_users?: Prisma.directus_notificationsUpdateManyWithoutDirectus_users_directus_notifications_recipientTodirectus_usersNestedInput
+  directus_notifications_directus_notifications_senderTodirectus_users?: Prisma.directus_notificationsUpdateManyWithoutDirectus_users_directus_notifications_senderTodirectus_usersNestedInput
+  directus_operations?: Prisma.directus_operationsUpdateManyWithoutDirectus_usersNestedInput
+  directus_panels?: Prisma.directus_panelsUpdateManyWithoutDirectus_usersNestedInput
+  directus_presets?: Prisma.directus_presetsUpdateManyWithoutDirectus_usersNestedInput
+  directus_sessions?: Prisma.directus_sessionsUpdateManyWithoutDirectus_usersNestedInput
+  directus_shares?: Prisma.directus_sharesUpdateManyWithoutDirectus_usersNestedInput
+  directus_roles?: Prisma.directus_rolesUpdateOneWithoutDirectus_usersNestedInput
+  directus_versions_directus_versions_user_createdTodirectus_users?: Prisma.directus_versionsUpdateManyWithoutDirectus_users_directus_versions_user_createdTodirectus_usersNestedInput
+  directus_versions_directus_versions_user_updatedTodirectus_users?: Prisma.directus_versionsUpdateManyWithoutDirectus_users_directus_versions_user_updatedTodirectus_usersNestedInput
+  profiles?: Prisma.profilesUpdateManyWithoutDirectus_usersNestedInput
+}
+
+export type directus_usersUncheckedUpdateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  first_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  last_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tfa_secret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  last_access?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  last_page?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  provider?: Prisma.StringFieldUpdateOperationsInput | string
+  external_identifier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  auth_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  email_notifications?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  appearance?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  theme_dark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  theme_light?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  theme_light_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  theme_dark_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  text_direction?: Prisma.StringFieldUpdateOperationsInput | string
+  ai_prompts_ai_prompts_user_updatedTodirectus_users?: Prisma.ai_promptsUncheckedUpdateManyWithoutDirectus_users_ai_prompts_user_updatedTodirectus_usersNestedInput
+  directus_access?: Prisma.directus_accessUncheckedUpdateManyWithoutDirectus_usersNestedInput
+  directus_comments_directus_comments_user_createdTodirectus_users?: Prisma.directus_commentsUncheckedUpdateManyWithoutDirectus_users_directus_comments_user_createdTodirectus_usersNestedInput
+  directus_comments_directus_comments_user_updatedTodirectus_users?: Prisma.directus_commentsUncheckedUpdateManyWithoutDirectus_users_directus_comments_user_updatedTodirectus_usersNestedInput
+  directus_dashboards?: Prisma.directus_dashboardsUncheckedUpdateManyWithoutDirectus_usersNestedInput
+  directus_files_directus_files_modified_byTodirectus_users?: Prisma.directus_filesUncheckedUpdateManyWithoutDirectus_users_directus_files_modified_byTodirectus_usersNestedInput
+  directus_files_directus_files_uploaded_byTodirectus_users?: Prisma.directus_filesUncheckedUpdateManyWithoutDirectus_users_directus_files_uploaded_byTodirectus_usersNestedInput
+  directus_flows?: Prisma.directus_flowsUncheckedUpdateManyWithoutDirectus_usersNestedInput
+  directus_notifications_directus_notifications_recipientTodirectus_users?: Prisma.directus_notificationsUncheckedUpdateManyWithoutDirectus_users_directus_notifications_recipientTodirectus_usersNestedInput
+  directus_notifications_directus_notifications_senderTodirectus_users?: Prisma.directus_notificationsUncheckedUpdateManyWithoutDirectus_users_directus_notifications_senderTodirectus_usersNestedInput
+  directus_operations?: Prisma.directus_operationsUncheckedUpdateManyWithoutDirectus_usersNestedInput
+  directus_panels?: Prisma.directus_panelsUncheckedUpdateManyWithoutDirectus_usersNestedInput
+  directus_presets?: Prisma.directus_presetsUncheckedUpdateManyWithoutDirectus_usersNestedInput
+  directus_sessions?: Prisma.directus_sessionsUncheckedUpdateManyWithoutDirectus_usersNestedInput
+  directus_shares?: Prisma.directus_sharesUncheckedUpdateManyWithoutDirectus_usersNestedInput
+  directus_versions_directus_versions_user_createdTodirectus_users?: Prisma.directus_versionsUncheckedUpdateManyWithoutDirectus_users_directus_versions_user_createdTodirectus_usersNestedInput
+  directus_versions_directus_versions_user_updatedTodirectus_users?: Prisma.directus_versionsUncheckedUpdateManyWithoutDirectus_users_directus_versions_user_updatedTodirectus_usersNestedInput
+  profiles?: Prisma.profilesUncheckedUpdateManyWithoutDirectus_usersNestedInput
+}
+
+export type directus_usersUpsertWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput = {
+  update: Prisma.XOR<Prisma.directus_usersUpdateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput, Prisma.directus_usersUncheckedUpdateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput>
+  create: Prisma.XOR<Prisma.directus_usersCreateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput, Prisma.directus_usersUncheckedCreateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput>
+  where?: Prisma.directus_usersWhereInput
+}
+
+export type directus_usersUpdateToOneWithWhereWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput = {
+  where?: Prisma.directus_usersWhereInput
+  data: Prisma.XOR<Prisma.directus_usersUpdateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput, Prisma.directus_usersUncheckedUpdateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput>
+}
+
+export type directus_usersUpdateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  first_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  last_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tfa_secret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  last_access?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  last_page?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  provider?: Prisma.StringFieldUpdateOperationsInput | string
+  external_identifier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  auth_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  email_notifications?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  appearance?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  theme_dark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  theme_light?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  theme_light_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  theme_dark_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  text_direction?: Prisma.StringFieldUpdateOperationsInput | string
+  ai_prompts_ai_prompts_user_createdTodirectus_users?: Prisma.ai_promptsUpdateManyWithoutDirectus_users_ai_prompts_user_createdTodirectus_usersNestedInput
+  directus_access?: Prisma.directus_accessUpdateManyWithoutDirectus_usersNestedInput
+  directus_comments_directus_comments_user_createdTodirectus_users?: Prisma.directus_commentsUpdateManyWithoutDirectus_users_directus_comments_user_createdTodirectus_usersNestedInput
+  directus_comments_directus_comments_user_updatedTodirectus_users?: Prisma.directus_commentsUpdateManyWithoutDirectus_users_directus_comments_user_updatedTodirectus_usersNestedInput
+  directus_dashboards?: Prisma.directus_dashboardsUpdateManyWithoutDirectus_usersNestedInput
+  directus_files_directus_files_modified_byTodirectus_users?: Prisma.directus_filesUpdateManyWithoutDirectus_users_directus_files_modified_byTodirectus_usersNestedInput
+  directus_files_directus_files_uploaded_byTodirectus_users?: Prisma.directus_filesUpdateManyWithoutDirectus_users_directus_files_uploaded_byTodirectus_usersNestedInput
+  directus_flows?: Prisma.directus_flowsUpdateManyWithoutDirectus_usersNestedInput
+  directus_notifications_directus_notifications_recipientTodirectus_users?: Prisma.directus_notificationsUpdateManyWithoutDirectus_users_directus_notifications_recipientTodirectus_usersNestedInput
+  directus_notifications_directus_notifications_senderTodirectus_users?: Prisma.directus_notificationsUpdateManyWithoutDirectus_users_directus_notifications_senderTodirectus_usersNestedInput
+  directus_operations?: Prisma.directus_operationsUpdateManyWithoutDirectus_usersNestedInput
+  directus_panels?: Prisma.directus_panelsUpdateManyWithoutDirectus_usersNestedInput
+  directus_presets?: Prisma.directus_presetsUpdateManyWithoutDirectus_usersNestedInput
+  directus_sessions?: Prisma.directus_sessionsUpdateManyWithoutDirectus_usersNestedInput
+  directus_shares?: Prisma.directus_sharesUpdateManyWithoutDirectus_usersNestedInput
+  directus_roles?: Prisma.directus_rolesUpdateOneWithoutDirectus_usersNestedInput
+  directus_versions_directus_versions_user_createdTodirectus_users?: Prisma.directus_versionsUpdateManyWithoutDirectus_users_directus_versions_user_createdTodirectus_usersNestedInput
+  directus_versions_directus_versions_user_updatedTodirectus_users?: Prisma.directus_versionsUpdateManyWithoutDirectus_users_directus_versions_user_updatedTodirectus_usersNestedInput
+  profiles?: Prisma.profilesUpdateManyWithoutDirectus_usersNestedInput
+}
+
+export type directus_usersUncheckedUpdateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  first_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  last_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  tfa_secret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  last_access?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  last_page?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  provider?: Prisma.StringFieldUpdateOperationsInput | string
+  external_identifier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  auth_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  email_notifications?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  appearance?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  theme_dark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  theme_light?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  theme_light_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  theme_dark_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  text_direction?: Prisma.StringFieldUpdateOperationsInput | string
+  ai_prompts_ai_prompts_user_createdTodirectus_users?: Prisma.ai_promptsUncheckedUpdateManyWithoutDirectus_users_ai_prompts_user_createdTodirectus_usersNestedInput
+  directus_access?: Prisma.directus_accessUncheckedUpdateManyWithoutDirectus_usersNestedInput
+  directus_comments_directus_comments_user_createdTodirectus_users?: Prisma.directus_commentsUncheckedUpdateManyWithoutDirectus_users_directus_comments_user_createdTodirectus_usersNestedInput
+  directus_comments_directus_comments_user_updatedTodirectus_users?: Prisma.directus_commentsUncheckedUpdateManyWithoutDirectus_users_directus_comments_user_updatedTodirectus_usersNestedInput
+  directus_dashboards?: Prisma.directus_dashboardsUncheckedUpdateManyWithoutDirectus_usersNestedInput
+  directus_files_directus_files_modified_byTodirectus_users?: Prisma.directus_filesUncheckedUpdateManyWithoutDirectus_users_directus_files_modified_byTodirectus_usersNestedInput
+  directus_files_directus_files_uploaded_byTodirectus_users?: Prisma.directus_filesUncheckedUpdateManyWithoutDirectus_users_directus_files_uploaded_byTodirectus_usersNestedInput
+  directus_flows?: Prisma.directus_flowsUncheckedUpdateManyWithoutDirectus_usersNestedInput
+  directus_notifications_directus_notifications_recipientTodirectus_users?: Prisma.directus_notificationsUncheckedUpdateManyWithoutDirectus_users_directus_notifications_recipientTodirectus_usersNestedInput
+  directus_notifications_directus_notifications_senderTodirectus_users?: Prisma.directus_notificationsUncheckedUpdateManyWithoutDirectus_users_directus_notifications_senderTodirectus_usersNestedInput
+  directus_operations?: Prisma.directus_operationsUncheckedUpdateManyWithoutDirectus_usersNestedInput
+  directus_panels?: Prisma.directus_panelsUncheckedUpdateManyWithoutDirectus_usersNestedInput
+  directus_presets?: Prisma.directus_presetsUncheckedUpdateManyWithoutDirectus_usersNestedInput
+  directus_sessions?: Prisma.directus_sessionsUncheckedUpdateManyWithoutDirectus_usersNestedInput
+  directus_shares?: Prisma.directus_sharesUncheckedUpdateManyWithoutDirectus_usersNestedInput
+  directus_versions_directus_versions_user_createdTodirectus_users?: Prisma.directus_versionsUncheckedUpdateManyWithoutDirectus_users_directus_versions_user_createdTodirectus_usersNestedInput
+  directus_versions_directus_versions_user_updatedTodirectus_users?: Prisma.directus_versionsUncheckedUpdateManyWithoutDirectus_users_directus_versions_user_updatedTodirectus_usersNestedInput
+  profiles?: Prisma.profilesUncheckedUpdateManyWithoutDirectus_usersNestedInput
 }
 
 export type directus_usersCreateWithoutDirectus_accessInput = {
@@ -4953,422 +5369,6 @@ export type directus_usersUncheckedUpdateWithoutProfilesInput = {
   directus_shares?: Prisma.directus_sharesUncheckedUpdateManyWithoutDirectus_usersNestedInput
   directus_versions_directus_versions_user_createdTodirectus_users?: Prisma.directus_versionsUncheckedUpdateManyWithoutDirectus_users_directus_versions_user_createdTodirectus_usersNestedInput
   directus_versions_directus_versions_user_updatedTodirectus_users?: Prisma.directus_versionsUncheckedUpdateManyWithoutDirectus_users_directus_versions_user_updatedTodirectus_usersNestedInput
-}
-
-export type directus_usersCreateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput = {
-  id: string
-  first_name?: string | null
-  last_name?: string | null
-  email?: string | null
-  password?: string | null
-  location?: string | null
-  title?: string | null
-  description?: string | null
-  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  avatar?: string | null
-  language?: string | null
-  tfa_secret?: string | null
-  status?: string
-  token?: string | null
-  last_access?: Date | string | null
-  last_page?: string | null
-  provider?: string
-  external_identifier?: string | null
-  auth_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  email_notifications?: boolean | null
-  appearance?: string | null
-  theme_dark?: string | null
-  theme_light?: string | null
-  theme_light_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  theme_dark_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  text_direction?: string
-  ai_prompts_ai_prompts_user_updatedTodirectus_users?: Prisma.ai_promptsCreateNestedManyWithoutDirectus_users_ai_prompts_user_updatedTodirectus_usersInput
-  directus_access?: Prisma.directus_accessCreateNestedManyWithoutDirectus_usersInput
-  directus_comments_directus_comments_user_createdTodirectus_users?: Prisma.directus_commentsCreateNestedManyWithoutDirectus_users_directus_comments_user_createdTodirectus_usersInput
-  directus_comments_directus_comments_user_updatedTodirectus_users?: Prisma.directus_commentsCreateNestedManyWithoutDirectus_users_directus_comments_user_updatedTodirectus_usersInput
-  directus_dashboards?: Prisma.directus_dashboardsCreateNestedManyWithoutDirectus_usersInput
-  directus_files_directus_files_modified_byTodirectus_users?: Prisma.directus_filesCreateNestedManyWithoutDirectus_users_directus_files_modified_byTodirectus_usersInput
-  directus_files_directus_files_uploaded_byTodirectus_users?: Prisma.directus_filesCreateNestedManyWithoutDirectus_users_directus_files_uploaded_byTodirectus_usersInput
-  directus_flows?: Prisma.directus_flowsCreateNestedManyWithoutDirectus_usersInput
-  directus_notifications_directus_notifications_recipientTodirectus_users?: Prisma.directus_notificationsCreateNestedManyWithoutDirectus_users_directus_notifications_recipientTodirectus_usersInput
-  directus_notifications_directus_notifications_senderTodirectus_users?: Prisma.directus_notificationsCreateNestedManyWithoutDirectus_users_directus_notifications_senderTodirectus_usersInput
-  directus_operations?: Prisma.directus_operationsCreateNestedManyWithoutDirectus_usersInput
-  directus_panels?: Prisma.directus_panelsCreateNestedManyWithoutDirectus_usersInput
-  directus_presets?: Prisma.directus_presetsCreateNestedManyWithoutDirectus_usersInput
-  directus_sessions?: Prisma.directus_sessionsCreateNestedManyWithoutDirectus_usersInput
-  directus_shares?: Prisma.directus_sharesCreateNestedManyWithoutDirectus_usersInput
-  directus_roles?: Prisma.directus_rolesCreateNestedOneWithoutDirectus_usersInput
-  directus_versions_directus_versions_user_createdTodirectus_users?: Prisma.directus_versionsCreateNestedManyWithoutDirectus_users_directus_versions_user_createdTodirectus_usersInput
-  directus_versions_directus_versions_user_updatedTodirectus_users?: Prisma.directus_versionsCreateNestedManyWithoutDirectus_users_directus_versions_user_updatedTodirectus_usersInput
-  profiles?: Prisma.profilesCreateNestedManyWithoutDirectus_usersInput
-}
-
-export type directus_usersUncheckedCreateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput = {
-  id: string
-  first_name?: string | null
-  last_name?: string | null
-  email?: string | null
-  password?: string | null
-  location?: string | null
-  title?: string | null
-  description?: string | null
-  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  avatar?: string | null
-  language?: string | null
-  tfa_secret?: string | null
-  status?: string
-  role?: string | null
-  token?: string | null
-  last_access?: Date | string | null
-  last_page?: string | null
-  provider?: string
-  external_identifier?: string | null
-  auth_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  email_notifications?: boolean | null
-  appearance?: string | null
-  theme_dark?: string | null
-  theme_light?: string | null
-  theme_light_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  theme_dark_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  text_direction?: string
-  ai_prompts_ai_prompts_user_updatedTodirectus_users?: Prisma.ai_promptsUncheckedCreateNestedManyWithoutDirectus_users_ai_prompts_user_updatedTodirectus_usersInput
-  directus_access?: Prisma.directus_accessUncheckedCreateNestedManyWithoutDirectus_usersInput
-  directus_comments_directus_comments_user_createdTodirectus_users?: Prisma.directus_commentsUncheckedCreateNestedManyWithoutDirectus_users_directus_comments_user_createdTodirectus_usersInput
-  directus_comments_directus_comments_user_updatedTodirectus_users?: Prisma.directus_commentsUncheckedCreateNestedManyWithoutDirectus_users_directus_comments_user_updatedTodirectus_usersInput
-  directus_dashboards?: Prisma.directus_dashboardsUncheckedCreateNestedManyWithoutDirectus_usersInput
-  directus_files_directus_files_modified_byTodirectus_users?: Prisma.directus_filesUncheckedCreateNestedManyWithoutDirectus_users_directus_files_modified_byTodirectus_usersInput
-  directus_files_directus_files_uploaded_byTodirectus_users?: Prisma.directus_filesUncheckedCreateNestedManyWithoutDirectus_users_directus_files_uploaded_byTodirectus_usersInput
-  directus_flows?: Prisma.directus_flowsUncheckedCreateNestedManyWithoutDirectus_usersInput
-  directus_notifications_directus_notifications_recipientTodirectus_users?: Prisma.directus_notificationsUncheckedCreateNestedManyWithoutDirectus_users_directus_notifications_recipientTodirectus_usersInput
-  directus_notifications_directus_notifications_senderTodirectus_users?: Prisma.directus_notificationsUncheckedCreateNestedManyWithoutDirectus_users_directus_notifications_senderTodirectus_usersInput
-  directus_operations?: Prisma.directus_operationsUncheckedCreateNestedManyWithoutDirectus_usersInput
-  directus_panels?: Prisma.directus_panelsUncheckedCreateNestedManyWithoutDirectus_usersInput
-  directus_presets?: Prisma.directus_presetsUncheckedCreateNestedManyWithoutDirectus_usersInput
-  directus_sessions?: Prisma.directus_sessionsUncheckedCreateNestedManyWithoutDirectus_usersInput
-  directus_shares?: Prisma.directus_sharesUncheckedCreateNestedManyWithoutDirectus_usersInput
-  directus_versions_directus_versions_user_createdTodirectus_users?: Prisma.directus_versionsUncheckedCreateNestedManyWithoutDirectus_users_directus_versions_user_createdTodirectus_usersInput
-  directus_versions_directus_versions_user_updatedTodirectus_users?: Prisma.directus_versionsUncheckedCreateNestedManyWithoutDirectus_users_directus_versions_user_updatedTodirectus_usersInput
-  profiles?: Prisma.profilesUncheckedCreateNestedManyWithoutDirectus_usersInput
-}
-
-export type directus_usersCreateOrConnectWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput = {
-  where: Prisma.directus_usersWhereUniqueInput
-  create: Prisma.XOR<Prisma.directus_usersCreateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput, Prisma.directus_usersUncheckedCreateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput>
-}
-
-export type directus_usersCreateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput = {
-  id: string
-  first_name?: string | null
-  last_name?: string | null
-  email?: string | null
-  password?: string | null
-  location?: string | null
-  title?: string | null
-  description?: string | null
-  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  avatar?: string | null
-  language?: string | null
-  tfa_secret?: string | null
-  status?: string
-  token?: string | null
-  last_access?: Date | string | null
-  last_page?: string | null
-  provider?: string
-  external_identifier?: string | null
-  auth_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  email_notifications?: boolean | null
-  appearance?: string | null
-  theme_dark?: string | null
-  theme_light?: string | null
-  theme_light_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  theme_dark_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  text_direction?: string
-  ai_prompts_ai_prompts_user_createdTodirectus_users?: Prisma.ai_promptsCreateNestedManyWithoutDirectus_users_ai_prompts_user_createdTodirectus_usersInput
-  directus_access?: Prisma.directus_accessCreateNestedManyWithoutDirectus_usersInput
-  directus_comments_directus_comments_user_createdTodirectus_users?: Prisma.directus_commentsCreateNestedManyWithoutDirectus_users_directus_comments_user_createdTodirectus_usersInput
-  directus_comments_directus_comments_user_updatedTodirectus_users?: Prisma.directus_commentsCreateNestedManyWithoutDirectus_users_directus_comments_user_updatedTodirectus_usersInput
-  directus_dashboards?: Prisma.directus_dashboardsCreateNestedManyWithoutDirectus_usersInput
-  directus_files_directus_files_modified_byTodirectus_users?: Prisma.directus_filesCreateNestedManyWithoutDirectus_users_directus_files_modified_byTodirectus_usersInput
-  directus_files_directus_files_uploaded_byTodirectus_users?: Prisma.directus_filesCreateNestedManyWithoutDirectus_users_directus_files_uploaded_byTodirectus_usersInput
-  directus_flows?: Prisma.directus_flowsCreateNestedManyWithoutDirectus_usersInput
-  directus_notifications_directus_notifications_recipientTodirectus_users?: Prisma.directus_notificationsCreateNestedManyWithoutDirectus_users_directus_notifications_recipientTodirectus_usersInput
-  directus_notifications_directus_notifications_senderTodirectus_users?: Prisma.directus_notificationsCreateNestedManyWithoutDirectus_users_directus_notifications_senderTodirectus_usersInput
-  directus_operations?: Prisma.directus_operationsCreateNestedManyWithoutDirectus_usersInput
-  directus_panels?: Prisma.directus_panelsCreateNestedManyWithoutDirectus_usersInput
-  directus_presets?: Prisma.directus_presetsCreateNestedManyWithoutDirectus_usersInput
-  directus_sessions?: Prisma.directus_sessionsCreateNestedManyWithoutDirectus_usersInput
-  directus_shares?: Prisma.directus_sharesCreateNestedManyWithoutDirectus_usersInput
-  directus_roles?: Prisma.directus_rolesCreateNestedOneWithoutDirectus_usersInput
-  directus_versions_directus_versions_user_createdTodirectus_users?: Prisma.directus_versionsCreateNestedManyWithoutDirectus_users_directus_versions_user_createdTodirectus_usersInput
-  directus_versions_directus_versions_user_updatedTodirectus_users?: Prisma.directus_versionsCreateNestedManyWithoutDirectus_users_directus_versions_user_updatedTodirectus_usersInput
-  profiles?: Prisma.profilesCreateNestedManyWithoutDirectus_usersInput
-}
-
-export type directus_usersUncheckedCreateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput = {
-  id: string
-  first_name?: string | null
-  last_name?: string | null
-  email?: string | null
-  password?: string | null
-  location?: string | null
-  title?: string | null
-  description?: string | null
-  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  avatar?: string | null
-  language?: string | null
-  tfa_secret?: string | null
-  status?: string
-  role?: string | null
-  token?: string | null
-  last_access?: Date | string | null
-  last_page?: string | null
-  provider?: string
-  external_identifier?: string | null
-  auth_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  email_notifications?: boolean | null
-  appearance?: string | null
-  theme_dark?: string | null
-  theme_light?: string | null
-  theme_light_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  theme_dark_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  text_direction?: string
-  ai_prompts_ai_prompts_user_createdTodirectus_users?: Prisma.ai_promptsUncheckedCreateNestedManyWithoutDirectus_users_ai_prompts_user_createdTodirectus_usersInput
-  directus_access?: Prisma.directus_accessUncheckedCreateNestedManyWithoutDirectus_usersInput
-  directus_comments_directus_comments_user_createdTodirectus_users?: Prisma.directus_commentsUncheckedCreateNestedManyWithoutDirectus_users_directus_comments_user_createdTodirectus_usersInput
-  directus_comments_directus_comments_user_updatedTodirectus_users?: Prisma.directus_commentsUncheckedCreateNestedManyWithoutDirectus_users_directus_comments_user_updatedTodirectus_usersInput
-  directus_dashboards?: Prisma.directus_dashboardsUncheckedCreateNestedManyWithoutDirectus_usersInput
-  directus_files_directus_files_modified_byTodirectus_users?: Prisma.directus_filesUncheckedCreateNestedManyWithoutDirectus_users_directus_files_modified_byTodirectus_usersInput
-  directus_files_directus_files_uploaded_byTodirectus_users?: Prisma.directus_filesUncheckedCreateNestedManyWithoutDirectus_users_directus_files_uploaded_byTodirectus_usersInput
-  directus_flows?: Prisma.directus_flowsUncheckedCreateNestedManyWithoutDirectus_usersInput
-  directus_notifications_directus_notifications_recipientTodirectus_users?: Prisma.directus_notificationsUncheckedCreateNestedManyWithoutDirectus_users_directus_notifications_recipientTodirectus_usersInput
-  directus_notifications_directus_notifications_senderTodirectus_users?: Prisma.directus_notificationsUncheckedCreateNestedManyWithoutDirectus_users_directus_notifications_senderTodirectus_usersInput
-  directus_operations?: Prisma.directus_operationsUncheckedCreateNestedManyWithoutDirectus_usersInput
-  directus_panels?: Prisma.directus_panelsUncheckedCreateNestedManyWithoutDirectus_usersInput
-  directus_presets?: Prisma.directus_presetsUncheckedCreateNestedManyWithoutDirectus_usersInput
-  directus_sessions?: Prisma.directus_sessionsUncheckedCreateNestedManyWithoutDirectus_usersInput
-  directus_shares?: Prisma.directus_sharesUncheckedCreateNestedManyWithoutDirectus_usersInput
-  directus_versions_directus_versions_user_createdTodirectus_users?: Prisma.directus_versionsUncheckedCreateNestedManyWithoutDirectus_users_directus_versions_user_createdTodirectus_usersInput
-  directus_versions_directus_versions_user_updatedTodirectus_users?: Prisma.directus_versionsUncheckedCreateNestedManyWithoutDirectus_users_directus_versions_user_updatedTodirectus_usersInput
-  profiles?: Prisma.profilesUncheckedCreateNestedManyWithoutDirectus_usersInput
-}
-
-export type directus_usersCreateOrConnectWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput = {
-  where: Prisma.directus_usersWhereUniqueInput
-  create: Prisma.XOR<Prisma.directus_usersCreateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput, Prisma.directus_usersUncheckedCreateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput>
-}
-
-export type directus_usersUpsertWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput = {
-  update: Prisma.XOR<Prisma.directus_usersUpdateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput, Prisma.directus_usersUncheckedUpdateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput>
-  create: Prisma.XOR<Prisma.directus_usersCreateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput, Prisma.directus_usersUncheckedCreateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput>
-  where?: Prisma.directus_usersWhereInput
-}
-
-export type directus_usersUpdateToOneWithWhereWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput = {
-  where?: Prisma.directus_usersWhereInput
-  data: Prisma.XOR<Prisma.directus_usersUpdateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput, Prisma.directus_usersUncheckedUpdateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput>
-}
-
-export type directus_usersUpdateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  first_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  last_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tfa_secret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  last_access?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  last_page?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  provider?: Prisma.StringFieldUpdateOperationsInput | string
-  external_identifier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  auth_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  email_notifications?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  appearance?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  theme_dark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  theme_light?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  theme_light_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  theme_dark_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  text_direction?: Prisma.StringFieldUpdateOperationsInput | string
-  ai_prompts_ai_prompts_user_updatedTodirectus_users?: Prisma.ai_promptsUpdateManyWithoutDirectus_users_ai_prompts_user_updatedTodirectus_usersNestedInput
-  directus_access?: Prisma.directus_accessUpdateManyWithoutDirectus_usersNestedInput
-  directus_comments_directus_comments_user_createdTodirectus_users?: Prisma.directus_commentsUpdateManyWithoutDirectus_users_directus_comments_user_createdTodirectus_usersNestedInput
-  directus_comments_directus_comments_user_updatedTodirectus_users?: Prisma.directus_commentsUpdateManyWithoutDirectus_users_directus_comments_user_updatedTodirectus_usersNestedInput
-  directus_dashboards?: Prisma.directus_dashboardsUpdateManyWithoutDirectus_usersNestedInput
-  directus_files_directus_files_modified_byTodirectus_users?: Prisma.directus_filesUpdateManyWithoutDirectus_users_directus_files_modified_byTodirectus_usersNestedInput
-  directus_files_directus_files_uploaded_byTodirectus_users?: Prisma.directus_filesUpdateManyWithoutDirectus_users_directus_files_uploaded_byTodirectus_usersNestedInput
-  directus_flows?: Prisma.directus_flowsUpdateManyWithoutDirectus_usersNestedInput
-  directus_notifications_directus_notifications_recipientTodirectus_users?: Prisma.directus_notificationsUpdateManyWithoutDirectus_users_directus_notifications_recipientTodirectus_usersNestedInput
-  directus_notifications_directus_notifications_senderTodirectus_users?: Prisma.directus_notificationsUpdateManyWithoutDirectus_users_directus_notifications_senderTodirectus_usersNestedInput
-  directus_operations?: Prisma.directus_operationsUpdateManyWithoutDirectus_usersNestedInput
-  directus_panels?: Prisma.directus_panelsUpdateManyWithoutDirectus_usersNestedInput
-  directus_presets?: Prisma.directus_presetsUpdateManyWithoutDirectus_usersNestedInput
-  directus_sessions?: Prisma.directus_sessionsUpdateManyWithoutDirectus_usersNestedInput
-  directus_shares?: Prisma.directus_sharesUpdateManyWithoutDirectus_usersNestedInput
-  directus_roles?: Prisma.directus_rolesUpdateOneWithoutDirectus_usersNestedInput
-  directus_versions_directus_versions_user_createdTodirectus_users?: Prisma.directus_versionsUpdateManyWithoutDirectus_users_directus_versions_user_createdTodirectus_usersNestedInput
-  directus_versions_directus_versions_user_updatedTodirectus_users?: Prisma.directus_versionsUpdateManyWithoutDirectus_users_directus_versions_user_updatedTodirectus_usersNestedInput
-  profiles?: Prisma.profilesUpdateManyWithoutDirectus_usersNestedInput
-}
-
-export type directus_usersUncheckedUpdateWithoutAi_prompts_ai_prompts_user_createdTodirectus_usersInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  first_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  last_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tfa_secret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  last_access?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  last_page?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  provider?: Prisma.StringFieldUpdateOperationsInput | string
-  external_identifier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  auth_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  email_notifications?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  appearance?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  theme_dark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  theme_light?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  theme_light_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  theme_dark_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  text_direction?: Prisma.StringFieldUpdateOperationsInput | string
-  ai_prompts_ai_prompts_user_updatedTodirectus_users?: Prisma.ai_promptsUncheckedUpdateManyWithoutDirectus_users_ai_prompts_user_updatedTodirectus_usersNestedInput
-  directus_access?: Prisma.directus_accessUncheckedUpdateManyWithoutDirectus_usersNestedInput
-  directus_comments_directus_comments_user_createdTodirectus_users?: Prisma.directus_commentsUncheckedUpdateManyWithoutDirectus_users_directus_comments_user_createdTodirectus_usersNestedInput
-  directus_comments_directus_comments_user_updatedTodirectus_users?: Prisma.directus_commentsUncheckedUpdateManyWithoutDirectus_users_directus_comments_user_updatedTodirectus_usersNestedInput
-  directus_dashboards?: Prisma.directus_dashboardsUncheckedUpdateManyWithoutDirectus_usersNestedInput
-  directus_files_directus_files_modified_byTodirectus_users?: Prisma.directus_filesUncheckedUpdateManyWithoutDirectus_users_directus_files_modified_byTodirectus_usersNestedInput
-  directus_files_directus_files_uploaded_byTodirectus_users?: Prisma.directus_filesUncheckedUpdateManyWithoutDirectus_users_directus_files_uploaded_byTodirectus_usersNestedInput
-  directus_flows?: Prisma.directus_flowsUncheckedUpdateManyWithoutDirectus_usersNestedInput
-  directus_notifications_directus_notifications_recipientTodirectus_users?: Prisma.directus_notificationsUncheckedUpdateManyWithoutDirectus_users_directus_notifications_recipientTodirectus_usersNestedInput
-  directus_notifications_directus_notifications_senderTodirectus_users?: Prisma.directus_notificationsUncheckedUpdateManyWithoutDirectus_users_directus_notifications_senderTodirectus_usersNestedInput
-  directus_operations?: Prisma.directus_operationsUncheckedUpdateManyWithoutDirectus_usersNestedInput
-  directus_panels?: Prisma.directus_panelsUncheckedUpdateManyWithoutDirectus_usersNestedInput
-  directus_presets?: Prisma.directus_presetsUncheckedUpdateManyWithoutDirectus_usersNestedInput
-  directus_sessions?: Prisma.directus_sessionsUncheckedUpdateManyWithoutDirectus_usersNestedInput
-  directus_shares?: Prisma.directus_sharesUncheckedUpdateManyWithoutDirectus_usersNestedInput
-  directus_versions_directus_versions_user_createdTodirectus_users?: Prisma.directus_versionsUncheckedUpdateManyWithoutDirectus_users_directus_versions_user_createdTodirectus_usersNestedInput
-  directus_versions_directus_versions_user_updatedTodirectus_users?: Prisma.directus_versionsUncheckedUpdateManyWithoutDirectus_users_directus_versions_user_updatedTodirectus_usersNestedInput
-  profiles?: Prisma.profilesUncheckedUpdateManyWithoutDirectus_usersNestedInput
-}
-
-export type directus_usersUpsertWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput = {
-  update: Prisma.XOR<Prisma.directus_usersUpdateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput, Prisma.directus_usersUncheckedUpdateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput>
-  create: Prisma.XOR<Prisma.directus_usersCreateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput, Prisma.directus_usersUncheckedCreateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput>
-  where?: Prisma.directus_usersWhereInput
-}
-
-export type directus_usersUpdateToOneWithWhereWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput = {
-  where?: Prisma.directus_usersWhereInput
-  data: Prisma.XOR<Prisma.directus_usersUpdateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput, Prisma.directus_usersUncheckedUpdateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput>
-}
-
-export type directus_usersUpdateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  first_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  last_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tfa_secret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  last_access?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  last_page?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  provider?: Prisma.StringFieldUpdateOperationsInput | string
-  external_identifier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  auth_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  email_notifications?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  appearance?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  theme_dark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  theme_light?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  theme_light_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  theme_dark_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  text_direction?: Prisma.StringFieldUpdateOperationsInput | string
-  ai_prompts_ai_prompts_user_createdTodirectus_users?: Prisma.ai_promptsUpdateManyWithoutDirectus_users_ai_prompts_user_createdTodirectus_usersNestedInput
-  directus_access?: Prisma.directus_accessUpdateManyWithoutDirectus_usersNestedInput
-  directus_comments_directus_comments_user_createdTodirectus_users?: Prisma.directus_commentsUpdateManyWithoutDirectus_users_directus_comments_user_createdTodirectus_usersNestedInput
-  directus_comments_directus_comments_user_updatedTodirectus_users?: Prisma.directus_commentsUpdateManyWithoutDirectus_users_directus_comments_user_updatedTodirectus_usersNestedInput
-  directus_dashboards?: Prisma.directus_dashboardsUpdateManyWithoutDirectus_usersNestedInput
-  directus_files_directus_files_modified_byTodirectus_users?: Prisma.directus_filesUpdateManyWithoutDirectus_users_directus_files_modified_byTodirectus_usersNestedInput
-  directus_files_directus_files_uploaded_byTodirectus_users?: Prisma.directus_filesUpdateManyWithoutDirectus_users_directus_files_uploaded_byTodirectus_usersNestedInput
-  directus_flows?: Prisma.directus_flowsUpdateManyWithoutDirectus_usersNestedInput
-  directus_notifications_directus_notifications_recipientTodirectus_users?: Prisma.directus_notificationsUpdateManyWithoutDirectus_users_directus_notifications_recipientTodirectus_usersNestedInput
-  directus_notifications_directus_notifications_senderTodirectus_users?: Prisma.directus_notificationsUpdateManyWithoutDirectus_users_directus_notifications_senderTodirectus_usersNestedInput
-  directus_operations?: Prisma.directus_operationsUpdateManyWithoutDirectus_usersNestedInput
-  directus_panels?: Prisma.directus_panelsUpdateManyWithoutDirectus_usersNestedInput
-  directus_presets?: Prisma.directus_presetsUpdateManyWithoutDirectus_usersNestedInput
-  directus_sessions?: Prisma.directus_sessionsUpdateManyWithoutDirectus_usersNestedInput
-  directus_shares?: Prisma.directus_sharesUpdateManyWithoutDirectus_usersNestedInput
-  directus_roles?: Prisma.directus_rolesUpdateOneWithoutDirectus_usersNestedInput
-  directus_versions_directus_versions_user_createdTodirectus_users?: Prisma.directus_versionsUpdateManyWithoutDirectus_users_directus_versions_user_createdTodirectus_usersNestedInput
-  directus_versions_directus_versions_user_updatedTodirectus_users?: Prisma.directus_versionsUpdateManyWithoutDirectus_users_directus_versions_user_updatedTodirectus_usersNestedInput
-  profiles?: Prisma.profilesUpdateManyWithoutDirectus_usersNestedInput
-}
-
-export type directus_usersUncheckedUpdateWithoutAi_prompts_ai_prompts_user_updatedTodirectus_usersInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  first_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  last_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  password?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  tfa_secret?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  role?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  token?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  last_access?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  last_page?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  provider?: Prisma.StringFieldUpdateOperationsInput | string
-  external_identifier?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  auth_data?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  email_notifications?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
-  appearance?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  theme_dark?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  theme_light?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  theme_light_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  theme_dark_overrides?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  text_direction?: Prisma.StringFieldUpdateOperationsInput | string
-  ai_prompts_ai_prompts_user_createdTodirectus_users?: Prisma.ai_promptsUncheckedUpdateManyWithoutDirectus_users_ai_prompts_user_createdTodirectus_usersNestedInput
-  directus_access?: Prisma.directus_accessUncheckedUpdateManyWithoutDirectus_usersNestedInput
-  directus_comments_directus_comments_user_createdTodirectus_users?: Prisma.directus_commentsUncheckedUpdateManyWithoutDirectus_users_directus_comments_user_createdTodirectus_usersNestedInput
-  directus_comments_directus_comments_user_updatedTodirectus_users?: Prisma.directus_commentsUncheckedUpdateManyWithoutDirectus_users_directus_comments_user_updatedTodirectus_usersNestedInput
-  directus_dashboards?: Prisma.directus_dashboardsUncheckedUpdateManyWithoutDirectus_usersNestedInput
-  directus_files_directus_files_modified_byTodirectus_users?: Prisma.directus_filesUncheckedUpdateManyWithoutDirectus_users_directus_files_modified_byTodirectus_usersNestedInput
-  directus_files_directus_files_uploaded_byTodirectus_users?: Prisma.directus_filesUncheckedUpdateManyWithoutDirectus_users_directus_files_uploaded_byTodirectus_usersNestedInput
-  directus_flows?: Prisma.directus_flowsUncheckedUpdateManyWithoutDirectus_usersNestedInput
-  directus_notifications_directus_notifications_recipientTodirectus_users?: Prisma.directus_notificationsUncheckedUpdateManyWithoutDirectus_users_directus_notifications_recipientTodirectus_usersNestedInput
-  directus_notifications_directus_notifications_senderTodirectus_users?: Prisma.directus_notificationsUncheckedUpdateManyWithoutDirectus_users_directus_notifications_senderTodirectus_usersNestedInput
-  directus_operations?: Prisma.directus_operationsUncheckedUpdateManyWithoutDirectus_usersNestedInput
-  directus_panels?: Prisma.directus_panelsUncheckedUpdateManyWithoutDirectus_usersNestedInput
-  directus_presets?: Prisma.directus_presetsUncheckedUpdateManyWithoutDirectus_usersNestedInput
-  directus_sessions?: Prisma.directus_sessionsUncheckedUpdateManyWithoutDirectus_usersNestedInput
-  directus_shares?: Prisma.directus_sharesUncheckedUpdateManyWithoutDirectus_usersNestedInput
-  directus_versions_directus_versions_user_createdTodirectus_users?: Prisma.directus_versionsUncheckedUpdateManyWithoutDirectus_users_directus_versions_user_createdTodirectus_usersNestedInput
-  directus_versions_directus_versions_user_updatedTodirectus_users?: Prisma.directus_versionsUncheckedUpdateManyWithoutDirectus_users_directus_versions_user_updatedTodirectus_usersNestedInput
-  profiles?: Prisma.profilesUncheckedUpdateManyWithoutDirectus_usersNestedInput
 }
 
 export type directus_usersCreateManyDirectus_rolesInput = {

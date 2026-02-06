@@ -380,16 +380,6 @@ export type job_match_preferencesUncheckedUpdateManyInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
-export type Job_match_preferencesListRelationFilter = {
-  every?: Prisma.job_match_preferencesWhereInput
-  some?: Prisma.job_match_preferencesWhereInput
-  none?: Prisma.job_match_preferencesWhereInput
-}
-
-export type job_match_preferencesOrderByRelationAggregateInput = {
-  _count?: Prisma.SortOrder
-}
-
 export type job_match_preferencesCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   date_created?: Prisma.SortOrder
@@ -426,6 +416,16 @@ export type job_match_preferencesMinOrderByAggregateInput = {
 export type job_match_preferencesSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
   profile?: Prisma.SortOrder
+}
+
+export type Job_match_preferencesListRelationFilter = {
+  every?: Prisma.job_match_preferencesWhereInput
+  some?: Prisma.job_match_preferencesWhereInput
+  none?: Prisma.job_match_preferencesWhereInput
+}
+
+export type job_match_preferencesOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
 }
 
 export type job_match_preferencesCreateNestedManyWithoutProfilesInput = {

@@ -464,16 +464,6 @@ export type work_experience_projectsUncheckedUpdateManyInput = {
   outcome?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
-export type Work_experience_projectsListRelationFilter = {
-  every?: Prisma.work_experience_projectsWhereInput
-  some?: Prisma.work_experience_projectsWhereInput
-  none?: Prisma.work_experience_projectsWhereInput
-}
-
-export type work_experience_projectsOrderByRelationAggregateInput = {
-  _count?: Prisma.SortOrder
-}
-
 export type Work_experience_projectsNullableScalarRelationFilter = {
   is?: Prisma.work_experience_projectsWhereInput | null
   isNot?: Prisma.work_experience_projectsWhereInput | null
@@ -536,6 +526,32 @@ export type work_experience_projectsSumOrderByAggregateInput = {
   work_experience?: Prisma.SortOrder
 }
 
+export type Work_experience_projectsListRelationFilter = {
+  every?: Prisma.work_experience_projectsWhereInput
+  some?: Prisma.work_experience_projectsWhereInput
+  none?: Prisma.work_experience_projectsWhereInput
+}
+
+export type work_experience_projectsOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
+}
+
+export type work_experience_projectsCreateNestedOneWithoutWork_experience_project_technologiesInput = {
+  create?: Prisma.XOR<Prisma.work_experience_projectsCreateWithoutWork_experience_project_technologiesInput, Prisma.work_experience_projectsUncheckedCreateWithoutWork_experience_project_technologiesInput>
+  connectOrCreate?: Prisma.work_experience_projectsCreateOrConnectWithoutWork_experience_project_technologiesInput
+  connect?: Prisma.work_experience_projectsWhereUniqueInput
+}
+
+export type work_experience_projectsUpdateOneWithoutWork_experience_project_technologiesNestedInput = {
+  create?: Prisma.XOR<Prisma.work_experience_projectsCreateWithoutWork_experience_project_technologiesInput, Prisma.work_experience_projectsUncheckedCreateWithoutWork_experience_project_technologiesInput>
+  connectOrCreate?: Prisma.work_experience_projectsCreateOrConnectWithoutWork_experience_project_technologiesInput
+  upsert?: Prisma.work_experience_projectsUpsertWithoutWork_experience_project_technologiesInput
+  disconnect?: Prisma.work_experience_projectsWhereInput | boolean
+  delete?: Prisma.work_experience_projectsWhereInput | boolean
+  connect?: Prisma.work_experience_projectsWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.work_experience_projectsUpdateToOneWithWhereWithoutWork_experience_project_technologiesInput, Prisma.work_experience_projectsUpdateWithoutWork_experience_project_technologiesInput>, Prisma.work_experience_projectsUncheckedUpdateWithoutWork_experience_project_technologiesInput>
+}
+
 export type work_experience_projectsCreateNestedManyWithoutWork_experiencesInput = {
   create?: Prisma.XOR<Prisma.work_experience_projectsCreateWithoutWork_experiencesInput, Prisma.work_experience_projectsUncheckedCreateWithoutWork_experiencesInput> | Prisma.work_experience_projectsCreateWithoutWork_experiencesInput[] | Prisma.work_experience_projectsUncheckedCreateWithoutWork_experiencesInput[]
   connectOrCreate?: Prisma.work_experience_projectsCreateOrConnectWithoutWork_experiencesInput | Prisma.work_experience_projectsCreateOrConnectWithoutWork_experiencesInput[]
@@ -576,95 +592,6 @@ export type work_experience_projectsUncheckedUpdateManyWithoutWork_experiencesNe
   update?: Prisma.work_experience_projectsUpdateWithWhereUniqueWithoutWork_experiencesInput | Prisma.work_experience_projectsUpdateWithWhereUniqueWithoutWork_experiencesInput[]
   updateMany?: Prisma.work_experience_projectsUpdateManyWithWhereWithoutWork_experiencesInput | Prisma.work_experience_projectsUpdateManyWithWhereWithoutWork_experiencesInput[]
   deleteMany?: Prisma.work_experience_projectsScalarWhereInput | Prisma.work_experience_projectsScalarWhereInput[]
-}
-
-export type work_experience_projectsCreateNestedOneWithoutWork_experience_project_technologiesInput = {
-  create?: Prisma.XOR<Prisma.work_experience_projectsCreateWithoutWork_experience_project_technologiesInput, Prisma.work_experience_projectsUncheckedCreateWithoutWork_experience_project_technologiesInput>
-  connectOrCreate?: Prisma.work_experience_projectsCreateOrConnectWithoutWork_experience_project_technologiesInput
-  connect?: Prisma.work_experience_projectsWhereUniqueInput
-}
-
-export type work_experience_projectsUpdateOneWithoutWork_experience_project_technologiesNestedInput = {
-  create?: Prisma.XOR<Prisma.work_experience_projectsCreateWithoutWork_experience_project_technologiesInput, Prisma.work_experience_projectsUncheckedCreateWithoutWork_experience_project_technologiesInput>
-  connectOrCreate?: Prisma.work_experience_projectsCreateOrConnectWithoutWork_experience_project_technologiesInput
-  upsert?: Prisma.work_experience_projectsUpsertWithoutWork_experience_project_technologiesInput
-  disconnect?: Prisma.work_experience_projectsWhereInput | boolean
-  delete?: Prisma.work_experience_projectsWhereInput | boolean
-  connect?: Prisma.work_experience_projectsWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.work_experience_projectsUpdateToOneWithWhereWithoutWork_experience_project_technologiesInput, Prisma.work_experience_projectsUpdateWithoutWork_experience_project_technologiesInput>, Prisma.work_experience_projectsUncheckedUpdateWithoutWork_experience_project_technologiesInput>
-}
-
-export type work_experience_projectsCreateWithoutWork_experiencesInput = {
-  status?: string
-  sort?: number | null
-  date_created?: Date | string | null
-  date_updated?: Date | string | null
-  name?: string | null
-  url?: string | null
-  start_date?: Date | string | null
-  end_date?: Date | string | null
-  description?: string | null
-  outcome?: string | null
-  work_experience_project_technologies?: Prisma.work_experience_project_technologiesCreateNestedManyWithoutWork_experience_projectsInput
-}
-
-export type work_experience_projectsUncheckedCreateWithoutWork_experiencesInput = {
-  id?: number
-  status?: string
-  sort?: number | null
-  date_created?: Date | string | null
-  date_updated?: Date | string | null
-  name?: string | null
-  url?: string | null
-  start_date?: Date | string | null
-  end_date?: Date | string | null
-  description?: string | null
-  outcome?: string | null
-  work_experience_project_technologies?: Prisma.work_experience_project_technologiesUncheckedCreateNestedManyWithoutWork_experience_projectsInput
-}
-
-export type work_experience_projectsCreateOrConnectWithoutWork_experiencesInput = {
-  where: Prisma.work_experience_projectsWhereUniqueInput
-  create: Prisma.XOR<Prisma.work_experience_projectsCreateWithoutWork_experiencesInput, Prisma.work_experience_projectsUncheckedCreateWithoutWork_experiencesInput>
-}
-
-export type work_experience_projectsCreateManyWork_experiencesInputEnvelope = {
-  data: Prisma.work_experience_projectsCreateManyWork_experiencesInput | Prisma.work_experience_projectsCreateManyWork_experiencesInput[]
-  skipDuplicates?: boolean
-}
-
-export type work_experience_projectsUpsertWithWhereUniqueWithoutWork_experiencesInput = {
-  where: Prisma.work_experience_projectsWhereUniqueInput
-  update: Prisma.XOR<Prisma.work_experience_projectsUpdateWithoutWork_experiencesInput, Prisma.work_experience_projectsUncheckedUpdateWithoutWork_experiencesInput>
-  create: Prisma.XOR<Prisma.work_experience_projectsCreateWithoutWork_experiencesInput, Prisma.work_experience_projectsUncheckedCreateWithoutWork_experiencesInput>
-}
-
-export type work_experience_projectsUpdateWithWhereUniqueWithoutWork_experiencesInput = {
-  where: Prisma.work_experience_projectsWhereUniqueInput
-  data: Prisma.XOR<Prisma.work_experience_projectsUpdateWithoutWork_experiencesInput, Prisma.work_experience_projectsUncheckedUpdateWithoutWork_experiencesInput>
-}
-
-export type work_experience_projectsUpdateManyWithWhereWithoutWork_experiencesInput = {
-  where: Prisma.work_experience_projectsScalarWhereInput
-  data: Prisma.XOR<Prisma.work_experience_projectsUpdateManyMutationInput, Prisma.work_experience_projectsUncheckedUpdateManyWithoutWork_experiencesInput>
-}
-
-export type work_experience_projectsScalarWhereInput = {
-  AND?: Prisma.work_experience_projectsScalarWhereInput | Prisma.work_experience_projectsScalarWhereInput[]
-  OR?: Prisma.work_experience_projectsScalarWhereInput[]
-  NOT?: Prisma.work_experience_projectsScalarWhereInput | Prisma.work_experience_projectsScalarWhereInput[]
-  id?: Prisma.IntFilter<"work_experience_projects"> | number
-  status?: Prisma.StringFilter<"work_experience_projects"> | string
-  sort?: Prisma.IntNullableFilter<"work_experience_projects"> | number | null
-  date_created?: Prisma.DateTimeNullableFilter<"work_experience_projects"> | Date | string | null
-  date_updated?: Prisma.DateTimeNullableFilter<"work_experience_projects"> | Date | string | null
-  work_experience?: Prisma.IntNullableFilter<"work_experience_projects"> | number | null
-  name?: Prisma.StringNullableFilter<"work_experience_projects"> | string | null
-  url?: Prisma.StringNullableFilter<"work_experience_projects"> | string | null
-  start_date?: Prisma.DateTimeNullableFilter<"work_experience_projects"> | Date | string | null
-  end_date?: Prisma.DateTimeNullableFilter<"work_experience_projects"> | Date | string | null
-  description?: Prisma.StringNullableFilter<"work_experience_projects"> | string | null
-  outcome?: Prisma.StringNullableFilter<"work_experience_projects"> | string | null
 }
 
 export type work_experience_projectsCreateWithoutWork_experience_project_technologiesInput = {
@@ -739,6 +666,79 @@ export type work_experience_projectsUncheckedUpdateWithoutWork_experience_projec
   end_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   outcome?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+}
+
+export type work_experience_projectsCreateWithoutWork_experiencesInput = {
+  status?: string
+  sort?: number | null
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  name?: string | null
+  url?: string | null
+  start_date?: Date | string | null
+  end_date?: Date | string | null
+  description?: string | null
+  outcome?: string | null
+  work_experience_project_technologies?: Prisma.work_experience_project_technologiesCreateNestedManyWithoutWork_experience_projectsInput
+}
+
+export type work_experience_projectsUncheckedCreateWithoutWork_experiencesInput = {
+  id?: number
+  status?: string
+  sort?: number | null
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  name?: string | null
+  url?: string | null
+  start_date?: Date | string | null
+  end_date?: Date | string | null
+  description?: string | null
+  outcome?: string | null
+  work_experience_project_technologies?: Prisma.work_experience_project_technologiesUncheckedCreateNestedManyWithoutWork_experience_projectsInput
+}
+
+export type work_experience_projectsCreateOrConnectWithoutWork_experiencesInput = {
+  where: Prisma.work_experience_projectsWhereUniqueInput
+  create: Prisma.XOR<Prisma.work_experience_projectsCreateWithoutWork_experiencesInput, Prisma.work_experience_projectsUncheckedCreateWithoutWork_experiencesInput>
+}
+
+export type work_experience_projectsCreateManyWork_experiencesInputEnvelope = {
+  data: Prisma.work_experience_projectsCreateManyWork_experiencesInput | Prisma.work_experience_projectsCreateManyWork_experiencesInput[]
+  skipDuplicates?: boolean
+}
+
+export type work_experience_projectsUpsertWithWhereUniqueWithoutWork_experiencesInput = {
+  where: Prisma.work_experience_projectsWhereUniqueInput
+  update: Prisma.XOR<Prisma.work_experience_projectsUpdateWithoutWork_experiencesInput, Prisma.work_experience_projectsUncheckedUpdateWithoutWork_experiencesInput>
+  create: Prisma.XOR<Prisma.work_experience_projectsCreateWithoutWork_experiencesInput, Prisma.work_experience_projectsUncheckedCreateWithoutWork_experiencesInput>
+}
+
+export type work_experience_projectsUpdateWithWhereUniqueWithoutWork_experiencesInput = {
+  where: Prisma.work_experience_projectsWhereUniqueInput
+  data: Prisma.XOR<Prisma.work_experience_projectsUpdateWithoutWork_experiencesInput, Prisma.work_experience_projectsUncheckedUpdateWithoutWork_experiencesInput>
+}
+
+export type work_experience_projectsUpdateManyWithWhereWithoutWork_experiencesInput = {
+  where: Prisma.work_experience_projectsScalarWhereInput
+  data: Prisma.XOR<Prisma.work_experience_projectsUpdateManyMutationInput, Prisma.work_experience_projectsUncheckedUpdateManyWithoutWork_experiencesInput>
+}
+
+export type work_experience_projectsScalarWhereInput = {
+  AND?: Prisma.work_experience_projectsScalarWhereInput | Prisma.work_experience_projectsScalarWhereInput[]
+  OR?: Prisma.work_experience_projectsScalarWhereInput[]
+  NOT?: Prisma.work_experience_projectsScalarWhereInput | Prisma.work_experience_projectsScalarWhereInput[]
+  id?: Prisma.IntFilter<"work_experience_projects"> | number
+  status?: Prisma.StringFilter<"work_experience_projects"> | string
+  sort?: Prisma.IntNullableFilter<"work_experience_projects"> | number | null
+  date_created?: Prisma.DateTimeNullableFilter<"work_experience_projects"> | Date | string | null
+  date_updated?: Prisma.DateTimeNullableFilter<"work_experience_projects"> | Date | string | null
+  work_experience?: Prisma.IntNullableFilter<"work_experience_projects"> | number | null
+  name?: Prisma.StringNullableFilter<"work_experience_projects"> | string | null
+  url?: Prisma.StringNullableFilter<"work_experience_projects"> | string | null
+  start_date?: Prisma.DateTimeNullableFilter<"work_experience_projects"> | Date | string | null
+  end_date?: Prisma.DateTimeNullableFilter<"work_experience_projects"> | Date | string | null
+  description?: Prisma.StringNullableFilter<"work_experience_projects"> | string | null
+  outcome?: Prisma.StringNullableFilter<"work_experience_projects"> | string | null
 }
 
 export type work_experience_projectsCreateManyWork_experiencesInput = {

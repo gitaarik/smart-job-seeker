@@ -8,7 +8,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // Mock dependencies
 vi.mock("$lib/server/db", () => ({
   db: {
-    ai_chat: {
+    ai_chats: {
       update: vi.fn(),
     },
   },
@@ -67,7 +67,7 @@ describe("generateAiChatResponse", () => {
     llmCache.clear();
   });
 
-  it("should return error if ai_chat not found", async () => {
+  it("should return error if ai_chats not found", async () => {
     const utilsMock = getInterpolatedPrompts as any;
     utilsMock.mockResolvedValueOnce(null);
 
@@ -91,13 +91,13 @@ describe("generateAiChatResponse", () => {
     mockInvoke.mockResolvedValueOnce(
       new AIMessage("The capital of France is Paris."),
     );
-    dbClient.ai_chat.update.mockResolvedValueOnce({});
+    dbClient.ai_chats.update.mockResolvedValueOnce({});
 
     const result = await generateAiChatResponse(1);
 
     expect(result.success).toBe(true);
     expect(result.message).toContain("Response generated for AI chat ID 1");
-    expect(dbClient.ai_chat.update).toHaveBeenCalledWith({
+    expect(dbClient.ai_chats.update).toHaveBeenCalledWith({
       where: { id: 1 },
       data: { response: "The capital of France is Paris." },
     });
@@ -117,7 +117,7 @@ describe("generateAiChatResponse", () => {
     mockInvoke.mockResolvedValueOnce(
       new AIMessage("Why did the chicken cross the road?"),
     );
-    dbClient.ai_chat.update.mockResolvedValueOnce({});
+    dbClient.ai_chats.update.mockResolvedValueOnce({});
 
     await generateAiChatResponse(1);
 
@@ -205,7 +205,7 @@ describe("generateAiChatResponse", () => {
     );
 
     const dbError = new Error("Database connection failed");
-    dbClient.ai_chat.update.mockRejectedValueOnce(dbError);
+    dbClient.ai_chats.update.mockRejectedValueOnce(dbError);
 
     const result = await generateAiChatResponse(1);
 
@@ -229,7 +229,7 @@ describe("generateAiChatResponse", () => {
     mockInvoke.mockResolvedValueOnce(
       new AIMessage("Response with interpolated data"),
     );
-    dbClient.ai_chat.update.mockResolvedValueOnce({});
+    dbClient.ai_chats.update.mockResolvedValueOnce({});
 
     const result = await generateAiChatResponse(1);
 
@@ -252,7 +252,7 @@ describe("generateAiChatResponse", () => {
     mockInvoke.mockResolvedValueOnce(
       new AIMessage("2 + 2 = 4"),
     );
-    dbClient.ai_chat.update.mockResolvedValueOnce({});
+    dbClient.ai_chats.update.mockResolvedValueOnce({});
 
     const result1 = await generateAiChatResponse(1);
 
@@ -260,12 +260,12 @@ describe("generateAiChatResponse", () => {
     mockInvoke.mockResolvedValueOnce(
       new AIMessage("2 + 2 = 4"),
     );
-    dbClient.ai_chat.update.mockResolvedValueOnce({});
+    dbClient.ai_chats.update.mockResolvedValueOnce({});
 
     const result2 = await generateAiChatResponse(2);
 
     expect(result1.success).toBe(true);
     expect(result2.success).toBe(true);
-    expect(dbClient.ai_chat.update).toHaveBeenCalledTimes(2);
+    expect(dbClient.ai_chats.update).toHaveBeenCalledTimes(2);
   });
 });

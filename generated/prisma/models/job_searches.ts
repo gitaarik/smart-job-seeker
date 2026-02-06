@@ -516,64 +516,6 @@ export type Job_searchesNullableScalarRelationFilter = {
   isNot?: Prisma.job_searchesWhereInput | null
 }
 
-export type job_searchesCreateNestedManyWithoutProfilesInput = {
-  create?: Prisma.XOR<Prisma.job_searchesCreateWithoutProfilesInput, Prisma.job_searchesUncheckedCreateWithoutProfilesInput> | Prisma.job_searchesCreateWithoutProfilesInput[] | Prisma.job_searchesUncheckedCreateWithoutProfilesInput[]
-  connectOrCreate?: Prisma.job_searchesCreateOrConnectWithoutProfilesInput | Prisma.job_searchesCreateOrConnectWithoutProfilesInput[]
-  createMany?: Prisma.job_searchesCreateManyProfilesInputEnvelope
-  connect?: Prisma.job_searchesWhereUniqueInput | Prisma.job_searchesWhereUniqueInput[]
-}
-
-export type job_searchesUncheckedCreateNestedManyWithoutProfilesInput = {
-  create?: Prisma.XOR<Prisma.job_searchesCreateWithoutProfilesInput, Prisma.job_searchesUncheckedCreateWithoutProfilesInput> | Prisma.job_searchesCreateWithoutProfilesInput[] | Prisma.job_searchesUncheckedCreateWithoutProfilesInput[]
-  connectOrCreate?: Prisma.job_searchesCreateOrConnectWithoutProfilesInput | Prisma.job_searchesCreateOrConnectWithoutProfilesInput[]
-  createMany?: Prisma.job_searchesCreateManyProfilesInputEnvelope
-  connect?: Prisma.job_searchesWhereUniqueInput | Prisma.job_searchesWhereUniqueInput[]
-}
-
-export type job_searchesUpdateManyWithoutProfilesNestedInput = {
-  create?: Prisma.XOR<Prisma.job_searchesCreateWithoutProfilesInput, Prisma.job_searchesUncheckedCreateWithoutProfilesInput> | Prisma.job_searchesCreateWithoutProfilesInput[] | Prisma.job_searchesUncheckedCreateWithoutProfilesInput[]
-  connectOrCreate?: Prisma.job_searchesCreateOrConnectWithoutProfilesInput | Prisma.job_searchesCreateOrConnectWithoutProfilesInput[]
-  upsert?: Prisma.job_searchesUpsertWithWhereUniqueWithoutProfilesInput | Prisma.job_searchesUpsertWithWhereUniqueWithoutProfilesInput[]
-  createMany?: Prisma.job_searchesCreateManyProfilesInputEnvelope
-  set?: Prisma.job_searchesWhereUniqueInput | Prisma.job_searchesWhereUniqueInput[]
-  disconnect?: Prisma.job_searchesWhereUniqueInput | Prisma.job_searchesWhereUniqueInput[]
-  delete?: Prisma.job_searchesWhereUniqueInput | Prisma.job_searchesWhereUniqueInput[]
-  connect?: Prisma.job_searchesWhereUniqueInput | Prisma.job_searchesWhereUniqueInput[]
-  update?: Prisma.job_searchesUpdateWithWhereUniqueWithoutProfilesInput | Prisma.job_searchesUpdateWithWhereUniqueWithoutProfilesInput[]
-  updateMany?: Prisma.job_searchesUpdateManyWithWhereWithoutProfilesInput | Prisma.job_searchesUpdateManyWithWhereWithoutProfilesInput[]
-  deleteMany?: Prisma.job_searchesScalarWhereInput | Prisma.job_searchesScalarWhereInput[]
-}
-
-export type job_searchesUncheckedUpdateManyWithoutProfilesNestedInput = {
-  create?: Prisma.XOR<Prisma.job_searchesCreateWithoutProfilesInput, Prisma.job_searchesUncheckedCreateWithoutProfilesInput> | Prisma.job_searchesCreateWithoutProfilesInput[] | Prisma.job_searchesUncheckedCreateWithoutProfilesInput[]
-  connectOrCreate?: Prisma.job_searchesCreateOrConnectWithoutProfilesInput | Prisma.job_searchesCreateOrConnectWithoutProfilesInput[]
-  upsert?: Prisma.job_searchesUpsertWithWhereUniqueWithoutProfilesInput | Prisma.job_searchesUpsertWithWhereUniqueWithoutProfilesInput[]
-  createMany?: Prisma.job_searchesCreateManyProfilesInputEnvelope
-  set?: Prisma.job_searchesWhereUniqueInput | Prisma.job_searchesWhereUniqueInput[]
-  disconnect?: Prisma.job_searchesWhereUniqueInput | Prisma.job_searchesWhereUniqueInput[]
-  delete?: Prisma.job_searchesWhereUniqueInput | Prisma.job_searchesWhereUniqueInput[]
-  connect?: Prisma.job_searchesWhereUniqueInput | Prisma.job_searchesWhereUniqueInput[]
-  update?: Prisma.job_searchesUpdateWithWhereUniqueWithoutProfilesInput | Prisma.job_searchesUpdateWithWhereUniqueWithoutProfilesInput[]
-  updateMany?: Prisma.job_searchesUpdateManyWithWhereWithoutProfilesInput | Prisma.job_searchesUpdateManyWithWhereWithoutProfilesInput[]
-  deleteMany?: Prisma.job_searchesScalarWhereInput | Prisma.job_searchesScalarWhereInput[]
-}
-
-export type job_searchesCreateNestedOneWithoutJob_searches_job_sitesInput = {
-  create?: Prisma.XOR<Prisma.job_searchesCreateWithoutJob_searches_job_sitesInput, Prisma.job_searchesUncheckedCreateWithoutJob_searches_job_sitesInput>
-  connectOrCreate?: Prisma.job_searchesCreateOrConnectWithoutJob_searches_job_sitesInput
-  connect?: Prisma.job_searchesWhereUniqueInput
-}
-
-export type job_searchesUpdateOneWithoutJob_searches_job_sitesNestedInput = {
-  create?: Prisma.XOR<Prisma.job_searchesCreateWithoutJob_searches_job_sitesInput, Prisma.job_searchesUncheckedCreateWithoutJob_searches_job_sitesInput>
-  connectOrCreate?: Prisma.job_searchesCreateOrConnectWithoutJob_searches_job_sitesInput
-  upsert?: Prisma.job_searchesUpsertWithoutJob_searches_job_sitesInput
-  disconnect?: Prisma.job_searchesWhereInput | boolean
-  delete?: Prisma.job_searchesWhereInput | boolean
-  connect?: Prisma.job_searchesWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.job_searchesUpdateToOneWithWhereWithoutJob_searches_job_sitesInput, Prisma.job_searchesUpdateWithoutJob_searches_job_sitesInput>, Prisma.job_searchesUncheckedUpdateWithoutJob_searches_job_sitesInput>
-}
-
 export type job_searchesCreateNestedManyWithoutJob_platformsInput = {
   create?: Prisma.XOR<Prisma.job_searchesCreateWithoutJob_platformsInput, Prisma.job_searchesUncheckedCreateWithoutJob_platformsInput> | Prisma.job_searchesCreateWithoutJob_platformsInput[] | Prisma.job_searchesUncheckedCreateWithoutJob_platformsInput[]
   connectOrCreate?: Prisma.job_searchesCreateOrConnectWithoutJob_platformsInput | Prisma.job_searchesCreateOrConnectWithoutJob_platformsInput[]
@@ -616,7 +558,65 @@ export type job_searchesUncheckedUpdateManyWithoutJob_platformsNestedInput = {
   deleteMany?: Prisma.job_searchesScalarWhereInput | Prisma.job_searchesScalarWhereInput[]
 }
 
-export type job_searchesCreateWithoutProfilesInput = {
+export type job_searchesCreateNestedOneWithoutJob_searches_job_sitesInput = {
+  create?: Prisma.XOR<Prisma.job_searchesCreateWithoutJob_searches_job_sitesInput, Prisma.job_searchesUncheckedCreateWithoutJob_searches_job_sitesInput>
+  connectOrCreate?: Prisma.job_searchesCreateOrConnectWithoutJob_searches_job_sitesInput
+  connect?: Prisma.job_searchesWhereUniqueInput
+}
+
+export type job_searchesUpdateOneWithoutJob_searches_job_sitesNestedInput = {
+  create?: Prisma.XOR<Prisma.job_searchesCreateWithoutJob_searches_job_sitesInput, Prisma.job_searchesUncheckedCreateWithoutJob_searches_job_sitesInput>
+  connectOrCreate?: Prisma.job_searchesCreateOrConnectWithoutJob_searches_job_sitesInput
+  upsert?: Prisma.job_searchesUpsertWithoutJob_searches_job_sitesInput
+  disconnect?: Prisma.job_searchesWhereInput | boolean
+  delete?: Prisma.job_searchesWhereInput | boolean
+  connect?: Prisma.job_searchesWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.job_searchesUpdateToOneWithWhereWithoutJob_searches_job_sitesInput, Prisma.job_searchesUpdateWithoutJob_searches_job_sitesInput>, Prisma.job_searchesUncheckedUpdateWithoutJob_searches_job_sitesInput>
+}
+
+export type job_searchesCreateNestedManyWithoutProfilesInput = {
+  create?: Prisma.XOR<Prisma.job_searchesCreateWithoutProfilesInput, Prisma.job_searchesUncheckedCreateWithoutProfilesInput> | Prisma.job_searchesCreateWithoutProfilesInput[] | Prisma.job_searchesUncheckedCreateWithoutProfilesInput[]
+  connectOrCreate?: Prisma.job_searchesCreateOrConnectWithoutProfilesInput | Prisma.job_searchesCreateOrConnectWithoutProfilesInput[]
+  createMany?: Prisma.job_searchesCreateManyProfilesInputEnvelope
+  connect?: Prisma.job_searchesWhereUniqueInput | Prisma.job_searchesWhereUniqueInput[]
+}
+
+export type job_searchesUncheckedCreateNestedManyWithoutProfilesInput = {
+  create?: Prisma.XOR<Prisma.job_searchesCreateWithoutProfilesInput, Prisma.job_searchesUncheckedCreateWithoutProfilesInput> | Prisma.job_searchesCreateWithoutProfilesInput[] | Prisma.job_searchesUncheckedCreateWithoutProfilesInput[]
+  connectOrCreate?: Prisma.job_searchesCreateOrConnectWithoutProfilesInput | Prisma.job_searchesCreateOrConnectWithoutProfilesInput[]
+  createMany?: Prisma.job_searchesCreateManyProfilesInputEnvelope
+  connect?: Prisma.job_searchesWhereUniqueInput | Prisma.job_searchesWhereUniqueInput[]
+}
+
+export type job_searchesUpdateManyWithoutProfilesNestedInput = {
+  create?: Prisma.XOR<Prisma.job_searchesCreateWithoutProfilesInput, Prisma.job_searchesUncheckedCreateWithoutProfilesInput> | Prisma.job_searchesCreateWithoutProfilesInput[] | Prisma.job_searchesUncheckedCreateWithoutProfilesInput[]
+  connectOrCreate?: Prisma.job_searchesCreateOrConnectWithoutProfilesInput | Prisma.job_searchesCreateOrConnectWithoutProfilesInput[]
+  upsert?: Prisma.job_searchesUpsertWithWhereUniqueWithoutProfilesInput | Prisma.job_searchesUpsertWithWhereUniqueWithoutProfilesInput[]
+  createMany?: Prisma.job_searchesCreateManyProfilesInputEnvelope
+  set?: Prisma.job_searchesWhereUniqueInput | Prisma.job_searchesWhereUniqueInput[]
+  disconnect?: Prisma.job_searchesWhereUniqueInput | Prisma.job_searchesWhereUniqueInput[]
+  delete?: Prisma.job_searchesWhereUniqueInput | Prisma.job_searchesWhereUniqueInput[]
+  connect?: Prisma.job_searchesWhereUniqueInput | Prisma.job_searchesWhereUniqueInput[]
+  update?: Prisma.job_searchesUpdateWithWhereUniqueWithoutProfilesInput | Prisma.job_searchesUpdateWithWhereUniqueWithoutProfilesInput[]
+  updateMany?: Prisma.job_searchesUpdateManyWithWhereWithoutProfilesInput | Prisma.job_searchesUpdateManyWithWhereWithoutProfilesInput[]
+  deleteMany?: Prisma.job_searchesScalarWhereInput | Prisma.job_searchesScalarWhereInput[]
+}
+
+export type job_searchesUncheckedUpdateManyWithoutProfilesNestedInput = {
+  create?: Prisma.XOR<Prisma.job_searchesCreateWithoutProfilesInput, Prisma.job_searchesUncheckedCreateWithoutProfilesInput> | Prisma.job_searchesCreateWithoutProfilesInput[] | Prisma.job_searchesUncheckedCreateWithoutProfilesInput[]
+  connectOrCreate?: Prisma.job_searchesCreateOrConnectWithoutProfilesInput | Prisma.job_searchesCreateOrConnectWithoutProfilesInput[]
+  upsert?: Prisma.job_searchesUpsertWithWhereUniqueWithoutProfilesInput | Prisma.job_searchesUpsertWithWhereUniqueWithoutProfilesInput[]
+  createMany?: Prisma.job_searchesCreateManyProfilesInputEnvelope
+  set?: Prisma.job_searchesWhereUniqueInput | Prisma.job_searchesWhereUniqueInput[]
+  disconnect?: Prisma.job_searchesWhereUniqueInput | Prisma.job_searchesWhereUniqueInput[]
+  delete?: Prisma.job_searchesWhereUniqueInput | Prisma.job_searchesWhereUniqueInput[]
+  connect?: Prisma.job_searchesWhereUniqueInput | Prisma.job_searchesWhereUniqueInput[]
+  update?: Prisma.job_searchesUpdateWithWhereUniqueWithoutProfilesInput | Prisma.job_searchesUpdateWithWhereUniqueWithoutProfilesInput[]
+  updateMany?: Prisma.job_searchesUpdateManyWithWhereWithoutProfilesInput | Prisma.job_searchesUpdateManyWithWhereWithoutProfilesInput[]
+  deleteMany?: Prisma.job_searchesScalarWhereInput | Prisma.job_searchesScalarWhereInput[]
+}
+
+export type job_searchesCreateWithoutJob_platformsInput = {
   status?: string
   date_created?: Date | string | null
   date_updated?: Date | string | null
@@ -625,48 +625,48 @@ export type job_searchesCreateWithoutProfilesInput = {
   search_url?: string | null
   navigation_type?: string | null
   stripped_html?: string | null
-  job_platforms?: Prisma.job_platformsCreateNestedOneWithoutJob_searchesInput
+  profiles: Prisma.profilesCreateNestedOneWithoutJob_searchesInput
   job_searches_job_sites?: Prisma.job_searches_job_sitesCreateNestedManyWithoutJob_searchesInput
 }
 
-export type job_searchesUncheckedCreateWithoutProfilesInput = {
+export type job_searchesUncheckedCreateWithoutJob_platformsInput = {
   id?: number
   status?: string
   date_created?: Date | string | null
   date_updated?: Date | string | null
   name: string
+  profile: number
   last_run?: Date | string | null
   search_url?: string | null
-  platform?: number | null
   navigation_type?: string | null
   stripped_html?: string | null
   job_searches_job_sites?: Prisma.job_searches_job_sitesUncheckedCreateNestedManyWithoutJob_searchesInput
 }
 
-export type job_searchesCreateOrConnectWithoutProfilesInput = {
+export type job_searchesCreateOrConnectWithoutJob_platformsInput = {
   where: Prisma.job_searchesWhereUniqueInput
-  create: Prisma.XOR<Prisma.job_searchesCreateWithoutProfilesInput, Prisma.job_searchesUncheckedCreateWithoutProfilesInput>
+  create: Prisma.XOR<Prisma.job_searchesCreateWithoutJob_platformsInput, Prisma.job_searchesUncheckedCreateWithoutJob_platformsInput>
 }
 
-export type job_searchesCreateManyProfilesInputEnvelope = {
-  data: Prisma.job_searchesCreateManyProfilesInput | Prisma.job_searchesCreateManyProfilesInput[]
+export type job_searchesCreateManyJob_platformsInputEnvelope = {
+  data: Prisma.job_searchesCreateManyJob_platformsInput | Prisma.job_searchesCreateManyJob_platformsInput[]
   skipDuplicates?: boolean
 }
 
-export type job_searchesUpsertWithWhereUniqueWithoutProfilesInput = {
+export type job_searchesUpsertWithWhereUniqueWithoutJob_platformsInput = {
   where: Prisma.job_searchesWhereUniqueInput
-  update: Prisma.XOR<Prisma.job_searchesUpdateWithoutProfilesInput, Prisma.job_searchesUncheckedUpdateWithoutProfilesInput>
-  create: Prisma.XOR<Prisma.job_searchesCreateWithoutProfilesInput, Prisma.job_searchesUncheckedCreateWithoutProfilesInput>
+  update: Prisma.XOR<Prisma.job_searchesUpdateWithoutJob_platformsInput, Prisma.job_searchesUncheckedUpdateWithoutJob_platformsInput>
+  create: Prisma.XOR<Prisma.job_searchesCreateWithoutJob_platformsInput, Prisma.job_searchesUncheckedCreateWithoutJob_platformsInput>
 }
 
-export type job_searchesUpdateWithWhereUniqueWithoutProfilesInput = {
+export type job_searchesUpdateWithWhereUniqueWithoutJob_platformsInput = {
   where: Prisma.job_searchesWhereUniqueInput
-  data: Prisma.XOR<Prisma.job_searchesUpdateWithoutProfilesInput, Prisma.job_searchesUncheckedUpdateWithoutProfilesInput>
+  data: Prisma.XOR<Prisma.job_searchesUpdateWithoutJob_platformsInput, Prisma.job_searchesUncheckedUpdateWithoutJob_platformsInput>
 }
 
-export type job_searchesUpdateManyWithWhereWithoutProfilesInput = {
+export type job_searchesUpdateManyWithWhereWithoutJob_platformsInput = {
   where: Prisma.job_searchesScalarWhereInput
-  data: Prisma.XOR<Prisma.job_searchesUpdateManyMutationInput, Prisma.job_searchesUncheckedUpdateManyWithoutProfilesInput>
+  data: Prisma.XOR<Prisma.job_searchesUpdateManyMutationInput, Prisma.job_searchesUncheckedUpdateManyWithoutJob_platformsInput>
 }
 
 export type job_searchesScalarWhereInput = {
@@ -756,7 +756,7 @@ export type job_searchesUncheckedUpdateWithoutJob_searches_job_sitesInput = {
   stripped_html?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
-export type job_searchesCreateWithoutJob_platformsInput = {
+export type job_searchesCreateWithoutProfilesInput = {
   status?: string
   date_created?: Date | string | null
   date_updated?: Date | string | null
@@ -765,51 +765,11 @@ export type job_searchesCreateWithoutJob_platformsInput = {
   search_url?: string | null
   navigation_type?: string | null
   stripped_html?: string | null
-  profiles: Prisma.profilesCreateNestedOneWithoutJob_searchesInput
+  job_platforms?: Prisma.job_platformsCreateNestedOneWithoutJob_searchesInput
   job_searches_job_sites?: Prisma.job_searches_job_sitesCreateNestedManyWithoutJob_searchesInput
 }
 
-export type job_searchesUncheckedCreateWithoutJob_platformsInput = {
-  id?: number
-  status?: string
-  date_created?: Date | string | null
-  date_updated?: Date | string | null
-  name: string
-  profile: number
-  last_run?: Date | string | null
-  search_url?: string | null
-  navigation_type?: string | null
-  stripped_html?: string | null
-  job_searches_job_sites?: Prisma.job_searches_job_sitesUncheckedCreateNestedManyWithoutJob_searchesInput
-}
-
-export type job_searchesCreateOrConnectWithoutJob_platformsInput = {
-  where: Prisma.job_searchesWhereUniqueInput
-  create: Prisma.XOR<Prisma.job_searchesCreateWithoutJob_platformsInput, Prisma.job_searchesUncheckedCreateWithoutJob_platformsInput>
-}
-
-export type job_searchesCreateManyJob_platformsInputEnvelope = {
-  data: Prisma.job_searchesCreateManyJob_platformsInput | Prisma.job_searchesCreateManyJob_platformsInput[]
-  skipDuplicates?: boolean
-}
-
-export type job_searchesUpsertWithWhereUniqueWithoutJob_platformsInput = {
-  where: Prisma.job_searchesWhereUniqueInput
-  update: Prisma.XOR<Prisma.job_searchesUpdateWithoutJob_platformsInput, Prisma.job_searchesUncheckedUpdateWithoutJob_platformsInput>
-  create: Prisma.XOR<Prisma.job_searchesCreateWithoutJob_platformsInput, Prisma.job_searchesUncheckedCreateWithoutJob_platformsInput>
-}
-
-export type job_searchesUpdateWithWhereUniqueWithoutJob_platformsInput = {
-  where: Prisma.job_searchesWhereUniqueInput
-  data: Prisma.XOR<Prisma.job_searchesUpdateWithoutJob_platformsInput, Prisma.job_searchesUncheckedUpdateWithoutJob_platformsInput>
-}
-
-export type job_searchesUpdateManyWithWhereWithoutJob_platformsInput = {
-  where: Prisma.job_searchesScalarWhereInput
-  data: Prisma.XOR<Prisma.job_searchesUpdateManyMutationInput, Prisma.job_searchesUncheckedUpdateManyWithoutJob_platformsInput>
-}
-
-export type job_searchesCreateManyProfilesInput = {
+export type job_searchesUncheckedCreateWithoutProfilesInput = {
   id?: number
   status?: string
   date_created?: Date | string | null
@@ -820,46 +780,33 @@ export type job_searchesCreateManyProfilesInput = {
   platform?: number | null
   navigation_type?: string | null
   stripped_html?: string | null
+  job_searches_job_sites?: Prisma.job_searches_job_sitesUncheckedCreateNestedManyWithoutJob_searchesInput
 }
 
-export type job_searchesUpdateWithoutProfilesInput = {
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  last_run?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  search_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  navigation_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  stripped_html?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  job_platforms?: Prisma.job_platformsUpdateOneWithoutJob_searchesNestedInput
-  job_searches_job_sites?: Prisma.job_searches_job_sitesUpdateManyWithoutJob_searchesNestedInput
+export type job_searchesCreateOrConnectWithoutProfilesInput = {
+  where: Prisma.job_searchesWhereUniqueInput
+  create: Prisma.XOR<Prisma.job_searchesCreateWithoutProfilesInput, Prisma.job_searchesUncheckedCreateWithoutProfilesInput>
 }
 
-export type job_searchesUncheckedUpdateWithoutProfilesInput = {
-  id?: Prisma.IntFieldUpdateOperationsInput | number
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  last_run?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  search_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  platform?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  navigation_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  stripped_html?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  job_searches_job_sites?: Prisma.job_searches_job_sitesUncheckedUpdateManyWithoutJob_searchesNestedInput
+export type job_searchesCreateManyProfilesInputEnvelope = {
+  data: Prisma.job_searchesCreateManyProfilesInput | Prisma.job_searchesCreateManyProfilesInput[]
+  skipDuplicates?: boolean
 }
 
-export type job_searchesUncheckedUpdateManyWithoutProfilesInput = {
-  id?: Prisma.IntFieldUpdateOperationsInput | number
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  last_run?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  search_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  platform?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  navigation_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  stripped_html?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+export type job_searchesUpsertWithWhereUniqueWithoutProfilesInput = {
+  where: Prisma.job_searchesWhereUniqueInput
+  update: Prisma.XOR<Prisma.job_searchesUpdateWithoutProfilesInput, Prisma.job_searchesUncheckedUpdateWithoutProfilesInput>
+  create: Prisma.XOR<Prisma.job_searchesCreateWithoutProfilesInput, Prisma.job_searchesUncheckedCreateWithoutProfilesInput>
+}
+
+export type job_searchesUpdateWithWhereUniqueWithoutProfilesInput = {
+  where: Prisma.job_searchesWhereUniqueInput
+  data: Prisma.XOR<Prisma.job_searchesUpdateWithoutProfilesInput, Prisma.job_searchesUncheckedUpdateWithoutProfilesInput>
+}
+
+export type job_searchesUpdateManyWithWhereWithoutProfilesInput = {
+  where: Prisma.job_searchesScalarWhereInput
+  data: Prisma.XOR<Prisma.job_searchesUpdateManyMutationInput, Prisma.job_searchesUncheckedUpdateManyWithoutProfilesInput>
 }
 
 export type job_searchesCreateManyJob_platformsInput = {
@@ -911,6 +858,59 @@ export type job_searchesUncheckedUpdateManyWithoutJob_platformsInput = {
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   last_run?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   search_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  navigation_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stripped_html?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+}
+
+export type job_searchesCreateManyProfilesInput = {
+  id?: number
+  status?: string
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  name: string
+  last_run?: Date | string | null
+  search_url?: string | null
+  platform?: number | null
+  navigation_type?: string | null
+  stripped_html?: string | null
+}
+
+export type job_searchesUpdateWithoutProfilesInput = {
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  last_run?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  search_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  navigation_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stripped_html?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  job_platforms?: Prisma.job_platformsUpdateOneWithoutJob_searchesNestedInput
+  job_searches_job_sites?: Prisma.job_searches_job_sitesUpdateManyWithoutJob_searchesNestedInput
+}
+
+export type job_searchesUncheckedUpdateWithoutProfilesInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  last_run?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  search_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  platform?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  navigation_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stripped_html?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  job_searches_job_sites?: Prisma.job_searches_job_sitesUncheckedUpdateManyWithoutJob_searchesNestedInput
+}
+
+export type job_searchesUncheckedUpdateManyWithoutProfilesInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  last_run?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  search_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  platform?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   navigation_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stripped_html?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }

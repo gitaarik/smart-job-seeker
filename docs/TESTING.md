@@ -239,8 +239,8 @@ Tests webhook handlers for AI chat generation events.
 
 **Coverage:**
 
-- ✓ `ai_chat.generate_full_prompt` event handling
-- ✓ `ai_chat.generate_response` event handling
+- ✓ `ai_chats.generate_full_prompt` event handling
+- ✓ `ai_chats.generate_response` event handling
 - ✓ Batch processing of multiple AI chats
 - ✓ Request validation (aiChatIds format)
 - ✓ Response format validation
@@ -249,8 +249,8 @@ Tests webhook handlers for AI chat generation events.
 
 **Test Suites:**
 
-1. **ai_chat.generate_full_prompt** - Tests prompt generation webhook
-2. **ai_chat.generate_response** - Tests response generation webhook
+1. **ai_chats.generate_full_prompt** - Tests prompt generation webhook
+2. **ai_chats.generate_response** - Tests response generation webhook
 3. **batch processing** - Tests parallel AI chat processing
 
 **Example:**
@@ -265,7 +265,7 @@ Tests webhook handlers for all followup-related events.
 
 **Coverage:**
 
-- ✓ `ai_chat.create_followup` event handling
+- ✓ `ai_chats.create_followup` event handling
 - ✓ `application_letter.create_followup` event handling
 - ✓ `application_questions.create_followup` event handling
 - ✓ Request validation (IDs, followup_request, include_original_context)
@@ -275,7 +275,7 @@ Tests webhook handlers for all followup-related events.
 
 **Test Suites:**
 
-1. **ai_chat.create_followup** - Tests generic AI chat follow-ups
+1. **ai_chats.create_followup** - Tests generic AI chat follow-ups
 2. **application_letter.create_followup** - Tests letter refinement
 3. **application_questions.create_followup** - Tests question refinement
 4. **validation** - Tests request validation
@@ -578,7 +578,7 @@ it("should generate cover letter with profile context", async () => {
   expect(result.success).toBe(true);
 
   // Verify AI chat was created
-  expect(mockDb.ai_chat.create).toHaveBeenCalledWith(
+  expect(mockDb.ai_chats.create).toHaveBeenCalledWith(
     expect.objectContaining({
       data: expect.objectContaining({
         full_prompt: expect.stringContaining("Software Engineer at TechCorp"),
@@ -706,7 +706,7 @@ To debug, add console logs to see intermediate values:
 it("should debug AI generation", async () => {
   const result = await generateAiChatResponse(1);
 
-  console.log("Full prompt:", mockDb.ai_chat.findUnique.mock.results[0]);
+  console.log("Full prompt:", mockDb.ai_chats.findUnique.mock.results[0]);
   console.log("AI response:", result);
 
   expect(result.success).toBe(true);

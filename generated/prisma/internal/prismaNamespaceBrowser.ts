@@ -51,9 +51,16 @@ export const AnyNull = runtime.AnyNull
 
 
 export const ModelName = {
+  ai_chat_prompts: 'ai_chat_prompts',
+  ai_prompts: 'ai_prompts',
+  application_activity_log: 'application_activity_log',
+  application_letters: 'application_letters',
+  application_questions: 'application_questions',
   applications: 'applications',
+  applications_files: 'applications_files',
   cheat_sheets: 'cheat_sheets',
   collected_data: 'collected_data',
+  config: 'config',
   directus_access: 'directus_access',
   directus_activity: 'directus_activity',
   directus_collections: 'directus_collections',
@@ -82,8 +89,19 @@ export const ModelName = {
   directus_versions: 'directus_versions',
   education: 'education',
   highlights: 'highlights',
+  job_match_preferences: 'job_match_preferences',
+  job_matches: 'job_matches',
+  job_platforms: 'job_platforms',
+  job_resources: 'job_resources',
+  job_searches: 'job_searches',
+  job_searches_job_sites: 'job_searches_job_sites',
+  jobs: 'jobs',
   languages: 'languages',
+  os_contributions: 'os_contributions',
   platform_profiles: 'platform_profiles',
+  profile_exports: 'profile_exports',
+  profile_tokens: 'profile_tokens',
+  profile_version_extensions: 'profile_version_extensions',
   profile_versions: 'profile_versions',
   profiles: 'profiles',
   project_stories: 'project_stories',
@@ -96,30 +114,11 @@ export const ModelName = {
   tech_skill_types: 'tech_skill_types',
   tech_skills: 'tech_skills',
   work_experience_achievements: 'work_experience_achievements',
-  work_experience_technologies: 'work_experience_technologies',
-  work_experiences: 'work_experiences',
-  ai_chat: 'ai_chat',
-  os_contributions: 'os_contributions',
   work_experience_project_technologies: 'work_experience_project_technologies',
   work_experience_projects: 'work_experience_projects',
-  ai_prompts: 'ai_prompts',
-  application_questions: 'application_questions',
-  application_activity_log: 'application_activity_log',
-  applications_files: 'applications_files',
-  ai_chat_prompts: 'ai_chat_prompts',
-  profile_version_extensions: 'profile_version_extensions',
-  application_letters: 'application_letters',
-  job_resources: 'job_resources',
-  jobs: 'jobs',
-  job_searches: 'job_searches',
-  job_searches_job_sites: 'job_searches_job_sites',
-  job_match_preferences: 'job_match_preferences',
-  job_matches: 'job_matches',
-  job_platforms: 'job_platforms',
-  config: 'config',
-  profile_exports: 'profile_exports',
-  profile_tokens: 'profile_tokens',
-  api_keys: 'api_keys'
+  work_experience_technologies: 'work_experience_technologies',
+  work_experiences: 'work_experiences',
+  ai_chats: 'ai_chats'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -136,6 +135,79 @@ export const TransactionIsolationLevel = runtime.makeStrictEnum({
 } as const)
 
 export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
+
+
+export const Ai_chat_promptsScalarFieldEnum = {
+  id: 'id',
+  date_created: 'date_created',
+  date_updated: 'date_updated',
+  request: 'request',
+  system_prompt: 'system_prompt',
+  user_prompt: 'user_prompt',
+  format: 'format'
+} as const
+
+export type Ai_chat_promptsScalarFieldEnum = (typeof Ai_chat_promptsScalarFieldEnum)[keyof typeof Ai_chat_promptsScalarFieldEnum]
+
+
+export const Ai_promptsScalarFieldEnum = {
+  id: 'id',
+  sort: 'sort',
+  date_created: 'date_created',
+  user_created: 'user_created',
+  date_updated: 'date_updated',
+  user_updated: 'user_updated',
+  name: 'name',
+  status: 'status',
+  description: 'description',
+  system_prompt: 'system_prompt',
+  messages: 'messages'
+} as const
+
+export type Ai_promptsScalarFieldEnum = (typeof Ai_promptsScalarFieldEnum)[keyof typeof Ai_promptsScalarFieldEnum]
+
+
+export const Application_activity_logScalarFieldEnum = {
+  id: 'id',
+  date_created: 'date_created',
+  date_updated: 'date_updated',
+  date: 'date',
+  title: 'title',
+  note: 'note',
+  application: 'application'
+} as const
+
+export type Application_activity_logScalarFieldEnum = (typeof Application_activity_logScalarFieldEnum)[keyof typeof Application_activity_logScalarFieldEnum]
+
+
+export const Application_lettersScalarFieldEnum = {
+  id: 'id',
+  date_created: 'date_created',
+  date_updated: 'date_updated',
+  application: 'application',
+  letter_type: 'letter_type',
+  content: 'content',
+  ai_chat: 'ai_chat',
+  status: 'status',
+  ai_chat_response: 'ai_chat_response'
+} as const
+
+export type Application_lettersScalarFieldEnum = (typeof Application_lettersScalarFieldEnum)[keyof typeof Application_lettersScalarFieldEnum]
+
+
+export const Application_questionsScalarFieldEnum = {
+  id: 'id',
+  sort: 'sort',
+  date_created: 'date_created',
+  date_updated: 'date_updated',
+  application: 'application',
+  question: 'question',
+  answer: 'answer',
+  ai_chat: 'ai_chat',
+  ai_chat_response: 'ai_chat_response'
+} as const
+
+export type Application_questionsScalarFieldEnum = (typeof Application_questionsScalarFieldEnum)[keyof typeof Application_questionsScalarFieldEnum]
 
 
 export const ApplicationsScalarFieldEnum = {
@@ -160,6 +232,15 @@ export const ApplicationsScalarFieldEnum = {
 export type ApplicationsScalarFieldEnum = (typeof ApplicationsScalarFieldEnum)[keyof typeof ApplicationsScalarFieldEnum]
 
 
+export const Applications_filesScalarFieldEnum = {
+  id: 'id',
+  applications_id: 'applications_id',
+  directus_files_id: 'directus_files_id'
+} as const
+
+export type Applications_filesScalarFieldEnum = (typeof Applications_filesScalarFieldEnum)[keyof typeof Applications_filesScalarFieldEnum]
+
+
 export const Cheat_sheetsScalarFieldEnum = {
   id: 'id',
   sort: 'sort',
@@ -182,6 +263,14 @@ export const Collected_dataScalarFieldEnum = {
 } as const
 
 export type Collected_dataScalarFieldEnum = (typeof Collected_dataScalarFieldEnum)[keyof typeof Collected_dataScalarFieldEnum]
+
+
+export const ConfigScalarFieldEnum = {
+  id: 'id',
+  default_profile: 'default_profile'
+} as const
+
+export type ConfigScalarFieldEnum = (typeof ConfigScalarFieldEnum)[keyof typeof ConfigScalarFieldEnum]
 
 
 export const Directus_accessScalarFieldEnum = {
@@ -695,6 +784,128 @@ export const HighlightsScalarFieldEnum = {
 export type HighlightsScalarFieldEnum = (typeof HighlightsScalarFieldEnum)[keyof typeof HighlightsScalarFieldEnum]
 
 
+export const Job_match_preferencesScalarFieldEnum = {
+  id: 'id',
+  date_created: 'date_created',
+  date_updated: 'date_updated',
+  job_types: 'job_types',
+  experience_levels: 'experience_levels',
+  remote_options: 'remote_options',
+  locations: 'locations',
+  profile: 'profile',
+  name: 'name'
+} as const
+
+export type Job_match_preferencesScalarFieldEnum = (typeof Job_match_preferencesScalarFieldEnum)[keyof typeof Job_match_preferencesScalarFieldEnum]
+
+
+export const Job_matchesScalarFieldEnum = {
+  id: 'id',
+  score: 'score',
+  reasoning: 'reasoning',
+  skill_match_percentage: 'skill_match_percentage',
+  strengths: 'strengths',
+  gaps: 'gaps',
+  recommendation: 'recommendation',
+  job_date_updated_when_matched: 'job_date_updated_when_matched',
+  status: 'status',
+  date_created: 'date_created',
+  date_updated: 'date_updated',
+  job: 'job',
+  profile: 'profile',
+  llm_prompt: 'llm_prompt',
+  ai_chat_scoring: 'ai_chat_scoring'
+} as const
+
+export type Job_matchesScalarFieldEnum = (typeof Job_matchesScalarFieldEnum)[keyof typeof Job_matchesScalarFieldEnum]
+
+
+export const Job_platformsScalarFieldEnum = {
+  id: 'id',
+  status: 'status',
+  sort: 'sort',
+  date_created: 'date_created',
+  date_updated: 'date_updated',
+  name: 'name',
+  url: 'url',
+  type: 'type',
+  key: 'key',
+  login_page_url: 'login_page_url'
+} as const
+
+export type Job_platformsScalarFieldEnum = (typeof Job_platformsScalarFieldEnum)[keyof typeof Job_platformsScalarFieldEnum]
+
+
+export const Job_resourcesScalarFieldEnum = {
+  id: 'id',
+  sort: 'sort',
+  date_created: 'date_created',
+  date_updated: 'date_updated',
+  name: 'name',
+  url: 'url',
+  file: 'file',
+  job: 'job'
+} as const
+
+export type Job_resourcesScalarFieldEnum = (typeof Job_resourcesScalarFieldEnum)[keyof typeof Job_resourcesScalarFieldEnum]
+
+
+export const Job_searchesScalarFieldEnum = {
+  id: 'id',
+  status: 'status',
+  date_created: 'date_created',
+  date_updated: 'date_updated',
+  name: 'name',
+  profile: 'profile',
+  last_run: 'last_run',
+  search_url: 'search_url',
+  platform: 'platform',
+  navigation_type: 'navigation_type',
+  stripped_html: 'stripped_html'
+} as const
+
+export type Job_searchesScalarFieldEnum = (typeof Job_searchesScalarFieldEnum)[keyof typeof Job_searchesScalarFieldEnum]
+
+
+export const Job_searches_job_sitesScalarFieldEnum = {
+  id: 'id',
+  job_searches_id: 'job_searches_id'
+} as const
+
+export type Job_searches_job_sitesScalarFieldEnum = (typeof Job_searches_job_sitesScalarFieldEnum)[keyof typeof Job_searches_job_sitesScalarFieldEnum]
+
+
+export const JobsScalarFieldEnum = {
+  id: 'id',
+  status: 'status',
+  date_created: 'date_created',
+  date_updated: 'date_updated',
+  source_url: 'source_url',
+  title: 'title',
+  job_description: 'job_description',
+  job_poster: 'job_poster',
+  company_description: 'company_description',
+  date_posted: 'date_posted',
+  salary_min: 'salary_min',
+  salary_max: 'salary_max',
+  salary_currency: 'salary_currency',
+  salary_period: 'salary_period',
+  import_error: 'import_error',
+  last_scraped: 'last_scraped',
+  location: 'location',
+  scrape_count: 'scrape_count',
+  job_types: 'job_types',
+  experience_levels: 'experience_levels',
+  remote_options: 'remote_options',
+  skills: 'skills',
+  source_html_stripped: 'source_html_stripped',
+  job_platform: 'job_platform',
+  ai_chat_extraction: 'ai_chat_extraction'
+} as const
+
+export type JobsScalarFieldEnum = (typeof JobsScalarFieldEnum)[keyof typeof JobsScalarFieldEnum]
+
+
 export const LanguagesScalarFieldEnum = {
   id: 'id',
   status: 'status',
@@ -708,6 +919,24 @@ export const LanguagesScalarFieldEnum = {
 } as const
 
 export type LanguagesScalarFieldEnum = (typeof LanguagesScalarFieldEnum)[keyof typeof LanguagesScalarFieldEnum]
+
+
+export const Os_contributionsScalarFieldEnum = {
+  id: 'id',
+  status: 'status',
+  date_created: 'date_created',
+  date_updated: 'date_updated',
+  title: 'title',
+  description: 'description',
+  project_name: 'project_name',
+  profile: 'profile',
+  merged_date: 'merged_date',
+  issue_url: 'issue_url',
+  pull_request_url: 'pull_request_url',
+  contribution_type: 'contribution_type'
+} as const
+
+export type Os_contributionsScalarFieldEnum = (typeof Os_contributionsScalarFieldEnum)[keyof typeof Os_contributionsScalarFieldEnum]
 
 
 export const Platform_profilesScalarFieldEnum = {
@@ -726,6 +955,54 @@ export const Platform_profilesScalarFieldEnum = {
 } as const
 
 export type Platform_profilesScalarFieldEnum = (typeof Platform_profilesScalarFieldEnum)[keyof typeof Platform_profilesScalarFieldEnum]
+
+
+export const Profile_exportsScalarFieldEnum = {
+  id: 'id',
+  status: 'status',
+  sort: 'sort',
+  date_created: 'date_created',
+  date_updated: 'date_updated',
+  profile: 'profile',
+  file: 'file',
+  file_type: 'file_type',
+  export_type: 'export_type',
+  export_format: 'export_format',
+  description: 'description',
+  source_url: 'source_url'
+} as const
+
+export type Profile_exportsScalarFieldEnum = (typeof Profile_exportsScalarFieldEnum)[keyof typeof Profile_exportsScalarFieldEnum]
+
+
+export const Profile_tokensScalarFieldEnum = {
+  id: 'id',
+  status: 'status',
+  sort: 'sort',
+  date_created: 'date_created',
+  date_updated: 'date_updated',
+  token: 'token',
+  token_hash: 'token_hash',
+  profile_version: 'profile_version',
+  visit_count: 'visit_count',
+  visit_limit: 'visit_limit',
+  expires_at: 'expires_at',
+  name: 'name',
+  notes: 'notes',
+  last_accessed_at: 'last_accessed_at',
+  last_accessed_ip: 'last_accessed_ip'
+} as const
+
+export type Profile_tokensScalarFieldEnum = (typeof Profile_tokensScalarFieldEnum)[keyof typeof Profile_tokensScalarFieldEnum]
+
+
+export const Profile_version_extensionsScalarFieldEnum = {
+  id: 'id',
+  extender: 'extender',
+  extended: 'extended'
+} as const
+
+export type Profile_version_extensionsScalarFieldEnum = (typeof Profile_version_extensionsScalarFieldEnum)[keyof typeof Profile_version_extensionsScalarFieldEnum]
 
 
 export const Profile_versionsScalarFieldEnum = {
@@ -953,6 +1230,36 @@ export const Work_experience_achievementsScalarFieldEnum = {
 export type Work_experience_achievementsScalarFieldEnum = (typeof Work_experience_achievementsScalarFieldEnum)[keyof typeof Work_experience_achievementsScalarFieldEnum]
 
 
+export const Work_experience_project_technologiesScalarFieldEnum = {
+  id: 'id',
+  sort: 'sort',
+  date_created: 'date_created',
+  date_updated: 'date_updated',
+  work_experience_project: 'work_experience_project',
+  name: 'name'
+} as const
+
+export type Work_experience_project_technologiesScalarFieldEnum = (typeof Work_experience_project_technologiesScalarFieldEnum)[keyof typeof Work_experience_project_technologiesScalarFieldEnum]
+
+
+export const Work_experience_projectsScalarFieldEnum = {
+  id: 'id',
+  status: 'status',
+  sort: 'sort',
+  date_created: 'date_created',
+  date_updated: 'date_updated',
+  work_experience: 'work_experience',
+  name: 'name',
+  url: 'url',
+  start_date: 'start_date',
+  end_date: 'end_date',
+  description: 'description',
+  outcome: 'outcome'
+} as const
+
+export type Work_experience_projectsScalarFieldEnum = (typeof Work_experience_projectsScalarFieldEnum)[keyof typeof Work_experience_projectsScalarFieldEnum]
+
+
 export const Work_experience_technologiesScalarFieldEnum = {
   id: 'id',
   status: 'status',
@@ -988,7 +1295,7 @@ export const Work_experiencesScalarFieldEnum = {
 export type Work_experiencesScalarFieldEnum = (typeof Work_experiencesScalarFieldEnum)[keyof typeof Work_experiencesScalarFieldEnum]
 
 
-export const Ai_chatScalarFieldEnum = {
+export const Ai_chatsScalarFieldEnum = {
   id: 'id',
   date_created: 'date_created',
   date_updated: 'date_updated',
@@ -1005,329 +1312,7 @@ export const Ai_chatScalarFieldEnum = {
   request_type: 'request_type'
 } as const
 
-export type Ai_chatScalarFieldEnum = (typeof Ai_chatScalarFieldEnum)[keyof typeof Ai_chatScalarFieldEnum]
-
-
-export const Os_contributionsScalarFieldEnum = {
-  id: 'id',
-  status: 'status',
-  date_created: 'date_created',
-  date_updated: 'date_updated',
-  title: 'title',
-  description: 'description',
-  project_name: 'project_name',
-  profile: 'profile',
-  merged_date: 'merged_date',
-  issue_url: 'issue_url',
-  pull_request_url: 'pull_request_url',
-  contribution_type: 'contribution_type'
-} as const
-
-export type Os_contributionsScalarFieldEnum = (typeof Os_contributionsScalarFieldEnum)[keyof typeof Os_contributionsScalarFieldEnum]
-
-
-export const Work_experience_project_technologiesScalarFieldEnum = {
-  id: 'id',
-  sort: 'sort',
-  date_created: 'date_created',
-  date_updated: 'date_updated',
-  work_experience_project: 'work_experience_project',
-  name: 'name'
-} as const
-
-export type Work_experience_project_technologiesScalarFieldEnum = (typeof Work_experience_project_technologiesScalarFieldEnum)[keyof typeof Work_experience_project_technologiesScalarFieldEnum]
-
-
-export const Work_experience_projectsScalarFieldEnum = {
-  id: 'id',
-  status: 'status',
-  sort: 'sort',
-  date_created: 'date_created',
-  date_updated: 'date_updated',
-  work_experience: 'work_experience',
-  name: 'name',
-  url: 'url',
-  start_date: 'start_date',
-  end_date: 'end_date',
-  description: 'description',
-  outcome: 'outcome'
-} as const
-
-export type Work_experience_projectsScalarFieldEnum = (typeof Work_experience_projectsScalarFieldEnum)[keyof typeof Work_experience_projectsScalarFieldEnum]
-
-
-export const Ai_promptsScalarFieldEnum = {
-  id: 'id',
-  sort: 'sort',
-  date_created: 'date_created',
-  user_created: 'user_created',
-  date_updated: 'date_updated',
-  user_updated: 'user_updated',
-  name: 'name',
-  status: 'status',
-  description: 'description',
-  system_prompt: 'system_prompt',
-  messages: 'messages'
-} as const
-
-export type Ai_promptsScalarFieldEnum = (typeof Ai_promptsScalarFieldEnum)[keyof typeof Ai_promptsScalarFieldEnum]
-
-
-export const Application_questionsScalarFieldEnum = {
-  id: 'id',
-  sort: 'sort',
-  date_created: 'date_created',
-  date_updated: 'date_updated',
-  application: 'application',
-  question: 'question',
-  answer: 'answer',
-  ai_chat: 'ai_chat',
-  ai_chat_response: 'ai_chat_response'
-} as const
-
-export type Application_questionsScalarFieldEnum = (typeof Application_questionsScalarFieldEnum)[keyof typeof Application_questionsScalarFieldEnum]
-
-
-export const Application_activity_logScalarFieldEnum = {
-  id: 'id',
-  date_created: 'date_created',
-  date_updated: 'date_updated',
-  date: 'date',
-  title: 'title',
-  note: 'note',
-  application: 'application'
-} as const
-
-export type Application_activity_logScalarFieldEnum = (typeof Application_activity_logScalarFieldEnum)[keyof typeof Application_activity_logScalarFieldEnum]
-
-
-export const Applications_filesScalarFieldEnum = {
-  id: 'id',
-  applications_id: 'applications_id',
-  directus_files_id: 'directus_files_id'
-} as const
-
-export type Applications_filesScalarFieldEnum = (typeof Applications_filesScalarFieldEnum)[keyof typeof Applications_filesScalarFieldEnum]
-
-
-export const Ai_chat_promptsScalarFieldEnum = {
-  id: 'id',
-  date_created: 'date_created',
-  date_updated: 'date_updated',
-  request: 'request',
-  system_prompt: 'system_prompt',
-  user_prompt: 'user_prompt',
-  format: 'format'
-} as const
-
-export type Ai_chat_promptsScalarFieldEnum = (typeof Ai_chat_promptsScalarFieldEnum)[keyof typeof Ai_chat_promptsScalarFieldEnum]
-
-
-export const Profile_version_extensionsScalarFieldEnum = {
-  id: 'id',
-  extender: 'extender',
-  extended: 'extended'
-} as const
-
-export type Profile_version_extensionsScalarFieldEnum = (typeof Profile_version_extensionsScalarFieldEnum)[keyof typeof Profile_version_extensionsScalarFieldEnum]
-
-
-export const Application_lettersScalarFieldEnum = {
-  id: 'id',
-  date_created: 'date_created',
-  date_updated: 'date_updated',
-  application: 'application',
-  letter_type: 'letter_type',
-  content: 'content',
-  ai_chat: 'ai_chat',
-  status: 'status',
-  ai_chat_response: 'ai_chat_response'
-} as const
-
-export type Application_lettersScalarFieldEnum = (typeof Application_lettersScalarFieldEnum)[keyof typeof Application_lettersScalarFieldEnum]
-
-
-export const Job_resourcesScalarFieldEnum = {
-  id: 'id',
-  sort: 'sort',
-  date_created: 'date_created',
-  date_updated: 'date_updated',
-  name: 'name',
-  url: 'url',
-  file: 'file',
-  job: 'job'
-} as const
-
-export type Job_resourcesScalarFieldEnum = (typeof Job_resourcesScalarFieldEnum)[keyof typeof Job_resourcesScalarFieldEnum]
-
-
-export const JobsScalarFieldEnum = {
-  id: 'id',
-  status: 'status',
-  date_created: 'date_created',
-  date_updated: 'date_updated',
-  source_url: 'source_url',
-  title: 'title',
-  job_description: 'job_description',
-  job_poster: 'job_poster',
-  company_description: 'company_description',
-  date_posted: 'date_posted',
-  salary_min: 'salary_min',
-  salary_max: 'salary_max',
-  salary_currency: 'salary_currency',
-  salary_period: 'salary_period',
-  import_error: 'import_error',
-  last_scraped: 'last_scraped',
-  location: 'location',
-  scrape_count: 'scrape_count',
-  job_types: 'job_types',
-  experience_levels: 'experience_levels',
-  remote_options: 'remote_options',
-  skills: 'skills',
-  source_html_stripped: 'source_html_stripped',
-  job_platform: 'job_platform',
-  ai_chat_extraction: 'ai_chat_extraction'
-} as const
-
-export type JobsScalarFieldEnum = (typeof JobsScalarFieldEnum)[keyof typeof JobsScalarFieldEnum]
-
-
-export const Job_searchesScalarFieldEnum = {
-  id: 'id',
-  status: 'status',
-  date_created: 'date_created',
-  date_updated: 'date_updated',
-  name: 'name',
-  profile: 'profile',
-  last_run: 'last_run',
-  search_url: 'search_url',
-  platform: 'platform',
-  navigation_type: 'navigation_type',
-  stripped_html: 'stripped_html'
-} as const
-
-export type Job_searchesScalarFieldEnum = (typeof Job_searchesScalarFieldEnum)[keyof typeof Job_searchesScalarFieldEnum]
-
-
-export const Job_searches_job_sitesScalarFieldEnum = {
-  id: 'id',
-  job_searches_id: 'job_searches_id'
-} as const
-
-export type Job_searches_job_sitesScalarFieldEnum = (typeof Job_searches_job_sitesScalarFieldEnum)[keyof typeof Job_searches_job_sitesScalarFieldEnum]
-
-
-export const Job_match_preferencesScalarFieldEnum = {
-  id: 'id',
-  date_created: 'date_created',
-  date_updated: 'date_updated',
-  job_types: 'job_types',
-  experience_levels: 'experience_levels',
-  remote_options: 'remote_options',
-  locations: 'locations',
-  profile: 'profile',
-  name: 'name'
-} as const
-
-export type Job_match_preferencesScalarFieldEnum = (typeof Job_match_preferencesScalarFieldEnum)[keyof typeof Job_match_preferencesScalarFieldEnum]
-
-
-export const Job_matchesScalarFieldEnum = {
-  id: 'id',
-  score: 'score',
-  reasoning: 'reasoning',
-  skill_match_percentage: 'skill_match_percentage',
-  strengths: 'strengths',
-  gaps: 'gaps',
-  recommendation: 'recommendation',
-  job_date_updated_when_matched: 'job_date_updated_when_matched',
-  status: 'status',
-  date_created: 'date_created',
-  date_updated: 'date_updated',
-  job: 'job',
-  profile: 'profile',
-  llm_prompt: 'llm_prompt',
-  ai_chat_scoring: 'ai_chat_scoring'
-} as const
-
-export type Job_matchesScalarFieldEnum = (typeof Job_matchesScalarFieldEnum)[keyof typeof Job_matchesScalarFieldEnum]
-
-
-export const Job_platformsScalarFieldEnum = {
-  id: 'id',
-  status: 'status',
-  sort: 'sort',
-  date_created: 'date_created',
-  date_updated: 'date_updated',
-  name: 'name',
-  url: 'url',
-  type: 'type',
-  key: 'key',
-  login_page_url: 'login_page_url'
-} as const
-
-export type Job_platformsScalarFieldEnum = (typeof Job_platformsScalarFieldEnum)[keyof typeof Job_platformsScalarFieldEnum]
-
-
-export const ConfigScalarFieldEnum = {
-  id: 'id',
-  default_profile: 'default_profile'
-} as const
-
-export type ConfigScalarFieldEnum = (typeof ConfigScalarFieldEnum)[keyof typeof ConfigScalarFieldEnum]
-
-
-export const Profile_exportsScalarFieldEnum = {
-  id: 'id',
-  status: 'status',
-  sort: 'sort',
-  date_created: 'date_created',
-  date_updated: 'date_updated',
-  profile: 'profile',
-  file: 'file',
-  file_type: 'file_type',
-  export_type: 'export_type',
-  export_format: 'export_format',
-  description: 'description',
-  source_url: 'source_url'
-} as const
-
-export type Profile_exportsScalarFieldEnum = (typeof Profile_exportsScalarFieldEnum)[keyof typeof Profile_exportsScalarFieldEnum]
-
-
-export const Profile_tokensScalarFieldEnum = {
-  id: 'id',
-  status: 'status',
-  sort: 'sort',
-  date_created: 'date_created',
-  date_updated: 'date_updated',
-  token: 'token',
-  token_hash: 'token_hash',
-  profile_version: 'profile_version',
-  visit_count: 'visit_count',
-  visit_limit: 'visit_limit',
-  expires_at: 'expires_at',
-  name: 'name',
-  notes: 'notes',
-  last_accessed_at: 'last_accessed_at',
-  last_accessed_ip: 'last_accessed_ip'
-} as const
-
-export type Profile_tokensScalarFieldEnum = (typeof Profile_tokensScalarFieldEnum)[keyof typeof Profile_tokensScalarFieldEnum]
-
-
-export const Api_keysScalarFieldEnum = {
-  id: 'id',
-  profile: 'profile',
-  name: 'name',
-  key_hash: 'key_hash',
-  date_created: 'date_created',
-  expires_at: 'expires_at',
-  last_used: 'last_used',
-  revoked: 'revoked'
-} as const
-
-export type Api_keysScalarFieldEnum = (typeof Api_keysScalarFieldEnum)[keyof typeof Api_keysScalarFieldEnum]
+export type Ai_chatsScalarFieldEnum = (typeof Ai_chatsScalarFieldEnum)[keyof typeof Ai_chatsScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1354,14 +1339,6 @@ export const QueryMode = {
 export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
 
 
-export const NullsOrder = {
-  first: 'first',
-  last: 'last'
-} as const
-
-export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
-
-
 export const JsonNullValueFilter = {
   DbNull: DbNull,
   JsonNull: JsonNull,
@@ -1369,4 +1346,12 @@ export const JsonNullValueFilter = {
 } as const
 
 export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
+
+
+export const NullsOrder = {
+  first: 'first',
+  last: 'last'
+} as const
+
+export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
 

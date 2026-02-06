@@ -383,7 +383,7 @@ export type jobsWhereInput = {
   applications?: Prisma.ApplicationsListRelationFilter
   job_matches?: Prisma.Job_matchesListRelationFilter
   job_resources?: Prisma.Job_resourcesListRelationFilter
-  ai_chat?: Prisma.XOR<Prisma.Ai_chatNullableScalarRelationFilter, Prisma.ai_chatWhereInput> | null
+  ai_chat?: Prisma.XOR<Prisma.Ai_chatsNullableScalarRelationFilter, Prisma.ai_chatsWhereInput> | null
   job_platforms?: Prisma.XOR<Prisma.Job_platformsNullableScalarRelationFilter, Prisma.job_platformsWhereInput> | null
 }
 
@@ -416,7 +416,7 @@ export type jobsOrderByWithRelationInput = {
   applications?: Prisma.applicationsOrderByRelationAggregateInput
   job_matches?: Prisma.job_matchesOrderByRelationAggregateInput
   job_resources?: Prisma.job_resourcesOrderByRelationAggregateInput
-  ai_chat?: Prisma.ai_chatOrderByWithRelationInput
+  ai_chat?: Prisma.ai_chatsOrderByWithRelationInput
   job_platforms?: Prisma.job_platformsOrderByWithRelationInput
 }
 
@@ -452,7 +452,7 @@ export type jobsWhereUniqueInput = Prisma.AtLeast<{
   applications?: Prisma.ApplicationsListRelationFilter
   job_matches?: Prisma.Job_matchesListRelationFilter
   job_resources?: Prisma.Job_resourcesListRelationFilter
-  ai_chat?: Prisma.XOR<Prisma.Ai_chatNullableScalarRelationFilter, Prisma.ai_chatWhereInput> | null
+  ai_chat?: Prisma.XOR<Prisma.Ai_chatsNullableScalarRelationFilter, Prisma.ai_chatsWhereInput> | null
   job_platforms?: Prisma.XOR<Prisma.Job_platformsNullableScalarRelationFilter, Prisma.job_platformsWhereInput> | null
 }, "id">
 
@@ -546,7 +546,7 @@ export type jobsCreateInput = {
   applications?: Prisma.applicationsCreateNestedManyWithoutJobsInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutJobsInput
   job_resources?: Prisma.job_resourcesCreateNestedManyWithoutJobsInput
-  ai_chat?: Prisma.ai_chatCreateNestedOneWithoutJobs_extractedInput
+  ai_chat?: Prisma.ai_chatsCreateNestedOneWithoutJobsInput
   job_platforms?: Prisma.job_platformsCreateNestedOneWithoutJobsInput
 }
 
@@ -607,7 +607,7 @@ export type jobsUpdateInput = {
   applications?: Prisma.applicationsUpdateManyWithoutJobsNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutJobsNestedInput
   job_resources?: Prisma.job_resourcesUpdateManyWithoutJobsNestedInput
-  ai_chat?: Prisma.ai_chatUpdateOneWithoutJobs_extractedNestedInput
+  ai_chat?: Prisma.ai_chatsUpdateOneWithoutJobsNestedInput
   job_platforms?: Prisma.job_platformsUpdateOneWithoutJobsNestedInput
 }
 
@@ -728,6 +728,11 @@ export type JobsNullableScalarRelationFilter = {
   isNot?: Prisma.jobsWhereInput | null
 }
 
+export type JobsScalarRelationFilter = {
+  is?: Prisma.jobsWhereInput
+  isNot?: Prisma.jobsWhereInput
+}
+
 export type JobsListRelationFilter = {
   every?: Prisma.jobsWhereInput
   some?: Prisma.jobsWhereInput
@@ -736,11 +741,6 @@ export type JobsListRelationFilter = {
 
 export type jobsOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
-}
-
-export type JobsScalarRelationFilter = {
-  is?: Prisma.jobsWhereInput
-  isNot?: Prisma.jobsWhereInput
 }
 
 export type jobsCountOrderByAggregateInput = {
@@ -853,62 +853,6 @@ export type jobsUpdateOneWithoutApplicationsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.jobsUpdateToOneWithWhereWithoutApplicationsInput, Prisma.jobsUpdateWithoutApplicationsInput>, Prisma.jobsUncheckedUpdateWithoutApplicationsInput>
 }
 
-export type jobsCreateNestedManyWithoutAi_chatInput = {
-  create?: Prisma.XOR<Prisma.jobsCreateWithoutAi_chatInput, Prisma.jobsUncheckedCreateWithoutAi_chatInput> | Prisma.jobsCreateWithoutAi_chatInput[] | Prisma.jobsUncheckedCreateWithoutAi_chatInput[]
-  connectOrCreate?: Prisma.jobsCreateOrConnectWithoutAi_chatInput | Prisma.jobsCreateOrConnectWithoutAi_chatInput[]
-  createMany?: Prisma.jobsCreateManyAi_chatInputEnvelope
-  connect?: Prisma.jobsWhereUniqueInput | Prisma.jobsWhereUniqueInput[]
-}
-
-export type jobsUncheckedCreateNestedManyWithoutAi_chatInput = {
-  create?: Prisma.XOR<Prisma.jobsCreateWithoutAi_chatInput, Prisma.jobsUncheckedCreateWithoutAi_chatInput> | Prisma.jobsCreateWithoutAi_chatInput[] | Prisma.jobsUncheckedCreateWithoutAi_chatInput[]
-  connectOrCreate?: Prisma.jobsCreateOrConnectWithoutAi_chatInput | Prisma.jobsCreateOrConnectWithoutAi_chatInput[]
-  createMany?: Prisma.jobsCreateManyAi_chatInputEnvelope
-  connect?: Prisma.jobsWhereUniqueInput | Prisma.jobsWhereUniqueInput[]
-}
-
-export type jobsUpdateManyWithoutAi_chatNestedInput = {
-  create?: Prisma.XOR<Prisma.jobsCreateWithoutAi_chatInput, Prisma.jobsUncheckedCreateWithoutAi_chatInput> | Prisma.jobsCreateWithoutAi_chatInput[] | Prisma.jobsUncheckedCreateWithoutAi_chatInput[]
-  connectOrCreate?: Prisma.jobsCreateOrConnectWithoutAi_chatInput | Prisma.jobsCreateOrConnectWithoutAi_chatInput[]
-  upsert?: Prisma.jobsUpsertWithWhereUniqueWithoutAi_chatInput | Prisma.jobsUpsertWithWhereUniqueWithoutAi_chatInput[]
-  createMany?: Prisma.jobsCreateManyAi_chatInputEnvelope
-  set?: Prisma.jobsWhereUniqueInput | Prisma.jobsWhereUniqueInput[]
-  disconnect?: Prisma.jobsWhereUniqueInput | Prisma.jobsWhereUniqueInput[]
-  delete?: Prisma.jobsWhereUniqueInput | Prisma.jobsWhereUniqueInput[]
-  connect?: Prisma.jobsWhereUniqueInput | Prisma.jobsWhereUniqueInput[]
-  update?: Prisma.jobsUpdateWithWhereUniqueWithoutAi_chatInput | Prisma.jobsUpdateWithWhereUniqueWithoutAi_chatInput[]
-  updateMany?: Prisma.jobsUpdateManyWithWhereWithoutAi_chatInput | Prisma.jobsUpdateManyWithWhereWithoutAi_chatInput[]
-  deleteMany?: Prisma.jobsScalarWhereInput | Prisma.jobsScalarWhereInput[]
-}
-
-export type jobsUncheckedUpdateManyWithoutAi_chatNestedInput = {
-  create?: Prisma.XOR<Prisma.jobsCreateWithoutAi_chatInput, Prisma.jobsUncheckedCreateWithoutAi_chatInput> | Prisma.jobsCreateWithoutAi_chatInput[] | Prisma.jobsUncheckedCreateWithoutAi_chatInput[]
-  connectOrCreate?: Prisma.jobsCreateOrConnectWithoutAi_chatInput | Prisma.jobsCreateOrConnectWithoutAi_chatInput[]
-  upsert?: Prisma.jobsUpsertWithWhereUniqueWithoutAi_chatInput | Prisma.jobsUpsertWithWhereUniqueWithoutAi_chatInput[]
-  createMany?: Prisma.jobsCreateManyAi_chatInputEnvelope
-  set?: Prisma.jobsWhereUniqueInput | Prisma.jobsWhereUniqueInput[]
-  disconnect?: Prisma.jobsWhereUniqueInput | Prisma.jobsWhereUniqueInput[]
-  delete?: Prisma.jobsWhereUniqueInput | Prisma.jobsWhereUniqueInput[]
-  connect?: Prisma.jobsWhereUniqueInput | Prisma.jobsWhereUniqueInput[]
-  update?: Prisma.jobsUpdateWithWhereUniqueWithoutAi_chatInput | Prisma.jobsUpdateWithWhereUniqueWithoutAi_chatInput[]
-  updateMany?: Prisma.jobsUpdateManyWithWhereWithoutAi_chatInput | Prisma.jobsUpdateManyWithWhereWithoutAi_chatInput[]
-  deleteMany?: Prisma.jobsScalarWhereInput | Prisma.jobsScalarWhereInput[]
-}
-
-export type jobsCreateNestedOneWithoutJob_resourcesInput = {
-  create?: Prisma.XOR<Prisma.jobsCreateWithoutJob_resourcesInput, Prisma.jobsUncheckedCreateWithoutJob_resourcesInput>
-  connectOrCreate?: Prisma.jobsCreateOrConnectWithoutJob_resourcesInput
-  connect?: Prisma.jobsWhereUniqueInput
-}
-
-export type jobsUpdateOneRequiredWithoutJob_resourcesNestedInput = {
-  create?: Prisma.XOR<Prisma.jobsCreateWithoutJob_resourcesInput, Prisma.jobsUncheckedCreateWithoutJob_resourcesInput>
-  connectOrCreate?: Prisma.jobsCreateOrConnectWithoutJob_resourcesInput
-  upsert?: Prisma.jobsUpsertWithoutJob_resourcesInput
-  connect?: Prisma.jobsWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.jobsUpdateToOneWithWhereWithoutJob_resourcesInput, Prisma.jobsUpdateWithoutJob_resourcesInput>, Prisma.jobsUncheckedUpdateWithoutJob_resourcesInput>
-}
-
 export type jobsCreateNestedOneWithoutJob_matchesInput = {
   create?: Prisma.XOR<Prisma.jobsCreateWithoutJob_matchesInput, Prisma.jobsUncheckedCreateWithoutJob_matchesInput>
   connectOrCreate?: Prisma.jobsCreateOrConnectWithoutJob_matchesInput
@@ -965,6 +909,62 @@ export type jobsUncheckedUpdateManyWithoutJob_platformsNestedInput = {
   deleteMany?: Prisma.jobsScalarWhereInput | Prisma.jobsScalarWhereInput[]
 }
 
+export type jobsCreateNestedOneWithoutJob_resourcesInput = {
+  create?: Prisma.XOR<Prisma.jobsCreateWithoutJob_resourcesInput, Prisma.jobsUncheckedCreateWithoutJob_resourcesInput>
+  connectOrCreate?: Prisma.jobsCreateOrConnectWithoutJob_resourcesInput
+  connect?: Prisma.jobsWhereUniqueInput
+}
+
+export type jobsUpdateOneRequiredWithoutJob_resourcesNestedInput = {
+  create?: Prisma.XOR<Prisma.jobsCreateWithoutJob_resourcesInput, Prisma.jobsUncheckedCreateWithoutJob_resourcesInput>
+  connectOrCreate?: Prisma.jobsCreateOrConnectWithoutJob_resourcesInput
+  upsert?: Prisma.jobsUpsertWithoutJob_resourcesInput
+  connect?: Prisma.jobsWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.jobsUpdateToOneWithWhereWithoutJob_resourcesInput, Prisma.jobsUpdateWithoutJob_resourcesInput>, Prisma.jobsUncheckedUpdateWithoutJob_resourcesInput>
+}
+
+export type jobsCreateNestedManyWithoutAi_chatInput = {
+  create?: Prisma.XOR<Prisma.jobsCreateWithoutAi_chatInput, Prisma.jobsUncheckedCreateWithoutAi_chatInput> | Prisma.jobsCreateWithoutAi_chatInput[] | Prisma.jobsUncheckedCreateWithoutAi_chatInput[]
+  connectOrCreate?: Prisma.jobsCreateOrConnectWithoutAi_chatInput | Prisma.jobsCreateOrConnectWithoutAi_chatInput[]
+  createMany?: Prisma.jobsCreateManyAi_chatInputEnvelope
+  connect?: Prisma.jobsWhereUniqueInput | Prisma.jobsWhereUniqueInput[]
+}
+
+export type jobsUncheckedCreateNestedManyWithoutAi_chatInput = {
+  create?: Prisma.XOR<Prisma.jobsCreateWithoutAi_chatInput, Prisma.jobsUncheckedCreateWithoutAi_chatInput> | Prisma.jobsCreateWithoutAi_chatInput[] | Prisma.jobsUncheckedCreateWithoutAi_chatInput[]
+  connectOrCreate?: Prisma.jobsCreateOrConnectWithoutAi_chatInput | Prisma.jobsCreateOrConnectWithoutAi_chatInput[]
+  createMany?: Prisma.jobsCreateManyAi_chatInputEnvelope
+  connect?: Prisma.jobsWhereUniqueInput | Prisma.jobsWhereUniqueInput[]
+}
+
+export type jobsUpdateManyWithoutAi_chatNestedInput = {
+  create?: Prisma.XOR<Prisma.jobsCreateWithoutAi_chatInput, Prisma.jobsUncheckedCreateWithoutAi_chatInput> | Prisma.jobsCreateWithoutAi_chatInput[] | Prisma.jobsUncheckedCreateWithoutAi_chatInput[]
+  connectOrCreate?: Prisma.jobsCreateOrConnectWithoutAi_chatInput | Prisma.jobsCreateOrConnectWithoutAi_chatInput[]
+  upsert?: Prisma.jobsUpsertWithWhereUniqueWithoutAi_chatInput | Prisma.jobsUpsertWithWhereUniqueWithoutAi_chatInput[]
+  createMany?: Prisma.jobsCreateManyAi_chatInputEnvelope
+  set?: Prisma.jobsWhereUniqueInput | Prisma.jobsWhereUniqueInput[]
+  disconnect?: Prisma.jobsWhereUniqueInput | Prisma.jobsWhereUniqueInput[]
+  delete?: Prisma.jobsWhereUniqueInput | Prisma.jobsWhereUniqueInput[]
+  connect?: Prisma.jobsWhereUniqueInput | Prisma.jobsWhereUniqueInput[]
+  update?: Prisma.jobsUpdateWithWhereUniqueWithoutAi_chatInput | Prisma.jobsUpdateWithWhereUniqueWithoutAi_chatInput[]
+  updateMany?: Prisma.jobsUpdateManyWithWhereWithoutAi_chatInput | Prisma.jobsUpdateManyWithWhereWithoutAi_chatInput[]
+  deleteMany?: Prisma.jobsScalarWhereInput | Prisma.jobsScalarWhereInput[]
+}
+
+export type jobsUncheckedUpdateManyWithoutAi_chatNestedInput = {
+  create?: Prisma.XOR<Prisma.jobsCreateWithoutAi_chatInput, Prisma.jobsUncheckedCreateWithoutAi_chatInput> | Prisma.jobsCreateWithoutAi_chatInput[] | Prisma.jobsUncheckedCreateWithoutAi_chatInput[]
+  connectOrCreate?: Prisma.jobsCreateOrConnectWithoutAi_chatInput | Prisma.jobsCreateOrConnectWithoutAi_chatInput[]
+  upsert?: Prisma.jobsUpsertWithWhereUniqueWithoutAi_chatInput | Prisma.jobsUpsertWithWhereUniqueWithoutAi_chatInput[]
+  createMany?: Prisma.jobsCreateManyAi_chatInputEnvelope
+  set?: Prisma.jobsWhereUniqueInput | Prisma.jobsWhereUniqueInput[]
+  disconnect?: Prisma.jobsWhereUniqueInput | Prisma.jobsWhereUniqueInput[]
+  delete?: Prisma.jobsWhereUniqueInput | Prisma.jobsWhereUniqueInput[]
+  connect?: Prisma.jobsWhereUniqueInput | Prisma.jobsWhereUniqueInput[]
+  update?: Prisma.jobsUpdateWithWhereUniqueWithoutAi_chatInput | Prisma.jobsUpdateWithWhereUniqueWithoutAi_chatInput[]
+  updateMany?: Prisma.jobsUpdateManyWithWhereWithoutAi_chatInput | Prisma.jobsUpdateManyWithWhereWithoutAi_chatInput[]
+  deleteMany?: Prisma.jobsScalarWhereInput | Prisma.jobsScalarWhereInput[]
+}
+
 export type jobsCreateWithoutApplicationsInput = {
   status?: string
   date_created?: Date | string | null
@@ -990,7 +990,7 @@ export type jobsCreateWithoutApplicationsInput = {
   source_html_stripped?: string | null
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutJobsInput
   job_resources?: Prisma.job_resourcesCreateNestedManyWithoutJobsInput
-  ai_chat?: Prisma.ai_chatCreateNestedOneWithoutJobs_extractedInput
+  ai_chat?: Prisma.ai_chatsCreateNestedOneWithoutJobsInput
   job_platforms?: Prisma.job_platformsCreateNestedOneWithoutJobsInput
 }
 
@@ -1065,7 +1065,7 @@ export type jobsUpdateWithoutApplicationsInput = {
   source_html_stripped?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_matches?: Prisma.job_matchesUpdateManyWithoutJobsNestedInput
   job_resources?: Prisma.job_resourcesUpdateManyWithoutJobsNestedInput
-  ai_chat?: Prisma.ai_chatUpdateOneWithoutJobs_extractedNestedInput
+  ai_chat?: Prisma.ai_chatsUpdateOneWithoutJobsNestedInput
   job_platforms?: Prisma.job_platformsUpdateOneWithoutJobsNestedInput
 }
 
@@ -1097,6 +1097,390 @@ export type jobsUncheckedUpdateWithoutApplicationsInput = {
   ai_chat_extraction?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutJobsNestedInput
   job_resources?: Prisma.job_resourcesUncheckedUpdateManyWithoutJobsNestedInput
+}
+
+export type jobsCreateWithoutJob_matchesInput = {
+  status?: string
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  source_url?: string | null
+  title?: string | null
+  job_description?: string | null
+  job_poster?: string | null
+  company_description?: string | null
+  date_posted?: Date | string | null
+  salary_min?: number | null
+  salary_max?: number | null
+  salary_currency?: string | null
+  salary_period?: string | null
+  import_error?: string | null
+  last_scraped?: Date | string | null
+  location?: string | null
+  scrape_count?: number | null
+  job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  source_html_stripped?: string | null
+  applications?: Prisma.applicationsCreateNestedManyWithoutJobsInput
+  job_resources?: Prisma.job_resourcesCreateNestedManyWithoutJobsInput
+  ai_chat?: Prisma.ai_chatsCreateNestedOneWithoutJobsInput
+  job_platforms?: Prisma.job_platformsCreateNestedOneWithoutJobsInput
+}
+
+export type jobsUncheckedCreateWithoutJob_matchesInput = {
+  id?: number
+  status?: string
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  source_url?: string | null
+  title?: string | null
+  job_description?: string | null
+  job_poster?: string | null
+  company_description?: string | null
+  date_posted?: Date | string | null
+  salary_min?: number | null
+  salary_max?: number | null
+  salary_currency?: string | null
+  salary_period?: string | null
+  import_error?: string | null
+  last_scraped?: Date | string | null
+  location?: string | null
+  scrape_count?: number | null
+  job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  source_html_stripped?: string | null
+  job_platform?: number | null
+  ai_chat_extraction?: number | null
+  applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutJobsInput
+  job_resources?: Prisma.job_resourcesUncheckedCreateNestedManyWithoutJobsInput
+}
+
+export type jobsCreateOrConnectWithoutJob_matchesInput = {
+  where: Prisma.jobsWhereUniqueInput
+  create: Prisma.XOR<Prisma.jobsCreateWithoutJob_matchesInput, Prisma.jobsUncheckedCreateWithoutJob_matchesInput>
+}
+
+export type jobsUpsertWithoutJob_matchesInput = {
+  update: Prisma.XOR<Prisma.jobsUpdateWithoutJob_matchesInput, Prisma.jobsUncheckedUpdateWithoutJob_matchesInput>
+  create: Prisma.XOR<Prisma.jobsCreateWithoutJob_matchesInput, Prisma.jobsUncheckedCreateWithoutJob_matchesInput>
+  where?: Prisma.jobsWhereInput
+}
+
+export type jobsUpdateToOneWithWhereWithoutJob_matchesInput = {
+  where?: Prisma.jobsWhereInput
+  data: Prisma.XOR<Prisma.jobsUpdateWithoutJob_matchesInput, Prisma.jobsUncheckedUpdateWithoutJob_matchesInput>
+}
+
+export type jobsUpdateWithoutJob_matchesInput = {
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  source_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  job_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  job_poster?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  date_posted?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  salary_min?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_max?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  scrape_count?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  source_html_stripped?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  applications?: Prisma.applicationsUpdateManyWithoutJobsNestedInput
+  job_resources?: Prisma.job_resourcesUpdateManyWithoutJobsNestedInput
+  ai_chat?: Prisma.ai_chatsUpdateOneWithoutJobsNestedInput
+  job_platforms?: Prisma.job_platformsUpdateOneWithoutJobsNestedInput
+}
+
+export type jobsUncheckedUpdateWithoutJob_matchesInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  source_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  job_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  job_poster?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  date_posted?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  salary_min?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_max?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  scrape_count?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  source_html_stripped?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  job_platform?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ai_chat_extraction?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  applications?: Prisma.applicationsUncheckedUpdateManyWithoutJobsNestedInput
+  job_resources?: Prisma.job_resourcesUncheckedUpdateManyWithoutJobsNestedInput
+}
+
+export type jobsCreateWithoutJob_platformsInput = {
+  status?: string
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  source_url?: string | null
+  title?: string | null
+  job_description?: string | null
+  job_poster?: string | null
+  company_description?: string | null
+  date_posted?: Date | string | null
+  salary_min?: number | null
+  salary_max?: number | null
+  salary_currency?: string | null
+  salary_period?: string | null
+  import_error?: string | null
+  last_scraped?: Date | string | null
+  location?: string | null
+  scrape_count?: number | null
+  job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  source_html_stripped?: string | null
+  applications?: Prisma.applicationsCreateNestedManyWithoutJobsInput
+  job_matches?: Prisma.job_matchesCreateNestedManyWithoutJobsInput
+  job_resources?: Prisma.job_resourcesCreateNestedManyWithoutJobsInput
+  ai_chat?: Prisma.ai_chatsCreateNestedOneWithoutJobsInput
+}
+
+export type jobsUncheckedCreateWithoutJob_platformsInput = {
+  id?: number
+  status?: string
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  source_url?: string | null
+  title?: string | null
+  job_description?: string | null
+  job_poster?: string | null
+  company_description?: string | null
+  date_posted?: Date | string | null
+  salary_min?: number | null
+  salary_max?: number | null
+  salary_currency?: string | null
+  salary_period?: string | null
+  import_error?: string | null
+  last_scraped?: Date | string | null
+  location?: string | null
+  scrape_count?: number | null
+  job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  source_html_stripped?: string | null
+  ai_chat_extraction?: number | null
+  applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutJobsInput
+  job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutJobsInput
+  job_resources?: Prisma.job_resourcesUncheckedCreateNestedManyWithoutJobsInput
+}
+
+export type jobsCreateOrConnectWithoutJob_platformsInput = {
+  where: Prisma.jobsWhereUniqueInput
+  create: Prisma.XOR<Prisma.jobsCreateWithoutJob_platformsInput, Prisma.jobsUncheckedCreateWithoutJob_platformsInput>
+}
+
+export type jobsCreateManyJob_platformsInputEnvelope = {
+  data: Prisma.jobsCreateManyJob_platformsInput | Prisma.jobsCreateManyJob_platformsInput[]
+  skipDuplicates?: boolean
+}
+
+export type jobsUpsertWithWhereUniqueWithoutJob_platformsInput = {
+  where: Prisma.jobsWhereUniqueInput
+  update: Prisma.XOR<Prisma.jobsUpdateWithoutJob_platformsInput, Prisma.jobsUncheckedUpdateWithoutJob_platformsInput>
+  create: Prisma.XOR<Prisma.jobsCreateWithoutJob_platformsInput, Prisma.jobsUncheckedCreateWithoutJob_platformsInput>
+}
+
+export type jobsUpdateWithWhereUniqueWithoutJob_platformsInput = {
+  where: Prisma.jobsWhereUniqueInput
+  data: Prisma.XOR<Prisma.jobsUpdateWithoutJob_platformsInput, Prisma.jobsUncheckedUpdateWithoutJob_platformsInput>
+}
+
+export type jobsUpdateManyWithWhereWithoutJob_platformsInput = {
+  where: Prisma.jobsScalarWhereInput
+  data: Prisma.XOR<Prisma.jobsUpdateManyMutationInput, Prisma.jobsUncheckedUpdateManyWithoutJob_platformsInput>
+}
+
+export type jobsScalarWhereInput = {
+  AND?: Prisma.jobsScalarWhereInput | Prisma.jobsScalarWhereInput[]
+  OR?: Prisma.jobsScalarWhereInput[]
+  NOT?: Prisma.jobsScalarWhereInput | Prisma.jobsScalarWhereInput[]
+  id?: Prisma.IntFilter<"jobs"> | number
+  status?: Prisma.StringFilter<"jobs"> | string
+  date_created?: Prisma.DateTimeNullableFilter<"jobs"> | Date | string | null
+  date_updated?: Prisma.DateTimeNullableFilter<"jobs"> | Date | string | null
+  source_url?: Prisma.StringNullableFilter<"jobs"> | string | null
+  title?: Prisma.StringNullableFilter<"jobs"> | string | null
+  job_description?: Prisma.StringNullableFilter<"jobs"> | string | null
+  job_poster?: Prisma.StringNullableFilter<"jobs"> | string | null
+  company_description?: Prisma.StringNullableFilter<"jobs"> | string | null
+  date_posted?: Prisma.DateTimeNullableFilter<"jobs"> | Date | string | null
+  salary_min?: Prisma.IntNullableFilter<"jobs"> | number | null
+  salary_max?: Prisma.IntNullableFilter<"jobs"> | number | null
+  salary_currency?: Prisma.StringNullableFilter<"jobs"> | string | null
+  salary_period?: Prisma.StringNullableFilter<"jobs"> | string | null
+  import_error?: Prisma.StringNullableFilter<"jobs"> | string | null
+  last_scraped?: Prisma.DateTimeNullableFilter<"jobs"> | Date | string | null
+  location?: Prisma.StringNullableFilter<"jobs"> | string | null
+  scrape_count?: Prisma.IntNullableFilter<"jobs"> | number | null
+  job_types?: Prisma.JsonNullableFilter<"jobs">
+  experience_levels?: Prisma.JsonNullableFilter<"jobs">
+  remote_options?: Prisma.JsonNullableFilter<"jobs">
+  skills?: Prisma.JsonNullableFilter<"jobs">
+  source_html_stripped?: Prisma.StringNullableFilter<"jobs"> | string | null
+  job_platform?: Prisma.IntNullableFilter<"jobs"> | number | null
+  ai_chat_extraction?: Prisma.IntNullableFilter<"jobs"> | number | null
+}
+
+export type jobsCreateWithoutJob_resourcesInput = {
+  status?: string
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  source_url?: string | null
+  title?: string | null
+  job_description?: string | null
+  job_poster?: string | null
+  company_description?: string | null
+  date_posted?: Date | string | null
+  salary_min?: number | null
+  salary_max?: number | null
+  salary_currency?: string | null
+  salary_period?: string | null
+  import_error?: string | null
+  last_scraped?: Date | string | null
+  location?: string | null
+  scrape_count?: number | null
+  job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  source_html_stripped?: string | null
+  applications?: Prisma.applicationsCreateNestedManyWithoutJobsInput
+  job_matches?: Prisma.job_matchesCreateNestedManyWithoutJobsInput
+  ai_chat?: Prisma.ai_chatsCreateNestedOneWithoutJobsInput
+  job_platforms?: Prisma.job_platformsCreateNestedOneWithoutJobsInput
+}
+
+export type jobsUncheckedCreateWithoutJob_resourcesInput = {
+  id?: number
+  status?: string
+  date_created?: Date | string | null
+  date_updated?: Date | string | null
+  source_url?: string | null
+  title?: string | null
+  job_description?: string | null
+  job_poster?: string | null
+  company_description?: string | null
+  date_posted?: Date | string | null
+  salary_min?: number | null
+  salary_max?: number | null
+  salary_currency?: string | null
+  salary_period?: string | null
+  import_error?: string | null
+  last_scraped?: Date | string | null
+  location?: string | null
+  scrape_count?: number | null
+  job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  source_html_stripped?: string | null
+  job_platform?: number | null
+  ai_chat_extraction?: number | null
+  applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutJobsInput
+  job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutJobsInput
+}
+
+export type jobsCreateOrConnectWithoutJob_resourcesInput = {
+  where: Prisma.jobsWhereUniqueInput
+  create: Prisma.XOR<Prisma.jobsCreateWithoutJob_resourcesInput, Prisma.jobsUncheckedCreateWithoutJob_resourcesInput>
+}
+
+export type jobsUpsertWithoutJob_resourcesInput = {
+  update: Prisma.XOR<Prisma.jobsUpdateWithoutJob_resourcesInput, Prisma.jobsUncheckedUpdateWithoutJob_resourcesInput>
+  create: Prisma.XOR<Prisma.jobsCreateWithoutJob_resourcesInput, Prisma.jobsUncheckedCreateWithoutJob_resourcesInput>
+  where?: Prisma.jobsWhereInput
+}
+
+export type jobsUpdateToOneWithWhereWithoutJob_resourcesInput = {
+  where?: Prisma.jobsWhereInput
+  data: Prisma.XOR<Prisma.jobsUpdateWithoutJob_resourcesInput, Prisma.jobsUncheckedUpdateWithoutJob_resourcesInput>
+}
+
+export type jobsUpdateWithoutJob_resourcesInput = {
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  source_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  job_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  job_poster?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  date_posted?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  salary_min?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_max?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  scrape_count?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  source_html_stripped?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  applications?: Prisma.applicationsUpdateManyWithoutJobsNestedInput
+  job_matches?: Prisma.job_matchesUpdateManyWithoutJobsNestedInput
+  ai_chat?: Prisma.ai_chatsUpdateOneWithoutJobsNestedInput
+  job_platforms?: Prisma.job_platformsUpdateOneWithoutJobsNestedInput
+}
+
+export type jobsUncheckedUpdateWithoutJob_resourcesInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  source_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  job_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  job_poster?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  date_posted?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  salary_min?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_max?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  scrape_count?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  source_html_stripped?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  job_platform?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  ai_chat_extraction?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  applications?: Prisma.applicationsUncheckedUpdateManyWithoutJobsNestedInput
+  job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutJobsNestedInput
 }
 
 export type jobsCreateWithoutAi_chatInput = {
@@ -1184,67 +1568,7 @@ export type jobsUpdateManyWithWhereWithoutAi_chatInput = {
   data: Prisma.XOR<Prisma.jobsUpdateManyMutationInput, Prisma.jobsUncheckedUpdateManyWithoutAi_chatInput>
 }
 
-export type jobsScalarWhereInput = {
-  AND?: Prisma.jobsScalarWhereInput | Prisma.jobsScalarWhereInput[]
-  OR?: Prisma.jobsScalarWhereInput[]
-  NOT?: Prisma.jobsScalarWhereInput | Prisma.jobsScalarWhereInput[]
-  id?: Prisma.IntFilter<"jobs"> | number
-  status?: Prisma.StringFilter<"jobs"> | string
-  date_created?: Prisma.DateTimeNullableFilter<"jobs"> | Date | string | null
-  date_updated?: Prisma.DateTimeNullableFilter<"jobs"> | Date | string | null
-  source_url?: Prisma.StringNullableFilter<"jobs"> | string | null
-  title?: Prisma.StringNullableFilter<"jobs"> | string | null
-  job_description?: Prisma.StringNullableFilter<"jobs"> | string | null
-  job_poster?: Prisma.StringNullableFilter<"jobs"> | string | null
-  company_description?: Prisma.StringNullableFilter<"jobs"> | string | null
-  date_posted?: Prisma.DateTimeNullableFilter<"jobs"> | Date | string | null
-  salary_min?: Prisma.IntNullableFilter<"jobs"> | number | null
-  salary_max?: Prisma.IntNullableFilter<"jobs"> | number | null
-  salary_currency?: Prisma.StringNullableFilter<"jobs"> | string | null
-  salary_period?: Prisma.StringNullableFilter<"jobs"> | string | null
-  import_error?: Prisma.StringNullableFilter<"jobs"> | string | null
-  last_scraped?: Prisma.DateTimeNullableFilter<"jobs"> | Date | string | null
-  location?: Prisma.StringNullableFilter<"jobs"> | string | null
-  scrape_count?: Prisma.IntNullableFilter<"jobs"> | number | null
-  job_types?: Prisma.JsonNullableFilter<"jobs">
-  experience_levels?: Prisma.JsonNullableFilter<"jobs">
-  remote_options?: Prisma.JsonNullableFilter<"jobs">
-  skills?: Prisma.JsonNullableFilter<"jobs">
-  source_html_stripped?: Prisma.StringNullableFilter<"jobs"> | string | null
-  job_platform?: Prisma.IntNullableFilter<"jobs"> | number | null
-  ai_chat_extraction?: Prisma.IntNullableFilter<"jobs"> | number | null
-}
-
-export type jobsCreateWithoutJob_resourcesInput = {
-  status?: string
-  date_created?: Date | string | null
-  date_updated?: Date | string | null
-  source_url?: string | null
-  title?: string | null
-  job_description?: string | null
-  job_poster?: string | null
-  company_description?: string | null
-  date_posted?: Date | string | null
-  salary_min?: number | null
-  salary_max?: number | null
-  salary_currency?: string | null
-  salary_period?: string | null
-  import_error?: string | null
-  last_scraped?: Date | string | null
-  location?: string | null
-  scrape_count?: number | null
-  job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  source_html_stripped?: string | null
-  applications?: Prisma.applicationsCreateNestedManyWithoutJobsInput
-  job_matches?: Prisma.job_matchesCreateNestedManyWithoutJobsInput
-  ai_chat?: Prisma.ai_chatCreateNestedOneWithoutJobs_extractedInput
-  job_platforms?: Prisma.job_platformsCreateNestedOneWithoutJobsInput
-}
-
-export type jobsUncheckedCreateWithoutJob_resourcesInput = {
+export type jobsCreateManyJob_platformsInput = {
   id?: number
   status?: string
   date_created?: Date | string | null
@@ -1268,29 +1592,10 @@ export type jobsUncheckedCreateWithoutJob_resourcesInput = {
   remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   source_html_stripped?: string | null
-  job_platform?: number | null
   ai_chat_extraction?: number | null
-  applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutJobsInput
-  job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutJobsInput
 }
 
-export type jobsCreateOrConnectWithoutJob_resourcesInput = {
-  where: Prisma.jobsWhereUniqueInput
-  create: Prisma.XOR<Prisma.jobsCreateWithoutJob_resourcesInput, Prisma.jobsUncheckedCreateWithoutJob_resourcesInput>
-}
-
-export type jobsUpsertWithoutJob_resourcesInput = {
-  update: Prisma.XOR<Prisma.jobsUpdateWithoutJob_resourcesInput, Prisma.jobsUncheckedUpdateWithoutJob_resourcesInput>
-  create: Prisma.XOR<Prisma.jobsCreateWithoutJob_resourcesInput, Prisma.jobsUncheckedCreateWithoutJob_resourcesInput>
-  where?: Prisma.jobsWhereInput
-}
-
-export type jobsUpdateToOneWithWhereWithoutJob_resourcesInput = {
-  where?: Prisma.jobsWhereInput
-  data: Prisma.XOR<Prisma.jobsUpdateWithoutJob_resourcesInput, Prisma.jobsUncheckedUpdateWithoutJob_resourcesInput>
-}
-
-export type jobsUpdateWithoutJob_resourcesInput = {
+export type jobsUpdateWithoutJob_platformsInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1315,11 +1620,11 @@ export type jobsUpdateWithoutJob_resourcesInput = {
   source_html_stripped?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   applications?: Prisma.applicationsUpdateManyWithoutJobsNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutJobsNestedInput
-  ai_chat?: Prisma.ai_chatUpdateOneWithoutJobs_extractedNestedInput
-  job_platforms?: Prisma.job_platformsUpdateOneWithoutJobsNestedInput
+  job_resources?: Prisma.job_resourcesUpdateManyWithoutJobsNestedInput
+  ai_chat?: Prisma.ai_chatsUpdateOneWithoutJobsNestedInput
 }
 
-export type jobsUncheckedUpdateWithoutJob_resourcesInput = {
+export type jobsUncheckedUpdateWithoutJob_platformsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.StringFieldUpdateOperationsInput | string
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1343,117 +1648,13 @@ export type jobsUncheckedUpdateWithoutJob_resourcesInput = {
   remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   source_html_stripped?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  job_platform?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat_extraction?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutJobsNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutJobsNestedInput
+  job_resources?: Prisma.job_resourcesUncheckedUpdateManyWithoutJobsNestedInput
 }
 
-export type jobsCreateWithoutJob_matchesInput = {
-  status?: string
-  date_created?: Date | string | null
-  date_updated?: Date | string | null
-  source_url?: string | null
-  title?: string | null
-  job_description?: string | null
-  job_poster?: string | null
-  company_description?: string | null
-  date_posted?: Date | string | null
-  salary_min?: number | null
-  salary_max?: number | null
-  salary_currency?: string | null
-  salary_period?: string | null
-  import_error?: string | null
-  last_scraped?: Date | string | null
-  location?: string | null
-  scrape_count?: number | null
-  job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  source_html_stripped?: string | null
-  applications?: Prisma.applicationsCreateNestedManyWithoutJobsInput
-  job_resources?: Prisma.job_resourcesCreateNestedManyWithoutJobsInput
-  ai_chat?: Prisma.ai_chatCreateNestedOneWithoutJobs_extractedInput
-  job_platforms?: Prisma.job_platformsCreateNestedOneWithoutJobsInput
-}
-
-export type jobsUncheckedCreateWithoutJob_matchesInput = {
-  id?: number
-  status?: string
-  date_created?: Date | string | null
-  date_updated?: Date | string | null
-  source_url?: string | null
-  title?: string | null
-  job_description?: string | null
-  job_poster?: string | null
-  company_description?: string | null
-  date_posted?: Date | string | null
-  salary_min?: number | null
-  salary_max?: number | null
-  salary_currency?: string | null
-  salary_period?: string | null
-  import_error?: string | null
-  last_scraped?: Date | string | null
-  location?: string | null
-  scrape_count?: number | null
-  job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  source_html_stripped?: string | null
-  job_platform?: number | null
-  ai_chat_extraction?: number | null
-  applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutJobsInput
-  job_resources?: Prisma.job_resourcesUncheckedCreateNestedManyWithoutJobsInput
-}
-
-export type jobsCreateOrConnectWithoutJob_matchesInput = {
-  where: Prisma.jobsWhereUniqueInput
-  create: Prisma.XOR<Prisma.jobsCreateWithoutJob_matchesInput, Prisma.jobsUncheckedCreateWithoutJob_matchesInput>
-}
-
-export type jobsUpsertWithoutJob_matchesInput = {
-  update: Prisma.XOR<Prisma.jobsUpdateWithoutJob_matchesInput, Prisma.jobsUncheckedUpdateWithoutJob_matchesInput>
-  create: Prisma.XOR<Prisma.jobsCreateWithoutJob_matchesInput, Prisma.jobsUncheckedCreateWithoutJob_matchesInput>
-  where?: Prisma.jobsWhereInput
-}
-
-export type jobsUpdateToOneWithWhereWithoutJob_matchesInput = {
-  where?: Prisma.jobsWhereInput
-  data: Prisma.XOR<Prisma.jobsUpdateWithoutJob_matchesInput, Prisma.jobsUncheckedUpdateWithoutJob_matchesInput>
-}
-
-export type jobsUpdateWithoutJob_matchesInput = {
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  source_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  job_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  job_poster?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  company_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  date_posted?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  salary_min?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  salary_max?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  scrape_count?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  source_html_stripped?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  applications?: Prisma.applicationsUpdateManyWithoutJobsNestedInput
-  job_resources?: Prisma.job_resourcesUpdateManyWithoutJobsNestedInput
-  ai_chat?: Prisma.ai_chatUpdateOneWithoutJobs_extractedNestedInput
-  job_platforms?: Prisma.job_platformsUpdateOneWithoutJobsNestedInput
-}
-
-export type jobsUncheckedUpdateWithoutJob_matchesInput = {
+export type jobsUncheckedUpdateManyWithoutJob_platformsInput = {
   id?: Prisma.IntFieldUpdateOperationsInput | number
   status?: Prisma.StringFieldUpdateOperationsInput | string
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1477,95 +1678,7 @@ export type jobsUncheckedUpdateWithoutJob_matchesInput = {
   remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   source_html_stripped?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  job_platform?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat_extraction?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  applications?: Prisma.applicationsUncheckedUpdateManyWithoutJobsNestedInput
-  job_resources?: Prisma.job_resourcesUncheckedUpdateManyWithoutJobsNestedInput
-}
-
-export type jobsCreateWithoutJob_platformsInput = {
-  status?: string
-  date_created?: Date | string | null
-  date_updated?: Date | string | null
-  source_url?: string | null
-  title?: string | null
-  job_description?: string | null
-  job_poster?: string | null
-  company_description?: string | null
-  date_posted?: Date | string | null
-  salary_min?: number | null
-  salary_max?: number | null
-  salary_currency?: string | null
-  salary_period?: string | null
-  import_error?: string | null
-  last_scraped?: Date | string | null
-  location?: string | null
-  scrape_count?: number | null
-  job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  source_html_stripped?: string | null
-  applications?: Prisma.applicationsCreateNestedManyWithoutJobsInput
-  job_matches?: Prisma.job_matchesCreateNestedManyWithoutJobsInput
-  job_resources?: Prisma.job_resourcesCreateNestedManyWithoutJobsInput
-  ai_chat?: Prisma.ai_chatCreateNestedOneWithoutJobs_extractedInput
-}
-
-export type jobsUncheckedCreateWithoutJob_platformsInput = {
-  id?: number
-  status?: string
-  date_created?: Date | string | null
-  date_updated?: Date | string | null
-  source_url?: string | null
-  title?: string | null
-  job_description?: string | null
-  job_poster?: string | null
-  company_description?: string | null
-  date_posted?: Date | string | null
-  salary_min?: number | null
-  salary_max?: number | null
-  salary_currency?: string | null
-  salary_period?: string | null
-  import_error?: string | null
-  last_scraped?: Date | string | null
-  location?: string | null
-  scrape_count?: number | null
-  job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  source_html_stripped?: string | null
-  ai_chat_extraction?: number | null
-  applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutJobsInput
-  job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutJobsInput
-  job_resources?: Prisma.job_resourcesUncheckedCreateNestedManyWithoutJobsInput
-}
-
-export type jobsCreateOrConnectWithoutJob_platformsInput = {
-  where: Prisma.jobsWhereUniqueInput
-  create: Prisma.XOR<Prisma.jobsCreateWithoutJob_platformsInput, Prisma.jobsUncheckedCreateWithoutJob_platformsInput>
-}
-
-export type jobsCreateManyJob_platformsInputEnvelope = {
-  data: Prisma.jobsCreateManyJob_platformsInput | Prisma.jobsCreateManyJob_platformsInput[]
-  skipDuplicates?: boolean
-}
-
-export type jobsUpsertWithWhereUniqueWithoutJob_platformsInput = {
-  where: Prisma.jobsWhereUniqueInput
-  update: Prisma.XOR<Prisma.jobsUpdateWithoutJob_platformsInput, Prisma.jobsUncheckedUpdateWithoutJob_platformsInput>
-  create: Prisma.XOR<Prisma.jobsCreateWithoutJob_platformsInput, Prisma.jobsUncheckedCreateWithoutJob_platformsInput>
-}
-
-export type jobsUpdateWithWhereUniqueWithoutJob_platformsInput = {
-  where: Prisma.jobsWhereUniqueInput
-  data: Prisma.XOR<Prisma.jobsUpdateWithoutJob_platformsInput, Prisma.jobsUncheckedUpdateWithoutJob_platformsInput>
-}
-
-export type jobsUpdateManyWithWhereWithoutJob_platformsInput = {
-  where: Prisma.jobsScalarWhereInput
-  data: Prisma.XOR<Prisma.jobsUpdateManyMutationInput, Prisma.jobsUncheckedUpdateManyWithoutJob_platformsInput>
 }
 
 export type jobsCreateManyAi_chatInput = {
@@ -1679,119 +1792,6 @@ export type jobsUncheckedUpdateManyWithoutAi_chatInput = {
   skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   source_html_stripped?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_platform?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-}
-
-export type jobsCreateManyJob_platformsInput = {
-  id?: number
-  status?: string
-  date_created?: Date | string | null
-  date_updated?: Date | string | null
-  source_url?: string | null
-  title?: string | null
-  job_description?: string | null
-  job_poster?: string | null
-  company_description?: string | null
-  date_posted?: Date | string | null
-  salary_min?: number | null
-  salary_max?: number | null
-  salary_currency?: string | null
-  salary_period?: string | null
-  import_error?: string | null
-  last_scraped?: Date | string | null
-  location?: string | null
-  scrape_count?: number | null
-  job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  source_html_stripped?: string | null
-  ai_chat_extraction?: number | null
-}
-
-export type jobsUpdateWithoutJob_platformsInput = {
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  source_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  job_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  job_poster?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  company_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  date_posted?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  salary_min?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  salary_max?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  scrape_count?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  source_html_stripped?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  applications?: Prisma.applicationsUpdateManyWithoutJobsNestedInput
-  job_matches?: Prisma.job_matchesUpdateManyWithoutJobsNestedInput
-  job_resources?: Prisma.job_resourcesUpdateManyWithoutJobsNestedInput
-  ai_chat?: Prisma.ai_chatUpdateOneWithoutJobs_extractedNestedInput
-}
-
-export type jobsUncheckedUpdateWithoutJob_platformsInput = {
-  id?: Prisma.IntFieldUpdateOperationsInput | number
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  source_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  job_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  job_poster?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  company_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  date_posted?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  salary_min?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  salary_max?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  scrape_count?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  source_html_stripped?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ai_chat_extraction?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  applications?: Prisma.applicationsUncheckedUpdateManyWithoutJobsNestedInput
-  job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutJobsNestedInput
-  job_resources?: Prisma.job_resourcesUncheckedUpdateManyWithoutJobsNestedInput
-}
-
-export type jobsUncheckedUpdateManyWithoutJob_platformsInput = {
-  id?: Prisma.IntFieldUpdateOperationsInput | number
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  date_updated?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  source_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  job_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  job_poster?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  company_description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  date_posted?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  salary_min?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  salary_max?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  salary_currency?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  scrape_count?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  source_html_stripped?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ai_chat_extraction?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
 }
 
 
@@ -1989,7 +1989,7 @@ export type $jobsPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     applications: Prisma.$applicationsPayload<ExtArgs>[]
     job_matches: Prisma.$job_matchesPayload<ExtArgs>[]
     job_resources: Prisma.$job_resourcesPayload<ExtArgs>[]
-    ai_chat: Prisma.$ai_chatPayload<ExtArgs> | null
+    ai_chat: Prisma.$ai_chatsPayload<ExtArgs> | null
     job_platforms: Prisma.$job_platformsPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
@@ -2415,7 +2415,7 @@ export interface Prisma__jobsClient<T, Null = never, ExtArgs extends runtime.Typ
   applications<T extends Prisma.jobs$applicationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.jobs$applicationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$applicationsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   job_matches<T extends Prisma.jobs$job_matchesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.jobs$job_matchesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$job_matchesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   job_resources<T extends Prisma.jobs$job_resourcesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.jobs$job_resourcesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$job_resourcesPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-  ai_chat<T extends Prisma.jobs$ai_chatArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.jobs$ai_chatArgs<ExtArgs>>): Prisma.Prisma__ai_chatClient<runtime.Types.Result.GetResult<Prisma.$ai_chatPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  ai_chat<T extends Prisma.jobs$ai_chatArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.jobs$ai_chatArgs<ExtArgs>>): Prisma.Prisma__ai_chatsClient<runtime.Types.Result.GetResult<Prisma.$ai_chatsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   job_platforms<T extends Prisma.jobs$job_platformsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.jobs$job_platformsArgs<ExtArgs>>): Prisma.Prisma__job_platformsClient<runtime.Types.Result.GetResult<Prisma.$job_platformsPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -2943,18 +2943,18 @@ export type jobs$job_resourcesArgs<ExtArgs extends runtime.Types.Extensions.Inte
  */
 export type jobs$ai_chatArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
-   * Select specific fields to fetch from the ai_chat
+   * Select specific fields to fetch from the ai_chats
    */
-  select?: Prisma.ai_chatSelect<ExtArgs> | null
+  select?: Prisma.ai_chatsSelect<ExtArgs> | null
   /**
-   * Omit specific fields from the ai_chat
+   * Omit specific fields from the ai_chats
    */
-  omit?: Prisma.ai_chatOmit<ExtArgs> | null
+  omit?: Prisma.ai_chatsOmit<ExtArgs> | null
   /**
    * Choose, which related nodes to fetch as well
    */
-  include?: Prisma.ai_chatInclude<ExtArgs> | null
-  where?: Prisma.ai_chatWhereInput
+  include?: Prisma.ai_chatsInclude<ExtArgs> | null
+  where?: Prisma.ai_chatsWhereInput
 }
 
 /**

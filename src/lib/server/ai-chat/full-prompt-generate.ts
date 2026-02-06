@@ -28,7 +28,7 @@ export async function generateAiChatFullPrompt(aiChatId: number): Promise<{
     const fullPrompt = makeFullPrompt(prompts.systemPrompt, prompts.userPrompt);
 
     // Update the full_prompt field
-    await db.ai_chat.update({
+    await db.ai_chats.update({
       where: { id: aiChatId },
       data: { full_prompt: fullPrompt },
     });

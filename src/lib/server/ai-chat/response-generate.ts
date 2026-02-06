@@ -38,7 +38,7 @@ export async function generateAiChatResponse(aiChatId: number): Promise<{
     ]);
 
     // Update the response field
-    await db.ai_chat.update({
+    await db.ai_chats.update({
       where: { id: aiChatId },
       data: { response: responseContent },
     });

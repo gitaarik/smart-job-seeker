@@ -11,15 +11,15 @@ import { createFollowupAiChat } from "./create-followup";
  * Create a follow-up AI chat for an application letter
  *
  * Steps:
- * 1. Fetch the application_letter with current ai_chat reference
+ * 1. Fetch the application_letter with current ai_chats reference
  * 2. Validate that ai_chat exists
  * 3. Call createFollowupAiChat to create the follow-up
- * 4. Update the application_letter to reference the new ai_chat
+ * 4. Update the application_letter to reference the new ai_chats
  *
  * @param letterId - The ID of the application letter
  * @param followupRequest - User's follow-up request describing what to refine
  * @param includeOriginalContext - Whether to include original context variables
- * @returns Object with success status, message, and created ai_chat if successful
+ * @returns Object with success status, message, and created ai_chats if successful
  */
 export async function createApplicationLetterFollowup(
   letterId: number,
@@ -71,7 +71,7 @@ export async function createApplicationLetterFollowup(
     return {
       success: false,
       message:
-        `Application letter ${letterId} does not have an ai_chat yet. Generate the initial letter first.`,
+        `Application letter ${letterId} does not have an ai_chats yet. Generate the initial letter first.`,
     };
   }
 

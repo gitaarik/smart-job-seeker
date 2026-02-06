@@ -1283,7 +1283,7 @@ In Directus:
 
 **2. Review AI Chat Records**
 
-- Check the ai_chat record linked to your letter/question
+- Check the ai_chats record linked to your letter/question
 - Look for error messages in the response field
 - Verify full_prompt was generated
 

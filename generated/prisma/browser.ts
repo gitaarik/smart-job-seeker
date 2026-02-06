@@ -18,10 +18,40 @@ export { Prisma }
 export * as $Enums from './enums'
 export * from './enums';
 /**
+ * Model ai_chat_prompts
+ * 
+ */
+export type ai_chat_prompts = Prisma.ai_chat_promptsModel
+/**
+ * Model ai_prompts
+ * 
+ */
+export type ai_prompts = Prisma.ai_promptsModel
+/**
+ * Model application_activity_log
+ * 
+ */
+export type application_activity_log = Prisma.application_activity_logModel
+/**
+ * Model application_letters
+ * 
+ */
+export type application_letters = Prisma.application_lettersModel
+/**
+ * Model application_questions
+ * 
+ */
+export type application_questions = Prisma.application_questionsModel
+/**
  * Model applications
  * 
  */
 export type applications = Prisma.applicationsModel
+/**
+ * Model applications_files
+ * 
+ */
+export type applications_files = Prisma.applications_filesModel
 /**
  * Model cheat_sheets
  * 
@@ -32,6 +62,11 @@ export type cheat_sheets = Prisma.cheat_sheetsModel
  * 
  */
 export type collected_data = Prisma.collected_dataModel
+/**
+ * Model config
+ * 
+ */
+export type config = Prisma.configModel
 /**
  * Model directus_access
  * 
@@ -173,15 +208,70 @@ export type education = Prisma.educationModel
  */
 export type highlights = Prisma.highlightsModel
 /**
+ * Model job_match_preferences
+ * 
+ */
+export type job_match_preferences = Prisma.job_match_preferencesModel
+/**
+ * Model job_matches
+ * 
+ */
+export type job_matches = Prisma.job_matchesModel
+/**
+ * Model job_platforms
+ * 
+ */
+export type job_platforms = Prisma.job_platformsModel
+/**
+ * Model job_resources
+ * 
+ */
+export type job_resources = Prisma.job_resourcesModel
+/**
+ * Model job_searches
+ * 
+ */
+export type job_searches = Prisma.job_searchesModel
+/**
+ * Model job_searches_job_sites
+ * 
+ */
+export type job_searches_job_sites = Prisma.job_searches_job_sitesModel
+/**
+ * Model jobs
+ * 
+ */
+export type jobs = Prisma.jobsModel
+/**
  * Model languages
  * 
  */
 export type languages = Prisma.languagesModel
 /**
+ * Model os_contributions
+ * 
+ */
+export type os_contributions = Prisma.os_contributionsModel
+/**
  * Model platform_profiles
  * 
  */
 export type platform_profiles = Prisma.platform_profilesModel
+/**
+ * Model profile_exports
+ * 
+ */
+export type profile_exports = Prisma.profile_exportsModel
+/**
+ * Model profile_tokens
+ * 
+ */
+export type profile_tokens = Prisma.profile_tokensModel
+/**
+ * Model profile_version_extensions
+ * 
+ */
+export type profile_version_extensions = Prisma.profile_version_extensionsModel
 /**
  * Model profile_versions
  * 
@@ -243,26 +333,6 @@ export type tech_skills = Prisma.tech_skillsModel
  */
 export type work_experience_achievements = Prisma.work_experience_achievementsModel
 /**
- * Model work_experience_technologies
- * 
- */
-export type work_experience_technologies = Prisma.work_experience_technologiesModel
-/**
- * Model work_experiences
- * 
- */
-export type work_experiences = Prisma.work_experiencesModel
-/**
- * Model ai_chat
- * 
- */
-export type ai_chat = Prisma.ai_chatModel
-/**
- * Model os_contributions
- * 
- */
-export type os_contributions = Prisma.os_contributionsModel
-/**
  * Model work_experience_project_technologies
  * 
  */
@@ -273,92 +343,17 @@ export type work_experience_project_technologies = Prisma.work_experience_projec
  */
 export type work_experience_projects = Prisma.work_experience_projectsModel
 /**
- * Model ai_prompts
+ * Model work_experience_technologies
  * 
  */
-export type ai_prompts = Prisma.ai_promptsModel
+export type work_experience_technologies = Prisma.work_experience_technologiesModel
 /**
- * Model application_questions
+ * Model work_experiences
  * 
  */
-export type application_questions = Prisma.application_questionsModel
+export type work_experiences = Prisma.work_experiencesModel
 /**
- * Model application_activity_log
+ * Model ai_chats
  * 
  */
-export type application_activity_log = Prisma.application_activity_logModel
-/**
- * Model applications_files
- * 
- */
-export type applications_files = Prisma.applications_filesModel
-/**
- * Model ai_chat_prompts
- * 
- */
-export type ai_chat_prompts = Prisma.ai_chat_promptsModel
-/**
- * Model profile_version_extensions
- * 
- */
-export type profile_version_extensions = Prisma.profile_version_extensionsModel
-/**
- * Model application_letters
- * 
- */
-export type application_letters = Prisma.application_lettersModel
-/**
- * Model job_resources
- * 
- */
-export type job_resources = Prisma.job_resourcesModel
-/**
- * Model jobs
- * 
- */
-export type jobs = Prisma.jobsModel
-/**
- * Model job_searches
- * 
- */
-export type job_searches = Prisma.job_searchesModel
-/**
- * Model job_searches_job_sites
- * 
- */
-export type job_searches_job_sites = Prisma.job_searches_job_sitesModel
-/**
- * Model job_match_preferences
- * 
- */
-export type job_match_preferences = Prisma.job_match_preferencesModel
-/**
- * Model job_matches
- * 
- */
-export type job_matches = Prisma.job_matchesModel
-/**
- * Model job_platforms
- * 
- */
-export type job_platforms = Prisma.job_platformsModel
-/**
- * Model config
- * 
- */
-export type config = Prisma.configModel
-/**
- * Model profile_exports
- * 
- */
-export type profile_exports = Prisma.profile_exportsModel
-/**
- * Model profile_tokens
- * 
- */
-export type profile_tokens = Prisma.profile_tokensModel
-/**
- * Model api_keys
- * 
- */
-export type api_keys = Prisma.api_keysModel
+export type ai_chats = Prisma.ai_chatsModel

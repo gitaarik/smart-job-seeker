@@ -101,8 +101,8 @@ export async function getInterpolatedPrompts(aiChatId: number): Promise<
     userPrompt: string;
   } | null
 > {
-  // Fetch the ai_chat record
-  const aiChat = await db.ai_chat.findUnique({
+  // Fetch the ai_chatss record
+  const aiChat = await db.ai_chats.findUnique({
     where: { id: aiChatId },
     select: { system_prompt: true, user_prompt: true, profile: true },
   });
@@ -140,16 +140,16 @@ export async function getInterpolatedPrompts(aiChatId: number): Promise<
  * 2. Fetches collected_data for the profile to get schema and data
  * 3. Merges standard variables (schema, data) with custom variables
  * 4. Interpolates prompts with all variables (stringifying JSON as needed)
- * 5. Creates ai_chat record with template prompts and original context values
+ * 5. Creates ai_chats record with template prompts and original context values
  * 6. Saves interpolated full_prompt
  * 7. Generates response via Groq API with interpolated prompts
- * 8. Returns the complete ai_chat record
+ * 8. Returns the complete ai_chats record
  *
  * @param profileId - The profile ID for this AI chat
  * @param promptRequest - The unique request identifier from ai_chat_prompts table
  * @param customVariables - Optional custom variables (strings or objects) for interpolation and context
- * @param followupTo - Optional parent ai_chat ID if this is a follow-up
- * @returns Object with success status, message, and the created ai_chat record (if successful)
+ * @param followupTo - Optional parent ai_chats ID if this is a follow-up
+ * @returns Object with success status, message, and the created ai_chats record (if successful)
  */
 export async function createAndGenerateAiChat(
   profileId: number,
@@ -229,8 +229,8 @@ export async function createAndGenerateAiChat(
       interpolationVariables,
     );
 
-    // Step 7: Create the ai_chat record with template prompts (not interpolated)
-    const aiChat = await db.ai_chat.create({
+    // Step 7: Create the ai_chatss record with template prompts (not interpolated)
+    const aiChat = await db.ai_chats.create({
       data: {
         profile: profileId,
         system_prompt: promptTemplate.system_prompt,
@@ -251,7 +251,7 @@ export async function createAndGenerateAiChat(
       interpolatedUserPrompt,
     );
 
-    await db.ai_chat.update({
+    await db.ai_chats.update({
       where: { id: aiChat.id },
       data: { full_prompt: fullPrompt },
     });
@@ -279,13 +279,13 @@ export async function createAndGenerateAiChat(
       ? responseContent
       : JSON.stringify(responseContent);
 
-    await db.ai_chat.update({
+    await db.ai_chats.update({
       where: { id: aiChat.id },
       data: { response: responseToSave },
     });
 
-    // Step 9: Fetch and return the complete ai_chat record
-    const completeAiChat = await db.ai_chat.findUnique({
+    // Step 9: Fetch and return the complete ai_chats record
+    const completeAiChat = await db.ai_chats.findUnique({
       where: { id: aiChat.id },
       select: {
         id: true,
@@ -303,7 +303,7 @@ export async function createAndGenerateAiChat(
       return {
         success: false,
         message:
-          `Failed to retrieve created ai_chat record with ID ${aiChat.id}`,
+          `Failed to retrieve created ai_chats record with ID ${aiChat.id}`,
       };
     }
 
@@ -317,14 +317,14 @@ export async function createAndGenerateAiChat(
       ? error.message
       : "Unknown error";
 
-    // Save error to ai_chat record if it was created
+    // Save error to ai_chats record if it was created
     if (aiChatId) {
-      await db.ai_chat.update({
+      await db.ai_chats.update({
         where: { id: aiChatId },
         data: { error: errorMessage },
       });
       console.error(
-        `      📋 Error details: ${config.directusUrl}/admin/content/ai_chat/${aiChatId}`,
+        `      📋 Error details: ${config.directusUrl}/admin/content/ai_chats/${aiChatId}`,
       );
     }
 
@@ -339,7 +339,7 @@ export async function createAndGenerateAiChat(
 
     return {
       success: false,
-      message: `Error creating and generating ai_chat: ${errorMessage}`,
+      message: `Error creating and generating ai_chats: ${errorMessage}`,
     };
   }
 }

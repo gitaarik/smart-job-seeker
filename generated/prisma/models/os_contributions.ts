@@ -453,16 +453,6 @@ export type os_contributionsUncheckedUpdateManyInput = {
   contribution_type?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
-export type Os_contributionsListRelationFilter = {
-  every?: Prisma.os_contributionsWhereInput
-  some?: Prisma.os_contributionsWhereInput
-  none?: Prisma.os_contributionsWhereInput
-}
-
-export type os_contributionsOrderByRelationAggregateInput = {
-  _count?: Prisma.SortOrder
-}
-
 export type os_contributionsCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -516,6 +506,16 @@ export type os_contributionsMinOrderByAggregateInput = {
 export type os_contributionsSumOrderByAggregateInput = {
   id?: Prisma.SortOrder
   profile?: Prisma.SortOrder
+}
+
+export type Os_contributionsListRelationFilter = {
+  every?: Prisma.os_contributionsWhereInput
+  some?: Prisma.os_contributionsWhereInput
+  none?: Prisma.os_contributionsWhereInput
+}
+
+export type os_contributionsOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
 }
 
 export type os_contributionsCreateNestedManyWithoutProfilesInput = {

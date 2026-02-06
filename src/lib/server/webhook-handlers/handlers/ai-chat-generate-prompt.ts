@@ -1,5 +1,5 @@
 /**
- * Handle ai_chat.generate_full_prompt events
+ * Handle ai_chats.generate_full_prompt events
  * Called to generate and update the full_prompt field
  */
 
@@ -7,7 +7,7 @@ import { generateAiChatFullPrompt } from "$lib/server/ai-chat/full-prompt-genera
 import type { WebhookHandler, WebhookHandlerResult } from "../types";
 
 export const aiChatGeneratePromptHandler: WebhookHandler = {
-  eventType: "ai_chat.generate_full_prompt",
+  eventType: "ai_chats.generate_full_prompt",
 
   async handle(data: Record<string, unknown>): Promise<WebhookHandlerResult> {
     let aiChatIds: number[] = [];
@@ -52,7 +52,7 @@ export const aiChatGeneratePromptHandler: WebhookHandler = {
         ? error.message
         : "Unknown error";
       console.error(
-        `[Webhook] ai_chat.generate_full_prompt failed:`,
+        `[Webhook] ai_chats.generate_full_prompt failed:`,
         errorMessage,
       );
       return {
