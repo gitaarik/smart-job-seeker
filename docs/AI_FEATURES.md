@@ -595,7 +595,7 @@ you use the system more effectively.
 
 ### What are AI Prompt Templates?
 
-Templates are pre-written instructions stored in the `ai_chat_prompts` table.
+Templates are pre-written instructions stored in the `ai_chat_templates` table.
 Each template has:
 
 - **Request Type** - Unique identifier (e.g., `write_cover_letter`)
@@ -685,7 +685,7 @@ the technical details.
 
 If you have admin access to Directus:
 
-1. Go to the `ai_chat_prompts` collection
+1. Go to the `ai_chat_templates` collection
 2. Find the template you want to customize
 3. Edit the system_prompt or user_prompt
 4. Test with a sample generation

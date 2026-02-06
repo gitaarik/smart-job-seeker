@@ -61,7 +61,7 @@ COPY (
 ) TO STDOUT WITH (FORMAT csv, HEADER false, NULL 'NULL_VALUE')
 " | {
   echo ""
-  echo "-- Last 25 ai_chat records"
+  echo "-- Last 25 ai_chats records"
   echo "COPY ai_chats (id, date_created, date_updated, profile, system_prompt, user_prompt, full_prompt, response, context, followup_to, error) FROM stdin WITH (FORMAT csv, NULL 'NULL_VALUE');"
   cat
   echo "\\."
@@ -92,7 +92,7 @@ COPY (
 # Reset sequences to max id + 1
 echo "" >> "$SMART_FILE"
 echo "-- Reset sequences after partial data import" >> "$SMART_FILE"
-echo "SELECT setval('ai_chat_id_seq', COALESCE((SELECT MAX(id) FROM ai_chats), 1));" >> "$SMART_FILE"
+echo "SELECT setval('ai_chats_id_seq', COALESCE((SELECT MAX(id) FROM ai_chats), 1));" >> "$SMART_FILE"
 echo "SELECT setval('jobs_id_seq', COALESCE((SELECT MAX(id) FROM jobs), 1));" >> "$SMART_FILE"
 
 SMART_SIZE=$(du -h "$SMART_FILE" | cut -f1)

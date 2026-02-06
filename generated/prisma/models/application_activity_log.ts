@@ -408,6 +408,14 @@ export type application_activity_logOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
+export type IntFieldUpdateOperationsInput = {
+  set?: number
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
+}
+
 export type application_activity_logCreateNestedManyWithoutApplicationsInput = {
   create?: Prisma.XOR<Prisma.application_activity_logCreateWithoutApplicationsInput, Prisma.application_activity_logUncheckedCreateWithoutApplicationsInput> | Prisma.application_activity_logCreateWithoutApplicationsInput[] | Prisma.application_activity_logUncheckedCreateWithoutApplicationsInput[]
   connectOrCreate?: Prisma.application_activity_logCreateOrConnectWithoutApplicationsInput | Prisma.application_activity_logCreateOrConnectWithoutApplicationsInput[]

@@ -7,16 +7,6 @@ datasource db {
   provider = "postgresql"
 }
 
-model ai_chat_prompts {
-  id            Int       @id @default(autoincrement())
-  date_created  DateTime? @db.Timestamptz(6)
-  date_updated  DateTime? @db.Timestamptz(6)
-  request       String    @unique(map: "ai_chat_prompts_request_unique") @db.VarChar(255)
-  system_prompt String?
-  user_prompt   String?
-  format        Json?     @db.Json
-}
-
 model ai_prompts {
   id                                                     String          @id @db.Uuid
   sort                                                   Int?
@@ -1183,6 +1173,8 @@ model ai_chats {
   provider                                                     String?                 @db.VarChar(255)
   model                                                        String?                 @db.VarChar(255)
   request_type                                                 String?                 @db.VarChar(255)
+  ai_chat_template                                             Int?
+  ai_chat_templates                                            ai_chat_templates?      @relation(fields: [ai_chat_template], references: [id], onUpdate: NoAction, map: "ai_chats_ai_chat_template_foreign")
   ai_chats                                                     ai_chats?               @relation("ai_chatsToai_chats", fields: [followup_to], references: [id], onUpdate: NoAction, map: "ai_chats_followup_to_foreign")
   other_ai_chats                                               ai_chats[]              @relation("ai_chatsToai_chats")
   profiles                                                     profiles                @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "ai_chats_profile_foreign")
@@ -1190,6 +1182,17 @@ model ai_chats {
   application_questions_application_questions_ai_chatToai_chat application_questions[] @relation("application_questions_ai_chatToai_chat")
   job_matches                                                  job_matches[]
   jobs                                                         jobs[]
+}
+
+model ai_chat_templates {
+  id            Int        @id @default(autoincrement())
+  date_created  DateTime?  @db.Timestamptz(6)
+  date_updated  DateTime?  @db.Timestamptz(6)
+  key           String     @unique @db.VarChar(255)
+  system_prompt String?
+  user_prompt   String?
+  format        Json?      @db.Json
+  ai_chats      ai_chats[]
 }
 
 enum Role {

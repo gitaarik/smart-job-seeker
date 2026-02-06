@@ -29,8 +29,8 @@ export * from "./enums"
  * @example
  * ```
  * const prisma = new PrismaClient()
- * // Fetch zero or more Ai_chat_prompts
- * const ai_chat_prompts = await prisma.ai_chat_prompts.findMany()
+ * // Fetch zero or more Ai_prompts
+ * const ai_prompts = await prisma.ai_prompts.findMany()
  * ```
  * 
  * Read more in our [docs](https://pris.ly/d/client).
@@ -39,11 +39,6 @@ export const PrismaClient = $Class.getPrismaClientClass()
 export type PrismaClient<LogOpts extends Prisma.LogLevel = never, OmitOpts extends Prisma.PrismaClientOptions["omit"] = Prisma.PrismaClientOptions["omit"], ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = $Class.PrismaClient<LogOpts, OmitOpts, ExtArgs>
 export { Prisma }
 
-/**
- * Model ai_chat_prompts
- * 
- */
-export type ai_chat_prompts = Prisma.ai_chat_promptsModel
 /**
  * Model ai_prompts
  * 
@@ -379,3 +374,8 @@ export type work_experiences = Prisma.work_experiencesModel
  * 
  */
 export type ai_chats = Prisma.ai_chatsModel
+/**
+ * Model ai_chat_templates
+ * 
+ */
+export type ai_chat_templates = Prisma.ai_chat_templatesModel

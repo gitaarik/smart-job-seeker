@@ -10,21 +10,21 @@ async function main() {
     "score_job_match",
   ];
 
-  const templates = await db.ai_chat_prompts.findMany({
-    where: { request: { in: requiredTemplates } },
-    select: { request: true, format: true },
+  const templates = await db.ai_chat_templates.findMany({
+    where: { key: { in: requiredTemplates } },
+    select: { key: true, format: true },
   });
 
   console.log(`✅ Found ${templates.length} templates:`);
   templates.forEach((t) => {
     const hasFormat = t.format !== null && t.format !== undefined;
     console.log(
-      `   - ${t.request}: ${hasFormat ? "has format ✓" : "NO FORMAT ✗"}`,
+      `   - ${t.key}: ${hasFormat ? "has format ✓" : "NO FORMAT ✗"}`,
     );
   });
 
   const missing = requiredTemplates.filter(
-    (req) => !templates.find((t) => t.request === req),
+    (key) => !templates.find((t) => t.key === key),
   );
 
   if (missing.length > 0) {
@@ -36,7 +36,7 @@ async function main() {
   if (noFormat.length > 0) {
     console.log(
       `\n⚠️  Templates without format: ${
-        noFormat.map((t) => t.request).join(", ")
+        noFormat.map((t) => t.key).join(", ")
       }`,
     );
   }

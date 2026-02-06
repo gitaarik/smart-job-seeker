@@ -120,7 +120,7 @@ Key collections:
 - **job_resources** - Additional job-related resources
 - **applications** - Job application tracking
 - **profiles** - User portfolios
-- **ai_chat_prompts** - AI prompt templates
+- **ai_chat_templates** - AI prompt templates
 
 Complete schema: `prisma/schema.prisma`
 

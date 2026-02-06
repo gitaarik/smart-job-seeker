@@ -26,7 +26,7 @@ export interface JobScrapingAiChatResult<T> {
  * prompts and responses to the database for debugging and audit purposes.
  *
  * @param jobSearchId - ID of the job search (used to lookup profile)
- * @param promptRequest - Template identifier from ai_chat_prompts table
+ * @param promptKey - Template identifier from ai_chat_templates table
  * @param customVariables - Variables to interpolate into the prompt template
  * @returns Result with parsed response and aiChatId for database linking
  *
@@ -44,7 +44,7 @@ export interface JobScrapingAiChatResult<T> {
  */
 export async function createJobScrapingAiChat<T>(
   jobSearchId: number,
-  promptRequest: string,
+  promptKey: string,
   customVariables: Record<string, unknown>,
 ): Promise<JobScrapingAiChatResult<T>> {
   // Look up profile from job_searches
@@ -75,7 +75,7 @@ export async function createJobScrapingAiChat<T>(
     // Call createAndGenerateAiChat with profile from job_searches
     const result = await createAndGenerateAiChat(
       jobSearch.profile,
-      promptRequest,
+      promptKey,
       customVariables,
     );
 
@@ -132,7 +132,7 @@ export async function createJobScrapingAiChat<T>(
  * Automatically saves prompts and responses for debugging.
  *
  * @param profileId - User's profile ID
- * @param promptRequest - Template identifier from ai_chat_prompts table
+ * @param promptKey - Template identifier from ai_chat_templates table
  * @param customVariables - Variables to interpolate (job data, preferences, etc.)
  * @returns Result with parsed response and aiChatId for database linking
  *
@@ -159,14 +159,14 @@ export async function createJobScrapingAiChat<T>(
  */
 export async function createJobMatchingAiChat<T>(
   profileId: number,
-  promptRequest: string,
+  promptKey: string,
   customVariables: Record<string, unknown>,
 ): Promise<JobScrapingAiChatResult<T>> {
   try {
     // Call createAndGenerateAiChat with user profile
     const result = await createAndGenerateAiChat(
       profileId,
-      promptRequest,
+      promptKey,
       customVariables,
     );
 

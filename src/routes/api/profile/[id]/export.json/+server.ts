@@ -48,7 +48,7 @@ export const GET: RequestHandler = async ({ params }) => {
   const baseProfile = await dbDirect.profiles.findUnique({
     where: { id: profileId },
     include: {
-      profile_versions: {
+      profile_versions_profile_versions_profileToprofiles: {
         select: {
           status: true,
           sort: true,
@@ -266,18 +266,19 @@ export const GET: RequestHandler = async ({ params }) => {
       nationality: baseProfile.nationality || undefined,
       location_url: baseProfile.location_url || undefined,
       location_timezone: baseProfile.location_timezone || undefined,
-      profile_versions: baseProfile.profile_versions.map((pv) => ({
-        status: pv.status || undefined,
-        sort: pv.sort,
-        name: pv.name || undefined,
-        description: pv.description || undefined,
-        toggles: pv.toggles,
-        extends_from: pv
-          .profile_version_extensions_profile_version_extensions_extenderToprofile_versions
-          ?.[0]
-          ?.profile_versions_profile_version_extensions_extendedToprofile_versions
-          ?.name,
-      })),
+      profile_versions: baseProfile
+        .profile_versions_profile_versions_profileToprofiles.map((pv) => ({
+          status: pv.status || undefined,
+          sort: pv.sort,
+          name: pv.name || undefined,
+          description: pv.description || undefined,
+          toggles: pv.toggles,
+          extends_from: pv
+            .profile_version_extensions_profile_version_extensions_extenderToprofile_versions
+            ?.[0]
+            ?.profile_versions_profile_version_extensions_extendedToprofile_versions
+            ?.name,
+        })),
       highlights: baseProfile.highlights,
       tech_skill_categories: baseProfile.tech_skill_categories.map((cat) => ({
         status: cat.status || undefined,

@@ -59,21 +59,23 @@ ${userPrompt}`;
 }
 
 /**
- * Fetch prompt template from ai_chat_prompts by request identifier
+ * Fetch prompt template from ai_chat_templates by key identifier
  * Returns null if template not found or if prompts are missing
  */
 async function fetchPromptTemplate(
-  request: string,
+  key: string,
 ): Promise<
   {
+    id: number;
     system_prompt: string;
     user_prompt: string;
     format: string | null;
   } | null
 > {
-  const template = await db.ai_chat_prompts.findUnique({
-    where: { request },
+  const template = await db.ai_chat_templates.findUnique({
+    where: { key },
     select: {
+      id: true,
       system_prompt: true,
       user_prompt: true,
       format: true,
@@ -85,6 +87,7 @@ async function fetchPromptTemplate(
   }
 
   return {
+    id: template.id,
     system_prompt: template.system_prompt,
     user_prompt: template.user_prompt,
     format: template.format,
@@ -134,9 +137,9 @@ export async function getInterpolatedPrompts(aiChatId: number): Promise<
 }
 
 /**
- * Create and fully generate an AI chat instance using prompt templates from ai_chat_prompts
+ * Create and fully generate an AI chat instance using prompt templates from ai_chat_templates
  * Orchestrates the entire process:
- * 1. Fetches prompt template from ai_chat_prompts by request identifier
+ * 1. Fetches prompt template from ai_chat_templates by key identifier
  * 2. Fetches collected_data for the profile to get schema and data
  * 3. Merges standard variables (schema, data) with custom variables
  * 4. Interpolates prompts with all variables (stringifying JSON as needed)
@@ -146,14 +149,14 @@ export async function getInterpolatedPrompts(aiChatId: number): Promise<
  * 8. Returns the complete ai_chats record
  *
  * @param profileId - The profile ID for this AI chat
- * @param promptRequest - The unique request identifier from ai_chat_prompts table
+ * @param promptKey - The unique key identifier from ai_chat_templates table
  * @param customVariables - Optional custom variables (strings or objects) for interpolation and context
  * @param followupTo - Optional parent ai_chats ID if this is a follow-up
  * @returns Object with success status, message, and the created ai_chats record (if successful)
  */
 export async function createAndGenerateAiChat(
   profileId: number,
-  promptRequest: string,
+  promptKey: string,
   customVariables?: Record<string, unknown>,
   followupTo?: number,
 ): Promise<{
@@ -174,14 +177,14 @@ export async function createAndGenerateAiChat(
   let aiChatId: number | undefined;
 
   try {
-    // Step 1: Fetch prompt template from ai_chat_prompts
-    const promptTemplate = await fetchPromptTemplate(promptRequest);
+    // Step 1: Fetch prompt template from ai_chat_templates
+    const promptTemplate = await fetchPromptTemplate(promptKey);
 
     if (!promptTemplate) {
       return {
         success: false,
         message:
-          `AI chat prompt template not found for request: '${promptRequest}'. Please ensure the template exists in Directus.`,
+          `AI chat template not found for key: '${promptKey}'. Please ensure the template exists in Directus.`,
       };
     }
 
@@ -229,7 +232,7 @@ export async function createAndGenerateAiChat(
       interpolationVariables,
     );
 
-    // Step 7: Create the ai_chatss record with template prompts (not interpolated)
+    // Step 7: Create the ai_chats record with template prompts (not interpolated)
     const aiChat = await db.ai_chats.create({
       data: {
         profile: profileId,
@@ -241,6 +244,7 @@ export async function createAndGenerateAiChat(
         provider: config.llmProvider,
         model: config.llmModel,
         request_type: "llm",
+        ai_chat_template: promptTemplate.id,
       },
     });
     aiChatId = aiChat.id;
@@ -258,10 +262,10 @@ export async function createAndGenerateAiChat(
 
     // Step 7: Generate AI response using generic LLM function
     // Look up Zod schema from code registry (no longer using database format field)
-    const zodSchema = getSchemaForPrompt(promptRequest);
+    const zodSchema = getSchemaForPrompt(promptKey);
     const structuredOutput = zodSchema
       ? {
-        name: promptRequest.replace(/[^a-zA-Z0-9_]/g, "_"),
+        name: promptKey.replace(/[^a-zA-Z0-9_]/g, "_"),
         schema: zodSchema,
       }
       : undefined;

@@ -22,9 +22,6 @@ export async function validateToken(
 
   const token = await db.profile_tokens.findUnique({
     where: { token_hash: tokenHash },
-    include: {
-      profile_versions: true,
-    },
   });
 
   if (!token) {
@@ -41,7 +38,13 @@ export async function validateToken(
     };
   }
 
-  if (token.profile_versions.profile !== profileId) {
+  // Look up the profile_version to verify profile ownership
+  const profileVersion = await db.profile_versions.findUnique({
+    where: { id: token.profile_version },
+    select: { profile: true },
+  });
+
+  if (!profileVersion || profileVersion.profile !== profileId) {
     return {
       valid: false,
       error: "Access token is not valid for this profile",

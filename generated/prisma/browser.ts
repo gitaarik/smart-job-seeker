@@ -18,11 +18,6 @@ export { Prisma }
 export * as $Enums from './enums'
 export * from './enums';
 /**
- * Model ai_chat_prompts
- * 
- */
-export type ai_chat_prompts = Prisma.ai_chat_promptsModel
-/**
  * Model ai_prompts
  * 
  */
@@ -357,3 +352,8 @@ export type work_experiences = Prisma.work_experiencesModel
  * 
  */
 export type ai_chats = Prisma.ai_chatsModel
+/**
+ * Model ai_chat_templates
+ * 
+ */
+export type ai_chat_templates = Prisma.ai_chat_templatesModel

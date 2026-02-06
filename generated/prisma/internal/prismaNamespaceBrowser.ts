@@ -51,7 +51,6 @@ export const AnyNull = runtime.AnyNull
 
 
 export const ModelName = {
-  ai_chat_prompts: 'ai_chat_prompts',
   ai_prompts: 'ai_prompts',
   application_activity_log: 'application_activity_log',
   application_letters: 'application_letters',
@@ -118,7 +117,8 @@ export const ModelName = {
   work_experience_projects: 'work_experience_projects',
   work_experience_technologies: 'work_experience_technologies',
   work_experiences: 'work_experiences',
-  ai_chats: 'ai_chats'
+  ai_chats: 'ai_chats',
+  ai_chat_templates: 'ai_chat_templates'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -135,19 +135,6 @@ export const TransactionIsolationLevel = runtime.makeStrictEnum({
 } as const)
 
 export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
-
-
-export const Ai_chat_promptsScalarFieldEnum = {
-  id: 'id',
-  date_created: 'date_created',
-  date_updated: 'date_updated',
-  request: 'request',
-  system_prompt: 'system_prompt',
-  user_prompt: 'user_prompt',
-  format: 'format'
-} as const
-
-export type Ai_chat_promptsScalarFieldEnum = (typeof Ai_chat_promptsScalarFieldEnum)[keyof typeof Ai_chat_promptsScalarFieldEnum]
 
 
 export const Ai_promptsScalarFieldEnum = {
@@ -1309,10 +1296,24 @@ export const Ai_chatsScalarFieldEnum = {
   error: 'error',
   provider: 'provider',
   model: 'model',
-  request_type: 'request_type'
+  request_type: 'request_type',
+  ai_chat_template: 'ai_chat_template'
 } as const
 
 export type Ai_chatsScalarFieldEnum = (typeof Ai_chatsScalarFieldEnum)[keyof typeof Ai_chatsScalarFieldEnum]
+
+
+export const Ai_chat_templatesScalarFieldEnum = {
+  id: 'id',
+  date_created: 'date_created',
+  date_updated: 'date_updated',
+  key: 'key',
+  system_prompt: 'system_prompt',
+  user_prompt: 'user_prompt',
+  format: 'format'
+} as const
+
+export type Ai_chat_templatesScalarFieldEnum = (typeof Ai_chat_templatesScalarFieldEnum)[keyof typeof Ai_chat_templatesScalarFieldEnum]
 
 
 export const SortOrder = {

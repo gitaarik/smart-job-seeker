@@ -8,7 +8,6 @@
  *
  * 🟢 You can import this file directly.
  */
-export type * from './models/ai_chat_prompts'
 export type * from './models/ai_prompts'
 export type * from './models/application_activity_log'
 export type * from './models/application_letters'
@@ -76,4 +75,5 @@ export type * from './models/work_experience_projects'
 export type * from './models/work_experience_technologies'
 export type * from './models/work_experiences'
 export type * from './models/ai_chats'
+export type * from './models/ai_chat_templates'
 export type * from './commonInputTypes'

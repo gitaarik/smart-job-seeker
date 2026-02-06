@@ -10,8 +10,8 @@ TypeScript Zod schemas.
 ## Overview
 
 Previously, AI prompt structured output schemas were stored as JSON in the
-database (`ai_chat_prompts.format` field) and converted to Zod at runtime using
-a `jsonSchemaToZod()` function. This approach had several limitations:
+database (`ai_chat_templates.format` field) and converted to Zod at runtime
+using a `jsonSchemaToZod()` function. This approach had several limitations:
 
 - Runtime conversion overhead
 - Limited type safety
@@ -61,7 +61,7 @@ These prompts return plain text and do NOT have schemas:
 
 ## Database Field Status
 
-The `ai_chat_prompts.format` field is **deprecated** and no longer used by the
+The `ai_chat_templates.format` field is **deprecated** and no longer used by the
 application.
 
 ### What Changed
@@ -159,7 +159,7 @@ export const aiPromptSchemas = {
 
 ### 3. Create Prompt in Database
 
-The prompt still needs to exist in `ai_chat_prompts` table with:
+The prompt still needs to exist in `ai_chat_templates` table with:
 
 - `request`: The prompt identifier (e.g., "my_new_prompt")
 - `system_prompt`: System instructions
@@ -222,9 +222,9 @@ The database `format` field was intentionally kept to enable safe rollback.
 
 After 3-6 months of stable operation, consider:
 
-1. Remove `format` column from `ai_chat_prompts` table
+1. Remove `format` column from `ai_chat_templates` table
 2. Update Prisma schema to drop the column
-3. Run migration: `ALTER TABLE ai_chat_prompts DROP COLUMN format;`
+3. Run migration: `ALTER TABLE ai_chat_templates DROP COLUMN format;`
 
 This is optional and not urgent - keeping the field has minimal cost.
 

@@ -1,7 +1,7 @@
 # Structured Output JSON Schemas
 
 This document contains example JSON schemas for the `format` field in the
-`ai_chat_prompts` collection. These schemas enable Groq's structured output
+`ai_chat_templates` collection. These schemas enable Groq's structured output
 feature, which ensures the LLM returns JSON that exactly matches the specified
 schema.
 
@@ -212,7 +212,7 @@ Object.keys(data).forEach((key) => {
 ## How to Use
 
 1. Open Directus admin panel
-2. Navigate to `ai_chat_prompts` collection
+2. Navigate to `ai_chat_templates` collection
 3. Edit the prompt you want to add structured output to
 4. Copy one of the schemas above into the `format` field
 5. Save the prompt

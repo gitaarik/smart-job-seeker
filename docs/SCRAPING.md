@@ -351,7 +351,7 @@ Screenshots saved to `debug-screenshots/` directory.
 
 - LLM may misclassify clickables
 - Check `data-xxx` attributes in HTML
-- Adjust prompts in `ai_chat_prompts` collection
+- Adjust prompts in `ai_chat_templates` collection
 
 **Pagination not working:**
 
@@ -387,7 +387,7 @@ Screenshots saved to `debug-screenshots/` directory.
 
 ## AI Prompts
 
-The scraper uses prompts from `ai_chat_prompts` collection:
+The scraper uses prompts from `ai_chat_templates` collection:
 
 | Request                         | Purpose                               |
 | ------------------------------- | ------------------------------------- |
