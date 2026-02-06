@@ -73,10 +73,10 @@ export async function clearDirectusCache(): Promise<void> {
     // Running in Docker - use direct API call (try block for async operation)
     try {
       await directusRequest("POST", "/utils/cache/clear");
+      console.log("✅ Directus cache cleared");
     } catch (error) {
-      console.warn(
-        "⚠️  Could not clear Directus cache via API (this is OK)",
-      );
+      const message = error instanceof Error ? error.message : String(error);
+      console.warn(`⚠️  Could not clear Directus cache: ${message}`);
     }
   } else {
     // Running on host - use npm script
