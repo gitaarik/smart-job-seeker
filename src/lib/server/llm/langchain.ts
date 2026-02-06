@@ -435,12 +435,13 @@ async function generateWithLangChain(
         });
 
         // Add JSON mode instruction with schema to the last user message
+        // Use compact JSON (no pretty-printing) to reduce token usage
         const lastMessage = langChainMessages[langChainMessages.length - 1];
         if (lastMessage instanceof HumanMessage) {
           lastMessage.content = lastMessage.content +
-            "\n\nRespond with valid JSON only that matches this exact schema. Use the exact field names as specified:\n\n" +
-            JSON.stringify(jsonSchema, null, 2) +
-            "\n\nIMPORTANT: Use the exact field names from the schema (e.g., 'isLoginPage', not 'is_login_page').";
+            "\n\nRespond with valid JSON only matching this schema:\n\n" +
+            JSON.stringify(jsonSchema) +
+            "\n\nUse exact field names from schema.";
         }
 
         // Invoke with JSON mode enabled to ensure valid JSON output
@@ -467,9 +468,28 @@ async function generateWithLangChain(
           const validated = zodSchema.parse(parsed);
           return JSON.stringify(validated);
         } catch (parseError) {
+          // Check if JSON appears truncated (missing closing braces/brackets)
+          const openBraces = (jsonContent.match(/{/g) || []).length;
+          const closeBraces = (jsonContent.match(/}/g) || []).length;
+          const openBrackets = (jsonContent.match(/\[/g) || []).length;
+          const closeBrackets = (jsonContent.match(/]/g) || []).length;
+          const isTruncated = openBraces > closeBraces ||
+            openBrackets > closeBrackets;
+
           const errorMsg = parseError instanceof Error
             ? parseError.message
             : String(parseError);
+
+          if (isTruncated) {
+            throw new Error(
+              `${provider} JSON response appears truncated (output token limit likely exceeded). ` +
+                `Missing ${openBraces - closeBraces} closing braces, ${openBrackets - closeBrackets} closing brackets. ` +
+                `Response length: ${responseContent.length} chars. Last 200 chars: ...${
+                  responseContent.slice(-200)
+                }`,
+            );
+          }
+
           throw new Error(
             `Failed to parse JSON response from ${provider}: ${errorMsg}\nResponse was: ${
               responseContent.substring(0, 500)
