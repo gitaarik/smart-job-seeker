@@ -34,8 +34,14 @@ export const extractJobDataSchema = z.object({
     .string()
     .nullable()
     .describe("Date the job was posted (ISO 8601 format)"),
-  location: z.string().nullable().describe("Job location"),
-  remote: z.string().nullable().describe("Remote work policy"),
+  location: z
+    .string()
+    .nullable()
+    .describe("Physical office location (city, region, country)"),
+  remote: z
+    .string()
+    .nullable()
+    .describe("Work location type (remote, hybrid, or onsite)"),
   experience_level: z
     .string()
     .nullable()
@@ -168,7 +174,7 @@ export const extractJobsFromSearchPageSchema = z.object({
       title: z.string().nullable().describe("Job title/position name"),
       company: z.string().nullable().describe("Company or employer name"),
       location: z.string().nullable().describe(
-        "Job location (city, region, country)",
+        "Physical office location (city, region, country)",
       ),
       salary_min: z.number().nullable().describe(
         "Minimum salary as numeric value only",
@@ -186,7 +192,7 @@ export const extractJobsFromSearchPageSchema = z.object({
         "Array of skills/technologies/tools mentioned",
       ),
       remote: z.string().nullable().describe(
-        "Work arrangement (Remote, Hybrid, On-site)",
+        "Work location type (remote, hybrid, or onsite)",
       ),
       date_posted: z.string().nullable().describe(
         "Date posted - preserve original format from HTML",
