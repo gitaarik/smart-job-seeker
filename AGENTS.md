@@ -11,6 +11,9 @@ This project uses Docker Compose with these containers:
   Directus database
 - Use `npm run docker:update-schema` to synchronize the prisma schema with the
   database changes made in Directus
+- Field choice labels (for dropdowns/checkboxes) can be retrieved programmatically
+  using `getFieldChoiceLabel()` from `$lib/server/directus/field-labels` - this
+  avoids hardcoding label strings and stays in sync with Directus configuration
 
 ## `app`
 
