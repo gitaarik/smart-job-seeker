@@ -69,13 +69,13 @@ export const extractJobDataSchema = z.object({
     .array(z.string())
     .nullable()
     .describe(
-      "Array of skills/technologies that are explicitly REQUIRED for the position",
+      "Array of REQUIRED skills/technologies, ordered by importance (most critical first)",
     ),
   skills_preferred: z
     .array(z.string())
     .nullable()
     .describe(
-      "Array of skills/technologies that are PREFERRED/nice-to-have but not mandatory",
+      "Array of PREFERRED/nice-to-have skills, ordered by importance (most desired first)",
     ),
   status: z
     .string()
@@ -197,10 +197,10 @@ export const extractJobsFromSearchPageSchema = z.object({
         "Salary period (year, month, hour, day)",
       ),
       skills_required: z.array(z.string()).nullable().describe(
-        "Array of skills/technologies that are explicitly REQUIRED",
+        "Array of REQUIRED skills, ordered by importance (most critical first)",
       ),
       skills_preferred: z.array(z.string()).nullable().describe(
-        "Array of skills/technologies that are PREFERRED/nice-to-have",
+        "Array of PREFERRED skills, ordered by importance (most desired first)",
       ),
       remote: z.string().nullable().describe(
         "Work location type (remote, hybrid, or onsite)",
