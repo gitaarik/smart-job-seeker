@@ -147,7 +147,7 @@ export const POST: RequestHandler = async (event) => {
           experience_levels: jobData.experienceLevel
             ? [jobData.experienceLevel]
             : undefined,
-          skills: jobData.skills,
+          skills_required: jobData.skills,
           date_posted: jobData.postedAt
             ? new Date(jobData.postedAt)
             : undefined,
@@ -196,7 +196,7 @@ export const POST: RequestHandler = async (event) => {
         experience_levels: jobData.experienceLevel
           ? [jobData.experienceLevel]
           : null,
-        skills: jobData.skills,
+        skills_required: jobData.skills,
         date_posted: jobData.postedAt ? new Date(jobData.postedAt) : null,
         job_platform: jobData.platformId,
         status: "hiring",

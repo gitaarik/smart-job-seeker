@@ -126,10 +126,15 @@ export async function filterEligibleJobs(
     Prisma.join(preferences.job_types)
   }]::text[]
     )
-    -- Skills overlap (AT LEAST ONE)
+    -- Skills overlap (AT LEAST ONE match in required OR preferred)
     AND (
-      j.skills IS NULL
-      OR j.skills::jsonb ?| array[${Prisma.join(profileSkills)}]::text[]
+      (j.skills_required IS NULL AND j.skills_preferred IS NULL)
+      OR j.skills_required::jsonb ?| array[${
+    Prisma.join(profileSkills)
+  }]::text[]
+      OR j.skills_preferred::jsonb ?| array[${
+    Prisma.join(profileSkills)
+  }]::text[]
     )
   `;
 
@@ -206,7 +211,12 @@ export async function calculateMatch(
     "job.remote_options": job.remote_options
       ? JSON.stringify(job.remote_options)
       : "Not specified",
-    "job.skills": job.skills ? JSON.stringify(job.skills) : "Not specified",
+    "job.skills_required": job.skills_required
+      ? JSON.stringify(job.skills_required)
+      : "Not specified",
+    "job.skills_preferred": job.skills_preferred
+      ? JSON.stringify(job.skills_preferred)
+      : "Not specified",
     "job.job_description": job.job_description || "No description provided",
     "job.company_description": job.company_description || "",
   });
