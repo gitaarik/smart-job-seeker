@@ -20,10 +20,16 @@ export const extractJobDataSchema = z.object({
     .string()
     .nullable()
     .describe("Company description"),
+  company: z
+    .string()
+    .nullable()
+    .describe("Name of the company that is hiring for this position"),
   job_poster: z
     .string()
     .nullable()
-    .describe("Name of person who posted the job"),
+    .describe(
+      "Name of recruiter, recruitment agency, or person who posted the job (NOT the hiring company)",
+    ),
   date_posted: z
     .string()
     .nullable()
