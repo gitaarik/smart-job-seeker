@@ -1,5 +1,7 @@
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
+import type { Session, User } from "$lib/server/auth/better-auth";
+
 declare global {
   interface Window {
     umami: object;
@@ -12,7 +14,8 @@ declare global {
   namespace App {
     // interface Error {}
     interface Locals {
-      // Will be populated by Better Auth when implemented
+      user: User | null;
+      session: Session | null;
     }
     // interface PageData {}
     // interface PageState {}

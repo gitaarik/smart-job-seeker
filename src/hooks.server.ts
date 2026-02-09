@@ -1,4 +1,6 @@
 import type { Handle } from "@sveltejs/kit";
+import { svelteKitHandler } from "better-auth/svelte-kit";
+import { auth } from "$lib/server/auth/better-auth";
 
 function getSystemTheme(request: Request): "light" | "dark" {
   // Try to detect system preference from headers
@@ -53,6 +55,20 @@ function getThemeFromRequest(request: Request): string {
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
+  // Handle Better Auth routes (e.g., /api/auth/*)
+  const authResponse = await svelteKitHandler({ event, resolve, auth });
+  if (authResponse) {
+    return authResponse;
+  }
+
+  // Get session and populate locals
+  const session = await auth.api.getSession({
+    headers: event.request.headers,
+  });
+  event.locals.user = session?.user ?? null;
+  event.locals.session = session?.session ?? null;
+
+  // Apply theme
   const theme = getThemeFromRequest(event.request);
 
   return await resolve(event, {

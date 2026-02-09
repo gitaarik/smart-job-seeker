@@ -54,7 +54,7 @@ function getThemeData(request: Request) {
   };
 }
 
-export const load: LayoutServerLoad = async ({ request }) => {
+export const load: LayoutServerLoad = async ({ request, locals }) => {
   const themeData = getThemeData(request);
 
   return {
@@ -62,5 +62,6 @@ export const load: LayoutServerLoad = async ({ request }) => {
     actualTheme: themeData.actualTheme,
     systemTheme: themeData.systemTheme,
     adminPublicUrl: config.adminPublicUrl,
+    user: locals.user,
   };
 };

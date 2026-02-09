@@ -609,7 +609,6 @@ model directus_users {
   directus_roles                                                          directus_roles?                @relation(fields: [role], references: [id], onUpdate: NoAction, map: "directus_users_role_foreign")
   directus_versions_directus_versions_user_createdTodirectus_users        directus_versions[]            @relation("directus_versions_user_createdTodirectus_users")
   directus_versions_directus_versions_user_updatedTodirectus_users        directus_versions[]            @relation("directus_versions_user_updatedTodirectus_users")
-  profiles                                                                profiles[]
 }
 
 model directus_versions {
@@ -963,7 +962,6 @@ model profiles {
   directus_files                                                    directus_files?         @relation(fields: [profile_picture], references: [id], onUpdate: NoAction, map: "profiles_profile_picture_foreign")
   profile_versions_profiles_public_cv_versionToprofile_versions     profile_versions?       @relation("profiles_public_cv_versionToprofile_versions", fields: [public_cv_version], references: [id], onUpdate: NoAction, map: "profiles_public_cv_version_foreign")
   profile_versions_profiles_public_resume_versionToprofile_versions profile_versions?       @relation("profiles_public_resume_versionToprofile_versions", fields: [public_resume_version], references: [id], onUpdate: NoAction, map: "profiles_public_resume_version_foreign")
-  directus_users                                                    directus_users?         @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "profiles_user_id_foreign")
   project_stories                                                   project_stories[]
   references                                                        references[]
   salary_expectations                                               salary_expectations[]
@@ -1246,6 +1244,56 @@ model directus_deployments {
   user_created                 String?                        @db.Uuid
   directus_deployment_projects directus_deployment_projects[]
   directus_users               directus_users?                @relation(fields: [user_created], references: [id], onUpdate: NoAction, map: "directus_deployments_user_created_foreign")
+}
+
+model account {
+  id                    String    @id @db.Uuid
+  userId                String    @db.Uuid
+  accountId             String    @db.VarChar(255)
+  providerId            String    @db.VarChar(255)
+  accessToken           String?
+  refreshToken          String?
+  accessTokenExpiresAt  DateTime? @db.Timestamptz(6)
+  refreshTokenExpiresAt DateTime? @db.Timestamptz(6)
+  scope                 String?   @db.VarChar(255)
+  idToken               String?
+  password              String?   @db.VarChar(255)
+  createdAt             DateTime? @db.Timestamptz(6)
+  updatedAt             DateTime? @db.Timestamptz(6)
+  user                  user      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "account_userid_foreign")
+}
+
+model session {
+  id        String    @id @db.Uuid
+  userId    String    @db.Uuid
+  token     String    @db.VarChar(255)
+  expiresAt DateTime  @db.Timestamptz(6)
+  ipAddress String?   @db.VarChar(255)
+  userAgent String?
+  createdAt DateTime? @db.Timestamptz(6)
+  updatedAt DateTime? @db.Timestamptz(6)
+  user      user      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "session_userid_foreign")
+}
+
+model user {
+  id            String    @id @db.Uuid
+  email         String    @db.VarChar(255)
+  emailVerified Boolean?  @default(false)
+  name          String?   @db.VarChar(255)
+  image         String?   @db.VarChar(255)
+  createdAt     DateTime? @db.Timestamptz(6)
+  updatedAt     DateTime? @db.Timestamptz(6)
+  account       account[]
+  session       session[]
+}
+
+model verification {
+  id         String    @id @db.Uuid
+  identifier String    @db.VarChar(255)
+  value      String    @db.VarChar(255)
+  expiresAt  DateTime  @db.Timestamptz(6)
+  createdAt  DateTime? @db.Timestamptz(6)
+  updatedAt  DateTime? @db.Timestamptz(6)
 }
 
 enum Role {
