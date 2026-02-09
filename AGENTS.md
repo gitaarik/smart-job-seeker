@@ -1,59 +1,62 @@
-# Docker Compose Setup
+# Smart Job Seeker (OSS)
+
+Open-source SvelteKit application for job seeking assistance.
+
+## Docker Compose Setup
 
 This project uses Docker Compose with these containers:
 
-## `admin`
-
-- **Directus CMS** used to build and manage the data in the database
-- Is the source of truth for the database
-- Use the Directus MCP server to make changes in the database
-- Prisma ORM is used within the Sveltekit app for connecting to the same
-  Directus database
-- Use `npm run docker:update-schema` to synchronize the prisma schema with the
-  database changes made in Directus
+### `admin`
+- **Directus CMS** for database management
+- Source of truth for the database schema
+- Use Directus MCP server or admin UI to make schema changes
+- Prisma ORM connects the SvelteKit app to the same database
+- After schema changes: `npm run docker:update-schema`
 - Field choice labels (for dropdowns/checkboxes) can be retrieved programmatically
-  using `getFieldChoiceLabel()` from `$lib/server/directus/field-labels` - this
-  avoids hardcoding label strings and stays in sync with Directus configuration
+  using `getFieldChoiceLabel()` from `$lib/server/directus/field-labels`
 
-## `app`
-
+### `app`
 - **SvelteKit** application using Svelte 5 with **TypeScript**
 - **Prisma** ORM, schema in `prisma/schema.prisma`
 - **Tailwind CSS** for styling
 
-## `database`
-
-- **PostgreSQL** server that is used by `admin` and `app`
+### `database`
+- **PostgreSQL** server
 
 Look at the scripts in `package.json` for help executing things in containers.
 
-### Development Notes
+## Development Notes
 
-- **TypeScript** is enabled throughout the codebase with strict type checking
+- **TypeScript** is enabled throughout with strict type checking
 - Use `npx tsx` for running TypeScript scripts (instead of `node`)
-- When creating scripts, use ES Modules `import` instead of CommonJS `require`
+- Use ES Modules `import` instead of CommonJS `require`
 - When removing a file, use `rm -f` instead of `rm`
-- **Path Aliases**: The `$lib/` alias is configured for use in scripts directory
-  - TypeScript: Configured in `tsconfig.json` with paths mapping and includes
-  - Deno: Configured in `deno.json` with imports mapping
-  - Use `$lib/` imports in scripts for consistency with SvelteKit code
+- **Path Aliases**: `$lib/` alias configured for scripts directory
+  - TypeScript: Configured in `tsconfig.json`
+  - Deno: Configured in `deno.json`
 
-## Bug Fixes
+## Database Changes
 
-- When asked to fix an issue or bug, focus on fixing the actual problem
-- Don't implement workarounds or alternative fixes unless explicitly asked
+**Important**: Use Directus admin UI to create/modify database fields, then sync Prisma:
+```bash
+npm run docker:update-schema
+```
 
-## Code Removal
-
-- When removing old code, don't leave comments explaining why it was removed
-- If you think a removal comment would be useful, ask first before adding it
+Do NOT add database columns directly via SQL - use Directus so fields get proper interface configuration.
 
 ## Code Quality
 
-- Keep try/catch blocks as small as possible, so it only contains code that
-  could throw the catched exception
-- Ensure unit-tested and clean, properly formatted code
-- After making code changes:
-  - Run `npm run test` to check if all unit tests still pass
-  - Run `npx deno fmt` to format all code consistently
-- For `.svelte` files, use `npx deno fmt --unstable-component`
+- Keep try/catch blocks minimal
+- Run tests after changes: `npm run test`
+- Format code: `npx deno fmt`
+- For `.svelte` files: `npx deno fmt --unstable-component`
+
+## Bug Fixes
+
+- Focus on fixing the actual problem
+- Don't implement workarounds unless explicitly asked
+
+## Code Removal
+
+- Don't leave comments explaining removed code
+- Ask before adding removal comments
