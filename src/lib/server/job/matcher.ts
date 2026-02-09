@@ -112,10 +112,10 @@ export async function filterEligibleJobs(
     SELECT j.* FROM jobs j
     WHERE j.status != 'archived'
     ${jobIdFilter}
-    -- Remote options overlap (REQUIRED)
+    -- Work location overlap (REQUIRED)
     AND (
-      j.remote_options IS NULL
-      OR j.remote_options::jsonb ?| array[${
+      j.work_location IS NULL
+      OR j.work_location::jsonb ?| array[${
     Prisma.join(preferences.remote_options)
   }]::text[]
     )
@@ -141,7 +141,7 @@ export async function filterEligibleJobs(
   // Apply location filter in memory (more flexible matching)
   if (preferences.locations && preferences.locations.length > 0) {
     return jobs.filter((job) =>
-      matchesLocation(job.location, preferences.locations!)
+      matchesLocation(job.office_location, preferences.locations!)
     );
   }
 
@@ -201,15 +201,15 @@ export async function calculateMatch(
     // Job variables
     "job.title": job.title || "Unknown",
     "job.job_poster": job.job_poster || "Unknown",
-    "job.location": job.location || "Remote/Not specified",
+    "job.office_location": job.office_location || "Remote/Not specified",
     "job.job_types": job.job_types
       ? JSON.stringify(job.job_types)
       : "Not specified",
     "job.experience_levels": job.experience_levels
       ? JSON.stringify(job.experience_levels)
       : "Not specified",
-    "job.remote_options": job.remote_options
-      ? JSON.stringify(job.remote_options)
+    "job.work_location": job.work_location
+      ? JSON.stringify(job.work_location)
       : "Not specified",
     "job.skills_required": job.skills_required
       ? JSON.stringify(job.skills_required)

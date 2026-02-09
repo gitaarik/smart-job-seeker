@@ -96,12 +96,12 @@ async function importSingleJob(
           title: jobData.title,
           job_poster: jobData.company,
           job_description: jobData.description,
-          location: jobData.location,
+          office_location: jobData.location,
           salary_min: jobData.salaryMin,
           salary_max: jobData.salaryMax,
           salary_currency: jobData.salaryCurrency,
           salary_period: jobData.salaryPeriod,
-          remote_options: jobData.remote ? [jobData.remote] : undefined,
+          work_location: jobData.remote ? [jobData.remote] : undefined,
           job_types: jobData.jobType ? [jobData.jobType] : undefined,
           experience_levels: jobData.experienceLevel
             ? [jobData.experienceLevel]
@@ -141,12 +141,12 @@ async function importSingleJob(
         job_poster: jobData.company,
         source_url: normalizedUrl,
         job_description: jobData.description,
-        location: jobData.location,
+        office_location: jobData.location,
         salary_min: jobData.salaryMin,
         salary_max: jobData.salaryMax,
         salary_currency: jobData.salaryCurrency,
         salary_period: jobData.salaryPeriod,
-        remote_options: jobData.remote ? [jobData.remote] : null,
+        work_location: jobData.remote ? [jobData.remote] : null,
         job_types: jobData.jobType ? [jobData.jobType] : null,
         experience_levels: jobData.experienceLevel
           ? [jobData.experienceLevel]
