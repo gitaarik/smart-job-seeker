@@ -42,10 +42,12 @@ export const extractJobDataSchema = z.object({
     .string()
     .nullable()
     .describe("Work location type (remote, hybrid, or onsite)"),
-  experience_level: z
-    .string()
+  experience_levels: z
+    .array(z.string())
     .nullable()
-    .describe("Required experience level"),
+    .describe(
+      "Array of applicable experience levels (entry, junior, mid, senior, lead, principal, executive)",
+    ),
   job_type: z.string().nullable().describe("Employment type"),
   salary_min: z
     .number()
