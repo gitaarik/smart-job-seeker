@@ -515,6 +515,16 @@ model directus_settings {
   ai_openai_api_key                                                  String?
   ai_anthropic_api_key                                               String?
   ai_system_prompt                                                   String?
+  ai_google_api_key                                                  String?
+  ai_openai_compatible_api_key                                       String?
+  ai_openai_compatible_base_url                                      String?
+  ai_openai_compatible_name                                          String?
+  ai_openai_compatible_models                                        Json?             @db.Json
+  ai_openai_compatible_headers                                       Json?             @db.Json
+  ai_openai_allowed_models                                           Json?             @db.Json
+  ai_anthropic_allowed_models                                        Json?             @db.Json
+  ai_google_allowed_models                                           Json?             @db.Json
+  collaborative_editing_enabled                                      Boolean           @default(false)
   directus_files_directus_settings_project_logoTodirectus_files      directus_files?   @relation("directus_settings_project_logoTodirectus_files", fields: [project_logo], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "directus_settings_project_logo_foreign")
   directus_files_directus_settings_public_backgroundTodirectus_files directus_files?   @relation("directus_settings_public_backgroundTodirectus_files", fields: [public_background], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "directus_settings_public_background_foreign")
   directus_files_directus_settings_public_faviconTodirectus_files    directus_files?   @relation("directus_settings_public_faviconTodirectus_files", fields: [public_favicon], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "directus_settings_public_favicon_foreign")
@@ -550,52 +560,55 @@ model directus_translations {
 }
 
 model directus_users {
-  id                                                                      String                   @id @db.Uuid
-  first_name                                                              String?                  @db.VarChar(50)
-  last_name                                                               String?                  @db.VarChar(50)
-  email                                                                   String?                  @unique(map: "directus_users_email_unique") @db.VarChar(128)
-  password                                                                String?                  @db.VarChar(255)
-  location                                                                String?                  @db.VarChar(255)
-  title                                                                   String?                  @db.VarChar(50)
+  id                                                                      String                         @id @db.Uuid
+  first_name                                                              String?                        @db.VarChar(50)
+  last_name                                                               String?                        @db.VarChar(50)
+  email                                                                   String?                        @unique(map: "directus_users_email_unique") @db.VarChar(128)
+  password                                                                String?                        @db.VarChar(255)
+  location                                                                String?                        @db.VarChar(255)
+  title                                                                   String?                        @db.VarChar(50)
   description                                                             String?
-  tags                                                                    Json?                    @db.Json
-  avatar                                                                  String?                  @db.Uuid
-  language                                                                String?                  @db.VarChar(255)
-  tfa_secret                                                              String?                  @db.VarChar(255)
-  status                                                                  String                   @default("active") @db.VarChar(16)
-  role                                                                    String?                  @db.Uuid
-  token                                                                   String?                  @unique(map: "directus_users_token_unique") @db.VarChar(255)
-  last_access                                                             DateTime?                @db.Timestamptz(6)
-  last_page                                                               String?                  @db.VarChar(255)
-  provider                                                                String                   @default("default") @db.VarChar(128)
-  external_identifier                                                     String?                  @unique(map: "directus_users_external_identifier_unique") @db.VarChar(255)
-  auth_data                                                               Json?                    @db.Json
-  email_notifications                                                     Boolean?                 @default(true)
-  appearance                                                              String?                  @db.VarChar(255)
-  theme_dark                                                              String?                  @db.VarChar(255)
-  theme_light                                                             String?                  @db.VarChar(255)
-  theme_light_overrides                                                   Json?                    @db.Json
-  theme_dark_overrides                                                    Json?                    @db.Json
-  text_direction                                                          String                   @default("auto") @db.VarChar(255)
-  ai_prompts_ai_prompts_user_createdTodirectus_users                      ai_prompts[]             @relation("ai_prompts_user_createdTodirectus_users")
-  ai_prompts_ai_prompts_user_updatedTodirectus_users                      ai_prompts[]             @relation("ai_prompts_user_updatedTodirectus_users")
+  tags                                                                    Json?                          @db.Json
+  avatar                                                                  String?                        @db.Uuid
+  language                                                                String?                        @db.VarChar(255)
+  tfa_secret                                                              String?                        @db.VarChar(255)
+  status                                                                  String                         @default("active") @db.VarChar(16)
+  role                                                                    String?                        @db.Uuid
+  token                                                                   String?                        @unique(map: "directus_users_token_unique") @db.VarChar(255)
+  last_access                                                             DateTime?                      @db.Timestamptz(6)
+  last_page                                                               String?                        @db.VarChar(255)
+  provider                                                                String                         @default("default") @db.VarChar(128)
+  external_identifier                                                     String?                        @unique(map: "directus_users_external_identifier_unique") @db.VarChar(255)
+  auth_data                                                               Json?                          @db.Json
+  email_notifications                                                     Boolean?                       @default(true)
+  appearance                                                              String?                        @db.VarChar(255)
+  theme_dark                                                              String?                        @db.VarChar(255)
+  theme_light                                                             String?                        @db.VarChar(255)
+  theme_light_overrides                                                   Json?                          @db.Json
+  theme_dark_overrides                                                    Json?                          @db.Json
+  text_direction                                                          String                         @default("auto") @db.VarChar(255)
+  ai_prompts_ai_prompts_user_createdTodirectus_users                      ai_prompts[]                   @relation("ai_prompts_user_createdTodirectus_users")
+  ai_prompts_ai_prompts_user_updatedTodirectus_users                      ai_prompts[]                   @relation("ai_prompts_user_updatedTodirectus_users")
   directus_access                                                         directus_access[]
-  directus_comments_directus_comments_user_createdTodirectus_users        directus_comments[]      @relation("directus_comments_user_createdTodirectus_users")
-  directus_comments_directus_comments_user_updatedTodirectus_users        directus_comments[]      @relation("directus_comments_user_updatedTodirectus_users")
+  directus_comments_directus_comments_user_createdTodirectus_users        directus_comments[]            @relation("directus_comments_user_createdTodirectus_users")
+  directus_comments_directus_comments_user_updatedTodirectus_users        directus_comments[]            @relation("directus_comments_user_updatedTodirectus_users")
   directus_dashboards                                                     directus_dashboards[]
-  directus_files_directus_files_modified_byTodirectus_users               directus_files[]         @relation("directus_files_modified_byTodirectus_users")
-  directus_files_directus_files_uploaded_byTodirectus_users               directus_files[]         @relation("directus_files_uploaded_byTodirectus_users")
+  directus_deployment_projects                                            directus_deployment_projects[]
+  directus_deployment_runs                                                directus_deployment_runs[]
+  directus_deployments                                                    directus_deployments[]
+  directus_files_directus_files_modified_byTodirectus_users               directus_files[]               @relation("directus_files_modified_byTodirectus_users")
+  directus_files_directus_files_uploaded_byTodirectus_users               directus_files[]               @relation("directus_files_uploaded_byTodirectus_users")
   directus_flows                                                          directus_flows[]
-  directus_notifications_directus_notifications_recipientTodirectus_users directus_notifications[] @relation("directus_notifications_recipientTodirectus_users")
-  directus_notifications_directus_notifications_senderTodirectus_users    directus_notifications[] @relation("directus_notifications_senderTodirectus_users")
+  directus_notifications_directus_notifications_recipientTodirectus_users directus_notifications[]       @relation("directus_notifications_recipientTodirectus_users")
+  directus_notifications_directus_notifications_senderTodirectus_users    directus_notifications[]       @relation("directus_notifications_senderTodirectus_users")
   directus_operations                                                     directus_operations[]
   directus_panels                                                         directus_panels[]
   directus_presets                                                        directus_presets[]
   directus_sessions                                                       directus_sessions[]
   directus_shares                                                         directus_shares[]
-  directus_roles                                                          directus_roles?          @relation(fields: [role], references: [id], onUpdate: NoAction, map: "directus_users_role_foreign")
-  directus_versions_directus_versions_user_createdTodirectus_users        directus_versions[]      @relation("directus_versions_user_createdTodirectus_users")
-  directus_versions_directus_versions_user_updatedTodirectus_users        directus_versions[]      @relation("directus_versions_user_updatedTodirectus_users")
+  directus_roles                                                          directus_roles?                @relation(fields: [role], references: [id], onUpdate: NoAction, map: "directus_users_role_foreign")
+  directus_versions_directus_versions_user_createdTodirectus_users        directus_versions[]            @relation("directus_versions_user_createdTodirectus_users")
+  directus_versions_directus_versions_user_updatedTodirectus_users        directus_versions[]            @relation("directus_versions_user_updatedTodirectus_users")
   profiles                                                                profiles[]
 }
 
@@ -756,15 +769,19 @@ model jobs {
   salary_period        String?         @db.VarChar(255)
   import_error         String?
   last_scraped         DateTime?       @db.Timestamptz(6)
-  location             String?         @db.VarChar(255)
+  office_location      String?         @db.VarChar(255)
   scrape_count         Int?            @default(0)
   job_types            Json?           @db.Json
   experience_levels    Json?           @db.Json
-  remote_options       Json?           @db.Json
-  skills               Json?           @db.Json
+  work_location        Json?           @db.Json
   source_html_stripped String?
   job_platform         Int?
   ai_chat_extraction   Int?
+  company              String?         @db.VarChar(255)
+  skills_required      Json?           @db.Json
+  skills_preferred     Json?           @db.Json
+  responsibilities     Json?
+  soft_skills          Json?
   applications         applications[]
   job_matches          job_matches[]
   job_resources        job_resources[]
@@ -1193,6 +1210,42 @@ model ai_chat_templates {
   user_prompt   String?
   format        Json?      @db.Json
   ai_chats      ai_chats[]
+}
+
+model directus_deployment_projects {
+  id                       String                     @id @db.Uuid
+  deployment               String                     @db.Uuid
+  external_id              String                     @db.VarChar(255)
+  name                     String                     @db.VarChar(255)
+  date_created             DateTime?                  @default(now()) @db.Timestamptz(6)
+  user_created             String?                    @db.Uuid
+  directus_deployments     directus_deployments       @relation(fields: [deployment], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "directus_deployment_projects_deployment_foreign")
+  directus_users           directus_users?            @relation(fields: [user_created], references: [id], onUpdate: NoAction, map: "directus_deployment_projects_user_created_foreign")
+  directus_deployment_runs directus_deployment_runs[]
+
+  @@unique([deployment, external_id], map: "directus_deployment_projects_deployment_external_id_unique")
+}
+
+model directus_deployment_runs {
+  id                           String                       @id @db.Uuid
+  project                      String                       @db.Uuid
+  external_id                  String                       @db.VarChar(255)
+  target                       String                       @db.VarChar(255)
+  date_created                 DateTime?                    @default(now()) @db.Timestamptz(6)
+  user_created                 String?                      @db.Uuid
+  directus_deployment_projects directus_deployment_projects @relation(fields: [project], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "directus_deployment_runs_project_foreign")
+  directus_users               directus_users?              @relation(fields: [user_created], references: [id], onUpdate: NoAction, map: "directus_deployment_runs_user_created_foreign")
+}
+
+model directus_deployments {
+  id                           String                         @id @db.Uuid
+  provider                     String                         @unique(map: "directus_deployments_provider_unique") @db.VarChar(255)
+  credentials                  String?
+  options                      String?
+  date_created                 DateTime?                      @default(now()) @db.Timestamptz(6)
+  user_created                 String?                        @db.Uuid
+  directus_deployment_projects directus_deployment_projects[]
+  directus_users               directus_users?                @relation(fields: [user_created], references: [id], onUpdate: NoAction, map: "directus_deployments_user_created_foreign")
 }
 
 enum Role {

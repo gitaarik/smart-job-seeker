@@ -379,3 +379,18 @@ export type ai_chats = Prisma.ai_chatsModel
  * 
  */
 export type ai_chat_templates = Prisma.ai_chat_templatesModel
+/**
+ * Model directus_deployment_projects
+ * 
+ */
+export type directus_deployment_projects = Prisma.directus_deployment_projectsModel
+/**
+ * Model directus_deployment_runs
+ * 
+ */
+export type directus_deployment_runs = Prisma.directus_deployment_runsModel
+/**
+ * Model directus_deployments
+ * 
+ */
+export type directus_deployments = Prisma.directus_deploymentsModel

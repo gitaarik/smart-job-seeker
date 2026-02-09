@@ -69,13 +69,25 @@ export const extractJobDataSchema = z.object({
     .array(z.string())
     .nullable()
     .describe(
-      "Array of REQUIRED skills/technologies, ordered by importance (most critical first)",
+      "Array of REQUIRED TECHNICAL skills/technologies, ordered by importance (most critical first)",
     ),
   skills_preferred: z
     .array(z.string())
     .nullable()
     .describe(
-      "Array of PREFERRED/nice-to-have skills, ordered by importance (most desired first)",
+      "Array of PREFERRED/nice-to-have TECHNICAL skills, ordered by importance (most desired first)",
+    ),
+  responsibilities: z
+    .array(z.string())
+    .nullable()
+    .describe(
+      "Array of key job responsibilities/duties, ordered by importance",
+    ),
+  soft_skills: z
+    .array(z.string())
+    .nullable()
+    .describe(
+      "Array of soft skills/personality traits (communication, leadership, teamwork, etc.)",
     ),
   status: z
     .string()

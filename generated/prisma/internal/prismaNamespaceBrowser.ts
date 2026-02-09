@@ -118,7 +118,10 @@ export const ModelName = {
   work_experience_technologies: 'work_experience_technologies',
   work_experiences: 'work_experiences',
   ai_chats: 'ai_chats',
-  ai_chat_templates: 'ai_chat_templates'
+  ai_chat_templates: 'ai_chat_templates',
+  directus_deployment_projects: 'directus_deployment_projects',
+  directus_deployment_runs: 'directus_deployment_runs',
+  directus_deployments: 'directus_deployments'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -648,7 +651,17 @@ export const Directus_settingsScalarFieldEnum = {
   project_status: 'project_status',
   ai_openai_api_key: 'ai_openai_api_key',
   ai_anthropic_api_key: 'ai_anthropic_api_key',
-  ai_system_prompt: 'ai_system_prompt'
+  ai_system_prompt: 'ai_system_prompt',
+  ai_google_api_key: 'ai_google_api_key',
+  ai_openai_compatible_api_key: 'ai_openai_compatible_api_key',
+  ai_openai_compatible_base_url: 'ai_openai_compatible_base_url',
+  ai_openai_compatible_name: 'ai_openai_compatible_name',
+  ai_openai_compatible_models: 'ai_openai_compatible_models',
+  ai_openai_compatible_headers: 'ai_openai_compatible_headers',
+  ai_openai_allowed_models: 'ai_openai_allowed_models',
+  ai_anthropic_allowed_models: 'ai_anthropic_allowed_models',
+  ai_google_allowed_models: 'ai_google_allowed_models',
+  collaborative_editing_enabled: 'collaborative_editing_enabled'
 } as const
 
 export type Directus_settingsScalarFieldEnum = (typeof Directus_settingsScalarFieldEnum)[keyof typeof Directus_settingsScalarFieldEnum]
@@ -879,15 +892,19 @@ export const JobsScalarFieldEnum = {
   salary_period: 'salary_period',
   import_error: 'import_error',
   last_scraped: 'last_scraped',
-  location: 'location',
+  office_location: 'office_location',
   scrape_count: 'scrape_count',
   job_types: 'job_types',
   experience_levels: 'experience_levels',
-  remote_options: 'remote_options',
-  skills: 'skills',
+  work_location: 'work_location',
   source_html_stripped: 'source_html_stripped',
   job_platform: 'job_platform',
-  ai_chat_extraction: 'ai_chat_extraction'
+  ai_chat_extraction: 'ai_chat_extraction',
+  company: 'company',
+  skills_required: 'skills_required',
+  skills_preferred: 'skills_preferred',
+  responsibilities: 'responsibilities',
+  soft_skills: 'soft_skills'
 } as const
 
 export type JobsScalarFieldEnum = (typeof JobsScalarFieldEnum)[keyof typeof JobsScalarFieldEnum]
@@ -1314,6 +1331,42 @@ export const Ai_chat_templatesScalarFieldEnum = {
 } as const
 
 export type Ai_chat_templatesScalarFieldEnum = (typeof Ai_chat_templatesScalarFieldEnum)[keyof typeof Ai_chat_templatesScalarFieldEnum]
+
+
+export const Directus_deployment_projectsScalarFieldEnum = {
+  id: 'id',
+  deployment: 'deployment',
+  external_id: 'external_id',
+  name: 'name',
+  date_created: 'date_created',
+  user_created: 'user_created'
+} as const
+
+export type Directus_deployment_projectsScalarFieldEnum = (typeof Directus_deployment_projectsScalarFieldEnum)[keyof typeof Directus_deployment_projectsScalarFieldEnum]
+
+
+export const Directus_deployment_runsScalarFieldEnum = {
+  id: 'id',
+  project: 'project',
+  external_id: 'external_id',
+  target: 'target',
+  date_created: 'date_created',
+  user_created: 'user_created'
+} as const
+
+export type Directus_deployment_runsScalarFieldEnum = (typeof Directus_deployment_runsScalarFieldEnum)[keyof typeof Directus_deployment_runsScalarFieldEnum]
+
+
+export const Directus_deploymentsScalarFieldEnum = {
+  id: 'id',
+  provider: 'provider',
+  credentials: 'credentials',
+  options: 'options',
+  date_created: 'date_created',
+  user_created: 'user_created'
+} as const
+
+export type Directus_deploymentsScalarFieldEnum = (typeof Directus_deploymentsScalarFieldEnum)[keyof typeof Directus_deploymentsScalarFieldEnum]
 
 
 export const SortOrder = {

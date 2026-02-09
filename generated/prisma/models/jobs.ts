@@ -61,11 +61,12 @@ export type JobsMinAggregateOutputType = {
   salary_period: string | null
   import_error: string | null
   last_scraped: Date | null
-  location: string | null
+  office_location: string | null
   scrape_count: number | null
   source_html_stripped: string | null
   job_platform: number | null
   ai_chat_extraction: number | null
+  company: string | null
 }
 
 export type JobsMaxAggregateOutputType = {
@@ -85,11 +86,12 @@ export type JobsMaxAggregateOutputType = {
   salary_period: string | null
   import_error: string | null
   last_scraped: Date | null
-  location: string | null
+  office_location: string | null
   scrape_count: number | null
   source_html_stripped: string | null
   job_platform: number | null
   ai_chat_extraction: number | null
+  company: string | null
 }
 
 export type JobsCountAggregateOutputType = {
@@ -109,15 +111,19 @@ export type JobsCountAggregateOutputType = {
   salary_period: number
   import_error: number
   last_scraped: number
-  location: number
+  office_location: number
   scrape_count: number
   job_types: number
   experience_levels: number
-  remote_options: number
-  skills: number
+  work_location: number
   source_html_stripped: number
   job_platform: number
   ai_chat_extraction: number
+  company: number
+  skills_required: number
+  skills_preferred: number
+  responsibilities: number
+  soft_skills: number
   _all: number
 }
 
@@ -157,11 +163,12 @@ export type JobsMinAggregateInputType = {
   salary_period?: true
   import_error?: true
   last_scraped?: true
-  location?: true
+  office_location?: true
   scrape_count?: true
   source_html_stripped?: true
   job_platform?: true
   ai_chat_extraction?: true
+  company?: true
 }
 
 export type JobsMaxAggregateInputType = {
@@ -181,11 +188,12 @@ export type JobsMaxAggregateInputType = {
   salary_period?: true
   import_error?: true
   last_scraped?: true
-  location?: true
+  office_location?: true
   scrape_count?: true
   source_html_stripped?: true
   job_platform?: true
   ai_chat_extraction?: true
+  company?: true
 }
 
 export type JobsCountAggregateInputType = {
@@ -205,15 +213,19 @@ export type JobsCountAggregateInputType = {
   salary_period?: true
   import_error?: true
   last_scraped?: true
-  location?: true
+  office_location?: true
   scrape_count?: true
   job_types?: true
   experience_levels?: true
-  remote_options?: true
-  skills?: true
+  work_location?: true
   source_html_stripped?: true
   job_platform?: true
   ai_chat_extraction?: true
+  company?: true
+  skills_required?: true
+  skills_preferred?: true
+  responsibilities?: true
+  soft_skills?: true
   _all?: true
 }
 
@@ -320,15 +332,19 @@ export type JobsGroupByOutputType = {
   salary_period: string | null
   import_error: string | null
   last_scraped: Date | null
-  location: string | null
+  office_location: string | null
   scrape_count: number | null
   job_types: runtime.JsonValue | null
   experience_levels: runtime.JsonValue | null
-  remote_options: runtime.JsonValue | null
-  skills: runtime.JsonValue | null
+  work_location: runtime.JsonValue | null
   source_html_stripped: string | null
   job_platform: number | null
   ai_chat_extraction: number | null
+  company: string | null
+  skills_required: runtime.JsonValue | null
+  skills_preferred: runtime.JsonValue | null
+  responsibilities: runtime.JsonValue | null
+  soft_skills: runtime.JsonValue | null
   _count: JobsCountAggregateOutputType | null
   _avg: JobsAvgAggregateOutputType | null
   _sum: JobsSumAggregateOutputType | null
@@ -371,15 +387,19 @@ export type jobsWhereInput = {
   salary_period?: Prisma.StringNullableFilter<"jobs"> | string | null
   import_error?: Prisma.StringNullableFilter<"jobs"> | string | null
   last_scraped?: Prisma.DateTimeNullableFilter<"jobs"> | Date | string | null
-  location?: Prisma.StringNullableFilter<"jobs"> | string | null
+  office_location?: Prisma.StringNullableFilter<"jobs"> | string | null
   scrape_count?: Prisma.IntNullableFilter<"jobs"> | number | null
   job_types?: Prisma.JsonNullableFilter<"jobs">
   experience_levels?: Prisma.JsonNullableFilter<"jobs">
-  remote_options?: Prisma.JsonNullableFilter<"jobs">
-  skills?: Prisma.JsonNullableFilter<"jobs">
+  work_location?: Prisma.JsonNullableFilter<"jobs">
   source_html_stripped?: Prisma.StringNullableFilter<"jobs"> | string | null
   job_platform?: Prisma.IntNullableFilter<"jobs"> | number | null
   ai_chat_extraction?: Prisma.IntNullableFilter<"jobs"> | number | null
+  company?: Prisma.StringNullableFilter<"jobs"> | string | null
+  skills_required?: Prisma.JsonNullableFilter<"jobs">
+  skills_preferred?: Prisma.JsonNullableFilter<"jobs">
+  responsibilities?: Prisma.JsonNullableFilter<"jobs">
+  soft_skills?: Prisma.JsonNullableFilter<"jobs">
   applications?: Prisma.ApplicationsListRelationFilter
   job_matches?: Prisma.Job_matchesListRelationFilter
   job_resources?: Prisma.Job_resourcesListRelationFilter
@@ -404,15 +424,19 @@ export type jobsOrderByWithRelationInput = {
   salary_period?: Prisma.SortOrderInput | Prisma.SortOrder
   import_error?: Prisma.SortOrderInput | Prisma.SortOrder
   last_scraped?: Prisma.SortOrderInput | Prisma.SortOrder
-  location?: Prisma.SortOrderInput | Prisma.SortOrder
+  office_location?: Prisma.SortOrderInput | Prisma.SortOrder
   scrape_count?: Prisma.SortOrderInput | Prisma.SortOrder
   job_types?: Prisma.SortOrderInput | Prisma.SortOrder
   experience_levels?: Prisma.SortOrderInput | Prisma.SortOrder
-  remote_options?: Prisma.SortOrderInput | Prisma.SortOrder
-  skills?: Prisma.SortOrderInput | Prisma.SortOrder
+  work_location?: Prisma.SortOrderInput | Prisma.SortOrder
   source_html_stripped?: Prisma.SortOrderInput | Prisma.SortOrder
   job_platform?: Prisma.SortOrderInput | Prisma.SortOrder
   ai_chat_extraction?: Prisma.SortOrderInput | Prisma.SortOrder
+  company?: Prisma.SortOrderInput | Prisma.SortOrder
+  skills_required?: Prisma.SortOrderInput | Prisma.SortOrder
+  skills_preferred?: Prisma.SortOrderInput | Prisma.SortOrder
+  responsibilities?: Prisma.SortOrderInput | Prisma.SortOrder
+  soft_skills?: Prisma.SortOrderInput | Prisma.SortOrder
   applications?: Prisma.applicationsOrderByRelationAggregateInput
   job_matches?: Prisma.job_matchesOrderByRelationAggregateInput
   job_resources?: Prisma.job_resourcesOrderByRelationAggregateInput
@@ -440,15 +464,19 @@ export type jobsWhereUniqueInput = Prisma.AtLeast<{
   salary_period?: Prisma.StringNullableFilter<"jobs"> | string | null
   import_error?: Prisma.StringNullableFilter<"jobs"> | string | null
   last_scraped?: Prisma.DateTimeNullableFilter<"jobs"> | Date | string | null
-  location?: Prisma.StringNullableFilter<"jobs"> | string | null
+  office_location?: Prisma.StringNullableFilter<"jobs"> | string | null
   scrape_count?: Prisma.IntNullableFilter<"jobs"> | number | null
   job_types?: Prisma.JsonNullableFilter<"jobs">
   experience_levels?: Prisma.JsonNullableFilter<"jobs">
-  remote_options?: Prisma.JsonNullableFilter<"jobs">
-  skills?: Prisma.JsonNullableFilter<"jobs">
+  work_location?: Prisma.JsonNullableFilter<"jobs">
   source_html_stripped?: Prisma.StringNullableFilter<"jobs"> | string | null
   job_platform?: Prisma.IntNullableFilter<"jobs"> | number | null
   ai_chat_extraction?: Prisma.IntNullableFilter<"jobs"> | number | null
+  company?: Prisma.StringNullableFilter<"jobs"> | string | null
+  skills_required?: Prisma.JsonNullableFilter<"jobs">
+  skills_preferred?: Prisma.JsonNullableFilter<"jobs">
+  responsibilities?: Prisma.JsonNullableFilter<"jobs">
+  soft_skills?: Prisma.JsonNullableFilter<"jobs">
   applications?: Prisma.ApplicationsListRelationFilter
   job_matches?: Prisma.Job_matchesListRelationFilter
   job_resources?: Prisma.Job_resourcesListRelationFilter
@@ -473,15 +501,19 @@ export type jobsOrderByWithAggregationInput = {
   salary_period?: Prisma.SortOrderInput | Prisma.SortOrder
   import_error?: Prisma.SortOrderInput | Prisma.SortOrder
   last_scraped?: Prisma.SortOrderInput | Prisma.SortOrder
-  location?: Prisma.SortOrderInput | Prisma.SortOrder
+  office_location?: Prisma.SortOrderInput | Prisma.SortOrder
   scrape_count?: Prisma.SortOrderInput | Prisma.SortOrder
   job_types?: Prisma.SortOrderInput | Prisma.SortOrder
   experience_levels?: Prisma.SortOrderInput | Prisma.SortOrder
-  remote_options?: Prisma.SortOrderInput | Prisma.SortOrder
-  skills?: Prisma.SortOrderInput | Prisma.SortOrder
+  work_location?: Prisma.SortOrderInput | Prisma.SortOrder
   source_html_stripped?: Prisma.SortOrderInput | Prisma.SortOrder
   job_platform?: Prisma.SortOrderInput | Prisma.SortOrder
   ai_chat_extraction?: Prisma.SortOrderInput | Prisma.SortOrder
+  company?: Prisma.SortOrderInput | Prisma.SortOrder
+  skills_required?: Prisma.SortOrderInput | Prisma.SortOrder
+  skills_preferred?: Prisma.SortOrderInput | Prisma.SortOrder
+  responsibilities?: Prisma.SortOrderInput | Prisma.SortOrder
+  soft_skills?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.jobsCountOrderByAggregateInput
   _avg?: Prisma.jobsAvgOrderByAggregateInput
   _max?: Prisma.jobsMaxOrderByAggregateInput
@@ -509,15 +541,19 @@ export type jobsScalarWhereWithAggregatesInput = {
   salary_period?: Prisma.StringNullableWithAggregatesFilter<"jobs"> | string | null
   import_error?: Prisma.StringNullableWithAggregatesFilter<"jobs"> | string | null
   last_scraped?: Prisma.DateTimeNullableWithAggregatesFilter<"jobs"> | Date | string | null
-  location?: Prisma.StringNullableWithAggregatesFilter<"jobs"> | string | null
+  office_location?: Prisma.StringNullableWithAggregatesFilter<"jobs"> | string | null
   scrape_count?: Prisma.IntNullableWithAggregatesFilter<"jobs"> | number | null
   job_types?: Prisma.JsonNullableWithAggregatesFilter<"jobs">
   experience_levels?: Prisma.JsonNullableWithAggregatesFilter<"jobs">
-  remote_options?: Prisma.JsonNullableWithAggregatesFilter<"jobs">
-  skills?: Prisma.JsonNullableWithAggregatesFilter<"jobs">
+  work_location?: Prisma.JsonNullableWithAggregatesFilter<"jobs">
   source_html_stripped?: Prisma.StringNullableWithAggregatesFilter<"jobs"> | string | null
   job_platform?: Prisma.IntNullableWithAggregatesFilter<"jobs"> | number | null
   ai_chat_extraction?: Prisma.IntNullableWithAggregatesFilter<"jobs"> | number | null
+  company?: Prisma.StringNullableWithAggregatesFilter<"jobs"> | string | null
+  skills_required?: Prisma.JsonNullableWithAggregatesFilter<"jobs">
+  skills_preferred?: Prisma.JsonNullableWithAggregatesFilter<"jobs">
+  responsibilities?: Prisma.JsonNullableWithAggregatesFilter<"jobs">
+  soft_skills?: Prisma.JsonNullableWithAggregatesFilter<"jobs">
 }
 
 export type jobsCreateInput = {
@@ -536,13 +572,17 @@ export type jobsCreateInput = {
   salary_period?: string | null
   import_error?: string | null
   last_scraped?: Date | string | null
-  location?: string | null
+  office_location?: string | null
   scrape_count?: number | null
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   source_html_stripped?: string | null
+  company?: string | null
+  skills_required?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   applications?: Prisma.applicationsCreateNestedManyWithoutJobsInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutJobsInput
   job_resources?: Prisma.job_resourcesCreateNestedManyWithoutJobsInput
@@ -567,15 +607,19 @@ export type jobsUncheckedCreateInput = {
   salary_period?: string | null
   import_error?: string | null
   last_scraped?: Date | string | null
-  location?: string | null
+  office_location?: string | null
   scrape_count?: number | null
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   source_html_stripped?: string | null
   job_platform?: number | null
   ai_chat_extraction?: number | null
+  company?: string | null
+  skills_required?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutJobsInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutJobsInput
   job_resources?: Prisma.job_resourcesUncheckedCreateNestedManyWithoutJobsInput
@@ -597,13 +641,17 @@ export type jobsUpdateInput = {
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scrape_count?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   source_html_stripped?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  skills_required?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   applications?: Prisma.applicationsUpdateManyWithoutJobsNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutJobsNestedInput
   job_resources?: Prisma.job_resourcesUpdateManyWithoutJobsNestedInput
@@ -628,15 +676,19 @@ export type jobsUncheckedUpdateInput = {
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scrape_count?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   source_html_stripped?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_platform?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat_extraction?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  company?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  skills_required?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutJobsNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutJobsNestedInput
   job_resources?: Prisma.job_resourcesUncheckedUpdateManyWithoutJobsNestedInput
@@ -659,15 +711,19 @@ export type jobsCreateManyInput = {
   salary_period?: string | null
   import_error?: string | null
   last_scraped?: Date | string | null
-  location?: string | null
+  office_location?: string | null
   scrape_count?: number | null
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   source_html_stripped?: string | null
   job_platform?: number | null
   ai_chat_extraction?: number | null
+  company?: string | null
+  skills_required?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type jobsUpdateManyMutationInput = {
@@ -686,13 +742,17 @@ export type jobsUpdateManyMutationInput = {
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scrape_count?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   source_html_stripped?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  skills_required?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type jobsUncheckedUpdateManyInput = {
@@ -712,15 +772,19 @@ export type jobsUncheckedUpdateManyInput = {
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scrape_count?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   source_html_stripped?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_platform?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat_extraction?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  company?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  skills_required?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type JobsNullableScalarRelationFilter = {
@@ -760,15 +824,19 @@ export type jobsCountOrderByAggregateInput = {
   salary_period?: Prisma.SortOrder
   import_error?: Prisma.SortOrder
   last_scraped?: Prisma.SortOrder
-  location?: Prisma.SortOrder
+  office_location?: Prisma.SortOrder
   scrape_count?: Prisma.SortOrder
   job_types?: Prisma.SortOrder
   experience_levels?: Prisma.SortOrder
-  remote_options?: Prisma.SortOrder
-  skills?: Prisma.SortOrder
+  work_location?: Prisma.SortOrder
   source_html_stripped?: Prisma.SortOrder
   job_platform?: Prisma.SortOrder
   ai_chat_extraction?: Prisma.SortOrder
+  company?: Prisma.SortOrder
+  skills_required?: Prisma.SortOrder
+  skills_preferred?: Prisma.SortOrder
+  responsibilities?: Prisma.SortOrder
+  soft_skills?: Prisma.SortOrder
 }
 
 export type jobsAvgOrderByAggregateInput = {
@@ -797,11 +865,12 @@ export type jobsMaxOrderByAggregateInput = {
   salary_period?: Prisma.SortOrder
   import_error?: Prisma.SortOrder
   last_scraped?: Prisma.SortOrder
-  location?: Prisma.SortOrder
+  office_location?: Prisma.SortOrder
   scrape_count?: Prisma.SortOrder
   source_html_stripped?: Prisma.SortOrder
   job_platform?: Prisma.SortOrder
   ai_chat_extraction?: Prisma.SortOrder
+  company?: Prisma.SortOrder
 }
 
 export type jobsMinOrderByAggregateInput = {
@@ -821,11 +890,12 @@ export type jobsMinOrderByAggregateInput = {
   salary_period?: Prisma.SortOrder
   import_error?: Prisma.SortOrder
   last_scraped?: Prisma.SortOrder
-  location?: Prisma.SortOrder
+  office_location?: Prisma.SortOrder
   scrape_count?: Prisma.SortOrder
   source_html_stripped?: Prisma.SortOrder
   job_platform?: Prisma.SortOrder
   ai_chat_extraction?: Prisma.SortOrder
+  company?: Prisma.SortOrder
 }
 
 export type jobsSumOrderByAggregateInput = {
@@ -981,13 +1051,17 @@ export type jobsCreateWithoutApplicationsInput = {
   salary_period?: string | null
   import_error?: string | null
   last_scraped?: Date | string | null
-  location?: string | null
+  office_location?: string | null
   scrape_count?: number | null
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   source_html_stripped?: string | null
+  company?: string | null
+  skills_required?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutJobsInput
   job_resources?: Prisma.job_resourcesCreateNestedManyWithoutJobsInput
   ai_chat?: Prisma.ai_chatsCreateNestedOneWithoutJobsInput
@@ -1011,15 +1085,19 @@ export type jobsUncheckedCreateWithoutApplicationsInput = {
   salary_period?: string | null
   import_error?: string | null
   last_scraped?: Date | string | null
-  location?: string | null
+  office_location?: string | null
   scrape_count?: number | null
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   source_html_stripped?: string | null
   job_platform?: number | null
   ai_chat_extraction?: number | null
+  company?: string | null
+  skills_required?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutJobsInput
   job_resources?: Prisma.job_resourcesUncheckedCreateNestedManyWithoutJobsInput
 }
@@ -1056,13 +1134,17 @@ export type jobsUpdateWithoutApplicationsInput = {
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scrape_count?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   source_html_stripped?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  skills_required?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   job_matches?: Prisma.job_matchesUpdateManyWithoutJobsNestedInput
   job_resources?: Prisma.job_resourcesUpdateManyWithoutJobsNestedInput
   ai_chat?: Prisma.ai_chatsUpdateOneWithoutJobsNestedInput
@@ -1086,15 +1168,19 @@ export type jobsUncheckedUpdateWithoutApplicationsInput = {
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scrape_count?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   source_html_stripped?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_platform?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat_extraction?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  company?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  skills_required?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutJobsNestedInput
   job_resources?: Prisma.job_resourcesUncheckedUpdateManyWithoutJobsNestedInput
 }
@@ -1115,13 +1201,17 @@ export type jobsCreateWithoutJob_matchesInput = {
   salary_period?: string | null
   import_error?: string | null
   last_scraped?: Date | string | null
-  location?: string | null
+  office_location?: string | null
   scrape_count?: number | null
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   source_html_stripped?: string | null
+  company?: string | null
+  skills_required?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   applications?: Prisma.applicationsCreateNestedManyWithoutJobsInput
   job_resources?: Prisma.job_resourcesCreateNestedManyWithoutJobsInput
   ai_chat?: Prisma.ai_chatsCreateNestedOneWithoutJobsInput
@@ -1145,15 +1235,19 @@ export type jobsUncheckedCreateWithoutJob_matchesInput = {
   salary_period?: string | null
   import_error?: string | null
   last_scraped?: Date | string | null
-  location?: string | null
+  office_location?: string | null
   scrape_count?: number | null
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   source_html_stripped?: string | null
   job_platform?: number | null
   ai_chat_extraction?: number | null
+  company?: string | null
+  skills_required?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutJobsInput
   job_resources?: Prisma.job_resourcesUncheckedCreateNestedManyWithoutJobsInput
 }
@@ -1190,13 +1284,17 @@ export type jobsUpdateWithoutJob_matchesInput = {
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scrape_count?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   source_html_stripped?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  skills_required?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   applications?: Prisma.applicationsUpdateManyWithoutJobsNestedInput
   job_resources?: Prisma.job_resourcesUpdateManyWithoutJobsNestedInput
   ai_chat?: Prisma.ai_chatsUpdateOneWithoutJobsNestedInput
@@ -1220,15 +1318,19 @@ export type jobsUncheckedUpdateWithoutJob_matchesInput = {
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scrape_count?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   source_html_stripped?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_platform?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat_extraction?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  company?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  skills_required?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutJobsNestedInput
   job_resources?: Prisma.job_resourcesUncheckedUpdateManyWithoutJobsNestedInput
 }
@@ -1249,13 +1351,17 @@ export type jobsCreateWithoutJob_platformsInput = {
   salary_period?: string | null
   import_error?: string | null
   last_scraped?: Date | string | null
-  location?: string | null
+  office_location?: string | null
   scrape_count?: number | null
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   source_html_stripped?: string | null
+  company?: string | null
+  skills_required?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   applications?: Prisma.applicationsCreateNestedManyWithoutJobsInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutJobsInput
   job_resources?: Prisma.job_resourcesCreateNestedManyWithoutJobsInput
@@ -1279,14 +1385,18 @@ export type jobsUncheckedCreateWithoutJob_platformsInput = {
   salary_period?: string | null
   import_error?: string | null
   last_scraped?: Date | string | null
-  location?: string | null
+  office_location?: string | null
   scrape_count?: number | null
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   source_html_stripped?: string | null
   ai_chat_extraction?: number | null
+  company?: string | null
+  skills_required?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutJobsInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutJobsInput
   job_resources?: Prisma.job_resourcesUncheckedCreateNestedManyWithoutJobsInput
@@ -1338,15 +1448,19 @@ export type jobsScalarWhereInput = {
   salary_period?: Prisma.StringNullableFilter<"jobs"> | string | null
   import_error?: Prisma.StringNullableFilter<"jobs"> | string | null
   last_scraped?: Prisma.DateTimeNullableFilter<"jobs"> | Date | string | null
-  location?: Prisma.StringNullableFilter<"jobs"> | string | null
+  office_location?: Prisma.StringNullableFilter<"jobs"> | string | null
   scrape_count?: Prisma.IntNullableFilter<"jobs"> | number | null
   job_types?: Prisma.JsonNullableFilter<"jobs">
   experience_levels?: Prisma.JsonNullableFilter<"jobs">
-  remote_options?: Prisma.JsonNullableFilter<"jobs">
-  skills?: Prisma.JsonNullableFilter<"jobs">
+  work_location?: Prisma.JsonNullableFilter<"jobs">
   source_html_stripped?: Prisma.StringNullableFilter<"jobs"> | string | null
   job_platform?: Prisma.IntNullableFilter<"jobs"> | number | null
   ai_chat_extraction?: Prisma.IntNullableFilter<"jobs"> | number | null
+  company?: Prisma.StringNullableFilter<"jobs"> | string | null
+  skills_required?: Prisma.JsonNullableFilter<"jobs">
+  skills_preferred?: Prisma.JsonNullableFilter<"jobs">
+  responsibilities?: Prisma.JsonNullableFilter<"jobs">
+  soft_skills?: Prisma.JsonNullableFilter<"jobs">
 }
 
 export type jobsCreateWithoutJob_resourcesInput = {
@@ -1365,13 +1479,17 @@ export type jobsCreateWithoutJob_resourcesInput = {
   salary_period?: string | null
   import_error?: string | null
   last_scraped?: Date | string | null
-  location?: string | null
+  office_location?: string | null
   scrape_count?: number | null
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   source_html_stripped?: string | null
+  company?: string | null
+  skills_required?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   applications?: Prisma.applicationsCreateNestedManyWithoutJobsInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutJobsInput
   ai_chat?: Prisma.ai_chatsCreateNestedOneWithoutJobsInput
@@ -1395,15 +1513,19 @@ export type jobsUncheckedCreateWithoutJob_resourcesInput = {
   salary_period?: string | null
   import_error?: string | null
   last_scraped?: Date | string | null
-  location?: string | null
+  office_location?: string | null
   scrape_count?: number | null
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   source_html_stripped?: string | null
   job_platform?: number | null
   ai_chat_extraction?: number | null
+  company?: string | null
+  skills_required?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutJobsInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutJobsInput
 }
@@ -1440,13 +1562,17 @@ export type jobsUpdateWithoutJob_resourcesInput = {
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scrape_count?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   source_html_stripped?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  skills_required?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   applications?: Prisma.applicationsUpdateManyWithoutJobsNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutJobsNestedInput
   ai_chat?: Prisma.ai_chatsUpdateOneWithoutJobsNestedInput
@@ -1470,15 +1596,19 @@ export type jobsUncheckedUpdateWithoutJob_resourcesInput = {
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scrape_count?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   source_html_stripped?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_platform?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   ai_chat_extraction?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  company?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  skills_required?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutJobsNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutJobsNestedInput
 }
@@ -1499,13 +1629,17 @@ export type jobsCreateWithoutAi_chatInput = {
   salary_period?: string | null
   import_error?: string | null
   last_scraped?: Date | string | null
-  location?: string | null
+  office_location?: string | null
   scrape_count?: number | null
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   source_html_stripped?: string | null
+  company?: string | null
+  skills_required?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   applications?: Prisma.applicationsCreateNestedManyWithoutJobsInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutJobsInput
   job_resources?: Prisma.job_resourcesCreateNestedManyWithoutJobsInput
@@ -1529,14 +1663,18 @@ export type jobsUncheckedCreateWithoutAi_chatInput = {
   salary_period?: string | null
   import_error?: string | null
   last_scraped?: Date | string | null
-  location?: string | null
+  office_location?: string | null
   scrape_count?: number | null
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   source_html_stripped?: string | null
   job_platform?: number | null
+  company?: string | null
+  skills_required?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutJobsInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutJobsInput
   job_resources?: Prisma.job_resourcesUncheckedCreateNestedManyWithoutJobsInput
@@ -1585,14 +1723,18 @@ export type jobsCreateManyJob_platformsInput = {
   salary_period?: string | null
   import_error?: string | null
   last_scraped?: Date | string | null
-  location?: string | null
+  office_location?: string | null
   scrape_count?: number | null
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   source_html_stripped?: string | null
   ai_chat_extraction?: number | null
+  company?: string | null
+  skills_required?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type jobsUpdateWithoutJob_platformsInput = {
@@ -1611,13 +1753,17 @@ export type jobsUpdateWithoutJob_platformsInput = {
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scrape_count?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   source_html_stripped?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  skills_required?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   applications?: Prisma.applicationsUpdateManyWithoutJobsNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutJobsNestedInput
   job_resources?: Prisma.job_resourcesUpdateManyWithoutJobsNestedInput
@@ -1641,14 +1787,18 @@ export type jobsUncheckedUpdateWithoutJob_platformsInput = {
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scrape_count?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   source_html_stripped?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat_extraction?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  company?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  skills_required?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutJobsNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutJobsNestedInput
   job_resources?: Prisma.job_resourcesUncheckedUpdateManyWithoutJobsNestedInput
@@ -1671,14 +1821,18 @@ export type jobsUncheckedUpdateManyWithoutJob_platformsInput = {
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scrape_count?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   source_html_stripped?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chat_extraction?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  company?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  skills_required?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type jobsCreateManyAi_chatInput = {
@@ -1698,14 +1852,18 @@ export type jobsCreateManyAi_chatInput = {
   salary_period?: string | null
   import_error?: string | null
   last_scraped?: Date | string | null
-  location?: string | null
+  office_location?: string | null
   scrape_count?: number | null
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   source_html_stripped?: string | null
   job_platform?: number | null
+  company?: string | null
+  skills_required?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 export type jobsUpdateWithoutAi_chatInput = {
@@ -1724,13 +1882,17 @@ export type jobsUpdateWithoutAi_chatInput = {
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scrape_count?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   source_html_stripped?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  company?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  skills_required?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   applications?: Prisma.applicationsUpdateManyWithoutJobsNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutJobsNestedInput
   job_resources?: Prisma.job_resourcesUpdateManyWithoutJobsNestedInput
@@ -1754,14 +1916,18 @@ export type jobsUncheckedUpdateWithoutAi_chatInput = {
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scrape_count?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   source_html_stripped?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_platform?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  company?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  skills_required?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutJobsNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutJobsNestedInput
   job_resources?: Prisma.job_resourcesUncheckedUpdateManyWithoutJobsNestedInput
@@ -1784,14 +1950,18 @@ export type jobsUncheckedUpdateManyWithoutAi_chatInput = {
   salary_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   import_error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   last_scraped?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  office_location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   scrape_count?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   job_types?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   experience_levels?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  remote_options?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  work_location?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   source_html_stripped?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_platform?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  company?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  skills_required?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  skills_preferred?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  responsibilities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
 
@@ -1860,15 +2030,19 @@ export type jobsSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   salary_period?: boolean
   import_error?: boolean
   last_scraped?: boolean
-  location?: boolean
+  office_location?: boolean
   scrape_count?: boolean
   job_types?: boolean
   experience_levels?: boolean
-  remote_options?: boolean
-  skills?: boolean
+  work_location?: boolean
   source_html_stripped?: boolean
   job_platform?: boolean
   ai_chat_extraction?: boolean
+  company?: boolean
+  skills_required?: boolean
+  skills_preferred?: boolean
+  responsibilities?: boolean
+  soft_skills?: boolean
   applications?: boolean | Prisma.jobs$applicationsArgs<ExtArgs>
   job_matches?: boolean | Prisma.jobs$job_matchesArgs<ExtArgs>
   job_resources?: boolean | Prisma.jobs$job_resourcesArgs<ExtArgs>
@@ -1894,15 +2068,19 @@ export type jobsSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   salary_period?: boolean
   import_error?: boolean
   last_scraped?: boolean
-  location?: boolean
+  office_location?: boolean
   scrape_count?: boolean
   job_types?: boolean
   experience_levels?: boolean
-  remote_options?: boolean
-  skills?: boolean
+  work_location?: boolean
   source_html_stripped?: boolean
   job_platform?: boolean
   ai_chat_extraction?: boolean
+  company?: boolean
+  skills_required?: boolean
+  skills_preferred?: boolean
+  responsibilities?: boolean
+  soft_skills?: boolean
   ai_chat?: boolean | Prisma.jobs$ai_chatArgs<ExtArgs>
   job_platforms?: boolean | Prisma.jobs$job_platformsArgs<ExtArgs>
 }, ExtArgs["result"]["jobs"]>
@@ -1924,15 +2102,19 @@ export type jobsSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   salary_period?: boolean
   import_error?: boolean
   last_scraped?: boolean
-  location?: boolean
+  office_location?: boolean
   scrape_count?: boolean
   job_types?: boolean
   experience_levels?: boolean
-  remote_options?: boolean
-  skills?: boolean
+  work_location?: boolean
   source_html_stripped?: boolean
   job_platform?: boolean
   ai_chat_extraction?: boolean
+  company?: boolean
+  skills_required?: boolean
+  skills_preferred?: boolean
+  responsibilities?: boolean
+  soft_skills?: boolean
   ai_chat?: boolean | Prisma.jobs$ai_chatArgs<ExtArgs>
   job_platforms?: boolean | Prisma.jobs$job_platformsArgs<ExtArgs>
 }, ExtArgs["result"]["jobs"]>
@@ -1954,18 +2136,22 @@ export type jobsSelectScalar = {
   salary_period?: boolean
   import_error?: boolean
   last_scraped?: boolean
-  location?: boolean
+  office_location?: boolean
   scrape_count?: boolean
   job_types?: boolean
   experience_levels?: boolean
-  remote_options?: boolean
-  skills?: boolean
+  work_location?: boolean
   source_html_stripped?: boolean
   job_platform?: boolean
   ai_chat_extraction?: boolean
+  company?: boolean
+  skills_required?: boolean
+  skills_preferred?: boolean
+  responsibilities?: boolean
+  soft_skills?: boolean
 }
 
-export type jobsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "date_created" | "date_updated" | "source_url" | "title" | "job_description" | "job_poster" | "company_description" | "date_posted" | "salary_min" | "salary_max" | "salary_currency" | "salary_period" | "import_error" | "last_scraped" | "location" | "scrape_count" | "job_types" | "experience_levels" | "remote_options" | "skills" | "source_html_stripped" | "job_platform" | "ai_chat_extraction", ExtArgs["result"]["jobs"]>
+export type jobsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "date_created" | "date_updated" | "source_url" | "title" | "job_description" | "job_poster" | "company_description" | "date_posted" | "salary_min" | "salary_max" | "salary_currency" | "salary_period" | "import_error" | "last_scraped" | "office_location" | "scrape_count" | "job_types" | "experience_levels" | "work_location" | "source_html_stripped" | "job_platform" | "ai_chat_extraction" | "company" | "skills_required" | "skills_preferred" | "responsibilities" | "soft_skills", ExtArgs["result"]["jobs"]>
 export type jobsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   applications?: boolean | Prisma.jobs$applicationsArgs<ExtArgs>
   job_matches?: boolean | Prisma.jobs$job_matchesArgs<ExtArgs>
@@ -2009,15 +2195,19 @@ export type $jobsPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     salary_period: string | null
     import_error: string | null
     last_scraped: Date | null
-    location: string | null
+    office_location: string | null
     scrape_count: number | null
     job_types: runtime.JsonValue | null
     experience_levels: runtime.JsonValue | null
-    remote_options: runtime.JsonValue | null
-    skills: runtime.JsonValue | null
+    work_location: runtime.JsonValue | null
     source_html_stripped: string | null
     job_platform: number | null
     ai_chat_extraction: number | null
+    company: string | null
+    skills_required: runtime.JsonValue | null
+    skills_preferred: runtime.JsonValue | null
+    responsibilities: runtime.JsonValue | null
+    soft_skills: runtime.JsonValue | null
   }, ExtArgs["result"]["jobs"]>
   composites: {}
 }
@@ -2462,15 +2652,19 @@ export interface jobsFieldRefs {
   readonly salary_period: Prisma.FieldRef<"jobs", 'String'>
   readonly import_error: Prisma.FieldRef<"jobs", 'String'>
   readonly last_scraped: Prisma.FieldRef<"jobs", 'DateTime'>
-  readonly location: Prisma.FieldRef<"jobs", 'String'>
+  readonly office_location: Prisma.FieldRef<"jobs", 'String'>
   readonly scrape_count: Prisma.FieldRef<"jobs", 'Int'>
   readonly job_types: Prisma.FieldRef<"jobs", 'Json'>
   readonly experience_levels: Prisma.FieldRef<"jobs", 'Json'>
-  readonly remote_options: Prisma.FieldRef<"jobs", 'Json'>
-  readonly skills: Prisma.FieldRef<"jobs", 'Json'>
+  readonly work_location: Prisma.FieldRef<"jobs", 'Json'>
   readonly source_html_stripped: Prisma.FieldRef<"jobs", 'String'>
   readonly job_platform: Prisma.FieldRef<"jobs", 'Int'>
   readonly ai_chat_extraction: Prisma.FieldRef<"jobs", 'Int'>
+  readonly company: Prisma.FieldRef<"jobs", 'String'>
+  readonly skills_required: Prisma.FieldRef<"jobs", 'Json'>
+  readonly skills_preferred: Prisma.FieldRef<"jobs", 'Json'>
+  readonly responsibilities: Prisma.FieldRef<"jobs", 'Json'>
+  readonly soft_skills: Prisma.FieldRef<"jobs", 'Json'>
 }
     
 

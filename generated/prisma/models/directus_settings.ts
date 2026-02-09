@@ -77,6 +77,11 @@ export type Directus_settingsMinAggregateOutputType = {
   ai_openai_api_key: string | null
   ai_anthropic_api_key: string | null
   ai_system_prompt: string | null
+  ai_google_api_key: string | null
+  ai_openai_compatible_api_key: string | null
+  ai_openai_compatible_base_url: string | null
+  ai_openai_compatible_name: string | null
+  collaborative_editing_enabled: boolean | null
 }
 
 export type Directus_settingsMaxAggregateOutputType = {
@@ -120,6 +125,11 @@ export type Directus_settingsMaxAggregateOutputType = {
   ai_openai_api_key: string | null
   ai_anthropic_api_key: string | null
   ai_system_prompt: string | null
+  ai_google_api_key: string | null
+  ai_openai_compatible_api_key: string | null
+  ai_openai_compatible_base_url: string | null
+  ai_openai_compatible_name: string | null
+  collaborative_editing_enabled: boolean | null
 }
 
 export type Directus_settingsCountAggregateOutputType = {
@@ -171,6 +181,16 @@ export type Directus_settingsCountAggregateOutputType = {
   ai_openai_api_key: number
   ai_anthropic_api_key: number
   ai_system_prompt: number
+  ai_google_api_key: number
+  ai_openai_compatible_api_key: number
+  ai_openai_compatible_base_url: number
+  ai_openai_compatible_name: number
+  ai_openai_compatible_models: number
+  ai_openai_compatible_headers: number
+  ai_openai_allowed_models: number
+  ai_anthropic_allowed_models: number
+  ai_google_allowed_models: number
+  collaborative_editing_enabled: number
   _all: number
 }
 
@@ -226,6 +246,11 @@ export type Directus_settingsMinAggregateInputType = {
   ai_openai_api_key?: true
   ai_anthropic_api_key?: true
   ai_system_prompt?: true
+  ai_google_api_key?: true
+  ai_openai_compatible_api_key?: true
+  ai_openai_compatible_base_url?: true
+  ai_openai_compatible_name?: true
+  collaborative_editing_enabled?: true
 }
 
 export type Directus_settingsMaxAggregateInputType = {
@@ -269,6 +294,11 @@ export type Directus_settingsMaxAggregateInputType = {
   ai_openai_api_key?: true
   ai_anthropic_api_key?: true
   ai_system_prompt?: true
+  ai_google_api_key?: true
+  ai_openai_compatible_api_key?: true
+  ai_openai_compatible_base_url?: true
+  ai_openai_compatible_name?: true
+  collaborative_editing_enabled?: true
 }
 
 export type Directus_settingsCountAggregateInputType = {
@@ -320,6 +350,16 @@ export type Directus_settingsCountAggregateInputType = {
   ai_openai_api_key?: true
   ai_anthropic_api_key?: true
   ai_system_prompt?: true
+  ai_google_api_key?: true
+  ai_openai_compatible_api_key?: true
+  ai_openai_compatible_base_url?: true
+  ai_openai_compatible_name?: true
+  ai_openai_compatible_models?: true
+  ai_openai_compatible_headers?: true
+  ai_openai_allowed_models?: true
+  ai_anthropic_allowed_models?: true
+  ai_google_allowed_models?: true
+  collaborative_editing_enabled?: true
   _all?: true
 }
 
@@ -458,6 +498,16 @@ export type Directus_settingsGroupByOutputType = {
   ai_openai_api_key: string | null
   ai_anthropic_api_key: string | null
   ai_system_prompt: string | null
+  ai_google_api_key: string | null
+  ai_openai_compatible_api_key: string | null
+  ai_openai_compatible_base_url: string | null
+  ai_openai_compatible_name: string | null
+  ai_openai_compatible_models: runtime.JsonValue | null
+  ai_openai_compatible_headers: runtime.JsonValue | null
+  ai_openai_allowed_models: runtime.JsonValue | null
+  ai_anthropic_allowed_models: runtime.JsonValue | null
+  ai_google_allowed_models: runtime.JsonValue | null
+  collaborative_editing_enabled: boolean
   _count: Directus_settingsCountAggregateOutputType | null
   _avg: Directus_settingsAvgAggregateOutputType | null
   _sum: Directus_settingsSumAggregateOutputType | null
@@ -532,6 +582,16 @@ export type directus_settingsWhereInput = {
   ai_openai_api_key?: Prisma.StringNullableFilter<"directus_settings"> | string | null
   ai_anthropic_api_key?: Prisma.StringNullableFilter<"directus_settings"> | string | null
   ai_system_prompt?: Prisma.StringNullableFilter<"directus_settings"> | string | null
+  ai_google_api_key?: Prisma.StringNullableFilter<"directus_settings"> | string | null
+  ai_openai_compatible_api_key?: Prisma.StringNullableFilter<"directus_settings"> | string | null
+  ai_openai_compatible_base_url?: Prisma.StringNullableFilter<"directus_settings"> | string | null
+  ai_openai_compatible_name?: Prisma.StringNullableFilter<"directus_settings"> | string | null
+  ai_openai_compatible_models?: Prisma.JsonNullableFilter<"directus_settings">
+  ai_openai_compatible_headers?: Prisma.JsonNullableFilter<"directus_settings">
+  ai_openai_allowed_models?: Prisma.JsonNullableFilter<"directus_settings">
+  ai_anthropic_allowed_models?: Prisma.JsonNullableFilter<"directus_settings">
+  ai_google_allowed_models?: Prisma.JsonNullableFilter<"directus_settings">
+  collaborative_editing_enabled?: Prisma.BoolFilter<"directus_settings"> | boolean
   directus_files_directus_settings_project_logoTodirectus_files?: Prisma.XOR<Prisma.Directus_filesNullableScalarRelationFilter, Prisma.directus_filesWhereInput> | null
   directus_files_directus_settings_public_backgroundTodirectus_files?: Prisma.XOR<Prisma.Directus_filesNullableScalarRelationFilter, Prisma.directus_filesWhereInput> | null
   directus_files_directus_settings_public_faviconTodirectus_files?: Prisma.XOR<Prisma.Directus_filesNullableScalarRelationFilter, Prisma.directus_filesWhereInput> | null
@@ -589,6 +649,16 @@ export type directus_settingsOrderByWithRelationInput = {
   ai_openai_api_key?: Prisma.SortOrderInput | Prisma.SortOrder
   ai_anthropic_api_key?: Prisma.SortOrderInput | Prisma.SortOrder
   ai_system_prompt?: Prisma.SortOrderInput | Prisma.SortOrder
+  ai_google_api_key?: Prisma.SortOrderInput | Prisma.SortOrder
+  ai_openai_compatible_api_key?: Prisma.SortOrderInput | Prisma.SortOrder
+  ai_openai_compatible_base_url?: Prisma.SortOrderInput | Prisma.SortOrder
+  ai_openai_compatible_name?: Prisma.SortOrderInput | Prisma.SortOrder
+  ai_openai_compatible_models?: Prisma.SortOrderInput | Prisma.SortOrder
+  ai_openai_compatible_headers?: Prisma.SortOrderInput | Prisma.SortOrder
+  ai_openai_allowed_models?: Prisma.SortOrderInput | Prisma.SortOrder
+  ai_anthropic_allowed_models?: Prisma.SortOrderInput | Prisma.SortOrder
+  ai_google_allowed_models?: Prisma.SortOrderInput | Prisma.SortOrder
+  collaborative_editing_enabled?: Prisma.SortOrder
   directus_files_directus_settings_project_logoTodirectus_files?: Prisma.directus_filesOrderByWithRelationInput
   directus_files_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_filesOrderByWithRelationInput
   directus_files_directus_settings_public_faviconTodirectus_files?: Prisma.directus_filesOrderByWithRelationInput
@@ -649,6 +719,16 @@ export type directus_settingsWhereUniqueInput = Prisma.AtLeast<{
   ai_openai_api_key?: Prisma.StringNullableFilter<"directus_settings"> | string | null
   ai_anthropic_api_key?: Prisma.StringNullableFilter<"directus_settings"> | string | null
   ai_system_prompt?: Prisma.StringNullableFilter<"directus_settings"> | string | null
+  ai_google_api_key?: Prisma.StringNullableFilter<"directus_settings"> | string | null
+  ai_openai_compatible_api_key?: Prisma.StringNullableFilter<"directus_settings"> | string | null
+  ai_openai_compatible_base_url?: Prisma.StringNullableFilter<"directus_settings"> | string | null
+  ai_openai_compatible_name?: Prisma.StringNullableFilter<"directus_settings"> | string | null
+  ai_openai_compatible_models?: Prisma.JsonNullableFilter<"directus_settings">
+  ai_openai_compatible_headers?: Prisma.JsonNullableFilter<"directus_settings">
+  ai_openai_allowed_models?: Prisma.JsonNullableFilter<"directus_settings">
+  ai_anthropic_allowed_models?: Prisma.JsonNullableFilter<"directus_settings">
+  ai_google_allowed_models?: Prisma.JsonNullableFilter<"directus_settings">
+  collaborative_editing_enabled?: Prisma.BoolFilter<"directus_settings"> | boolean
   directus_files_directus_settings_project_logoTodirectus_files?: Prisma.XOR<Prisma.Directus_filesNullableScalarRelationFilter, Prisma.directus_filesWhereInput> | null
   directus_files_directus_settings_public_backgroundTodirectus_files?: Prisma.XOR<Prisma.Directus_filesNullableScalarRelationFilter, Prisma.directus_filesWhereInput> | null
   directus_files_directus_settings_public_faviconTodirectus_files?: Prisma.XOR<Prisma.Directus_filesNullableScalarRelationFilter, Prisma.directus_filesWhereInput> | null
@@ -706,6 +786,16 @@ export type directus_settingsOrderByWithAggregationInput = {
   ai_openai_api_key?: Prisma.SortOrderInput | Prisma.SortOrder
   ai_anthropic_api_key?: Prisma.SortOrderInput | Prisma.SortOrder
   ai_system_prompt?: Prisma.SortOrderInput | Prisma.SortOrder
+  ai_google_api_key?: Prisma.SortOrderInput | Prisma.SortOrder
+  ai_openai_compatible_api_key?: Prisma.SortOrderInput | Prisma.SortOrder
+  ai_openai_compatible_base_url?: Prisma.SortOrderInput | Prisma.SortOrder
+  ai_openai_compatible_name?: Prisma.SortOrderInput | Prisma.SortOrder
+  ai_openai_compatible_models?: Prisma.SortOrderInput | Prisma.SortOrder
+  ai_openai_compatible_headers?: Prisma.SortOrderInput | Prisma.SortOrder
+  ai_openai_allowed_models?: Prisma.SortOrderInput | Prisma.SortOrder
+  ai_anthropic_allowed_models?: Prisma.SortOrderInput | Prisma.SortOrder
+  ai_google_allowed_models?: Prisma.SortOrderInput | Prisma.SortOrder
+  collaborative_editing_enabled?: Prisma.SortOrder
   _count?: Prisma.directus_settingsCountOrderByAggregateInput
   _avg?: Prisma.directus_settingsAvgOrderByAggregateInput
   _max?: Prisma.directus_settingsMaxOrderByAggregateInput
@@ -765,6 +855,16 @@ export type directus_settingsScalarWhereWithAggregatesInput = {
   ai_openai_api_key?: Prisma.StringNullableWithAggregatesFilter<"directus_settings"> | string | null
   ai_anthropic_api_key?: Prisma.StringNullableWithAggregatesFilter<"directus_settings"> | string | null
   ai_system_prompt?: Prisma.StringNullableWithAggregatesFilter<"directus_settings"> | string | null
+  ai_google_api_key?: Prisma.StringNullableWithAggregatesFilter<"directus_settings"> | string | null
+  ai_openai_compatible_api_key?: Prisma.StringNullableWithAggregatesFilter<"directus_settings"> | string | null
+  ai_openai_compatible_base_url?: Prisma.StringNullableWithAggregatesFilter<"directus_settings"> | string | null
+  ai_openai_compatible_name?: Prisma.StringNullableWithAggregatesFilter<"directus_settings"> | string | null
+  ai_openai_compatible_models?: Prisma.JsonNullableWithAggregatesFilter<"directus_settings">
+  ai_openai_compatible_headers?: Prisma.JsonNullableWithAggregatesFilter<"directus_settings">
+  ai_openai_allowed_models?: Prisma.JsonNullableWithAggregatesFilter<"directus_settings">
+  ai_anthropic_allowed_models?: Prisma.JsonNullableWithAggregatesFilter<"directus_settings">
+  ai_google_allowed_models?: Prisma.JsonNullableWithAggregatesFilter<"directus_settings">
+  collaborative_editing_enabled?: Prisma.BoolWithAggregatesFilter<"directus_settings"> | boolean
 }
 
 export type directus_settingsCreateInput = {
@@ -809,6 +909,16 @@ export type directus_settingsCreateInput = {
   ai_openai_api_key?: string | null
   ai_anthropic_api_key?: string | null
   ai_system_prompt?: string | null
+  ai_google_api_key?: string | null
+  ai_openai_compatible_api_key?: string | null
+  ai_openai_compatible_base_url?: string | null
+  ai_openai_compatible_name?: string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: boolean
   directus_files_directus_settings_project_logoTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_project_logoTodirectus_filesInput
   directus_files_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_public_backgroundTodirectus_filesInput
   directus_files_directus_settings_public_faviconTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_public_faviconTodirectus_filesInput
@@ -866,6 +976,16 @@ export type directus_settingsUncheckedCreateInput = {
   ai_openai_api_key?: string | null
   ai_anthropic_api_key?: string | null
   ai_system_prompt?: string | null
+  ai_google_api_key?: string | null
+  ai_openai_compatible_api_key?: string | null
+  ai_openai_compatible_base_url?: string | null
+  ai_openai_compatible_name?: string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: boolean
 }
 
 export type directus_settingsUpdateInput = {
@@ -910,6 +1030,16 @@ export type directus_settingsUpdateInput = {
   ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_google_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_base_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   directus_files_directus_settings_project_logoTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_project_logoTodirectus_filesNestedInput
   directus_files_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_public_backgroundTodirectus_filesNestedInput
   directus_files_directus_settings_public_faviconTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_public_faviconTodirectus_filesNestedInput
@@ -967,6 +1097,16 @@ export type directus_settingsUncheckedUpdateInput = {
   ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_google_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_base_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type directus_settingsCreateManyInput = {
@@ -1018,6 +1158,16 @@ export type directus_settingsCreateManyInput = {
   ai_openai_api_key?: string | null
   ai_anthropic_api_key?: string | null
   ai_system_prompt?: string | null
+  ai_google_api_key?: string | null
+  ai_openai_compatible_api_key?: string | null
+  ai_openai_compatible_base_url?: string | null
+  ai_openai_compatible_name?: string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: boolean
 }
 
 export type directus_settingsUpdateManyMutationInput = {
@@ -1062,6 +1212,16 @@ export type directus_settingsUpdateManyMutationInput = {
   ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_google_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_base_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type directus_settingsUncheckedUpdateManyInput = {
@@ -1113,6 +1273,16 @@ export type directus_settingsUncheckedUpdateManyInput = {
   ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_google_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_base_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type Directus_settingsListRelationFilter = {
@@ -1174,6 +1344,16 @@ export type directus_settingsCountOrderByAggregateInput = {
   ai_openai_api_key?: Prisma.SortOrder
   ai_anthropic_api_key?: Prisma.SortOrder
   ai_system_prompt?: Prisma.SortOrder
+  ai_google_api_key?: Prisma.SortOrder
+  ai_openai_compatible_api_key?: Prisma.SortOrder
+  ai_openai_compatible_base_url?: Prisma.SortOrder
+  ai_openai_compatible_name?: Prisma.SortOrder
+  ai_openai_compatible_models?: Prisma.SortOrder
+  ai_openai_compatible_headers?: Prisma.SortOrder
+  ai_openai_allowed_models?: Prisma.SortOrder
+  ai_anthropic_allowed_models?: Prisma.SortOrder
+  ai_google_allowed_models?: Prisma.SortOrder
+  collaborative_editing_enabled?: Prisma.SortOrder
 }
 
 export type directus_settingsAvgOrderByAggregateInput = {
@@ -1222,6 +1402,11 @@ export type directus_settingsMaxOrderByAggregateInput = {
   ai_openai_api_key?: Prisma.SortOrder
   ai_anthropic_api_key?: Prisma.SortOrder
   ai_system_prompt?: Prisma.SortOrder
+  ai_google_api_key?: Prisma.SortOrder
+  ai_openai_compatible_api_key?: Prisma.SortOrder
+  ai_openai_compatible_base_url?: Prisma.SortOrder
+  ai_openai_compatible_name?: Prisma.SortOrder
+  collaborative_editing_enabled?: Prisma.SortOrder
 }
 
 export type directus_settingsMinOrderByAggregateInput = {
@@ -1265,6 +1450,11 @@ export type directus_settingsMinOrderByAggregateInput = {
   ai_openai_api_key?: Prisma.SortOrder
   ai_anthropic_api_key?: Prisma.SortOrder
   ai_system_prompt?: Prisma.SortOrder
+  ai_google_api_key?: Prisma.SortOrder
+  ai_openai_compatible_api_key?: Prisma.SortOrder
+  ai_openai_compatible_base_url?: Prisma.SortOrder
+  ai_openai_compatible_name?: Prisma.SortOrder
+  collaborative_editing_enabled?: Prisma.SortOrder
 }
 
 export type directus_settingsSumOrderByAggregateInput = {
@@ -1566,6 +1756,16 @@ export type directus_settingsCreateWithoutDirectus_files_directus_settings_proje
   ai_openai_api_key?: string | null
   ai_anthropic_api_key?: string | null
   ai_system_prompt?: string | null
+  ai_google_api_key?: string | null
+  ai_openai_compatible_api_key?: string | null
+  ai_openai_compatible_base_url?: string | null
+  ai_openai_compatible_name?: string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: boolean
   directus_files_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_public_backgroundTodirectus_filesInput
   directus_files_directus_settings_public_faviconTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_public_faviconTodirectus_filesInput
   directus_files_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_public_foregroundTodirectus_filesInput
@@ -1621,6 +1821,16 @@ export type directus_settingsUncheckedCreateWithoutDirectus_files_directus_setti
   ai_openai_api_key?: string | null
   ai_anthropic_api_key?: string | null
   ai_system_prompt?: string | null
+  ai_google_api_key?: string | null
+  ai_openai_compatible_api_key?: string | null
+  ai_openai_compatible_base_url?: string | null
+  ai_openai_compatible_name?: string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: boolean
 }
 
 export type directus_settingsCreateOrConnectWithoutDirectus_files_directus_settings_project_logoTodirectus_filesInput = {
@@ -1675,6 +1885,16 @@ export type directus_settingsCreateWithoutDirectus_files_directus_settings_publi
   ai_openai_api_key?: string | null
   ai_anthropic_api_key?: string | null
   ai_system_prompt?: string | null
+  ai_google_api_key?: string | null
+  ai_openai_compatible_api_key?: string | null
+  ai_openai_compatible_base_url?: string | null
+  ai_openai_compatible_name?: string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: boolean
   directus_files_directus_settings_project_logoTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_project_logoTodirectus_filesInput
   directus_files_directus_settings_public_faviconTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_public_faviconTodirectus_filesInput
   directus_files_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_public_foregroundTodirectus_filesInput
@@ -1730,6 +1950,16 @@ export type directus_settingsUncheckedCreateWithoutDirectus_files_directus_setti
   ai_openai_api_key?: string | null
   ai_anthropic_api_key?: string | null
   ai_system_prompt?: string | null
+  ai_google_api_key?: string | null
+  ai_openai_compatible_api_key?: string | null
+  ai_openai_compatible_base_url?: string | null
+  ai_openai_compatible_name?: string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: boolean
 }
 
 export type directus_settingsCreateOrConnectWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesInput = {
@@ -1784,6 +2014,16 @@ export type directus_settingsCreateWithoutDirectus_files_directus_settings_publi
   ai_openai_api_key?: string | null
   ai_anthropic_api_key?: string | null
   ai_system_prompt?: string | null
+  ai_google_api_key?: string | null
+  ai_openai_compatible_api_key?: string | null
+  ai_openai_compatible_base_url?: string | null
+  ai_openai_compatible_name?: string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: boolean
   directus_files_directus_settings_project_logoTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_project_logoTodirectus_filesInput
   directus_files_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_public_backgroundTodirectus_filesInput
   directus_files_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_public_foregroundTodirectus_filesInput
@@ -1839,6 +2079,16 @@ export type directus_settingsUncheckedCreateWithoutDirectus_files_directus_setti
   ai_openai_api_key?: string | null
   ai_anthropic_api_key?: string | null
   ai_system_prompt?: string | null
+  ai_google_api_key?: string | null
+  ai_openai_compatible_api_key?: string | null
+  ai_openai_compatible_base_url?: string | null
+  ai_openai_compatible_name?: string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: boolean
 }
 
 export type directus_settingsCreateOrConnectWithoutDirectus_files_directus_settings_public_faviconTodirectus_filesInput = {
@@ -1893,6 +2143,16 @@ export type directus_settingsCreateWithoutDirectus_files_directus_settings_publi
   ai_openai_api_key?: string | null
   ai_anthropic_api_key?: string | null
   ai_system_prompt?: string | null
+  ai_google_api_key?: string | null
+  ai_openai_compatible_api_key?: string | null
+  ai_openai_compatible_base_url?: string | null
+  ai_openai_compatible_name?: string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: boolean
   directus_files_directus_settings_project_logoTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_project_logoTodirectus_filesInput
   directus_files_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_public_backgroundTodirectus_filesInput
   directus_files_directus_settings_public_faviconTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_public_faviconTodirectus_filesInput
@@ -1948,6 +2208,16 @@ export type directus_settingsUncheckedCreateWithoutDirectus_files_directus_setti
   ai_openai_api_key?: string | null
   ai_anthropic_api_key?: string | null
   ai_system_prompt?: string | null
+  ai_google_api_key?: string | null
+  ai_openai_compatible_api_key?: string | null
+  ai_openai_compatible_base_url?: string | null
+  ai_openai_compatible_name?: string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: boolean
 }
 
 export type directus_settingsCreateOrConnectWithoutDirectus_files_directus_settings_public_foregroundTodirectus_filesInput = {
@@ -2028,6 +2298,16 @@ export type directus_settingsScalarWhereInput = {
   ai_openai_api_key?: Prisma.StringNullableFilter<"directus_settings"> | string | null
   ai_anthropic_api_key?: Prisma.StringNullableFilter<"directus_settings"> | string | null
   ai_system_prompt?: Prisma.StringNullableFilter<"directus_settings"> | string | null
+  ai_google_api_key?: Prisma.StringNullableFilter<"directus_settings"> | string | null
+  ai_openai_compatible_api_key?: Prisma.StringNullableFilter<"directus_settings"> | string | null
+  ai_openai_compatible_base_url?: Prisma.StringNullableFilter<"directus_settings"> | string | null
+  ai_openai_compatible_name?: Prisma.StringNullableFilter<"directus_settings"> | string | null
+  ai_openai_compatible_models?: Prisma.JsonNullableFilter<"directus_settings">
+  ai_openai_compatible_headers?: Prisma.JsonNullableFilter<"directus_settings">
+  ai_openai_allowed_models?: Prisma.JsonNullableFilter<"directus_settings">
+  ai_anthropic_allowed_models?: Prisma.JsonNullableFilter<"directus_settings">
+  ai_google_allowed_models?: Prisma.JsonNullableFilter<"directus_settings">
+  collaborative_editing_enabled?: Prisma.BoolFilter<"directus_settings"> | boolean
 }
 
 export type directus_settingsUpsertWithWhereUniqueWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesInput = {
@@ -2120,6 +2400,16 @@ export type directus_settingsCreateWithoutDirectus_foldersInput = {
   ai_openai_api_key?: string | null
   ai_anthropic_api_key?: string | null
   ai_system_prompt?: string | null
+  ai_google_api_key?: string | null
+  ai_openai_compatible_api_key?: string | null
+  ai_openai_compatible_base_url?: string | null
+  ai_openai_compatible_name?: string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: boolean
   directus_files_directus_settings_project_logoTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_project_logoTodirectus_filesInput
   directus_files_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_public_backgroundTodirectus_filesInput
   directus_files_directus_settings_public_faviconTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_public_faviconTodirectus_filesInput
@@ -2175,6 +2465,16 @@ export type directus_settingsUncheckedCreateWithoutDirectus_foldersInput = {
   ai_openai_api_key?: string | null
   ai_anthropic_api_key?: string | null
   ai_system_prompt?: string | null
+  ai_google_api_key?: string | null
+  ai_openai_compatible_api_key?: string | null
+  ai_openai_compatible_base_url?: string | null
+  ai_openai_compatible_name?: string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: boolean
 }
 
 export type directus_settingsCreateOrConnectWithoutDirectus_foldersInput = {
@@ -2245,6 +2545,16 @@ export type directus_settingsCreateWithoutDirectus_rolesInput = {
   ai_openai_api_key?: string | null
   ai_anthropic_api_key?: string | null
   ai_system_prompt?: string | null
+  ai_google_api_key?: string | null
+  ai_openai_compatible_api_key?: string | null
+  ai_openai_compatible_base_url?: string | null
+  ai_openai_compatible_name?: string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: boolean
   directus_files_directus_settings_project_logoTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_project_logoTodirectus_filesInput
   directus_files_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_public_backgroundTodirectus_filesInput
   directus_files_directus_settings_public_faviconTodirectus_files?: Prisma.directus_filesCreateNestedOneWithoutDirectus_settings_directus_settings_public_faviconTodirectus_filesInput
@@ -2300,6 +2610,16 @@ export type directus_settingsUncheckedCreateWithoutDirectus_rolesInput = {
   ai_openai_api_key?: string | null
   ai_anthropic_api_key?: string | null
   ai_system_prompt?: string | null
+  ai_google_api_key?: string | null
+  ai_openai_compatible_api_key?: string | null
+  ai_openai_compatible_base_url?: string | null
+  ai_openai_compatible_name?: string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: boolean
 }
 
 export type directus_settingsCreateOrConnectWithoutDirectus_rolesInput = {
@@ -2376,6 +2696,16 @@ export type directus_settingsCreateManyDirectus_files_directus_settings_project_
   ai_openai_api_key?: string | null
   ai_anthropic_api_key?: string | null
   ai_system_prompt?: string | null
+  ai_google_api_key?: string | null
+  ai_openai_compatible_api_key?: string | null
+  ai_openai_compatible_base_url?: string | null
+  ai_openai_compatible_name?: string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: boolean
 }
 
 export type directus_settingsCreateManyDirectus_files_directus_settings_public_backgroundTodirectus_filesInput = {
@@ -2426,6 +2756,16 @@ export type directus_settingsCreateManyDirectus_files_directus_settings_public_b
   ai_openai_api_key?: string | null
   ai_anthropic_api_key?: string | null
   ai_system_prompt?: string | null
+  ai_google_api_key?: string | null
+  ai_openai_compatible_api_key?: string | null
+  ai_openai_compatible_base_url?: string | null
+  ai_openai_compatible_name?: string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: boolean
 }
 
 export type directus_settingsCreateManyDirectus_files_directus_settings_public_faviconTodirectus_filesInput = {
@@ -2476,6 +2816,16 @@ export type directus_settingsCreateManyDirectus_files_directus_settings_public_f
   ai_openai_api_key?: string | null
   ai_anthropic_api_key?: string | null
   ai_system_prompt?: string | null
+  ai_google_api_key?: string | null
+  ai_openai_compatible_api_key?: string | null
+  ai_openai_compatible_base_url?: string | null
+  ai_openai_compatible_name?: string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: boolean
 }
 
 export type directus_settingsCreateManyDirectus_files_directus_settings_public_foregroundTodirectus_filesInput = {
@@ -2526,6 +2876,16 @@ export type directus_settingsCreateManyDirectus_files_directus_settings_public_f
   ai_openai_api_key?: string | null
   ai_anthropic_api_key?: string | null
   ai_system_prompt?: string | null
+  ai_google_api_key?: string | null
+  ai_openai_compatible_api_key?: string | null
+  ai_openai_compatible_base_url?: string | null
+  ai_openai_compatible_name?: string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: boolean
 }
 
 export type directus_settingsUpdateWithoutDirectus_files_directus_settings_project_logoTodirectus_filesInput = {
@@ -2570,6 +2930,16 @@ export type directus_settingsUpdateWithoutDirectus_files_directus_settings_proje
   ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_google_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_base_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   directus_files_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_public_backgroundTodirectus_filesNestedInput
   directus_files_directus_settings_public_faviconTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_public_faviconTodirectus_filesNestedInput
   directus_files_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_public_foregroundTodirectus_filesNestedInput
@@ -2625,6 +2995,16 @@ export type directus_settingsUncheckedUpdateWithoutDirectus_files_directus_setti
   ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_google_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_base_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_project_logoTodirectus_filesInput = {
@@ -2675,6 +3055,16 @@ export type directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_s
   ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_google_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_base_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type directus_settingsUpdateWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesInput = {
@@ -2719,6 +3109,16 @@ export type directus_settingsUpdateWithoutDirectus_files_directus_settings_publi
   ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_google_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_base_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   directus_files_directus_settings_project_logoTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_project_logoTodirectus_filesNestedInput
   directus_files_directus_settings_public_faviconTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_public_faviconTodirectus_filesNestedInput
   directus_files_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_public_foregroundTodirectus_filesNestedInput
@@ -2774,6 +3174,16 @@ export type directus_settingsUncheckedUpdateWithoutDirectus_files_directus_setti
   ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_google_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_base_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_public_backgroundTodirectus_filesInput = {
@@ -2824,6 +3234,16 @@ export type directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_s
   ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_google_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_base_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type directus_settingsUpdateWithoutDirectus_files_directus_settings_public_faviconTodirectus_filesInput = {
@@ -2868,6 +3288,16 @@ export type directus_settingsUpdateWithoutDirectus_files_directus_settings_publi
   ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_google_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_base_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   directus_files_directus_settings_project_logoTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_project_logoTodirectus_filesNestedInput
   directus_files_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_public_backgroundTodirectus_filesNestedInput
   directus_files_directus_settings_public_foregroundTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_public_foregroundTodirectus_filesNestedInput
@@ -2923,6 +3353,16 @@ export type directus_settingsUncheckedUpdateWithoutDirectus_files_directus_setti
   ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_google_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_base_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_public_faviconTodirectus_filesInput = {
@@ -2973,6 +3413,16 @@ export type directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_s
   ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_google_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_base_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type directus_settingsUpdateWithoutDirectus_files_directus_settings_public_foregroundTodirectus_filesInput = {
@@ -3017,6 +3467,16 @@ export type directus_settingsUpdateWithoutDirectus_files_directus_settings_publi
   ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_google_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_base_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   directus_files_directus_settings_project_logoTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_project_logoTodirectus_filesNestedInput
   directus_files_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_public_backgroundTodirectus_filesNestedInput
   directus_files_directus_settings_public_faviconTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_public_faviconTodirectus_filesNestedInput
@@ -3072,6 +3532,16 @@ export type directus_settingsUncheckedUpdateWithoutDirectus_files_directus_setti
   ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_google_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_base_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_settings_public_foregroundTodirectus_filesInput = {
@@ -3122,6 +3592,16 @@ export type directus_settingsUncheckedUpdateManyWithoutDirectus_files_directus_s
   ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_google_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_base_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type directus_settingsCreateManyDirectus_foldersInput = {
@@ -3172,6 +3652,16 @@ export type directus_settingsCreateManyDirectus_foldersInput = {
   ai_openai_api_key?: string | null
   ai_anthropic_api_key?: string | null
   ai_system_prompt?: string | null
+  ai_google_api_key?: string | null
+  ai_openai_compatible_api_key?: string | null
+  ai_openai_compatible_base_url?: string | null
+  ai_openai_compatible_name?: string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: boolean
 }
 
 export type directus_settingsUpdateWithoutDirectus_foldersInput = {
@@ -3216,6 +3706,16 @@ export type directus_settingsUpdateWithoutDirectus_foldersInput = {
   ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_google_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_base_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   directus_files_directus_settings_project_logoTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_project_logoTodirectus_filesNestedInput
   directus_files_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_public_backgroundTodirectus_filesNestedInput
   directus_files_directus_settings_public_faviconTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_public_faviconTodirectus_filesNestedInput
@@ -3271,6 +3771,16 @@ export type directus_settingsUncheckedUpdateWithoutDirectus_foldersInput = {
   ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_google_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_base_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type directus_settingsUncheckedUpdateManyWithoutDirectus_foldersInput = {
@@ -3321,6 +3831,16 @@ export type directus_settingsUncheckedUpdateManyWithoutDirectus_foldersInput = {
   ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_google_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_base_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type directus_settingsCreateManyDirectus_rolesInput = {
@@ -3371,6 +3891,16 @@ export type directus_settingsCreateManyDirectus_rolesInput = {
   ai_openai_api_key?: string | null
   ai_anthropic_api_key?: string | null
   ai_system_prompt?: string | null
+  ai_google_api_key?: string | null
+  ai_openai_compatible_api_key?: string | null
+  ai_openai_compatible_base_url?: string | null
+  ai_openai_compatible_name?: string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: boolean
 }
 
 export type directus_settingsUpdateWithoutDirectus_rolesInput = {
@@ -3415,6 +3945,16 @@ export type directus_settingsUpdateWithoutDirectus_rolesInput = {
   ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_google_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_base_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   directus_files_directus_settings_project_logoTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_project_logoTodirectus_filesNestedInput
   directus_files_directus_settings_public_backgroundTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_public_backgroundTodirectus_filesNestedInput
   directus_files_directus_settings_public_faviconTodirectus_files?: Prisma.directus_filesUpdateOneWithoutDirectus_settings_directus_settings_public_faviconTodirectus_filesNestedInput
@@ -3470,6 +4010,16 @@ export type directus_settingsUncheckedUpdateWithoutDirectus_rolesInput = {
   ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_google_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_base_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type directus_settingsUncheckedUpdateManyWithoutDirectus_rolesInput = {
@@ -3520,6 +4070,16 @@ export type directus_settingsUncheckedUpdateManyWithoutDirectus_rolesInput = {
   ai_openai_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_anthropic_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_system_prompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_google_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_api_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_base_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_openai_compatible_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_compatible_headers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_openai_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_anthropic_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  ai_google_allowed_models?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  collaborative_editing_enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 
@@ -3573,6 +4133,16 @@ export type directus_settingsSelect<ExtArgs extends runtime.Types.Extensions.Int
   ai_openai_api_key?: boolean
   ai_anthropic_api_key?: boolean
   ai_system_prompt?: boolean
+  ai_google_api_key?: boolean
+  ai_openai_compatible_api_key?: boolean
+  ai_openai_compatible_base_url?: boolean
+  ai_openai_compatible_name?: boolean
+  ai_openai_compatible_models?: boolean
+  ai_openai_compatible_headers?: boolean
+  ai_openai_allowed_models?: boolean
+  ai_anthropic_allowed_models?: boolean
+  ai_google_allowed_models?: boolean
+  collaborative_editing_enabled?: boolean
   directus_files_directus_settings_project_logoTodirectus_files?: boolean | Prisma.directus_settings$directus_files_directus_settings_project_logoTodirectus_filesArgs<ExtArgs>
   directus_files_directus_settings_public_backgroundTodirectus_files?: boolean | Prisma.directus_settings$directus_files_directus_settings_public_backgroundTodirectus_filesArgs<ExtArgs>
   directus_files_directus_settings_public_faviconTodirectus_files?: boolean | Prisma.directus_settings$directus_files_directus_settings_public_faviconTodirectus_filesArgs<ExtArgs>
@@ -3630,6 +4200,16 @@ export type directus_settingsSelectCreateManyAndReturn<ExtArgs extends runtime.T
   ai_openai_api_key?: boolean
   ai_anthropic_api_key?: boolean
   ai_system_prompt?: boolean
+  ai_google_api_key?: boolean
+  ai_openai_compatible_api_key?: boolean
+  ai_openai_compatible_base_url?: boolean
+  ai_openai_compatible_name?: boolean
+  ai_openai_compatible_models?: boolean
+  ai_openai_compatible_headers?: boolean
+  ai_openai_allowed_models?: boolean
+  ai_anthropic_allowed_models?: boolean
+  ai_google_allowed_models?: boolean
+  collaborative_editing_enabled?: boolean
   directus_files_directus_settings_project_logoTodirectus_files?: boolean | Prisma.directus_settings$directus_files_directus_settings_project_logoTodirectus_filesArgs<ExtArgs>
   directus_files_directus_settings_public_backgroundTodirectus_files?: boolean | Prisma.directus_settings$directus_files_directus_settings_public_backgroundTodirectus_filesArgs<ExtArgs>
   directus_files_directus_settings_public_faviconTodirectus_files?: boolean | Prisma.directus_settings$directus_files_directus_settings_public_faviconTodirectus_filesArgs<ExtArgs>
@@ -3687,6 +4267,16 @@ export type directus_settingsSelectUpdateManyAndReturn<ExtArgs extends runtime.T
   ai_openai_api_key?: boolean
   ai_anthropic_api_key?: boolean
   ai_system_prompt?: boolean
+  ai_google_api_key?: boolean
+  ai_openai_compatible_api_key?: boolean
+  ai_openai_compatible_base_url?: boolean
+  ai_openai_compatible_name?: boolean
+  ai_openai_compatible_models?: boolean
+  ai_openai_compatible_headers?: boolean
+  ai_openai_allowed_models?: boolean
+  ai_anthropic_allowed_models?: boolean
+  ai_google_allowed_models?: boolean
+  collaborative_editing_enabled?: boolean
   directus_files_directus_settings_project_logoTodirectus_files?: boolean | Prisma.directus_settings$directus_files_directus_settings_project_logoTodirectus_filesArgs<ExtArgs>
   directus_files_directus_settings_public_backgroundTodirectus_files?: boolean | Prisma.directus_settings$directus_files_directus_settings_public_backgroundTodirectus_filesArgs<ExtArgs>
   directus_files_directus_settings_public_faviconTodirectus_files?: boolean | Prisma.directus_settings$directus_files_directus_settings_public_faviconTodirectus_filesArgs<ExtArgs>
@@ -3744,9 +4334,19 @@ export type directus_settingsSelectScalar = {
   ai_openai_api_key?: boolean
   ai_anthropic_api_key?: boolean
   ai_system_prompt?: boolean
+  ai_google_api_key?: boolean
+  ai_openai_compatible_api_key?: boolean
+  ai_openai_compatible_base_url?: boolean
+  ai_openai_compatible_name?: boolean
+  ai_openai_compatible_models?: boolean
+  ai_openai_compatible_headers?: boolean
+  ai_openai_allowed_models?: boolean
+  ai_anthropic_allowed_models?: boolean
+  ai_google_allowed_models?: boolean
+  collaborative_editing_enabled?: boolean
 }
 
-export type directus_settingsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "project_name" | "project_url" | "project_color" | "project_logo" | "public_foreground" | "public_background" | "public_note" | "auth_login_attempts" | "auth_password_policy" | "storage_asset_transform" | "storage_asset_presets" | "custom_css" | "storage_default_folder" | "basemaps" | "mapbox_key" | "module_bar" | "project_descriptor" | "default_language" | "custom_aspect_ratios" | "public_favicon" | "default_appearance" | "default_theme_light" | "theme_light_overrides" | "default_theme_dark" | "theme_dark_overrides" | "report_error_url" | "report_bug_url" | "report_feature_url" | "public_registration" | "public_registration_verify_email" | "public_registration_role" | "public_registration_email_filter" | "visual_editor_urls" | "project_id" | "mcp_enabled" | "mcp_allow_deletes" | "mcp_prompts_collection" | "mcp_system_prompt_enabled" | "mcp_system_prompt" | "project_owner" | "project_usage" | "org_name" | "product_updates" | "project_status" | "ai_openai_api_key" | "ai_anthropic_api_key" | "ai_system_prompt", ExtArgs["result"]["directus_settings"]>
+export type directus_settingsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "project_name" | "project_url" | "project_color" | "project_logo" | "public_foreground" | "public_background" | "public_note" | "auth_login_attempts" | "auth_password_policy" | "storage_asset_transform" | "storage_asset_presets" | "custom_css" | "storage_default_folder" | "basemaps" | "mapbox_key" | "module_bar" | "project_descriptor" | "default_language" | "custom_aspect_ratios" | "public_favicon" | "default_appearance" | "default_theme_light" | "theme_light_overrides" | "default_theme_dark" | "theme_dark_overrides" | "report_error_url" | "report_bug_url" | "report_feature_url" | "public_registration" | "public_registration_verify_email" | "public_registration_role" | "public_registration_email_filter" | "visual_editor_urls" | "project_id" | "mcp_enabled" | "mcp_allow_deletes" | "mcp_prompts_collection" | "mcp_system_prompt_enabled" | "mcp_system_prompt" | "project_owner" | "project_usage" | "org_name" | "product_updates" | "project_status" | "ai_openai_api_key" | "ai_anthropic_api_key" | "ai_system_prompt" | "ai_google_api_key" | "ai_openai_compatible_api_key" | "ai_openai_compatible_base_url" | "ai_openai_compatible_name" | "ai_openai_compatible_models" | "ai_openai_compatible_headers" | "ai_openai_allowed_models" | "ai_anthropic_allowed_models" | "ai_google_allowed_models" | "collaborative_editing_enabled", ExtArgs["result"]["directus_settings"]>
 export type directus_settingsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   directus_files_directus_settings_project_logoTodirectus_files?: boolean | Prisma.directus_settings$directus_files_directus_settings_project_logoTodirectus_filesArgs<ExtArgs>
   directus_files_directus_settings_public_backgroundTodirectus_files?: boolean | Prisma.directus_settings$directus_files_directus_settings_public_backgroundTodirectus_filesArgs<ExtArgs>
@@ -3831,6 +4431,16 @@ export type $directus_settingsPayload<ExtArgs extends runtime.Types.Extensions.I
     ai_openai_api_key: string | null
     ai_anthropic_api_key: string | null
     ai_system_prompt: string | null
+    ai_google_api_key: string | null
+    ai_openai_compatible_api_key: string | null
+    ai_openai_compatible_base_url: string | null
+    ai_openai_compatible_name: string | null
+    ai_openai_compatible_models: runtime.JsonValue | null
+    ai_openai_compatible_headers: runtime.JsonValue | null
+    ai_openai_allowed_models: runtime.JsonValue | null
+    ai_anthropic_allowed_models: runtime.JsonValue | null
+    ai_google_allowed_models: runtime.JsonValue | null
+    collaborative_editing_enabled: boolean
   }, ExtArgs["result"]["directus_settings"]>
   composites: {}
 }
@@ -4308,6 +4918,16 @@ export interface directus_settingsFieldRefs {
   readonly ai_openai_api_key: Prisma.FieldRef<"directus_settings", 'String'>
   readonly ai_anthropic_api_key: Prisma.FieldRef<"directus_settings", 'String'>
   readonly ai_system_prompt: Prisma.FieldRef<"directus_settings", 'String'>
+  readonly ai_google_api_key: Prisma.FieldRef<"directus_settings", 'String'>
+  readonly ai_openai_compatible_api_key: Prisma.FieldRef<"directus_settings", 'String'>
+  readonly ai_openai_compatible_base_url: Prisma.FieldRef<"directus_settings", 'String'>
+  readonly ai_openai_compatible_name: Prisma.FieldRef<"directus_settings", 'String'>
+  readonly ai_openai_compatible_models: Prisma.FieldRef<"directus_settings", 'Json'>
+  readonly ai_openai_compatible_headers: Prisma.FieldRef<"directus_settings", 'Json'>
+  readonly ai_openai_allowed_models: Prisma.FieldRef<"directus_settings", 'Json'>
+  readonly ai_anthropic_allowed_models: Prisma.FieldRef<"directus_settings", 'Json'>
+  readonly ai_google_allowed_models: Prisma.FieldRef<"directus_settings", 'Json'>
+  readonly collaborative_editing_enabled: Prisma.FieldRef<"directus_settings", 'Boolean'>
 }
     
 

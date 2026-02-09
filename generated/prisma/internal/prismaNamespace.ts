@@ -451,7 +451,10 @@ export const ModelName = {
   work_experience_technologies: 'work_experience_technologies',
   work_experiences: 'work_experiences',
   ai_chats: 'ai_chats',
-  ai_chat_templates: 'ai_chat_templates'
+  ai_chat_templates: 'ai_chat_templates',
+  directus_deployment_projects: 'directus_deployment_projects',
+  directus_deployment_runs: 'directus_deployment_runs',
+  directus_deployments: 'directus_deployments'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -467,7 +470,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "ai_prompts" | "application_activity_log" | "application_letters" | "application_questions" | "applications" | "applications_files" | "cheat_sheets" | "collected_data" | "config" | "directus_access" | "directus_activity" | "directus_collections" | "directus_comments" | "directus_dashboards" | "directus_extensions" | "directus_fields" | "directus_files" | "directus_flows" | "directus_folders" | "directus_migrations" | "directus_notifications" | "directus_operations" | "directus_panels" | "directus_permissions" | "directus_policies" | "directus_presets" | "directus_relations" | "directus_revisions" | "directus_roles" | "directus_sessions" | "directus_settings" | "directus_shares" | "directus_translations" | "directus_users" | "directus_versions" | "education" | "highlights" | "job_match_preferences" | "job_matches" | "job_platforms" | "job_resources" | "job_searches" | "job_searches_job_sites" | "jobs" | "languages" | "os_contributions" | "platform_profiles" | "profile_exports" | "profile_tokens" | "profile_version_extensions" | "profile_versions" | "profiles" | "project_stories" | "references" | "salary_expectations" | "side_project_achievements" | "side_project_technologies" | "side_projects" | "tech_skill_categories" | "tech_skill_types" | "tech_skills" | "work_experience_achievements" | "work_experience_project_technologies" | "work_experience_projects" | "work_experience_technologies" | "work_experiences" | "ai_chats" | "ai_chat_templates"
+    modelProps: "ai_prompts" | "application_activity_log" | "application_letters" | "application_questions" | "applications" | "applications_files" | "cheat_sheets" | "collected_data" | "config" | "directus_access" | "directus_activity" | "directus_collections" | "directus_comments" | "directus_dashboards" | "directus_extensions" | "directus_fields" | "directus_files" | "directus_flows" | "directus_folders" | "directus_migrations" | "directus_notifications" | "directus_operations" | "directus_panels" | "directus_permissions" | "directus_policies" | "directus_presets" | "directus_relations" | "directus_revisions" | "directus_roles" | "directus_sessions" | "directus_settings" | "directus_shares" | "directus_translations" | "directus_users" | "directus_versions" | "education" | "highlights" | "job_match_preferences" | "job_matches" | "job_platforms" | "job_resources" | "job_searches" | "job_searches_job_sites" | "jobs" | "languages" | "os_contributions" | "platform_profiles" | "profile_exports" | "profile_tokens" | "profile_version_extensions" | "profile_versions" | "profiles" | "project_stories" | "references" | "salary_expectations" | "side_project_achievements" | "side_project_technologies" | "side_projects" | "tech_skill_categories" | "tech_skill_types" | "tech_skills" | "work_experience_achievements" | "work_experience_project_technologies" | "work_experience_projects" | "work_experience_technologies" | "work_experiences" | "ai_chats" | "ai_chat_templates" | "directus_deployment_projects" | "directus_deployment_runs" | "directus_deployments"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -5503,6 +5506,228 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    directus_deployment_projects: {
+      payload: Prisma.$directus_deployment_projectsPayload<ExtArgs>
+      fields: Prisma.directus_deployment_projectsFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.directus_deployment_projectsFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_deployment_projectsPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.directus_deployment_projectsFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_deployment_projectsPayload>
+        }
+        findFirst: {
+          args: Prisma.directus_deployment_projectsFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_deployment_projectsPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.directus_deployment_projectsFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_deployment_projectsPayload>
+        }
+        findMany: {
+          args: Prisma.directus_deployment_projectsFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_deployment_projectsPayload>[]
+        }
+        create: {
+          args: Prisma.directus_deployment_projectsCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_deployment_projectsPayload>
+        }
+        createMany: {
+          args: Prisma.directus_deployment_projectsCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.directus_deployment_projectsCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_deployment_projectsPayload>[]
+        }
+        delete: {
+          args: Prisma.directus_deployment_projectsDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_deployment_projectsPayload>
+        }
+        update: {
+          args: Prisma.directus_deployment_projectsUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_deployment_projectsPayload>
+        }
+        deleteMany: {
+          args: Prisma.directus_deployment_projectsDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.directus_deployment_projectsUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.directus_deployment_projectsUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_deployment_projectsPayload>[]
+        }
+        upsert: {
+          args: Prisma.directus_deployment_projectsUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_deployment_projectsPayload>
+        }
+        aggregate: {
+          args: Prisma.Directus_deployment_projectsAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateDirectus_deployment_projects>
+        }
+        groupBy: {
+          args: Prisma.directus_deployment_projectsGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Directus_deployment_projectsGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.directus_deployment_projectsCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Directus_deployment_projectsCountAggregateOutputType> | number
+        }
+      }
+    }
+    directus_deployment_runs: {
+      payload: Prisma.$directus_deployment_runsPayload<ExtArgs>
+      fields: Prisma.directus_deployment_runsFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.directus_deployment_runsFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_deployment_runsPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.directus_deployment_runsFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_deployment_runsPayload>
+        }
+        findFirst: {
+          args: Prisma.directus_deployment_runsFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_deployment_runsPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.directus_deployment_runsFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_deployment_runsPayload>
+        }
+        findMany: {
+          args: Prisma.directus_deployment_runsFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_deployment_runsPayload>[]
+        }
+        create: {
+          args: Prisma.directus_deployment_runsCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_deployment_runsPayload>
+        }
+        createMany: {
+          args: Prisma.directus_deployment_runsCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.directus_deployment_runsCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_deployment_runsPayload>[]
+        }
+        delete: {
+          args: Prisma.directus_deployment_runsDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_deployment_runsPayload>
+        }
+        update: {
+          args: Prisma.directus_deployment_runsUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_deployment_runsPayload>
+        }
+        deleteMany: {
+          args: Prisma.directus_deployment_runsDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.directus_deployment_runsUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.directus_deployment_runsUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_deployment_runsPayload>[]
+        }
+        upsert: {
+          args: Prisma.directus_deployment_runsUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_deployment_runsPayload>
+        }
+        aggregate: {
+          args: Prisma.Directus_deployment_runsAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateDirectus_deployment_runs>
+        }
+        groupBy: {
+          args: Prisma.directus_deployment_runsGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Directus_deployment_runsGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.directus_deployment_runsCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Directus_deployment_runsCountAggregateOutputType> | number
+        }
+      }
+    }
+    directus_deployments: {
+      payload: Prisma.$directus_deploymentsPayload<ExtArgs>
+      fields: Prisma.directus_deploymentsFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.directus_deploymentsFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_deploymentsPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.directus_deploymentsFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_deploymentsPayload>
+        }
+        findFirst: {
+          args: Prisma.directus_deploymentsFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_deploymentsPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.directus_deploymentsFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_deploymentsPayload>
+        }
+        findMany: {
+          args: Prisma.directus_deploymentsFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_deploymentsPayload>[]
+        }
+        create: {
+          args: Prisma.directus_deploymentsCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_deploymentsPayload>
+        }
+        createMany: {
+          args: Prisma.directus_deploymentsCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.directus_deploymentsCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_deploymentsPayload>[]
+        }
+        delete: {
+          args: Prisma.directus_deploymentsDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_deploymentsPayload>
+        }
+        update: {
+          args: Prisma.directus_deploymentsUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_deploymentsPayload>
+        }
+        deleteMany: {
+          args: Prisma.directus_deploymentsDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.directus_deploymentsUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.directus_deploymentsUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_deploymentsPayload>[]
+        }
+        upsert: {
+          args: Prisma.directus_deploymentsUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$directus_deploymentsPayload>
+        }
+        aggregate: {
+          args: Prisma.Directus_deploymentsAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateDirectus_deployments>
+        }
+        groupBy: {
+          args: Prisma.directus_deploymentsGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Directus_deploymentsGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.directus_deploymentsCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Directus_deploymentsCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -6053,7 +6278,17 @@ export const Directus_settingsScalarFieldEnum = {
   project_status: 'project_status',
   ai_openai_api_key: 'ai_openai_api_key',
   ai_anthropic_api_key: 'ai_anthropic_api_key',
-  ai_system_prompt: 'ai_system_prompt'
+  ai_system_prompt: 'ai_system_prompt',
+  ai_google_api_key: 'ai_google_api_key',
+  ai_openai_compatible_api_key: 'ai_openai_compatible_api_key',
+  ai_openai_compatible_base_url: 'ai_openai_compatible_base_url',
+  ai_openai_compatible_name: 'ai_openai_compatible_name',
+  ai_openai_compatible_models: 'ai_openai_compatible_models',
+  ai_openai_compatible_headers: 'ai_openai_compatible_headers',
+  ai_openai_allowed_models: 'ai_openai_allowed_models',
+  ai_anthropic_allowed_models: 'ai_anthropic_allowed_models',
+  ai_google_allowed_models: 'ai_google_allowed_models',
+  collaborative_editing_enabled: 'collaborative_editing_enabled'
 } as const
 
 export type Directus_settingsScalarFieldEnum = (typeof Directus_settingsScalarFieldEnum)[keyof typeof Directus_settingsScalarFieldEnum]
@@ -6284,15 +6519,19 @@ export const JobsScalarFieldEnum = {
   salary_period: 'salary_period',
   import_error: 'import_error',
   last_scraped: 'last_scraped',
-  location: 'location',
+  office_location: 'office_location',
   scrape_count: 'scrape_count',
   job_types: 'job_types',
   experience_levels: 'experience_levels',
-  remote_options: 'remote_options',
-  skills: 'skills',
+  work_location: 'work_location',
   source_html_stripped: 'source_html_stripped',
   job_platform: 'job_platform',
-  ai_chat_extraction: 'ai_chat_extraction'
+  ai_chat_extraction: 'ai_chat_extraction',
+  company: 'company',
+  skills_required: 'skills_required',
+  skills_preferred: 'skills_preferred',
+  responsibilities: 'responsibilities',
+  soft_skills: 'soft_skills'
 } as const
 
 export type JobsScalarFieldEnum = (typeof JobsScalarFieldEnum)[keyof typeof JobsScalarFieldEnum]
@@ -6721,6 +6960,42 @@ export const Ai_chat_templatesScalarFieldEnum = {
 export type Ai_chat_templatesScalarFieldEnum = (typeof Ai_chat_templatesScalarFieldEnum)[keyof typeof Ai_chat_templatesScalarFieldEnum]
 
 
+export const Directus_deployment_projectsScalarFieldEnum = {
+  id: 'id',
+  deployment: 'deployment',
+  external_id: 'external_id',
+  name: 'name',
+  date_created: 'date_created',
+  user_created: 'user_created'
+} as const
+
+export type Directus_deployment_projectsScalarFieldEnum = (typeof Directus_deployment_projectsScalarFieldEnum)[keyof typeof Directus_deployment_projectsScalarFieldEnum]
+
+
+export const Directus_deployment_runsScalarFieldEnum = {
+  id: 'id',
+  project: 'project',
+  external_id: 'external_id',
+  target: 'target',
+  date_created: 'date_created',
+  user_created: 'user_created'
+} as const
+
+export type Directus_deployment_runsScalarFieldEnum = (typeof Directus_deployment_runsScalarFieldEnum)[keyof typeof Directus_deployment_runsScalarFieldEnum]
+
+
+export const Directus_deploymentsScalarFieldEnum = {
+  id: 'id',
+  provider: 'provider',
+  credentials: 'credentials',
+  options: 'options',
+  date_created: 'date_created',
+  user_created: 'user_created'
+} as const
+
+export type Directus_deploymentsScalarFieldEnum = (typeof Directus_deploymentsScalarFieldEnum)[keyof typeof Directus_deploymentsScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -7035,6 +7310,9 @@ export type GlobalOmitConfig = {
   work_experiences?: Prisma.work_experiencesOmit
   ai_chats?: Prisma.ai_chatsOmit
   ai_chat_templates?: Prisma.ai_chat_templatesOmit
+  directus_deployment_projects?: Prisma.directus_deployment_projectsOmit
+  directus_deployment_runs?: Prisma.directus_deployment_runsOmit
+  directus_deployments?: Prisma.directus_deploymentsOmit
 }
 
 /* Types for Logging */

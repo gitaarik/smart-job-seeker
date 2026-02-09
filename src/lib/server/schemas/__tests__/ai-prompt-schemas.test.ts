@@ -44,6 +44,7 @@ describe("AI Prompt Schemas", () => {
         title: "Software Engineer",
         job_description: "Full description here",
         company_description: "Company info",
+        company: "Tech Corp",
         job_poster: "HR Manager",
         date_posted: "2026-01-08",
         location: "Remote",
@@ -54,7 +55,10 @@ describe("AI Prompt Schemas", () => {
         salary_max: 120000,
         salary_currency: "EUR",
         salary_period: "year",
-        skills: ["JavaScript", "React", "Node.js"],
+        skills_required: ["JavaScript", "React", "Node.js"],
+        skills_preferred: ["TypeScript", "AWS"],
+        responsibilities: ["Design systems", "Lead team"],
+        soft_skills: ["Communication", "Leadership"],
         status: "hiring",
       };
       expect(() => extractJobDataSchema.parse(validData)).not.toThrow();
@@ -65,6 +69,7 @@ describe("AI Prompt Schemas", () => {
         title: "Software Engineer",
         job_description: "Full description",
         company_description: null,
+        company: null,
         job_poster: null,
         date_posted: null,
         location: null,
@@ -75,7 +80,10 @@ describe("AI Prompt Schemas", () => {
         salary_max: null,
         salary_currency: null,
         salary_period: null,
-        skills: null,
+        skills_required: null,
+        skills_preferred: null,
+        responsibilities: null,
+        soft_skills: null,
         status: null,
       };
       expect(() => extractJobDataSchema.parse(dataWithNulls)).not.toThrow();
@@ -86,6 +94,7 @@ describe("AI Prompt Schemas", () => {
         title: "Software Engineer",
         job_description: "Description",
         company_description: null,
+        company: null,
         job_poster: null,
         date_posted: null,
         location: null,
@@ -96,7 +105,10 @@ describe("AI Prompt Schemas", () => {
         salary_max: 120000,
         salary_currency: "EUR",
         salary_period: "year",
-        skills: null,
+        skills_required: null,
+        skills_preferred: null,
+        responsibilities: null,
+        soft_skills: null,
         status: null,
       };
       expect(() => extractJobDataSchema.parse(invalidData)).toThrow();
