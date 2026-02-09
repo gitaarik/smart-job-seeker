@@ -483,7 +483,9 @@ async function generateWithLangChain(
           if (isTruncated) {
             throw new Error(
               `${provider} JSON response appears truncated (output token limit likely exceeded). ` +
-                `Missing ${openBraces - closeBraces} closing braces, ${openBrackets - closeBrackets} closing brackets. ` +
+                `Missing ${openBraces - closeBraces} closing braces, ${
+                  openBrackets - closeBrackets
+                } closing brackets. ` +
                 `Response length: ${responseContent.length} chars. Last 200 chars: ...${
                   responseContent.slice(-200)
                 }`,
