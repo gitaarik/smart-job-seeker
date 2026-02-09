@@ -3,7 +3,7 @@
  * POST /api/jobs/import
  *
  * Imports a single job into the system.
- * Supports both session authentication and API key authentication.
+ * Requires API key authentication via X-API-Key header.
  */
 
 import { json } from "@sveltejs/kit";
@@ -18,26 +18,12 @@ import {
 } from "$lib/server/job/validation";
 
 /**
- * Get profile ID from session or API key
+ * Get profile ID from API key
  */
-async function getProfileId(event: {
-  locals: App.Locals;
-  request: Request;
-}): Promise<{ profileId: number | null; error?: string }> {
-  // First try session auth
-  if (event.locals.user) {
-    const profile = await db.profiles.findFirst({
-      where: { user_id: event.locals.user.id },
-      select: { id: true },
-    });
-
-    if (profile) {
-      return { profileId: profile.id };
-    }
-  }
-
-  // Try API key auth
-  const apiKey = event.request.headers.get("X-API-Key");
+async function getProfileId(
+  request: Request,
+): Promise<{ profileId: number | null; error?: string }> {
+  const apiKey = request.headers.get("X-API-Key");
   if (apiKey) {
     const profileId = await verifyApiKey(apiKey);
     if (profileId) {
@@ -46,7 +32,7 @@ async function getProfileId(event: {
     return { profileId: null, error: "Invalid API key" };
   }
 
-  return { profileId: null, error: "Authentication required" };
+  return { profileId: null, error: "API key required" };
 }
 
 /**
@@ -76,7 +62,7 @@ async function findExistingJob(
  */
 export const POST: RequestHandler = async (event) => {
   // Step 1: Authenticate
-  const { profileId, error: authError } = await getProfileId(event);
+  const { profileId, error: authError } = await getProfileId(event.request);
 
   if (!profileId) {
     return json(

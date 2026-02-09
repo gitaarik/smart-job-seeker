@@ -7,7 +7,6 @@ import type { PageServerLoad } from "./$types";
 export const load: PageServerLoad = async ({
   params,
   url,
-  locals,
   getClientAddress,
 }) => {
   const { slug } = params;
@@ -25,7 +24,6 @@ export const load: PageServerLoad = async ({
   // Check access control
   const accessResult = await checkProfileAccess({
     profile,
-    user: locals.user,
     token,
     clientIp: getClientAddress(),
     routeType: "resume",

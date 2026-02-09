@@ -92,7 +92,7 @@ describe("POST /api/jobs/import - Single Job Import", () => {
       expect(response.status).toBe(401);
       const data = await response.json();
       expect(data.success).toBe(false);
-      expect(data.message).toContain("Authentication required");
+      expect(data.message).toContain("API key required");
     });
 
     it("should reject invalid API key", async () => {
@@ -130,29 +130,6 @@ describe("POST /api/jobs/import - Single Job Import", () => {
       expect(data.jobId).toBe(42);
     });
 
-    it("should accept session authentication", async () => {
-      const mockDbProfiles = db.profiles as any;
-      mockDbProfiles.findFirst.mockResolvedValueOnce({ id: 1 });
-
-      const mockDbJobs = db.jobs as any;
-      mockDbJobs.findFirst.mockResolvedValueOnce(null);
-      mockDbJobs.create.mockResolvedValueOnce({ id: 42 });
-
-      const request = createMockRequest(validJob);
-      const event = createMockEvent(request, {
-        id: "user-123",
-        email: "test@example.com",
-        firstName: "Test",
-        lastName: "User",
-        role: "USER",
-      });
-
-      const response = await importSingle(event);
-
-      expect(response.status).toBe(200);
-      const data = await response.json();
-      expect(data.success).toBe(true);
-    });
   });
 
   describe("validation", () => {

@@ -4,7 +4,6 @@ import { validateToken } from "../auth/token-validation";
 
 export interface AccessControlOptions {
   profile: profiles;
-  user?: App.Locals["user"];
   token?: string | null;
   clientIp?: string;
   routeType: "cv" | "resume";
@@ -16,21 +15,20 @@ export interface AccessControlResult {
   message: string;
   versionId?: number;
   tokenId?: number;
-  accessType: "public" | "owner" | "token";
+  accessType: "public" | "token";
 }
 
 /**
- * Check if a user has access to a profile's resume/CV
+ * Check if a request has access to a profile's resume/CV
  * Access is granted in this order:
  * 1. Public version is set (no auth/token required)
- * 2. User is authenticated and owns the profile
- * 3. Valid token is provided
+ * 2. Valid token is provided
  * Otherwise, access is denied
  */
 export async function checkProfileAccess(
   options: AccessControlOptions,
 ): Promise<AccessControlResult> {
-  const { profile, user, token, routeType } = options;
+  const { profile, token, routeType } = options;
 
   // 1. Check for public version access
   const publicVersionId = routeType === "cv"
@@ -47,17 +45,7 @@ export async function checkProfileAccess(
     };
   }
 
-  // 2. Check for owner access
-  if (user && profile.user_id && user.id === profile.user_id) {
-    return {
-      allowed: true,
-      statusCode: 200,
-      message: "Owner access granted",
-      accessType: "owner",
-    };
-  }
-
-  // 3. Check for token access
+  // 2. Check for token access
   if (token) {
     const validationResult = await validateToken(token, profile.id);
 
@@ -81,11 +69,11 @@ export async function checkProfileAccess(
     };
   }
 
-  // 4. Deny access
+  // 3. Deny access
   return {
     allowed: false,
     statusCode: 401,
-    message: "This profile requires authentication or a valid access token",
+    message: "This profile requires a valid access token",
     accessType: "public",
   };
 }

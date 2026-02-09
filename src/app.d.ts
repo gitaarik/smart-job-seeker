@@ -12,13 +12,7 @@ declare global {
   namespace App {
     // interface Error {}
     interface Locals {
-      user?: {
-        id: string;
-        email: string;
-        firstName: string | null;
-        lastName: string | null;
-        role: "USER" | "ADMIN" | "SUPER_ADMIN";
-      };
+      // Will be populated by Better Auth when implemented
     }
     // interface PageData {}
     // interface PageState {}

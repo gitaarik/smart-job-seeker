@@ -23,11 +23,10 @@ function transformVersionToExportFormat(
 }
 
 export const GET: RequestHandler = async (
-  { params, url, locals, getClientAddress },
+  { params, url, getClientAddress },
 ) => {
   const { slug } = params;
   const token = url.searchParams.get("t");
-  const versionParam = url.searchParams.get("version");
 
   // Get profile by slug
   const profile = await getProfileByIdentifier(slug);
@@ -39,7 +38,6 @@ export const GET: RequestHandler = async (
   // Check access control
   const accessResult = await checkProfileAccess({
     profile,
-    user: locals.user,
     token,
     clientIp: getClientAddress(),
     routeType: "resume",
@@ -54,18 +52,10 @@ export const GET: RequestHandler = async (
     await incrementTokenVisit(accessResult.tokenId, getClientAddress());
   }
 
-  // Determine version priority:
-  // 1. Token version (highest priority)
-  // 2. Public version (if accessing via public route)
-  // 3. URL ?version= parameter (owner only)
-  // 4. Latest version (fallback)
+  // Determine version from access control (token or public version)
   let effectiveVersion: string | null = null;
   if (accessResult.versionId) {
-    // Access control already determined the version (from token or public version)
     effectiveVersion = await getVersionNameById(accessResult.versionId);
-  } else if (versionParam && accessResult.accessType === "owner") {
-    // Owner can specify version via URL parameter
-    effectiveVersion = versionParam;
   }
 
   // Query latest resume PDF export from profile_exports

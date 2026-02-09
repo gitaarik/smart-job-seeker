@@ -54,14 +54,13 @@ function getThemeData(request: Request) {
   };
 }
 
-export const load: LayoutServerLoad = async ({ request, locals }) => {
+export const load: LayoutServerLoad = async ({ request }) => {
   const themeData = getThemeData(request);
 
   return {
     themePreference: themeData.themePreference,
     actualTheme: themeData.actualTheme,
     systemTheme: themeData.systemTheme,
-    user: locals.user || null,
     adminPublicUrl: config.adminPublicUrl,
   };
 };

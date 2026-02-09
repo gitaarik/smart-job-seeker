@@ -86,6 +86,7 @@
   let { profile, type = null }: Props = $props();
 
   function getVersion(idx: string | number) {
+    if (!profile.profile_versions) return undefined;
     if (typeof idx === "number") {
       return profile.profile_versions.find((v) => v.id === idx);
     } else {
