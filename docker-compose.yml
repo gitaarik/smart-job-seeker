@@ -12,8 +12,7 @@ services:
       - ./db-dumps/:/db-dumps
     ports:
       - ${SJS_DB_PORT:-5432}:5432
-    command: |
-      bash -c "cp /db-dumps/smart.sql /docker-entrypoint-initdb.d/smart.sql 2>/dev/null || true && docker-entrypoint.sh postgres"
+    command: /scripts/init-db.sh
     healthcheck:
       test:
         - CMD
