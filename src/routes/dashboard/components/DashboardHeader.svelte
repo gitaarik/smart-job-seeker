@@ -13,13 +13,13 @@
   let { user, profiles, selectedProfile }: Props = $props();
 </script>
 
-<header class="bg-navy border-b border-glass transition-colors">
+<header class="bg-[var(--dash-chrome)] border-b border-[var(--dash-chrome)]/80 transition-colors">
   <div class="max-w-5xl mx-auto px-4 py-3">
     <div class="flex items-center justify-between">
       <!-- Logo and branding -->
       <a href="/dashboard" class="flex items-center gap-3">
         <Logo class="h-8 w-8" />
-        <span class="text-pearl font-medium hidden sm:block"
+        <span class="text-[var(--dash-chrome-text)] font-medium hidden sm:block"
         >Smart Job Seeker</span>
       </a>
 

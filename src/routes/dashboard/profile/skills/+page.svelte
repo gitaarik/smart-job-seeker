@@ -156,8 +156,8 @@
   />
 
   {#if form?.error}
-    <div class="bg-crimson/10 border border-crimson rounded-lg p-4">
-      <p class="text-crimson text-sm">{form.error}</p>
+    <div class="bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg p-4">
+      <p class="text-[var(--dash-error)] text-sm">{form.error}</p>
     </div>
   {/if}
 
@@ -167,16 +167,16 @@
       method="POST"
       action="?/createCategory"
       use:enhance={handleAddCategorySubmit}
-      class="bg-snow rounded-lg border border-ocean p-4"
+      class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-primary)] p-4"
     >
-      <h3 class="font-medium text-slate mb-4">Add New Category</h3>
+      <h3 class="font-medium text-[var(--dash-text)] mb-4">Add New Category</h3>
       <div class="flex gap-4">
         <div class="flex-1">
           <label
             for="new-category-name"
-            class="block text-sm font-medium text-slate mb-1"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
           >
-            Category Name <span class="text-crimson">*</span>
+            Category Name <span class="text-[var(--dash-error)]">*</span>
           </label>
           <input
             type="text"
@@ -185,7 +185,7 @@
             bind:value={newCategoryName}
             placeholder="e.g., Frontend, Backend, DevOps"
             required
-            class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
           />
         </div>
       </div>
@@ -194,13 +194,13 @@
         <button
           type="button"
           onclick={resetAddCategory}
-          class="px-4 py-2 border border-light rounded-lg text-slate hover:bg-light/50 transition-colors"
+          class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-gray-100 transition-colors"
         >
           Cancel
         </button>
         <button
           type="submit"
-          class="px-4 py-2 bg-ocean text-white rounded-lg hover:bg-aqua transition-colors"
+          class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
         >
           Add Category
         </button>
@@ -220,7 +220,7 @@
   {:else}
     <div class="space-y-4">
       {#each categories as category (category.id)}
-        <div class="bg-snow rounded-lg border border-light overflow-hidden">
+        <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden">
           <!-- Category Header -->
           <div class="flex items-center justify-between p-4">
             {#if editingCategoryId === category.id}
@@ -237,19 +237,19 @@
                   name="name"
                   bind:value={editCategoryName}
                   required
-                  class="flex-1 px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+                  class="flex-1 px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                 />
                 <button
                   type="button"
                   onclick={cancelEditCategory}
-                  class="p-2 text-pearl hover:text-slate transition-colors"
+                  class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
                   aria-label="Cancel"
                 >
                   <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
                 </button>
                 <button
                   type="submit"
-                  class="p-2 text-ocean hover:text-aqua transition-colors"
+                  class="p-2 text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] transition-colors"
                   aria-label="Save"
                 >
                   <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
@@ -262,13 +262,13 @@
                 class="flex-1 flex items-center gap-4 text-left"
               >
                 <div
-                  class="w-10 h-10 rounded-full bg-ocean/10 flex items-center justify-center flex-shrink-0"
+                  class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0"
                 >
-                  <FontAwesomeIcon icon={faCode} class="w-5 h-5 text-ocean" />
+                  <FontAwesomeIcon icon={faCode} class="w-5 h-5 text-[var(--dash-primary)]" />
                 </div>
                 <div>
-                  <h3 class="font-medium text-slate">{category.name}</h3>
-                  <p class="text-sm text-pearl">
+                  <h3 class="font-medium text-[var(--dash-text)]">{category.name}</h3>
+                  <p class="text-sm text-[var(--dash-text-secondary)]">
                     {category.tech_skills.length} skill(s)
                   </p>
                 </div>
@@ -278,7 +278,7 @@
                 <button
                   type="button"
                   onclick={() => startEditCategory(category)}
-                  class="p-2 text-pearl hover:text-ocean transition-colors"
+                  class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
                   aria-label="Edit category"
                 >
                   <FontAwesomeIcon icon={faPencil} class="w-4 h-4" />
@@ -286,7 +286,7 @@
                 <button
                   type="button"
                   onclick={() => (deleteCategoryId = category.id)}
-                  class="p-2 text-pearl hover:text-crimson transition-colors"
+                  class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
                   aria-label="Delete category"
                 >
                   <FontAwesomeIcon icon={faTrash} class="w-4 h-4" />
@@ -294,7 +294,7 @@
                 <button
                   type="button"
                   onclick={() => toggleCategory(category.id)}
-                  class="p-2 text-pearl"
+                  class="p-2 text-[var(--dash-text-secondary)]"
                   aria-label="Toggle category"
                 >
                   <FontAwesomeIcon
@@ -310,13 +310,13 @@
 
           <!-- Skills List (Expanded) -->
           {#if expandedCategoryId === category.id}
-            <div class="border-t border-light p-4">
+            <div class="border-t border-[var(--dash-border)] p-4">
               <!-- Add Skill Button -->
               {#if addingSkillToCategoryId !== category.id}
                 <button
                   type="button"
                   onclick={() => (addingSkillToCategoryId = category.id)}
-                  class="w-full flex items-center justify-center gap-2 py-2 border border-dashed border-light rounded-lg text-pearl hover:text-ocean hover:border-ocean transition-colors mb-4"
+                  class="w-full flex items-center justify-center gap-2 py-2 border border-dashed border-[var(--dash-border)] rounded-lg text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] hover:border-[var(--dash-primary)] transition-colors mb-4"
                 >
                   <FontAwesomeIcon icon={faPlus} class="w-4 h-4" />
                   Add Skill
@@ -327,7 +327,7 @@
                   method="POST"
                   action="?/createSkill"
                   use:enhance={handleAddSkillSubmit}
-                  class="bg-ice rounded-lg p-3 mb-4"
+                  class="bg-gray-100 rounded-lg p-3 mb-4"
                 >
                   <input type="hidden" name="categoryId" value={category.id} />
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -338,14 +338,14 @@
                         bind:value={newSkillName}
                         placeholder="Skill name *"
                         required
-                        class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                       />
                     </div>
                     <div>
                       <select
                         name="level"
                         bind:value={newSkillLevel}
-                        class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                       >
                         <option value="">Level</option>
                         {#each levelOptions as option}
@@ -361,7 +361,7 @@
                         placeholder="Years"
                         min="0"
                         max="50"
-                        class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                       />
                     </div>
                   </div>
@@ -369,13 +369,13 @@
                     <button
                       type="button"
                       onclick={resetAddSkill}
-                      class="px-3 py-1 text-sm text-slate hover:text-crimson transition-colors"
+                      class="px-3 py-1 text-sm text-[var(--dash-text)] hover:text-[var(--dash-error)] transition-colors"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      class="px-3 py-1 text-sm bg-ocean text-white rounded-lg hover:bg-aqua transition-colors"
+                      class="px-3 py-1 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
                     >
                       Add
                     </button>
@@ -385,7 +385,7 @@
 
               <!-- Skills -->
               {#if category.tech_skills.length === 0}
-                <p class="text-pearl text-sm text-center py-4">
+                <p class="text-[var(--dash-text-secondary)] text-sm text-center py-4">
                   No skills in this category yet.
                 </p>
               {:else}
@@ -397,7 +397,7 @@
                         method="POST"
                         action="?/updateSkill"
                         use:enhance={handleEditSkillSubmit}
-                        class="bg-ice rounded-lg p-3"
+                        class="bg-gray-100 rounded-lg p-3"
                       >
                         <input type="hidden" name="id" value={skill.id} />
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -407,14 +407,14 @@
                               name="name"
                               bind:value={editSkillName}
                               required
-                              class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+                              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                             />
                           </div>
                           <div>
                             <select
                               name="level"
                               bind:value={editSkillLevel}
-                              class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+                              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                             >
                               <option value="">Level</option>
                               {#each levelOptions as option}
@@ -432,7 +432,7 @@
                               placeholder="Years"
                               min="0"
                               max="50"
-                              class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+                              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                             />
                           </div>
                         </div>
@@ -440,14 +440,14 @@
                           <button
                             type="button"
                             onclick={cancelEditSkill}
-                            class="p-2 text-pearl hover:text-slate transition-colors"
+                            class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
                             aria-label="Cancel"
                           >
                             <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
                           </button>
                           <button
                             type="submit"
-                            class="p-2 text-ocean hover:text-aqua transition-colors"
+                            class="p-2 text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] transition-colors"
                             aria-label="Save"
                           >
                             <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
@@ -457,18 +457,18 @@
                     {:else}
                       <!-- Skill View -->
                       <div
-                        class="flex items-center justify-between py-2 px-3 bg-ice rounded-lg"
+                        class="flex items-center justify-between py-2 px-3 bg-gray-100 rounded-lg"
                       >
                         <div>
-                          <span class="font-medium text-slate">{
+                          <span class="font-medium text-[var(--dash-text)]">{
                             skill.name
                           }</span>
                           {#if skill.level}
-                            <span class="text-pearl text-sm ml-2"
+                            <span class="text-[var(--dash-text-secondary)] text-sm ml-2"
                             >({getLevelLabel(skill.level)})</span>
                           {/if}
                           {#if skill.years_experience}
-                            <span class="text-pearl text-sm ml-2">{
+                            <span class="text-[var(--dash-text-secondary)] text-sm ml-2">{
                                 skill.years_experience
                               } yrs</span>
                           {/if}
@@ -477,7 +477,7 @@
                           <button
                             type="button"
                             onclick={() => startEditSkill(skill)}
-                            class="p-2 text-pearl hover:text-ocean transition-colors"
+                            class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
                             aria-label="Edit skill"
                           >
                             <FontAwesomeIcon icon={faPencil} class="w-3 h-3" />
@@ -485,7 +485,7 @@
                           <button
                             type="button"
                             onclick={() => (deleteSkillId = skill.id)}
-                            class="p-2 text-pearl hover:text-crimson transition-colors"
+                            class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
                             aria-label="Delete skill"
                           >
                             <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />

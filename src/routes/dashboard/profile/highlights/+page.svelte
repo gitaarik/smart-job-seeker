@@ -98,8 +98,8 @@
   />
 
   {#if form?.error}
-    <div class="bg-crimson/10 border border-crimson rounded-lg p-4">
-      <p class="text-crimson text-sm">{form.error}</p>
+    <div class="bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg p-4">
+      <p class="text-[var(--dash-error)] text-sm">{form.error}</p>
     </div>
   {/if}
 
@@ -109,16 +109,16 @@
       method="POST"
       action="?/create"
       use:enhance={handleAddSubmit}
-      class="bg-snow rounded-lg border border-ocean p-4"
+      class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-primary)] p-4"
     >
-      <h3 class="font-medium text-slate mb-4">Add New Highlight</h3>
+      <h3 class="font-medium text-[var(--dash-text)] mb-4">Add New Highlight</h3>
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div class="md:col-span-3">
           <label
             for="new-text"
-            class="block text-sm font-medium text-slate mb-1"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
           >
-            Highlight Text <span class="text-crimson">*</span>
+            Highlight Text <span class="text-[var(--dash-error)]">*</span>
           </label>
           <input
             type="text"
@@ -127,14 +127,14 @@
             bind:value={newText}
             placeholder="e.g., 10+ years of experience in software development"
             required
-            class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
           />
         </div>
 
         <div>
           <label
             for="new-icon"
-            class="block text-sm font-medium text-slate mb-1"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
           >
             Icon Name
           </label>
@@ -144,7 +144,7 @@
             name="icon_name"
             bind:value={newIconName}
             placeholder="e.g., star"
-            class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
           />
         </div>
       </div>
@@ -153,13 +153,13 @@
         <button
           type="button"
           onclick={resetAddForm}
-          class="px-4 py-2 border border-light rounded-lg text-slate hover:bg-light/50 transition-colors"
+          class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-gray-100 transition-colors"
         >
           Cancel
         </button>
         <button
           type="submit"
-          class="px-4 py-2 bg-ocean text-white rounded-lg hover:bg-aqua transition-colors"
+          class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
         >
           Add Highlight
         </button>
@@ -179,7 +179,7 @@
   {:else}
     <div class="space-y-3">
       {#each highlights as highlight (highlight.id)}
-        <div class="bg-snow rounded-lg border border-light p-4">
+        <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4">
           {#if editingId === highlight.id}
             <!-- Edit Mode -->
             <form
@@ -192,9 +192,9 @@
                 <div class="md:col-span-3">
                   <label
                     for="edit-text-{highlight.id}"
-                    class="block text-sm font-medium text-slate mb-1"
+                    class="block text-sm font-medium text-[var(--dash-text)] mb-1"
                   >
-                    Highlight Text <span class="text-crimson">*</span>
+                    Highlight Text <span class="text-[var(--dash-error)]">*</span>
                   </label>
                   <input
                     type="text"
@@ -202,14 +202,14 @@
                     name="text"
                     bind:value={editText}
                     required
-                    class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+                    class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                   />
                 </div>
 
                 <div>
                   <label
                     for="edit-icon-{highlight.id}"
-                    class="block text-sm font-medium text-slate mb-1"
+                    class="block text-sm font-medium text-[var(--dash-text)] mb-1"
                   >
                     Icon Name
                   </label>
@@ -218,7 +218,7 @@
                     id="edit-icon-{highlight.id}"
                     name="icon_name"
                     bind:value={editIconName}
-                    class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+                    class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                   />
                 </div>
               </div>
@@ -227,14 +227,14 @@
                 <button
                   type="button"
                   onclick={cancelEdit}
-                  class="p-2 text-pearl hover:text-slate transition-colors"
+                  class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
                   aria-label="Cancel"
                 >
                   <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
                 </button>
                 <button
                   type="submit"
-                  class="p-2 text-ocean hover:text-aqua transition-colors"
+                  class="p-2 text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] transition-colors"
                   aria-label="Save"
                 >
                   <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
@@ -246,14 +246,14 @@
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-4">
                 <div
-                  class="w-10 h-10 rounded-full bg-ocean/10 flex items-center justify-center"
+                  class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center"
                 >
-                  <FontAwesomeIcon icon={faStar} class="w-5 h-5 text-ocean" />
+                  <FontAwesomeIcon icon={faStar} class="w-5 h-5 text-[var(--dash-primary)]" />
                 </div>
                 <div>
-                  <p class="text-slate">{highlight.text}</p>
+                  <p class="text-[var(--dash-text)]">{highlight.text}</p>
                   {#if highlight.icon_name}
-                    <p class="text-sm text-pearl">
+                    <p class="text-sm text-[var(--dash-text-secondary)]">
                       Icon: {highlight.icon_name}
                     </p>
                   {/if}
@@ -264,7 +264,7 @@
                 <button
                   type="button"
                   onclick={() => startEdit(highlight)}
-                  class="p-2 text-pearl hover:text-ocean transition-colors"
+                  class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
                   aria-label="Edit"
                 >
                   <FontAwesomeIcon icon={faPencil} class="w-4 h-4" />
@@ -272,7 +272,7 @@
                 <button
                   type="button"
                   onclick={() => (deleteId = highlight.id)}
-                  class="p-2 text-pearl hover:text-crimson transition-colors"
+                  class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
                   aria-label="Delete"
                 >
                   <FontAwesomeIcon icon={faTrash} class="w-4 h-4" />

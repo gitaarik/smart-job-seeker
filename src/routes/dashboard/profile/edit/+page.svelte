@@ -47,14 +47,14 @@
   <SectionHeader title="Basic Info" icon={faUser} />
 
   {#if form?.error}
-    <div class="bg-crimson/10 border border-crimson rounded-lg p-4">
-      <p class="text-crimson text-sm">{form.error}</p>
+    <div class="bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg p-4">
+      <p class="text-[var(--dash-error)] text-sm">{form.error}</p>
     </div>
   {/if}
 
   {#if showSuccess}
-    <div class="bg-emerald/10 border border-emerald rounded-lg p-4">
-      <p class="text-emerald text-sm">Profile updated successfully!</p>
+    <div class="bg-[var(--dash-success-light)] border border-[var(--dash-success)] rounded-lg p-4">
+      <p class="text-[var(--dash-success)] text-sm">Profile updated successfully!</p>
     </div>
   {/if}
 
@@ -65,16 +65,16 @@
     class="space-y-8"
   >
     <!-- Personal Information -->
-    <div class="bg-snow rounded-lg border border-light p-6">
-      <h2 class="text-lg font-semibold text-slate mb-4 flex items-center gap-2">
-        <FontAwesomeIcon icon={faUser} class="w-5 h-5 text-ocean" />
+    <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
+      <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4 flex items-center gap-2">
+        <FontAwesomeIcon icon={faUser} class="w-5 h-5 text-[var(--dash-primary)]" />
         Personal Information
       </h2>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label for="name" class="block text-sm font-medium text-slate mb-1">
-            Full Name <span class="text-crimson">*</span>
+          <label for="name" class="block text-sm font-medium text-[var(--dash-text)] mb-1">
+            Full Name <span class="text-[var(--dash-error)]">*</span>
           </label>
           <input
             type="text"
@@ -82,12 +82,12 @@
             name="name"
             value={profile?.name || ""}
             required
-            class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
           />
         </div>
 
         <div>
-          <label for="title" class="block text-sm font-medium text-slate mb-1">
+          <label for="title" class="block text-sm font-medium text-[var(--dash-text)] mb-1">
             Professional Title
           </label>
           <input
@@ -96,14 +96,14 @@
             name="title"
             value={profile?.title || ""}
             placeholder="e.g., Senior Software Engineer"
-            class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
           />
         </div>
 
         <div>
           <label
             for="subtitle"
-            class="block text-sm font-medium text-slate mb-1"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
           >
             Subtitle
           </label>
@@ -113,14 +113,14 @@
             name="subtitle"
             value={profile?.subtitle || ""}
             placeholder="e.g., Full-Stack Developer"
-            class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
           />
         </div>
 
         <div>
           <label
             for="headline"
-            class="block text-sm font-medium text-slate mb-1"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
           >
             Headline
           </label>
@@ -130,14 +130,14 @@
             name="headline"
             value={profile?.headline || ""}
             placeholder="A short tagline about yourself"
-            class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
           />
         </div>
 
         <div class="md:col-span-2">
           <label
             for="summary"
-            class="block text-sm font-medium text-slate mb-1"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
           >
             Professional Summary
           </label>
@@ -146,16 +146,16 @@
             name="summary"
             rows={4}
             placeholder="Write a brief professional summary..."
-            class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent resize-y"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
           >{profile?.summary || ""}</textarea>
         </div>
       </div>
     </div>
 
     <!-- Contact Information -->
-    <div class="bg-snow rounded-lg border border-light p-6">
-      <h2 class="text-lg font-semibold text-slate mb-4 flex items-center gap-2">
-        <FontAwesomeIcon icon={faEnvelope} class="w-5 h-5 text-ocean" />
+    <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
+      <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4 flex items-center gap-2">
+        <FontAwesomeIcon icon={faEnvelope} class="w-5 h-5 text-[var(--dash-primary)]" />
         Contact Information
       </h2>
 
@@ -163,11 +163,11 @@
         <div>
           <label
             for="email_address"
-            class="block text-sm font-medium text-slate mb-1"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
           >
             <FontAwesomeIcon
               icon={faEnvelope}
-              class="w-4 h-4 text-pearl mr-1"
+              class="w-4 h-4 text-[var(--dash-text-secondary)] mr-1"
             />
             Email Address
           </label>
@@ -177,16 +177,16 @@
             name="email_address"
             value={profile?.email_address || ""}
             placeholder="you@example.com"
-            class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
           />
         </div>
 
         <div>
           <label
             for="phone_number"
-            class="block text-sm font-medium text-slate mb-1"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
           >
-            <FontAwesomeIcon icon={faPhone} class="w-4 h-4 text-pearl mr-1" />
+            <FontAwesomeIcon icon={faPhone} class="w-4 h-4 text-[var(--dash-text-secondary)] mr-1" />
             Phone Number
           </label>
           <input
@@ -195,16 +195,16 @@
             name="phone_number"
             value={profile?.phone_number || ""}
             placeholder="+1 (555) 000-0000"
-            class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
           />
         </div>
 
         <div class="md:col-span-2">
           <label
             for="personal_website"
-            class="block text-sm font-medium text-slate mb-1"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
           >
-            <FontAwesomeIcon icon={faGlobe} class="w-4 h-4 text-pearl mr-1" />
+            <FontAwesomeIcon icon={faGlobe} class="w-4 h-4 text-[var(--dash-text-secondary)] mr-1" />
             Personal Website
           </label>
           <input
@@ -213,22 +213,22 @@
             name="personal_website"
             value={profile?.personal_website || ""}
             placeholder="https://yourwebsite.com"
-            class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
           />
         </div>
       </div>
     </div>
 
     <!-- Location -->
-    <div class="bg-snow rounded-lg border border-light p-6">
-      <h2 class="text-lg font-semibold text-slate mb-4 flex items-center gap-2">
-        <FontAwesomeIcon icon={faMapMarkerAlt} class="w-5 h-5 text-ocean" />
+    <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
+      <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4 flex items-center gap-2">
+        <FontAwesomeIcon icon={faMapMarkerAlt} class="w-5 h-5 text-[var(--dash-primary)]" />
         Location
       </h2>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <label for="city" class="block text-sm font-medium text-slate mb-1">
+          <label for="city" class="block text-sm font-medium text-[var(--dash-text)] mb-1">
             City
           </label>
           <input
@@ -237,12 +237,12 @@
             name="city"
             value={profile?.city || ""}
             placeholder="San Francisco"
-            class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
           />
         </div>
 
         <div>
-          <label for="region" class="block text-sm font-medium text-slate mb-1">
+          <label for="region" class="block text-sm font-medium text-[var(--dash-text)] mb-1">
             State / Region
           </label>
           <input
@@ -251,14 +251,14 @@
             name="region"
             value={profile?.region || ""}
             placeholder="California"
-            class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
           />
         </div>
 
         <div>
           <label
             for="country_code"
-            class="block text-sm font-medium text-slate mb-1"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
           >
             Country Code
           </label>
@@ -269,16 +269,16 @@
             value={profile?.country_code || ""}
             placeholder="US"
             maxlength={2}
-            class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent uppercase"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent uppercase"
           />
         </div>
       </div>
     </div>
 
     <!-- Social Profiles -->
-    <div class="bg-snow rounded-lg border border-light p-6">
-      <h2 class="text-lg font-semibold text-slate mb-4 flex items-center gap-2">
-        <FontAwesomeIcon icon={faGlobe} class="w-5 h-5 text-ocean" />
+    <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
+      <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4 flex items-center gap-2">
+        <FontAwesomeIcon icon={faGlobe} class="w-5 h-5 text-[var(--dash-primary)]" />
         Social Profiles
       </h2>
 
@@ -286,7 +286,7 @@
         <div>
           <label
             for="linkedin_profile"
-            class="block text-sm font-medium text-slate mb-1"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
           >
             <FontAwesomeIcon
               icon={faLinkedin}
@@ -300,16 +300,16 @@
             name="linkedin_profile"
             value={profile?.linkedin_profile || ""}
             placeholder="https://linkedin.com/in/yourprofile"
-            class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
           />
         </div>
 
         <div>
           <label
             for="github_profile"
-            class="block text-sm font-medium text-slate mb-1"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
           >
-            <FontAwesomeIcon icon={faGithub} class="w-4 h-4 text-slate mr-1" />
+            <FontAwesomeIcon icon={faGithub} class="w-4 h-4 text-[var(--dash-text)] mr-1" />
             GitHub
           </label>
           <input
@@ -318,14 +318,14 @@
             name="github_profile"
             value={profile?.github_profile || ""}
             placeholder="https://github.com/yourusername"
-            class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
           />
         </div>
 
         <div>
           <label
             for="stackoverflow_profile"
-            class="block text-sm font-medium text-slate mb-1"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
           >
             <FontAwesomeIcon
               icon={faStackOverflow}
@@ -339,14 +339,14 @@
             name="stackoverflow_profile"
             value={profile?.stackoverflow_profile || ""}
             placeholder="https://stackoverflow.com/users/123456"
-            class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
           />
         </div>
 
         <div>
           <label
             for="npm_profile"
-            class="block text-sm font-medium text-slate mb-1"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
           >
             <FontAwesomeIcon icon={faNpm} class="w-4 h-4 text-[#CB3837] mr-1" />
             npm
@@ -357,14 +357,14 @@
             name="npm_profile"
             value={profile?.npm_profile || ""}
             placeholder="https://npmjs.com/~yourusername"
-            class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
           />
         </div>
 
         <div>
           <label
             for="pypi_profile"
-            class="block text-sm font-medium text-slate mb-1"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
           >
             <FontAwesomeIcon
               icon={faPython}
@@ -378,7 +378,7 @@
             name="pypi_profile"
             value={profile?.pypi_profile || ""}
             placeholder="https://pypi.org/user/yourusername"
-            class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
           />
         </div>
       </div>
@@ -388,14 +388,14 @@
     <div class="flex justify-end gap-3">
       <a
         href="/dashboard/profile"
-        class="px-4 py-2 border border-light rounded-lg text-slate hover:bg-light/50 transition-colors"
+        class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-gray-100 transition-colors"
       >
         Cancel
       </a>
       <button
         type="submit"
         disabled={saving}
-        class="px-6 py-2 bg-ocean text-white rounded-lg hover:bg-aqua transition-colors disabled:opacity-50"
+        class="px-6 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50"
       >
         {saving ? "Saving..." : "Save Changes"}
       </button>

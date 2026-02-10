@@ -153,8 +153,8 @@
   />
 
   {#if form?.error}
-    <div class="bg-crimson/10 border border-crimson rounded-lg p-4">
-      <p class="text-crimson text-sm">{form.error}</p>
+    <div class="bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg p-4">
+      <p class="text-[var(--dash-error)] text-sm">{form.error}</p>
     </div>
   {/if}
 
@@ -164,17 +164,17 @@
       method="POST"
       action="?/create"
       use:enhance={handleAddSubmit}
-      class="bg-snow rounded-lg border border-ocean p-4"
+      class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-primary)] p-4"
     >
-      <h3 class="font-medium text-slate mb-4">Add New Side Project</h3>
+      <h3 class="font-medium text-[var(--dash-text)] mb-4">Add New Side Project</h3>
       <div class="space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label
               for="new-name"
-              class="block text-sm font-medium text-slate mb-1"
+              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
             >
-              Project Name <span class="text-crimson">*</span>
+              Project Name <span class="text-[var(--dash-error)]">*</span>
             </label>
             <input
               type="text"
@@ -183,14 +183,14 @@
               bind:value={newName}
               placeholder="e.g., Open Source Library"
               required
-              class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
             />
           </div>
 
           <div>
             <label
               for="new-url"
-              class="block text-sm font-medium text-slate mb-1"
+              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
             >
               URL
             </label>
@@ -200,14 +200,14 @@
               name="url"
               bind:value={newUrl}
               placeholder="https://github.com/user/project"
-              class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
             />
           </div>
 
           <div>
             <label
               for="new-url-label"
-              class="block text-sm font-medium text-slate mb-1"
+              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
             >
               URL Label
             </label>
@@ -217,14 +217,14 @@
               name="url_label"
               bind:value={newUrlLabel}
               placeholder="e.g., View on GitHub"
-              class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
             />
           </div>
 
           <div>
             <label
               for="new-stars"
-              class="block text-sm font-medium text-slate mb-1"
+              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
             >
               GitHub Stars
             </label>
@@ -235,14 +235,14 @@
               bind:value={newStars}
               placeholder="e.g., 150"
               min="0"
-              class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
             />
           </div>
 
           <div>
             <label
               for="new-start-date"
-              class="block text-sm font-medium text-slate mb-1"
+              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
             >
               Start Date
             </label>
@@ -251,14 +251,14 @@
               id="new-start-date"
               name="start_date"
               bind:value={newStartDate}
-              class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
             />
           </div>
 
           <div>
             <label
               for="new-end-date"
-              class="block text-sm font-medium text-slate mb-1"
+              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
             >
               End Date
             </label>
@@ -267,7 +267,7 @@
               id="new-end-date"
               name="end_date"
               bind:value={newEndDate}
-              class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
             />
           </div>
         </div>
@@ -275,7 +275,7 @@
         <div>
           <label
             for="new-summary"
-            class="block text-sm font-medium text-slate mb-1"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
           >
             Summary
           </label>
@@ -285,7 +285,7 @@
             bind:value={newSummary}
             rows={3}
             placeholder="Brief description of the project..."
-            class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent resize-y"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
           ></textarea>
         </div>
       </div>
@@ -294,13 +294,13 @@
         <button
           type="button"
           onclick={resetAddForm}
-          class="px-4 py-2 border border-light rounded-lg text-slate hover:bg-light/50 transition-colors"
+          class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-gray-100 transition-colors"
         >
           Cancel
         </button>
         <button
           type="submit"
-          class="px-4 py-2 bg-ocean text-white rounded-lg hover:bg-aqua transition-colors"
+          class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
         >
           Add Project
         </button>
@@ -320,24 +320,24 @@
   {:else}
     <div class="space-y-3">
       {#each projects as project (project.id)}
-        <div class="bg-snow rounded-lg border border-light overflow-hidden">
+        <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden">
           <!-- Header -->
           <button
             type="button"
             onclick={() => toggleExpand(project.id)}
-            class="w-full flex items-center justify-between p-4 hover:bg-light/30 transition-colors text-left"
+            class="w-full flex items-center justify-between p-4 hover:bg-gray-100 transition-colors text-left"
           >
             <div class="flex items-center gap-4">
               <div
-                class="w-10 h-10 rounded-full bg-ocean/10 flex items-center justify-center flex-shrink-0"
+                class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0"
               >
                 <FontAwesomeIcon
                   icon={faLightbulb}
-                  class="w-5 h-5 text-ocean"
+                  class="w-5 h-5 text-[var(--dash-primary)]"
                 />
               </div>
               <div>
-                <h3 class="font-medium text-slate">
+                <h3 class="font-medium text-[var(--dash-text)]">
                   {project.name}
                   {#if project.stars}
                     <span class="text-amber-500 text-sm ml-2">
@@ -346,7 +346,7 @@
                     </span>
                   {/if}
                 </h3>
-                <p class="text-sm text-pearl">
+                <p class="text-sm text-[var(--dash-text-secondary)]">
                   {
                     project.side_project_technologies.map((t) =>
                       t.name
@@ -364,7 +364,7 @@
                     e.stopPropagation();
                     startEdit(project);
                   }}
-                  class="p-2 text-pearl hover:text-ocean transition-colors"
+                  class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
                   aria-label="Edit"
                 >
                   <FontAwesomeIcon icon={faPencil} class="w-4 h-4" />
@@ -375,7 +375,7 @@
                     e.stopPropagation();
                     deleteId = project.id;
                   }}
-                  class="p-2 text-pearl hover:text-crimson transition-colors"
+                  class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
                   aria-label="Delete"
                 >
                   <FontAwesomeIcon icon={faTrash} class="w-4 h-4" />
@@ -385,14 +385,14 @@
                 icon={expandedId === project.id
                   ? faChevronUp
                   : faChevronDown}
-                class="w-4 h-4 text-pearl"
+                class="w-4 h-4 text-[var(--dash-text-secondary)]"
               />
             </div>
           </button>
 
           <!-- Expanded Content -->
           {#if expandedId === project.id}
-            <div class="border-t border-light p-4">
+            <div class="border-t border-[var(--dash-border)] p-4">
               {#if editingId === project.id}
                 <!-- Edit Mode -->
                 <form
@@ -417,9 +417,9 @@
                       <div>
                         <label
                           for="edit-name-{project.id}"
-                          class="block text-sm font-medium text-slate mb-1"
+                          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
                         >
-                          Project Name <span class="text-crimson">*</span>
+                          Project Name <span class="text-[var(--dash-error)]">*</span>
                         </label>
                         <input
                           type="text"
@@ -427,14 +427,14 @@
                           name="name"
                           bind:value={editName}
                           required
-                          class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                         />
                       </div>
 
                       <div>
                         <label
                           for="edit-url-{project.id}"
-                          class="block text-sm font-medium text-slate mb-1"
+                          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
                         >
                           URL
                         </label>
@@ -443,14 +443,14 @@
                           id="edit-url-{project.id}"
                           name="url"
                           bind:value={editUrl}
-                          class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                         />
                       </div>
 
                       <div>
                         <label
                           for="edit-url-label-{project.id}"
-                          class="block text-sm font-medium text-slate mb-1"
+                          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
                         >
                           URL Label
                         </label>
@@ -459,14 +459,14 @@
                           id="edit-url-label-{project.id}"
                           name="url_label"
                           bind:value={editUrlLabel}
-                          class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                         />
                       </div>
 
                       <div>
                         <label
                           for="edit-stars-{project.id}"
-                          class="block text-sm font-medium text-slate mb-1"
+                          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
                         >
                           GitHub Stars
                         </label>
@@ -476,14 +476,14 @@
                           name="stars"
                           bind:value={editStars}
                           min="0"
-                          class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                         />
                       </div>
 
                       <div>
                         <label
                           for="edit-start-date-{project.id}"
-                          class="block text-sm font-medium text-slate mb-1"
+                          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
                         >
                           Start Date
                         </label>
@@ -492,14 +492,14 @@
                           id="edit-start-date-{project.id}"
                           name="start_date"
                           bind:value={editStartDate}
-                          class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                         />
                       </div>
 
                       <div>
                         <label
                           for="edit-end-date-{project.id}"
-                          class="block text-sm font-medium text-slate mb-1"
+                          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
                         >
                           End Date
                         </label>
@@ -508,7 +508,7 @@
                           id="edit-end-date-{project.id}"
                           name="end_date"
                           bind:value={editEndDate}
-                          class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                         />
                       </div>
                     </div>
@@ -516,7 +516,7 @@
                     <div>
                       <label
                         for="edit-summary-{project.id}"
-                        class="block text-sm font-medium text-slate mb-1"
+                        class="block text-sm font-medium text-[var(--dash-text)] mb-1"
                       >
                         Summary
                       </label>
@@ -525,19 +525,19 @@
                         name="summary"
                         bind:value={editSummary}
                         rows={3}
-                        class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent resize-y"
+                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
                       ></textarea>
                     </div>
 
                     <!-- Technologies -->
                     <div>
                       <div class="flex items-center justify-between mb-2">
-                        <label class="block text-sm font-medium text-slate"
+                        <label class="block text-sm font-medium text-[var(--dash-text)]"
                         >Technologies</label>
                         <button
                           type="button"
                           onclick={addTechnology}
-                          class="text-ocean hover:text-aqua text-sm flex items-center gap-1"
+                          class="text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] text-sm flex items-center gap-1"
                         >
                           <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
                           Add
@@ -550,12 +550,12 @@
                               type="text"
                               bind:value={editTechnologies[index]}
                               placeholder="Technology name"
-                              class="flex-1 px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+                              class="flex-1 px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                             />
                             <button
                               type="button"
                               onclick={() => removeTechnology(index)}
-                              class="p-2 text-pearl hover:text-crimson transition-colors"
+                              class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
                               aria-label="Remove"
                             >
                               <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
@@ -568,12 +568,12 @@
                     <!-- Achievements -->
                     <div>
                       <div class="flex items-center justify-between mb-2">
-                        <label class="block text-sm font-medium text-slate"
+                        <label class="block text-sm font-medium text-[var(--dash-text)]"
                         >Achievements</label>
                         <button
                           type="button"
                           onclick={addAchievement}
-                          class="text-ocean hover:text-aqua text-sm flex items-center gap-1"
+                          class="text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] text-sm flex items-center gap-1"
                         >
                           <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
                           Add
@@ -586,12 +586,12 @@
                               type="text"
                               bind:value={editAchievements[index]}
                               placeholder="Achievement description"
-                              class="flex-1 px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+                              class="flex-1 px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                             />
                             <button
                               type="button"
                               onclick={() => removeAchievement(index)}
-                              class="p-2 text-pearl hover:text-crimson transition-colors"
+                              class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
                               aria-label="Remove"
                             >
                               <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
@@ -606,13 +606,13 @@
                     <button
                       type="button"
                       onclick={cancelEdit}
-                      class="px-4 py-2 border border-light rounded-lg text-slate hover:bg-light/50 transition-colors"
+                      class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-gray-100 transition-colors"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      class="px-4 py-2 bg-ocean text-white rounded-lg hover:bg-aqua transition-colors"
+                      class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
                     >
                       Save Changes
                     </button>
@@ -622,7 +622,7 @@
                 <!-- View Mode -->
                 <div class="space-y-4 text-sm">
                   {#if project.summary}
-                    <p class="text-slate">{project.summary}</p>
+                    <p class="text-[var(--dash-text)]">{project.summary}</p>
                   {/if}
 
                   {#if project.url}
@@ -631,7 +631,7 @@
                         href={project.url}
                         target="_blank"
                         rel="noopener"
-                        class="text-ocean hover:text-aqua"
+                        class="text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)]"
                       >
                         {project.url_label || project.url}
                       </a>
@@ -640,8 +640,8 @@
 
                   {#if project.start_date || project.end_date}
                     <p>
-                      <span class="text-pearl">Period:</span>
-                      <span class="text-slate">
+                      <span class="text-[var(--dash-text-secondary)]">Period:</span>
+                      <span class="text-[var(--dash-text)]">
                         {formatDisplayDate(project.start_date) || "N/A"} - {
                           formatDisplayDate(project.end_date) ||
                             "Present"
@@ -652,8 +652,8 @@
 
                   {#if project.side_project_achievements.length > 0}
                     <div>
-                      <p class="text-pearl mb-1">Achievements:</p>
-                      <ul class="list-disc list-inside text-slate space-y-1">
+                      <p class="text-[var(--dash-text-secondary)] mb-1">Achievements:</p>
+                      <ul class="list-disc list-inside text-[var(--dash-text)] space-y-1">
                         {#each project.side_project_achievements as achievement}
                           <li>{achievement.description}</li>
                         {/each}

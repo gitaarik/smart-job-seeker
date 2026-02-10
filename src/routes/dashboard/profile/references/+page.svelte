@@ -101,8 +101,8 @@
   />
 
   {#if form?.error}
-    <div class="bg-crimson/10 border border-crimson rounded-lg p-4">
-      <p class="text-crimson text-sm">{form.error}</p>
+    <div class="bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg p-4">
+      <p class="text-[var(--dash-error)] text-sm">{form.error}</p>
     </div>
   {/if}
 
@@ -112,17 +112,17 @@
       method="POST"
       action="?/create"
       use:enhance={handleAddSubmit}
-      class="bg-snow rounded-lg border border-ocean p-4"
+      class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-primary)] p-4"
     >
-      <h3 class="font-medium text-slate mb-4">Add New Reference</h3>
+      <h3 class="font-medium text-[var(--dash-text)] mb-4">Add New Reference</h3>
       <div class="space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label
               for="new-author"
-              class="block text-sm font-medium text-slate mb-1"
+              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
             >
-              Author Name <span class="text-crimson">*</span>
+              Author Name <span class="text-[var(--dash-error)]">*</span>
             </label>
             <input
               type="text"
@@ -131,14 +131,14 @@
               bind:value={newAuthor}
               placeholder="e.g., John Smith"
               required
-              class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
             />
           </div>
 
           <div>
             <label
               for="new-position"
-              class="block text-sm font-medium text-slate mb-1"
+              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
             >
               Position
             </label>
@@ -148,7 +148,7 @@
               name="author_position"
               bind:value={newAuthorPosition}
               placeholder="e.g., CTO at Company Inc."
-              class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
             />
           </div>
         </div>
@@ -156,7 +156,7 @@
         <div>
           <label
             for="new-text"
-            class="block text-sm font-medium text-slate mb-1"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
           >
             Reference Text
           </label>
@@ -166,7 +166,7 @@
             bind:value={newText}
             rows={4}
             placeholder="Write the reference text..."
-            class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent resize-y"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
           ></textarea>
         </div>
       </div>
@@ -175,13 +175,13 @@
         <button
           type="button"
           onclick={resetAddForm}
-          class="px-4 py-2 border border-light rounded-lg text-slate hover:bg-light/50 transition-colors"
+          class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-gray-100 transition-colors"
         >
           Cancel
         </button>
         <button
           type="submit"
-          class="px-4 py-2 bg-ocean text-white rounded-lg hover:bg-aqua transition-colors"
+          class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
         >
           Add Reference
         </button>
@@ -201,7 +201,7 @@
   {:else}
     <div class="space-y-4">
       {#each references as ref (ref.id)}
-        <div class="bg-snow rounded-lg border border-light p-4">
+        <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4">
           {#if editingId === ref.id}
             <!-- Edit Mode -->
             <form
@@ -215,9 +215,9 @@
                   <div>
                     <label
                       for="edit-author-{ref.id}"
-                      class="block text-sm font-medium text-slate mb-1"
+                      class="block text-sm font-medium text-[var(--dash-text)] mb-1"
                     >
-                      Author Name <span class="text-crimson">*</span>
+                      Author Name <span class="text-[var(--dash-error)]">*</span>
                     </label>
                     <input
                       type="text"
@@ -225,14 +225,14 @@
                       name="author"
                       bind:value={editAuthor}
                       required
-                      class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+                      class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                     />
                   </div>
 
                   <div>
                     <label
                       for="edit-position-{ref.id}"
-                      class="block text-sm font-medium text-slate mb-1"
+                      class="block text-sm font-medium text-[var(--dash-text)] mb-1"
                     >
                       Position
                     </label>
@@ -241,7 +241,7 @@
                       id="edit-position-{ref.id}"
                       name="author_position"
                       bind:value={editAuthorPosition}
-                      class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+                      class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                     />
                   </div>
                 </div>
@@ -249,7 +249,7 @@
                 <div>
                   <label
                     for="edit-text-{ref.id}"
-                    class="block text-sm font-medium text-slate mb-1"
+                    class="block text-sm font-medium text-[var(--dash-text)] mb-1"
                   >
                     Reference Text
                   </label>
@@ -258,7 +258,7 @@
                     name="text"
                     bind:value={editText}
                     rows={4}
-                    class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent resize-y"
+                    class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
                   ></textarea>
                 </div>
               </div>
@@ -267,14 +267,14 @@
                 <button
                   type="button"
                   onclick={cancelEdit}
-                  class="p-2 text-pearl hover:text-slate transition-colors"
+                  class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
                   aria-label="Cancel"
                 >
                   <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
                 </button>
                 <button
                   type="submit"
-                  class="p-2 text-ocean hover:text-aqua transition-colors"
+                  class="p-2 text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] transition-colors"
                   aria-label="Save"
                 >
                   <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
@@ -286,20 +286,20 @@
             <div class="flex items-start justify-between">
               <div class="flex items-start gap-4">
                 <div
-                  class="w-10 h-10 rounded-full bg-ocean/10 flex items-center justify-center flex-shrink-0 mt-1"
+                  class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 mt-1"
                 >
                   <FontAwesomeIcon
                     icon={faQuoteLeft}
-                    class="w-5 h-5 text-ocean"
+                    class="w-5 h-5 text-[var(--dash-primary)]"
                   />
                 </div>
                 <div>
-                  <h3 class="font-medium text-slate">{ref.author}</h3>
+                  <h3 class="font-medium text-[var(--dash-text)]">{ref.author}</h3>
                   {#if ref.author_position}
-                    <p class="text-sm text-pearl">{ref.author_position}</p>
+                    <p class="text-sm text-[var(--dash-text-secondary)]">{ref.author_position}</p>
                   {/if}
                   {#if ref.text}
-                    <p class="text-slate mt-2 italic">"{ref.text}"</p>
+                    <p class="text-[var(--dash-text)] mt-2 italic">"{ref.text}"</p>
                   {/if}
                 </div>
               </div>
@@ -308,7 +308,7 @@
                 <button
                   type="button"
                   onclick={() => startEdit(ref)}
-                  class="p-2 text-pearl hover:text-ocean transition-colors"
+                  class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
                   aria-label="Edit"
                 >
                   <FontAwesomeIcon icon={faPencil} class="w-4 h-4" />
@@ -316,7 +316,7 @@
                 <button
                   type="button"
                   onclick={() => (deleteId = ref.id)}
-                  class="p-2 text-pearl hover:text-crimson transition-colors"
+                  class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
                   aria-label="Delete"
                 >
                   <FontAwesomeIcon icon={faTrash} class="w-4 h-4" />

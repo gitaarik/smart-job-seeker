@@ -68,8 +68,8 @@
   />
 
   {#if form?.error}
-    <div class="bg-crimson/10 border border-crimson rounded-lg p-4">
-      <p class="text-crimson text-sm">{form.error}</p>
+    <div class="bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg p-4">
+      <p class="text-[var(--dash-error)] text-sm">{form.error}</p>
     </div>
   {/if}
 
@@ -78,17 +78,17 @@
     <form
       method="POST"
       action="?/create"
-      class="bg-snow rounded-lg border border-ocean p-4"
+      class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-primary)] p-4"
     >
-      <h3 class="font-medium text-slate mb-4">Add New Work Experience</h3>
+      <h3 class="font-medium text-[var(--dash-text)] mb-4">Add New Work Experience</h3>
       <div class="space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label
               for="new-name"
-              class="block text-sm font-medium text-slate mb-1"
+              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
             >
-              Company Name <span class="text-crimson">*</span>
+              Company Name <span class="text-[var(--dash-error)]">*</span>
             </label>
             <input
               type="text"
@@ -97,16 +97,16 @@
               bind:value={newName}
               placeholder="e.g., Acme Corp"
               required
-              class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
             />
           </div>
 
           <div>
             <label
               for="new-position"
-              class="block text-sm font-medium text-slate mb-1"
+              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
             >
-              Position <span class="text-crimson">*</span>
+              Position <span class="text-[var(--dash-error)]">*</span>
             </label>
             <input
               type="text"
@@ -115,14 +115,14 @@
               bind:value={newPosition}
               placeholder="e.g., Senior Software Engineer"
               required
-              class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
             />
           </div>
 
           <div>
             <label
               for="new-location"
-              class="block text-sm font-medium text-slate mb-1"
+              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
             >
               Location
             </label>
@@ -132,14 +132,14 @@
               name="location"
               bind:value={newLocation}
               placeholder="e.g., San Francisco, CA"
-              class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
             />
           </div>
 
           <div>
             <label
               for="new-website"
-              class="block text-sm font-medium text-slate mb-1"
+              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
             >
               Website
             </label>
@@ -149,14 +149,14 @@
               name="website"
               bind:value={newWebsite}
               placeholder="https://company.com"
-              class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
             />
           </div>
 
           <div>
             <label
               for="new-start-date"
-              class="block text-sm font-medium text-slate mb-1"
+              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
             >
               Start Date
             </label>
@@ -165,14 +165,14 @@
               id="new-start-date"
               name="start_date"
               bind:value={newStartDate}
-              class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
             />
           </div>
 
           <div>
             <label
               for="new-end-date"
-              class="block text-sm font-medium text-slate mb-1"
+              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
             >
               End Date
             </label>
@@ -181,7 +181,7 @@
               id="new-end-date"
               name="end_date"
               bind:value={newEndDate}
-              class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
             />
           </div>
         </div>
@@ -189,7 +189,7 @@
         <div>
           <label
             for="new-description"
-            class="block text-sm font-medium text-slate mb-1"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
           >
             Description
           </label>
@@ -199,14 +199,14 @@
             bind:value={newDescription}
             rows={2}
             placeholder="Brief description of the company..."
-            class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent resize-y"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
           ></textarea>
         </div>
 
         <div>
           <label
             for="new-summary"
-            class="block text-sm font-medium text-slate mb-1"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
           >
             Summary
           </label>
@@ -216,7 +216,7 @@
             bind:value={newSummary}
             rows={3}
             placeholder="Summary of your role and responsibilities..."
-            class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent resize-y"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
           ></textarea>
         </div>
       </div>
@@ -225,13 +225,13 @@
         <button
           type="button"
           onclick={resetAddForm}
-          class="px-4 py-2 border border-light rounded-lg text-slate hover:bg-light/50 transition-colors"
+          class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-gray-100 transition-colors"
         >
           Cancel
         </button>
         <button
           type="submit"
-          class="px-4 py-2 bg-ocean text-white rounded-lg hover:bg-aqua transition-colors"
+          class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
         >
           Create & Edit Details
         </button>
@@ -251,33 +251,33 @@
   {:else}
     <div class="space-y-3">
       {#each experiences as exp (exp.id)}
-        <div class="bg-snow rounded-lg border border-light overflow-hidden">
+        <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden">
           <!-- Header -->
           <div
             role="button"
             tabindex="0"
             onclick={() => toggleExpand(exp.id)}
             onkeydown={(e) => e.key === "Enter" && toggleExpand(exp.id)}
-            class="w-full flex items-center justify-between p-4 hover:bg-light/30 transition-colors text-left cursor-pointer"
+            class="w-full flex items-center justify-between p-4 hover:bg-gray-100 transition-colors text-left cursor-pointer"
           >
             <div class="flex items-center gap-4">
               <div
-                class="w-12 h-12 rounded-lg bg-ocean/10 flex items-center justify-center flex-shrink-0"
+                class="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0"
               >
                 <FontAwesomeIcon
                   icon={faBriefcase}
-                  class="w-6 h-6 text-ocean"
+                  class="w-6 h-6 text-[var(--dash-primary)]"
                 />
               </div>
               <div>
-                <h3 class="font-medium text-slate">{exp.position}</h3>
-                <p class="text-sm text-pearl">
+                <h3 class="font-medium text-[var(--dash-text)]">{exp.position}</h3>
+                <p class="text-sm text-[var(--dash-text-secondary)]">
                   {exp.name}
                   {#if exp.location}
                     <span class="mx-1">•</span> {exp.location}
                   {/if}
                 </p>
-                <p class="text-sm text-pearl">
+                <p class="text-sm text-[var(--dash-text-secondary)]">
                   {formatDisplayDate(exp.start_date) || "N/A"} - {
                     formatDisplayDate(exp.end_date) || "Present"
                   }
@@ -289,7 +289,7 @@
               <a
                 href="/dashboard/profile/work-experience/{exp.id}"
                 onclick={(e) => e.stopPropagation()}
-                class="p-2 text-pearl hover:text-ocean transition-colors"
+                class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
                 aria-label="Edit"
               >
                 <FontAwesomeIcon icon={faPencil} class="w-4 h-4" />
@@ -300,23 +300,23 @@
                   e.stopPropagation();
                   deleteId = exp.id;
                 }}
-                class="p-2 text-pearl hover:text-crimson transition-colors"
+                class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
                 aria-label="Delete"
               >
                 <FontAwesomeIcon icon={faTrash} class="w-4 h-4" />
               </button>
               <FontAwesomeIcon
                 icon={expandedId === exp.id ? faChevronUp : faChevronDown}
-                class="w-4 h-4 text-pearl"
+                class="w-4 h-4 text-[var(--dash-text-secondary)]"
               />
             </div>
           </div>
 
           <!-- Expanded Content -->
           {#if expandedId === exp.id}
-            <div class="border-t border-light p-4 space-y-4">
+            <div class="border-t border-[var(--dash-border)] p-4 space-y-4">
               {#if exp.summary}
-                <p class="text-slate text-sm">{exp.summary}</p>
+                <p class="text-[var(--dash-text)] text-sm">{exp.summary}</p>
               {/if}
 
               {#if exp.website}
@@ -325,7 +325,7 @@
                     href={exp.website}
                     target="_blank"
                     rel="noopener"
-                    class="text-ocean hover:text-aqua flex items-center gap-1"
+                    class="text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] flex items-center gap-1"
                   >
                     {exp.website}
                     <FontAwesomeIcon icon={faExternalLink} class="w-3 h-3" />
@@ -335,11 +335,11 @@
 
               {#if exp.work_experience_technologies.length > 0}
                 <div>
-                  <p class="text-pearl text-sm mb-2">Technologies:</p>
+                  <p class="text-[var(--dash-text-secondary)] text-sm mb-2">Technologies:</p>
                   <div class="flex flex-wrap gap-2">
                     {#each exp.work_experience_technologies as tech}
                       <span
-                        class="px-2 py-1 bg-ice text-slate text-sm rounded"
+                        class="px-2 py-1 bg-gray-100 text-[var(--dash-text)] text-sm rounded"
                       >{tech.name}</span>
                     {/each}
                   </div>
@@ -348,9 +348,9 @@
 
               {#if exp.work_experience_achievements.length > 0}
                 <div>
-                  <p class="text-pearl text-sm mb-2">Achievements:</p>
+                  <p class="text-[var(--dash-text-secondary)] text-sm mb-2">Achievements:</p>
                   <ul
-                    class="list-disc list-inside text-slate text-sm space-y-1"
+                    class="list-disc list-inside text-[var(--dash-text)] text-sm space-y-1"
                   >
                     {#each exp.work_experience_achievements as achievement}
                       <li>
@@ -369,7 +369,7 @@
 
               <a
                 href="/dashboard/profile/work-experience/{exp.id}"
-                class="inline-flex items-center gap-2 text-ocean hover:text-aqua text-sm"
+                class="inline-flex items-center gap-2 text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] text-sm"
               >
                 <FontAwesomeIcon icon={faPencil} class="w-3 h-3" />
                 Edit full details

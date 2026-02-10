@@ -16,20 +16,20 @@
 </script>
 
 <div
-  class="flex flex-col items-center justify-center py-12 px-6 border-2 border-dashed border-light rounded-lg"
+  class="flex flex-col items-center justify-center py-12 px-6 border-2 border-dashed border-[var(--dash-border)] rounded-lg"
 >
   <div
-    class="w-16 h-16 rounded-full bg-ocean/10 flex items-center justify-center mb-4"
+    class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4"
   >
-    <FontAwesomeIcon {icon} class="w-8 h-8 text-ocean/50" />
+    <FontAwesomeIcon {icon} class="w-8 h-8 text-[var(--dash-text-muted)]" />
   </div>
-  <h3 class="text-lg font-medium text-slate mb-2">{title}</h3>
-  <p class="text-pearl text-center max-w-sm mb-6">{description}</p>
+  <h3 class="text-lg font-medium text-[var(--dash-text)] mb-2">{title}</h3>
+  <p class="text-[var(--dash-text-secondary)] text-center max-w-sm mb-6">{description}</p>
   {#if onAction}
     <button
       type="button"
       onclick={onAction}
-      class="flex items-center gap-2 px-4 py-2 bg-ocean text-white rounded-lg hover:bg-aqua transition-colors"
+      class="flex items-center gap-2 px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
     >
       <FontAwesomeIcon icon={faPlus} class="w-4 h-4" />
       {actionLabel}

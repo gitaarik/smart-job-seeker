@@ -29,19 +29,19 @@
 <div class="user-menu relative">
   <button
     onclick={() => (isOpen = !isOpen)}
-    class="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-glass-light transition-colors"
+    class="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-white/10 transition-colors"
   >
     <div
-      class="w-8 h-8 rounded-full bg-ocean flex items-center justify-center"
+      class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"
     >
-      <span class="text-pearl text-sm font-medium">
+      <span class="text-[var(--dash-chrome-text)] text-sm font-medium">
         {initial}
       </span>
     </div>
     <FontAwesomeIcon
       icon={faChevronDown}
       class="
-        w-3 h-3 text-pearl transition-transform {isOpen
+        w-3 h-3 text-[var(--dash-chrome-text)] transition-transform {isOpen
         ? 'rotate-180'
         : ''}
       "
@@ -50,19 +50,19 @@
 
   {#if isOpen}
     <div
-      class="absolute right-0 mt-2 w-56 bg-snow rounded-lg shadow-lg border border-light overflow-hidden z-50"
+      class="absolute right-0 mt-2 w-56 bg-[var(--dash-card)] rounded-lg shadow-lg border border-[var(--dash-border)] overflow-hidden z-50"
     >
-      <div class="px-4 py-3 border-b border-light">
-        <p class="text-sm font-medium text-slate truncate">
+      <div class="px-4 py-3 border-b border-[var(--dash-border)]">
+        <p class="text-sm font-medium text-[var(--dash-text)] truncate">
           {user.name || "User"}
         </p>
-        <p class="text-xs text-pearl truncate">{user.email}</p>
+        <p class="text-xs text-[var(--dash-text-secondary)] truncate">{user.email}</p>
       </div>
 
       <div class="py-2">
         <a
           href="/dashboard/settings"
-          class="flex items-center gap-2 px-4 py-2 text-sm text-slate hover:bg-ice transition-colors"
+          class="flex items-center gap-2 px-4 py-2 text-sm text-[var(--dash-text)] hover:bg-gray-100 transition-colors"
         >
           <FontAwesomeIcon icon={faCog} class="w-4 h-4" />
           <span>Settings</span>
@@ -70,7 +70,7 @@
 
         <a
           href="/logout"
-          class="flex items-center gap-2 px-4 py-2 text-sm text-crimson hover:bg-ice transition-colors"
+          class="flex items-center gap-2 px-4 py-2 text-sm text-[var(--dash-error)] hover:bg-gray-100 transition-colors"
         >
           <FontAwesomeIcon icon={faSignOutAlt} class="w-4 h-4" />
           <span>Sign out</span>

@@ -90,7 +90,7 @@
   <div class="flex items-center gap-4">
     <a
       href="/dashboard"
-      class="flex items-center gap-2 text-pearl hover:text-ocean transition-colors"
+      class="flex items-center gap-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
     >
       <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />
       <span class="text-sm">Back to Dashboard</span>
@@ -98,31 +98,31 @@
   </div>
 
   <div>
-    <h1 class="text-2xl font-bold text-slate">Edit Profile</h1>
-    <p class="text-pearl mt-1">
+    <h1 class="text-2xl font-bold text-[var(--dash-text)]">Edit Profile</h1>
+    <p class="text-[var(--dash-text-secondary)] mt-1">
       Manage your professional profile information across all sections.
     </p>
   </div>
 
   <!-- Profile summary -->
   {#if profile}
-    <div class="bg-snow rounded-lg border border-light p-6">
+    <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
       <div class="flex items-center gap-4">
         <div
-          class="w-14 h-14 rounded-full bg-ocean flex items-center justify-center shrink-0"
+          class="w-14 h-14 rounded-full bg-[var(--dash-primary)] flex items-center justify-center shrink-0"
         >
           <FontAwesomeIcon icon={faUser} class="w-7 h-7 text-white" />
         </div>
         <div class="flex-1">
-          <h2 class="text-xl font-semibold text-slate">
+          <h2 class="text-xl font-semibold text-[var(--dash-text)]">
             {profile.name || "Unnamed Profile"}
           </h2>
-          <p class="text-pearl">{profile.title || "No title set"}</p>
+          <p class="text-[var(--dash-text-secondary)]">{profile.title || "No title set"}</p>
         </div>
         <a
           href="/p/{profile.slug}/portfolio"
           target="_blank"
-          class="text-ocean hover:text-aqua transition-colors text-sm"
+          class="text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] transition-colors text-sm"
         >
           View public profile
         </a>
@@ -135,31 +135,31 @@
     {#each sections as section}
       <a
         href={section.href}
-        class="group bg-snow rounded-lg border border-light p-5 hover:border-ocean hover:shadow-md transition-all"
+        class="group bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-5 hover:border-[var(--dash-primary)] hover:shadow-md transition-all"
       >
         <div class="flex items-start gap-4">
           <div
-            class="w-12 h-12 rounded-lg bg-ice flex items-center justify-center shrink-0 group-hover:bg-ocean/10 transition-colors"
+            class="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 group-hover:bg-gray-100 transition-colors"
           >
             <FontAwesomeIcon
               icon={section.icon}
-              class="w-6 h-6 text-ocean"
+              class="w-6 h-6 text-[var(--dash-primary)]"
             />
           </div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center justify-between">
               <h3
-                class="font-semibold text-slate group-hover:text-ocean transition-colors"
+                class="font-semibold text-[var(--dash-text)] group-hover:text-[var(--dash-primary)] transition-colors"
               >
                 {section.title}
               </h3>
               <FontAwesomeIcon
                 icon={faArrowRight}
-                class="w-4 h-4 text-pearl group-hover:text-ocean transition-colors"
+                class="w-4 h-4 text-[var(--dash-text-secondary)] group-hover:text-[var(--dash-primary)] transition-colors"
               />
             </div>
-            <p class="text-sm text-pearl mt-1">{section.description}</p>
-            <p class="text-sm font-medium text-ocean mt-2">
+            <p class="text-sm text-[var(--dash-text-secondary)] mt-1">{section.description}</p>
+            <p class="text-sm font-medium text-[var(--dash-primary)] mt-2">
               {section.count}
               {section.countLabel}
             </p>

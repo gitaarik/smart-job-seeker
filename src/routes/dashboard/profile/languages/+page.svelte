@@ -114,8 +114,8 @@
   />
 
   {#if form?.error}
-    <div class="bg-crimson/10 border border-crimson rounded-lg p-4">
-      <p class="text-crimson text-sm">{form.error}</p>
+    <div class="bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg p-4">
+      <p class="text-[var(--dash-error)] text-sm">{form.error}</p>
     </div>
   {/if}
 
@@ -125,16 +125,16 @@
       method="POST"
       action="?/create"
       use:enhance={handleAddSubmit}
-      class="bg-snow rounded-lg border border-ocean p-4"
+      class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-primary)] p-4"
     >
-      <h3 class="font-medium text-slate mb-4">Add New Language</h3>
+      <h3 class="font-medium text-[var(--dash-text)] mb-4">Add New Language</h3>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label
             for="new-name"
-            class="block text-sm font-medium text-slate mb-1"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
           >
-            Language <span class="text-crimson">*</span>
+            Language <span class="text-[var(--dash-error)]">*</span>
           </label>
           <input
             type="text"
@@ -143,14 +143,14 @@
             bind:value={newName}
             placeholder="e.g., English"
             required
-            class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
           />
         </div>
 
         <div>
           <label
             for="new-code"
-            class="block text-sm font-medium text-slate mb-1"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
           >
             Code
           </label>
@@ -161,14 +161,14 @@
             bind:value={newLanguageCode}
             placeholder="e.g., en"
             maxlength={10}
-            class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
           />
         </div>
 
         <div>
           <label
             for="new-proficiency"
-            class="block text-sm font-medium text-slate mb-1"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
           >
             Proficiency
           </label>
@@ -176,7 +176,7 @@
             id="new-proficiency"
             name="proficiency"
             bind:value={newProficiency}
-            class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
           >
             <option value="">Select proficiency</option>
             {#each proficiencyOptions as option}
@@ -190,13 +190,13 @@
         <button
           type="button"
           onclick={resetAddForm}
-          class="px-4 py-2 border border-light rounded-lg text-slate hover:bg-light/50 transition-colors"
+          class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-gray-100 transition-colors"
         >
           Cancel
         </button>
         <button
           type="submit"
-          class="px-4 py-2 bg-ocean text-white rounded-lg hover:bg-aqua transition-colors"
+          class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
         >
           Add Language
         </button>
@@ -216,7 +216,7 @@
   {:else}
     <div class="space-y-3">
       {#each languages as lang (lang.id)}
-        <div class="bg-snow rounded-lg border border-light p-4">
+        <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4">
           {#if editingId === lang.id}
             <!-- Edit Mode -->
             <form
@@ -229,9 +229,9 @@
                 <div>
                   <label
                     for="edit-name-{lang.id}"
-                    class="block text-sm font-medium text-slate mb-1"
+                    class="block text-sm font-medium text-[var(--dash-text)] mb-1"
                   >
-                    Language <span class="text-crimson">*</span>
+                    Language <span class="text-[var(--dash-error)]">*</span>
                   </label>
                   <input
                     type="text"
@@ -239,14 +239,14 @@
                     name="name"
                     bind:value={editName}
                     required
-                    class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+                    class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                   />
                 </div>
 
                 <div>
                   <label
                     for="edit-code-{lang.id}"
-                    class="block text-sm font-medium text-slate mb-1"
+                    class="block text-sm font-medium text-[var(--dash-text)] mb-1"
                   >
                     Code
                   </label>
@@ -256,14 +256,14 @@
                     name="language_code"
                     bind:value={editLanguageCode}
                     maxlength={10}
-                    class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+                    class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                   />
                 </div>
 
                 <div>
                   <label
                     for="edit-proficiency-{lang.id}"
-                    class="block text-sm font-medium text-slate mb-1"
+                    class="block text-sm font-medium text-[var(--dash-text)] mb-1"
                   >
                     Proficiency
                   </label>
@@ -271,7 +271,7 @@
                     id="edit-proficiency-{lang.id}"
                     name="proficiency"
                     bind:value={editProficiency}
-                    class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+                    class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                   >
                     <option value="">Select proficiency</option>
                     {#each proficiencyOptions as option}
@@ -285,14 +285,14 @@
                 <button
                   type="button"
                   onclick={cancelEdit}
-                  class="p-2 text-pearl hover:text-slate transition-colors"
+                  class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
                   aria-label="Cancel"
                 >
                   <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
                 </button>
                 <button
                   type="submit"
-                  class="p-2 text-ocean hover:text-aqua transition-colors"
+                  class="p-2 text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] transition-colors"
                   aria-label="Save"
                 >
                   <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
@@ -304,19 +304,19 @@
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-4">
                 <div
-                  class="w-10 h-10 rounded-full bg-ocean/10 flex items-center justify-center"
+                  class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center"
                 >
-                  <FontAwesomeIcon icon={faGlobe} class="w-5 h-5 text-ocean" />
+                  <FontAwesomeIcon icon={faGlobe} class="w-5 h-5 text-[var(--dash-primary)]" />
                 </div>
                 <div>
-                  <h3 class="font-medium text-slate">
+                  <h3 class="font-medium text-[var(--dash-text)]">
                     {lang.name}
                     {#if lang.language_code}
-                      <span class="text-pearl text-sm"
+                      <span class="text-[var(--dash-text-secondary)] text-sm"
                       >({lang.language_code})</span>
                     {/if}
                   </h3>
-                  <p class="text-sm text-pearl">
+                  <p class="text-sm text-[var(--dash-text-secondary)]">
                     {getProficiencyLabel(lang.proficiency)}
                   </p>
                 </div>
@@ -326,7 +326,7 @@
                 <button
                   type="button"
                   onclick={() => startEdit(lang)}
-                  class="p-2 text-pearl hover:text-ocean transition-colors"
+                  class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
                   aria-label="Edit"
                 >
                   <FontAwesomeIcon icon={faPencil} class="w-4 h-4" />
@@ -334,7 +334,7 @@
                 <button
                   type="button"
                   onclick={() => (deleteId = lang.id)}
-                  class="p-2 text-pearl hover:text-crimson transition-colors"
+                  class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
                   aria-label="Delete"
                 >
                   <FontAwesomeIcon icon={faTrash} class="w-4 h-4" />

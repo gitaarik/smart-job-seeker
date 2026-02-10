@@ -39,16 +39,16 @@
 <div class="profile-switcher relative">
   <button
     onclick={() => (isOpen = !isOpen)}
-    class="flex items-center gap-2 px-3 py-2 rounded-lg bg-glass-light hover:bg-glass transition-colors"
+    class="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
   >
-    <FontAwesomeIcon icon={faUser} class="w-4 h-4 text-pearl" />
-    <span class="text-pearl text-sm font-medium max-w-32 truncate">
+    <FontAwesomeIcon icon={faUser} class="w-4 h-4 text-[var(--dash-chrome-text)]" />
+    <span class="text-[var(--dash-chrome-text)] text-sm font-medium max-w-32 truncate">
       {selectedProfile.name || "Unnamed Profile"}
     </span>
     <FontAwesomeIcon
       icon={faChevronDown}
       class="
-        w-3 h-3 text-pearl transition-transform {isOpen
+        w-3 h-3 text-[var(--dash-chrome-text)] transition-transform {isOpen
         ? 'rotate-180'
         : ''}
       "
@@ -57,10 +57,10 @@
 
   {#if isOpen}
     <div
-      class="absolute right-0 mt-2 w-64 bg-snow rounded-lg shadow-lg border border-light overflow-hidden z-50"
+      class="absolute right-0 mt-2 w-64 bg-[var(--dash-card)] rounded-lg shadow-lg border border-[var(--dash-border)] overflow-hidden z-50"
     >
       <div class="py-2">
-        <div class="px-3 py-1 text-xs font-semibold text-pearl uppercase">
+        <div class="px-3 py-1 text-xs font-semibold text-[var(--dash-text-secondary)] uppercase">
           Your Profiles
         </div>
 
@@ -68,25 +68,25 @@
           <button
             onclick={() => selectProfile(profile)}
             class="
-              w-full px-3 py-2 text-left hover:bg-ice transition-colors flex items-center gap-2 {profile.id ===
+              w-full px-3 py-2 text-left hover:bg-gray-100 transition-colors flex items-center gap-2 {profile.id ===
               selectedProfile.id
-              ? 'bg-ice'
+              ? 'bg-gray-100'
               : ''}
             "
           >
-            <span class="flex-1 truncate text-slate">{
+            <span class="flex-1 truncate text-[var(--dash-text)]">{
               profile.name || "Unnamed Profile"
             }</span>
             {#if profile.id === selectedProfile.id}
-              <FontAwesomeIcon icon={faCheck} class="w-3 h-3 text-teal" />
+              <FontAwesomeIcon icon={faCheck} class="w-3 h-3 text-[var(--dash-primary)]" />
             {/if}
           </button>
         {/each}
 
-        <div class="border-t border-light mt-2 pt-2">
+        <div class="border-t border-[var(--dash-border)] mt-2 pt-2">
           <a
             href="/dashboard/profile/create"
-            class="w-full px-3 py-2 text-left hover:bg-ice transition-colors flex items-center gap-2 text-teal"
+            class="w-full px-3 py-2 text-left hover:bg-gray-100 transition-colors flex items-center gap-2 text-[var(--dash-primary)]"
           >
             <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
             <span>Create New Profile</span>

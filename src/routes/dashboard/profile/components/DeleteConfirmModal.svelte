@@ -44,25 +44,25 @@
     aria-labelledby="modal-title"
   >
     <div
-      class="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
+      class="bg-[var(--dash-card)] rounded-lg shadow-xl max-w-md w-full p-6"
       onclick={(e) => e.stopPropagation()}
       onkeydown={() => {}}
       role="document"
     >
       <div class="flex items-start gap-4">
         <div
-          class="w-10 h-10 rounded-full bg-crimson/10 flex items-center justify-center flex-shrink-0"
+          class="w-10 h-10 rounded-full bg-[var(--dash-error-light)] flex items-center justify-center flex-shrink-0"
         >
           <FontAwesomeIcon
             icon={faExclamationTriangle}
-            class="w-5 h-5 text-crimson"
+            class="w-5 h-5 text-[var(--dash-error)]"
           />
         </div>
         <div>
-          <h3 id="modal-title" class="text-lg font-semibold text-slate mb-2">
+          <h3 id="modal-title" class="text-lg font-semibold text-[var(--dash-text)] mb-2">
             {title}
           </h3>
-          <p class="text-pearl text-sm">{message}</p>
+          <p class="text-[var(--dash-text-secondary)] text-sm">{message}</p>
         </div>
       </div>
 
@@ -70,14 +70,14 @@
         <button
           type="button"
           onclick={onCancel}
-          class="px-4 py-2 border border-light rounded-lg text-slate hover:bg-light/50 transition-colors"
+          class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-gray-100 transition-colors"
         >
           {cancelLabel}
         </button>
         <button
           type="button"
           onclick={onConfirm}
-          class="px-4 py-2 bg-crimson text-white rounded-lg hover:bg-crimson/90 transition-colors"
+          class="px-4 py-2 bg-[var(--dash-error)] text-white rounded-lg hover:opacity-90 transition-colors"
         >
           {confirmLabel}
         </button>

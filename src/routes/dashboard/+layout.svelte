@@ -3,6 +3,7 @@
   import type { Snippet } from "svelte";
   import DashboardHeader from "./components/DashboardHeader.svelte";
   import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
+  import "./dashboard.css";
 
   let { children, data }: { children: Snippet; data: LayoutData } =
     $props();
@@ -16,7 +17,7 @@
   <ThemeSwitcher />
 </div>
 
-<div class="min-h-screen bg-mist transition-colors">
+<div class="min-h-screen bg-[var(--dash-bg)] transition-colors">
   <DashboardHeader
     user={data.user}
     profiles={data.profiles}

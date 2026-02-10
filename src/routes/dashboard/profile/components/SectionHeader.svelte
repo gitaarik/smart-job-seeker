@@ -28,7 +28,7 @@
   <div class="flex items-center gap-4">
     <a
       href={backHref}
-      class="flex items-center gap-2 text-pearl hover:text-ocean transition-colors"
+      class="flex items-center gap-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
     >
       <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />
       <span class="text-sm">{backLabel}</span>
@@ -36,12 +36,12 @@
     <div class="flex items-center gap-3">
       {#if icon}
         <div
-          class="w-10 h-10 rounded-full bg-ocean/10 flex items-center justify-center"
+          class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center"
         >
-          <FontAwesomeIcon {icon} class="w-5 h-5 text-ocean" />
+          <FontAwesomeIcon {icon} class="w-5 h-5 text-[var(--dash-text-muted)]" />
         </div>
       {/if}
-      <h1 class="text-2xl font-bold text-slate">{title}</h1>
+      <h1 class="text-2xl font-bold text-[var(--dash-text)]">{title}</h1>
     </div>
   </div>
 
@@ -49,7 +49,7 @@
     <button
       type="button"
       onclick={onAdd}
-      class="flex items-center gap-2 px-4 py-2 bg-ocean text-white rounded-lg hover:bg-aqua transition-colors"
+      class="flex items-center gap-2 px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
     >
       <FontAwesomeIcon icon={faPlus} class="w-4 h-4" />
       {addLabel}

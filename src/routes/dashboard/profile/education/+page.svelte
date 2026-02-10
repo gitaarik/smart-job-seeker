@@ -135,8 +135,8 @@
   />
 
   {#if form?.error}
-    <div class="bg-crimson/10 border border-crimson rounded-lg p-4">
-      <p class="text-crimson text-sm">{form.error}</p>
+    <div class="bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg p-4">
+      <p class="text-[var(--dash-error)] text-sm">{form.error}</p>
     </div>
   {/if}
 
@@ -146,17 +146,17 @@
       method="POST"
       action="?/create"
       use:enhance={handleAddSubmit}
-      class="bg-snow rounded-lg border border-ocean p-4"
+      class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-primary)] p-4"
     >
-      <h3 class="font-medium text-slate mb-4">Add New Education</h3>
+      <h3 class="font-medium text-[var(--dash-text)] mb-4">Add New Education</h3>
       <div class="space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label
               for="new-institution"
-              class="block text-sm font-medium text-slate mb-1"
+              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
             >
-              Institution <span class="text-crimson">*</span>
+              Institution <span class="text-[var(--dash-error)]">*</span>
             </label>
             <input
               type="text"
@@ -165,14 +165,14 @@
               bind:value={newInstitution}
               placeholder="e.g., University of Technology"
               required
-              class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
             />
           </div>
 
           <div>
             <label
               for="new-area"
-              class="block text-sm font-medium text-slate mb-1"
+              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
             >
               Field of Study
             </label>
@@ -182,14 +182,14 @@
               name="area"
               bind:value={newArea}
               placeholder="e.g., Computer Science"
-              class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
             />
           </div>
 
           <div>
             <label
               for="new-study-type"
-              class="block text-sm font-medium text-slate mb-1"
+              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
             >
               Degree Type
             </label>
@@ -199,14 +199,14 @@
               name="study_type"
               bind:value={newStudyType}
               placeholder="e.g., Bachelor's, Master's, PhD"
-              class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
             />
           </div>
 
           <div>
             <label
               for="new-location"
-              class="block text-sm font-medium text-slate mb-1"
+              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
             >
               Location
             </label>
@@ -216,14 +216,14 @@
               name="location"
               bind:value={newLocation}
               placeholder="e.g., Boston, MA"
-              class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
             />
           </div>
 
           <div>
             <label
               for="new-url"
-              class="block text-sm font-medium text-slate mb-1"
+              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
             >
               Website URL
             </label>
@@ -233,14 +233,14 @@
               name="url"
               bind:value={newUrl}
               placeholder="https://university.edu"
-              class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
             />
           </div>
 
           <div>
             <label
               for="new-graduation-year"
-              class="block text-sm font-medium text-slate mb-1"
+              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
             >
               Graduation Year
             </label>
@@ -252,14 +252,14 @@
               placeholder="e.g., 2020"
               min="1950"
               max="2100"
-              class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
             />
           </div>
 
           <div>
             <label
               for="new-start-date"
-              class="block text-sm font-medium text-slate mb-1"
+              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
             >
               Start Date
             </label>
@@ -268,14 +268,14 @@
               id="new-start-date"
               name="start_date"
               bind:value={newStartDate}
-              class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
             />
           </div>
 
           <div>
             <label
               for="new-end-date"
-              class="block text-sm font-medium text-slate mb-1"
+              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
             >
               End Date
             </label>
@@ -284,7 +284,7 @@
               id="new-end-date"
               name="end_date"
               bind:value={newEndDate}
-              class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
             />
           </div>
         </div>
@@ -292,7 +292,7 @@
         <div>
           <label
             for="new-summary"
-            class="block text-sm font-medium text-slate mb-1"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
           >
             Summary
           </label>
@@ -302,7 +302,7 @@
             bind:value={newSummary}
             rows={3}
             placeholder="Brief description of your studies, achievements, etc."
-            class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent resize-y"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
           ></textarea>
         </div>
       </div>
@@ -311,13 +311,13 @@
         <button
           type="button"
           onclick={resetAddForm}
-          class="px-4 py-2 border border-light rounded-lg text-slate hover:bg-light/50 transition-colors"
+          class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-gray-100 transition-colors"
         >
           Cancel
         </button>
         <button
           type="submit"
-          class="px-4 py-2 bg-ocean text-white rounded-lg hover:bg-aqua transition-colors"
+          class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
         >
           Add Education
         </button>
@@ -337,32 +337,32 @@
   {:else}
     <div class="space-y-3">
       {#each education as edu (edu.id)}
-        <div class="bg-snow rounded-lg border border-light overflow-hidden">
+        <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden">
           <!-- Header (clickable to expand) -->
           <button
             type="button"
             onclick={() => toggleExpand(edu.id)}
-            class="w-full flex items-center justify-between p-4 hover:bg-light/30 transition-colors text-left"
+            class="w-full flex items-center justify-between p-4 hover:bg-gray-100 transition-colors text-left"
           >
             <div class="flex items-center gap-4">
               <div
-                class="w-10 h-10 rounded-full bg-ocean/10 flex items-center justify-center flex-shrink-0"
+                class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0"
               >
                 <FontAwesomeIcon
                   icon={faGraduationCap}
-                  class="w-5 h-5 text-ocean"
+                  class="w-5 h-5 text-[var(--dash-primary)]"
                 />
               </div>
               <div>
-                <h3 class="font-medium text-slate">{edu.institution}</h3>
-                <p class="text-sm text-pearl">
+                <h3 class="font-medium text-[var(--dash-text)]">{edu.institution}</h3>
+                <p class="text-sm text-[var(--dash-text-secondary)]">
                   {#if edu.study_type}{edu.study_type}{/if}
                   {#if edu.study_type && edu.area}
                     in
                   {/if}
                   {#if edu.area}{edu.area}{/if}
                   {#if edu.graduation_year}
-                    <span class="text-pearl"> ({edu.graduation_year})</span>
+                    <span class="text-[var(--dash-text-secondary)]"> ({edu.graduation_year})</span>
                   {/if}
                 </p>
               </div>
@@ -376,7 +376,7 @@
                     e.stopPropagation();
                     startEdit(edu);
                   }}
-                  class="p-2 text-pearl hover:text-ocean transition-colors"
+                  class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
                   aria-label="Edit"
                 >
                   <FontAwesomeIcon icon={faPencil} class="w-4 h-4" />
@@ -387,7 +387,7 @@
                     e.stopPropagation();
                     deleteId = edu.id;
                   }}
-                  class="p-2 text-pearl hover:text-crimson transition-colors"
+                  class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
                   aria-label="Delete"
                 >
                   <FontAwesomeIcon icon={faTrash} class="w-4 h-4" />
@@ -395,14 +395,14 @@
               {/if}
               <FontAwesomeIcon
                 icon={expandedId === edu.id ? faChevronUp : faChevronDown}
-                class="w-4 h-4 text-pearl"
+                class="w-4 h-4 text-[var(--dash-text-secondary)]"
               />
             </div>
           </button>
 
           <!-- Expanded Content -->
           {#if expandedId === edu.id}
-            <div class="border-t border-light p-4">
+            <div class="border-t border-[var(--dash-border)] p-4">
               {#if editingId === edu.id}
                 <!-- Edit Mode -->
                 <form
@@ -416,9 +416,9 @@
                       <div>
                         <label
                           for="edit-institution-{edu.id}"
-                          class="block text-sm font-medium text-slate mb-1"
+                          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
                         >
-                          Institution <span class="text-crimson">*</span>
+                          Institution <span class="text-[var(--dash-error)]">*</span>
                         </label>
                         <input
                           type="text"
@@ -426,14 +426,14 @@
                           name="institution"
                           bind:value={editInstitution}
                           required
-                          class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                         />
                       </div>
 
                       <div>
                         <label
                           for="edit-area-{edu.id}"
-                          class="block text-sm font-medium text-slate mb-1"
+                          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
                         >
                           Field of Study
                         </label>
@@ -442,14 +442,14 @@
                           id="edit-area-{edu.id}"
                           name="area"
                           bind:value={editArea}
-                          class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                         />
                       </div>
 
                       <div>
                         <label
                           for="edit-study-type-{edu.id}"
-                          class="block text-sm font-medium text-slate mb-1"
+                          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
                         >
                           Degree Type
                         </label>
@@ -458,14 +458,14 @@
                           id="edit-study-type-{edu.id}"
                           name="study_type"
                           bind:value={editStudyType}
-                          class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                         />
                       </div>
 
                       <div>
                         <label
                           for="edit-location-{edu.id}"
-                          class="block text-sm font-medium text-slate mb-1"
+                          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
                         >
                           Location
                         </label>
@@ -474,14 +474,14 @@
                           id="edit-location-{edu.id}"
                           name="location"
                           bind:value={editLocation}
-                          class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                         />
                       </div>
 
                       <div>
                         <label
                           for="edit-url-{edu.id}"
-                          class="block text-sm font-medium text-slate mb-1"
+                          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
                         >
                           Website URL
                         </label>
@@ -490,14 +490,14 @@
                           id="edit-url-{edu.id}"
                           name="url"
                           bind:value={editUrl}
-                          class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                         />
                       </div>
 
                       <div>
                         <label
                           for="edit-graduation-year-{edu.id}"
-                          class="block text-sm font-medium text-slate mb-1"
+                          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
                         >
                           Graduation Year
                         </label>
@@ -508,14 +508,14 @@
                           bind:value={editGraduationYear}
                           min="1950"
                           max="2100"
-                          class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                         />
                       </div>
 
                       <div>
                         <label
                           for="edit-start-date-{edu.id}"
-                          class="block text-sm font-medium text-slate mb-1"
+                          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
                         >
                           Start Date
                         </label>
@@ -524,14 +524,14 @@
                           id="edit-start-date-{edu.id}"
                           name="start_date"
                           bind:value={editStartDate}
-                          class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                         />
                       </div>
 
                       <div>
                         <label
                           for="edit-end-date-{edu.id}"
-                          class="block text-sm font-medium text-slate mb-1"
+                          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
                         >
                           End Date
                         </label>
@@ -540,7 +540,7 @@
                           id="edit-end-date-{edu.id}"
                           name="end_date"
                           bind:value={editEndDate}
-                          class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent"
+                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                         />
                       </div>
                     </div>
@@ -548,7 +548,7 @@
                     <div>
                       <label
                         for="edit-summary-{edu.id}"
-                        class="block text-sm font-medium text-slate mb-1"
+                        class="block text-sm font-medium text-[var(--dash-text)] mb-1"
                       >
                         Summary
                       </label>
@@ -557,7 +557,7 @@
                         name="summary"
                         bind:value={editSummary}
                         rows={3}
-                        class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-transparent resize-y"
+                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
                       ></textarea>
                     </div>
                   </div>
@@ -566,13 +566,13 @@
                     <button
                       type="button"
                       onclick={cancelEdit}
-                      class="px-4 py-2 border border-light rounded-lg text-slate hover:bg-light/50 transition-colors"
+                      class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-gray-100 transition-colors"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      class="px-4 py-2 bg-ocean text-white rounded-lg hover:bg-aqua transition-colors"
+                      class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
                     >
                       Save Changes
                     </button>
@@ -583,15 +583,15 @@
                 <div class="space-y-3 text-sm">
                   {#if edu.location}
                     <p>
-                      <span class="text-pearl">Location:</span> <span
-                        class="text-slate"
+                      <span class="text-[var(--dash-text-secondary)]">Location:</span> <span
+                        class="text-[var(--dash-text)]"
                       >{edu.location}</span>
                     </p>
                   {/if}
                   {#if edu.start_date || edu.end_date}
                     <p>
-                      <span class="text-pearl">Period:</span>
-                      <span class="text-slate">
+                      <span class="text-[var(--dash-text-secondary)]">Period:</span>
+                      <span class="text-[var(--dash-text)]">
                         {formatDisplayDate(edu.start_date) || "N/A"} - {
                           formatDisplayDate(edu.end_date) || "Present"
                         }
@@ -600,17 +600,17 @@
                   {/if}
                   {#if edu.url}
                     <p>
-                      <span class="text-pearl">Website:</span>
+                      <span class="text-[var(--dash-text-secondary)]">Website:</span>
                       <a
                         href={edu.url}
                         target="_blank"
                         rel="noopener"
-                        class="text-ocean hover:text-aqua"
+                        class="text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)]"
                       >{edu.url}</a>
                     </p>
                   {/if}
                   {#if edu.summary}
-                    <p class="text-slate">{edu.summary}</p>
+                    <p class="text-[var(--dash-text)]">{edu.summary}</p>
                   {/if}
                 </div>
               {/if}
