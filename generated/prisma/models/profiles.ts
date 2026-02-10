@@ -565,7 +565,7 @@ export type profilesWhereInput = {
   signal_profile?: Prisma.StringNullableFilter<"profiles"> | string | null
   whatsapp_number?: Prisma.StringNullableFilter<"profiles"> | string | null
   telegram_username?: Prisma.StringNullableFilter<"profiles"> | string | null
-  user_id?: Prisma.UuidNullableFilter<"profiles"> | string | null
+  user_id?: Prisma.StringNullableFilter<"profiles"> | string | null
   public_cv_version?: Prisma.IntNullableFilter<"profiles"> | number | null
   public_resume_version?: Prisma.IntNullableFilter<"profiles"> | number | null
   ai_chats?: Prisma.Ai_chatsListRelationFilter
@@ -714,7 +714,7 @@ export type profilesWhereUniqueInput = Prisma.AtLeast<{
   signal_profile?: Prisma.StringNullableFilter<"profiles"> | string | null
   whatsapp_number?: Prisma.StringNullableFilter<"profiles"> | string | null
   telegram_username?: Prisma.StringNullableFilter<"profiles"> | string | null
-  user_id?: Prisma.UuidNullableFilter<"profiles"> | string | null
+  user_id?: Prisma.StringNullableFilter<"profiles"> | string | null
   public_cv_version?: Prisma.IntNullableFilter<"profiles"> | number | null
   public_resume_version?: Prisma.IntNullableFilter<"profiles"> | number | null
   ai_chats?: Prisma.Ai_chatsListRelationFilter
@@ -844,7 +844,7 @@ export type profilesScalarWhereWithAggregatesInput = {
   signal_profile?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
   whatsapp_number?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
   telegram_username?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
-  user_id?: Prisma.UuidNullableWithAggregatesFilter<"profiles"> | string | null
+  user_id?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
   public_cv_version?: Prisma.IntNullableWithAggregatesFilter<"profiles"> | number | null
   public_resume_version?: Prisma.IntNullableWithAggregatesFilter<"profiles"> | number | null
 }
@@ -3253,7 +3253,7 @@ export type profilesScalarWhereInput = {
   signal_profile?: Prisma.StringNullableFilter<"profiles"> | string | null
   whatsapp_number?: Prisma.StringNullableFilter<"profiles"> | string | null
   telegram_username?: Prisma.StringNullableFilter<"profiles"> | string | null
-  user_id?: Prisma.UuidNullableFilter<"profiles"> | string | null
+  user_id?: Prisma.StringNullableFilter<"profiles"> | string | null
   public_cv_version?: Prisma.IntNullableFilter<"profiles"> | number | null
   public_resume_version?: Prisma.IntNullableFilter<"profiles"> | number | null
 }

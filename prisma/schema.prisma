@@ -941,7 +941,7 @@ model profiles {
   signal_profile                                                    String?                 @db.VarChar(500)
   whatsapp_number                                                   String?                 @db.VarChar(50)
   telegram_username                                                 String?                 @db.VarChar(100)
-  user_id                                                           String?                 @db.Uuid
+  user_id                                                           String?
   public_cv_version                                                 Int?
   public_resume_version                                             Int?
   ai_chats                                                          ai_chats[]

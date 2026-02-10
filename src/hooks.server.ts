@@ -55,18 +55,20 @@ function getThemeFromRequest(request: Request): string {
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
-  // Handle Better Auth routes (e.g., /api/auth/*)
-  const authResponse = await svelteKitHandler({ event, resolve, auth });
-  if (authResponse) {
-    return authResponse;
-  }
-
-  // Get session and populate locals
+  // Get session and populate locals FIRST, before svelteKitHandler
+  // This ensures event.locals is populated when resolve() is called
   const session = await auth.api.getSession({
     headers: event.request.headers,
   });
   event.locals.user = session?.user ?? null;
   event.locals.session = session?.session ?? null;
+
+  // Handle Better Auth routes (e.g., /api/auth/*)
+  // Note: svelteKitHandler may call resolve() which needs locals to be set
+  const authResponse = await svelteKitHandler({ event, resolve, auth });
+  if (authResponse) {
+    return authResponse;
+  }
 
   // Apply theme
   const theme = getThemeFromRequest(event.request);
