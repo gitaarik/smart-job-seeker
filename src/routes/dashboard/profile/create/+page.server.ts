@@ -185,5 +185,4 @@ export const actions: Actions = {
 
     redirect(302, `/dashboard?profile=${profile.id}`);
   },
-
 };
