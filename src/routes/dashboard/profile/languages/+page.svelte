@@ -143,7 +143,7 @@
             bind:value={newName}
             placeholder="e.g., English"
             required
-            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
           />
         </div>
 
@@ -161,7 +161,7 @@
             bind:value={newLanguageCode}
             placeholder="e.g., en"
             maxlength={10}
-            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
           />
         </div>
 
@@ -176,7 +176,7 @@
             id="new-proficiency"
             name="proficiency"
             bind:value={newProficiency}
-            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
           >
             <option value="">Select proficiency</option>
             {#each proficiencyOptions as option}
@@ -239,7 +239,7 @@
                     name="name"
                     bind:value={editName}
                     required
-                    class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                    class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                   />
                 </div>
 
@@ -256,7 +256,7 @@
                     name="language_code"
                     bind:value={editLanguageCode}
                     maxlength={10}
-                    class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                    class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                   />
                 </div>
 
@@ -271,7 +271,7 @@
                     id="edit-proficiency-{lang.id}"
                     name="proficiency"
                     bind:value={editProficiency}
-                    class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                    class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                   >
                     <option value="">Select proficiency</option>
                     {#each proficiencyOptions as option}

@@ -44,7 +44,7 @@
     aria-labelledby="modal-title"
   >
     <div
-      class="bg-[var(--dash-card)] rounded-lg shadow-xl max-w-md w-full p-6"
+      class="bg-[var(--dash-card)] rounded-xl shadow-xl max-w-md w-full p-6"
       onclick={(e) => e.stopPropagation()}
       onkeydown={() => {}}
       role="document"
