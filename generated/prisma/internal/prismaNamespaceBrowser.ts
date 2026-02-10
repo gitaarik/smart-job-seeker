@@ -1075,7 +1075,8 @@ export const ProfilesScalarFieldEnum = {
   telegram_username: 'telegram_username',
   user_id: 'user_id',
   public_cv_version: 'public_cv_version',
-  public_resume_version: 'public_resume_version'
+  public_resume_version: 'public_resume_version',
+  source_cv: 'source_cv'
 } as const
 
 export type ProfilesScalarFieldEnum = (typeof ProfilesScalarFieldEnum)[keyof typeof ProfilesScalarFieldEnum]

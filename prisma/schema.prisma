@@ -944,6 +944,7 @@ model profiles {
   user_id                                                           String?
   public_cv_version                                                 Int?
   public_resume_version                                             Int?
+  source_cv                                                         String?                 @db.Uuid
   ai_chats                                                          ai_chats[]
   applications                                                      applications[]
   cheat_sheets                                                      cheat_sheets[]

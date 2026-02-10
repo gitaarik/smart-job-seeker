@@ -1,21 +1,81 @@
 <script lang="ts">
-  import { enhance } from "$app/forms";
   import type { ActionData } from "./$types";
+  import type { ResumeData } from "$lib/server/resume/types";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import { faArrowLeft, faUser } from "@fortawesome/free-solid-svg-icons";
 
+  import StepIndicator from "./components/StepIndicator.svelte";
+  import StepChoice from "./components/StepChoice.svelte";
+  import StepUpload from "./components/StepUpload.svelte";
+  import StepManual from "./components/StepManual.svelte";
+  import StepReview from "./components/StepReview.svelte";
+
   let { form }: { form: ActionData } = $props();
 
-  let name = $state(form?.name || "");
-  let title = $state(form?.title || "");
-  let loading = $state(false);
+  // Wizard state
+  type ImportMethod = "upload" | "manual" | null;
+  let currentStep = $state(1);
+  let importMethod = $state<ImportMethod>(null);
+  let parsedData = $state<ResumeData | null>(null);
+  let uploadedFileId = $state<string | null>(null);
+  let uploadedFileName = $state<string | null>(null);
+  let isLoading = $state(false);
+  let error = $state<string | null>(form?.error || null);
+
+  const steps = ["Choose", "Import", "Review", "Done"];
+
+  function handleChoose(method: ImportMethod) {
+    importMethod = method;
+    currentStep = 2;
+    error = null;
+  }
+
+  function handleUploadComplete(data: {
+    parsedData: unknown;
+    fileId: string;
+    fileName: string;
+  }) {
+    parsedData = data.parsedData as ResumeData;
+    uploadedFileId = data.fileId;
+    uploadedFileName = data.fileName;
+    currentStep = 3;
+    error = null;
+  }
+
+  function handleSkipToManual() {
+    importMethod = "manual";
+    error = null;
+  }
+
+  function handleBack() {
+    if (currentStep === 3) {
+      // From review, go back to upload
+      currentStep = 2;
+    } else if (currentStep === 2) {
+      // From import, go back to choice
+      currentStep = 1;
+      importMethod = null;
+      parsedData = null;
+      uploadedFileId = null;
+      uploadedFileName = null;
+    }
+    error = null;
+  }
+
+  function handleError(msg: string) {
+    error = msg;
+  }
+
+  function handleLoadingChange(loading: boolean) {
+    isLoading = loading;
+  }
 </script>
 
 <svelte:head>
   <title>Create Profile - Smart Job Seeker</title>
 </svelte:head>
 
-<div class="max-w-lg mx-auto">
+<div class="max-w-2xl mx-auto">
   <a
     href="/dashboard"
     class="inline-flex items-center gap-2 text-pearl hover:text-slate transition-colors mb-6"
@@ -39,66 +99,38 @@
       </div>
     </div>
 
-    <form
-      method="POST"
-      use:enhance={() => {
-        loading = true;
-        return async ({ update }) => {
-          loading = false;
-          await update();
-        };
-      }}
-      class="space-y-6"
-    >
-      {#if form?.error}
-        <div class="rounded-md bg-red-50 p-4">
-          <p class="text-sm text-crimson">{form.error}</p>
-        </div>
+    <StepIndicator {currentStep} {steps} />
+
+    {#if currentStep === 1}
+      <StepChoice onChoose={handleChoose} />
+    {:else if currentStep === 2}
+      {#if importMethod === "upload"}
+        <StepUpload
+          {isLoading}
+          {error}
+          onSkipToManual={handleSkipToManual}
+          onUploadComplete={handleUploadComplete}
+          onError={handleError}
+          onLoadingChange={handleLoadingChange}
+        />
+      {:else}
+        <StepManual
+          {isLoading}
+          {error}
+          onBack={handleBack}
+          onLoadingChange={handleLoadingChange}
+        />
       {/if}
-
-      <div>
-        <label for="name" class="block text-sm font-medium text-slate mb-1">
-          Full Name <span class="text-crimson">*</span>
-        </label>
-        <input
-          id="name"
-          name="name"
-          type="text"
-          bind:value={name}
-          required
-          class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-ocean bg-snow text-slate"
-          placeholder="John Doe"
-        />
-      </div>
-
-      <div>
-        <label for="title" class="block text-sm font-medium text-slate mb-1">
-          Professional Title
-        </label>
-        <input
-          id="title"
-          name="title"
-          type="text"
-          bind:value={title}
-          class="w-full px-3 py-2 border border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-ocean focus:border-ocean bg-snow text-slate"
-          placeholder="Software Engineer"
-        />
-        <p class="text-xs text-pearl mt-1">
-          This will appear below your name on your profile.
-        </p>
-      </div>
-
-      <button
-        type="submit"
-        disabled={loading || !name.trim()}
-        class="w-full py-2 px-4 bg-ocean text-pearl font-medium rounded-lg hover:bg-aqua transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {#if loading}
-          Creating...
-        {:else}
-          Create Profile
-        {/if}
-      </button>
-    </form>
+    {:else if currentStep === 3 && parsedData}
+      <StepReview
+        {parsedData}
+        fileId={uploadedFileId}
+        fileName={uploadedFileName}
+        {isLoading}
+        {error}
+        onBack={handleBack}
+        onLoadingChange={handleLoadingChange}
+      />
+    {/if}
   </div>
 </div>
