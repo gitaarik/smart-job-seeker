@@ -233,8 +233,8 @@ export type accountWhereInput = {
   AND?: Prisma.accountWhereInput | Prisma.accountWhereInput[]
   OR?: Prisma.accountWhereInput[]
   NOT?: Prisma.accountWhereInput | Prisma.accountWhereInput[]
-  id?: Prisma.UuidFilter<"account"> | string
-  userId?: Prisma.UuidFilter<"account"> | string
+  id?: Prisma.StringFilter<"account"> | string
+  userId?: Prisma.StringFilter<"account"> | string
   accountId?: Prisma.StringFilter<"account"> | string
   providerId?: Prisma.StringFilter<"account"> | string
   accessToken?: Prisma.StringNullableFilter<"account"> | string | null
@@ -271,7 +271,7 @@ export type accountWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.accountWhereInput | Prisma.accountWhereInput[]
   OR?: Prisma.accountWhereInput[]
   NOT?: Prisma.accountWhereInput | Prisma.accountWhereInput[]
-  userId?: Prisma.UuidFilter<"account"> | string
+  userId?: Prisma.StringFilter<"account"> | string
   accountId?: Prisma.StringFilter<"account"> | string
   providerId?: Prisma.StringFilter<"account"> | string
   accessToken?: Prisma.StringNullableFilter<"account"> | string | null
@@ -309,8 +309,8 @@ export type accountScalarWhereWithAggregatesInput = {
   AND?: Prisma.accountScalarWhereWithAggregatesInput | Prisma.accountScalarWhereWithAggregatesInput[]
   OR?: Prisma.accountScalarWhereWithAggregatesInput[]
   NOT?: Prisma.accountScalarWhereWithAggregatesInput | Prisma.accountScalarWhereWithAggregatesInput[]
-  id?: Prisma.UuidWithAggregatesFilter<"account"> | string
-  userId?: Prisma.UuidWithAggregatesFilter<"account"> | string
+  id?: Prisma.StringWithAggregatesFilter<"account"> | string
+  userId?: Prisma.StringWithAggregatesFilter<"account"> | string
   accountId?: Prisma.StringWithAggregatesFilter<"account"> | string
   providerId?: Prisma.StringWithAggregatesFilter<"account"> | string
   accessToken?: Prisma.StringNullableWithAggregatesFilter<"account"> | string | null
@@ -595,8 +595,8 @@ export type accountScalarWhereInput = {
   AND?: Prisma.accountScalarWhereInput | Prisma.accountScalarWhereInput[]
   OR?: Prisma.accountScalarWhereInput[]
   NOT?: Prisma.accountScalarWhereInput | Prisma.accountScalarWhereInput[]
-  id?: Prisma.UuidFilter<"account"> | string
-  userId?: Prisma.UuidFilter<"account"> | string
+  id?: Prisma.StringFilter<"account"> | string
+  userId?: Prisma.StringFilter<"account"> | string
   accountId?: Prisma.StringFilter<"account"> | string
   providerId?: Prisma.StringFilter<"account"> | string
   accessToken?: Prisma.StringNullableFilter<"account"> | string | null

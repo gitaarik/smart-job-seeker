@@ -198,8 +198,8 @@ export type sessionWhereInput = {
   AND?: Prisma.sessionWhereInput | Prisma.sessionWhereInput[]
   OR?: Prisma.sessionWhereInput[]
   NOT?: Prisma.sessionWhereInput | Prisma.sessionWhereInput[]
-  id?: Prisma.UuidFilter<"session"> | string
-  userId?: Prisma.UuidFilter<"session"> | string
+  id?: Prisma.StringFilter<"session"> | string
+  userId?: Prisma.StringFilter<"session"> | string
   token?: Prisma.StringFilter<"session"> | string
   expiresAt?: Prisma.DateTimeFilter<"session"> | Date | string
   ipAddress?: Prisma.StringNullableFilter<"session"> | string | null
@@ -226,7 +226,7 @@ export type sessionWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.sessionWhereInput | Prisma.sessionWhereInput[]
   OR?: Prisma.sessionWhereInput[]
   NOT?: Prisma.sessionWhereInput | Prisma.sessionWhereInput[]
-  userId?: Prisma.UuidFilter<"session"> | string
+  userId?: Prisma.StringFilter<"session"> | string
   token?: Prisma.StringFilter<"session"> | string
   expiresAt?: Prisma.DateTimeFilter<"session"> | Date | string
   ipAddress?: Prisma.StringNullableFilter<"session"> | string | null
@@ -254,8 +254,8 @@ export type sessionScalarWhereWithAggregatesInput = {
   AND?: Prisma.sessionScalarWhereWithAggregatesInput | Prisma.sessionScalarWhereWithAggregatesInput[]
   OR?: Prisma.sessionScalarWhereWithAggregatesInput[]
   NOT?: Prisma.sessionScalarWhereWithAggregatesInput | Prisma.sessionScalarWhereWithAggregatesInput[]
-  id?: Prisma.UuidWithAggregatesFilter<"session"> | string
-  userId?: Prisma.UuidWithAggregatesFilter<"session"> | string
+  id?: Prisma.StringWithAggregatesFilter<"session"> | string
+  userId?: Prisma.StringWithAggregatesFilter<"session"> | string
   token?: Prisma.StringWithAggregatesFilter<"session"> | string
   expiresAt?: Prisma.DateTimeWithAggregatesFilter<"session"> | Date | string
   ipAddress?: Prisma.StringNullableWithAggregatesFilter<"session"> | string | null
@@ -475,8 +475,8 @@ export type sessionScalarWhereInput = {
   AND?: Prisma.sessionScalarWhereInput | Prisma.sessionScalarWhereInput[]
   OR?: Prisma.sessionScalarWhereInput[]
   NOT?: Prisma.sessionScalarWhereInput | Prisma.sessionScalarWhereInput[]
-  id?: Prisma.UuidFilter<"session"> | string
-  userId?: Prisma.UuidFilter<"session"> | string
+  id?: Prisma.StringFilter<"session"> | string
+  userId?: Prisma.StringFilter<"session"> | string
   token?: Prisma.StringFilter<"session"> | string
   expiresAt?: Prisma.DateTimeFilter<"session"> | Date | string
   ipAddress?: Prisma.StringNullableFilter<"session"> | string | null

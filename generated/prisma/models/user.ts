@@ -191,7 +191,7 @@ export type userWhereInput = {
   AND?: Prisma.userWhereInput | Prisma.userWhereInput[]
   OR?: Prisma.userWhereInput[]
   NOT?: Prisma.userWhereInput | Prisma.userWhereInput[]
-  id?: Prisma.UuidFilter<"user"> | string
+  id?: Prisma.StringFilter<"user"> | string
   email?: Prisma.StringFilter<"user"> | string
   emailVerified?: Prisma.BoolNullableFilter<"user"> | boolean | null
   name?: Prisma.StringNullableFilter<"user"> | string | null
@@ -246,7 +246,7 @@ export type userScalarWhereWithAggregatesInput = {
   AND?: Prisma.userScalarWhereWithAggregatesInput | Prisma.userScalarWhereWithAggregatesInput[]
   OR?: Prisma.userScalarWhereWithAggregatesInput[]
   NOT?: Prisma.userScalarWhereWithAggregatesInput | Prisma.userScalarWhereWithAggregatesInput[]
-  id?: Prisma.UuidWithAggregatesFilter<"user"> | string
+  id?: Prisma.StringWithAggregatesFilter<"user"> | string
   email?: Prisma.StringWithAggregatesFilter<"user"> | string
   emailVerified?: Prisma.BoolNullableWithAggregatesFilter<"user"> | boolean | null
   name?: Prisma.StringNullableWithAggregatesFilter<"user"> | string | null

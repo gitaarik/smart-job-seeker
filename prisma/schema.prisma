@@ -1247,8 +1247,8 @@ model directus_deployments {
 }
 
 model account {
-  id                    String    @id @db.Uuid
-  userId                String    @db.Uuid
+  id                    String    @id
+  userId                String
   accountId             String    @db.VarChar(255)
   providerId            String    @db.VarChar(255)
   accessToken           String?
@@ -1264,8 +1264,8 @@ model account {
 }
 
 model session {
-  id        String    @id @db.Uuid
-  userId    String    @db.Uuid
+  id        String    @id
+  userId    String
   token     String    @db.VarChar(255)
   expiresAt DateTime  @db.Timestamptz(6)
   ipAddress String?   @db.VarChar(255)
@@ -1276,7 +1276,7 @@ model session {
 }
 
 model user {
-  id            String    @id @db.Uuid
+  id            String    @id
   email         String    @db.VarChar(255)
   emailVerified Boolean?  @default(false)
   name          String?   @db.VarChar(255)
@@ -1288,7 +1288,7 @@ model user {
 }
 
 model verification {
-  id         String    @id @db.Uuid
+  id         String    @id
   identifier String    @db.VarChar(255)
   value      String    @db.VarChar(255)
   expiresAt  DateTime  @db.Timestamptz(6)
