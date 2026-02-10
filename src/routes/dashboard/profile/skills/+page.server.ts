@@ -1,6 +1,7 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { getSelectedProfileId } from "../utils";
 
 export const load: PageServerLoad = async ({ parent }) => {
   const layoutData = await parent();
@@ -23,14 +24,14 @@ export const load: PageServerLoad = async ({ parent }) => {
 };
 
 export const actions: Actions = {
-  createCategory: async ({ request, locals, parent }) => {
+  createCategory: async ({ request, locals, cookies }) => {
     const user = locals.user;
     if (!user) {
       return fail(401, { error: "Not authenticated" });
     }
 
-    const layoutData = await parent();
-    if (!layoutData.selectedProfile) {
+    const profileId = await getSelectedProfileId(cookies, user.id);
+    if (!profileId) {
       return fail(400, { error: "No profile selected" });
     }
 
@@ -43,14 +44,14 @@ export const actions: Actions = {
 
     // Get the highest sort value
     const lastItem = await db.tech_skill_categories.findFirst({
-      where: { profile: layoutData.selectedProfile.id },
+      where: { profile: profileId },
       orderBy: { sort: "desc" },
     });
 
     await db.tech_skill_categories.create({
       data: {
         name: name.trim(),
-        profile: layoutData.selectedProfile.id,
+        profile: profileId,
         sort: (lastItem?.sort ?? -1) + 1,
         status: "published",
         date_created: new Date(),
@@ -60,14 +61,14 @@ export const actions: Actions = {
     return { success: true };
   },
 
-  updateCategory: async ({ request, locals, parent }) => {
+  updateCategory: async ({ request, locals, cookies }) => {
     const user = locals.user;
     if (!user) {
       return fail(401, { error: "Not authenticated" });
     }
 
-    const layoutData = await parent();
-    if (!layoutData.selectedProfile) {
+    const profileId = await getSelectedProfileId(cookies, user.id);
+    if (!profileId) {
       return fail(400, { error: "No profile selected" });
     }
 
@@ -85,7 +86,7 @@ export const actions: Actions = {
 
     // Verify ownership
     const existing = await db.tech_skill_categories.findFirst({
-      where: { id, profile: layoutData.selectedProfile.id },
+      where: { id, profile: profileId },
     });
 
     if (!existing) {
@@ -103,14 +104,14 @@ export const actions: Actions = {
     return { success: true };
   },
 
-  deleteCategory: async ({ request, locals, parent }) => {
+  deleteCategory: async ({ request, locals, cookies }) => {
     const user = locals.user;
     if (!user) {
       return fail(401, { error: "Not authenticated" });
     }
 
-    const layoutData = await parent();
-    if (!layoutData.selectedProfile) {
+    const profileId = await getSelectedProfileId(cookies, user.id);
+    if (!profileId) {
       return fail(400, { error: "No profile selected" });
     }
 
@@ -123,7 +124,7 @@ export const actions: Actions = {
 
     // Verify ownership
     const existing = await db.tech_skill_categories.findFirst({
-      where: { id, profile: layoutData.selectedProfile.id },
+      where: { id, profile: profileId },
     });
 
     if (!existing) {
@@ -138,14 +139,14 @@ export const actions: Actions = {
     return { success: true };
   },
 
-  createSkill: async ({ request, locals, parent }) => {
+  createSkill: async ({ request, locals, cookies }) => {
     const user = locals.user;
     if (!user) {
       return fail(401, { error: "Not authenticated" });
     }
 
-    const layoutData = await parent();
-    if (!layoutData.selectedProfile) {
+    const profileId = await getSelectedProfileId(cookies, user.id);
+    if (!profileId) {
       return fail(400, { error: "No profile selected" });
     }
 
@@ -165,7 +166,7 @@ export const actions: Actions = {
 
     // Verify category ownership
     const category = await db.tech_skill_categories.findFirst({
-      where: { id: categoryId, profile: layoutData.selectedProfile.id },
+      where: { id: categoryId, profile: profileId },
     });
 
     if (!category) {
@@ -193,14 +194,14 @@ export const actions: Actions = {
     return { success: true };
   },
 
-  updateSkill: async ({ request, locals, parent }) => {
+  updateSkill: async ({ request, locals, cookies }) => {
     const user = locals.user;
     if (!user) {
       return fail(401, { error: "Not authenticated" });
     }
 
-    const layoutData = await parent();
-    if (!layoutData.selectedProfile) {
+    const profileId = await getSelectedProfileId(cookies, user.id);
+    if (!profileId) {
       return fail(400, { error: "No profile selected" });
     }
 
@@ -226,7 +227,7 @@ export const actions: Actions = {
 
     if (
       !existing ||
-      existing.tech_skill_categories.profile !== layoutData.selectedProfile.id
+      existing.tech_skill_categories.profile !== profileId
     ) {
       return fail(404, { error: "Skill not found" });
     }
@@ -244,14 +245,14 @@ export const actions: Actions = {
     return { success: true };
   },
 
-  deleteSkill: async ({ request, locals, parent }) => {
+  deleteSkill: async ({ request, locals, cookies }) => {
     const user = locals.user;
     if (!user) {
       return fail(401, { error: "Not authenticated" });
     }
 
-    const layoutData = await parent();
-    if (!layoutData.selectedProfile) {
+    const profileId = await getSelectedProfileId(cookies, user.id);
+    if (!profileId) {
       return fail(400, { error: "No profile selected" });
     }
 
@@ -270,7 +271,7 @@ export const actions: Actions = {
 
     if (
       !existing ||
-      existing.tech_skill_categories.profile !== layoutData.selectedProfile.id
+      existing.tech_skill_categories.profile !== profileId
     ) {
       return fail(404, { error: "Skill not found" });
     }

@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { ActionData, PageData } from "./$types";
-  import { enhance } from "$app/forms";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faBriefcase,
@@ -57,10 +56,6 @@
     newEndDate = "";
   }
 
-  function handleAddSubmit() {
-    // Form will redirect to edit page on success
-    return async () => {};
-  }
 </script>
 
 <div class="space-y-6">
@@ -83,7 +78,6 @@
     <form
       method="POST"
       action="?/create"
-      use:enhance={handleAddSubmit}
       class="bg-snow rounded-lg border border-ocean p-4"
     >
       <h3 class="font-medium text-slate mb-4">Add New Work Experience</h3>
@@ -259,10 +253,12 @@
       {#each experiences as exp (exp.id)}
         <div class="bg-snow rounded-lg border border-light overflow-hidden">
           <!-- Header -->
-          <button
-            type="button"
+          <div
+            role="button"
+            tabindex="0"
             onclick={() => toggleExpand(exp.id)}
-            class="w-full flex items-center justify-between p-4 hover:bg-light/30 transition-colors text-left"
+            onkeydown={(e) => e.key === "Enter" && toggleExpand(exp.id)}
+            class="w-full flex items-center justify-between p-4 hover:bg-light/30 transition-colors text-left cursor-pointer"
           >
             <div class="flex items-center gap-4">
               <div
@@ -314,7 +310,7 @@
                 class="w-4 h-4 text-pearl"
               />
             </div>
-          </button>
+          </div>
 
           <!-- Expanded Content -->
           {#if expandedId === exp.id}

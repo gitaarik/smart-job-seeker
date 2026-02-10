@@ -1,6 +1,7 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { getSelectedProfileId } from "../../utils";
 
 export const load: PageServerLoad = async ({ params, parent }) => {
   const layoutData = await parent();
@@ -34,14 +35,14 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 };
 
 export const actions: Actions = {
-  update: async ({ request, params, locals, parent }) => {
+  update: async ({ request, params, locals, cookies }) => {
     const user = locals.user;
     if (!user) {
       return fail(401, { error: "Not authenticated" });
     }
 
-    const layoutData = await parent();
-    if (!layoutData.selectedProfile) {
+    const profileId = await getSelectedProfileId(cookies, user.id);
+    if (!profileId) {
       return fail(400, { error: "No profile selected" });
     }
 
@@ -52,7 +53,7 @@ export const actions: Actions = {
 
     // Verify ownership
     const existing = await db.work_experiences.findFirst({
-      where: { id, profile: layoutData.selectedProfile.id },
+      where: { id, profile: profileId },
     });
 
     if (!existing) {

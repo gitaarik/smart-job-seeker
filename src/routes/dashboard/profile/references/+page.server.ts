@@ -1,6 +1,7 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { getSelectedProfileId } from "../utils";
 
 export const load: PageServerLoad = async ({ parent }) => {
   const layoutData = await parent();
@@ -18,14 +19,14 @@ export const load: PageServerLoad = async ({ parent }) => {
 };
 
 export const actions: Actions = {
-  create: async ({ request, locals, parent }) => {
+  create: async ({ request, locals, cookies }) => {
     const user = locals.user;
     if (!user) {
       return fail(401, { error: "Not authenticated" });
     }
 
-    const layoutData = await parent();
-    if (!layoutData.selectedProfile) {
+    const profileId = await getSelectedProfileId(cookies, user.id);
+    if (!profileId) {
       return fail(400, { error: "No profile selected" });
     }
 
@@ -40,7 +41,7 @@ export const actions: Actions = {
 
     // Get the highest sort value
     const lastItem = await db.references.findFirst({
-      where: { profile: layoutData.selectedProfile.id },
+      where: { profile: profileId },
       orderBy: { sort: "desc" },
     });
 
@@ -49,7 +50,7 @@ export const actions: Actions = {
         author: author.trim(),
         author_position: author_position?.trim() || null,
         text: text?.trim() || null,
-        profile: layoutData.selectedProfile.id,
+        profile: profileId,
         sort: (lastItem?.sort ?? -1) + 1,
         status: "published",
         date_created: new Date(),
@@ -59,14 +60,14 @@ export const actions: Actions = {
     return { success: true };
   },
 
-  update: async ({ request, locals, parent }) => {
+  update: async ({ request, locals, cookies }) => {
     const user = locals.user;
     if (!user) {
       return fail(401, { error: "Not authenticated" });
     }
 
-    const layoutData = await parent();
-    if (!layoutData.selectedProfile) {
+    const profileId = await getSelectedProfileId(cookies, user.id);
+    if (!profileId) {
       return fail(400, { error: "No profile selected" });
     }
 
@@ -86,7 +87,7 @@ export const actions: Actions = {
 
     // Verify ownership
     const existing = await db.references.findFirst({
-      where: { id, profile: layoutData.selectedProfile.id },
+      where: { id, profile: profileId },
     });
 
     if (!existing) {
@@ -106,14 +107,14 @@ export const actions: Actions = {
     return { success: true };
   },
 
-  delete: async ({ request, locals, parent }) => {
+  delete: async ({ request, locals, cookies }) => {
     const user = locals.user;
     if (!user) {
       return fail(401, { error: "Not authenticated" });
     }
 
-    const layoutData = await parent();
-    if (!layoutData.selectedProfile) {
+    const profileId = await getSelectedProfileId(cookies, user.id);
+    if (!profileId) {
       return fail(400, { error: "No profile selected" });
     }
 
@@ -126,7 +127,7 @@ export const actions: Actions = {
 
     // Verify ownership
     const existing = await db.references.findFirst({
-      where: { id, profile: layoutData.selectedProfile.id },
+      where: { id, profile: profileId },
     });
 
     if (!existing) {
