@@ -205,6 +205,7 @@ async function importProfile(
   filePath: string,
   profileIdStr?: string,
   deleteExisting: boolean = false,
+  userId?: string,
 ): Promise<void> {
   try {
     console.log(`Importing profile from: ${filePath}`);
@@ -350,6 +351,7 @@ async function importProfile(
           postal_code: data.postal_code,
           vat_id: data.vat_id,
           kvk_number: data.kvk_number,
+          user_id: userId,
           date_updated: new Date(),
         },
       });
@@ -400,6 +402,7 @@ async function importProfile(
           postal_code: data.postal_code,
           vat_id: data.vat_id,
           kvk_number: data.kvk_number,
+          user_id: userId,
           date_created: new Date(),
           date_updated: new Date(),
         },
@@ -826,6 +829,7 @@ program
   .version("1.0.0")
   .argument("<file-path>", "Path to the JSON export file")
   .option("-p, --profile-id <id>", "Existing profile ID to update")
+  .option("-u, --user-id <id>", "User ID to link the profile to")
   .option("-d, --delete", "Delete existing data before import", false)
   .helpOption("-h, --help", "Display help for command")
   .addHelpText(
@@ -853,8 +857,14 @@ const options = program.opts();
 async function main() {
   let profileId = options.profileId;
 
-  // If no profile ID specified, check for default profile
-  if (!profileId) {
+  // If --user-id is provided without --profile-id, always create a new profile
+  if (options.userId && !profileId) {
+    console.log(
+      "Creating new profile linked to user:",
+      options.userId,
+    );
+  } else if (!profileId) {
+    // No profile ID and no user ID - check for default profile
     const defaultId = await getDefaultProfileId();
     if (defaultId) {
       profileId = defaultId.toString();
@@ -868,7 +878,7 @@ async function main() {
     }
   }
 
-  await importProfile(filePath, profileId, options.delete);
+  await importProfile(filePath, profileId, options.delete, options.userId);
 }
 
 main().catch((error) => {

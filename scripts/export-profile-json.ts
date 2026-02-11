@@ -685,9 +685,9 @@ async function main() {
     exportToFile = true;
     console.log(`Using default profile: ${profileId}`);
   } else {
-    // Profile ID provided as argument - only save to Directus
+    // Profile ID provided as argument
     profileId = providedProfileId;
-    exportToFile = false;
+    exportToFile = true;
   }
 
   await exportProfile(profileId, exportToFile);

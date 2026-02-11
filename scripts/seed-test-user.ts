@@ -2,29 +2,21 @@
 
 import { auth } from "$lib/server/auth/better-auth";
 import { dbDirect as db } from "$lib/server/db";
+import { execFileSync } from "child_process";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
 
 const TEST_EMAIL = "alex.morgan@example.com";
 const TEST_PASSWORD = "testpassword123";
 const TEST_NAME = "Alex Morgan";
-const ALEX_MORGAN_PROFILE_ID = 12;
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const FIXTURE_PATH = join(__dirname, "fixtures", "alex-morgan-profile.json");
 
 async function seedTestUser() {
-  console.log("Seeding test user for Alex Morgan profile...");
+  console.log("Seeding test user with Alex Morgan profile...\n");
 
-  // Check if Alex Morgan profile exists
-  const alexProfile = await db.profiles.findUnique({
-    where: { id: ALEX_MORGAN_PROFILE_ID },
-  });
-
-  if (!alexProfile) {
-    console.error(`Alex Morgan profile (ID ${ALEX_MORGAN_PROFILE_ID}) not found!`);
-    console.error("Make sure the profile exists before running this script.");
-    process.exit(1);
-  }
-
-  console.log(`Found Alex Morgan profile: ${alexProfile.name}`);
-
-  // Check if test user exists
+  // Check if test user already exists
   const existing = await db.user.findFirst({
     where: { email: TEST_EMAIL },
   });
@@ -34,6 +26,19 @@ async function seedTestUser() {
   if (existing) {
     console.log(`Test user already exists: ${TEST_EMAIL}`);
     userId = existing.id;
+
+    // Check if user already has a profile
+    const existingProfile = await db.profiles.findFirst({
+      where: { user_id: userId },
+    });
+
+    if (existingProfile) {
+      console.log(`User already has profile: ${existingProfile.name} (ID ${existingProfile.id})`);
+      console.log("\nTest credentials:");
+      console.log(`  Email: ${TEST_EMAIL}`);
+      console.log(`  Password: ${TEST_PASSWORD}`);
+      return;
+    }
   } else {
     // Create user via Better Auth API (handles password hashing)
     console.log(`Creating test user: ${TEST_EMAIL}`);
@@ -54,22 +59,29 @@ async function seedTestUser() {
     userId = ctx.user.id;
   }
 
-  // Link the Alex Morgan profile to this user
-  if (alexProfile.user_id === userId) {
-    console.log("Alex Morgan profile is already linked to test user.");
-  } else {
-    await db.profiles.update({
-      where: { id: ALEX_MORGAN_PROFILE_ID },
-      data: { user_id: userId },
+  // Import the Alex Morgan profile from fixture and link to user
+  console.log(`\nImporting profile from fixture...`);
+  console.log(`Fixture: ${FIXTURE_PATH}`);
+
+  try {
+    execFileSync("npx", [
+      "vite-node",
+      "scripts/import-profile.ts",
+      FIXTURE_PATH,
+      "--user-id",
+      userId,
+    ], {
+      stdio: "inherit",
+      cwd: join(__dirname, ".."),
     });
-    console.log(`Linked Alex Morgan profile to test user.`);
+  } catch (error) {
+    console.error("Failed to import profile:", error);
+    process.exit(1);
   }
 
-  console.log("");
-  console.log("Test credentials:");
+  console.log("\nTest credentials:");
   console.log(`  Email: ${TEST_EMAIL}`);
   console.log(`  Password: ${TEST_PASSWORD}`);
-  console.log(`  Profile: Alex Morgan (ID ${ALEX_MORGAN_PROFILE_ID})`);
 }
 
 seedTestUser()
