@@ -223,18 +223,18 @@ export type sessionOrderByWithRelationInput = {
 
 export type sessionWhereUniqueInput = Prisma.AtLeast<{
   id?: string
+  token?: string
   AND?: Prisma.sessionWhereInput | Prisma.sessionWhereInput[]
   OR?: Prisma.sessionWhereInput[]
   NOT?: Prisma.sessionWhereInput | Prisma.sessionWhereInput[]
   userId?: Prisma.StringFilter<"session"> | string
-  token?: Prisma.StringFilter<"session"> | string
   expiresAt?: Prisma.DateTimeFilter<"session"> | Date | string
   ipAddress?: Prisma.StringNullableFilter<"session"> | string | null
   userAgent?: Prisma.StringNullableFilter<"session"> | string | null
   createdAt?: Prisma.DateTimeNullableFilter<"session"> | Date | string | null
   updatedAt?: Prisma.DateTimeNullableFilter<"session"> | Date | string | null
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.userWhereInput>
-}, "id">
+}, "id" | "token">
 
 export type sessionOrderByWithAggregationInput = {
   id?: Prisma.SortOrder

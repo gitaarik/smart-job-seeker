@@ -1267,7 +1267,7 @@ model account {
 model session {
   id        String    @id
   userId    String
-  token     String    @db.VarChar(255)
+  token     String    @unique(map: "session_token_unique") @db.VarChar(255)
   expiresAt DateTime  @db.Timestamptz(6)
   ipAddress String?   @db.VarChar(255)
   userAgent String?
