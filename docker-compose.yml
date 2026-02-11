@@ -8,11 +8,8 @@ services:
       POSTGRES_PASSWORD: postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./scripts/:/scripts
-      - ./db-dumps/:/db-dumps
     ports:
       - ${SJS_DB_PORT:-5432}:5432
-    command: /scripts/init-db.sh
     healthcheck:
       test:
         - CMD
@@ -31,7 +28,8 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
-    command: sh -c "npm ci --ignore-scripts && npx dotenvx run -- prisma generate && npx dotenvx run -- vite dev --host"
+      - ./db-dumps:/db-dumps:ro
+    command: /app/scripts/start-app.sh
     depends_on:
       database:
         condition: service_healthy
