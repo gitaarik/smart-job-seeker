@@ -127,13 +127,14 @@ Create a user-facing dashboard for the Smart Job Seeker application that allows 
 Dashboard
 ├── Overview (home)
 ├── Profile
-│   ├── Basic Info & Highlights
+│   ├── Basic Info
 │   ├── Work Experience
 │   ├── Education
 │   ├── Skills
 │   ├── Side Projects
 │   ├── Languages
 │   └── References
+│   └── Highlights
 ├── Job Search
 │   ├── Search Settings
 │   ├── Job Matches

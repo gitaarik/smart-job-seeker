@@ -2,6 +2,7 @@
   import type { LayoutData } from "./$types";
   import type { Snippet } from "svelte";
   import DashboardHeader from "./components/DashboardHeader.svelte";
+  import Sidebar from "./components/Sidebar.svelte";
   import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
   import "./dashboard.css";
 
@@ -24,7 +25,9 @@
     selectedProfile={data.selectedProfile}
   />
 
-  <main class="py-8 px-4">
+  <Sidebar />
+
+  <main class="py-8 px-4 lg:pl-72">
     <div class="max-w-5xl mx-auto">
       {@render children()}
     </div>
