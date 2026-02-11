@@ -20,7 +20,7 @@
         <svg class="h-9 w-9 text-[var(--dash-chrome-text)]" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
           <circle cx="16" cy="16" r="12" stroke="currentColor" stroke-width="3" fill="none"/>
           <line x1="25" y1="25" x2="36" y2="36" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
-          <path d="M10 16l4 4 8-8" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <path d="M10 17l4 4 8-8" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
         </svg>
         <span class="text-[var(--dash-chrome-text)] font-semibold tracking-wide uppercase hidden sm:block"
         >Smart Job Seeker</span>
