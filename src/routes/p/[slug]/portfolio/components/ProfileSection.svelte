@@ -68,8 +68,8 @@
 
     {
       icon: faGlobe,
-      text: profile.personal_website.replace("https://", ""),
-      href: profile.personal_website,
+      text: profile.personal_website?.replace("https://", "") || "",
+      href: profile.personal_website || "",
       target: "_blank",
       label: "Website",
     },
