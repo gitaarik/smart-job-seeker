@@ -57,17 +57,29 @@ function getThemeFromRequest(request: Request): string {
 export const handle: Handle = async ({ event, resolve }) => {
   // Get session and populate locals FIRST, before svelteKitHandler
   // This ensures event.locals is populated when resolve() is called
-  const session = await auth.api.getSession({
-    headers: event.request.headers,
-  });
-  event.locals.user = session?.user ?? null;
-  event.locals.session = session?.session ?? null;
+  try {
+    const session = await auth.api.getSession({
+      headers: event.request.headers,
+    });
+    event.locals.user = session?.user ?? null;
+    event.locals.session = session?.session ?? null;
+  } catch {
+    // Invalid/expired session - clear locals and let the page handle auth
+    event.locals.user = null;
+    event.locals.session = null;
+  }
 
   // Handle Better Auth routes (e.g., /api/auth/*)
   // Note: svelteKitHandler may call resolve() which needs locals to be set
-  const authResponse = await svelteKitHandler({ event, resolve, auth });
-  if (authResponse) {
-    return authResponse;
+  try {
+    const authResponse = await svelteKitHandler({ event, resolve, auth });
+    if (authResponse) {
+      return authResponse;
+    }
+  } catch {
+    // Session error (e.g., stale token) - clear session cookie and continue
+    event.locals.user = null;
+    event.locals.session = null;
   }
 
   // Apply theme
