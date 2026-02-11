@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "docker compose up",
+    "dev:reset": "DB_RESET=true docker compose up",
     "init": "npm i && dotenvx run -- prisma generate",
     "build": "npm i && dotenvx run -- prisma generate && dotenvx run -- vite build",
     "reinstall": "npm ci && dotenvx run -- prisma generate",

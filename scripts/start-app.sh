@@ -22,8 +22,32 @@ npx svelte-kit sync
 echo "=== Generating Prisma client ==="
 npx dotenvx run -- prisma generate
 
-# Check if app tables exist (profiles table indicates app schema is initialized)
-if db_query -c "SELECT 1 FROM profiles LIMIT 1" > /dev/null 2>&1; then
+# Database initialization
+if [ "$DB_RESET" = "true" ]; then
+  echo "=== Reset mode: dropping all tables ==="
+  db_query -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+
+  # Phase 2 runs in background after vite starts (allows Directus to initialize first)
+  (
+    echo "=== Waiting for Directus to initialize... ==="
+    until curl -sf "${SJS_ADMIN_URL_DOCKER:-http://admin:8055}/server/health" > /dev/null 2>&1; do
+      sleep 2
+    done
+    echo "=== Directus is ready ==="
+
+    echo "=== Creating app tables with prisma db push ==="
+    cd /app && npx dotenvx run -- prisma db push --accept-data-loss
+
+    echo "=== Seeding test user ==="
+    cd /app && npx vite-node scripts/seed-test-user.ts
+
+    echo ""
+    echo "============================================"
+    echo "  Reset complete! Refresh your browser.    "
+    echo "============================================"
+  ) &
+
+elif db_query -c "SELECT 1 FROM profiles LIMIT 1" > /dev/null 2>&1; then
   echo "=== App tables already exist, skipping initialization ==="
 else
   echo "=== App tables not found, initializing database ==="
@@ -35,8 +59,8 @@ else
     echo "Restoring from smart backup..."
     db_query -f /db-dumps/smart.sql
   else
-    echo "No backup found, running Prisma migrations..."
-    npx dotenvx run -- prisma migrate deploy
+    echo "ERROR: No backup found. Cannot initialize database."
+    exit 1
   fi
 fi
 

@@ -25,10 +25,13 @@ This project uses Docker Compose with these containers:
 
 ### Database Initialization
 
-When you run `npm run dev`, the app container automatically:
-1. Checks if the database is already initialized (looks for `profiles` table)
-2. If empty, restores from `db-dumps/full.sql` or `db-dumps/smart.sql` backup
-3. If no backup found, runs Prisma migrations
+**Normal development** (`npm run dev`):
+- Checks if the database is already initialized (looks for `profiles` table)
+- If empty, restores from `db-dumps/full.sql` or `db-dumps/smart.sql` backup
+- If no backup found, runs Prisma migrations
+
+**Reset database** (`npm run dev:reset`):
+- Drops all tables and runs Prisma migrations from scratch
 
 Look at the scripts in `package.json` for help executing things in containers.
 
