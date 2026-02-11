@@ -38,8 +38,14 @@ if [ "$DB_RESET" = "true" ]; then
     echo "=== Creating app tables with prisma db push ==="
     cd /app && npx dotenvx run -- prisma db push --accept-data-loss
 
-    echo "=== Seeding test user ==="
-    cd /app && npx vite-node scripts/seed-test-user.ts
+    # Load dev seed if available, otherwise seed minimal test user
+    if [ -f /db-dumps/dev-seed.sql ]; then
+      echo "=== Loading dev seed data ==="
+      db_query -f /db-dumps/dev-seed.sql
+    else
+      echo "=== Seeding test user ==="
+      cd /app && npx vite-node scripts/seed-test-user.ts
+    fi
 
     echo ""
     echo "============================================"
