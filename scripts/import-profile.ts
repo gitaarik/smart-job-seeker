@@ -10,20 +10,47 @@ interface ImportedProfile {
   profile: {
     name?: string;
     title?: string;
-    location?: string;
+    slug?: string;
+    // Location fields
+    location_city?: string;
+    location_region?: string;
+    location_country_code?: string;
+    city?: string;
+    region?: string;
+    country_code?: string;
+    // Contact fields
     phone_number?: string;
     email_address?: string;
     personal_website?: string;
-    subtitle?: string;
-    core_stack?: string;
+    // Social profiles
     linkedin_profile?: string;
     github_profile?: string;
     stackoverflow_profile?: string;
+    npm_profile?: string;
+    pypi_profile?: string;
+    signal_profile?: string;
+    whatsapp_number?: string;
+    telegram_username?: string;
+    // Professional info
+    subtitle?: string;
+    core_stack?: string;
     headline?: string;
     summary?: string;
+    about_me_text?: string;
     nationality?: string;
     location_url?: string;
     location_timezone?: string;
+    meta_image_url?: string;
+    // Experience years
+    dev_start_year?: number | null;
+    python_js_start_year?: number | null;
+    remote_start_year?: number | null;
+    // Business info
+    company_name?: string;
+    street_address?: string;
+    postal_code?: string;
+    vat_id?: string;
+    kvk_number?: string;
     profile_versions: Array<{
       status?: string;
       sort?: number | null;
@@ -154,13 +181,6 @@ interface ImportedProfile {
       reflection?: string;
       category?: string;
     }>;
-    application_questions: Array<{
-      sort?: number | null;
-      question?: string;
-      answer?: string;
-      title?: string;
-      source?: string;
-    }>;
     cheat_sheets: Array<{
       sort?: number | null;
       title?: string;
@@ -183,7 +203,7 @@ interface ImportedProfile {
 
 async function importProfile(
   filePath: string,
-  profileId?: string,
+  profileIdStr?: string,
   deleteExisting: boolean = false,
 ): Promise<void> {
   try {
@@ -200,6 +220,9 @@ async function importProfile(
 
     const data = importData.profile;
 
+    // Convert profile ID to integer if provided
+    const profileId = profileIdStr ? parseInt(profileIdStr, 10) : undefined;
+
     // If updating existing profile
     if (profileId) {
       const existingProfile = await dbDirect.profiles.findUnique({
@@ -213,6 +236,21 @@ async function importProfile(
       if (deleteExisting) {
         console.log("Deleting existing related data...");
         // Delete all related data for this profile
+        // First delete profile_version_extensions (junction table)
+        await dbDirect.profile_version_extensions.deleteMany({
+          where: {
+            OR: [
+              {
+                profile_versions_profile_version_extensions_extenderToprofile_versions:
+                  { profile: profileId },
+              },
+              {
+                profile_versions_profile_version_extensions_extendedToprofile_versions:
+                  { profile: profileId },
+              },
+            ],
+          },
+        });
         await Promise.all([
           dbDirect.profile_versions.deleteMany({
             where: { profile: profileId },
@@ -250,9 +288,6 @@ async function importProfile(
           dbDirect.project_stories.deleteMany({
             where: { profile: profileId },
           }),
-          dbDirect.application_questions.deleteMany({
-            where: { profile: profileId },
-          }),
           dbDirect.cheat_sheets.deleteMany({ where: { profile: profileId } }),
           dbDirect.tech_skill_categories.deleteMany({
             where: { profile: profileId },
@@ -274,20 +309,47 @@ async function importProfile(
         data: {
           name: data.name,
           title: data.title,
-          location: data.location,
+          slug: data.slug,
+          // Location fields
+          location_city: data.location_city,
+          location_region: data.location_region,
+          location_country_code: data.location_country_code,
+          city: data.city,
+          region: data.region,
+          country_code: data.country_code,
+          // Contact fields
           phone_number: data.phone_number,
           email_address: data.email_address,
           personal_website: data.personal_website,
-          subtitle: data.subtitle,
-          core_stack: data.core_stack,
+          // Social profiles
           linkedin_profile: data.linkedin_profile,
           github_profile: data.github_profile,
           stackoverflow_profile: data.stackoverflow_profile,
+          npm_profile: data.npm_profile,
+          pypi_profile: data.pypi_profile,
+          signal_profile: data.signal_profile,
+          whatsapp_number: data.whatsapp_number,
+          telegram_username: data.telegram_username,
+          // Professional info
+          subtitle: data.subtitle,
+          core_stack: data.core_stack,
           headline: data.headline,
           summary: data.summary,
+          about_me_text: data.about_me_text,
           nationality: data.nationality,
           location_url: data.location_url,
           location_timezone: data.location_timezone,
+          meta_image_url: data.meta_image_url,
+          // Experience years
+          dev_start_year: data.dev_start_year,
+          python_js_start_year: data.python_js_start_year,
+          remote_start_year: data.remote_start_year,
+          // Business info
+          company_name: data.company_name,
+          street_address: data.street_address,
+          postal_code: data.postal_code,
+          vat_id: data.vat_id,
+          kvk_number: data.kvk_number,
           date_updated: new Date(),
         },
       });
@@ -297,20 +359,47 @@ async function importProfile(
         data: {
           name: data.name,
           title: data.title,
-          location: data.location,
+          slug: data.slug,
+          // Location fields
+          location_city: data.location_city,
+          location_region: data.location_region,
+          location_country_code: data.location_country_code,
+          city: data.city,
+          region: data.region,
+          country_code: data.country_code,
+          // Contact fields
           phone_number: data.phone_number,
           email_address: data.email_address,
           personal_website: data.personal_website,
-          subtitle: data.subtitle,
-          core_stack: data.core_stack,
+          // Social profiles
           linkedin_profile: data.linkedin_profile,
           github_profile: data.github_profile,
           stackoverflow_profile: data.stackoverflow_profile,
+          npm_profile: data.npm_profile,
+          pypi_profile: data.pypi_profile,
+          signal_profile: data.signal_profile,
+          whatsapp_number: data.whatsapp_number,
+          telegram_username: data.telegram_username,
+          // Professional info
+          subtitle: data.subtitle,
+          core_stack: data.core_stack,
           headline: data.headline,
           summary: data.summary,
+          about_me_text: data.about_me_text,
           nationality: data.nationality,
           location_url: data.location_url,
           location_timezone: data.location_timezone,
+          meta_image_url: data.meta_image_url,
+          // Experience years
+          dev_start_year: data.dev_start_year,
+          python_js_start_year: data.python_js_start_year,
+          remote_start_year: data.remote_start_year,
+          // Business info
+          company_name: data.company_name,
+          street_address: data.street_address,
+          postal_code: data.postal_code,
+          vat_id: data.vat_id,
+          kvk_number: data.kvk_number,
           date_created: new Date(),
           date_updated: new Date(),
         },
@@ -323,32 +412,49 @@ async function importProfile(
       console.log(
         `Importing ${data.profile_versions.length} profile versions...`,
       );
+      // First pass: create all profile versions
+      const createdVersions: Array<{
+        id: number;
+        name: string | null;
+        extends_from?: string | null;
+      }> = [];
       for (const version of data.profile_versions) {
-        let extendsFromId: number | null = null;
-
-        // If extends_from is specified, look up the ID by name
-        if (version.extends_from) {
-          const extendsFromVersion = await dbDirect.profile_versions.findFirst({
-            where: {
-              name: version.extends_from,
-              profile: profile.id,
-            },
-            select: { id: true },
-          });
-          extendsFromId = extendsFromVersion?.id ?? null;
-        }
-
-        await dbDirect.profile_versions.create({
+        const created = await dbDirect.profile_versions.create({
           data: {
             status: version.status || "draft",
             sort: version.sort,
             name: version.name,
             description: version.description,
             toggles: version.toggles,
-            extends_from: extendsFromId,
             profile: profile.id,
           },
         });
+        createdVersions.push({
+          id: created.id,
+          name: created.name,
+          extends_from: version.extends_from,
+        });
+      }
+
+      // Second pass: create extension relationships
+      for (const version of createdVersions) {
+        if (version.extends_from) {
+          const extendedVersion = createdVersions.find(
+            (v) => v.name === version.extends_from,
+          );
+          if (extendedVersion) {
+            await dbDirect.profile_version_extensions.create({
+              data: {
+                extender: version.id,
+                extended: extendedVersion.id,
+              },
+            });
+          } else {
+            console.warn(
+              `Warning: Could not find profile version "${version.extends_from}" to extend from`,
+            );
+          }
+        }
       }
     }
 
@@ -545,10 +651,7 @@ async function importProfile(
           for (const achievement of project.achievements) {
             await dbDirect.side_project_achievements.create({
               data: {
-                title: achievement.title,
-                fa_icon: achievement.fa_icon,
                 description: achievement.description,
-                status: achievement.status || "draft",
                 sort: achievement.sort,
                 side_project: createdProject.id,
               },
@@ -561,7 +664,6 @@ async function importProfile(
           for (const tech of project.technologies) {
             await dbDirect.side_project_technologies.create({
               data: {
-                status: tech.status || "draft",
                 sort: tech.sort,
                 name: tech.name,
                 side_project: createdProject.id,
@@ -652,25 +754,6 @@ async function importProfile(
       }
     }
 
-    // Import application questions
-    if (data.application_questions && data.application_questions.length > 0) {
-      console.log(
-        `Importing ${data.application_questions.length} application questions...`,
-      );
-      for (const question of data.application_questions) {
-        await dbDirect.application_questions.create({
-          data: {
-            sort: question.sort,
-            question: question.question,
-            answer: question.answer,
-            title: question.title,
-            source: question.source,
-            profile: profile.id,
-          },
-        });
-      }
-    }
-
     // Import cheat sheets
     if (data.cheat_sheets && data.cheat_sheets.length > 0) {
       console.log(`Importing ${data.cheat_sheets.length} cheat sheets...`);
@@ -724,9 +807,6 @@ async function importProfile(
     console.log(`   - Languages: ${data.languages?.length || 0}`);
     console.log(`   - References: ${data.references?.length || 0}`);
     console.log(`   - Project stories: ${data.project_stories?.length || 0}`);
-    console.log(
-      `   - Application questions: ${data.application_questions?.length || 0}`,
-    );
     console.log(`   - Cheat sheets: ${data.cheat_sheets?.length || 0}`);
     console.log(
       `   - Salary expectations: ${data.salary_expectations?.length || 0}`,

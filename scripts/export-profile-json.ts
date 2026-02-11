@@ -10,22 +10,47 @@ interface ExportedProfile {
   profile: {
     name?: string;
     title?: string;
+    slug?: string;
+    // Location fields
     location_city?: string;
     location_region?: string;
     location_country_code?: string;
+    city?: string;
+    region?: string;
+    country_code?: string;
+    // Contact fields
     phone_number?: string;
     email_address?: string;
     personal_website?: string;
-    subtitle?: string;
-    core_stack?: string;
+    // Social profiles
     linkedin_profile?: string;
     github_profile?: string;
     stackoverflow_profile?: string;
+    npm_profile?: string;
+    pypi_profile?: string;
+    signal_profile?: string;
+    whatsapp_number?: string;
+    telegram_username?: string;
+    // Professional info
+    subtitle?: string;
+    core_stack?: string;
     headline?: string;
     summary?: string;
+    about_me_text?: string;
     nationality?: string;
     location_url?: string;
     location_timezone?: string;
+    meta_image_url?: string;
+    // Experience years
+    dev_start_year?: number | null;
+    python_js_start_year?: number | null;
+    remote_start_year?: number | null;
+    // Business info
+    company_name?: string;
+    street_address?: string;
+    postal_code?: string;
+    vat_id?: string;
+    kvk_number?: string;
     profile_versions: Array<{
       status?: string;
       sort?: number | null;
@@ -152,13 +177,6 @@ interface ExportedProfile {
       reflection?: string;
       category?: string;
     }>;
-    application_questions: Array<{
-      sort?: number | null;
-      question?: string;
-      answer?: string;
-      title?: string;
-      source?: string;
-    }>;
     cheat_sheets: Array<{
       sort?: number | null;
       title?: string;
@@ -192,7 +210,7 @@ async function exportProfile(
     const baseProfile = await dbDirect.profiles.findUnique({
       where: { id },
       include: {
-        profile_versions: {
+        profile_versions_profile_versions_profileToprofiles: {
           select: {
             status: true,
             sort: true,
@@ -452,23 +470,48 @@ async function exportProfile(
       profile: {
         name: baseProfile.name || undefined,
         title: baseProfile.title || undefined,
+        slug: baseProfile.slug || undefined,
+        // Location fields
         location_city: baseProfile.location_city || undefined,
         location_region: baseProfile.location_region || undefined,
         location_country_code: baseProfile.location_country_code || undefined,
+        city: baseProfile.city || undefined,
+        region: baseProfile.region || undefined,
+        country_code: baseProfile.country_code || undefined,
+        // Contact fields
         phone_number: baseProfile.phone_number || undefined,
         email_address: baseProfile.email_address || undefined,
         personal_website: baseProfile.personal_website || undefined,
-        subtitle: baseProfile.subtitle || undefined,
-        core_stack: baseProfile.core_stack || undefined,
+        // Social profiles
         linkedin_profile: baseProfile.linkedin_profile || undefined,
         github_profile: baseProfile.github_profile || undefined,
         stackoverflow_profile: baseProfile.stackoverflow_profile || undefined,
+        npm_profile: baseProfile.npm_profile || undefined,
+        pypi_profile: baseProfile.pypi_profile || undefined,
+        signal_profile: baseProfile.signal_profile || undefined,
+        whatsapp_number: baseProfile.whatsapp_number || undefined,
+        telegram_username: baseProfile.telegram_username || undefined,
+        // Professional info
+        subtitle: baseProfile.subtitle || undefined,
+        core_stack: baseProfile.core_stack || undefined,
         headline: baseProfile.headline || undefined,
         summary: baseProfile.summary || undefined,
+        about_me_text: baseProfile.about_me_text || undefined,
         nationality: baseProfile.nationality || undefined,
         location_url: baseProfile.location_url || undefined,
         location_timezone: baseProfile.location_timezone || undefined,
-        profile_versions: baseProfile.profile_versions.map((pv) => ({
+        meta_image_url: baseProfile.meta_image_url || undefined,
+        // Experience years
+        dev_start_year: baseProfile.dev_start_year,
+        python_js_start_year: baseProfile.python_js_start_year,
+        remote_start_year: baseProfile.remote_start_year,
+        // Business info
+        company_name: baseProfile.company_name || undefined,
+        street_address: baseProfile.street_address || undefined,
+        postal_code: baseProfile.postal_code || undefined,
+        vat_id: baseProfile.vat_id || undefined,
+        kvk_number: baseProfile.kvk_number || undefined,
+        profile_versions: baseProfile.profile_versions_profile_versions_profileToprofiles.map((pv) => ({
           status: pv.status || undefined,
           sort: pv.sort,
           name: pv.name || undefined,
@@ -529,7 +572,6 @@ async function exportProfile(
         languages: baseProfile.languages,
         references: baseProfile.references,
         project_stories: baseProfile.project_stories,
-        application_questions: baseProfile.application_questions,
         cheat_sheets: baseProfile.cheat_sheets,
         salary_expectations: baseProfile.salary_expectations,
       },

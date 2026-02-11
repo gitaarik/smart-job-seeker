@@ -60,3 +60,21 @@ Do NOT add database columns directly via SQL - use Directus so fields get proper
 
 - Don't leave comments explaining removed code
 - Ask before adding removal comments
+
+## Testing with Playwright MCP
+
+Test credentials are available for browser testing (uses Alex Morgan profile with realistic data):
+
+- **Email**: `alex.morgan@example.com`
+- **Password**: `testpassword123`
+- **Profile**: Alex Morgan (ID 12)
+
+To create the test user (run once after fresh DB):
+```bash
+npm run docker:seed:test-user
+```
+
+After seeding, make a database backup to include the test user in future restores:
+```bash
+npm run docker:db:backup
+```
