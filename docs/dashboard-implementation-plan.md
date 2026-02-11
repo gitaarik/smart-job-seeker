@@ -141,7 +141,7 @@ Dashboard
 │   └── Saved Jobs
 ├── Applications
 │   ├── Active Applications
-│   ├── Application Letters
+│   ├── Letters & Forms
 │   └── Salary Expectations
 ├── Interview Prep
 │   ├── Project Stories

@@ -16,8 +16,8 @@
   let {
     title,
     icon,
-    backHref = "/dashboard/profile",
-    backLabel = "Back to Profile",
+    backHref,
+    backLabel = "Back",
     showAddButton = false,
     addLabel = "Add New",
     onAdd,
@@ -26,19 +26,24 @@
 
 <div class="flex items-center justify-between mb-6">
   <div class="flex items-center gap-4">
-    <a
-      href={backHref}
-      class="flex items-center gap-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
-    >
-      <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />
-      <span class="text-sm">{backLabel}</span>
-    </a>
+    {#if backHref}
+      <a
+        href={backHref}
+        class="flex items-center gap-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
+      >
+        <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />
+        <span class="text-sm">{backLabel}</span>
+      </a>
+    {/if}
     <div class="flex items-center gap-3">
       {#if icon}
         <div
           class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center"
         >
-          <FontAwesomeIcon {icon} class="w-5 h-5 text-[var(--dash-text-muted)]" />
+          <FontAwesomeIcon
+            {icon}
+            class="w-5 h-5 text-[var(--dash-text-muted)]"
+          />
         </div>
       {/if}
       <h1 class="text-2xl font-bold text-[var(--dash-text)]">{title}</h1>

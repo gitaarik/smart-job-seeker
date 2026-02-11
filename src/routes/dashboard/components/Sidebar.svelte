@@ -78,7 +78,7 @@
           icon: faPaperPlane,
         },
         {
-          label: "Application Letters",
+          label: "Letters & Forms",
           href: "/dashboard/applications/letters",
           icon: faEnvelope,
         },
