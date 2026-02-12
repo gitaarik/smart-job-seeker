@@ -4,6 +4,7 @@
 # This is used by dev:reset to populate a fresh database.
 #
 # Includes:
+# - Directus config (schema, roles, permissions, flows)
 # - User/auth tables (user, account)
 # - Profile and all related content
 # - Job configuration (searches, preferences, platforms)
@@ -13,6 +14,7 @@
 # - Sessions, logs, generated content
 # - Jobs, job matches, applications
 # - AI chat history
+# - Directus audit/activity tables
 #
 
 set -e
@@ -27,7 +29,34 @@ mkdir -p "$OUTPUT_DIR"
 echo "Creating dev seed..."
 echo ""
 
-# Tables to include (order matters for FK dependencies)
+# Directus config tables (order matters for FK dependencies)
+DIRECTUS_TABLES=(
+  # Migrations (MUST be first - tells Directus DB is already initialized)
+  directus_migrations
+  # Files (needed early, referenced by other tables)
+  directus_folders
+  directus_files
+  # Schema configuration
+  directus_collections
+  directus_fields
+  directus_relations
+  # Roles and policies (no FK deps)
+  directus_roles
+  directus_policies
+  # Users (before access, since access references users)
+  directus_users
+  # Access links roles/users to policies
+  directus_access
+  directus_permissions
+  # Settings
+  directus_settings
+  directus_translations
+  # Automation
+  directus_flows
+  directus_operations
+)
+
+# Application tables (order matters for FK dependencies)
 TABLES=(
   # Auth
   "user"
@@ -86,131 +115,87 @@ SET session_replication_role = 'replica';
 
 EOF
 
-# Step 1: Export referenced directus_folders and directus_files
-echo "  [1/3] Exporting referenced files..."
+# Step 1: Export Directus tables WITH SCHEMA (so they can be created before Directus starts)
+echo "  [1/3] Exporting Directus config (with schema)..."
 
-# Get all referenced file UUIDs
-FILE_UUIDS=$(psql -U postgres -d smartjobseeker -t -A -c "
-SELECT DISTINCT id FROM (
-  SELECT profile_picture AS id FROM profiles WHERE profile_picture IS NOT NULL
-  UNION SELECT source_cv AS id FROM profiles WHERE source_cv IS NOT NULL
-  UNION SELECT logo AS id FROM work_experiences WHERE logo IS NOT NULL
-  UNION SELECT logo AS id FROM education WHERE logo IS NOT NULL
-) AS files WHERE id IS NOT NULL;
-")
+# Build table list for pg_dump
+DIRECTUS_TABLE_ARGS=""
+for table in "${DIRECTUS_TABLES[@]}"; do
+  DIRECTUS_TABLE_ARGS="$DIRECTUS_TABLE_ARGS -t $table"
+done
 
-if [ -n "$FILE_UUIDS" ]; then
-  # Get folder UUIDs for these files
-  FOLDER_UUIDS=$(psql -U postgres -d smartjobseeker -t -A -c "
-  SELECT DISTINCT folder FROM directus_files
-  WHERE id IN ('$(echo "$FILE_UUIDS" | tr '\n' "'" | sed "s/'/','/g" | sed "s/,'$//")')
-  AND folder IS NOT NULL;
-  ")
+# Dump Directus tables with schema and data
+echo "        - Dumping Directus tables with schema..."
+pg_dump -U postgres -d smartjobseeker \
+  --no-owner --no-acl \
+  --disable-triggers \
+  $DIRECTUS_TABLE_ARGS \
+  >> "$OUTPUT_FILE"
 
-  # Export folders first (if any)
-  if [ -n "$FOLDER_UUIDS" ]; then
-    echo "        - Exporting directus_folders..."
-    {
-      echo "-- Referenced directus_folders"
-      echo "COPY public.directus_folders FROM stdin WITH (FORMAT csv, NULL 'NULL_VALUE');"
-      psql -U postgres -d smartjobseeker -c "
-      COPY (
-        SELECT * FROM directus_folders
-        WHERE id IN ('$(echo "$FOLDER_UUIDS" | tr '\n' "'" | sed "s/'/','/g" | sed "s/,'$//")')
-      ) TO STDOUT WITH (FORMAT csv, NULL 'NULL_VALUE')
-      "
-      echo "\\."
-      echo ""
-    } >> "$OUTPUT_FILE"
-  fi
-
-  # Export files
-  echo "        - Exporting directus_files..."
-  {
-    echo "-- Referenced directus_files"
-    echo "COPY public.directus_files FROM stdin WITH (FORMAT csv, NULL 'NULL_VALUE');"
-    psql -U postgres -d smartjobseeker -c "
-    COPY (
-      SELECT * FROM directus_files
-      WHERE id IN ('$(echo "$FILE_UUIDS" | tr '\n' "'" | sed "s/'/','/g" | sed "s/,'$//")')
-    ) TO STDOUT WITH (FORMAT csv, NULL 'NULL_VALUE')
-    "
-    echo "\\."
-    echo ""
-  } >> "$OUTPUT_FILE"
-else
-  echo "        - No files referenced"
-fi
-
-# Step 2: Export each table
-echo ""
-echo "  [2/3] Exporting tables..."
-
-for table in "${TABLES[@]}"; do
-  # Check if table has data
-  count=$(psql -U postgres -d smartjobseeker -t -A -c "SELECT COUNT(*) FROM \"$table\";")
-
-  if [ "$count" -gt 0 ]; then
+# Count what was exported
+for table in "${DIRECTUS_TABLES[@]}"; do
+  exists=$(psql -U postgres -d smartjobseeker -t -A -c "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = '$table');")
+  if [ "$exists" = "t" ]; then
+    count=$(psql -U postgres -d smartjobseeker -t -A -c "SELECT COUNT(*) FROM \"$table\";")
     echo "        - $table ($count rows)"
-    {
-      echo "-- $table"
-      echo "COPY public.\"$table\" FROM stdin WITH (FORMAT csv, NULL 'NULL_VALUE');"
-      psql -U postgres -d smartjobseeker -c "COPY public.\"$table\" TO STDOUT WITH (FORMAT csv, NULL 'NULL_VALUE')"
-      echo "\\."
-      echo ""
-    } >> "$OUTPUT_FILE"
-  else
-    echo "        - $table (empty, skipped)"
   fi
 done
 
-# Step 3: Reset sequences and re-enable FK triggers
+# Step 2: Export application tables WITH SCHEMA
 echo ""
-echo "  [3/3] Adding sequence resets..."
+echo "  [2/3] Exporting application tables (with schema)..."
 
-{
-  echo "-- Re-enable FK constraint triggers"
-  echo "SET session_replication_role = 'origin';"
-  echo ""
-  echo "-- Reset sequences to max ID + 1"
-} >> "$OUTPUT_FILE"
-
-# Reset sequences for tables with auto-increment IDs
-SEQUENCE_TABLES=(
-  profiles
-  work_experiences
-  work_experience_achievements
-  work_experience_technologies
-  work_experience_projects
-  work_experience_project_technologies
-  education
-  tech_skill_categories
-  tech_skills
-  tech_skill_types
-  side_projects
-  side_project_achievements
-  side_project_technologies
-  languages
-  highlights
-  os_contributions
-  "references"
-  project_stories
-  salary_expectations
-  cheat_sheets
-  collected_data
-  profile_versions
-  profile_version_extensions
-  job_platforms
-  job_searches
-  job_searches_job_sites
-  job_match_preferences
-  platform_profiles
-  ai_chat_templates
+# Tables to EXCLUDE (everything not in TABLES list + directus tables which are already dumped)
+EXCLUDE_TABLES=(
+  # Already dumped Directus tables
+  directus_migrations directus_folders directus_files directus_collections directus_fields
+  directus_relations directus_roles directus_policies directus_users directus_access
+  directus_permissions directus_settings directus_translations directus_flows directus_operations
+  # Other Directus tables not needed
+  directus_activity directus_revisions directus_sessions directus_notifications
+  directus_presets directus_dashboards directus_panels directus_shares directus_versions
+  directus_comments directus_extensions directus_deployments directus_deployment_projects
+  directus_deployment_runs
+  # App tables not needed
+  session verification
+  jobs job_matches job_resources applications application_questions application_letters
+  application_activity_log applications_files
+  profile_exports profile_tokens
+  ai_chats ai_prompts config
 )
 
-for table in "${SEQUENCE_TABLES[@]}"; do
-  echo "SELECT setval('public.${table}_id_seq', COALESCE((SELECT MAX(id) FROM public.\"$table\"), 1));" >> "$OUTPUT_FILE"
+# Build exclude args
+EXCLUDE_ARGS=""
+for table in "${EXCLUDE_TABLES[@]}"; do
+  EXCLUDE_ARGS="$EXCLUDE_ARGS --exclude-table=$table"
 done
+
+# Dump remaining tables (app tables we want) with schema and data
+echo "        - Dumping application tables with schema..."
+pg_dump -U postgres -d smartjobseeker \
+  --no-owner --no-acl \
+  --disable-triggers \
+  $EXCLUDE_ARGS >> "$OUTPUT_FILE"
+
+# Count what was exported
+for table in "${TABLES[@]}"; do
+  count=$(psql -U postgres -d smartjobseeker -t -A -c "SELECT COUNT(*) FROM \"$table\";")
+  if [ "$count" -gt 0 ]; then
+    echo "        - $table ($count rows)"
+  else
+    echo "        - $table (empty)"
+  fi
+done
+
+# Step 3: Re-enable FK triggers (pg_dump handles sequences)
+echo ""
+echo "  [3/3] Finalizing..."
+
+{
+  echo ""
+  echo "-- Re-enable FK constraint triggers"
+  echo "SET session_replication_role = 'origin';"
+} >> "$OUTPUT_FILE"
 
 # Get file size
 SIZE=$(du -h "$OUTPUT_FILE" | cut -f1)
