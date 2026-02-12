@@ -23,6 +23,22 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OUTPUT_DIR="$DIR/../db-dumps"
 OUTPUT_FILE="$OUTPUT_DIR/dev-seed.sql"
 
+# Database connection settings (supports both local and containerized environments)
+DB_HOST="${SJS_DB_HOST:-localhost}"
+DB_USER="${SJS_DB_USER:-postgres}"
+DB_NAME="${SJS_DB_DATABASE:-smartjobseeker}"
+DB_PASSWORD="${SJS_DB_PASSWORD:-postgres}"
+
+# Helper for psql commands
+db_query() {
+  PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" "$@"
+}
+
+# Helper for pg_dump
+db_dump() {
+  PGPASSWORD="$DB_PASSWORD" pg_dump -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" "$@"
+}
+
 # Ensure output directory exists
 mkdir -p "$OUTPUT_DIR"
 
@@ -126,7 +142,7 @@ done
 
 # Dump Directus tables with schema and data
 echo "        - Dumping Directus tables with schema..."
-pg_dump -U postgres -d smartjobseeker \
+db_dump \
   --no-owner --no-acl \
   --disable-triggers \
   $DIRECTUS_TABLE_ARGS \
@@ -134,9 +150,9 @@ pg_dump -U postgres -d smartjobseeker \
 
 # Count what was exported
 for table in "${DIRECTUS_TABLES[@]}"; do
-  exists=$(psql -U postgres -d smartjobseeker -t -A -c "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = '$table');")
+  exists=$(db_query -t -A -c "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = '$table');")
   if [ "$exists" = "t" ]; then
-    count=$(psql -U postgres -d smartjobseeker -t -A -c "SELECT COUNT(*) FROM \"$table\";")
+    count=$(db_query -t -A -c "SELECT COUNT(*) FROM \"$table\";")
     echo "        - $table ($count rows)"
   fi
 done
@@ -172,14 +188,14 @@ done
 
 # Dump remaining tables (app tables we want) with schema and data
 echo "        - Dumping application tables with schema..."
-pg_dump -U postgres -d smartjobseeker \
+db_dump \
   --no-owner --no-acl \
   --disable-triggers \
   $EXCLUDE_ARGS >> "$OUTPUT_FILE"
 
 # Count what was exported
 for table in "${TABLES[@]}"; do
-  count=$(psql -U postgres -d smartjobseeker -t -A -c "SELECT COUNT(*) FROM \"$table\";")
+  count=$(db_query -t -A -c "SELECT COUNT(*) FROM \"$table\";")
   if [ "$count" -gt 0 ]; then
     echo "        - $table ($count rows)"
   else
