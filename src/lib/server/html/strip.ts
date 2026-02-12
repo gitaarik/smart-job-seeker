@@ -41,10 +41,40 @@ export function stripHtmlForLlm(
   $("canvas").remove();
 
   // Remove common navigation/UI elements that don't contain useful content
-  $("nav").remove();
+  // EXCEPT pagination-related elements when extraClassPatterns includes pagination patterns
+  const preservePagination = options.extraClassPatterns?.some((p) =>
+    ["pagination", "pager", "page-nav"].includes(p.toLowerCase())
+  );
+
+  // Remove nav elements except those with pagination-related classes or aria-labels
+  $("nav").each(function () {
+    const el = $(this);
+    const className = el.attr("class")?.toLowerCase() || "";
+    const ariaLabel = el.attr("aria-label")?.toLowerCase() || "";
+    const isPagination = className.includes("pagination") ||
+      className.includes("pager") ||
+      ariaLabel.includes("pagination");
+    if (!preservePagination || !isPagination) {
+      el.remove();
+    }
+  });
+
   $("header").remove();
   $("footer").remove();
-  $("[role='navigation']").remove();
+
+  // Remove role=navigation elements except pagination
+  $("[role='navigation']").each(function () {
+    const el = $(this);
+    const className = el.attr("class")?.toLowerCase() || "";
+    const ariaLabel = el.attr("aria-label")?.toLowerCase() || "";
+    const isPagination = className.includes("pagination") ||
+      className.includes("pager") ||
+      ariaLabel.includes("pagination");
+    if (!preservePagination || !isPagination) {
+      el.remove();
+    }
+  });
+
   $("[role='banner']").remove();
   $("[role='contentinfo']").remove();
   $(".artdeco-modal").remove(); // LinkedIn modals
