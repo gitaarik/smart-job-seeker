@@ -35,9 +35,18 @@ const PROFILE_INCLUDE = {
   },
   references: { orderBy: { sort: "asc" as const } },
   profile_versions_profile_versions_profileToprofiles: {
-    include: {
+    select: {
+      id: true,
+      status: true,
+      sort: true,
+      date_created: true,
+      date_updated: true,
+      name: true,
+      description: true,
+      profile: true,
+      toggles: true,
       profile_version_extensions_profile_version_extensions_extenderToprofile_versions:
-        {},
+        true,
     },
     orderBy: { sort: "asc" as const },
     where: { status: { equals: "published" } },
