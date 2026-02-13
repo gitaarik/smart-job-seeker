@@ -1,10 +1,8 @@
-import { env } from "$env/dynamic/public";
-
 /**
- * Generate public URL for Directus asset
+ * Generate URL for Directus asset, served via the app's own domain
  * @param fileUuid - UUID of the file in Directus
  * @param options - Optional transformation parameters (width, height, quality, etc.)
- * @returns Public URL to the asset
+ * @returns Relative URL to the asset (proxied to Directus via Caddy)
  */
 export function getDirectusAssetUrl(
   fileUuid: string | null | undefined,
@@ -17,10 +15,8 @@ export function getDirectusAssetUrl(
 ): string | null {
   if (!fileUuid) return null;
 
-  const baseUrl = env.PUBLIC_DIRECTUS_URL || "http://localhost:8055";
-  let url = `${baseUrl}/assets/${fileUuid}`;
+  let url = `/assets/${fileUuid}`;
 
-  // Add transformation parameters if provided
   if (options) {
     const params = new URLSearchParams();
     if (options.width) params.set("width", options.width.toString());

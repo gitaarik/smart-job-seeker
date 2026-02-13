@@ -1,5 +1,4 @@
 import type { LayoutServerLoad } from "./$types";
-import { config } from "$lib/server/config";
 
 function getSystemTheme(request: Request): "light" | "dark" {
   // Try to detect system preference from headers
@@ -61,7 +60,6 @@ export const load: LayoutServerLoad = async ({ request, locals }) => {
     themePreference: themeData.themePreference,
     actualTheme: themeData.actualTheme,
     systemTheme: themeData.systemTheme,
-    adminPublicUrl: config.adminPublicUrl,
     user: locals.user,
   };
 };
