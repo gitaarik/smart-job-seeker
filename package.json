@@ -49,6 +49,7 @@
     "host:clear-directus-cache": "npx vite-node scripts/clear-directus-cache.ts",
     "host:build-json-resume": "npx vite-node scripts/build-json-resume.ts",
     "host:seed:test-user": "npx vite-node scripts/seed-test-user.ts",
+    "host:set-user-password": "npx vite-node scripts/set-user-password.ts --",
     "host:match:jobs": "dotenvx run -- npx vite-node scripts/match-jobs.ts",
     "container:match:jobs": "npx vite-node scripts/match-jobs.ts",
     "prepare": "svelte-kit sync || echo ''",
