@@ -322,10 +322,12 @@
       {#each projects as project (project.id)}
         <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden">
           <!-- Header -->
-          <button
-            type="button"
+          <div
+            role="button"
+            tabindex="0"
             onclick={() => toggleExpand(project.id)}
-            class="w-full flex items-center justify-between p-4 hover:bg-gray-100 transition-colors text-left"
+            onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleExpand(project.id); } }}
+            class="w-full flex items-center justify-between p-4 hover:bg-gray-100 transition-colors text-left cursor-pointer"
           >
             <div class="flex items-center gap-4">
               <div
@@ -388,7 +390,7 @@
                 class="w-4 h-4 text-[var(--dash-text-secondary)]"
               />
             </div>
-          </button>
+          </div>
 
           <!-- Expanded Content -->
           {#if expandedId === project.id}
