@@ -14,7 +14,7 @@ db_query() {
 }
 
 echo "=== Installing dependencies ==="
-npm ci --ignore-scripts
+npm ci --ignore-scripts --include=dev --legacy-peer-deps
 
 echo "=== Syncing SvelteKit ==="
 npx svelte-kit sync
@@ -100,5 +100,13 @@ else
   fi
 fi
 
-echo "=== Starting Vite dev server ==="
-exec npx dotenvx run -- vite dev --host
+if [ "$NODE_ENV" = "development" ] || [ -z "$NODE_ENV" ]; then
+  echo "=== Starting Vite dev server ==="
+  exec npx dotenvx run -- vite dev --host
+else
+  echo "=== Building app ==="
+  npx dotenvx run -- vite build
+
+  echo "=== Starting Node server ==="
+  exec npx dotenvx run -- node build
+fi

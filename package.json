@@ -8,6 +8,7 @@
     "dev:reset": "DB_RESET=true docker compose up",
     "init": "npm i && dotenvx run -- prisma generate",
     "build": "npm i && dotenvx run -- prisma generate && dotenvx run -- vite build",
+    "start": "dotenvx run -- node build",
     "reinstall": "npm ci && dotenvx run -- prisma generate",
     "docker:build": "docker compose exec app npm run host:build -- --host",
     "docker:cli": "docker compose exec -it app /bin/bash",
@@ -63,7 +64,7 @@
   "devDependencies": {
     "@eslint/compat": "^1.2.5",
     "@eslint/js": "^9.18.0",
-    "@sveltejs/adapter-vercel": "^5.8.1",
+    "@sveltejs/adapter-node": "^5.5.3",
     "@sveltejs/enhanced-img": "^0.7.0",
     "@sveltejs/kit": "^2.16.0",
     "@sveltejs/vite-plugin-svelte": "^6.1.0",
@@ -111,6 +112,7 @@
     "@langchain/google-genai": "^2.1.7",
     "@langchain/groq": "^1.0.2",
     "@langchain/openai": "^1.2.1",
+    "@noble/ciphers": "^2.1.1",
     "@prisma/adapter-pg": "^7.3.0",
     "@prisma/client": "^7.3.0",
     "@smithy/eventstream-codec": "^2.2.0",
@@ -134,7 +136,8 @@
     "resend": "^6.9.1",
     "tsx": "^4.20.6",
     "uuid": "^11.1.0",
-    "zod": "^3.25.76"
+    "zod": "^4.3.6",
+    "zod-to-json-schema": "^3.25.1"
   },
   "volta": {
     "node": "22.14.0"
