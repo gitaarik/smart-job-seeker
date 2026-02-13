@@ -131,6 +131,8 @@ Complete schema: `prisma/schema.prisma`
 ```bash
 # Development
 npm run dev                      # Start all services
+npm run dev:reset                # Reset DB with dev seed
+npm run dev:restore              # Reset DB from full/smart backup
 npm run docker:cli               # Access app container
 
 # Database

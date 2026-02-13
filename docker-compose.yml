@@ -45,6 +45,7 @@ services:
     environment:
       NODE_ENV: development
       DB_RESET: ${DB_RESET:-false}
+      DB_RESTORE: ${DB_RESTORE:-false}
       # Override SJS_DATABASE_URL to use direct database connection instead of Prisma Accelerate
       SJS_DATABASE_URL: ${SJS_POSTGRES_URL_DOCKER:-postgres://postgres:postgres@database:5432/smartjobseeker}
       # DATABASE_URL is also set for compatibility with standard Prisma tools

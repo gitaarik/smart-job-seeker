@@ -63,6 +63,26 @@ if [ "$DB_RESET" = "true" ]; then
     ) &
   fi
 
+elif [ "$DB_RESTORE" = "true" ]; then
+  echo "=== Restore mode: dropping all tables ==="
+  db_query -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+
+  if [ -f /db-dumps/full.sql ]; then
+    echo "=== Restoring from full backup ==="
+    db_query -f /db-dumps/full.sql
+  elif [ -f /db-dumps/smart.sql ]; then
+    echo "=== Restoring from smart backup ==="
+    db_query -f /db-dumps/smart.sql
+  else
+    echo "ERROR: No backup found in /db-dumps/. Cannot restore."
+    exit 1
+  fi
+
+  echo ""
+  echo "============================================"
+  echo "  Restore complete! Refresh your browser.  "
+  echo "============================================"
+
 elif db_query -c "SELECT 1 FROM profiles LIMIT 1" > /dev/null 2>&1; then
   echo "=== App tables already exist, skipping initialization ==="
 else

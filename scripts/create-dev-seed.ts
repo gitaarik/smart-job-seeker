@@ -1,0 +1,247 @@
+#!/usr/bin/env node
+/**
+ * Creates a dev seed SQL file with essential tables and dev users.
+ *
+ * 1. Seeds dev users via Better Auth (creates accounts, links to profiles)
+ * 2. Dumps Directus config tables (with schema)
+ * 3. Dumps application tables (with schema, excluding transient data)
+ *
+ * Run inside the app container: npx vite-node scripts/create-dev-seed.ts
+ */
+
+import { auth } from "$lib/server/auth/better-auth";
+import { dbDirect as db } from "$lib/server/db";
+import { execFileSync } from "child_process";
+import { dirname, join } from "path";
+import { fileURLToPath, URL } from "url";
+import { writeFileSync, statSync, mkdirSync } from "fs";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const OUTPUT_DIR = join(__dirname, "..", "db-dumps");
+const OUTPUT_FILE = join(OUTPUT_DIR, "dev-seed.sql");
+
+// Parse DATABASE_URL for pg_dump connection
+const dbUrl = new URL(
+  process.env.SJS_DATABASE_URL ||
+    process.env.DATABASE_URL ||
+    "postgres://postgres:postgres@database:5432/smartjobseeker",
+);
+const DB_HOST = dbUrl.hostname;
+const DB_PORT = dbUrl.port || "5432";
+const DB_USER = dbUrl.username || "postgres";
+const DB_PASSWORD = dbUrl.password || "postgres";
+const DB_NAME = dbUrl.pathname.slice(1) || "smartjobseeker";
+
+const pgEnv = { ...process.env, PGPASSWORD: DB_PASSWORD };
+
+function pgDump(args: string[]): string {
+  return execFileSync(
+    "pg_dump",
+    ["-h", DB_HOST, "-p", DB_PORT, "-U", DB_USER, "-d", DB_NAME, ...args],
+    { env: pgEnv, maxBuffer: 100 * 1024 * 1024 },
+  ).toString();
+}
+
+function psqlQuery(query: string): string {
+  return execFileSync(
+    "psql",
+    ["-h", DB_HOST, "-p", DB_PORT, "-U", DB_USER, "-d", DB_NAME, "-t", "-A", "-c", query],
+    { env: pgEnv },
+  )
+    .toString()
+    .trim();
+}
+
+// ============================================================================
+// Dev Users
+// ============================================================================
+
+const DEV_USERS = [
+  {
+    email: "rik@rikwanders.tech",
+    password: "waterpijp",
+    name: "Rik Wanders",
+    profileId: 1,
+  },
+  {
+    email: "alex.morgan@example.com",
+    password: "testpassword123",
+    name: "Alex Morgan",
+    profileId: 12,
+  },
+];
+
+async function seedDevUsers() {
+  console.log("[1/3] Seeding dev users...");
+
+  for (const user of DEV_USERS) {
+    const profile = await db.profiles.findUnique({
+      where: { id: user.profileId },
+    });
+
+    if (!profile) {
+      console.error(
+        `  Profile ${user.profileId} not found, skipping ${user.email}`,
+      );
+      continue;
+    }
+
+    const existing = await db.user.findFirst({
+      where: { email: user.email },
+    });
+
+    let userId: string;
+
+    if (existing) {
+      console.log(`  User already exists: ${user.email}`);
+      userId = existing.id;
+    } else {
+      const ctx = await auth.api.signUpEmail({
+        body: {
+          email: user.email,
+          password: user.password,
+          name: user.name,
+        },
+      });
+
+      if (!ctx.user) {
+        console.error(`  Failed to create user: ${user.email}`);
+        continue;
+      }
+
+      userId = ctx.user.id;
+      console.log(`  Created user: ${user.email} (${userId})`);
+    }
+
+    await db.profiles.update({
+      where: { id: user.profileId },
+      data: { user_id: userId },
+    });
+    console.log(`  Linked to profile ${user.profileId} (${profile.name})`);
+  }
+}
+
+// ============================================================================
+// Database Dump
+// ============================================================================
+
+const DIRECTUS_TABLES = [
+  "directus_migrations",
+  "directus_folders",
+  "directus_files",
+  "directus_collections",
+  "directus_fields",
+  "directus_relations",
+  "directus_roles",
+  "directus_policies",
+  "directus_users",
+  "directus_access",
+  "directus_permissions",
+  "directus_settings",
+  "directus_translations",
+  "directus_flows",
+  "directus_operations",
+];
+
+const EXCLUDE_TABLES = [
+  // Already dumped Directus tables
+  ...DIRECTUS_TABLES,
+  // Other Directus tables not needed
+  "directus_activity",
+  "directus_revisions",
+  "directus_sessions",
+  "directus_notifications",
+  "directus_presets",
+  "directus_dashboards",
+  "directus_panels",
+  "directus_shares",
+  "directus_versions",
+  "directus_comments",
+  "directus_extensions",
+  "directus_deployments",
+  "directus_deployment_projects",
+  "directus_deployment_runs",
+  // App tables not needed
+  "session",
+  "verification",
+  "jobs",
+  "job_matches",
+  "job_resources",
+  "applications",
+  "application_questions",
+  "application_letters",
+  "application_activity_log",
+  "applications_files",
+  "profile_exports",
+  "profile_tokens",
+  "ai_chats",
+  "ai_prompts",
+  "config",
+];
+
+function createDump() {
+  mkdirSync(OUTPUT_DIR, { recursive: true });
+
+  // Header
+  let sql = `--
+-- Dev Seed Data
+-- Generated by create-dev-seed.ts
+--
+-- This file contains only essential data for development.
+-- Schema is managed by Prisma (prisma db push).
+--
+
+-- Disable FK constraint triggers during restore
+SET session_replication_role = 'replica';
+
+`;
+
+  // Directus tables (with schema)
+  console.log("\n[2/3] Exporting Directus config...");
+  const directusTableArgs = DIRECTUS_TABLES.flatMap((t) => ["-t", t]);
+  sql += pgDump(["--no-owner", "--no-acl", "--disable-triggers", ...directusTableArgs]);
+
+  for (const table of DIRECTUS_TABLES) {
+    const count = psqlQuery(`SELECT COUNT(*) FROM "${table}"`);
+    console.log(`  ${table} (${count} rows)`);
+  }
+
+  // Application tables (with schema, excluding unwanted)
+  console.log("\n[3/3] Exporting application tables...");
+  const excludeArgs = EXCLUDE_TABLES.flatMap((t) => [`--exclude-table=${t}`]);
+  sql += pgDump(["--no-owner", "--no-acl", "--disable-triggers", ...excludeArgs]);
+
+  // Footer
+  sql += `
+-- Re-enable FK constraint triggers
+SET session_replication_role = 'origin';
+`;
+
+  writeFileSync(OUTPUT_FILE, sql);
+  const size = (statSync(OUTPUT_FILE).size / 1024).toFixed(0);
+  console.log(`\n  Dev seed created: db-dumps/dev-seed.sql (${size}K)`);
+}
+
+// ============================================================================
+// Main
+// ============================================================================
+
+async function main() {
+  await seedDevUsers();
+  createDump();
+
+  console.log("\nDev users:");
+  for (const user of DEV_USERS) {
+    console.log(`  ${user.email} / ${user.password}`);
+  }
+}
+
+main()
+  .then(() => {
+    console.log("\nDone!");
+    process.exit(0);
+  })
+  .catch((error) => {
+    console.error("Failed:", error);
+    process.exit(1);
+  });

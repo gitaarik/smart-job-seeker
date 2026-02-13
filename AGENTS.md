@@ -31,7 +31,10 @@ This project uses Docker Compose with these containers:
 - If no backup found, runs Prisma migrations
 
 **Reset database** (`npm run dev:reset`):
-- Drops all tables and runs Prisma migrations from scratch
+- Drops all tables and loads dev seed
+
+**Restore database** (`npm run dev:restore`):
+- Drops all tables and restores from full/smart backup
 
 Look at the scripts in `package.json` for help executing things in containers.
 

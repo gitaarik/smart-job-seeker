@@ -10,7 +10,7 @@ import { dbDirect as db } from "$lib/server/db";
 const DEV_USERS = [
   {
     email: "rik@rikwanders.tech",
-    password: "testpassword123",
+    password: "waterpijp",
     name: "Rik Wanders",
     profileId: 1,
   },
