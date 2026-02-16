@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 
 import { hashPassword } from "better-auth/crypto";
-import { createInterface } from "readline";
+import { createInterface } from "node:readline";
 import { dbDirect as db } from "$lib/server/db";
 
 const MIN_PASSWORD_LENGTH = 8;
+const DIRECTUS_URL = process.env.SJS_ADMIN_URL_DOCKER ?? "http://admin:8055";
+const DIRECTUS_TOKEN = process.env.SJS_ADMIN_TOKEN;
 
 function parseArgs() {
   const args = process.argv.slice(2);
@@ -32,69 +34,70 @@ function parseArgs() {
   return { email, id, password };
 }
 
-async function promptPassword(): Promise<string> {
-  return new Promise((resolve) => {
-    const rl = createInterface({
-      input: process.stdin,
-      output: process.stdout,
-    });
-
-    // Disable echoing
-    if (process.stdin.isTTY) {
+function readHidden(prompt: string): Promise<string> {
+  if (process.stdin.isTTY) {
+    process.stderr.write(prompt);
+    return new Promise((resolve) => {
       process.stdin.setRawMode(true);
-    }
+      process.stdin.resume();
+      process.stdin.setEncoding("utf-8");
 
-    process.stdout.write("New password: ");
-
-    let password = "";
-    process.stdin.on("data", (data) => {
-      const char = data.toString();
-
-      if (char === "\n" || char === "\r" || char === "\u0004") {
-        process.stdout.write("\n");
-        if (process.stdin.isTTY) {
+      let value = "";
+      const onData = (ch: string) => {
+        if (ch === "\n" || ch === "\r" || ch === "\u0004") {
+          process.stdin.removeListener("data", onData);
           process.stdin.setRawMode(false);
+          process.stdin.pause();
+          process.stderr.write("\n");
+          resolve(value);
+        } else if (ch === "\u0003") {
+          process.stdin.setRawMode(false);
+          process.stderr.write("\n");
+          process.exit(1);
+        } else if (ch === "\u007F" || ch === "\b") {
+          value = value.slice(0, -1);
+        } else {
+          value += ch;
         }
-        rl.close();
-        resolve(password);
-      } else if (char === "\u007F" || char === "\b") {
-        // Backspace
-        if (password.length > 0) {
-          password = password.slice(0, -1);
-        }
-      } else if (char === "\u0003") {
-        // Ctrl+C
-        process.stdout.write("\n");
-        process.exit(1);
-      } else {
-        password += char;
-      }
+      };
+      process.stdin.on("data", onData);
+    });
+  }
+
+  // Fallback for piped/non-TTY input
+  const rl = createInterface({ input: process.stdin });
+  return new Promise((resolve) => {
+    rl.once("line", (line) => {
+      rl.close();
+      resolve(line);
     });
   });
 }
 
-async function main() {
-  const { email, id, password: passwordArg } = parseArgs();
+async function promptPassword(): Promise<string> {
+  const password = await readHidden("New password: ");
+  if (process.stdin.isTTY) {
+    const confirm = await readHidden("Confirm password: ");
+    if (password !== confirm) {
+      console.error("Passwords do not match.");
+      process.exit(1);
+    }
+  }
+  return password;
+}
 
+async function updateAppUser(
+  email: string | undefined,
+  id: string | undefined,
+  password: string,
+): Promise<boolean> {
   const user = await db.user.findFirst({
     where: email ? { email } : { id },
   });
 
-  if (!user) {
-    console.error(`User not found: ${email ?? id}`);
-    process.exit(1);
-  }
+  if (!user) return false;
 
-  console.log(`User: ${user.name} (${user.email})`);
-
-  const password = passwordArg ?? await promptPassword();
-
-  if (password.length < MIN_PASSWORD_LENGTH) {
-    console.error(
-      `Password must be at least ${MIN_PASSWORD_LENGTH} characters`,
-    );
-    process.exit(1);
-  }
+  console.log(`App user: ${user.name} (${user.email})`);
 
   const hash = await hashPassword(password);
 
@@ -121,7 +124,76 @@ async function main() {
     });
   }
 
-  console.log("Password updated successfully.");
+  console.log("  ✓ App password updated");
+  return true;
+}
+
+async function updateDirectusUser(
+  email: string | undefined,
+  password: string,
+): Promise<boolean> {
+  if (!DIRECTUS_TOKEN) {
+    console.error("  ⚠ SJS_ADMIN_TOKEN not set, skipping Directus");
+    return false;
+  }
+
+  if (!email) return false;
+
+  const res = await fetch(
+    `${DIRECTUS_URL}/users?filter[email][_eq]=${encodeURIComponent(email)}&fields=id,email,first_name`,
+    { headers: { Authorization: `Bearer ${DIRECTUS_TOKEN}` } },
+  );
+
+  if (!res.ok) {
+    console.error(`  ⚠ Directus API error: ${res.status} ${res.statusText}`);
+    return false;
+  }
+
+  const { data } = await res.json();
+  if (!data?.length) return false;
+
+  const user = data[0];
+  console.log(`Directus user: ${user.first_name} (${user.email})`);
+
+  const updateRes = await fetch(`${DIRECTUS_URL}/users/${user.id}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${DIRECTUS_TOKEN}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ password }),
+  });
+
+  if (!updateRes.ok) {
+    console.error(
+      `  ✗ Failed to update Directus password: ${updateRes.status}`,
+    );
+    return false;
+  }
+
+  console.log("  ✓ Directus password updated");
+  return true;
+}
+
+async function main() {
+  const { email, id, password: passwordArg } = parseArgs();
+
+  const password = passwordArg ?? await promptPassword();
+
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    console.error(
+      `Password must be at least ${MIN_PASSWORD_LENGTH} characters`,
+    );
+    process.exit(1);
+  }
+
+  const appUpdated = await updateAppUser(email, id, password);
+  const directusUpdated = await updateDirectusUser(email, password);
+
+  if (!appUpdated && !directusUpdated) {
+    console.error(`User not found: ${email ?? id}`);
+    process.exit(1);
+  }
 }
 
 main()
