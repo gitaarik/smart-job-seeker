@@ -24,7 +24,7 @@ services:
     working_dir: /app
     restart: unless-stopped
     ports:
-      - ${SJS_APP_PORT:-5173}:5173
+      - 127.0.0.1:${SJS_APP_PORT:-5173}:5173
     volumes:
       - .:/app
       - /app/node_modules

@@ -5,7 +5,7 @@ services:
     image: directus/directus:latest
     restart: unless-stopped
     ports:
-      - ${SJS_ADMIN_PORT:-8055}:8055
+      - 127.0.0.1:${SJS_ADMIN_PORT:-8055}:8055
     volumes:
       - ./directus/uploads:/directus/uploads
       - ./directus/extensions:/directus/extensions
