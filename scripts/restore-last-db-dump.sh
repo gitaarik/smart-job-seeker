@@ -1,4 +1,7 @@
 #!/bin/bash
+export PGHOST="${SJS_DB_HOST:-database}"
+export PGPASSWORD="${SJS_DB_PASSWORD:-postgres}"
+
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$DIR/../db-dumps/" || exit
 
