@@ -373,22 +373,22 @@ export type directus_deployment_runs = Prisma.directus_deployment_runsModel
  */
 export type directus_deployments = Prisma.directus_deploymentsModel
 /**
- * Model account
+ * Model accounts
  * 
  */
-export type account = Prisma.accountModel
+export type accounts = Prisma.accountsModel
 /**
- * Model session
+ * Model sessions
  * 
  */
-export type session = Prisma.sessionModel
+export type sessions = Prisma.sessionsModel
 /**
- * Model user
+ * Model users
  * 
  */
-export type user = Prisma.userModel
+export type users = Prisma.usersModel
 /**
- * Model verification
+ * Model verifications
  * 
  */
-export type verification = Prisma.verificationModel
+export type verifications = Prisma.verificationsModel

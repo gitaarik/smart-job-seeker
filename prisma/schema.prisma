@@ -1247,7 +1247,7 @@ model directus_deployments {
   directus_users               directus_users?                @relation(fields: [user_created], references: [id], onUpdate: NoAction, map: "directus_deployments_user_created_foreign")
 }
 
-model account {
+model accounts {
   id                    String    @id
   userId                String
   accountId             String    @db.VarChar(255)
@@ -1261,10 +1261,10 @@ model account {
   password              String?   @db.VarChar(255)
   createdAt             DateTime? @db.Timestamptz(6)
   updatedAt             DateTime? @db.Timestamptz(6)
-  user                  user      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "account_userid_foreign")
+  user                  users     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "account_userid_foreign")
 }
 
-model session {
+model sessions {
   id        String    @id
   userId    String
   token     String    @unique(map: "session_token_unique") @db.VarChar(255)
@@ -1273,22 +1273,22 @@ model session {
   userAgent String?
   createdAt DateTime? @db.Timestamptz(6)
   updatedAt DateTime? @db.Timestamptz(6)
-  user      user      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "session_userid_foreign")
+  user      users     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "session_userid_foreign")
 }
 
-model user {
-  id            String    @id
-  email         String    @db.VarChar(255)
-  emailVerified Boolean?  @default(false)
-  name          String?   @db.VarChar(255)
-  image         String?   @db.VarChar(255)
-  createdAt     DateTime? @db.Timestamptz(6)
-  updatedAt     DateTime? @db.Timestamptz(6)
-  account       account[]
-  session       session[]
+model users {
+  id            String     @id
+  email         String     @db.VarChar(255)
+  emailVerified Boolean?   @default(false)
+  name          String?    @db.VarChar(255)
+  image         String?    @db.VarChar(255)
+  createdAt     DateTime?  @db.Timestamptz(6)
+  updatedAt     DateTime?  @db.Timestamptz(6)
+  accounts      accounts[]
+  sessions      sessions[]
 }
 
-model verification {
+model verifications {
   id         String    @id
   identifier String    @db.VarChar(255)
   value      String    @db.VarChar(255)

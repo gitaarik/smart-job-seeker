@@ -15,6 +15,10 @@ export const auth = betterAuth({
   secret: getEnv("SJS_AUTH_SECRET"),
   baseURL: getEnv("SJS_APP_URL_HOST", "http://localhost:5173"),
 
+  user: { modelName: "users" },
+  account: { modelName: "accounts" },
+  verification: { modelName: "verifications" },
+
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,
@@ -34,6 +38,7 @@ export const auth = betterAuth({
   },
 
   session: {
+    modelName: "sessions",
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // Update session age daily
   },
