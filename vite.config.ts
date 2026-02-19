@@ -16,5 +16,8 @@ export default defineConfig({
       // `app` service and runs on the host `app`.
       ...(process.env.SJS_HOSTNAME ? [process.env.SJS_HOSTNAME] : []),
     ],
+    hmr: process.env.SJS_HOSTNAME
+      ? { clientPort: 443 }
+      : undefined,
   },
 });
