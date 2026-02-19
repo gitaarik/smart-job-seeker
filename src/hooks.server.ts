@@ -70,11 +70,14 @@ export const handle: Handle = async ({ event, resolve }) => {
   }
 
   // Handle Better Auth routes (e.g., /api/auth/*)
-  // Call auth.handler directly for auth routes to avoid origin mismatch
-  // between the internal dev server URL and the public baseURL.
-  const basePath = auth.options.basePath || "/api/auth";
-  if (event.url.pathname.startsWith(basePath)) {
-    return auth.handler(event.request);
+  // In dev mode, Vite's dev server always uses http://localhost:PORT as the
+  // request origin, which doesn't match the public baseURL behind a reverse
+  // proxy. Bypass better-auth's origin check by calling auth.handler directly.
+  if (import.meta.env.DEV) {
+    const basePath = auth.options.basePath || "/api/auth";
+    if (event.url.pathname.startsWith(basePath)) {
+      return auth.handler(event.request);
+    }
   }
 
   try {
