@@ -14,12 +14,66 @@
   let isDragging = $state(false);
   let isLoading = $state(false);
   let error = $state<string | null>(null);
+  let preview = $state<
+    {
+      name: string;
+      title?: string;
+      counts: { label: string; count: number }[];
+    } | null
+  >(null);
+
+  async function parsePreview(file: File) {
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      const p = data?.profile;
+      if (!p) {
+        error = "Invalid export format: missing profile data";
+        preview = null;
+        return;
+      }
+
+      const counts: { label: string; count: number }[] = [];
+      const add = (label: string, arr: unknown[] | undefined | null) => {
+        const len = arr?.length ?? 0;
+        if (len > 0) counts.push({ label, count: len });
+      };
+
+      add("Work experiences", p.work_experiences);
+      add("Education", p.education);
+      add("Skill categories", p.tech_skill_categories);
+      add("Side projects", p.side_projects);
+      add("Profile versions", p.profile_versions);
+      add("Languages", p.languages);
+      add("Highlights", p.highlights);
+      add("References", p.references);
+      add("Project stories", p.project_stories);
+      add("Cheat sheets", p.cheat_sheets);
+      add("Salary expectations", p.salary_expectations);
+
+      preview = {
+        name: p.name || "Unnamed profile",
+        title: p.title || undefined,
+        counts,
+      };
+      error = null;
+    } catch {
+      error = "Could not read JSON file";
+      preview = null;
+    }
+  }
+
+  function setFile(file: File) {
+    error = null;
+    preview = null;
+    selectedFile = file;
+    parsePreview(file);
+  }
 
   function handleFileSelect(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
-      error = null;
-      selectedFile = input.files[0];
+      setFile(input.files[0]);
     }
   }
 
@@ -28,8 +82,7 @@
     isDragging = false;
     const files = event.dataTransfer?.files;
     if (files && files.length > 0) {
-      error = null;
-      selectedFile = files[0];
+      setFile(files[0]);
     }
   }
 
@@ -44,6 +97,7 @@
 
   function clearFile() {
     selectedFile = null;
+    preview = null;
   }
 </script>
 
@@ -142,9 +196,43 @@
       />
     </div>
 
+    {#if preview}
+      <div
+        class="rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg-secondary)] p-4 space-y-3"
+      >
+        <div>
+          <h3 class="font-semibold text-[var(--dash-text)]">{preview.name}</h3>
+          {#if preview.title}
+            <p class="text-sm text-[var(--dash-text-secondary)]">
+              {preview.title}
+            </p>
+          {/if}
+        </div>
+
+        {#if preview.counts.length > 0}
+          <div class="flex flex-wrap gap-2">
+            {#each preview.counts as { label, count }}
+              <span
+                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-[var(--dash-bg)] border border-[var(--dash-border)] text-[var(--dash-text-secondary)]"
+              >
+                {label}
+                <span
+                  class="bg-[var(--dash-primary)]/10 text-[var(--dash-primary)] px-1.5 rounded-full font-semibold"
+                >{count}</span>
+              </span>
+            {/each}
+          </div>
+        {:else}
+          <p class="text-sm text-[var(--dash-text-muted)]">
+            No child records found
+          </p>
+        {/if}
+      </div>
+    {/if}
+
     <button
       type="submit"
-      disabled={!selectedFile || isLoading}
+      disabled={!selectedFile || !preview || isLoading}
       class="w-full py-2.5 px-4 bg-[var(--dash-primary)] text-white font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
     >
       {#if isLoading}
