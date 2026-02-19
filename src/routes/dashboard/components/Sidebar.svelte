@@ -232,7 +232,9 @@
 <!-- Sidebar -->
 <aside
   class="
-    fixed top-0 left-0 h-full w-56 bg-[var(--dash-card)] border-r border-[var(--dash-border)] z-40 transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:top-[49px] lg:h-[calc(100vh-49px)] {mobileMenuOpen
+    fixed left-0 w-56 bg-[var(--dash-card)] border-r border-[var(--dash-border)] z-40 transform transition-transform duration-200 ease-in-out
+    top-[65px] h-[calc(100vh-65px)]
+    lg:translate-x-0 {mobileMenuOpen
     ? 'translate-x-0'
     : '-translate-x-full'}
   "

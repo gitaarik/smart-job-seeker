@@ -12,7 +12,7 @@
   let { user, profiles, selectedProfile }: Props = $props();
 </script>
 
-<header class="bg-[var(--dash-chrome)] border-b border-[var(--dash-chrome)]/80 transition-colors">
+<header class="sticky top-0 z-50 bg-[var(--dash-chrome)] border-b border-[var(--dash-chrome)]/80 transition-colors">
   <div class="max-w-5xl mx-auto px-4 py-2">
     <div class="flex items-center justify-between">
       <!-- Logo and branding -->
