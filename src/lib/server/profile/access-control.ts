@@ -5,6 +5,7 @@ import { validateToken } from "../auth/token-validation";
 export interface AccessControlOptions {
   profile: profiles;
   token?: string | null;
+  userId?: string | null;
   clientIp?: string;
   routeType: "cv" | "resume";
 }
@@ -15,20 +16,21 @@ export interface AccessControlResult {
   message: string;
   versionId?: number;
   tokenId?: number;
-  accessType: "public" | "token";
+  accessType: "public" | "token" | "owner";
 }
 
 /**
  * Check if a request has access to a profile's resume/CV
  * Access is granted in this order:
  * 1. Public version is set (no auth/token required)
- * 2. Valid token is provided
+ * 2. Logged-in user owns the profile
+ * 3. Valid token is provided
  * Otherwise, access is denied
  */
 export async function checkProfileAccess(
   options: AccessControlOptions,
 ): Promise<AccessControlResult> {
-  const { profile, token, routeType } = options;
+  const { profile, token, userId, routeType } = options;
 
   // 1. Check for public version access
   const publicVersionId = routeType === "cv"
@@ -45,7 +47,17 @@ export async function checkProfileAccess(
     };
   }
 
-  // 2. Check for token access
+  // 2. Check if logged-in user owns this profile
+  if (userId && profile.user_id === userId) {
+    return {
+      allowed: true,
+      statusCode: 200,
+      message: "Owner access granted",
+      accessType: "owner",
+    };
+  }
+
+  // 3. Check for token access
   if (token) {
     const validationResult = await validateToken(token, profile.id);
 
@@ -69,7 +81,7 @@ export async function checkProfileAccess(
     };
   }
 
-  // 3. Deny access
+  // 4. Deny access
   return {
     allowed: false,
     statusCode: 401,
@@ -92,4 +104,19 @@ export async function getVersionNameById(
   });
 
   return version?.name || null;
+}
+
+/**
+ * Get version ID by name and profile
+ */
+export async function getVersionIdByName(
+  profileId: number,
+  versionName: string,
+): Promise<number | null> {
+  const version = await db.profile_versions.findFirst({
+    where: { profile: profileId, name: versionName },
+    select: { id: true },
+  });
+
+  return version?.id ?? null;
 }

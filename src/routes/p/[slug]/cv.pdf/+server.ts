@@ -23,7 +23,7 @@ function transformVersionToExportFormat(
 }
 
 export const GET: RequestHandler = async (
-  { params, url, getClientAddress },
+  { params, url, locals, getClientAddress },
 ) => {
   const { slug } = params;
   const token = url.searchParams.get("t");
@@ -39,6 +39,7 @@ export const GET: RequestHandler = async (
   const accessResult = await checkProfileAccess({
     profile,
     token,
+    userId: locals.user?.id,
     clientIp: getClientAddress(),
     routeType: "cv",
   });
@@ -52,10 +53,12 @@ export const GET: RequestHandler = async (
     await incrementTokenVisit(accessResult.tokenId, getClientAddress());
   }
 
-  // Determine version from access control (token or public version)
+  // Determine version from access control, or from ?version= query param for owner access
   let effectiveVersion: string | null = null;
   if (accessResult.versionId) {
     effectiveVersion = await getVersionNameById(accessResult.versionId);
+  } else if (accessResult.accessType === "owner") {
+    effectiveVersion = url.searchParams.get("version");
   }
 
   // Query latest CV PDF export from profile_exports

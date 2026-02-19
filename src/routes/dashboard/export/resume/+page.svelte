@@ -399,15 +399,36 @@
                     </div>
                   {/if}
 
-                  {#if version.preview_links}
+                  {#if data.selectedProfile?.slug}
+                    {@const slug = data.selectedProfile.slug}
+                    {@const encodedName = encodeURIComponent(version.name)}
                     <div>
                       <p
                         class="text-sm font-medium text-[var(--dash-text-secondary)] mb-1"
                       >
                         Preview Links
                       </p>
-                      <div class="prose prose-sm max-w-none">
-                        {@html version.preview_links}
+                      <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                        <a
+                          href="/p/{slug}/resume?version={encodedName}"
+                          target="_blank"
+                          class="text-[var(--dash-primary)] hover:underline"
+                        >Resume</a>
+                        <a
+                          href="/p/{slug}/resume.pdf?version={encodedName}"
+                          target="_blank"
+                          class="text-[var(--dash-primary)] hover:underline"
+                        >Resume PDF</a>
+                        <a
+                          href="/p/{slug}/cv?version={encodedName}"
+                          target="_blank"
+                          class="text-[var(--dash-primary)] hover:underline"
+                        >CV</a>
+                        <a
+                          href="/p/{slug}/cv.pdf?version={encodedName}"
+                          target="_blank"
+                          class="text-[var(--dash-primary)] hover:underline"
+                        >CV PDF</a>
                       </div>
                     </div>
                   {/if}

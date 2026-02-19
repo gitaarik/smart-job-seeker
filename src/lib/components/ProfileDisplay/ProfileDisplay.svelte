@@ -338,7 +338,7 @@
 
     <hr class="mt-1 mb-2" />
 
-    {#each filterOnTags(profile.side_projects) as project (project.name)}
+    {#each filterOnTags(profile.side_projects) as project, index (index)}
       <div class="mb-3">
         <div class="text-xs font-bold mb-0">
           {project.name} | {
@@ -370,7 +370,7 @@
 
     <hr class="mt-1 mb-2" />
 
-    {#each filterOnTags(profile.education) as education (education.area)}
+    {#each filterOnTags(profile.education) as education, index (index)}
       <div class="mb-2">
         <div class="font-bold">
           {education.area}, {education.study_type}{#if type === "cv"},
@@ -403,7 +403,7 @@
 
     <hr class="mt-1 mb-2" />
 
-    {#each profile.languages as language (language.language_code)}
+    {#each profile.languages as language, index (index)}
       <div>
         {language.name}: {
           language.proficiency.substr(0, 1).toUpperCase() +

@@ -1,12 +1,16 @@
 import { error } from "@sveltejs/kit";
 import { getProfileByIdentifier } from "$lib/server/profile/default";
-import { checkProfileAccess } from "$lib/server/profile/access-control";
+import {
+  checkProfileAccess,
+  getVersionIdByName,
+} from "$lib/server/profile/access-control";
 import { incrementTokenVisit } from "$lib/server/auth/token-validation";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({
   params,
   url,
+  locals,
   getClientAddress,
 }) => {
   const { slug } = params;
@@ -25,6 +29,7 @@ export const load: PageServerLoad = async ({
   const accessResult = await checkProfileAccess({
     profile,
     token,
+    userId: locals.user?.id,
     clientIp: getClientAddress(),
     routeType: "cv",
   });
@@ -40,9 +45,23 @@ export const load: PageServerLoad = async ({
     await incrementTokenVisit(accessResult.tokenId, getClientAddress());
   }
 
+  // Resolve version: from access control, or from ?version= query param for owner access
+  let versionId = accessResult.versionId;
+  if (!versionId && accessResult.accessType === "owner") {
+    const versionName = url.searchParams.get("version");
+    if (versionName) {
+      versionId = await getVersionIdByName(profile.id, versionName) ??
+        undefined;
+    }
+  }
+
   return {
-    profile,
-    versionId: accessResult.versionId,
+    profile: {
+      ...profile,
+      profile_versions: profile
+        .profile_versions_profile_versions_profileToprofiles,
+    },
+    versionId,
     accessType: accessResult.accessType,
   };
 };
