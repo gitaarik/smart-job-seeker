@@ -6,7 +6,6 @@
     faCheck,
     faChevronDown,
     faChevronUp,
-    faDownload,
     faFileAlt,
     faPencil,
     faTimes,
@@ -19,7 +18,7 @@
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
   let versions = $derived(data.versions);
-  let exports = $derived(data.exports);
+
   let expandedId = $state<number | null>(null);
   let editingId = $state<number | null>(null);
   let showAddForm = $state(false);
@@ -61,23 +60,6 @@
         return "bg-gray-100 text-gray-600";
       default:
         return "bg-gray-100 text-gray-600";
-    }
-  }
-
-  function getFileTypeLabel(type: string): string {
-    switch (type) {
-      case "pdf":
-        return "PDF";
-      case "html":
-        return "HTML";
-      case "docx":
-        return "Word";
-      case "json":
-        return "JSON";
-      case "txt":
-        return "Text";
-      default:
-        return type.toUpperCase();
     }
   }
 
@@ -459,54 +441,6 @@
           {/if}
         </div>
       {/each}
-    </div>
-  {/if}
-
-  <!-- Exports Section -->
-  {#if exports.length > 0}
-    <div class="mt-8">
-      <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">
-        Available Exports
-      </h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {#each exports as exp (exp.id)}
-          <div
-            class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4"
-          >
-            <div class="flex items-center gap-3">
-              <div
-                class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center"
-              >
-                <FontAwesomeIcon
-                  icon={faDownload}
-                  class="w-5 h-5 text-gray-600"
-                />
-              </div>
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2">
-                  <span
-                    class="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-700 font-medium"
-                  >
-                    {getFileTypeLabel(exp.file_type)}
-                  </span>
-                  <span class="text-xs text-[var(--dash-text-secondary)]">
-                    {exp.export_type}
-                  </span>
-                </div>
-                <p class="text-sm text-[var(--dash-text)] truncate mt-1">
-                  {
-                    exp.description || exp.export_format ||
-                      "Export file"
-                  }
-                </p>
-                <p class="text-xs text-[var(--dash-text-secondary)]">
-                  {formatDate(exp.date_created)}
-                </p>
-              </div>
-            </div>
-          </div>
-        {/each}
-      </div>
     </div>
   {/if}
 </div>

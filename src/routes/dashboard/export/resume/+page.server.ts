@@ -15,17 +15,8 @@ export const load: PageServerLoad = async ({ parent }) => {
     orderBy: { date_created: "desc" },
   });
 
-  const exports = await db.profile_exports.findMany({
-    where: { profile: layoutData.selectedProfile.id },
-    include: {
-      directus_files: true,
-    },
-    orderBy: { date_created: "desc" },
-  });
-
   return {
     versions,
-    exports,
     profileId: layoutData.selectedProfile.id,
   };
 };
