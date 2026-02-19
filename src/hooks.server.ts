@@ -70,7 +70,13 @@ export const handle: Handle = async ({ event, resolve }) => {
   }
 
   // Handle Better Auth routes (e.g., /api/auth/*)
-  // Note: svelteKitHandler may call resolve() which needs locals to be set
+  // Call auth.handler directly for auth routes to avoid origin mismatch
+  // between the internal dev server URL and the public baseURL.
+  const basePath = auth.options.basePath || "/api/auth";
+  if (event.url.pathname.startsWith(basePath)) {
+    return auth.handler(event.request);
+  }
+
   try {
     const authResponse = await svelteKitHandler({ event, resolve, auth });
     if (authResponse) {
