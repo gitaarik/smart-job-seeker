@@ -27,7 +27,7 @@
 
   <Sidebar />
 
-  <main class="py-8 px-4 lg:pl-72">
+  <main class="text-sm py-5 px-4 lg:pl-60">
     <div class="max-w-5xl mx-auto">
       {@render children()}
     </div>

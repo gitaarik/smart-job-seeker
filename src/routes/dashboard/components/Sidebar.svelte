@@ -232,12 +232,12 @@
 <!-- Sidebar -->
 <aside
   class="
-    fixed top-0 left-0 h-full w-64 bg-[var(--dash-card)] border-r border-[var(--dash-border)] z-40 transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:top-[61px] lg:h-[calc(100vh-61px)] {mobileMenuOpen
+    fixed top-0 left-0 h-full w-56 bg-[var(--dash-card)] border-r border-[var(--dash-border)] z-40 transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:top-[49px] lg:h-[calc(100vh-49px)] {mobileMenuOpen
     ? 'translate-x-0'
     : '-translate-x-full'}
   "
 >
-  <nav class="p-4 overflow-y-auto h-full">
+  <nav class="p-3 overflow-y-auto h-full">
     <ul class="space-y-1">
       {#each menuItems as item}
         {#if item.children}
@@ -247,14 +247,14 @@
               type="button"
               onclick={() => toggleSection(item.label)}
               class="
-                w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors {isChildActive(
+                w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-sm text-left transition-colors {isChildActive(
                 item,
                 )
                 ? 'bg-[var(--dash-primary)]/10 text-[var(--dash-primary)]'
                 : 'text-[var(--dash-text)] hover:bg-gray-100'}
               "
             >
-              <div class="flex items-center gap-3">
+              <div class="flex items-center gap-2">
                 <FontAwesomeIcon icon={item.icon} class="w-4 h-4" />
                 <span class="font-medium">{item.label}</span>
               </div>
@@ -276,7 +276,7 @@
                       href={child.href}
                       onclick={closeMobileMenu}
                       class="
-                        flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {isActive(
+                        flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-colors {isActive(
                         child.href,
                         )
                         ? 'bg-[var(--dash-primary)] text-white'
@@ -298,7 +298,7 @@
               href={item.href}
               onclick={closeMobileMenu}
               class="
-                flex items-center gap-3 px-3 py-2 rounded-lg transition-colors {isActive(
+                flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-sm transition-colors {isActive(
                 item.href,
                 )
                 ? 'bg-[var(--dash-primary)] text-white'
