@@ -1,8 +1,9 @@
-import { error } from "@sveltejs/kit";
+import { error, redirect } from "@sveltejs/kit";
 import { getProfileByIdentifier } from "$lib/server/profile/default";
 import { incrementTokenVisit } from "$lib/server/auth/token-validation";
 import { hashToken } from "$lib/server/auth/token-generator";
 import { db } from "$lib/server/db";
+import { DEFAULT_FORMAT, DEFAULT_VIEW_MODE } from "$lib/profile-tokens";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({
@@ -65,11 +66,18 @@ export const load: PageServerLoad = async ({
     });
   }
 
-  // Increment visit counter
-  await incrementTokenVisit(token.id, getClientAddress());
+  // Determine format and view mode (defaults)
+  const format = token.format || DEFAULT_FORMAT;
+  const viewMode = token.view_mode || DEFAULT_VIEW_MODE;
 
-  // Determine format (default to resume if not set)
-  const format = token.format || "resume";
+  // If view_mode is PDF, redirect to the appropriate PDF route with token
+  if (viewMode === "pdf") {
+    const pdfPath = format === "cv" ? "cv.pdf" : "resume.pdf";
+    redirect(302, `/p/${slug}/${pdfPath}?t=${tokenString}`);
+  }
+
+  // Increment visit counter (for HTML view - PDF view increments in its own route)
+  await incrementTokenVisit(token.id, getClientAddress());
 
   return {
     profile: {

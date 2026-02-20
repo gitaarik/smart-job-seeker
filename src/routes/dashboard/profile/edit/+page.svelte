@@ -127,14 +127,16 @@
           >
             Subtitle
           </label>
-          <input
-            type="text"
+          <textarea
             id="subtitle"
             name="subtitle"
-            value={profile?.subtitle || ""}
+            rows={2}
             placeholder="e.g., Full-Stack Developer"
-            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-          />
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
+          >{profile?.subtitle || ""}</textarea>
+          <p class="text-xs text-[var(--dash-text-secondary)] mt-1">
+            One sentence describing your role or specialty
+          </p>
         </div>
 
         <div>
@@ -144,14 +146,16 @@
           >
             Headline
           </label>
-          <input
-            type="text"
+          <textarea
             id="headline"
             name="headline"
-            value={profile?.headline || ""}
+            rows={2}
             placeholder="A short tagline about yourself"
-            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-          />
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
+          >{profile?.headline || ""}</textarea>
+          <p class="text-xs text-[var(--dash-text-secondary)] mt-1">
+            One sentence summarizing your professional focus
+          </p>
         </div>
 
         <div class="md:col-span-2">
@@ -219,7 +223,22 @@
           />
         </div>
 
-        <div class="md:col-span-2">
+        <div>
+          <label for="location" class="block text-sm font-medium text-[var(--dash-text)] mb-1">
+            <FontAwesomeIcon icon={faMapMarkerAlt} class="w-4 h-4 text-[var(--dash-text-secondary)] mr-1" />
+            Location
+          </label>
+          <input
+            type="text"
+            id="location"
+            name="location"
+            value={profile?.location || ""}
+            placeholder="Amsterdam, Netherlands"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+          />
+        </div>
+
+        <div>
           <label
             for="personal_website"
             class="block text-sm font-medium text-[var(--dash-text)] mb-1"
@@ -234,62 +253,6 @@
             value={profile?.personal_website || ""}
             placeholder="https://yourwebsite.com"
             class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-          />
-        </div>
-      </div>
-    </div>
-
-    <!-- Location -->
-    <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
-      <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4 flex items-center gap-2">
-        <FontAwesomeIcon icon={faMapMarkerAlt} class="w-5 h-5 text-[var(--dash-primary)]" />
-        Location
-      </h2>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <label for="city" class="block text-sm font-medium text-[var(--dash-text)] mb-1">
-            City
-          </label>
-          <input
-            type="text"
-            id="city"
-            name="city"
-            value={profile?.city || ""}
-            placeholder="San Francisco"
-            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-          />
-        </div>
-
-        <div>
-          <label for="region" class="block text-sm font-medium text-[var(--dash-text)] mb-1">
-            State / Region
-          </label>
-          <input
-            type="text"
-            id="region"
-            name="region"
-            value={profile?.region || ""}
-            placeholder="California"
-            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-          />
-        </div>
-
-        <div>
-          <label
-            for="country_code"
-            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-          >
-            Country Code
-          </label>
-          <input
-            type="text"
-            id="country_code"
-            name="country_code"
-            value={profile?.country_code || ""}
-            placeholder="US"
-            maxlength={2}
-            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent uppercase"
           />
         </div>
       </div>

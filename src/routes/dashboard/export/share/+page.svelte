@@ -32,6 +32,7 @@
   let newNotes = $state("");
   let newVersion = $state("");
   let newFormat = $state("resume");
+  let newViewMode = $state("html");
   let newVisitLimit = $state("");
   let newExpiresAt = $state("");
 
@@ -40,6 +41,7 @@
   let editNotes = $state("");
   let editVersion = $state("");
   let editFormat = $state("");
+  let editViewMode = $state("");
   let editVisitLimit = $state("");
   let editExpiresAt = $state("");
   let editStatus = $state("");
@@ -102,6 +104,7 @@
     editNotes = token.notes || "";
     editVersion = token.profile_version?.toString() || "";
     editFormat = token.format || "resume";
+    editViewMode = token.view_mode || "html";
     editVisitLimit = token.visit_limit?.toString() || "";
     editExpiresAt = token.expires_at
       ? new Date(token.expires_at).toISOString().split("T")[0]
@@ -119,6 +122,7 @@
     newNotes = "";
     newVersion = "";
     newFormat = "resume";
+    newViewMode = "html";
     newVisitLimit = "";
     newExpiresAt = "";
   }
@@ -252,6 +256,25 @@
               >
                 <option value="resume">Resume (compact)</option>
                 <option value="cv">CV (full)</option>
+              </select>
+            </div>
+
+            <div>
+              <label
+                for="new-view-mode"
+                class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+              >
+                View Mode <span class="text-[var(--dash-error)]">*</span>
+              </label>
+              <select
+                id="new-view-mode"
+                name="view_mode"
+                bind:value={newViewMode}
+                required
+                class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent bg-[var(--dash-card)] text-[var(--dash-text)]"
+              >
+                <option value="html">HTML (web page)</option>
+                <option value="pdf">PDF (download)</option>
               </select>
             </div>
 
@@ -405,6 +428,8 @@
                     <span class="mx-1">•</span>
                     {token.format === "cv" ? "CV" : "Resume"}
                     <span class="mx-1">•</span>
+                    {token.view_mode === "pdf" ? "PDF" : "HTML"}
+                    <span class="mx-1">•</span>
                     <FontAwesomeIcon icon={faEye} class="w-3 h-3" />
                     {token.visit_count} view{token.visit_count !== 1 ? "s" : ""}
                     {#if token.visit_limit}
@@ -503,7 +528,7 @@
                             class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent bg-[var(--dash-card)] text-[var(--dash-text)]"
                           >
                             {#each versions as version}
-                              <option value={version.id}>{version.name}</option>
+                              <option value={version.id.toString()}>{version.name}</option>
                             {/each}
                           </select>
                         </div>
@@ -528,6 +553,24 @@
                       </div>
 
                       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label
+                            for="edit-view-mode-{token.id}"
+                            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+                          >
+                            View Mode
+                          </label>
+                          <select
+                            id="edit-view-mode-{token.id}"
+                            name="view_mode"
+                            bind:value={editViewMode}
+                            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent bg-[var(--dash-card)] text-[var(--dash-text)]"
+                          >
+                            <option value="html">HTML (web page)</option>
+                            <option value="pdf">PDF (download)</option>
+                          </select>
+                        </div>
+
                         <div>
                           <label
                             for="edit-visit-limit-{token.id}"

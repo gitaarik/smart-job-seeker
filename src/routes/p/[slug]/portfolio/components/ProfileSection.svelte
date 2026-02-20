@@ -25,13 +25,12 @@
 
   const linkedInProfile = profile.linkedin_profile;
 
-  // Build location string from separate fields
-  const locationParts = [
+  // Use single location field, fall back to legacy fields
+  const locationText = profile.location || [
     profile.location_city,
     profile.location_region,
     profile.location_country_code,
-  ].filter(Boolean);
-  const locationText = locationParts.join(", ");
+  ].filter(Boolean).join(", ");
 
   const profileData = [
     {

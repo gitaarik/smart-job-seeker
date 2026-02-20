@@ -863,6 +863,7 @@ model profile_tokens {
   token_hash       String    @unique(map: "profile_tokens_token_hash_unique") @db.VarChar(255)
   profile_version  Int
   format           String    @default("resume") @db.VarChar(20)
+  view_mode        String    @default("html") @db.VarChar(10)
   visit_count      Int       @default(0)
   visit_limit      Int?
   expires_at       DateTime? @db.Timestamptz(6)
@@ -919,6 +920,7 @@ model profiles {
   location_url                                                      String?                 @db.VarChar(255)
   location_timezone                                                 String?                 @db.VarChar(255)
   sort                                                              Int?
+  location                                                          String?                 @db.VarChar(255)
   city                                                              String?                 @db.VarChar(255)
   region                                                            String?                 @db.VarChar(255)
   country_code                                                      String?                 @db.VarChar(10)

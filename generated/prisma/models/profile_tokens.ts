@@ -52,6 +52,7 @@ export type Profile_tokensMinAggregateOutputType = {
   token_hash: string | null
   profile_version: number | null
   format: string | null
+  view_mode: string | null
   visit_count: number | null
   visit_limit: number | null
   expires_at: Date | null
@@ -71,6 +72,7 @@ export type Profile_tokensMaxAggregateOutputType = {
   token_hash: string | null
   profile_version: number | null
   format: string | null
+  view_mode: string | null
   visit_count: number | null
   visit_limit: number | null
   expires_at: Date | null
@@ -90,6 +92,7 @@ export type Profile_tokensCountAggregateOutputType = {
   token_hash: number
   profile_version: number
   format: number
+  view_mode: number
   visit_count: number
   visit_limit: number
   expires_at: number
@@ -127,6 +130,7 @@ export type Profile_tokensMinAggregateInputType = {
   token_hash?: true
   profile_version?: true
   format?: true
+  view_mode?: true
   visit_count?: true
   visit_limit?: true
   expires_at?: true
@@ -146,6 +150,7 @@ export type Profile_tokensMaxAggregateInputType = {
   token_hash?: true
   profile_version?: true
   format?: true
+  view_mode?: true
   visit_count?: true
   visit_limit?: true
   expires_at?: true
@@ -165,6 +170,7 @@ export type Profile_tokensCountAggregateInputType = {
   token_hash?: true
   profile_version?: true
   format?: true
+  view_mode?: true
   visit_count?: true
   visit_limit?: true
   expires_at?: true
@@ -271,6 +277,7 @@ export type Profile_tokensGroupByOutputType = {
   token_hash: string
   profile_version: number
   format: string
+  view_mode: string
   visit_count: number
   visit_limit: number | null
   expires_at: Date | null
@@ -313,6 +320,7 @@ export type profile_tokensWhereInput = {
   token_hash?: Prisma.StringFilter<"profile_tokens"> | string
   profile_version?: Prisma.IntFilter<"profile_tokens"> | number
   format?: Prisma.StringFilter<"profile_tokens"> | string
+  view_mode?: Prisma.StringFilter<"profile_tokens"> | string
   visit_count?: Prisma.IntFilter<"profile_tokens"> | number
   visit_limit?: Prisma.IntNullableFilter<"profile_tokens"> | number | null
   expires_at?: Prisma.DateTimeNullableFilter<"profile_tokens"> | Date | string | null
@@ -332,6 +340,7 @@ export type profile_tokensOrderByWithRelationInput = {
   token_hash?: Prisma.SortOrder
   profile_version?: Prisma.SortOrder
   format?: Prisma.SortOrder
+  view_mode?: Prisma.SortOrder
   visit_count?: Prisma.SortOrder
   visit_limit?: Prisma.SortOrderInput | Prisma.SortOrder
   expires_at?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -354,6 +363,7 @@ export type profile_tokensWhereUniqueInput = Prisma.AtLeast<{
   date_updated?: Prisma.DateTimeNullableFilter<"profile_tokens"> | Date | string | null
   profile_version?: Prisma.IntFilter<"profile_tokens"> | number
   format?: Prisma.StringFilter<"profile_tokens"> | string
+  view_mode?: Prisma.StringFilter<"profile_tokens"> | string
   visit_count?: Prisma.IntFilter<"profile_tokens"> | number
   visit_limit?: Prisma.IntNullableFilter<"profile_tokens"> | number | null
   expires_at?: Prisma.DateTimeNullableFilter<"profile_tokens"> | Date | string | null
@@ -373,6 +383,7 @@ export type profile_tokensOrderByWithAggregationInput = {
   token_hash?: Prisma.SortOrder
   profile_version?: Prisma.SortOrder
   format?: Prisma.SortOrder
+  view_mode?: Prisma.SortOrder
   visit_count?: Prisma.SortOrder
   visit_limit?: Prisma.SortOrderInput | Prisma.SortOrder
   expires_at?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -400,6 +411,7 @@ export type profile_tokensScalarWhereWithAggregatesInput = {
   token_hash?: Prisma.StringWithAggregatesFilter<"profile_tokens"> | string
   profile_version?: Prisma.IntWithAggregatesFilter<"profile_tokens"> | number
   format?: Prisma.StringWithAggregatesFilter<"profile_tokens"> | string
+  view_mode?: Prisma.StringWithAggregatesFilter<"profile_tokens"> | string
   visit_count?: Prisma.IntWithAggregatesFilter<"profile_tokens"> | number
   visit_limit?: Prisma.IntNullableWithAggregatesFilter<"profile_tokens"> | number | null
   expires_at?: Prisma.DateTimeNullableWithAggregatesFilter<"profile_tokens"> | Date | string | null
@@ -418,6 +430,7 @@ export type profile_tokensCreateInput = {
   token_hash: string
   profile_version: number
   format?: string
+  view_mode?: string
   visit_count?: number
   visit_limit?: number | null
   expires_at?: Date | string | null
@@ -437,6 +450,7 @@ export type profile_tokensUncheckedCreateInput = {
   token_hash: string
   profile_version: number
   format?: string
+  view_mode?: string
   visit_count?: number
   visit_limit?: number | null
   expires_at?: Date | string | null
@@ -455,6 +469,7 @@ export type profile_tokensUpdateInput = {
   token_hash?: Prisma.StringFieldUpdateOperationsInput | string
   profile_version?: Prisma.IntFieldUpdateOperationsInput | number
   format?: Prisma.StringFieldUpdateOperationsInput | string
+  view_mode?: Prisma.StringFieldUpdateOperationsInput | string
   visit_count?: Prisma.IntFieldUpdateOperationsInput | number
   visit_limit?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   expires_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -474,6 +489,7 @@ export type profile_tokensUncheckedUpdateInput = {
   token_hash?: Prisma.StringFieldUpdateOperationsInput | string
   profile_version?: Prisma.IntFieldUpdateOperationsInput | number
   format?: Prisma.StringFieldUpdateOperationsInput | string
+  view_mode?: Prisma.StringFieldUpdateOperationsInput | string
   visit_count?: Prisma.IntFieldUpdateOperationsInput | number
   visit_limit?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   expires_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -493,6 +509,7 @@ export type profile_tokensCreateManyInput = {
   token_hash: string
   profile_version: number
   format?: string
+  view_mode?: string
   visit_count?: number
   visit_limit?: number | null
   expires_at?: Date | string | null
@@ -511,6 +528,7 @@ export type profile_tokensUpdateManyMutationInput = {
   token_hash?: Prisma.StringFieldUpdateOperationsInput | string
   profile_version?: Prisma.IntFieldUpdateOperationsInput | number
   format?: Prisma.StringFieldUpdateOperationsInput | string
+  view_mode?: Prisma.StringFieldUpdateOperationsInput | string
   visit_count?: Prisma.IntFieldUpdateOperationsInput | number
   visit_limit?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   expires_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -530,6 +548,7 @@ export type profile_tokensUncheckedUpdateManyInput = {
   token_hash?: Prisma.StringFieldUpdateOperationsInput | string
   profile_version?: Prisma.IntFieldUpdateOperationsInput | number
   format?: Prisma.StringFieldUpdateOperationsInput | string
+  view_mode?: Prisma.StringFieldUpdateOperationsInput | string
   visit_count?: Prisma.IntFieldUpdateOperationsInput | number
   visit_limit?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   expires_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -549,6 +568,7 @@ export type profile_tokensCountOrderByAggregateInput = {
   token_hash?: Prisma.SortOrder
   profile_version?: Prisma.SortOrder
   format?: Prisma.SortOrder
+  view_mode?: Prisma.SortOrder
   visit_count?: Prisma.SortOrder
   visit_limit?: Prisma.SortOrder
   expires_at?: Prisma.SortOrder
@@ -576,6 +596,7 @@ export type profile_tokensMaxOrderByAggregateInput = {
   token_hash?: Prisma.SortOrder
   profile_version?: Prisma.SortOrder
   format?: Prisma.SortOrder
+  view_mode?: Prisma.SortOrder
   visit_count?: Prisma.SortOrder
   visit_limit?: Prisma.SortOrder
   expires_at?: Prisma.SortOrder
@@ -595,6 +616,7 @@ export type profile_tokensMinOrderByAggregateInput = {
   token_hash?: Prisma.SortOrder
   profile_version?: Prisma.SortOrder
   format?: Prisma.SortOrder
+  view_mode?: Prisma.SortOrder
   visit_count?: Prisma.SortOrder
   visit_limit?: Prisma.SortOrder
   expires_at?: Prisma.SortOrder
@@ -624,6 +646,7 @@ export type profile_tokensSelect<ExtArgs extends runtime.Types.Extensions.Intern
   token_hash?: boolean
   profile_version?: boolean
   format?: boolean
+  view_mode?: boolean
   visit_count?: boolean
   visit_limit?: boolean
   expires_at?: boolean
@@ -643,6 +666,7 @@ export type profile_tokensSelectCreateManyAndReturn<ExtArgs extends runtime.Type
   token_hash?: boolean
   profile_version?: boolean
   format?: boolean
+  view_mode?: boolean
   visit_count?: boolean
   visit_limit?: boolean
   expires_at?: boolean
@@ -662,6 +686,7 @@ export type profile_tokensSelectUpdateManyAndReturn<ExtArgs extends runtime.Type
   token_hash?: boolean
   profile_version?: boolean
   format?: boolean
+  view_mode?: boolean
   visit_count?: boolean
   visit_limit?: boolean
   expires_at?: boolean
@@ -681,6 +706,7 @@ export type profile_tokensSelectScalar = {
   token_hash?: boolean
   profile_version?: boolean
   format?: boolean
+  view_mode?: boolean
   visit_count?: boolean
   visit_limit?: boolean
   expires_at?: boolean
@@ -690,7 +716,7 @@ export type profile_tokensSelectScalar = {
   last_accessed_ip?: boolean
 }
 
-export type profile_tokensOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "sort" | "date_created" | "date_updated" | "token" | "token_hash" | "profile_version" | "format" | "visit_count" | "visit_limit" | "expires_at" | "name" | "notes" | "last_accessed_at" | "last_accessed_ip", ExtArgs["result"]["profile_tokens"]>
+export type profile_tokensOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "sort" | "date_created" | "date_updated" | "token" | "token_hash" | "profile_version" | "format" | "view_mode" | "visit_count" | "visit_limit" | "expires_at" | "name" | "notes" | "last_accessed_at" | "last_accessed_ip", ExtArgs["result"]["profile_tokens"]>
 
 export type $profile_tokensPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "profile_tokens"
@@ -705,6 +731,7 @@ export type $profile_tokensPayload<ExtArgs extends runtime.Types.Extensions.Inte
     token_hash: string
     profile_version: number
     format: string
+    view_mode: string
     visit_count: number
     visit_limit: number | null
     expires_at: Date | null
@@ -1144,6 +1171,7 @@ export interface profile_tokensFieldRefs {
   readonly token_hash: Prisma.FieldRef<"profile_tokens", 'String'>
   readonly profile_version: Prisma.FieldRef<"profile_tokens", 'Int'>
   readonly format: Prisma.FieldRef<"profile_tokens", 'String'>
+  readonly view_mode: Prisma.FieldRef<"profile_tokens", 'String'>
   readonly visit_count: Prisma.FieldRef<"profile_tokens", 'Int'>
   readonly visit_limit: Prisma.FieldRef<"profile_tokens", 'Int'>
   readonly expires_at: Prisma.FieldRef<"profile_tokens", 'DateTime'>

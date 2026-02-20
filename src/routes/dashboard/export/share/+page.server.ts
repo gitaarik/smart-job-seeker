@@ -2,6 +2,12 @@ import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { getSelectedProfileId } from "../../profile/utils";
+import {
+  DEFAULT_FORMAT,
+  DEFAULT_VIEW_MODE,
+  isValidFormat,
+  isValidViewMode,
+} from "$lib/profile-tokens";
 import crypto from "crypto";
 
 function generateToken(): string {
@@ -68,7 +74,8 @@ export const actions: Actions = {
     const name = formData.get("name") as string;
     const notes = formData.get("notes") as string;
     const profile_version = formData.get("profile_version") as string;
-    const format = (formData.get("format") as string) || "resume";
+    const format = (formData.get("format") as string) || DEFAULT_FORMAT;
+    const view_mode = (formData.get("view_mode") as string) || DEFAULT_VIEW_MODE;
     const visit_limit = formData.get("visit_limit") as string;
     const expires_at = formData.get("expires_at") as string;
 
@@ -76,8 +83,12 @@ export const actions: Actions = {
       return fail(400, { error: "Please select a profile version" });
     }
 
-    if (!["resume", "cv"].includes(format)) {
+    if (!isValidFormat(format)) {
       return fail(400, { error: "Invalid format" });
+    }
+
+    if (!isValidViewMode(view_mode)) {
+      return fail(400, { error: "Invalid view mode" });
     }
 
     // Verify the version belongs to this profile
@@ -103,6 +114,7 @@ export const actions: Actions = {
         notes: notes?.trim() || null,
         profile_version: parseInt(profile_version),
         format,
+        view_mode,
         visit_limit: visit_limit ? parseInt(visit_limit) : null,
         expires_at: expires_at ? new Date(expires_at) : null,
         date_created: new Date(),
@@ -129,6 +141,7 @@ export const actions: Actions = {
     const notes = formData.get("notes") as string;
     const profile_version = formData.get("profile_version") as string;
     const format = formData.get("format") as string;
+    const view_mode = formData.get("view_mode") as string;
     const visit_limit = formData.get("visit_limit") as string;
     const expires_at = formData.get("expires_at") as string;
     const status = formData.get("status") as string;
@@ -178,7 +191,8 @@ export const actions: Actions = {
         name: name?.trim() || null,
         notes: notes?.trim() || null,
         profile_version: newVersionId,
-        format: format && ["resume", "cv"].includes(format) ? format : (existingToken.format || "resume"),
+        format: format && isValidFormat(format) ? format : (existingToken.format || DEFAULT_FORMAT),
+        view_mode: view_mode && isValidViewMode(view_mode) ? view_mode : (existingToken.view_mode || DEFAULT_VIEW_MODE),
         visit_limit: visit_limit ? parseInt(visit_limit) : null,
         expires_at: expires_at ? new Date(expires_at) : null,
         status: status || "published",

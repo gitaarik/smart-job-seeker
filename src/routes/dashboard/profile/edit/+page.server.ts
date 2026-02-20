@@ -47,10 +47,8 @@ export const actions: Actions = {
     const phone_number = formData.get("phone_number") as string;
     const personal_website = formData.get("personal_website") as string;
 
-    // Location fields
-    const city = formData.get("city") as string;
-    const region = formData.get("region") as string;
-    const country_code = formData.get("country_code") as string;
+    // Location field
+    const location = formData.get("location") as string;
 
     // Social profiles
     const linkedin_profile = formData.get("linkedin_profile") as string;
@@ -108,9 +106,7 @@ export const actions: Actions = {
         email_address: email_address?.trim() || null,
         phone_number: phone_number?.trim() || null,
         personal_website: personal_website?.trim() || null,
-        city: city?.trim() || null,
-        region: region?.trim() || null,
-        country_code: country_code?.trim() || null,
+        location: location?.trim() || null,
         linkedin_profile: linkedin_profile?.trim() || null,
         github_profile: github_profile?.trim() || null,
         stackoverflow_profile: stackoverflow_profile?.trim() || null,

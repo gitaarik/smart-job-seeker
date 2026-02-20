@@ -5,13 +5,8 @@ export interface ExportedProfile {
     name?: string;
     title?: string;
     slug?: string;
-    // Location fields
-    location_city?: string;
-    location_region?: string;
-    location_country_code?: string;
-    city?: string;
-    region?: string;
-    country_code?: string;
+    // Location field
+    location?: string;
     // Contact fields
     phone_number?: string;
     email_address?: string;
@@ -399,13 +394,8 @@ export async function buildProfileJsonExport(
       name: baseProfile.name || undefined,
       title: baseProfile.title || undefined,
       slug: baseProfile.slug || undefined,
-      // Location fields
-      location_city: baseProfile.location_city || undefined,
-      location_region: baseProfile.location_region || undefined,
-      location_country_code: baseProfile.location_country_code || undefined,
-      city: baseProfile.city || undefined,
-      region: baseProfile.region || undefined,
-      country_code: baseProfile.country_code || undefined,
+      // Location field
+      location: baseProfile.location || undefined,
       // Contact fields
       phone_number: baseProfile.phone_number || undefined,
       email_address: baseProfile.email_address || undefined,
