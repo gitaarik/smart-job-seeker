@@ -6,5 +6,5 @@
 </script>
 
 {#if data.profile}
-  <ProfileDisplay profile={data.profile} type="resume" />
+  <ProfileDisplay profile={data.profile} type="resume" versionId={data.versionId} />
 {/if}

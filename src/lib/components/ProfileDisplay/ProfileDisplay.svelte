@@ -81,9 +81,10 @@
   interface Props {
     profile: Profile;
     type?: string | null;
+    versionId?: number | null;
   }
 
-  let { profile, type = null }: Props = $props();
+  let { profile, type = null, versionId = null }: Props = $props();
 
   function getVersion(idx: string | number) {
     if (!profile.profile_versions) return undefined;
@@ -94,8 +95,9 @@
     }
   }
 
-  const version: string = page.url.searchParams.get("version") || "";
-  let versionObj = getVersion(version);
+  // Use versionId prop if provided, otherwise fall back to URL query param
+  const versionFromUrl: string = page.url.searchParams.get("version") || "";
+  let versionObj = versionId ? getVersion(versionId) : getVersion(versionFromUrl);
 
   function getAllVersionObjs(versionObj) {
     const versionObjs = [versionObj];

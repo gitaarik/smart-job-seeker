@@ -7,6 +7,7 @@
     faChevronDown,
     faChevronUp,
     faFileAlt,
+    faGlobe,
     faPencil,
     faTimes,
     faTrash,
@@ -18,6 +19,8 @@
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
   let versions = $derived(data.versions);
+  let publicResumeVersionId = $derived(data.publicResumeVersionId);
+  let publicCvVersionId = $derived(data.publicCvVersionId);
 
   let expandedId = $state<number | null>(null);
   let editingId = $state<number | null>(null);
@@ -115,6 +118,14 @@
         editingId = null;
       }
     };
+  }
+
+  function isPublicResume(versionId: number): boolean {
+    return publicResumeVersionId === versionId;
+  }
+
+  function isPublicCv(versionId: number): boolean {
+    return publicCvVersionId === versionId;
   }
 </script>
 
@@ -263,6 +274,22 @@
                   >
                     {version.status}
                   </span>
+                  {#if isPublicResume(version.id)}
+                    <span
+                      class="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 flex items-center gap-1"
+                    >
+                      <FontAwesomeIcon icon={faGlobe} class="w-3 h-3" />
+                      Public Resume
+                    </span>
+                  {/if}
+                  {#if isPublicCv(version.id)}
+                    <span
+                      class="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 flex items-center gap-1"
+                    >
+                      <FontAwesomeIcon icon={faGlobe} class="w-3 h-3" />
+                      Public CV
+                    </span>
+                  {/if}
                 </div>
                 <p class="text-sm text-[var(--dash-text-secondary)] truncate">
                   {version.description || "No description"}
@@ -414,6 +441,42 @@
                       </div>
                     </div>
                   {/if}
+
+                  <div>
+                    <p
+                      class="text-sm font-medium text-[var(--dash-text-secondary)] mb-2"
+                    >
+                      Public Access
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                      <form method="POST" action="?/setPublicResume" use:enhance>
+                        <input type="hidden" name="versionId" value={isPublicResume(version.id) ? "" : version.id} />
+                        <button
+                          type="submit"
+                          class="text-sm px-3 py-1.5 rounded-md border transition-colors flex items-center gap-1.5
+                            {isPublicResume(version.id)
+                              ? 'bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100'
+                              : 'border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:border-blue-300 hover:text-blue-600'}"
+                        >
+                          <FontAwesomeIcon icon={faGlobe} class="w-3.5 h-3.5" />
+                          {isPublicResume(version.id) ? "Public Resume ✓" : "Set Public Resume"}
+                        </button>
+                      </form>
+                      <form method="POST" action="?/setPublicCv" use:enhance>
+                        <input type="hidden" name="versionId" value={isPublicCv(version.id) ? "" : version.id} />
+                        <button
+                          type="submit"
+                          class="text-sm px-3 py-1.5 rounded-md border transition-colors flex items-center gap-1.5
+                            {isPublicCv(version.id)
+                              ? 'bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100'
+                              : 'border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:border-blue-300 hover:text-blue-600'}"
+                        >
+                          <FontAwesomeIcon icon={faGlobe} class="w-3.5 h-3.5" />
+                          {isPublicCv(version.id) ? "Public CV ✓" : "Set Public CV"}
+                        </button>
+                      </form>
+                    </div>
+                  </div>
 
                   <div
                     class="flex items-center justify-end gap-2 pt-2 border-t border-[var(--dash-border)]"

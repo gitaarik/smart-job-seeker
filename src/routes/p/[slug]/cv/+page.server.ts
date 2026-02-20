@@ -45,13 +45,16 @@ export const load: PageServerLoad = async ({
     await incrementTokenVisit(accessResult.tokenId, getClientAddress());
   }
 
-  // Resolve version: from access control, or from ?version= query param for owner access
+  // Resolve version: from access control, query param, or public version fallback
   let versionId = accessResult.versionId;
   if (!versionId && accessResult.accessType === "owner") {
     const versionName = url.searchParams.get("version");
     if (versionName) {
       versionId = await getVersionIdByName(profile.id, versionName) ??
         undefined;
+    } else if (profile.public_cv_version) {
+      // Fall back to public version when no specific version requested
+      versionId = profile.public_cv_version;
     }
   }
 
