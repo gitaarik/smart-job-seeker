@@ -47,7 +47,7 @@
   function getStatusColor(status: string): string {
     switch (status) {
       case "draft":
-        return "bg-gray-100 text-gray-600";
+        return "bg-[var(--dash-bg)] text-gray-600";
       case "sent":
         return "bg-blue-100 text-blue-600";
       case "seen":
@@ -59,9 +59,9 @@
       case "rejected":
         return "bg-red-100 text-red-600";
       case "withdrawn":
-        return "bg-gray-100 text-gray-500";
+        return "bg-[var(--dash-bg)] text-gray-500";
       default:
-        return "bg-gray-100 text-gray-600";
+        return "bg-[var(--dash-bg)] text-gray-600";
     }
   }
 
@@ -112,7 +112,7 @@
           px-3 py-1.5 text-sm rounded-lg transition-colors {currentStatus ===
           filter.value
           ? 'bg-[var(--dash-primary)] text-white'
-          : 'bg-[var(--dash-card)] border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-gray-100'}
+          : 'bg-[var(--dash-card)] border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)]'}
         "
       >
         {filter.label}
@@ -140,7 +140,7 @@
           <button
             type="button"
             onclick={() => toggleExpand(app.id)}
-            class="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors text-left"
+            class="w-full flex items-center justify-between p-4 hover:bg-[var(--dash-bg)] transition-colors text-left"
           >
             <div class="flex items-center gap-4 flex-1 min-w-0">
               <div
@@ -306,7 +306,7 @@
                           px-2 py-1 text-xs rounded transition-colors {app.status ===
                           option.value
                           ? 'bg-[var(--dash-primary)] text-white'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}
+                          : 'bg-[var(--dash-bg)] text-gray-600 hover:bg-gray-200'}
                         "
                       >
                         {option.label}

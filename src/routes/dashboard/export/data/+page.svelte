@@ -78,7 +78,7 @@
   >
     <div class="flex items-start gap-4">
       <div
-        class="w-12 h-12 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0"
+        class="w-12 h-12 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center flex-shrink-0"
       >
         <FontAwesomeIcon
           icon={faDatabase}
@@ -130,7 +130,7 @@
           >
             <div class="flex items-center gap-3">
               <div
-                class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center"
+                class="w-10 h-10 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center"
               >
                 <FontAwesomeIcon
                   icon={faDownload}
@@ -140,7 +140,7 @@
               <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2">
                   <span
-                    class="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-700 font-medium"
+                    class="text-xs px-2 py-0.5 rounded bg-[var(--dash-bg)] text-gray-700 font-medium"
                   >
                     {getFileTypeLabel(exp.file_type)}
                   </span>

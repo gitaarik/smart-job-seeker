@@ -19,7 +19,7 @@
   function getScoreColor(score: number): string {
     if (score >= 80) return "text-green-600 bg-green-100";
     if (score >= 60) return "text-yellow-600 bg-yellow-100";
-    return "text-gray-600 bg-gray-100";
+    return "text-gray-600 bg-[var(--dash-bg)]";
   }
 
   function formatSalary(

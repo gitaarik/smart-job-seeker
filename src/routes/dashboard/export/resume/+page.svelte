@@ -60,9 +60,9 @@
       case "draft":
         return "bg-yellow-100 text-yellow-700";
       case "archived":
-        return "bg-gray-100 text-gray-600";
+        return "bg-[var(--dash-bg)] text-gray-600";
       default:
-        return "bg-gray-100 text-gray-600";
+        return "bg-[var(--dash-bg)] text-gray-600";
     }
   }
 
@@ -219,7 +219,7 @@
         <button
           type="button"
           onclick={resetAddForm}
-          class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-gray-100 transition-colors"
+          class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
         >
           Cancel
         </button>
@@ -252,11 +252,11 @@
           <button
             type="button"
             onclick={() => toggleExpand(version.id)}
-            class="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors text-left"
+            class="w-full flex items-center justify-between p-4 hover:bg-[var(--dash-bg)] transition-colors text-left"
           >
             <div class="flex items-center gap-4 flex-1 min-w-0">
               <div
-                class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0"
+                class="w-10 h-10 rounded-full bg-[var(--dash-bg)] flex items-center justify-center flex-shrink-0"
               >
                 <FontAwesomeIcon
                   icon={faFileAlt}

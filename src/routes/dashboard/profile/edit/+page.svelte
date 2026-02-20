@@ -371,7 +371,7 @@
     <div class="flex justify-end gap-3">
       <a
         href="/dashboard/profile"
-        class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-gray-100 transition-colors"
+        class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
       >
         Cancel
       </a>

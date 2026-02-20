@@ -175,7 +175,7 @@
         <button
           type="button"
           onclick={resetAddForm}
-          class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-gray-100 transition-colors"
+          class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
         >
           Cancel
         </button>
@@ -286,7 +286,7 @@
             <div class="flex items-start justify-between">
               <div class="flex items-start gap-4">
                 <div
-                  class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 mt-1"
+                  class="w-10 h-10 rounded-full bg-[var(--dash-bg)] flex items-center justify-center flex-shrink-0 mt-1"
                 >
                   <FontAwesomeIcon
                     icon={faQuoteLeft}

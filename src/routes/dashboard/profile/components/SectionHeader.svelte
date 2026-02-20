@@ -38,7 +38,7 @@
     <div class="flex items-center gap-3">
       {#if icon}
         <div
-          class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center"
+          class="w-10 h-10 rounded-full bg-[var(--dash-bg)] flex items-center justify-center"
         >
           <FontAwesomeIcon
             {icon}

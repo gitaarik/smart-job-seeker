@@ -19,7 +19,7 @@
   class="flex flex-col items-center justify-center py-12 px-6 border-2 border-dashed border-[var(--dash-border)] rounded-lg"
 >
   <div
-    class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4"
+    class="w-16 h-16 rounded-full bg-[var(--dash-bg)] flex items-center justify-center mb-4"
   >
     <FontAwesomeIcon {icon} class="w-8 h-8 text-[var(--dash-text-muted)]" />
   </div>

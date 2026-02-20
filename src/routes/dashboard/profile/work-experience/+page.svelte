@@ -225,7 +225,7 @@
         <button
           type="button"
           onclick={resetAddForm}
-          class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-gray-100 transition-colors"
+          class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
         >
           Cancel
         </button>
@@ -258,11 +258,11 @@
             tabindex="0"
             onclick={() => toggleExpand(exp.id)}
             onkeydown={(e) => e.key === "Enter" && toggleExpand(exp.id)}
-            class="w-full flex items-center justify-between p-4 hover:bg-gray-100 transition-colors text-left cursor-pointer"
+            class="w-full flex items-center justify-between p-4 hover:bg-[var(--dash-bg)] transition-colors text-left cursor-pointer"
           >
             <div class="flex items-center gap-4">
               <div
-                class="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0"
+                class="w-12 h-12 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center flex-shrink-0"
               >
                 <FontAwesomeIcon
                   icon={faBriefcase}
@@ -339,7 +339,7 @@
                   <div class="flex flex-wrap gap-2">
                     {#each exp.work_experience_technologies as tech}
                       <span
-                        class="px-2 py-1 bg-gray-100 text-[var(--dash-text)] text-sm rounded"
+                        class="px-2 py-1 bg-[var(--dash-bg)] text-[var(--dash-text)] text-sm rounded"
                       >{tech.name}</span>
                     {/each}
                   </div>

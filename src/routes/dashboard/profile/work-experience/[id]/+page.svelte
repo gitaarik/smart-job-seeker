@@ -92,7 +92,7 @@
 
   <div class="flex items-center gap-4">
     <div
-      class="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center"
+      class="w-12 h-12 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center"
     >
       <FontAwesomeIcon icon={faBriefcase} class="w-6 h-6 text-[var(--dash-primary)]" />
     </div>
@@ -289,7 +289,7 @@
         <div class="flex flex-wrap gap-2">
           {#each editTechnologies as tech, index}
             <div
-              class="flex items-center gap-1 bg-gray-100 rounded-lg pl-3 pr-1 py-1"
+              class="flex items-center gap-1 bg-[var(--dash-bg)] rounded-lg pl-3 pr-1 py-1"
             >
               <input
                 type="text"
@@ -330,7 +330,7 @@
       {:else}
         <div class="space-y-3">
           {#each editAchievements as achievement, index}
-            <div class="flex items-start gap-3 p-3 bg-gray-100 rounded-lg">
+            <div class="flex items-start gap-3 p-3 bg-[var(--dash-bg)] rounded-lg">
               <div class="flex-1 space-y-2">
                 <input
                   type="text"
@@ -363,7 +363,7 @@
     <div class="flex justify-end gap-3">
       <a
         href="/dashboard/profile/work-experience"
-        class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-gray-100 transition-colors"
+        class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
       >
         Cancel
       </a>

@@ -271,7 +271,7 @@
                 item,
                 )
                 ? 'bg-[var(--dash-primary)]/10 text-[var(--dash-primary)]'
-                : 'text-[var(--dash-text)] hover:bg-gray-100'}
+                : 'text-[var(--dash-text)] hover:bg-[var(--dash-bg)]'}
               "
             >
               <div class="flex items-center gap-2">
@@ -300,7 +300,7 @@
                         child.href,
                         )
                         ? 'bg-[var(--dash-primary)] text-white'
-                        : 'text-[var(--dash-text-secondary)] hover:bg-gray-100 hover:text-[var(--dash-text)]'}
+                        : 'text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] hover:text-[var(--dash-text)]'}
                       "
                     >
                       <FontAwesomeIcon icon={child.icon} class="w-4 h-4" />
@@ -322,7 +322,7 @@
                 item.href,
                 )
                 ? 'bg-[var(--dash-primary)] text-white'
-                : 'text-[var(--dash-text)] hover:bg-gray-100'}
+                : 'text-[var(--dash-text)] hover:bg-[var(--dash-bg)]'}
               "
             >
               <FontAwesomeIcon icon={item.icon} class="w-4 h-4" />

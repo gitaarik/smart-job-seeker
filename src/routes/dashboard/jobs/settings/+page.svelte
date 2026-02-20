@@ -211,7 +211,7 @@
         <button
           type="button"
           onclick={resetAddForm}
-          class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-gray-100 transition-colors"
+          class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
         >
           Cancel
         </button>
@@ -352,7 +352,7 @@
                     w-10 h-10 rounded-full flex items-center justify-center {search.status ===
                     'active'
                     ? 'bg-green-100'
-                    : 'bg-gray-100'}
+                    : 'bg-[var(--dash-bg)]'}
                   "
                 >
                   <FontAwesomeIcon
@@ -375,7 +375,7 @@
                         ? 'bg-green-100 text-green-700'
                         : search.status === 'paused'
                         ? 'bg-yellow-100 text-yellow-700'
-                        : 'bg-gray-100 text-gray-600'}
+                        : 'bg-[var(--dash-bg)] text-gray-600'}
                       "
                     >
                       {search.status}

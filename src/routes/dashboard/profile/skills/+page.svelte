@@ -194,7 +194,7 @@
         <button
           type="button"
           onclick={resetAddCategory}
-          class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-gray-100 transition-colors"
+          class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
         >
           Cancel
         </button>
@@ -262,7 +262,7 @@
                 class="flex-1 flex items-center gap-4 text-left"
               >
                 <div
-                  class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0"
+                  class="w-10 h-10 rounded-full bg-[var(--dash-bg)] flex items-center justify-center flex-shrink-0"
                 >
                   <FontAwesomeIcon icon={faCode} class="w-5 h-5 text-[var(--dash-primary)]" />
                 </div>
@@ -327,7 +327,7 @@
                   method="POST"
                   action="?/createSkill"
                   use:enhance={handleAddSkillSubmit}
-                  class="bg-gray-100 rounded-lg p-3 mb-4"
+                  class="bg-[var(--dash-bg)] rounded-lg p-3 mb-4"
                 >
                   <input type="hidden" name="categoryId" value={category.id} />
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -397,7 +397,7 @@
                         method="POST"
                         action="?/updateSkill"
                         use:enhance={handleEditSkillSubmit}
-                        class="bg-gray-100 rounded-lg p-3"
+                        class="bg-[var(--dash-bg)] rounded-lg p-3"
                       >
                         <input type="hidden" name="id" value={skill.id} />
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -457,7 +457,7 @@
                     {:else}
                       <!-- Skill View -->
                       <div
-                        class="flex items-center justify-between py-2 px-3 bg-gray-100 rounded-lg"
+                        class="flex items-center justify-between py-2 px-3 bg-[var(--dash-bg)] rounded-lg"
                       >
                         <div>
                           <span class="font-medium text-[var(--dash-text)]">{

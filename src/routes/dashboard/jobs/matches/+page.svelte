@@ -44,7 +44,7 @@
   function getScoreColor(score: number): string {
     if (score >= 80) return "text-green-600 bg-green-100";
     if (score >= 60) return "text-yellow-600 bg-yellow-100";
-    return "text-gray-600 bg-gray-100";
+    return "text-gray-600 bg-[var(--dash-bg)]";
   }
 
   function getRecommendationLabel(rec: string | null): string {
@@ -119,7 +119,7 @@
           px-3 py-1.5 text-sm rounded-lg transition-colors {currentStatus ===
           filter.value
           ? 'bg-[var(--dash-primary)] text-white'
-          : 'bg-[var(--dash-card)] border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-gray-100'}
+          : 'bg-[var(--dash-card)] border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)]'}
         "
       >
         {filter.label}
@@ -147,7 +147,7 @@
           <button
             type="button"
             onclick={() => toggleExpand(match.id)}
-            class="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors text-left"
+            class="w-full flex items-center justify-between p-4 hover:bg-[var(--dash-bg)] transition-colors text-left"
           >
             <div class="flex items-center gap-4 flex-1 min-w-0">
               <!-- Score Badge -->
@@ -167,7 +167,7 @@
                     {job.title || "Untitled Job"}
                   </h3>
                   <span
-                    class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600"
+                    class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-bg)] text-gray-600"
                   >
                     {match.status}
                   </span>
@@ -339,7 +339,7 @@
                         px-2 py-1 text-xs rounded transition-colors {match.status ===
                         option.value
                         ? 'bg-[var(--dash-primary)] text-white'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}
+                        : 'bg-[var(--dash-bg)] text-gray-600 hover:bg-gray-200'}
                       "
                     >
                       {option.label}

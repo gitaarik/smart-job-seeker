@@ -284,7 +284,7 @@
         <button
           type="button"
           onclick={resetAddForm}
-          class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-gray-100 transition-colors"
+          class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
         >
           Cancel
         </button>
@@ -317,11 +317,11 @@
           <button
             type="button"
             onclick={() => toggleExpand(story.id)}
-            class="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors text-left"
+            class="w-full flex items-center justify-between p-4 hover:bg-[var(--dash-bg)] transition-colors text-left"
           >
             <div class="flex items-center gap-4 flex-1 min-w-0">
               <div
-                class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0"
+                class="w-10 h-10 rounded-full bg-[var(--dash-bg)] flex items-center justify-center flex-shrink-0"
               >
                 <FontAwesomeIcon icon={faBook} class="w-5 h-5 text-blue-600" />
               </div>
@@ -333,7 +333,7 @@
                   </h3>
                   {#if story.category}
                     <span
-                      class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600"
+                      class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-bg)] text-gray-600"
                     >
                       {getCategoryLabel(story.category)}
                     </span>

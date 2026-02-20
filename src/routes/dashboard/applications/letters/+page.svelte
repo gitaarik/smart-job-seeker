@@ -129,7 +129,7 @@
           px-3 py-1.5 text-sm rounded-lg transition-colors {currentType ===
           filter.value
           ? 'bg-[var(--dash-primary)] text-white'
-          : 'bg-[var(--dash-card)] border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-gray-100'}
+          : 'bg-[var(--dash-card)] border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)]'}
         "
       >
         {filter.label}
@@ -160,7 +160,7 @@
           <button
             type="button"
             onclick={() => toggleExpand(itemId)}
-            class="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors text-left"
+            class="w-full flex items-center justify-between p-4 hover:bg-[var(--dash-bg)] transition-colors text-left"
           >
             <div class="flex items-center gap-4 flex-1 min-w-0">
               <div
@@ -194,7 +194,7 @@
                         text-xs px-2 py-0.5 rounded-full capitalize {item.status ===
                         'published'
                         ? 'bg-green-100 text-green-700'
-                        : 'bg-gray-100 text-gray-600'}
+                        : 'bg-[var(--dash-bg)] text-gray-600'}
                       "
                     >
                       {item.status}
@@ -272,7 +272,7 @@
                       <button
                         type="button"
                         onclick={cancelEdit}
-                        class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-gray-100 transition-colors"
+                        class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
                       >
                         Cancel
                       </button>
@@ -299,7 +299,7 @@
                           Question
                         </p>
                         <p
-                          class="text-[var(--dash-text)] bg-gray-50 p-3 rounded-lg"
+                          class="text-[var(--dash-text)] bg-[var(--dash-bg)] p-3 rounded-lg"
                         >
                           {item.question}
                         </p>
@@ -324,7 +324,7 @@
                       <button
                         type="button"
                         onclick={cancelEdit}
-                        class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-gray-100 transition-colors"
+                        class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
                       >
                         Cancel
                       </button>
@@ -344,7 +344,7 @@
                     {#if item.content}
                       <div class="prose prose-sm max-w-none">
                         <pre
-                          class="whitespace-pre-wrap text-sm text-[var(--dash-text)] bg-gray-50 p-4 rounded-lg overflow-x-auto"
+                          class="whitespace-pre-wrap text-sm text-[var(--dash-text)] bg-[var(--dash-bg)] p-4 rounded-lg overflow-x-auto"
                         >{item.content}</pre>
                       </div>
                     {:else}

@@ -201,7 +201,7 @@
           <button
             type="button"
             onclick={clearFile}
-            class="p-1 rounded hover:bg-gray-100 transition-colors"
+            class="p-1 rounded hover:bg-[var(--dash-bg)] transition-colors"
             aria-label="Remove file"
           >
             <FontAwesomeIcon
@@ -349,7 +349,7 @@
             type="button"
             onclick={() => handleImportClick("overwrite")}
             disabled={!selectedFile || !preview || isLoading}
-            class="flex-1 py-2.5 px-4 border border-[var(--dash-border)] text-[var(--dash-text)] font-medium rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            class="flex-1 py-2.5 px-4 border border-[var(--dash-border)] text-[var(--dash-text)] font-medium rounded-lg hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             <FontAwesomeIcon icon={faSync} class="w-4 h-4" />
             Overwrite Current Profile

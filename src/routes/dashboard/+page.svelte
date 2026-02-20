@@ -64,7 +64,7 @@
     <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-3">
       <div class="flex items-center gap-2.5">
         <div
-          class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0"
+          class="w-8 h-8 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center shrink-0"
         >
           <FontAwesomeIcon icon={faBriefcase} class="w-4 h-4 text-[var(--dash-text-muted)]" />
         </div>
@@ -80,7 +80,7 @@
     <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-3">
       <div class="flex items-center gap-2.5">
         <div
-          class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0"
+          class="w-8 h-8 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center shrink-0"
         >
           <FontAwesomeIcon icon={faGraduationCap} class="w-4 h-4 text-[var(--dash-text-muted)]" />
         </div>
@@ -96,7 +96,7 @@
     <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-3">
       <div class="flex items-center gap-2.5">
         <div
-          class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0"
+          class="w-8 h-8 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center shrink-0"
         >
           <FontAwesomeIcon icon={faCode} class="w-4 h-4 text-[var(--dash-text-muted)]" />
         </div>
@@ -112,7 +112,7 @@
     <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-3">
       <div class="flex items-center gap-2.5">
         <div
-          class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0"
+          class="w-8 h-8 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center shrink-0"
         >
           <FontAwesomeIcon icon={faEdit} class="w-4 h-4 text-[var(--dash-text-muted)]" />
         </div>
@@ -132,7 +132,7 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       <a
         href="/dashboard/profile"
-        class="p-3 rounded-lg border border-[var(--dash-border)] hover:border-[var(--dash-primary)] hover:bg-gray-50 transition-colors text-center"
+        class="p-3 rounded-lg border border-[var(--dash-border)] hover:border-[var(--dash-primary)] hover:bg-[var(--dash-bg)] transition-colors text-center"
       >
         <FontAwesomeIcon
           icon={faFileAlt}
@@ -143,7 +143,7 @@
       </a>
       <a
         href="/dashboard/jobs"
-        class="p-3 rounded-lg border border-[var(--dash-border)] hover:border-[var(--dash-primary)] hover:bg-gray-50 transition-colors text-center"
+        class="p-3 rounded-lg border border-[var(--dash-border)] hover:border-[var(--dash-primary)] hover:bg-[var(--dash-bg)] transition-colors text-center"
       >
         <FontAwesomeIcon
           icon={faSearch}
@@ -154,7 +154,7 @@
       </a>
       <a
         href="/dashboard/applications"
-        class="p-3 rounded-lg border border-[var(--dash-border)] hover:border-[var(--dash-primary)] hover:bg-gray-50 transition-colors text-center"
+        class="p-3 rounded-lg border border-[var(--dash-border)] hover:border-[var(--dash-primary)] hover:bg-[var(--dash-bg)] transition-colors text-center"
       >
         <FontAwesomeIcon
           icon={faPaperPlane}

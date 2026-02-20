@@ -62,7 +62,7 @@
       <div class="py-2">
         <a
           href="/dashboard/settings"
-          class="flex items-center gap-2 px-4 py-2 text-sm text-[var(--dash-text)] hover:bg-gray-100 transition-colors"
+          class="flex items-center gap-2 px-4 py-2 text-sm text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
         >
           <FontAwesomeIcon icon={faCog} class="w-4 h-4" />
           <span>Settings</span>
@@ -70,7 +70,7 @@
 
         <a
           href="/logout"
-          class="flex items-center gap-2 px-4 py-2 text-sm text-[var(--dash-error)] hover:bg-gray-100 transition-colors"
+          class="flex items-center gap-2 px-4 py-2 text-sm text-[var(--dash-error)] hover:bg-[var(--dash-bg)] transition-colors"
         >
           <FontAwesomeIcon icon={faSignOutAlt} class="w-4 h-4" />
           <span>Sign out</span>

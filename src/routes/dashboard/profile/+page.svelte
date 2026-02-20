@@ -139,7 +139,7 @@
       >
         <div class="flex items-start gap-4">
           <div
-            class="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 group-hover:bg-gray-100 transition-colors"
+            class="w-12 h-12 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center shrink-0 group-hover:bg-[var(--dash-bg)] transition-colors"
           >
             <FontAwesomeIcon
               icon={section.icon}
