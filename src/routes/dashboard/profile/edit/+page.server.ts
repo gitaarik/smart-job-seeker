@@ -36,6 +36,7 @@ export const actions: Actions = {
 
     // Basic info fields
     const name = formData.get("name") as string;
+    const slug = formData.get("slug") as string;
     const title = formData.get("title") as string;
     const subtitle = formData.get("subtitle") as string;
     const headline = formData.get("headline") as string;
@@ -65,10 +66,41 @@ export const actions: Actions = {
       return fail(400, { error: "Name is required" });
     }
 
+    // Validate and process slug
+    let finalSlug: string | undefined;
+    if (slug && slug.trim()) {
+      // Normalize slug: lowercase, replace non-alphanumeric with hyphens, trim hyphens
+      finalSlug = slug
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "");
+
+      if (finalSlug.length < 2) {
+        return fail(400, { error: "Slug must be at least 2 characters" });
+      }
+
+      if (finalSlug.length > 50) {
+        return fail(400, { error: "Slug must be 50 characters or less" });
+      }
+
+      // Check if slug is already taken by another profile
+      const existingProfile = await db.profiles.findFirst({
+        where: {
+          slug: finalSlug,
+          id: { not: profileId },
+        },
+      });
+
+      if (existingProfile) {
+        return fail(400, { error: "This URL slug is already taken. Please choose another." });
+      }
+    }
+
     await db.profiles.update({
       where: { id: profileId },
       data: {
         name: name.trim(),
+        ...(finalSlug && { slug: finalSlug }),
         title: title?.trim() || null,
         subtitle: subtitle?.trim() || null,
         headline: headline?.trim() || null,

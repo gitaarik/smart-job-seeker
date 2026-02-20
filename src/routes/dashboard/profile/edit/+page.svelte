@@ -87,6 +87,26 @@
         </div>
 
         <div>
+          <label for="slug" class="block text-sm font-medium text-[var(--dash-text)] mb-1">
+            Profile URL
+          </label>
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-[var(--dash-text-secondary)]">/p/</span>
+            <input
+              type="text"
+              id="slug"
+              name="slug"
+              value={profile?.slug || ""}
+              placeholder="your-profile-name"
+              class="flex-1 px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+            />
+          </div>
+          <p class="text-xs text-[var(--dash-text-secondary)] mt-1">
+            Used in your public profile URL. Only lowercase letters, numbers, and hyphens.
+          </p>
+        </div>
+
+        <div>
           <label for="title" class="block text-sm font-medium text-[var(--dash-text)] mb-1">
             Professional Title
           </label>
