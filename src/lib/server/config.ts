@@ -25,6 +25,9 @@ export interface AppConfig {
   // Browser
   chromePath: string;
 
+  // Internal rendering (for server-side PDF generation)
+  internalRenderSecret: string;
+
   // LLM (for TypeScript/SvelteKit app)
   llmProvider:
     | "groq"
@@ -106,6 +109,12 @@ function loadConfig(): AppConfig {
 
     // Browser
     chromePath: getEnv("SJS_CHROME_PATH", ""),
+
+    // Internal rendering (for server-side PDF generation)
+    internalRenderSecret: getEnv(
+      "SJS_INTERNAL_RENDER_SECRET",
+      "dev-internal-render-secret",
+    ),
 
     // LLM (for TypeScript/SvelteKit app)
     llmProvider: (llmProvider as

@@ -2,6 +2,7 @@ import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { getSelectedProfileId } from "../../profile/utils";
+import { generateVersionPdfs } from "$lib/server/profile/generate-version-pdfs";
 
 export const load: PageServerLoad = async ({ parent }) => {
   const layoutData = await parent();
@@ -52,6 +53,8 @@ export const actions: Actions = {
       },
     });
 
+    generateVersionPdfs(profileId, name.trim()).catch(console.error);
+
     return { success: true };
   },
 
@@ -97,6 +100,8 @@ export const actions: Actions = {
         date_updated: new Date(),
       },
     });
+
+    generateVersionPdfs(profileId, name.trim()).catch(console.error);
 
     return { success: true };
   },

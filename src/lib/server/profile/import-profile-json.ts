@@ -1,5 +1,6 @@
 import { dbDirect } from "$lib/server/db";
 import type { ExportedProfile } from "./export-profile-json";
+import { generateVersionPdfs } from "./generate-version-pdfs";
 
 export async function importProfileFromJson(
   data: ExportedProfile,
@@ -376,6 +377,13 @@ export async function importProfileFromJson(
           },
         });
       }
+    }
+  }
+
+  // Generate PDFs for all imported versions (fire-and-forget)
+  for (const pv of p.profile_versions ?? []) {
+    if (pv.name) {
+      generateVersionPdfs(profileId, pv.name).catch(console.error);
     }
   }
 

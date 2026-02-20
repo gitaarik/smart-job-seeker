@@ -1,6 +1,8 @@
 import type { Handle } from "@sveltejs/kit";
 import { svelteKitHandler } from "better-auth/svelte-kit";
 import { auth } from "$lib/server/auth/better-auth";
+import type { User } from "$lib/server/auth/better-auth";
+import { config } from "$lib/server/config";
 
 function getSystemTheme(request: Request): "light" | "dark" {
   // Try to detect system preference from headers
@@ -55,6 +57,18 @@ function getThemeFromRequest(request: Request): string {
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
+  // Internal rendering bypass (for server-side PDF generation)
+  const internalSecret = event.request.headers.get("x-internal-render-secret");
+  const internalUserId = event.request.headers.get("x-internal-user-id");
+  if (
+    internalSecret && internalUserId &&
+    internalSecret === config.internalRenderSecret
+  ) {
+    event.locals.user = { id: internalUserId } as User;
+    event.locals.session = null;
+    return await resolve(event);
+  }
+
   // Get session and populate locals FIRST, before svelteKitHandler
   // This ensures event.locals is populated when resolve() is called
   try {
