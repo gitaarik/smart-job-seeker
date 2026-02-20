@@ -14,7 +14,6 @@
     faDatabase,
     faDownload,
     faFileAlt,
-    faFileExport,
     faFileImport,
     faGlobe,
     faGraduationCap,
@@ -28,6 +27,7 @@
     faSearch,
     faStickyNote,
     faTimes,
+    faTrash,
     faUser,
     faUserFriends,
     faUserTie,
@@ -157,9 +157,9 @@
       ],
     },
     {
-      label: "Export & Share",
+      label: "Data & Settings",
       href: "/dashboard/export",
-      icon: faFileExport,
+      icon: faCog,
       children: [
         {
           label: "Resume/CV Versions",
@@ -167,7 +167,7 @@
           icon: faFileAlt,
         },
         {
-          label: "Share Links",
+          label: "Private Links",
           href: "/dashboard/export/share",
           icon: faLink,
         },
@@ -180,6 +180,11 @@
           label: "Import Data",
           href: "/dashboard/export/import",
           icon: faFileImport,
+        },
+        {
+          label: "Delete Profile",
+          href: "/dashboard/export/delete",
+          icon: faTrash,
         },
       ],
     },

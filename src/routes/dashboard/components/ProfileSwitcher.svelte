@@ -68,9 +68,9 @@
           <button
             onclick={() => selectProfile(profile)}
             class="
-              w-full px-3 py-2 text-left hover:bg-gray-100 transition-colors flex items-center gap-2 {profile.id ===
+              w-full px-3 py-2 text-left hover:bg-[var(--dash-bg)] transition-colors flex items-center gap-2 {profile.id ===
               selectedProfile.id
-              ? 'bg-gray-100'
+              ? 'bg-[var(--dash-bg)]'
               : ''}
             "
           >
@@ -86,7 +86,7 @@
         <div class="border-t border-[var(--dash-border)] mt-2 pt-2">
           <a
             href="/dashboard/profile/create"
-            class="w-full px-3 py-2 text-left hover:bg-gray-100 transition-colors flex items-center gap-2 text-[var(--dash-primary)]"
+            class="w-full px-3 py-2 text-left hover:bg-[var(--dash-bg)] transition-colors flex items-center gap-2 text-[var(--dash-primary)]"
           >
             <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
             <span>Create New Profile</span>

@@ -6915,6 +6915,7 @@ export const Profile_tokensScalarFieldEnum = {
   token: 'token',
   token_hash: 'token_hash',
   profile_version: 'profile_version',
+  format: 'format',
   visit_count: 'visit_count',
   visit_limit: 'visit_limit',
   expires_at: 'expires_at',

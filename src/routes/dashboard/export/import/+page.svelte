@@ -1,19 +1,28 @@
 <script lang="ts">
+  import type { ActionData, PageData } from "./$types";
   import { enhance } from "$app/forms";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faCloudUploadAlt,
+    faExclamationTriangle,
     faFile,
-    faFileImport,
+    faPlus,
     faSpinner,
+    faSync,
     faTimes,
   } from "@fortawesome/free-solid-svg-icons";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
+  import { faFileImport } from "@fortawesome/free-solid-svg-icons";
+
+  let { data, form }: { data: PageData; form: ActionData } = $props();
 
   let selectedFile = $state<File | null>(null);
   let isDragging = $state(false);
   let isLoading = $state(false);
   let error = $state<string | null>(null);
+  let importMode = $state<"new" | "overwrite">("new");
+  let showOverwriteConfirm = $state(false);
+  let confirmName = $state("");
   let preview = $state<
     {
       name: string;
@@ -25,8 +34,8 @@
   async function parsePreview(file: File) {
     try {
       const text = await file.text();
-      const data = JSON.parse(text);
-      const p = data?.profile;
+      const fileData = JSON.parse(text);
+      const p = fileData?.profile;
       if (!p) {
         error = "Invalid export format: missing profile data";
         preview = null;
@@ -66,6 +75,7 @@
   function setFile(file: File) {
     error = null;
     preview = null;
+    showOverwriteConfirm = false;
     selectedFile = file;
     parsePreview(file);
   }
@@ -98,6 +108,30 @@
   function clearFile() {
     selectedFile = null;
     preview = null;
+    showOverwriteConfirm = false;
+    confirmName = "";
+  }
+
+  const overwriteNameMatches = $derived(confirmName === data.selectedProfileName);
+
+  function handleImportClick(mode: "new" | "overwrite") {
+    importMode = mode;
+    if (mode === "overwrite") {
+      showOverwriteConfirm = true;
+    } else {
+      showOverwriteConfirm = false;
+      document.getElementById("import-form")?.requestSubmit();
+    }
+  }
+
+  function confirmOverwrite() {
+    document.getElementById("import-form")?.requestSubmit();
+  }
+
+  function cancelOverwrite() {
+    showOverwriteConfirm = false;
+    importMode = "new";
+    confirmName = "";
   }
 </script>
 
@@ -105,6 +139,7 @@
   <SectionHeader title="Import Data" icon={faFileImport} />
 
   <form
+    id="import-form"
     method="POST"
     action="?/importJson"
     enctype="multipart/form-data"
@@ -114,8 +149,8 @@
       return async ({ result }) => {
         isLoading = false;
         if (result.type === "failure") {
-          const data = result.data as { error?: string } | undefined;
-          error = data?.error || "Import failed";
+          const resultData = result.data as { error?: string } | undefined;
+          error = resultData?.error || "Import failed";
         } else if (result.type === "redirect") {
           window.location.href = result.location;
         }
@@ -123,6 +158,8 @@
     }}
     class="space-y-4"
   >
+    <input type="hidden" name="importMode" value={importMode} />
+
     {#if error}
       <div class="rounded-md bg-red-50 p-4">
         <p class="text-sm text-red-700">{error}</p>
@@ -228,20 +265,97 @@
           </p>
         {/if}
       </div>
-    {/if}
 
-    <button
-      type="submit"
-      disabled={!selectedFile || !preview || isLoading}
-      class="w-full py-2.5 px-4 bg-[var(--dash-primary)] text-white font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-    >
-      {#if isLoading}
-        <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 animate-spin" />
-        Importing...
+      {#if showOverwriteConfirm}
+        <div
+          class="rounded-lg border p-4 space-y-4"
+          style="border-color: var(--dash-warning-border); background-color: var(--dash-warning-light);"
+        >
+          <div class="flex items-start gap-3">
+            <FontAwesomeIcon
+              icon={faExclamationTriangle}
+              class="w-5 h-5 flex-shrink-0 mt-0.5"
+              style="color: var(--dash-warning);"
+            />
+            <div>
+              <p class="font-medium" style="color: var(--dash-warning);">
+                Overwrite "{data.selectedProfileName}"?
+              </p>
+              <p class="text-sm mt-1 text-[var(--dash-text-secondary)]">
+                This will permanently delete all existing data in the current profile and replace it with the imported data. This action cannot be undone.
+              </p>
+            </div>
+          </div>
+          <div class="ml-8 space-y-3">
+            <div>
+              <label
+                for="confirmOverwriteName"
+                class="block text-sm font-medium mb-1"
+                style="color: var(--dash-warning);"
+              >
+                To confirm, type <strong>"{data.selectedProfileName}"</strong> below:
+              </label>
+              <input
+                type="text"
+                id="confirmOverwriteName"
+                bind:value={confirmName}
+                autocomplete="off"
+                class="w-full max-w-md px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:border-transparent bg-[var(--dash-card)] text-[var(--dash-text)]"
+                style="border: 1px solid var(--dash-warning-border);"
+                placeholder="Enter profile name to confirm"
+              />
+            </div>
+            <div class="flex gap-2">
+              <button
+                type="button"
+                onclick={cancelOverwrite}
+                disabled={isLoading}
+                class="px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded-md hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50 text-[var(--dash-text)]"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onclick={confirmOverwrite}
+                disabled={isLoading || !overwriteNameMatches}
+                class="px-3 py-1.5 text-sm text-white rounded-md hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                style="background-color: var(--dash-warning);"
+              >
+                {#if isLoading}
+                  <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
+                {/if}
+                Yes, overwrite profile
+              </button>
+            </div>
+          </div>
+        </div>
       {:else}
-        <FontAwesomeIcon icon={faFileImport} class="w-4 h-4" />
-        Import Profile
+        <div class="flex flex-col sm:flex-row gap-3">
+          <button
+            type="button"
+            onclick={() => handleImportClick("new")}
+            disabled={!selectedFile || !preview || isLoading}
+            class="flex-1 py-2.5 px-4 bg-[var(--dash-primary)] text-white font-medium rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {#if isLoading && importMode === "new"}
+              <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 animate-spin" />
+              Importing...
+            {:else}
+              <FontAwesomeIcon icon={faPlus} class="w-4 h-4" />
+              Import as New Profile
+            {/if}
+          </button>
+          <button
+            type="button"
+            onclick={() => handleImportClick("overwrite")}
+            disabled={!selectedFile || !preview || isLoading}
+            class="flex-1 py-2.5 px-4 border border-[var(--dash-border)] text-[var(--dash-text)] font-medium rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            <FontAwesomeIcon icon={faSync} class="w-4 h-4" />
+            Overwrite Current Profile
+          </button>
+        </div>
       {/if}
-    </button>
+    {/if}
   </form>
 </div>

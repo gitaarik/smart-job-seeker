@@ -48,6 +48,7 @@ export const load: PageServerLoad = async ({ parent }) => {
     tokens: tokensWithVersions,
     versions,
     profileId: layoutData.selectedProfile.id,
+    profileSlug: layoutData.selectedProfile.slug,
   };
 };
 
@@ -67,11 +68,16 @@ export const actions: Actions = {
     const name = formData.get("name") as string;
     const notes = formData.get("notes") as string;
     const profile_version = formData.get("profile_version") as string;
+    const format = (formData.get("format") as string) || "resume";
     const visit_limit = formData.get("visit_limit") as string;
     const expires_at = formData.get("expires_at") as string;
 
     if (!profile_version) {
       return fail(400, { error: "Please select a profile version" });
+    }
+
+    if (!["resume", "cv"].includes(format)) {
+      return fail(400, { error: "Invalid format" });
     }
 
     // Verify the version belongs to this profile
@@ -96,6 +102,7 @@ export const actions: Actions = {
         name: name?.trim() || null,
         notes: notes?.trim() || null,
         profile_version: parseInt(profile_version),
+        format,
         visit_limit: visit_limit ? parseInt(visit_limit) : null,
         expires_at: expires_at ? new Date(expires_at) : null,
         date_created: new Date(),
@@ -120,6 +127,8 @@ export const actions: Actions = {
     const id = parseInt(formData.get("id") as string);
     const name = formData.get("name") as string;
     const notes = formData.get("notes") as string;
+    const profile_version = formData.get("profile_version") as string;
+    const format = formData.get("format") as string;
     const visit_limit = formData.get("visit_limit") as string;
     const expires_at = formData.get("expires_at") as string;
     const status = formData.get("status") as string;
@@ -148,11 +157,28 @@ export const actions: Actions = {
       return fail(403, { error: "Not authorized" });
     }
 
+    // If changing version, verify the new version belongs to this profile
+    let newVersionId = existingToken.profile_version;
+    if (profile_version) {
+      const newVersion = await db.profile_versions.findFirst({
+        where: {
+          id: parseInt(profile_version),
+          profile: profileId,
+        },
+      });
+      if (!newVersion) {
+        return fail(400, { error: "Invalid profile version" });
+      }
+      newVersionId = newVersion.id;
+    }
+
     await db.profile_tokens.update({
       where: { id },
       data: {
         name: name?.trim() || null,
         notes: notes?.trim() || null,
+        profile_version: newVersionId,
+        format: format && ["resume", "cv"].includes(format) ? format : (existingToken.format || "resume"),
         visit_limit: visit_limit ? parseInt(visit_limit) : null,
         expires_at: expires_at ? new Date(expires_at) : null,
         status: status || "published",

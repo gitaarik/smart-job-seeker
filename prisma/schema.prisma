@@ -862,6 +862,7 @@ model profile_tokens {
   token            String    @unique(map: "profile_tokens_token_unique") @db.VarChar(255)
   token_hash       String    @unique(map: "profile_tokens_token_hash_unique") @db.VarChar(255)
   profile_version  Int
+  format           String    @default("resume") @db.VarChar(20)
   visit_count      Int       @default(0)
   visit_limit      Int?
   expires_at       DateTime? @db.Timestamptz(6)

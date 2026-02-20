@@ -2,14 +2,19 @@ import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { importProfileFromJson } from "$lib/server/profile/import-profile-json";
 import type { ExportedProfile } from "$lib/server/profile/export-profile-json";
+import { getSelectedProfileId } from "../../profile/utils";
 
 export const load: PageServerLoad = async ({ parent }) => {
-  await parent();
-  return {};
+  const layoutData = await parent();
+
+  return {
+    selectedProfileName: layoutData.selectedProfile?.name || "Current Profile",
+    selectedProfileId: layoutData.selectedProfile?.id,
+  };
 };
 
 export const actions: Actions = {
-  importJson: async ({ request, locals }) => {
+  importJson: async ({ request, locals, cookies }) => {
     const user = locals.user;
     if (!user) {
       return fail(401, { error: "Not authenticated" });
@@ -17,6 +22,7 @@ export const actions: Actions = {
 
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
+    const importMode = formData.get("importMode") as string;
 
     if (!file || file.size === 0) {
       return fail(400, { error: "Please select a JSON file to import" });
@@ -47,7 +53,15 @@ export const actions: Actions = {
 
     let result: { profileId: number; profileName: string };
     try {
-      result = await importProfileFromJson(data, user.id);
+      if (importMode === "overwrite") {
+        const profileId = await getSelectedProfileId(cookies, user.id);
+        if (!profileId) {
+          return fail(400, { error: "No profile selected to overwrite" });
+        }
+        result = await importProfileFromJson(data, user.id, { overwriteProfileId: profileId });
+      } else {
+        result = await importProfileFromJson(data, user.id);
+      }
     } catch (e) {
       const message = e instanceof Error ? e.message : "Import failed";
       return fail(500, { error: message });

@@ -2,91 +2,227 @@ import { dbDirect } from "$lib/server/db";
 import type { ExportedProfile } from "./export-profile-json";
 import { generateVersionPdfs } from "./generate-version-pdfs";
 
-export async function importProfileFromJson(
-  data: ExportedProfile,
-  userId: string,
-): Promise<{ profileId: number; profileName: string }> {
-  const p = data.profile;
+interface ImportOptions {
+  overwriteProfileId?: number;
+}
 
-  // Deduplicate name
-  const baseName = p.name || "Imported Profile";
+/**
+ * Generate a unique profile name by appending a number suffix if needed.
+ */
+export async function getUniqueProfileName(baseName: string, userId: string): Promise<string> {
   const existingNames = await dbDirect.profiles.findMany({
     where: { user_id: userId },
     select: { name: true },
   });
   const nameSet = new Set(existingNames.map((r) => r.name));
-  let finalName = baseName;
-  if (nameSet.has(finalName)) {
-    let suffix = 2;
-    while (nameSet.has(`${baseName} ${suffix}`)) suffix++;
-    finalName = `${baseName} ${suffix}`;
+
+  if (!nameSet.has(baseName)) {
+    return baseName;
   }
 
-  // Generate unique slug
-  const baseSlug = finalName
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-  let slugSuffix = 0;
-  let finalSlug = baseSlug;
-  while (true) {
-    const existing = await dbDirect.profiles.findFirst({
-      where: { slug: finalSlug },
+  let suffix = 2;
+  while (nameSet.has(`${baseName} ${suffix}`)) suffix++;
+  return `${baseName} ${suffix}`;
+}
+
+export async function importProfileFromJson(
+  data: ExportedProfile,
+  userId: string,
+  options: ImportOptions = {},
+): Promise<{ profileId: number; profileName: string }> {
+  const p = data.profile;
+  const { overwriteProfileId } = options;
+
+  let profileId: number;
+  let finalName: string;
+
+  if (overwriteProfileId) {
+    // Overwrite existing profile - delete all child records first
+    const existingProfile = await dbDirect.profiles.findFirst({
+      where: { id: overwriteProfileId, user_id: userId },
     });
-    if (!existing) break;
-    slugSuffix++;
-    finalSlug = `${baseSlug}-${slugSuffix}`;
+
+    if (!existingProfile) {
+      throw new Error("Profile not found or not owned by user");
+    }
+
+    // Delete all child records (cascade doesn't always work for all relations)
+    await dbDirect.highlights.deleteMany({ where: { profile: overwriteProfileId } });
+    await dbDirect.education.deleteMany({ where: { profile: overwriteProfileId } });
+    await dbDirect.languages.deleteMany({ where: { profile: overwriteProfileId } });
+    await dbDirect.references.deleteMany({ where: { profile: overwriteProfileId } });
+    await dbDirect.project_stories.deleteMany({ where: { profile: overwriteProfileId } });
+    await dbDirect.cheat_sheets.deleteMany({ where: { profile: overwriteProfileId } });
+    await dbDirect.salary_expectations.deleteMany({ where: { profile: overwriteProfileId } });
+
+    // Delete tech skills (need to delete skills before categories)
+    const techCategories = await dbDirect.tech_skill_categories.findMany({
+      where: { profile: overwriteProfileId },
+      select: { id: true },
+    });
+    for (const cat of techCategories) {
+      await dbDirect.tech_skills.deleteMany({ where: { category: cat.id } });
+    }
+    await dbDirect.tech_skill_categories.deleteMany({ where: { profile: overwriteProfileId } });
+
+    // Delete work experiences and children
+    const workExps = await dbDirect.work_experiences.findMany({
+      where: { profile: overwriteProfileId },
+      select: { id: true },
+    });
+    for (const we of workExps) {
+      await dbDirect.work_experience_achievements.deleteMany({ where: { work_experience: we.id } });
+      await dbDirect.work_experience_technologies.deleteMany({ where: { work_experience: we.id } });
+      const projects = await dbDirect.work_experience_projects.findMany({
+        where: { work_experience: we.id },
+        select: { id: true },
+      });
+      for (const proj of projects) {
+        await dbDirect.work_experience_project_technologies.deleteMany({ where: { work_experience_project: proj.id } });
+      }
+      await dbDirect.work_experience_projects.deleteMany({ where: { work_experience: we.id } });
+    }
+    await dbDirect.work_experiences.deleteMany({ where: { profile: overwriteProfileId } });
+
+    // Delete side projects and children
+    const sideProjs = await dbDirect.side_projects.findMany({
+      where: { profile: overwriteProfileId },
+      select: { id: true },
+    });
+    for (const sp of sideProjs) {
+      await dbDirect.side_project_achievements.deleteMany({ where: { side_project: sp.id } });
+      await dbDirect.side_project_technologies.deleteMany({ where: { side_project: sp.id } });
+    }
+    await dbDirect.side_projects.deleteMany({ where: { profile: overwriteProfileId } });
+
+    // Delete profile versions and extensions
+    const versions = await dbDirect.profile_versions.findMany({
+      where: { profile: overwriteProfileId },
+      select: { id: true },
+    });
+    for (const v of versions) {
+      await dbDirect.profile_version_extensions.deleteMany({ where: { extender: v.id } });
+      await dbDirect.profile_version_extensions.deleteMany({ where: { extended: v.id } });
+    }
+    await dbDirect.profile_versions.deleteMany({ where: { profile: overwriteProfileId } });
+
+    // Update the profile itself with deduplicated name
+    const baseName = p.name || existingProfile.name || "Imported Profile";
+    finalName = await getUniqueProfileName(baseName, userId);
+    await dbDirect.profiles.update({
+      where: { id: overwriteProfileId },
+      data: {
+        name: finalName,
+        title: p.title || null,
+        location_city: p.location_city || null,
+        location_region: p.location_region || null,
+        location_country_code: p.location_country_code || null,
+        city: p.city || null,
+        region: p.region || null,
+        country_code: p.country_code || null,
+        phone_number: p.phone_number || null,
+        email_address: p.email_address || null,
+        personal_website: p.personal_website || null,
+        linkedin_profile: p.linkedin_profile || null,
+        github_profile: p.github_profile || null,
+        stackoverflow_profile: p.stackoverflow_profile || null,
+        npm_profile: p.npm_profile || null,
+        pypi_profile: p.pypi_profile || null,
+        signal_profile: p.signal_profile || null,
+        whatsapp_number: p.whatsapp_number || null,
+        telegram_username: p.telegram_username || null,
+        subtitle: p.subtitle || null,
+        core_stack: p.core_stack || null,
+        headline: p.headline || null,
+        summary: p.summary || null,
+        about_me_text: p.about_me_text || null,
+        nationality: p.nationality || null,
+        location_url: p.location_url || null,
+        location_timezone: p.location_timezone || null,
+        meta_image_url: p.meta_image_url || null,
+        dev_start_year: p.dev_start_year ?? null,
+        python_js_start_year: p.python_js_start_year ?? null,
+        remote_start_year: p.remote_start_year ?? null,
+        company_name: p.company_name || null,
+        street_address: p.street_address || null,
+        postal_code: p.postal_code || null,
+        vat_id: p.vat_id || null,
+        kvk_number: p.kvk_number || null,
+        date_updated: new Date(),
+      },
+    });
+
+    profileId = overwriteProfileId;
+  } else {
+    // Create new profile with deduplicated name
+    const baseName = p.name || "Imported Profile";
+    finalName = await getUniqueProfileName(baseName, userId);
+
+    // Generate unique slug
+    const baseSlug = finalName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+    let slugSuffix = 0;
+    let finalSlug = baseSlug;
+    while (true) {
+      const existing = await dbDirect.profiles.findFirst({
+        where: { slug: finalSlug },
+      });
+      if (!existing) break;
+      slugSuffix++;
+      finalSlug = `${baseSlug}-${slugSuffix}`;
+    }
+
+    // Create profile
+    const profile = await dbDirect.profiles.create({
+      data: {
+        user_id: userId,
+        is_default: false,
+        slug: finalSlug,
+        name: finalName,
+        title: p.title || null,
+        location_city: p.location_city || null,
+        location_region: p.location_region || null,
+        location_country_code: p.location_country_code || null,
+        city: p.city || null,
+        region: p.region || null,
+        country_code: p.country_code || null,
+        phone_number: p.phone_number || null,
+        email_address: p.email_address || null,
+        personal_website: p.personal_website || null,
+        linkedin_profile: p.linkedin_profile || null,
+        github_profile: p.github_profile || null,
+        stackoverflow_profile: p.stackoverflow_profile || null,
+        npm_profile: p.npm_profile || null,
+        pypi_profile: p.pypi_profile || null,
+        signal_profile: p.signal_profile || null,
+        whatsapp_number: p.whatsapp_number || null,
+        telegram_username: p.telegram_username || null,
+        subtitle: p.subtitle || null,
+        core_stack: p.core_stack || null,
+        headline: p.headline || null,
+        summary: p.summary || null,
+        about_me_text: p.about_me_text || null,
+        nationality: p.nationality || null,
+        location_url: p.location_url || null,
+        location_timezone: p.location_timezone || null,
+        meta_image_url: p.meta_image_url || null,
+        dev_start_year: p.dev_start_year ?? null,
+        python_js_start_year: p.python_js_start_year ?? null,
+        remote_start_year: p.remote_start_year ?? null,
+        company_name: p.company_name || null,
+        street_address: p.street_address || null,
+        postal_code: p.postal_code || null,
+        vat_id: p.vat_id || null,
+        kvk_number: p.kvk_number || null,
+        date_created: new Date(),
+        date_updated: new Date(),
+      },
+    });
+
+    profileId = profile.id;
   }
-
-  // Create profile
-  const profile = await dbDirect.profiles.create({
-    data: {
-      user_id: userId,
-      is_default: false,
-      slug: finalSlug,
-      name: finalName,
-      title: p.title || null,
-      location_city: p.location_city || null,
-      location_region: p.location_region || null,
-      location_country_code: p.location_country_code || null,
-      city: p.city || null,
-      region: p.region || null,
-      country_code: p.country_code || null,
-      phone_number: p.phone_number || null,
-      email_address: p.email_address || null,
-      personal_website: p.personal_website || null,
-      linkedin_profile: p.linkedin_profile || null,
-      github_profile: p.github_profile || null,
-      stackoverflow_profile: p.stackoverflow_profile || null,
-      npm_profile: p.npm_profile || null,
-      pypi_profile: p.pypi_profile || null,
-      signal_profile: p.signal_profile || null,
-      whatsapp_number: p.whatsapp_number || null,
-      telegram_username: p.telegram_username || null,
-      subtitle: p.subtitle || null,
-      core_stack: p.core_stack || null,
-      headline: p.headline || null,
-      summary: p.summary || null,
-      about_me_text: p.about_me_text || null,
-      nationality: p.nationality || null,
-      location_url: p.location_url || null,
-      location_timezone: p.location_timezone || null,
-      meta_image_url: p.meta_image_url || null,
-      dev_start_year: p.dev_start_year ?? null,
-      python_js_start_year: p.python_js_start_year ?? null,
-      remote_start_year: p.remote_start_year ?? null,
-      company_name: p.company_name || null,
-      street_address: p.street_address || null,
-      postal_code: p.postal_code || null,
-      vat_id: p.vat_id || null,
-      kvk_number: p.kvk_number || null,
-      date_created: new Date(),
-      date_updated: new Date(),
-    },
-  });
-
-  const profileId = profile.id;
-
   // Highlights
   for (const h of p.highlights ?? []) {
     await dbDirect.highlights.create({

@@ -31,12 +31,15 @@
   let newName = $state("");
   let newNotes = $state("");
   let newVersion = $state("");
+  let newFormat = $state("resume");
   let newVisitLimit = $state("");
   let newExpiresAt = $state("");
 
   // Form states for editing
   let editName = $state("");
   let editNotes = $state("");
+  let editVersion = $state("");
+  let editFormat = $state("");
   let editVisitLimit = $state("");
   let editExpiresAt = $state("");
   let editStatus = $state("");
@@ -63,14 +66,13 @@
     });
   }
 
-  function getShareUrl(token: string): string {
-    // This would be the actual share URL format
-    return `${window.location.origin}/share/${token}`;
+  function getPrivateLinkUrl(token: string): string {
+    return `${window.location.origin}/p/${data.profileSlug}/s/${token}`;
   }
 
   async function copyToClipboard(token: string, id: number) {
     try {
-      await navigator.clipboard.writeText(getShareUrl(token));
+      await navigator.clipboard.writeText(getPrivateLinkUrl(token));
       copiedId = id;
       setTimeout(() => {
         copiedId = null;
@@ -98,6 +100,8 @@
     expandedId = token.id;
     editName = token.name || "";
     editNotes = token.notes || "";
+    editVersion = token.profile_version?.toString() || "";
+    editFormat = token.format || "resume";
     editVisitLimit = token.visit_limit?.toString() || "";
     editExpiresAt = token.expires_at
       ? new Date(token.expires_at).toISOString().split("T")[0]
@@ -114,6 +118,7 @@
     newName = "";
     newNotes = "";
     newVersion = "";
+    newFormat = "resume";
     newVisitLimit = "";
     newExpiresAt = "";
   }
@@ -151,7 +156,7 @@
 
 <div class="space-y-6">
   <SectionHeader
-    title="Share Links"
+    title="Private Links"
     icon={faLink}
     showAddButton={!showAddForm && tokens.length > 0 && versions.length > 0}
     addLabel="Create Link"
@@ -171,7 +176,7 @@
     <EmptyState
       icon={faLink}
       title="No resume versions available"
-      description="Create a resume version first before creating share links. Share links allow you to share your resume with specific people and track views."
+      description="Create a resume version first before creating private links. Share links allow you to share your resume with specific people and track views."
       actionLabel="Create Resume Version"
       onAction={() => {
         window.location.href = "/dashboard/export/resume";
@@ -187,7 +192,7 @@
         class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-primary)] p-4"
       >
         <h3 class="font-medium text-[var(--dash-text)] mb-4">
-          Create Share Link
+          Create Private Link
         </h3>
         <div class="space-y-4">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -204,7 +209,7 @@
                 name="name"
                 bind:value={newName}
                 placeholder="e.g., For Company X"
-                class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent bg-[var(--dash-card)] text-[var(--dash-text)]"
               />
             </div>
 
@@ -213,14 +218,14 @@
                 for="new-version"
                 class="block text-sm font-medium text-[var(--dash-text)] mb-1"
               >
-                Resume Version <span class="text-[var(--dash-error)]">*</span>
+                Version <span class="text-[var(--dash-error)]">*</span>
               </label>
               <select
                 id="new-version"
                 name="profile_version"
                 bind:value={newVersion}
                 required
-                class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent bg-[var(--dash-card)] text-[var(--dash-text)]"
               >
                 <option value="">Select a version</option>
                 {#each versions as version}
@@ -231,6 +236,25 @@
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label
+                for="new-format"
+                class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+              >
+                Format <span class="text-[var(--dash-error)]">*</span>
+              </label>
+              <select
+                id="new-format"
+                name="format"
+                bind:value={newFormat}
+                required
+                class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent bg-[var(--dash-card)] text-[var(--dash-text)]"
+              >
+                <option value="resume">Resume (compact)</option>
+                <option value="cv">CV (full)</option>
+              </select>
+            </div>
+
             <div>
               <label
                 for="new-visit-limit"
@@ -245,7 +269,7 @@
                 bind:value={newVisitLimit}
                 min="1"
                 placeholder="Unlimited"
-                class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent bg-[var(--dash-card)] text-[var(--dash-text)]"
               />
               <p class="text-xs text-[var(--dash-text-secondary)] mt-1">
                 Leave empty for unlimited views
@@ -264,7 +288,7 @@
                 id="new-expires-at"
                 name="expires_at"
                 bind:value={newExpiresAt}
-                class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent bg-[var(--dash-card)] text-[var(--dash-text)]"
               />
               <p class="text-xs text-[var(--dash-text-secondary)] mt-1">
                 Leave empty for no expiration
@@ -284,7 +308,7 @@
               name="notes"
               bind:value={newNotes}
               rows={2}
-              placeholder="Private notes about this share link..."
+              placeholder="Private notes about this private link..."
               class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
             ></textarea>
           </div>
@@ -294,7 +318,7 @@
           <button
             type="button"
             onclick={resetAddForm}
-            class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-gray-100 transition-colors"
+            class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
           >
             Cancel
           </button>
@@ -312,7 +336,7 @@
     {#if tokens.length === 0 && !showAddForm}
       <EmptyState
         icon={faLink}
-        title="No share links yet"
+        title="No private links yet"
         description="Create shareable links for your resume versions. Track who views your resume and set expiration dates or view limits."
         actionLabel="Create First Link"
         onAction={() => (showAddForm = true)}
@@ -337,24 +361,17 @@
                   toggleExpand(token.id);
                 }
               }}
-              class="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors text-left cursor-pointer"
+              class="w-full flex items-center justify-between p-4 hover:bg-[var(--dash-bg)] transition-colors text-left cursor-pointer"
             >
               <div class="flex items-center gap-4 flex-1 min-w-0">
                 <div
-                  class="
-                    w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 {expired ||
-                    limitReached
-                    ? 'bg-gray-100'
-                    : 'bg-green-100'}
-                  "
+                  class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                  style="background-color: {expired || limitReached ? 'var(--dash-bg)' : 'var(--dash-success-light)'};"
                 >
                   <FontAwesomeIcon
                     icon={faLink}
-                    class="
-                      w-5 h-5 {expired || limitReached
-                      ? 'text-gray-500'
-                      : 'text-green-600'}
-                    "
+                    class="w-5 h-5"
+                    style="color: {expired || limitReached ? 'var(--dash-text-muted)' : 'var(--dash-success)'};"
                   />
                 </div>
 
@@ -385,6 +402,8 @@
                   </div>
                   <p class="text-sm text-[var(--dash-text-secondary)] truncate">
                     {token.version?.name || "Unknown version"}
+                    <span class="mx-1">•</span>
+                    {token.format === "cv" ? "CV" : "Resume"}
                     <span class="mx-1">•</span>
                     <FontAwesomeIcon icon={faEye} class="w-3 h-3" />
                     {token.visit_count} view{token.visit_count !== 1 ? "s" : ""}
@@ -446,7 +465,7 @@
                             id="edit-name-{token.id}"
                             name="name"
                             bind:value={editName}
-                            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent bg-[var(--dash-card)] text-[var(--dash-text)]"
                           />
                         </div>
 
@@ -461,10 +480,49 @@
                             id="edit-status-{token.id}"
                             name="status"
                             bind:value={editStatus}
-                            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent bg-[var(--dash-card)] text-[var(--dash-text)]"
                           >
                             <option value="published">Active</option>
                             <option value="archived">Disabled</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label
+                            for="edit-version-{token.id}"
+                            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+                          >
+                            Version
+                          </label>
+                          <select
+                            id="edit-version-{token.id}"
+                            name="profile_version"
+                            bind:value={editVersion}
+                            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent bg-[var(--dash-card)] text-[var(--dash-text)]"
+                          >
+                            {#each versions as version}
+                              <option value={version.id}>{version.name}</option>
+                            {/each}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label
+                            for="edit-format-{token.id}"
+                            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+                          >
+                            Format
+                          </label>
+                          <select
+                            id="edit-format-{token.id}"
+                            name="format"
+                            bind:value={editFormat}
+                            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent bg-[var(--dash-card)] text-[var(--dash-text)]"
+                          >
+                            <option value="resume">Resume (compact)</option>
+                            <option value="cv">CV (full)</option>
                           </select>
                         </div>
                       </div>
@@ -484,7 +542,7 @@
                             bind:value={editVisitLimit}
                             min="1"
                             placeholder="Unlimited"
-                            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent bg-[var(--dash-card)] text-[var(--dash-text)]"
                           />
                         </div>
 
@@ -500,7 +558,7 @@
                             id="edit-expires-at-{token.id}"
                             name="expires_at"
                             bind:value={editExpiresAt}
-                            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent bg-[var(--dash-card)] text-[var(--dash-text)]"
                           />
                         </div>
                       </div>
@@ -551,12 +609,12 @@
                         Share URL
                       </p>
                       <div
-                        class="flex items-center gap-2 bg-gray-50 p-2 rounded-lg"
+                        class="flex items-center gap-2 bg-[var(--dash-bg)] p-2 rounded-lg"
                       >
                         <code
                           class="text-sm text-[var(--dash-text)] flex-1 truncate"
                         >
-                          {getShareUrl(token.token)}
+                          {getPrivateLinkUrl(token.token)}
                         </code>
                         <button
                           type="button"
@@ -652,8 +710,8 @@
 <!-- Delete Confirmation Modal -->
 <DeleteConfirmModal
   isOpen={deleteId !== null}
-  title="Delete Share Link"
-  message="Are you sure you want to delete this share link? Anyone with the link will no longer be able to access your resume. This action cannot be undone."
+  title="Delete Private Link"
+  message="Are you sure you want to delete this private link? Anyone with the link will no longer be able to access your resume. This action cannot be undone."
   onCancel={() => (deleteId = null)}
   onConfirm={() => {
     if (deleteId !== null) {
