@@ -42,9 +42,9 @@
   ];
 
   function getScoreColor(score: number): string {
-    if (score >= 80) return "text-green-600 bg-green-100";
-    if (score >= 60) return "text-yellow-600 bg-yellow-100";
-    return "text-gray-600 bg-[var(--dash-bg)]";
+    if (score >= 80) return "text-[var(--dash-success)] bg-[var(--dash-success-light)]";
+    if (score >= 60) return "text-[var(--dash-warning)] bg-[var(--dash-warning-light)]";
+    return "text-[var(--dash-text-muted)] bg-[var(--dash-bg)]";
   }
 
   function getRecommendationLabel(rec: string | null): string {

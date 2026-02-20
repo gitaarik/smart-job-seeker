@@ -164,11 +164,7 @@
           >
             <div class="flex items-center gap-4 flex-1 min-w-0">
               <div
-                class="
-                  w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 {isLetter
-                  ? 'bg-blue-100'
-                  : 'bg-purple-100'}
-                "
+                class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-[var(--dash-bg)]"
               >
                 <FontAwesomeIcon
                   icon={isLetter ? faEnvelope : faQuestionCircle}
@@ -193,8 +189,8 @@
                       class="
                         text-xs px-2 py-0.5 rounded-full capitalize {item.status ===
                         'published'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-[var(--dash-bg)] text-gray-600'}
+                        ? 'bg-[var(--dash-success-light)] text-[var(--dash-success)]'
+                        : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)]'}
                       "
                     >
                       {item.status}

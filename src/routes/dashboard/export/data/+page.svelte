@@ -65,8 +65,8 @@
   {/if}
 
   {#if form?.success}
-    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-      <p class="text-green-700 text-sm">
+    <div class="bg-[var(--dash-success-light)] border border-[var(--dash-success)] rounded-lg p-4">
+      <p class="text-[var(--dash-success)] text-sm">
         Profile data exported successfully.
       </p>
     </div>

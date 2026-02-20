@@ -405,19 +405,19 @@
                     </h3>
                     {#if expired}
                       <span
-                        class="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700"
+                        class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-error-light)] text-[var(--dash-error)]"
                       >
                         Expired
                       </span>
                     {:else if limitReached}
                       <span
-                        class="text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700"
+                        class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-warning-light)] text-[var(--dash-warning)]"
                       >
                         Limit Reached
                       </span>
                     {:else}
                       <span
-                        class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700"
+                        class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-success-light)] text-[var(--dash-success)]"
                       >
                         Active
                       </span>

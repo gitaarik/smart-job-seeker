@@ -35,6 +35,10 @@
   --dash-warning: #d97706;           /* amber-600 */
   --dash-warning-light: #fffbeb;     /* amber-50 */
   --dash-warning-border: #fcd34d;    /* amber-300 */
+  --dash-info: #2563eb;              /* blue-600 */
+  --dash-info-light: #eff6ff;        /* blue-50 */
+  --dash-purple: #9333ea;            /* purple-600 */
+  --dash-purple-light: #faf5ff;      /* purple-50 */
 }
 
 /* Dark mode */
@@ -64,4 +68,8 @@
   --dash-warning: #fbbf24;           /* amber-400 */
   --dash-warning-light: #451a03;     /* amber-950 */
   --dash-warning-border: #b45309;    /* amber-700 */
+  --dash-info: #60a5fa;              /* blue-400 */
+  --dash-info-light: #172554;        /* blue-950 */
+  --dash-purple: #c084fc;            /* purple-400 */
+  --dash-purple-light: #3b0764;      /* purple-950 */
 }

@@ -56,13 +56,13 @@
   function getStatusColor(status: string): string {
     switch (status) {
       case "published":
-        return "bg-green-100 text-green-700";
+        return "bg-[var(--dash-success-light)] text-[var(--dash-success)]";
       case "draft":
-        return "bg-yellow-100 text-yellow-700";
+        return "bg-[var(--dash-warning-light)] text-[var(--dash-warning)]";
       case "archived":
-        return "bg-[var(--dash-bg)] text-gray-600";
+        return "bg-[var(--dash-bg)] text-[var(--dash-text-muted)]";
       default:
-        return "bg-[var(--dash-bg)] text-gray-600";
+        return "bg-[var(--dash-bg)] text-[var(--dash-text-muted)]";
     }
   }
 
@@ -276,7 +276,7 @@
                   </span>
                   {#if isPublicResume(version.id)}
                     <span
-                      class="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 flex items-center gap-1"
+                      class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-info-light)] text-[var(--dash-info)] flex items-center gap-1"
                     >
                       <FontAwesomeIcon icon={faGlobe} class="w-3 h-3" />
                       Public Resume
@@ -284,7 +284,7 @@
                   {/if}
                   {#if isPublicCv(version.id)}
                     <span
-                      class="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 flex items-center gap-1"
+                      class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-info-light)] text-[var(--dash-info)] flex items-center gap-1"
                     >
                       <FontAwesomeIcon icon={faGlobe} class="w-3 h-3" />
                       Public CV
@@ -455,8 +455,8 @@
                           type="submit"
                           class="text-sm px-3 py-1.5 rounded-md border transition-colors flex items-center gap-1.5
                             {isPublicResume(version.id)
-                              ? 'bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100'
-                              : 'border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:border-blue-300 hover:text-blue-600'}"
+                              ? 'bg-[var(--dash-info-light)] border-[var(--dash-info)] text-[var(--dash-info)]'
+                              : 'border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:border-[var(--dash-info)] hover:text-[var(--dash-info)]'}"
                         >
                           <FontAwesomeIcon icon={faGlobe} class="w-3.5 h-3.5" />
                           {isPublicResume(version.id) ? "Public Resume ✓" : "Set Public Resume"}
@@ -468,8 +468,8 @@
                           type="submit"
                           class="text-sm px-3 py-1.5 rounded-md border transition-colors flex items-center gap-1.5
                             {isPublicCv(version.id)
-                              ? 'bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100'
-                              : 'border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:border-blue-300 hover:text-blue-600'}"
+                              ? 'bg-[var(--dash-info-light)] border-[var(--dash-info)] text-[var(--dash-info)]'
+                              : 'border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:border-[var(--dash-info)] hover:text-[var(--dash-info)]'}"
                         >
                           <FontAwesomeIcon icon={faGlobe} class="w-3.5 h-3.5" />
                           {isPublicCv(version.id) ? "Public CV ✓" : "Set Public CV"}

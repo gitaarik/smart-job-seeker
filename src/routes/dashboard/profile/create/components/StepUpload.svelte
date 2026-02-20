@@ -104,8 +104,8 @@
     class="space-y-4"
   >
     {#if error}
-      <div class="rounded-md bg-red-50 p-4">
-        <p class="text-sm text-crimson">{error}</p>
+      <div class="rounded-md bg-[var(--dash-error-light)] p-4">
+        <p class="text-sm text-[var(--dash-error)]">{error}</p>
       </div>
     {/if}
 

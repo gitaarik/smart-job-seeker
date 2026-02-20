@@ -63,8 +63,8 @@
   </div>
 
   {#if error}
-    <div class="rounded-md bg-red-50 p-4">
-      <p class="text-sm text-crimson">{error}</p>
+    <div class="rounded-md bg-[var(--dash-error-light)] p-4">
+      <p class="text-sm text-[var(--dash-error)]">{error}</p>
     </div>
   {/if}
 
@@ -144,8 +144,8 @@
     {/if}
 
     {#if !isValid}
-      <div class="rounded-md bg-yellow-50 p-4 mb-4">
-        <p class="text-sm text-yellow-800">
+      <div class="rounded-md bg-[var(--dash-warning-light)] p-4 mb-4">
+        <p class="text-sm text-[var(--dash-warning)]">
           Please enter a name to continue.
         </p>
       </div>

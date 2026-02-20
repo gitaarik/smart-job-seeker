@@ -47,21 +47,21 @@
   function getStatusColor(status: string): string {
     switch (status) {
       case "draft":
-        return "bg-[var(--dash-bg)] text-gray-600";
+        return "bg-[var(--dash-bg)] text-[var(--dash-text-muted)]";
       case "sent":
-        return "bg-blue-100 text-blue-600";
+        return "bg-[var(--dash-info-light)] text-[var(--dash-info)]";
       case "seen":
-        return "bg-purple-100 text-purple-600";
+        return "bg-[var(--dash-purple-light)] text-[var(--dash-purple)]";
       case "interviewing":
-        return "bg-yellow-100 text-yellow-700";
+        return "bg-[var(--dash-warning-light)] text-[var(--dash-warning)]";
       case "offered":
-        return "bg-green-100 text-green-600";
+        return "bg-[var(--dash-success-light)] text-[var(--dash-success)]";
       case "rejected":
-        return "bg-red-100 text-red-600";
+        return "bg-[var(--dash-error-light)] text-[var(--dash-error)]";
       case "withdrawn":
-        return "bg-[var(--dash-bg)] text-gray-500";
+        return "bg-[var(--dash-bg)] text-[var(--dash-text-muted)]";
       default:
-        return "bg-[var(--dash-bg)] text-gray-600";
+        return "bg-[var(--dash-bg)] text-[var(--dash-text-muted)]";
     }
   }
 
@@ -269,13 +269,13 @@
 
               {#if app.discontinued_reason}
                 <div
-                  class="bg-red-50 border border-red-200 rounded-lg p-3 text-sm"
+                  class="bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg p-3 text-sm"
                 >
-                  <p class="text-red-700 font-medium">
+                  <p class="text-[var(--dash-error)] font-medium">
                     Discontinued: {app.discontinued_reason}
                   </p>
                   {#if app.discontinued_note}
-                    <p class="text-red-600 mt-1">{app.discontinued_note}</p>
+                    <p class="text-[var(--dash-error)] mt-1">{app.discontinued_note}</p>
                   {/if}
                 </div>
               {/if}

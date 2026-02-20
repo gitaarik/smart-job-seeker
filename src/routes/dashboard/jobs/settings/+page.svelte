@@ -351,7 +351,7 @@
                   class="
                     w-10 h-10 rounded-full flex items-center justify-center {search.status ===
                     'active'
-                    ? 'bg-green-100'
+                    ? 'bg-[var(--dash-success-light)]'
                     : 'bg-[var(--dash-bg)]'}
                   "
                 >
@@ -359,7 +359,7 @@
                     icon={faCog}
                     class="
                       w-5 h-5 {search.status === 'active'
-                      ? 'text-green-600'
+                      ? 'text-[var(--dash-success)]'
                       : 'text-[var(--dash-text-muted)]'}
                     "
                   />
@@ -372,10 +372,10 @@
                     <span
                       class="
                         text-xs px-2 py-0.5 rounded-full {search.status === 'active'
-                        ? 'bg-green-100 text-green-700'
+                        ? 'bg-[var(--dash-success-light)] text-[var(--dash-success)]'
                         : search.status === 'paused'
-                        ? 'bg-yellow-100 text-yellow-700'
-                        : 'bg-[var(--dash-bg)] text-gray-600'}
+                        ? 'bg-[var(--dash-warning-light)] text-[var(--dash-warning)]'
+                        : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)]'}
                       "
                     >
                       {search.status}

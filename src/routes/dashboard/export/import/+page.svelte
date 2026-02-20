@@ -161,8 +161,8 @@
     <input type="hidden" name="importMode" value={importMode} />
 
     {#if error}
-      <div class="rounded-md bg-red-50 p-4">
-        <p class="text-sm text-red-700">{error}</p>
+      <div class="rounded-md bg-[var(--dash-error-light)] p-4">
+        <p class="text-sm text-[var(--dash-error)]">{error}</p>
       </div>
     {/if}
 
