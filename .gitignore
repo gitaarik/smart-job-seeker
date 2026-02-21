@@ -38,3 +38,7 @@ chrome-profiles/
 
 # Full database dumps (large, use db-dumps/smart.sql for git)
 db-dumps/full.sql
+
+# User uploads (keep .gitkeep only)
+uploads/*
+!uploads/.gitkeep
