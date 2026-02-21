@@ -84,16 +84,16 @@
     <span>Back to Dashboard</span>
   </a>
 
-  <div class="bg-snow rounded-lg border border-light p-8">
-    <div class="flex items-center gap-4 mb-6">
+  <div class="bg-snow rounded-lg border border-light p-4 sm:p-6 md:p-8">
+    <div class="flex items-center gap-3 mb-4 sm:mb-6">
       <div
-        class="w-12 h-12 rounded-full bg-ocean flex items-center justify-center"
+        class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-ocean flex items-center justify-center flex-shrink-0"
       >
-        <FontAwesomeIcon icon={faUser} class="w-6 h-6 text-pearl" />
+        <FontAwesomeIcon icon={faUser} class="w-5 h-5 sm:w-6 sm:h-6 text-pearl" />
       </div>
       <div>
-        <h1 class="text-2xl font-semibold text-slate">Create Your Profile</h1>
-        <p class="text-pearl">
+        <h1 class="text-xl sm:text-2xl font-semibold text-slate">Create Your Profile</h1>
+        <p class="text-sm sm:text-base text-pearl">
           Set up your professional profile to get started.
         </p>
       </div>

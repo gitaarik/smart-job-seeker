@@ -64,10 +64,10 @@
   }
 </script>
 
-<div class="space-y-6">
+<div class="space-y-4 sm:space-y-6">
   <div class="text-center">
-    <h2 class="text-xl font-semibold text-slate mb-2">Upload Your CV/Resume</h2>
-    <p class="text-pearl">
+    <h2 class="text-lg sm:text-xl font-semibold text-slate mb-1 sm:mb-2">Upload Your CV/Resume</h2>
+    <p class="text-sm sm:text-base text-pearl">
       We'll use AI to extract your information automatically
     </p>
   </div>
@@ -121,18 +121,18 @@
         }
       }}
       class="
-        relative border-2 border-dashed rounded-lg p-8 text-center transition-colors
+        relative border-2 border-dashed rounded-lg p-4 sm:p-8 text-center transition-colors
         {isDragging
         ? 'border-ocean bg-ocean/5'
         : 'border-light hover:border-ocean/50'}
       "
     >
       {#if selectedFile}
-        <div class="flex items-center justify-center gap-3">
-          <FontAwesomeIcon icon={faFile} class="w-8 h-8 text-ocean" />
+        <div class="flex items-center justify-center gap-2 sm:gap-3">
+          <FontAwesomeIcon icon={faFile} class="w-6 h-6 sm:w-8 sm:h-8 text-ocean" />
           <div class="text-left">
-            <p class="font-medium text-slate">{selectedFile.name}</p>
-            <p class="text-sm text-pearl">
+            <p class="font-medium text-slate text-sm sm:text-base">{selectedFile.name}</p>
+            <p class="text-xs sm:text-sm text-pearl">
               {(selectedFile.size / 1024).toFixed(1)} KB
             </p>
           </div>
@@ -148,12 +148,12 @@
       {:else}
         <FontAwesomeIcon
           icon={faCloudUploadAlt}
-          class="w-12 h-12 text-pearl mx-auto mb-4"
+          class="w-10 h-10 sm:w-12 sm:h-12 text-pearl mx-auto mb-3 sm:mb-4"
         />
-        <p class="text-slate font-medium mb-1">
+        <p class="text-slate font-medium mb-1 text-sm sm:text-base">
           Drag and drop your file here, or click to browse
         </p>
-        <p class="text-sm text-pearl">PDF, DOCX, or HTML (max 10MB)</p>
+        <p class="text-xs sm:text-sm text-pearl">PDF, DOCX, or HTML (max 10MB)</p>
       {/if}
 
       <input

@@ -18,10 +18,10 @@
   let phone = $state("");
 </script>
 
-<div class="space-y-6">
+<div class="space-y-4 sm:space-y-6">
   <div class="text-center">
-    <h2 class="text-xl font-semibold text-slate mb-2">Create Your Profile</h2>
-    <p class="text-pearl">Enter your basic information to get started</p>
+    <h2 class="text-lg sm:text-xl font-semibold text-slate mb-1 sm:mb-2">Create Your Profile</h2>
+    <p class="text-sm sm:text-base text-pearl">Enter your basic information to get started</p>
   </div>
 
   <form
@@ -104,7 +104,7 @@
       </div>
     </div>
 
-    <div class="flex gap-3 pt-4">
+    <div class="flex gap-3 pt-2 sm:pt-4">
       <button
         type="button"
         onclick={onBack}

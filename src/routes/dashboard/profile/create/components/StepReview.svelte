@@ -49,10 +49,10 @@
   let isValid = $derived(editableData.basics?.name?.trim().length > 0);
 </script>
 
-<div class="space-y-6">
+<div class="space-y-4 sm:space-y-6">
   <div class="text-center">
-    <h2 class="text-xl font-semibold text-slate mb-2">Review Your Profile</h2>
-    <p class="text-pearl">
+    <h2 class="text-lg sm:text-xl font-semibold text-slate mb-1 sm:mb-2">Review Your Profile</h2>
+    <p class="text-sm sm:text-base text-pearl">
       We extracted the following information from
       {#if fileName}
         <span class="font-medium">{fileName}</span>
@@ -69,30 +69,30 @@
   {/if}
 
   <!-- Stats summary -->
-  <div class="grid grid-cols-3 md:grid-cols-6 gap-2 p-4 bg-ocean/5 rounded-lg">
+  <div class="grid grid-cols-3 md:grid-cols-6 gap-1 sm:gap-2 p-2 sm:p-4 bg-ocean/5 rounded-lg">
     <div class="text-center">
-      <div class="text-xl font-semibold text-ocean">{stats.work}</div>
-      <div class="text-xs text-pearl">Jobs</div>
+      <div class="text-lg sm:text-xl font-semibold text-ocean">{stats.work}</div>
+      <div class="text-[10px] sm:text-xs text-pearl">Jobs</div>
     </div>
     <div class="text-center">
-      <div class="text-xl font-semibold text-ocean">{stats.education}</div>
-      <div class="text-xs text-pearl">Education</div>
+      <div class="text-lg sm:text-xl font-semibold text-ocean">{stats.education}</div>
+      <div class="text-[10px] sm:text-xs text-pearl">Education</div>
     </div>
     <div class="text-center">
-      <div class="text-xl font-semibold text-ocean">{stats.skills}</div>
-      <div class="text-xs text-pearl">Skills</div>
+      <div class="text-lg sm:text-xl font-semibold text-ocean">{stats.skills}</div>
+      <div class="text-[10px] sm:text-xs text-pearl">Skills</div>
     </div>
     <div class="text-center">
-      <div class="text-xl font-semibold text-ocean">{stats.languages}</div>
-      <div class="text-xs text-pearl">Languages</div>
+      <div class="text-lg sm:text-xl font-semibold text-ocean">{stats.languages}</div>
+      <div class="text-[10px] sm:text-xs text-pearl">Languages</div>
     </div>
     <div class="text-center">
-      <div class="text-xl font-semibold text-ocean">{stats.projects}</div>
-      <div class="text-xs text-pearl">Projects</div>
+      <div class="text-lg sm:text-xl font-semibold text-ocean">{stats.projects}</div>
+      <div class="text-[10px] sm:text-xs text-pearl">Projects</div>
     </div>
     <div class="text-center">
-      <div class="text-xl font-semibold text-ocean">{stats.references}</div>
-      <div class="text-xs text-pearl">References</div>
+      <div class="text-lg sm:text-xl font-semibold text-ocean">{stats.references}</div>
+      <div class="text-[10px] sm:text-xs text-pearl">References</div>
     </div>
   </div>
 
@@ -136,7 +136,7 @@
         await update();
       };
     }}
-    class="pt-4"
+    class="pt-2 sm:pt-4"
   >
     <input type="hidden" name="data" value={JSON.stringify(editableData)} />
     {#if fileId}
