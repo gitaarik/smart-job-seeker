@@ -1,10 +1,10 @@
 <script lang="ts">
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
-    faCloudUploadAlt,
     faSpinner,
     faTimes,
     faImage,
+    faExpand,
   } from "@fortawesome/free-solid-svg-icons";
 
   interface Props {
@@ -34,6 +34,7 @@
   let isDragging = $state(false);
   let error = $state<string | null>(null);
   let previewUrl = $state<string | null>(currentUrl);
+  let showFullPreview = $state(false);
 
   // Update preview when currentUrl prop changes
   $effect(() => {
@@ -139,13 +140,23 @@
   {/if}
 
   {#if previewUrl}
-    <!-- Preview with delete option -->
-    <div class="relative inline-block">
+    <!-- Preview with delete and expand options -->
+    <div class="relative inline-block group">
       <img
         src={previewUrl}
         alt="Preview"
         class="w-24 h-24 object-cover rounded-lg border border-[var(--dash-border)]"
       />
+      <!-- Overlay with expand button on hover -->
+      <button
+        type="button"
+        onclick={() => (showFullPreview = true)}
+        class="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+        aria-label="View full image"
+      >
+        <FontAwesomeIcon icon={faExpand} class="w-6 h-6 text-white" />
+      </button>
+      <!-- Delete button -->
       <button
         type="button"
         onclick={handleDelete}
@@ -204,3 +215,29 @@
     </div>
   {/if}
 </div>
+
+<!-- Full preview modal -->
+{#if showFullPreview && previewUrl}
+  <div
+    role="dialog"
+    aria-modal="true"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80"
+    onclick={() => (showFullPreview = false)}
+    onkeydown={(e) => e.key === "Escape" && (showFullPreview = false)}
+  >
+    <button
+      type="button"
+      onclick={() => (showFullPreview = false)}
+      class="absolute top-4 right-4 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors"
+      aria-label="Close preview"
+    >
+      <FontAwesomeIcon icon={faTimes} class="w-5 h-5 text-white" />
+    </button>
+    <img
+      src={previewUrl}
+      alt="Full preview"
+      class="max-w-full max-h-full object-contain rounded-lg"
+      onclick={(e) => e.stopPropagation()}
+    />
+  </div>
+{/if}
