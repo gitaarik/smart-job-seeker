@@ -5,6 +5,7 @@
     faCog,
     faSignOutAlt,
   } from "@fortawesome/free-solid-svg-icons";
+  import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
 
   interface Props {
     user: { id: string; name: string | null; email: string };
@@ -60,6 +61,8 @@
       </div>
 
       <div class="py-2">
+        <ThemeSwitcher variant="inline" />
+
         <a
           href="/dashboard/settings"
           class="flex items-center gap-2 px-4 py-2 text-sm text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"

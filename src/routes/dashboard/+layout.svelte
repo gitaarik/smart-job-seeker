@@ -3,7 +3,6 @@
   import type { Snippet } from "svelte";
   import DashboardHeader from "./components/DashboardHeader.svelte";
   import Sidebar from "./components/Sidebar.svelte";
-  import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
   import "./dashboard.css";
 
   let { children, data }: { children: Snippet; data: LayoutData } =
@@ -13,10 +12,6 @@
 <svelte:head>
   <title>Dashboard - Smart Job Seeker</title>
 </svelte:head>
-
-<div class="print:hidden fixed top-4 right-4 z-50">
-  <ThemeSwitcher />
-</div>
 
 <div class="min-h-screen bg-[var(--dash-bg)] transition-colors">
   <DashboardHeader
