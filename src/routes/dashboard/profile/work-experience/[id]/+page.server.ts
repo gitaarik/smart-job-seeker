@@ -2,6 +2,7 @@ import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { getSelectedProfileId } from "../../utils";
+import { deleteEntityMedia } from "$lib/server/uploads/entity-media";
 
 export const load: PageServerLoad = async ({ params, parent }) => {
   const layoutData = await parent();
@@ -78,6 +79,7 @@ export const actions: Actions = {
     const end_date = formData.get("end_date") as string;
     const achievementsJson = formData.get("achievements") as string;
     const technologiesJson = formData.get("technologies") as string;
+    const deleteLogoPath = formData.get("delete_logo_path") as string;
 
     if (!name || name.trim().length === 0) {
       return fail(400, { error: "Company name is required" });
@@ -85,6 +87,11 @@ export const actions: Actions = {
 
     if (!position || position.trim().length === 0) {
       return fail(400, { error: "Position is required" });
+    }
+
+    // Handle logo deletion if marked
+    if (deleteLogoPath === "true") {
+      await deleteEntityMedia("work_experience", id, "logo_path");
     }
 
     // Update main experience

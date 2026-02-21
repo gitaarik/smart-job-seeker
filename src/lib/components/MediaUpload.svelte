@@ -30,15 +30,16 @@
   }: Props = $props();
 
   let isUploading = $state(false);
-  let isDeleting = $state(false);
   let isDragging = $state(false);
   let error = $state<string | null>(null);
   let previewUrl = $state<string | null>(currentUrl);
   let showFullPreview = $state(false);
+  let markedForDeletion = $state(false);
 
   // Update preview when currentUrl prop changes
   $effect(() => {
     previewUrl = currentUrl;
+    markedForDeletion = false;
   });
 
   async function handleUpload(file: File) {
@@ -66,6 +67,7 @@
       }
 
       previewUrl = result.url;
+      markedForDeletion = false;
       onUpload?.(result.url);
     } catch (e) {
       error = e instanceof Error ? e.message : "Upload failed";
@@ -74,30 +76,11 @@
     }
   }
 
-  async function handleDelete() {
-    error = null;
-    isDeleting = true;
-
-    try {
-      const response = await fetch(
-        `/api/media/${entityType}/${entityId}/${field}`,
-        {
-          method: "DELETE",
-        },
-      );
-
-      if (!response.ok) {
-        const result = await response.json();
-        throw new Error(result.message || "Delete failed");
-      }
-
-      previewUrl = null;
-      onDelete?.();
-    } catch (e) {
-      error = e instanceof Error ? e.message : "Delete failed";
-    } finally {
-      isDeleting = false;
-    }
+  function handleDelete() {
+    // Just mark for deletion locally - actual deletion happens on form save
+    previewUrl = null;
+    markedForDeletion = true;
+    onDelete?.();
   }
 
   function handleFileSelect(event: Event) {
@@ -126,9 +109,13 @@
   }
 
   const inputId = $derived(`media-upload-${entityType}-${entityId}-${field}`);
+  const deleteFieldName = $derived(`delete_${field}`);
 </script>
 
 <div class="space-y-2">
+  <!-- Hidden field to track deletion on form submit -->
+  <input type="hidden" name={deleteFieldName} value={markedForDeletion ? "true" : ""} />
+
   {#if label}
     <label for={inputId} class="block text-sm font-medium text-[var(--dash-text)]">
       {label}
@@ -160,15 +147,10 @@
       <button
         type="button"
         onclick={handleDelete}
-        disabled={isDeleting}
-        class="absolute -top-2 -right-2 w-6 h-6 bg-[var(--dash-error)] text-white rounded-full flex items-center justify-center hover:opacity-80 transition-opacity disabled:opacity-50"
+        class="absolute -top-2 -right-2 w-6 h-6 bg-[var(--dash-error)] text-white rounded-full flex items-center justify-center hover:opacity-80 transition-opacity"
         aria-label="Remove image"
       >
-        {#if isDeleting}
-          <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
-        {:else}
-          <FontAwesomeIcon icon={faTimes} class="w-3 h-3" />
-        {/if}
+        <FontAwesomeIcon icon={faTimes} class="w-3 h-3" />
       </button>
     </div>
   {:else}

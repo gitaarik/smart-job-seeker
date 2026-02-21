@@ -2,6 +2,7 @@ import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { getSelectedProfileId } from "../utils";
+import { deleteEntityMedia } from "$lib/server/uploads/entity-media";
 
 export const load: PageServerLoad = async ({ parent }) => {
   const layoutData = await parent();
@@ -98,6 +99,7 @@ export const actions: Actions = {
     const end_date = formData.get("end_date") as string;
     const achievementsJson = formData.get("achievements") as string;
     const technologiesJson = formData.get("technologies") as string;
+    const deleteImagePath = formData.get("delete_image_path") as string;
 
     if (isNaN(id)) {
       return fail(400, { error: "Invalid project ID" });
@@ -114,6 +116,11 @@ export const actions: Actions = {
 
     if (!existing) {
       return fail(404, { error: "Project not found" });
+    }
+
+    // Handle image deletion if marked
+    if (deleteImagePath === "true") {
+      await deleteEntityMedia("side_project", id, "image_path");
     }
 
     // Update main project
