@@ -4,6 +4,7 @@
   import {
     faCloudUploadAlt,
     faFile,
+    faFileImport,
     faSpinner,
     faTimes,
   } from "@fortawesome/free-solid-svg-icons";
@@ -12,6 +13,7 @@
     isLoading: boolean;
     error: string | null;
     onSkipToManual: () => void;
+    onImportExport: () => void;
     onUploadComplete: (data: {
       parsedData: unknown;
       fileId: string;
@@ -25,6 +27,7 @@
     isLoading,
     error,
     onSkipToManual,
+    onImportExport,
     onUploadComplete,
     onError,
     onLoadingChange,
@@ -66,8 +69,8 @@
 
 <div class="space-y-4 sm:space-y-6">
   <div class="text-center">
-    <h2 class="text-lg sm:text-xl font-semibold text-slate mb-1 sm:mb-2">Upload Your CV/Resume</h2>
-    <p class="text-sm sm:text-base text-pearl">
+    <h2 class="text-lg sm:text-xl font-semibold text-[var(--dash-text)] mb-1 sm:mb-2">Upload Your CV/Resume</h2>
+    <p class="text-sm sm:text-base text-[var(--dash-text-secondary)]">
       We'll use AI to extract your information automatically
     </p>
   </div>
@@ -123,37 +126,37 @@
       class="
         relative border-2 border-dashed rounded-lg p-4 sm:p-8 text-center transition-colors
         {isDragging
-        ? 'border-ocean bg-ocean/5'
-        : 'border-light hover:border-ocean/50'}
+        ? 'border-[var(--dash-primary)] bg-[var(--dash-primary)]/5'
+        : 'border-[var(--dash-border)] hover:border-[var(--dash-primary)]/50'}
       "
     >
       {#if selectedFile}
         <div class="flex items-center justify-center gap-2 sm:gap-3">
-          <FontAwesomeIcon icon={faFile} class="w-6 h-6 sm:w-8 sm:h-8 text-ocean" />
+          <FontAwesomeIcon icon={faFile} class="w-6 h-6 sm:w-8 sm:h-8 text-[var(--dash-primary)]" />
           <div class="text-left">
-            <p class="font-medium text-slate text-sm sm:text-base">{selectedFile.name}</p>
-            <p class="text-xs sm:text-sm text-pearl">
+            <p class="font-medium text-[var(--dash-text)] text-sm sm:text-base">{selectedFile.name}</p>
+            <p class="text-xs sm:text-sm text-[var(--dash-text-secondary)]">
               {(selectedFile.size / 1024).toFixed(1)} KB
             </p>
           </div>
           <button
             type="button"
             onclick={clearFile}
-            class="p-1 rounded hover:bg-light transition-colors"
+            class="p-1 rounded hover:bg-[var(--dash-bg)] transition-colors"
             aria-label="Remove file"
           >
-            <FontAwesomeIcon icon={faTimes} class="w-4 h-4 text-pearl" />
+            <FontAwesomeIcon icon={faTimes} class="w-4 h-4 text-[var(--dash-text-secondary)]" />
           </button>
         </div>
       {:else}
         <FontAwesomeIcon
           icon={faCloudUploadAlt}
-          class="w-10 h-10 sm:w-12 sm:h-12 text-pearl mx-auto mb-3 sm:mb-4"
+          class="w-10 h-10 sm:w-12 sm:h-12 text-[var(--dash-text-muted)] mx-auto mb-3 sm:mb-4"
         />
-        <p class="text-slate font-medium mb-1 text-sm sm:text-base">
+        <p class="text-[var(--dash-text)] font-medium mb-1 text-sm sm:text-base">
           Drag and drop your file here, or click to browse
         </p>
-        <p class="text-xs sm:text-sm text-pearl">PDF, DOCX, or HTML (max 10MB)</p>
+        <p class="text-xs sm:text-sm text-[var(--dash-text-secondary)]">PDF, DOCX, or HTML (max 10MB)</p>
       {/if}
 
       <input
@@ -170,7 +173,7 @@
       <button
         type="button"
         onclick={onSkipToManual}
-        class="flex-1 py-2 px-4 border border-light rounded-lg text-slate hover:bg-light/50 transition-colors"
+        class="flex-1 py-2 px-4 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
       >
         Skip to Manual Entry
       </button>
@@ -178,7 +181,7 @@
       <button
         type="submit"
         disabled={!selectedFile || isLoading}
-        class="flex-1 py-2 px-4 bg-ocean text-pearl font-medium rounded-lg hover:bg-aqua transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        class="flex-1 py-2 px-4 bg-[var(--dash-primary)] text-white font-medium rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
         {#if isLoading}
           <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 animate-spin" />
@@ -186,6 +189,17 @@
         {:else}
           Upload & Parse
         {/if}
+      </button>
+    </div>
+
+    <div class="pt-2 sm:pt-4 border-t border-[var(--dash-border)]">
+      <button
+        type="button"
+        onclick={onImportExport}
+        class="w-full flex items-center justify-center gap-2 py-2 text-sm text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
+      >
+        <FontAwesomeIcon icon={faFileImport} class="w-4 h-4" />
+        <span>Import from a previous export</span>
       </button>
     </div>
   </form>

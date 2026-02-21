@@ -5,7 +5,6 @@
   import { faArrowLeft, faUser } from "@fortawesome/free-solid-svg-icons";
 
   import StepIndicator from "./components/StepIndicator.svelte";
-  import StepChoice from "./components/StepChoice.svelte";
   import StepUpload from "./components/StepUpload.svelte";
   import StepManual from "./components/StepManual.svelte";
   import StepReview from "./components/StepReview.svelte";
@@ -14,20 +13,19 @@
   let { form }: { form: ActionData } = $props();
 
   // Wizard state
-  type ImportMethod = "upload" | "manual" | "import" | null;
+  type ImportMethod = "upload" | "manual" | "import";
   let currentStep = $state(1);
-  let importMethod = $state<ImportMethod>(null);
+  let importMethod = $state<ImportMethod>("upload");
   let parsedData = $state<ResumeData | null>(null);
   let uploadedFileId = $state<string | null>(null);
   let uploadedFileName = $state<string | null>(null);
   let isLoading = $state(false);
   let error = $state<string | null>(form?.error || null);
 
-  const steps = ["Choose", "Import", "Review", "Done"];
+  const steps = ["Import", "Review", "Done"];
 
-  function handleChoose(method: ImportMethod) {
+  function handleSwitchMethod(method: ImportMethod) {
     importMethod = method;
-    currentStep = 2;
     error = null;
   }
 
@@ -39,23 +37,15 @@
     parsedData = data.parsedData as ResumeData;
     uploadedFileId = data.fileId;
     uploadedFileName = data.fileName;
-    currentStep = 3;
-    error = null;
-  }
-
-  function handleSkipToManual() {
-    importMethod = "manual";
+    currentStep = 2;
     error = null;
   }
 
   function handleBack() {
-    if (currentStep === 3) {
+    if (currentStep === 2) {
       // From review, go back to upload
-      currentStep = 2;
-    } else if (currentStep === 2) {
-      // From import, go back to choice
       currentStep = 1;
-      importMethod = null;
+      importMethod = "upload";
       parsedData = null;
       uploadedFileId = null;
       uploadedFileName = null;
@@ -103,13 +93,12 @@
     <StepIndicator {currentStep} {steps} />
 
     {#if currentStep === 1}
-      <StepChoice onChoose={handleChoose} />
-    {:else if currentStep === 2}
       {#if importMethod === "upload"}
         <StepUpload
           {isLoading}
           {error}
-          onSkipToManual={handleSkipToManual}
+          onSkipToManual={() => handleSwitchMethod("manual")}
+          onImportExport={() => handleSwitchMethod("import")}
           onUploadComplete={handleUploadComplete}
           onError={handleError}
           onLoadingChange={handleLoadingChange}
@@ -118,18 +107,18 @@
         <StepImport
           {isLoading}
           {error}
-          onBack={handleBack}
+          onBack={() => handleSwitchMethod("upload")}
           onLoadingChange={handleLoadingChange}
         />
       {:else}
         <StepManual
           {isLoading}
           {error}
-          onBack={handleBack}
+          onBack={() => handleSwitchMethod("upload")}
           onLoadingChange={handleLoadingChange}
         />
       {/if}
-    {:else if currentStep === 3 && parsedData}
+    {:else if currentStep === 2 && parsedData}
       <StepReview
         {parsedData}
         fileId={uploadedFileId}
