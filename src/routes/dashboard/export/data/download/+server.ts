@@ -36,11 +36,27 @@ export const GET: RequestHandler = async ({ url, locals, cookies }) => {
 
   const fileBuffer = await getFileFromDirectus(exp.file);
   const filename =
-    exp.directus_files?.filename_download || `export-${exp.id}.json`;
+    exp.directus_files?.filename_download || `export-${exp.id}.${exp.file_type}`;
+
+  // Determine content type based on file type
+  let contentType: string;
+  switch (exp.file_type) {
+    case "zip":
+      contentType = "application/zip";
+      break;
+    case "json":
+      contentType = "application/json";
+      break;
+    case "pdf":
+      contentType = "application/pdf";
+      break;
+    default:
+      contentType = "application/octet-stream";
+  }
 
   return new Response(fileBuffer, {
     headers: {
-      "Content-Type": "application/json",
+      "Content-Type": contentType,
       "Content-Disposition": `attachment; filename="${filename}"`,
     },
   });

@@ -30,7 +30,7 @@
   import GetInTouchButton from "$lib/components/contact-info/GetInTouchButton.svelte";
   import Quote from "$lib/components/Quote.svelte";
   import ThemeSwitcher from "$lib/components/ThemeSwitcher.svelte";
-  import { getDirectusAssetUrl } from "$lib/utils/directus-asset-url";
+  import { getProfilePhotoUrl } from "$lib/utils/profile-photo-url";
 
   let { data }: { data: PageData } = $props();
 
@@ -61,10 +61,10 @@
     `https://www.rikwanders.tech/p/${profile.slug}`;
   const metaDescription = profile.summary || profile.headline || "";
   const metaImg = profile.meta_image_url ||
-    getDirectusAssetUrl(profile.profile_picture);
+    getProfilePhotoUrl(profile);
 
   // Profile picture URL
-  const profilePhotoUrl = getDirectusAssetUrl(profile.profile_picture);
+  const profilePhotoUrl = getProfilePhotoUrl(profile);
 
   const currentYear = new Date().getFullYear();
 

@@ -3,6 +3,11 @@ import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { getProfileByIdentifier } from "$lib/server/profile/default";
 import { getSelectedProfileId } from "../utils";
+import {
+  validateUpload,
+  saveProfilePhoto,
+  deleteUpload,
+} from "$lib/server/uploads";
 
 export const load: PageServerLoad = async ({ parent }) => {
   const layoutData = await parent();
@@ -117,5 +122,101 @@ export const actions: Actions = {
     });
 
     return { success: true };
+  },
+
+  uploadPhoto: async ({ request, locals, cookies }) => {
+    const user = locals.user;
+    if (!user) {
+      return fail(401, { error: "Not authenticated" });
+    }
+
+    const profileId = await getSelectedProfileId(cookies, user.id);
+    if (!profileId) {
+      return fail(400, { error: "No profile selected" });
+    }
+
+    const formData = await request.formData();
+    const file = formData.get("photo") as File | null;
+
+    if (!file || file.size === 0) {
+      return fail(400, { error: "Please select a photo to upload" });
+    }
+
+    // Validate file
+    const validation = validateUpload(file);
+    if (!validation.valid) {
+      return fail(400, { error: validation.error });
+    }
+
+    try {
+      // Get current profile to check for existing photo
+      const currentProfile = await db.profiles.findUnique({
+        where: { id: profileId },
+        select: { profile_photo_path: true },
+      });
+
+      // Save new photo (processes and optimizes image)
+      const uploadResult = await saveProfilePhoto(file);
+
+      // Update profile with new photo path
+      await db.profiles.update({
+        where: { id: profileId },
+        data: {
+          profile_photo_path: uploadResult.path,
+          date_updated: new Date(),
+        },
+      });
+
+      // Delete old photo if it exists
+      if (currentProfile?.profile_photo_path) {
+        await deleteUpload(currentProfile.profile_photo_path);
+      }
+
+      return { success: true, photoUploaded: true };
+    } catch (error) {
+      console.error("Failed to upload profile photo:", error);
+      return fail(500, { error: "Failed to upload photo. Please try again." });
+    }
+  },
+
+  removePhoto: async ({ locals, cookies }) => {
+    const user = locals.user;
+    if (!user) {
+      return fail(401, { error: "Not authenticated" });
+    }
+
+    const profileId = await getSelectedProfileId(cookies, user.id);
+    if (!profileId) {
+      return fail(400, { error: "No profile selected" });
+    }
+
+    try {
+      // Get current profile photo
+      const currentProfile = await db.profiles.findUnique({
+        where: { id: profileId },
+        select: { profile_photo_path: true },
+      });
+
+      if (!currentProfile?.profile_photo_path) {
+        return fail(400, { error: "No profile photo to remove" });
+      }
+
+      // Remove photo reference from profile
+      await db.profiles.update({
+        where: { id: profileId },
+        data: {
+          profile_photo_path: null,
+          date_updated: new Date(),
+        },
+      });
+
+      // Delete file
+      await deleteUpload(currentProfile.profile_photo_path);
+
+      return { success: true, photoRemoved: true };
+    } catch (error) {
+      console.error("Failed to remove profile photo:", error);
+      return fail(500, { error: "Failed to remove photo. Please try again." });
+    }
   },
 };

@@ -27,11 +27,18 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     },
   });
 
+  // Get logo URL (prefer local path, fall back to Directus UUID)
+  const logoUrl = experience?.logo_path
+    ? `/uploads/${experience.logo_path}`
+    : experience?.logo
+      ? `/assets/${experience.logo}`
+      : null;
+
   if (!experience) {
     redirect(302, "/dashboard/profile/work-experience");
   }
 
-  return { experience };
+  return { experience, logoUrl };
 };
 
 export const actions: Actions = {

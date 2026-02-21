@@ -54,6 +54,7 @@ export type Side_projectsMinAggregateOutputType = {
   stars: number | null
   summary: string | null
   url_label: string | null
+  image_path: string | null
 }
 
 export type Side_projectsMaxAggregateOutputType = {
@@ -70,6 +71,7 @@ export type Side_projectsMaxAggregateOutputType = {
   stars: number | null
   summary: string | null
   url_label: string | null
+  image_path: string | null
 }
 
 export type Side_projectsCountAggregateOutputType = {
@@ -86,6 +88,7 @@ export type Side_projectsCountAggregateOutputType = {
   stars: number
   summary: number
   url_label: number
+  image_path: number
   tags: number
   _all: number
 }
@@ -119,6 +122,7 @@ export type Side_projectsMinAggregateInputType = {
   stars?: true
   summary?: true
   url_label?: true
+  image_path?: true
 }
 
 export type Side_projectsMaxAggregateInputType = {
@@ -135,6 +139,7 @@ export type Side_projectsMaxAggregateInputType = {
   stars?: true
   summary?: true
   url_label?: true
+  image_path?: true
 }
 
 export type Side_projectsCountAggregateInputType = {
@@ -151,6 +156,7 @@ export type Side_projectsCountAggregateInputType = {
   stars?: true
   summary?: true
   url_label?: true
+  image_path?: true
   tags?: true
   _all?: true
 }
@@ -255,6 +261,7 @@ export type Side_projectsGroupByOutputType = {
   stars: number | null
   summary: string | null
   url_label: string | null
+  image_path: string | null
   tags: runtime.JsonValue | null
   _count: Side_projectsCountAggregateOutputType | null
   _avg: Side_projectsAvgAggregateOutputType | null
@@ -295,6 +302,7 @@ export type side_projectsWhereInput = {
   stars?: Prisma.IntNullableFilter<"side_projects"> | number | null
   summary?: Prisma.StringNullableFilter<"side_projects"> | string | null
   url_label?: Prisma.StringNullableFilter<"side_projects"> | string | null
+  image_path?: Prisma.StringNullableFilter<"side_projects"> | string | null
   tags?: Prisma.JsonNullableFilter<"side_projects">
   side_project_achievements?: Prisma.Side_project_achievementsListRelationFilter
   side_project_technologies?: Prisma.Side_project_technologiesListRelationFilter
@@ -315,6 +323,7 @@ export type side_projectsOrderByWithRelationInput = {
   stars?: Prisma.SortOrderInput | Prisma.SortOrder
   summary?: Prisma.SortOrderInput | Prisma.SortOrder
   url_label?: Prisma.SortOrderInput | Prisma.SortOrder
+  image_path?: Prisma.SortOrderInput | Prisma.SortOrder
   tags?: Prisma.SortOrderInput | Prisma.SortOrder
   side_project_achievements?: Prisma.side_project_achievementsOrderByRelationAggregateInput
   side_project_technologies?: Prisma.side_project_technologiesOrderByRelationAggregateInput
@@ -338,6 +347,7 @@ export type side_projectsWhereUniqueInput = Prisma.AtLeast<{
   stars?: Prisma.IntNullableFilter<"side_projects"> | number | null
   summary?: Prisma.StringNullableFilter<"side_projects"> | string | null
   url_label?: Prisma.StringNullableFilter<"side_projects"> | string | null
+  image_path?: Prisma.StringNullableFilter<"side_projects"> | string | null
   tags?: Prisma.JsonNullableFilter<"side_projects">
   side_project_achievements?: Prisma.Side_project_achievementsListRelationFilter
   side_project_technologies?: Prisma.Side_project_technologiesListRelationFilter
@@ -358,6 +368,7 @@ export type side_projectsOrderByWithAggregationInput = {
   stars?: Prisma.SortOrderInput | Prisma.SortOrder
   summary?: Prisma.SortOrderInput | Prisma.SortOrder
   url_label?: Prisma.SortOrderInput | Prisma.SortOrder
+  image_path?: Prisma.SortOrderInput | Prisma.SortOrder
   tags?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.side_projectsCountOrderByAggregateInput
   _avg?: Prisma.side_projectsAvgOrderByAggregateInput
@@ -383,6 +394,7 @@ export type side_projectsScalarWhereWithAggregatesInput = {
   stars?: Prisma.IntNullableWithAggregatesFilter<"side_projects"> | number | null
   summary?: Prisma.StringNullableWithAggregatesFilter<"side_projects"> | string | null
   url_label?: Prisma.StringNullableWithAggregatesFilter<"side_projects"> | string | null
+  image_path?: Prisma.StringNullableWithAggregatesFilter<"side_projects"> | string | null
   tags?: Prisma.JsonNullableWithAggregatesFilter<"side_projects">
 }
 
@@ -398,6 +410,7 @@ export type side_projectsCreateInput = {
   stars?: number | null
   summary?: string | null
   url_label?: string | null
+  image_path?: string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   side_project_achievements?: Prisma.side_project_achievementsCreateNestedManyWithoutSide_projectsInput
   side_project_technologies?: Prisma.side_project_technologiesCreateNestedManyWithoutSide_projectsInput
@@ -418,6 +431,7 @@ export type side_projectsUncheckedCreateInput = {
   stars?: number | null
   summary?: string | null
   url_label?: string | null
+  image_path?: string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   side_project_achievements?: Prisma.side_project_achievementsUncheckedCreateNestedManyWithoutSide_projectsInput
   side_project_technologies?: Prisma.side_project_technologiesUncheckedCreateNestedManyWithoutSide_projectsInput
@@ -435,6 +449,7 @@ export type side_projectsUpdateInput = {
   stars?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   url_label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   side_project_achievements?: Prisma.side_project_achievementsUpdateManyWithoutSide_projectsNestedInput
   side_project_technologies?: Prisma.side_project_technologiesUpdateManyWithoutSide_projectsNestedInput
@@ -455,6 +470,7 @@ export type side_projectsUncheckedUpdateInput = {
   stars?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   url_label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   side_project_achievements?: Prisma.side_project_achievementsUncheckedUpdateManyWithoutSide_projectsNestedInput
   side_project_technologies?: Prisma.side_project_technologiesUncheckedUpdateManyWithoutSide_projectsNestedInput
@@ -474,6 +490,7 @@ export type side_projectsCreateManyInput = {
   stars?: number | null
   summary?: string | null
   url_label?: string | null
+  image_path?: string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
@@ -489,6 +506,7 @@ export type side_projectsUpdateManyMutationInput = {
   stars?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   url_label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
@@ -506,6 +524,7 @@ export type side_projectsUncheckedUpdateManyInput = {
   stars?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   url_label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
@@ -538,6 +557,7 @@ export type side_projectsCountOrderByAggregateInput = {
   stars?: Prisma.SortOrder
   summary?: Prisma.SortOrder
   url_label?: Prisma.SortOrder
+  image_path?: Prisma.SortOrder
   tags?: Prisma.SortOrder
 }
 
@@ -562,6 +582,7 @@ export type side_projectsMaxOrderByAggregateInput = {
   stars?: Prisma.SortOrder
   summary?: Prisma.SortOrder
   url_label?: Prisma.SortOrder
+  image_path?: Prisma.SortOrder
 }
 
 export type side_projectsMinOrderByAggregateInput = {
@@ -578,6 +599,7 @@ export type side_projectsMinOrderByAggregateInput = {
   stars?: Prisma.SortOrder
   summary?: Prisma.SortOrder
   url_label?: Prisma.SortOrder
+  image_path?: Prisma.SortOrder
 }
 
 export type side_projectsSumOrderByAggregateInput = {
@@ -669,6 +691,7 @@ export type side_projectsCreateWithoutProfilesInput = {
   stars?: number | null
   summary?: string | null
   url_label?: string | null
+  image_path?: string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   side_project_achievements?: Prisma.side_project_achievementsCreateNestedManyWithoutSide_projectsInput
   side_project_technologies?: Prisma.side_project_technologiesCreateNestedManyWithoutSide_projectsInput
@@ -687,6 +710,7 @@ export type side_projectsUncheckedCreateWithoutProfilesInput = {
   stars?: number | null
   summary?: string | null
   url_label?: string | null
+  image_path?: string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   side_project_achievements?: Prisma.side_project_achievementsUncheckedCreateNestedManyWithoutSide_projectsInput
   side_project_technologies?: Prisma.side_project_technologiesUncheckedCreateNestedManyWithoutSide_projectsInput
@@ -735,6 +759,7 @@ export type side_projectsScalarWhereInput = {
   stars?: Prisma.IntNullableFilter<"side_projects"> | number | null
   summary?: Prisma.StringNullableFilter<"side_projects"> | string | null
   url_label?: Prisma.StringNullableFilter<"side_projects"> | string | null
+  image_path?: Prisma.StringNullableFilter<"side_projects"> | string | null
   tags?: Prisma.JsonNullableFilter<"side_projects">
 }
 
@@ -750,6 +775,7 @@ export type side_projectsCreateWithoutSide_project_achievementsInput = {
   stars?: number | null
   summary?: string | null
   url_label?: string | null
+  image_path?: string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   side_project_technologies?: Prisma.side_project_technologiesCreateNestedManyWithoutSide_projectsInput
   profiles: Prisma.profilesCreateNestedOneWithoutSide_projectsInput
@@ -769,6 +795,7 @@ export type side_projectsUncheckedCreateWithoutSide_project_achievementsInput = 
   stars?: number | null
   summary?: string | null
   url_label?: string | null
+  image_path?: string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   side_project_technologies?: Prisma.side_project_technologiesUncheckedCreateNestedManyWithoutSide_projectsInput
 }
@@ -801,6 +828,7 @@ export type side_projectsUpdateWithoutSide_project_achievementsInput = {
   stars?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   url_label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   side_project_technologies?: Prisma.side_project_technologiesUpdateManyWithoutSide_projectsNestedInput
   profiles?: Prisma.profilesUpdateOneRequiredWithoutSide_projectsNestedInput
@@ -820,6 +848,7 @@ export type side_projectsUncheckedUpdateWithoutSide_project_achievementsInput = 
   stars?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   url_label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   side_project_technologies?: Prisma.side_project_technologiesUncheckedUpdateManyWithoutSide_projectsNestedInput
 }
@@ -836,6 +865,7 @@ export type side_projectsCreateWithoutSide_project_technologiesInput = {
   stars?: number | null
   summary?: string | null
   url_label?: string | null
+  image_path?: string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   side_project_achievements?: Prisma.side_project_achievementsCreateNestedManyWithoutSide_projectsInput
   profiles: Prisma.profilesCreateNestedOneWithoutSide_projectsInput
@@ -855,6 +885,7 @@ export type side_projectsUncheckedCreateWithoutSide_project_technologiesInput = 
   stars?: number | null
   summary?: string | null
   url_label?: string | null
+  image_path?: string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   side_project_achievements?: Prisma.side_project_achievementsUncheckedCreateNestedManyWithoutSide_projectsInput
 }
@@ -887,6 +918,7 @@ export type side_projectsUpdateWithoutSide_project_technologiesInput = {
   stars?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   url_label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   side_project_achievements?: Prisma.side_project_achievementsUpdateManyWithoutSide_projectsNestedInput
   profiles?: Prisma.profilesUpdateOneRequiredWithoutSide_projectsNestedInput
@@ -906,6 +938,7 @@ export type side_projectsUncheckedUpdateWithoutSide_project_technologiesInput = 
   stars?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   url_label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   side_project_achievements?: Prisma.side_project_achievementsUncheckedUpdateManyWithoutSide_projectsNestedInput
 }
@@ -923,6 +956,7 @@ export type side_projectsCreateManyProfilesInput = {
   stars?: number | null
   summary?: string | null
   url_label?: string | null
+  image_path?: string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
@@ -938,6 +972,7 @@ export type side_projectsUpdateWithoutProfilesInput = {
   stars?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   url_label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   side_project_achievements?: Prisma.side_project_achievementsUpdateManyWithoutSide_projectsNestedInput
   side_project_technologies?: Prisma.side_project_technologiesUpdateManyWithoutSide_projectsNestedInput
@@ -956,6 +991,7 @@ export type side_projectsUncheckedUpdateWithoutProfilesInput = {
   stars?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   url_label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   side_project_achievements?: Prisma.side_project_achievementsUncheckedUpdateManyWithoutSide_projectsNestedInput
   side_project_technologies?: Prisma.side_project_technologiesUncheckedUpdateManyWithoutSide_projectsNestedInput
@@ -974,6 +1010,7 @@ export type side_projectsUncheckedUpdateManyWithoutProfilesInput = {
   stars?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   url_label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  image_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
@@ -1031,6 +1068,7 @@ export type side_projectsSelect<ExtArgs extends runtime.Types.Extensions.Interna
   stars?: boolean
   summary?: boolean
   url_label?: boolean
+  image_path?: boolean
   tags?: boolean
   side_project_achievements?: boolean | Prisma.side_projects$side_project_achievementsArgs<ExtArgs>
   side_project_technologies?: boolean | Prisma.side_projects$side_project_technologiesArgs<ExtArgs>
@@ -1052,6 +1090,7 @@ export type side_projectsSelectCreateManyAndReturn<ExtArgs extends runtime.Types
   stars?: boolean
   summary?: boolean
   url_label?: boolean
+  image_path?: boolean
   tags?: boolean
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["side_projects"]>
@@ -1070,6 +1109,7 @@ export type side_projectsSelectUpdateManyAndReturn<ExtArgs extends runtime.Types
   stars?: boolean
   summary?: boolean
   url_label?: boolean
+  image_path?: boolean
   tags?: boolean
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["side_projects"]>
@@ -1088,10 +1128,11 @@ export type side_projectsSelectScalar = {
   stars?: boolean
   summary?: boolean
   url_label?: boolean
+  image_path?: boolean
   tags?: boolean
 }
 
-export type side_projectsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "sort" | "date_created" | "date_updated" | "name" | "start_date" | "end_date" | "profile" | "url" | "stars" | "summary" | "url_label" | "tags", ExtArgs["result"]["side_projects"]>
+export type side_projectsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "sort" | "date_created" | "date_updated" | "name" | "start_date" | "end_date" | "profile" | "url" | "stars" | "summary" | "url_label" | "image_path" | "tags", ExtArgs["result"]["side_projects"]>
 export type side_projectsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   side_project_achievements?: boolean | Prisma.side_projects$side_project_achievementsArgs<ExtArgs>
   side_project_technologies?: boolean | Prisma.side_projects$side_project_technologiesArgs<ExtArgs>
@@ -1126,6 +1167,7 @@ export type $side_projectsPayload<ExtArgs extends runtime.Types.Extensions.Inter
     stars: number | null
     summary: string | null
     url_label: string | null
+    image_path: string | null
     tags: runtime.JsonValue | null
   }, ExtArgs["result"]["side_projects"]>
   composites: {}
@@ -1566,6 +1608,7 @@ export interface side_projectsFieldRefs {
   readonly stars: Prisma.FieldRef<"side_projects", 'Int'>
   readonly summary: Prisma.FieldRef<"side_projects", 'String'>
   readonly url_label: Prisma.FieldRef<"side_projects", 'String'>
+  readonly image_path: Prisma.FieldRef<"side_projects", 'String'>
   readonly tags: Prisma.FieldRef<"side_projects", 'Json'>
 }
     

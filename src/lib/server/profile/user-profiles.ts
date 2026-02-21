@@ -16,6 +16,7 @@ export interface ProfileSummary {
   title: string | null;
   is_default: boolean | null;
   profile_picture: string | null;
+  profile_photo_path: string | null;
 }
 
 /**
@@ -33,6 +34,7 @@ export async function getProfilesByUserId(
       title: true,
       is_default: true,
       profile_picture: true,
+      profile_photo_path: true,
     },
     orderBy: [
       { is_default: "desc" }, // Default profile first

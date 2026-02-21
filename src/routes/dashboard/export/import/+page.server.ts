@@ -1,8 +1,17 @@
 import type { Actions, PageServerLoad } from "./$types";
-import { fail, redirect } from "@sveltejs/kit";
+import { fail, redirect, isRedirect } from "@sveltejs/kit";
+import { getSelectedProfileId } from "../../profile/utils";
+import {
+  importExportData,
+  validateExportData,
+  isLegacyFormat,
+  parseExportZip,
+  importMediaFiles,
+  deleteProfileMediaFiles,
+  type ExportData,
+} from "$lib/server/export";
 import { importProfileFromJson } from "$lib/server/profile/import-profile-json";
 import type { ExportedProfile } from "$lib/server/profile/export-profile-json";
-import { getSelectedProfileId } from "../../profile/utils";
 
 export const load: PageServerLoad = async ({ parent }) => {
   const layoutData = await parent();
@@ -14,6 +23,128 @@ export const load: PageServerLoad = async ({ parent }) => {
 };
 
 export const actions: Actions = {
+  import: async ({ request, locals, cookies }) => {
+    const user = locals.user;
+    if (!user) {
+      return fail(401, { error: "Not authenticated" });
+    }
+
+    const formData = await request.formData();
+    const file = formData.get("file") as File | null;
+    const importMode = formData.get("importMode") as string;
+
+    if (!file || file.size === 0) {
+      return fail(400, { error: "Please select a file to import" });
+    }
+
+    const isZip =
+      file.name.endsWith(".zip") || file.type === "application/zip";
+    const isJson =
+      file.name.endsWith(".json") || file.type === "application/json";
+
+    if (!isZip && !isJson) {
+      return fail(400, { error: "Please upload a JSON or ZIP file" });
+    }
+
+    const MAX_SIZE = 100 * 1024 * 1024; // 100MB for ZIP files with media
+    if (file.size > MAX_SIZE) {
+      return fail(400, { error: "File is too large. Maximum size is 100MB." });
+    }
+
+    let overwriteProfileId: number | undefined;
+    if (importMode === "overwrite") {
+      const selectedId = await getSelectedProfileId(cookies, user.id);
+      if (!selectedId) {
+        return fail(400, { error: "No profile selected to overwrite" });
+      }
+      overwriteProfileId = selectedId;
+    }
+
+    try {
+      if (isZip) {
+        // Handle ZIP import (v2.0 format with media)
+        const buffer = Buffer.from(await file.arrayBuffer());
+        const { data, mediaFiles } = await parseExportZip(buffer);
+
+        if (!validateExportData(data)) {
+          return fail(400, { error: "Invalid export format in ZIP file" });
+        }
+
+        // Delete old media files if overwriting
+        if (overwriteProfileId) {
+          await deleteProfileMediaFiles(overwriteProfileId);
+        }
+
+        // Import data
+        const result = await importExportData(data, user.id, {
+          overwriteProfileId,
+        });
+
+        // Import media files if present
+        if (data.has_media && data.media_files) {
+          const mediaResult = await importMediaFiles(
+            mediaFiles,
+            data.media_files,
+            result.profileId,
+            result.mediaPathMapping,
+          );
+
+          if (mediaResult.failed > 0) {
+            console.warn("Some media files failed to import:", mediaResult.errors);
+          }
+        }
+
+        redirect(302, `/dashboard?profile=${result.profileId}`);
+      } else {
+        // Handle JSON import
+        const text = await file.text();
+        let data: unknown;
+
+        try {
+          data = JSON.parse(text);
+        } catch {
+          return fail(400, { error: "Invalid JSON file" });
+        }
+
+        // Check format version
+        if (validateExportData(data)) {
+          // v2.0 format
+          const result = await importExportData(data as ExportData, user.id, {
+            overwriteProfileId,
+          });
+          redirect(302, `/dashboard?profile=${result.profileId}`);
+        } else if (isLegacyFormat(data)) {
+          // Legacy v1.0 format - use old import function
+          const legacyData = data as ExportedProfile;
+
+          if (!legacyData.profile) {
+            return fail(400, {
+              error: "Invalid export format: missing profile data",
+            });
+          }
+
+          const result = await importProfileFromJson(legacyData, user.id, {
+            overwriteProfileId,
+          });
+          redirect(302, `/dashboard?profile=${result.profileId}`);
+        } else {
+          return fail(400, {
+            error: "Invalid export format: unrecognized structure",
+          });
+        }
+      }
+    } catch (e) {
+      // Re-throw redirects - they're not errors
+      if (isRedirect(e)) {
+        throw e;
+      }
+      console.error("Import failed:", e);
+      const message = e instanceof Error ? e.message : "Import failed";
+      return fail(500, { error: message });
+    }
+  },
+
+  // Keep legacy action for backwards compatibility
   importJson: async ({ request, locals, cookies }) => {
     const user = locals.user;
     if (!user) {
@@ -58,7 +189,9 @@ export const actions: Actions = {
         if (!profileId) {
           return fail(400, { error: "No profile selected to overwrite" });
         }
-        result = await importProfileFromJson(data, user.id, { overwriteProfileId: profileId });
+        result = await importProfileFromJson(data, user.id, {
+          overwriteProfileId: profileId,
+        });
       } else {
         result = await importProfileFromJson(data, user.id);
       }

@@ -14,6 +14,8 @@
   import SectionHeader from "../components/SectionHeader.svelte";
   import EmptyState from "../components/EmptyState.svelte";
   import DeleteConfirmModal from "../components/DeleteConfirmModal.svelte";
+  import MediaUpload from "$lib/components/MediaUpload.svelte";
+  import { getEducationLogoUrl } from "$lib/utils/entity-media-url";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -44,6 +46,7 @@
   let editStartDate = $state("");
   let editEndDate = $state("");
   let editSummary = $state("");
+  let editLogoUrl = $state<string | null>(null);
 
   function formatDate(date: Date | string | null): string {
     if (!date) return "";
@@ -72,6 +75,7 @@
     editStartDate = formatDate(edu.start_date);
     editEndDate = formatDate(edu.end_date);
     editSummary = edu.summary || "";
+    editLogoUrl = getEducationLogoUrl(edu);
   }
 
   function cancelEdit() {
@@ -414,6 +418,19 @@
                 >
                   <input type="hidden" name="id" value={edu.id} />
                   <div class="space-y-4">
+                    <!-- Institution Logo -->
+                    <div class="max-w-xs">
+                      <MediaUpload
+                        entityType="education"
+                        entityId={edu.id}
+                        field="logo_path"
+                        currentUrl={editLogoUrl}
+                        label="Institution Logo"
+                        onUpload={(url) => (editLogoUrl = url)}
+                        onDelete={() => (editLogoUrl = null)}
+                      />
+                    </div>
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label

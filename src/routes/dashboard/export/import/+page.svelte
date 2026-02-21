@@ -6,10 +6,14 @@
     faCloudUploadAlt,
     faExclamationTriangle,
     faFile,
+    faFileArchive,
+    faImage,
+    faLayerGroup,
     faPlus,
     faSpinner,
     faSync,
     faTimes,
+    faUser,
   } from "@fortawesome/free-solid-svg-icons";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import { faFileImport } from "@fortawesome/free-solid-svg-icons";
@@ -23,51 +27,110 @@
   let importMode = $state<"new" | "overwrite">("new");
   let showOverwriteConfirm = $state(false);
   let confirmName = $state("");
-  let preview = $state<
-    {
-      name: string;
-      title?: string;
-      counts: { label: string; count: number }[];
-    } | null
-  >(null);
+  let preview = $state<{
+    name: string;
+    title?: string;
+    scope?: "profile" | "full";
+    hasMedia?: boolean;
+    version?: string;
+    counts: { label: string; count: number }[];
+  } | null>(null);
 
   async function parsePreview(file: File) {
     try {
-      const text = await file.text();
-      const fileData = JSON.parse(text);
-      const p = fileData?.profile;
-      if (!p) {
-        error = "Invalid export format: missing profile data";
-        preview = null;
+      const isZip =
+        file.name.endsWith(".zip") || file.type === "application/zip";
+
+      if (isZip) {
+        // For ZIP files, we can't easily preview without JSZip on client
+        // Just show basic info
+        preview = {
+          name: file.name.replace(".zip", ""),
+          hasMedia: true,
+          counts: [{ label: "ZIP archive with media", count: 1 }],
+        };
+        error = null;
         return;
       }
 
-      const counts: { label: string; count: number }[] = [];
-      const add = (label: string, arr: unknown[] | undefined | null) => {
-        const len = arr?.length ?? 0;
-        if (len > 0) counts.push({ label, count: len });
-      };
+      const text = await file.text();
+      const fileData = JSON.parse(text);
 
-      add("Work experiences", p.work_experiences);
-      add("Education", p.education);
-      add("Skill categories", p.tech_skill_categories);
-      add("Side projects", p.side_projects);
-      add("Profile versions", p.profile_versions);
-      add("Languages", p.languages);
-      add("Highlights", p.highlights);
-      add("References", p.references);
-      add("Project stories", p.project_stories);
-      add("Cheat sheets", p.cheat_sheets);
-      add("Salary expectations", p.salary_expectations);
+      // Check if v2.0 format
+      if (fileData.version === "2.0") {
+        const p = fileData.profile;
+        if (!p) {
+          error = "Invalid export format: missing profile data";
+          preview = null;
+          return;
+        }
 
-      preview = {
-        name: p.name || "Unnamed profile",
-        title: p.title || undefined,
-        counts,
-      };
-      error = null;
+        const counts: { label: string; count: number }[] = [];
+        const add = (label: string, arr: unknown[] | undefined | null) => {
+          const len = arr?.length ?? 0;
+          if (len > 0) counts.push({ label, count: len });
+        };
+
+        add("Work experiences", p.work_experiences);
+        add("Education", p.education);
+        add("Skill categories", p.tech_skill_categories);
+        add("Side projects", p.side_projects);
+        add("Profile versions", p.profile_versions);
+        add("Languages", p.languages);
+        add("Highlights", p.highlights);
+        add("References", p.references);
+
+        // Full account data
+        if (fileData.scope === "full") {
+          add("Project stories", fileData.project_stories);
+          add("Cheat sheets", fileData.cheat_sheets);
+          add("Salary expectations", fileData.salary_expectations);
+          add("Applications", fileData.applications);
+        }
+
+        preview = {
+          name: p.name || "Unnamed profile",
+          title: p.title || undefined,
+          scope: fileData.scope,
+          hasMedia: fileData.has_media,
+          version: "2.0",
+          counts,
+        };
+        error = null;
+      } else if (fileData.profile) {
+        // Legacy v1.0 format
+        const p = fileData.profile;
+        const counts: { label: string; count: number }[] = [];
+        const add = (label: string, arr: unknown[] | undefined | null) => {
+          const len = arr?.length ?? 0;
+          if (len > 0) counts.push({ label, count: len });
+        };
+
+        add("Work experiences", p.work_experiences);
+        add("Education", p.education);
+        add("Skill categories", p.tech_skill_categories);
+        add("Side projects", p.side_projects);
+        add("Profile versions", p.profile_versions);
+        add("Languages", p.languages);
+        add("Highlights", p.highlights);
+        add("References", p.references);
+        add("Project stories", p.project_stories);
+        add("Cheat sheets", p.cheat_sheets);
+        add("Salary expectations", p.salary_expectations);
+
+        preview = {
+          name: p.name || "Unnamed profile",
+          title: p.title || undefined,
+          version: "1.0 (legacy)",
+          counts,
+        };
+        error = null;
+      } else {
+        error = "Invalid export format: missing profile data";
+        preview = null;
+      }
     } catch {
-      error = "Could not read JSON file";
+      error = "Could not read file";
       preview = null;
     }
   }
@@ -112,7 +175,9 @@
     confirmName = "";
   }
 
-  const overwriteNameMatches = $derived(confirmName === data.selectedProfileName);
+  const overwriteNameMatches = $derived(
+    confirmName === data.selectedProfileName,
+  );
   let showFinalOverwriteConfirm = $state(false);
 
   function handleImportClick(mode: "new" | "overwrite") {
@@ -143,6 +208,13 @@
     importMode = "new";
     confirmName = "";
   }
+
+  const isZipFile = $derived(
+    selectedFile?.name.endsWith(".zip") ||
+      selectedFile?.type === "application/zip",
+  );
+
+  const fileIcon = $derived(isZipFile ? faFileArchive : faFile);
 </script>
 
 <div class="space-y-6">
@@ -151,7 +223,7 @@
   <form
     id="import-form"
     method="POST"
-    action="?/importJson"
+    action="?/import"
     enctype="multipart/form-data"
     use:enhance={() => {
       isLoading = true;
@@ -197,7 +269,7 @@
       {#if selectedFile}
         <div class="flex items-center justify-center gap-3">
           <FontAwesomeIcon
-            icon={faFile}
+            icon={fileIcon}
             class="w-8 h-8 text-[var(--dash-primary)]"
           />
           <div class="text-left">
@@ -226,10 +298,10 @@
           class="w-12 h-12 text-[var(--dash-text-muted)] mx-auto mb-4"
         />
         <p class="font-medium text-[var(--dash-text)] mb-1">
-          Drag and drop your JSON export here, or click to browse
+          Drag and drop your export file here, or click to browse
         </p>
         <p class="text-sm text-[var(--dash-text-secondary)]">
-          JSON files exported from Export Data (max 10MB)
+          JSON or ZIP files from Export Data (max 100MB)
         </p>
       {/if}
 
@@ -237,7 +309,7 @@
         id="json-file-input"
         type="file"
         name="file"
-        accept=".json,application/json"
+        accept=".json,.zip,application/json,application/zip"
         onchange={handleFileSelect}
         class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
       />
@@ -247,13 +319,46 @@
       <div
         class="rounded-lg border border-[var(--dash-border)] bg-[var(--dash-bg-secondary)] p-4 space-y-3"
       >
-        <div>
-          <h3 class="font-semibold text-[var(--dash-text)]">{preview.name}</h3>
-          {#if preview.title}
-            <p class="text-sm text-[var(--dash-text-secondary)]">
-              {preview.title}
-            </p>
-          {/if}
+        <div class="flex items-start justify-between">
+          <div>
+            <h3 class="font-semibold text-[var(--dash-text)]">{preview.name}</h3>
+            {#if preview.title}
+              <p class="text-sm text-[var(--dash-text-secondary)]">
+                {preview.title}
+              </p>
+            {/if}
+          </div>
+          <div class="flex items-center gap-2">
+            {#if preview.version}
+              <span
+                class="text-xs px-2 py-0.5 rounded bg-[var(--dash-bg)] text-[var(--dash-text-secondary)]"
+              >
+                v{preview.version}
+              </span>
+            {/if}
+            {#if preview.scope}
+              <span
+                class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded {preview.scope ===
+                'full'
+                  ? 'bg-indigo-100 text-indigo-700'
+                  : 'bg-blue-100 text-blue-700'}"
+              >
+                <FontAwesomeIcon
+                  icon={preview.scope === "full" ? faLayerGroup : faUser}
+                  class="w-3 h-3"
+                />
+                {preview.scope === "full" ? "Full Account" : "Profile"}
+              </span>
+            {/if}
+            {#if preview.hasMedia}
+              <span
+                class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded bg-green-100 text-green-700"
+              >
+                <FontAwesomeIcon icon={faImage} class="w-3 h-3" />
+                With Media
+              </span>
+            {/if}
+          </div>
         </div>
 
         {#if preview.counts.length > 0}
@@ -265,7 +370,8 @@
                 {label}
                 <span
                   class="bg-[var(--dash-primary)]/10 text-[var(--dash-primary)] px-1.5 rounded-full font-semibold"
-                >{count}</span>
+                  >{count}</span
+                >
               </span>
             {/each}
           </div>
@@ -292,7 +398,9 @@
                 Overwrite "{data.selectedProfileName}"?
               </p>
               <p class="text-sm mt-1 text-[var(--dash-text-secondary)]">
-                This will permanently delete all existing data in the current profile and replace it with the imported data. This action cannot be undone.
+                This will permanently delete all existing data in the current
+                profile and replace it with the imported data. This action
+                cannot be undone.
               </p>
             </div>
           </div>
@@ -321,7 +429,8 @@
                 style="border-color: var(--dash-error); background-color: var(--dash-error-light);"
               >
                 <p class="font-medium" style="color: var(--dash-error);">
-                  Are you absolutely sure? This will permanently delete all data in "{data.selectedProfileName}".
+                  Are you absolutely sure? This will permanently delete all data
+                  in "{data.selectedProfileName}".
                 </p>
                 <div class="flex gap-2">
                   <button
@@ -340,7 +449,10 @@
                     style="background-color: var(--dash-error);"
                   >
                     {#if isLoading}
-                      <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
+                      <FontAwesomeIcon
+                        icon={faSpinner}
+                        class="w-3 h-3 animate-spin"
+                      />
                     {/if}
                     Yes, overwrite permanently
                   </button>

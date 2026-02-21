@@ -8,8 +8,11 @@
     faPlus,
     faTimes,
   } from "@fortawesome/free-solid-svg-icons";
+  import MediaUpload from "$lib/components/MediaUpload.svelte";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
+
+  let logoUrl = $state(data.logoUrl);
 
   let experience = $derived(data.experience);
   let saving = $state(false);
@@ -135,6 +138,19 @@
     <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
       <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">Basic Information</h2>
       <div class="space-y-4">
+        <!-- Company Logo -->
+        <div class="max-w-xs">
+          <MediaUpload
+            entityType="work_experience"
+            entityId={experience.id}
+            field="logo_path"
+            currentUrl={logoUrl}
+            label="Company Logo"
+            onUpload={(url) => (logoUrl = url)}
+            onDelete={() => (logoUrl = null)}
+          />
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label

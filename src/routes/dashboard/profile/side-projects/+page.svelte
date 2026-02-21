@@ -16,6 +16,8 @@
   import SectionHeader from "../components/SectionHeader.svelte";
   import EmptyState from "../components/EmptyState.svelte";
   import DeleteConfirmModal from "../components/DeleteConfirmModal.svelte";
+  import MediaUpload from "$lib/components/MediaUpload.svelte";
+  import { getSideProjectImageUrl } from "$lib/utils/entity-media-url";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -44,6 +46,7 @@
   let editEndDate = $state("");
   let editAchievements = $state<string[]>([]);
   let editTechnologies = $state<string[]>([]);
+  let editImageUrl = $state<string | null>(null);
 
   function formatDate(date: Date | string | null): string {
     if (!date) return "";
@@ -76,6 +79,7 @@
     editTechnologies = project.side_project_technologies.map((t) =>
       t.name || ""
     );
+    editImageUrl = getSideProjectImageUrl(project);
   }
 
   function cancelEdit() {
@@ -415,6 +419,19 @@
                   />
 
                   <div class="space-y-4">
+                    <!-- Project Image -->
+                    <div class="max-w-xs">
+                      <MediaUpload
+                        entityType="side_project"
+                        entityId={project.id}
+                        field="image_path"
+                        currentUrl={editImageUrl}
+                        label="Project Image"
+                        onUpload={(url) => (editImageUrl = url)}
+                        onDelete={() => (editImageUrl = null)}
+                      />
+                    </div>
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label

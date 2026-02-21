@@ -6689,6 +6689,7 @@ export const EducationScalarFieldEnum = {
   profile: 'profile',
   summary: 'summary',
   logo: 'logo',
+  logo_path: 'logo_path',
   tags: 'tags'
 } as const
 
@@ -6970,6 +6971,7 @@ export const ProfilesScalarFieldEnum = {
   stackoverflow_profile: 'stackoverflow_profile',
   headline: 'headline',
   profile_picture: 'profile_picture',
+  profile_photo_path: 'profile_photo_path',
   summary: 'summary',
   nationality: 'nationality',
   location_url: 'location_url',
@@ -7100,6 +7102,7 @@ export const Side_projectsScalarFieldEnum = {
   stars: 'stars',
   summary: 'summary',
   url_label: 'url_label',
+  image_path: 'image_path',
   tags: 'tags'
 } as const
 
@@ -7216,6 +7219,7 @@ export const Work_experiencesScalarFieldEnum = {
   summary: 'summary',
   id: 'id',
   logo: 'logo',
+  logo_path: 'logo_path',
   status: 'status',
   sort: 'sort',
   profile: 'profile',

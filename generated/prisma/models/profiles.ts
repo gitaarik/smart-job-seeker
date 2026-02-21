@@ -62,6 +62,7 @@ export type ProfilesMinAggregateOutputType = {
   stackoverflow_profile: string | null
   headline: string | null
   profile_picture: string | null
+  profile_photo_path: string | null
   summary: string | null
   nationality: string | null
   location_url: string | null
@@ -113,6 +114,7 @@ export type ProfilesMaxAggregateOutputType = {
   stackoverflow_profile: string | null
   headline: string | null
   profile_picture: string | null
+  profile_photo_path: string | null
   summary: string | null
   nationality: string | null
   location_url: string | null
@@ -164,6 +166,7 @@ export type ProfilesCountAggregateOutputType = {
   stackoverflow_profile: number
   headline: number
   profile_picture: number
+  profile_photo_path: number
   summary: number
   nationality: number
   location_url: number
@@ -237,6 +240,7 @@ export type ProfilesMinAggregateInputType = {
   stackoverflow_profile?: true
   headline?: true
   profile_picture?: true
+  profile_photo_path?: true
   summary?: true
   nationality?: true
   location_url?: true
@@ -288,6 +292,7 @@ export type ProfilesMaxAggregateInputType = {
   stackoverflow_profile?: true
   headline?: true
   profile_picture?: true
+  profile_photo_path?: true
   summary?: true
   nationality?: true
   location_url?: true
@@ -339,6 +344,7 @@ export type ProfilesCountAggregateInputType = {
   stackoverflow_profile?: true
   headline?: true
   profile_picture?: true
+  profile_photo_path?: true
   summary?: true
   nationality?: true
   location_url?: true
@@ -477,6 +483,7 @@ export type ProfilesGroupByOutputType = {
   stackoverflow_profile: string | null
   headline: string | null
   profile_picture: string | null
+  profile_photo_path: string | null
   summary: string | null
   nationality: string | null
   location_url: string | null
@@ -551,6 +558,7 @@ export type profilesWhereInput = {
   stackoverflow_profile?: Prisma.StringNullableFilter<"profiles"> | string | null
   headline?: Prisma.StringNullableFilter<"profiles"> | string | null
   profile_picture?: Prisma.UuidNullableFilter<"profiles"> | string | null
+  profile_photo_path?: Prisma.StringNullableFilter<"profiles"> | string | null
   summary?: Prisma.StringNullableFilter<"profiles"> | string | null
   nationality?: Prisma.StringNullableFilter<"profiles"> | string | null
   location_url?: Prisma.StringNullableFilter<"profiles"> | string | null
@@ -626,6 +634,7 @@ export type profilesOrderByWithRelationInput = {
   stackoverflow_profile?: Prisma.SortOrderInput | Prisma.SortOrder
   headline?: Prisma.SortOrderInput | Prisma.SortOrder
   profile_picture?: Prisma.SortOrderInput | Prisma.SortOrder
+  profile_photo_path?: Prisma.SortOrderInput | Prisma.SortOrder
   summary?: Prisma.SortOrderInput | Prisma.SortOrder
   nationality?: Prisma.SortOrderInput | Prisma.SortOrder
   location_url?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -705,6 +714,7 @@ export type profilesWhereUniqueInput = Prisma.AtLeast<{
   stackoverflow_profile?: Prisma.StringNullableFilter<"profiles"> | string | null
   headline?: Prisma.StringNullableFilter<"profiles"> | string | null
   profile_picture?: Prisma.UuidNullableFilter<"profiles"> | string | null
+  profile_photo_path?: Prisma.StringNullableFilter<"profiles"> | string | null
   summary?: Prisma.StringNullableFilter<"profiles"> | string | null
   nationality?: Prisma.StringNullableFilter<"profiles"> | string | null
   location_url?: Prisma.StringNullableFilter<"profiles"> | string | null
@@ -779,6 +789,7 @@ export type profilesOrderByWithAggregationInput = {
   stackoverflow_profile?: Prisma.SortOrderInput | Prisma.SortOrder
   headline?: Prisma.SortOrderInput | Prisma.SortOrder
   profile_picture?: Prisma.SortOrderInput | Prisma.SortOrder
+  profile_photo_path?: Prisma.SortOrderInput | Prisma.SortOrder
   summary?: Prisma.SortOrderInput | Prisma.SortOrder
   nationality?: Prisma.SortOrderInput | Prisma.SortOrder
   location_url?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -838,6 +849,7 @@ export type profilesScalarWhereWithAggregatesInput = {
   stackoverflow_profile?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
   headline?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
   profile_picture?: Prisma.UuidNullableWithAggregatesFilter<"profiles"> | string | null
+  profile_photo_path?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
   summary?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
   nationality?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
   location_url?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
@@ -887,6 +899,7 @@ export type profilesCreateInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -960,6 +973,7 @@ export type profilesUncheckedCreateInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -1030,6 +1044,7 @@ export type profilesUpdateInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1103,6 +1118,7 @@ export type profilesUncheckedUpdateInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1175,6 +1191,7 @@ export type profilesCreateManyInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -1224,6 +1241,7 @@ export type profilesUpdateManyMutationInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1273,6 +1291,7 @@ export type profilesUncheckedUpdateManyInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1344,6 +1363,7 @@ export type profilesCountOrderByAggregateInput = {
   stackoverflow_profile?: Prisma.SortOrder
   headline?: Prisma.SortOrder
   profile_picture?: Prisma.SortOrder
+  profile_photo_path?: Prisma.SortOrder
   summary?: Prisma.SortOrder
   nationality?: Prisma.SortOrder
   location_url?: Prisma.SortOrder
@@ -1405,6 +1425,7 @@ export type profilesMaxOrderByAggregateInput = {
   stackoverflow_profile?: Prisma.SortOrder
   headline?: Prisma.SortOrder
   profile_picture?: Prisma.SortOrder
+  profile_photo_path?: Prisma.SortOrder
   summary?: Prisma.SortOrder
   nationality?: Prisma.SortOrder
   location_url?: Prisma.SortOrder
@@ -1456,6 +1477,7 @@ export type profilesMinOrderByAggregateInput = {
   stackoverflow_profile?: Prisma.SortOrder
   headline?: Prisma.SortOrder
   profile_picture?: Prisma.SortOrder
+  profile_photo_path?: Prisma.SortOrder
   summary?: Prisma.SortOrder
   nationality?: Prisma.SortOrder
   location_url?: Prisma.SortOrder
@@ -1941,6 +1963,7 @@ export type profilesCreateWithoutApplicationsInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -2013,6 +2036,7 @@ export type profilesUncheckedCreateWithoutApplicationsInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -2098,6 +2122,7 @@ export type profilesUpdateWithoutApplicationsInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2170,6 +2195,7 @@ export type profilesUncheckedUpdateWithoutApplicationsInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2239,6 +2265,7 @@ export type profilesCreateWithoutCheat_sheetsInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -2311,6 +2338,7 @@ export type profilesUncheckedCreateWithoutCheat_sheetsInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -2396,6 +2424,7 @@ export type profilesUpdateWithoutCheat_sheetsInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2468,6 +2497,7 @@ export type profilesUncheckedUpdateWithoutCheat_sheetsInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2537,6 +2567,7 @@ export type profilesCreateWithoutCollected_dataInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -2609,6 +2640,7 @@ export type profilesUncheckedCreateWithoutCollected_dataInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -2694,6 +2726,7 @@ export type profilesUpdateWithoutCollected_dataInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2766,6 +2799,7 @@ export type profilesUncheckedUpdateWithoutCollected_dataInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2835,6 +2869,7 @@ export type profilesCreateWithoutConfigInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -2907,6 +2942,7 @@ export type profilesUncheckedCreateWithoutConfigInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -2992,6 +3028,7 @@ export type profilesUpdateWithoutConfigInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3064,6 +3101,7 @@ export type profilesUncheckedUpdateWithoutConfigInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3133,6 +3171,7 @@ export type profilesCreateWithoutDirectus_filesInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -3204,6 +3243,7 @@ export type profilesUncheckedCreateWithoutDirectus_filesInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -3305,6 +3345,7 @@ export type profilesScalarWhereInput = {
   stackoverflow_profile?: Prisma.StringNullableFilter<"profiles"> | string | null
   headline?: Prisma.StringNullableFilter<"profiles"> | string | null
   profile_picture?: Prisma.UuidNullableFilter<"profiles"> | string | null
+  profile_photo_path?: Prisma.StringNullableFilter<"profiles"> | string | null
   summary?: Prisma.StringNullableFilter<"profiles"> | string | null
   nationality?: Prisma.StringNullableFilter<"profiles"> | string | null
   location_url?: Prisma.StringNullableFilter<"profiles"> | string | null
@@ -3354,6 +3395,7 @@ export type profilesCreateWithoutEducationInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -3426,6 +3468,7 @@ export type profilesUncheckedCreateWithoutEducationInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -3511,6 +3554,7 @@ export type profilesUpdateWithoutEducationInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3583,6 +3627,7 @@ export type profilesUncheckedUpdateWithoutEducationInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3652,6 +3697,7 @@ export type profilesCreateWithoutHighlightsInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -3724,6 +3770,7 @@ export type profilesUncheckedCreateWithoutHighlightsInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -3809,6 +3856,7 @@ export type profilesUpdateWithoutHighlightsInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3881,6 +3929,7 @@ export type profilesUncheckedUpdateWithoutHighlightsInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3950,6 +3999,7 @@ export type profilesCreateWithoutJob_match_preferencesInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -4022,6 +4072,7 @@ export type profilesUncheckedCreateWithoutJob_match_preferencesInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -4107,6 +4158,7 @@ export type profilesUpdateWithoutJob_match_preferencesInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4179,6 +4231,7 @@ export type profilesUncheckedUpdateWithoutJob_match_preferencesInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4248,6 +4301,7 @@ export type profilesCreateWithoutJob_matchesInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -4320,6 +4374,7 @@ export type profilesUncheckedCreateWithoutJob_matchesInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -4405,6 +4460,7 @@ export type profilesUpdateWithoutJob_matchesInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4477,6 +4533,7 @@ export type profilesUncheckedUpdateWithoutJob_matchesInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4546,6 +4603,7 @@ export type profilesCreateWithoutJob_searchesInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -4618,6 +4676,7 @@ export type profilesUncheckedCreateWithoutJob_searchesInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -4703,6 +4762,7 @@ export type profilesUpdateWithoutJob_searchesInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4775,6 +4835,7 @@ export type profilesUncheckedUpdateWithoutJob_searchesInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4844,6 +4905,7 @@ export type profilesCreateWithoutLanguagesInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -4916,6 +4978,7 @@ export type profilesUncheckedCreateWithoutLanguagesInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -5001,6 +5064,7 @@ export type profilesUpdateWithoutLanguagesInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5073,6 +5137,7 @@ export type profilesUncheckedUpdateWithoutLanguagesInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5142,6 +5207,7 @@ export type profilesCreateWithoutOs_contributionsInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -5214,6 +5280,7 @@ export type profilesUncheckedCreateWithoutOs_contributionsInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -5299,6 +5366,7 @@ export type profilesUpdateWithoutOs_contributionsInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5371,6 +5439,7 @@ export type profilesUncheckedUpdateWithoutOs_contributionsInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5440,6 +5509,7 @@ export type profilesCreateWithoutPlatform_profilesInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -5512,6 +5582,7 @@ export type profilesUncheckedCreateWithoutPlatform_profilesInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -5597,6 +5668,7 @@ export type profilesUpdateWithoutPlatform_profilesInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5669,6 +5741,7 @@ export type profilesUncheckedUpdateWithoutPlatform_profilesInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5738,6 +5811,7 @@ export type profilesCreateWithoutProfile_exportsInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -5810,6 +5884,7 @@ export type profilesUncheckedCreateWithoutProfile_exportsInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -5895,6 +5970,7 @@ export type profilesUpdateWithoutProfile_exportsInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5967,6 +6043,7 @@ export type profilesUncheckedUpdateWithoutProfile_exportsInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6036,6 +6113,7 @@ export type profilesCreateWithoutProfile_versions_profile_versions_profileToprof
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -6108,6 +6186,7 @@ export type profilesUncheckedCreateWithoutProfile_versions_profile_versions_prof
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -6182,6 +6261,7 @@ export type profilesCreateWithoutProfile_versions_profiles_public_cv_versionTopr
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -6254,6 +6334,7 @@ export type profilesUncheckedCreateWithoutProfile_versions_profiles_public_cv_ve
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -6333,6 +6414,7 @@ export type profilesCreateWithoutProfile_versions_profiles_public_resume_version
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -6405,6 +6487,7 @@ export type profilesUncheckedCreateWithoutProfile_versions_profiles_public_resum
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -6495,6 +6578,7 @@ export type profilesUpdateWithoutProfile_versions_profile_versions_profileToprof
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6567,6 +6651,7 @@ export type profilesUncheckedUpdateWithoutProfile_versions_profile_versions_prof
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6668,6 +6753,7 @@ export type profilesCreateWithoutProject_storiesInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -6740,6 +6826,7 @@ export type profilesUncheckedCreateWithoutProject_storiesInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -6825,6 +6912,7 @@ export type profilesUpdateWithoutProject_storiesInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6897,6 +6985,7 @@ export type profilesUncheckedUpdateWithoutProject_storiesInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6966,6 +7055,7 @@ export type profilesCreateWithoutReferencesInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -7038,6 +7128,7 @@ export type profilesUncheckedCreateWithoutReferencesInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -7123,6 +7214,7 @@ export type profilesUpdateWithoutReferencesInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7195,6 +7287,7 @@ export type profilesUncheckedUpdateWithoutReferencesInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7264,6 +7357,7 @@ export type profilesCreateWithoutSalary_expectationsInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -7336,6 +7430,7 @@ export type profilesUncheckedCreateWithoutSalary_expectationsInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -7421,6 +7516,7 @@ export type profilesUpdateWithoutSalary_expectationsInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7493,6 +7589,7 @@ export type profilesUncheckedUpdateWithoutSalary_expectationsInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7562,6 +7659,7 @@ export type profilesCreateWithoutSide_projectsInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -7634,6 +7732,7 @@ export type profilesUncheckedCreateWithoutSide_projectsInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -7719,6 +7818,7 @@ export type profilesUpdateWithoutSide_projectsInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7791,6 +7891,7 @@ export type profilesUncheckedUpdateWithoutSide_projectsInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7860,6 +7961,7 @@ export type profilesCreateWithoutTech_skill_categoriesInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -7932,6 +8034,7 @@ export type profilesUncheckedCreateWithoutTech_skill_categoriesInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -8017,6 +8120,7 @@ export type profilesUpdateWithoutTech_skill_categoriesInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8089,6 +8193,7 @@ export type profilesUncheckedUpdateWithoutTech_skill_categoriesInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8158,6 +8263,7 @@ export type profilesCreateWithoutWork_experiencesInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -8230,6 +8336,7 @@ export type profilesUncheckedCreateWithoutWork_experiencesInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -8315,6 +8422,7 @@ export type profilesUpdateWithoutWork_experiencesInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8387,6 +8495,7 @@ export type profilesUncheckedUpdateWithoutWork_experiencesInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8456,6 +8565,7 @@ export type profilesCreateWithoutAi_chatsInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -8528,6 +8638,7 @@ export type profilesUncheckedCreateWithoutAi_chatsInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -8613,6 +8724,7 @@ export type profilesUpdateWithoutAi_chatsInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8685,6 +8797,7 @@ export type profilesUncheckedUpdateWithoutAi_chatsInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8755,6 +8868,7 @@ export type profilesCreateManyDirectus_filesInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -8804,6 +8918,7 @@ export type profilesUpdateWithoutDirectus_filesInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8875,6 +8990,7 @@ export type profilesUncheckedUpdateWithoutDirectus_filesInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8946,6 +9062,7 @@ export type profilesUncheckedUpdateManyWithoutDirectus_filesInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8997,6 +9114,7 @@ export type profilesCreateManyProfile_versions_profiles_public_cv_versionToprofi
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -9047,6 +9165,7 @@ export type profilesCreateManyProfile_versions_profiles_public_resume_versionTop
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
+  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
@@ -9095,6 +9214,7 @@ export type profilesUpdateWithoutProfile_versions_profiles_public_cv_versionTopr
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9167,6 +9287,7 @@ export type profilesUncheckedUpdateWithoutProfile_versions_profiles_public_cv_ve
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9238,6 +9359,7 @@ export type profilesUncheckedUpdateManyWithoutProfile_versions_profiles_public_c
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9286,6 +9408,7 @@ export type profilesUpdateWithoutProfile_versions_profiles_public_resume_version
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9358,6 +9481,7 @@ export type profilesUncheckedUpdateWithoutProfile_versions_profiles_public_resum
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9429,6 +9553,7 @@ export type profilesUncheckedUpdateManyWithoutProfile_versions_profiles_public_r
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9690,6 +9815,7 @@ export type profilesSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   stackoverflow_profile?: boolean
   headline?: boolean
   profile_picture?: boolean
+  profile_photo_path?: boolean
   summary?: boolean
   nationality?: boolean
   location_url?: boolean
@@ -9766,6 +9892,7 @@ export type profilesSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   stackoverflow_profile?: boolean
   headline?: boolean
   profile_picture?: boolean
+  profile_photo_path?: boolean
   summary?: boolean
   nationality?: boolean
   location_url?: boolean
@@ -9820,6 +9947,7 @@ export type profilesSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   stackoverflow_profile?: boolean
   headline?: boolean
   profile_picture?: boolean
+  profile_photo_path?: boolean
   summary?: boolean
   nationality?: boolean
   location_url?: boolean
@@ -9874,6 +10002,7 @@ export type profilesSelectScalar = {
   stackoverflow_profile?: boolean
   headline?: boolean
   profile_picture?: boolean
+  profile_photo_path?: boolean
   summary?: boolean
   nationality?: boolean
   location_url?: boolean
@@ -9909,7 +10038,7 @@ export type profilesSelectScalar = {
   source_cv?: boolean
 }
 
-export type profilesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "date_created" | "date_updated" | "name" | "title" | "phone_number" | "email_address" | "personal_website" | "subtitle" | "core_stack" | "linkedin_profile" | "github_profile" | "stackoverflow_profile" | "headline" | "profile_picture" | "summary" | "nationality" | "location_url" | "location_timezone" | "sort" | "location" | "city" | "region" | "country_code" | "location_city" | "location_region" | "location_country_code" | "is_default" | "slug" | "npm_profile" | "pypi_profile" | "company_name" | "street_address" | "postal_code" | "vat_id" | "kvk_number" | "about_me_text" | "meta_image_url" | "dev_start_year" | "python_js_start_year" | "remote_start_year" | "signal_profile" | "whatsapp_number" | "telegram_username" | "user_id" | "public_cv_version" | "public_resume_version" | "source_cv", ExtArgs["result"]["profiles"]>
+export type profilesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "date_created" | "date_updated" | "name" | "title" | "phone_number" | "email_address" | "personal_website" | "subtitle" | "core_stack" | "linkedin_profile" | "github_profile" | "stackoverflow_profile" | "headline" | "profile_picture" | "profile_photo_path" | "summary" | "nationality" | "location_url" | "location_timezone" | "sort" | "location" | "city" | "region" | "country_code" | "location_city" | "location_region" | "location_country_code" | "is_default" | "slug" | "npm_profile" | "pypi_profile" | "company_name" | "street_address" | "postal_code" | "vat_id" | "kvk_number" | "about_me_text" | "meta_image_url" | "dev_start_year" | "python_js_start_year" | "remote_start_year" | "signal_profile" | "whatsapp_number" | "telegram_username" | "user_id" | "public_cv_version" | "public_resume_version" | "source_cv", ExtArgs["result"]["profiles"]>
 export type profilesInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   ai_chats?: boolean | Prisma.profiles$ai_chatsArgs<ExtArgs>
   applications?: boolean | Prisma.profiles$applicationsArgs<ExtArgs>
@@ -9992,6 +10121,7 @@ export type $profilesPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     stackoverflow_profile: string | null
     headline: string | null
     profile_picture: string | null
+    profile_photo_path: string | null
     summary: string | null
     nationality: string | null
     location_url: string | null
@@ -10487,6 +10617,7 @@ export interface profilesFieldRefs {
   readonly stackoverflow_profile: Prisma.FieldRef<"profiles", 'String'>
   readonly headline: Prisma.FieldRef<"profiles", 'String'>
   readonly profile_picture: Prisma.FieldRef<"profiles", 'String'>
+  readonly profile_photo_path: Prisma.FieldRef<"profiles", 'String'>
   readonly summary: Prisma.FieldRef<"profiles", 'String'>
   readonly nationality: Prisma.FieldRef<"profiles", 'String'>
   readonly location_url: Prisma.FieldRef<"profiles", 'String'>

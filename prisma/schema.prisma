@@ -646,6 +646,7 @@ model education {
   profile         Int
   summary         String?
   logo            String?         @db.Uuid
+  logo_path       String?         @db.VarChar(255)
   tags            Json?           @db.Json
   directus_files  directus_files? @relation(fields: [logo], references: [id], onUpdate: NoAction, map: "education_logo_foreign")
   profiles        profiles        @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "education_profile_foreign")
@@ -915,6 +916,7 @@ model profiles {
   stackoverflow_profile                                             String?                 @db.VarChar(255)
   headline                                                          String?                 @db.VarChar(255)
   profile_picture                                                   String?                 @db.Uuid
+  profile_photo_path                                                String?                 @db.VarChar(255)
   summary                                                           String?
   nationality                                                       String?                 @db.VarChar(255)
   location_url                                                      String?                 @db.VarChar(255)
@@ -1056,6 +1058,7 @@ model side_projects {
   stars                     Int?
   summary                   String?
   url_label                 String?                     @db.VarChar(255)
+  image_path                String?                     @db.VarChar(255)
   tags                      Json?                       @db.Json
   side_project_achievements side_project_achievements[]
   side_project_technologies side_project_technologies[]
@@ -1161,6 +1164,7 @@ model work_experiences {
   summary                      String
   id                           Int                            @id @default(autoincrement())
   logo                         String?                        @db.Uuid
+  logo_path                    String?                        @db.VarChar(255)
   status                       String                         @default("draft") @db.VarChar(255)
   sort                         Int?
   profile                      Int
