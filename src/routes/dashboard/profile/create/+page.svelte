@@ -9,11 +9,12 @@
   import StepUpload from "./components/StepUpload.svelte";
   import StepManual from "./components/StepManual.svelte";
   import StepReview from "./components/StepReview.svelte";
+  import StepImport from "./components/StepImport.svelte";
 
   let { form }: { form: ActionData } = $props();
 
   // Wizard state
-  type ImportMethod = "upload" | "manual" | null;
+  type ImportMethod = "upload" | "manual" | "import" | null;
   let currentStep = $state(1);
   let importMethod = $state<ImportMethod>(null);
   let parsedData = $state<ResumeData | null>(null);
@@ -111,6 +112,13 @@
           onSkipToManual={handleSkipToManual}
           onUploadComplete={handleUploadComplete}
           onError={handleError}
+          onLoadingChange={handleLoadingChange}
+        />
+      {:else if importMethod === "import"}
+        <StepImport
+          {isLoading}
+          {error}
+          onBack={handleBack}
           onLoadingChange={handleLoadingChange}
         />
       {:else}
