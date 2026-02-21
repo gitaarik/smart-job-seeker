@@ -13,6 +13,7 @@
   import SectionHeader from "../components/SectionHeader.svelte";
   import EmptyState from "../components/EmptyState.svelte";
   import DeleteConfirmModal from "../components/DeleteConfirmModal.svelte";
+  import { getWorkExperienceLogoUrl } from "$lib/utils/entity-media-url";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -261,14 +262,22 @@
             class="w-full flex items-center justify-between p-4 hover:bg-[var(--dash-bg)] transition-colors text-left cursor-pointer"
           >
             <div class="flex items-center gap-4">
-              <div
-                class="w-12 h-12 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center flex-shrink-0"
-              >
-                <FontAwesomeIcon
-                  icon={faBriefcase}
-                  class="w-6 h-6 text-[var(--dash-primary)]"
+              {#if getWorkExperienceLogoUrl(exp)}
+                <img
+                  src={getWorkExperienceLogoUrl(exp)}
+                  alt="{exp.name} logo"
+                  class="w-12 h-12 rounded-lg object-cover flex-shrink-0"
                 />
-              </div>
+              {:else}
+                <div
+                  class="w-12 h-12 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center flex-shrink-0"
+                >
+                  <FontAwesomeIcon
+                    icon={faBriefcase}
+                    class="w-6 h-6 text-[var(--dash-primary)]"
+                  />
+                </div>
+              {/if}
               <div>
                 <h3 class="font-medium text-[var(--dash-text)]">{exp.position}</h3>
                 <p class="text-sm text-[var(--dash-text-secondary)]">

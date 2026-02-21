@@ -334,14 +334,22 @@
             class="w-full flex items-center justify-between p-4 hover:bg-[var(--dash-bg)] transition-colors text-left cursor-pointer"
           >
             <div class="flex items-center gap-4">
-              <div
-                class="w-10 h-10 rounded-full bg-[var(--dash-bg)] flex items-center justify-center flex-shrink-0"
-              >
-                <FontAwesomeIcon
-                  icon={faLightbulb}
-                  class="w-5 h-5 text-[var(--dash-primary)]"
+              {#if getSideProjectImageUrl(project)}
+                <img
+                  src={getSideProjectImageUrl(project)}
+                  alt="{project.name} image"
+                  class="w-10 h-10 rounded-full object-cover flex-shrink-0"
                 />
-              </div>
+              {:else}
+                <div
+                  class="w-10 h-10 rounded-full bg-[var(--dash-bg)] flex items-center justify-center flex-shrink-0"
+                >
+                  <FontAwesomeIcon
+                    icon={faLightbulb}
+                    class="w-5 h-5 text-[var(--dash-primary)]"
+                  />
+                </div>
+              {/if}
               <div>
                 <h3 class="font-medium text-[var(--dash-text)]">
                   {project.name}
