@@ -8,10 +8,18 @@ interface ImportOptions {
 
 /**
  * Generate a unique profile name by appending a number suffix if needed.
+ * @param excludeProfileId - Optional profile ID to exclude from uniqueness check (for overwrites)
  */
-export async function getUniqueProfileName(baseName: string, userId: string): Promise<string> {
+export async function getUniqueProfileName(
+  baseName: string,
+  userId: string,
+  excludeProfileId?: number,
+): Promise<string> {
   const existingNames = await dbDirect.profiles.findMany({
-    where: { user_id: userId },
+    where: {
+      user_id: userId,
+      ...(excludeProfileId ? { id: { not: excludeProfileId } } : {}),
+    },
     select: { name: true },
   });
   const nameSet = new Set(existingNames.map((r) => r.name));
@@ -107,8 +115,9 @@ export async function importProfileFromJson(
     await dbDirect.profile_versions.deleteMany({ where: { profile: overwriteProfileId } });
 
     // Update the profile itself with deduplicated name
+    // Pass overwriteProfileId to exclude it from uniqueness check
     const baseName = p.name || existingProfile.name || "Imported Profile";
-    finalName = await getUniqueProfileName(baseName, userId);
+    finalName = await getUniqueProfileName(baseName, userId, overwriteProfileId);
     await dbDirect.profiles.update({
       where: { id: overwriteProfileId },
       data: {
