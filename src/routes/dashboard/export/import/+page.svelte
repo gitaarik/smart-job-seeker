@@ -113,6 +113,7 @@
   }
 
   const overwriteNameMatches = $derived(confirmName === data.selectedProfileName);
+  let showFinalOverwriteConfirm = $state(false);
 
   function handleImportClick(mode: "new" | "overwrite") {
     importMode = mode;
@@ -124,12 +125,21 @@
     }
   }
 
+  function handleOverwriteClick() {
+    showFinalOverwriteConfirm = true;
+  }
+
   function confirmOverwrite() {
     document.getElementById("import-form")?.requestSubmit();
   }
 
+  function cancelFinalOverwrite() {
+    showFinalOverwriteConfirm = false;
+  }
+
   function cancelOverwrite() {
     showOverwriteConfirm = false;
+    showFinalOverwriteConfirm = false;
     importMode = "new";
     confirmName = "";
   }
@@ -305,28 +315,58 @@
                 placeholder="Enter profile name to confirm"
               />
             </div>
-            <div class="flex gap-2">
-              <button
-                type="button"
-                onclick={cancelOverwrite}
-                disabled={isLoading}
-                class="px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded-md hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50 text-[var(--dash-text)]"
+            {#if showFinalOverwriteConfirm}
+              <div
+                class="rounded-lg border p-3 space-y-3"
+                style="border-color: var(--dash-error); background-color: var(--dash-error-light);"
               >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onclick={confirmOverwrite}
-                disabled={isLoading || !overwriteNameMatches}
-                class="px-3 py-1.5 text-sm text-white rounded-md hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                style="background-color: var(--dash-warning);"
-              >
-                {#if isLoading}
-                  <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
-                {/if}
-                Yes, overwrite profile
-              </button>
-            </div>
+                <p class="font-medium" style="color: var(--dash-error);">
+                  Are you absolutely sure? This will permanently delete all data in "{data.selectedProfileName}".
+                </p>
+                <div class="flex gap-2">
+                  <button
+                    type="button"
+                    onclick={cancelFinalOverwrite}
+                    disabled={isLoading}
+                    class="px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded-md hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50 text-[var(--dash-text)]"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onclick={confirmOverwrite}
+                    disabled={isLoading}
+                    class="px-3 py-1.5 text-sm text-white rounded-md hover:opacity-90 transition-colors disabled:opacity-50 flex items-center gap-2"
+                    style="background-color: var(--dash-error);"
+                  >
+                    {#if isLoading}
+                      <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
+                    {/if}
+                    Yes, overwrite permanently
+                  </button>
+                </div>
+              </div>
+            {:else}
+              <div class="flex gap-2">
+                <button
+                  type="button"
+                  onclick={cancelOverwrite}
+                  disabled={isLoading}
+                  class="px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded-md hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50 text-[var(--dash-text)]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onclick={handleOverwriteClick}
+                  disabled={isLoading || !overwriteNameMatches}
+                  class="px-3 py-1.5 text-sm text-white rounded-md hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  style="background-color: var(--dash-warning);"
+                >
+                  Yes, overwrite profile
+                </button>
+              </div>
+            {/if}
           </div>
         </div>
       {:else}

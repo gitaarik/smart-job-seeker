@@ -13,8 +13,21 @@
 
   let confirmName = $state("");
   let isLoading = $state(false);
+  let showFinalConfirm = $state(false);
 
   const nameMatches = $derived(confirmName === data.profileName);
+
+  function handleDeleteClick() {
+    showFinalConfirm = true;
+  }
+
+  function confirmDelete() {
+    document.getElementById("delete-form")?.requestSubmit();
+  }
+
+  function cancelDelete() {
+    showFinalConfirm = false;
+  }
 </script>
 
 <div class="space-y-6">
@@ -60,6 +73,7 @@
     </div>
   {:else}
     <form
+      id="delete-form"
       method="POST"
       action="?/delete"
       use:enhance={() => {
@@ -99,20 +113,49 @@
         />
       </div>
 
-      <button
-        type="submit"
-        disabled={!nameMatches || isLoading}
-        class="px-4 py-2 text-white font-medium rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-        style="background-color: var(--dash-error);"
-      >
-        {#if isLoading}
-          <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 animate-spin" />
-          Deleting...
-        {:else}
+      {#if showFinalConfirm}
+        <div
+          class="rounded-lg border p-4 space-y-3"
+          style="border-color: var(--dash-error); background-color: var(--dash-error-light);"
+        >
+          <p class="font-medium" style="color: var(--dash-error);">
+            Are you absolutely sure you want to delete "{data.profileName}"?
+          </p>
+          <div class="flex gap-2">
+            <button
+              type="button"
+              onclick={cancelDelete}
+              disabled={isLoading}
+              class="px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded-md hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50 text-[var(--dash-text)]"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onclick={confirmDelete}
+              disabled={isLoading}
+              class="px-3 py-1.5 text-sm text-white rounded-md hover:opacity-90 transition-colors disabled:opacity-50 flex items-center gap-2"
+              style="background-color: var(--dash-error);"
+            >
+              {#if isLoading}
+                <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
+              {/if}
+              Yes, delete permanently
+            </button>
+          </div>
+        </div>
+      {:else}
+        <button
+          type="button"
+          onclick={handleDeleteClick}
+          disabled={!nameMatches || isLoading}
+          class="px-4 py-2 text-white font-medium rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          style="background-color: var(--dash-error);"
+        >
           <FontAwesomeIcon icon={faTrash} class="w-4 h-4" />
           Delete this profile
-        {/if}
-      </button>
+        </button>
+      {/if}
     </form>
   {/if}
 </div>
