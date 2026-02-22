@@ -198,6 +198,32 @@
   let mobileMenuOpen = $state(false);
   let expandedSections = $state<Set<string>>(new Set());
 
+  // Auto-expand sections that contain the active menu item
+  $effect(() => {
+    const currentPath = $page.url.pathname;
+    const sectionsToExpand = new Set<string>();
+
+    for (const item of menuItems) {
+      if (item.children) {
+        const hasActiveChild = item.children.some(
+          (child) =>
+            currentPath === child.href || currentPath.startsWith(child.href + "/"),
+        );
+        if (hasActiveChild) {
+          sectionsToExpand.add(item.label);
+        }
+      }
+    }
+
+    // Only update if there are sections to expand that aren't already expanded
+    for (const section of sectionsToExpand) {
+      if (!expandedSections.has(section)) {
+        expandedSections = new Set([...expandedSections, ...sectionsToExpand]);
+        break;
+      }
+    }
+  });
+
   function toggleSection(label: string) {
     const newSet = new Set(expandedSections);
     if (newSet.has(label)) {
