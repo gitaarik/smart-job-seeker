@@ -1,28 +1,23 @@
 <script lang="ts">
   import type { ActionData, PageData } from "./$types";
-  import { enhance } from "$app/forms";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
-    faCheck,
     faChevronDown,
     faChevronUp,
+    faExternalLink,
     faLightbulb,
     faPencil,
-    faPlus,
     faStar,
-    faTimes,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
   import SectionHeader from "../components/SectionHeader.svelte";
   import EmptyState from "../components/EmptyState.svelte";
   import DeleteConfirmModal from "../components/DeleteConfirmModal.svelte";
-  import MediaUpload from "$lib/components/MediaUpload.svelte";
-  import { getSideProjectImageUrl, getSideProjectBannerUrl } from "$lib/utils/entity-media-url";
+  import { getSideProjectImageUrl } from "$lib/utils/entity-media-url";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
   let projects = $derived(data.projects);
-  let editingId = $state<number | null>(null);
   let expandedId = $state<number | null>(null);
   let showAddForm = $state(false);
   let deleteId = $state<number | null>(null);
@@ -36,25 +31,6 @@
   let newStartDate = $state("");
   let newEndDate = $state("");
 
-  // Form states for editing
-  let editName = $state("");
-  let editUrl = $state("");
-  let editUrlLabel = $state("");
-  let editSummary = $state("");
-  let editStars = $state("");
-  let editStartDate = $state("");
-  let editEndDate = $state("");
-  let editAchievements = $state<string[]>([]);
-  let editTechnologies = $state<string[]>([]);
-  let editImageUrl = $state<string | null>(null);
-  let editBannerUrl = $state<string | null>(null);
-
-  function formatDate(date: Date | string | null): string {
-    if (!date) return "";
-    const d = typeof date === "string" ? new Date(date) : date;
-    return d.toISOString().split("T")[0];
-  }
-
   function formatDisplayDate(date: Date | string | null): string {
     if (!date) return "";
     const d = typeof date === "string" ? new Date(date) : date;
@@ -64,28 +40,8 @@
     });
   }
 
-  function startEdit(project: typeof projects[0]) {
-    editingId = project.id;
-    expandedId = project.id;
-    editName = project.name || "";
-    editUrl = project.url || "";
-    editUrlLabel = project.url_label || "";
-    editSummary = project.summary || "";
-    editStars = project.stars?.toString() || "";
-    editStartDate = formatDate(project.start_date);
-    editEndDate = formatDate(project.end_date);
-    editAchievements = project.side_project_achievements.map((a) =>
-      a.description || ""
-    );
-    editTechnologies = project.side_project_technologies.map((t) =>
-      t.name || ""
-    );
-    editImageUrl = getSideProjectImageUrl(project);
-    editBannerUrl = getSideProjectBannerUrl(project);
-  }
-
-  function cancelEdit() {
-    editingId = null;
+  function toggleExpand(id: number) {
+    expandedId = expandedId === id ? null : id;
   }
 
   function resetAddForm() {
@@ -97,55 +53,6 @@
     newStars = "";
     newStartDate = "";
     newEndDate = "";
-  }
-
-  function handleAddSubmit() {
-    return async (
-      { result, update }: {
-        result: { type: string };
-        update: () => Promise<void>;
-      },
-    ) => {
-      await update();
-      if (result.type === "success") {
-        resetAddForm();
-      }
-    };
-  }
-
-  function handleEditSubmit() {
-    return async (
-      { result, update }: {
-        result: { type: string };
-        update: () => Promise<void>;
-      },
-    ) => {
-      await update();
-      if (result.type === "success") {
-        editingId = null;
-      }
-    };
-  }
-
-  function toggleExpand(id: number) {
-    if (editingId === id) return;
-    expandedId = expandedId === id ? null : id;
-  }
-
-  function addAchievement() {
-    editAchievements = [...editAchievements, ""];
-  }
-
-  function removeAchievement(index: number) {
-    editAchievements = editAchievements.filter((_, i) => i !== index);
-  }
-
-  function addTechnology() {
-    editTechnologies = [...editTechnologies, ""];
-  }
-
-  function removeTechnology(index: number) {
-    editTechnologies = editTechnologies.filter((_, i) => i !== index);
   }
 </script>
 
@@ -169,7 +76,6 @@
     <form
       method="POST"
       action="?/create"
-      use:enhance={handleAddSubmit}
       class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-primary)] p-4"
     >
       <h3 class="font-medium text-[var(--dash-text)] mb-4">Add New Side Project</h3>
@@ -308,7 +214,7 @@
           type="submit"
           class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
         >
-          Add Project
+          Create & Edit Details
         </button>
       </div>
     </form>
@@ -332,7 +238,7 @@
             role="button"
             tabindex="0"
             onclick={() => toggleExpand(project.id)}
-            onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleExpand(project.id); } }}
+            onkeydown={(e) => e.key === "Enter" && toggleExpand(project.id)}
             class="w-full flex items-center justify-between p-4 hover:bg-[var(--dash-bg)] transition-colors text-left cursor-pointer"
           >
             <div class="flex items-center gap-4">
@@ -340,15 +246,15 @@
                 <img
                   src={getSideProjectImageUrl(project)}
                   alt="{project.name} image"
-                  class="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                  class="w-12 h-12 rounded-lg object-cover flex-shrink-0"
                 />
               {:else}
                 <div
-                  class="w-10 h-10 rounded-full bg-[var(--dash-bg)] flex items-center justify-center flex-shrink-0"
+                  class="w-12 h-12 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center flex-shrink-0"
                 >
                   <FontAwesomeIcon
                     icon={faLightbulb}
-                    class="w-5 h-5 text-[var(--dash-primary)]"
+                    class="w-6 h-6 text-[var(--dash-primary)]"
                   />
                 </div>
               {/if}
@@ -364,43 +270,40 @@
                 </h3>
                 <p class="text-sm text-[var(--dash-text-secondary)]">
                   {
-                    project.side_project_technologies.map((t) =>
-                      t.name
-                    ).join(", ") || "No technologies listed"
+                    project.side_project_technologies.map((t) => t.name).join(", ") ||
+                      "No technologies listed"
+                  }
+                </p>
+                <p class="text-sm text-[var(--dash-text-secondary)]">
+                  {formatDisplayDate(project.start_date) || "N/A"} - {
+                    formatDisplayDate(project.end_date) || "Present"
                   }
                 </p>
               </div>
             </div>
 
             <div class="flex items-center gap-2">
-              {#if editingId !== project.id}
-                <button
-                  type="button"
-                  onclick={(e) => {
-                    e.stopPropagation();
-                    startEdit(project);
-                  }}
-                  class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
-                  aria-label="Edit"
-                >
-                  <FontAwesomeIcon icon={faPencil} class="w-4 h-4" />
-                </button>
-                <button
-                  type="button"
-                  onclick={(e) => {
-                    e.stopPropagation();
-                    deleteId = project.id;
-                  }}
-                  class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
-                  aria-label="Delete"
-                >
-                  <FontAwesomeIcon icon={faTrash} class="w-4 h-4" />
-                </button>
-              {/if}
+              <a
+                href="/dashboard/profile/side-projects/{project.id}"
+                onclick={(e) => e.stopPropagation()}
+                class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
+                aria-label="Edit"
+              >
+                <FontAwesomeIcon icon={faPencil} class="w-4 h-4" />
+              </a>
+              <button
+                type="button"
+                onclick={(e) => {
+                  e.stopPropagation();
+                  deleteId = project.id;
+                }}
+                class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
+                aria-label="Delete"
+              >
+                <FontAwesomeIcon icon={faTrash} class="w-4 h-4" />
+              </button>
               <FontAwesomeIcon
-                icon={expandedId === project.id
-                  ? faChevronUp
-                  : faChevronDown}
+                icon={expandedId === project.id ? faChevronUp : faChevronDown}
                 class="w-4 h-4 text-[var(--dash-text-secondary)]"
               />
             </div>
@@ -408,308 +311,43 @@
 
           <!-- Expanded Content -->
           {#if expandedId === project.id}
-            <div class="border-t border-[var(--dash-border)] p-4">
-              {#if editingId === project.id}
-                <!-- Edit Mode -->
-                <form
-                  method="POST"
-                  action="?/update"
-                  use:enhance={handleEditSubmit}
-                >
-                  <input type="hidden" name="id" value={project.id} />
-                  <input
-                    type="hidden"
-                    name="achievements"
-                    value={JSON.stringify(editAchievements)}
-                  />
-                  <input
-                    type="hidden"
-                    name="technologies"
-                    value={JSON.stringify(editTechnologies)}
-                  />
+            <div class="border-t border-[var(--dash-border)] p-4 space-y-4">
+              {#if project.summary}
+                <p class="text-[var(--dash-text)] text-sm">{project.summary}</p>
+              {/if}
 
-                  <div class="space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label
-                          for="edit-name-{project.id}"
-                          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-                        >
-                          Project Name <span class="text-[var(--dash-error)]">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          id="edit-name-{project.id}"
-                          name="name"
-                          bind:value={editName}
-                          required
-                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                        />
-                      </div>
+              {#if project.url}
+                <p class="text-sm">
+                  <a
+                    href={project.url}
+                    target="_blank"
+                    rel="noopener"
+                    class="text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] flex items-center gap-1"
+                  >
+                    {project.url_label || project.url}
+                    <FontAwesomeIcon icon={faExternalLink} class="w-3 h-3" />
+                  </a>
+                </p>
+              {/if}
 
-                      <div>
-                        <label
-                          for="edit-url-{project.id}"
-                          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-                        >
-                          URL
-                        </label>
-                        <input
-                          type="url"
-                          id="edit-url-{project.id}"
-                          name="url"
-                          bind:value={editUrl}
-                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                        />
-                      </div>
-
-                      <div>
-                        <label
-                          for="edit-url-label-{project.id}"
-                          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-                        >
-                          URL Label
-                        </label>
-                        <input
-                          type="text"
-                          id="edit-url-label-{project.id}"
-                          name="url_label"
-                          bind:value={editUrlLabel}
-                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                        />
-                      </div>
-
-                      <div>
-                        <label
-                          for="edit-stars-{project.id}"
-                          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-                        >
-                          GitHub Stars
-                        </label>
-                        <input
-                          type="number"
-                          id="edit-stars-{project.id}"
-                          name="stars"
-                          bind:value={editStars}
-                          min="0"
-                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                        />
-                      </div>
-
-                      <div>
-                        <label
-                          for="edit-start-date-{project.id}"
-                          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-                        >
-                          Start Date
-                        </label>
-                        <input
-                          type="date"
-                          id="edit-start-date-{project.id}"
-                          name="start_date"
-                          bind:value={editStartDate}
-                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                        />
-                      </div>
-
-                      <div>
-                        <label
-                          for="edit-end-date-{project.id}"
-                          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-                        >
-                          End Date
-                        </label>
-                        <input
-                          type="date"
-                          id="edit-end-date-{project.id}"
-                          name="end_date"
-                          bind:value={editEndDate}
-                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label
-                        for="edit-summary-{project.id}"
-                        class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-                      >
-                        Summary
-                      </label>
-                      <textarea
-                        id="edit-summary-{project.id}"
-                        name="summary"
-                        bind:value={editSummary}
-                        rows={3}
-                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
-                      ></textarea>
-                    </div>
-
-                    <!-- Technologies -->
-                    <div>
-                      <div class="flex items-center justify-between mb-2">
-                        <label class="block text-sm font-medium text-[var(--dash-text)]"
-                        >Technologies</label>
-                        <button
-                          type="button"
-                          onclick={addTechnology}
-                          class="text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] text-sm flex items-center gap-1"
-                        >
-                          <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
-                          Add
-                        </button>
-                      </div>
-                      <div class="space-y-2">
-                        {#each editTechnologies as tech, index}
-                          <div class="flex items-center gap-2">
-                            <input
-                              type="text"
-                              bind:value={editTechnologies[index]}
-                              placeholder="Technology name"
-                              class="flex-1 px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                            />
-                            <button
-                              type="button"
-                              onclick={() => removeTechnology(index)}
-                              class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
-                              aria-label="Remove"
-                            >
-                              <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
-                            </button>
-                          </div>
-                        {/each}
-                      </div>
-                    </div>
-
-                    <!-- Achievements -->
-                    <div>
-                      <div class="flex items-center justify-between mb-2">
-                        <label class="block text-sm font-medium text-[var(--dash-text)]"
-                        >Achievements</label>
-                        <button
-                          type="button"
-                          onclick={addAchievement}
-                          class="text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] text-sm flex items-center gap-1"
-                        >
-                          <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
-                          Add
-                        </button>
-                      </div>
-                      <div class="space-y-2">
-                        {#each editAchievements as achievement, index}
-                          <div class="flex items-center gap-2">
-                            <input
-                              type="text"
-                              bind:value={editAchievements[index]}
-                              placeholder="Achievement description"
-                              class="flex-1 px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                            />
-                            <button
-                              type="button"
-                              onclick={() => removeAchievement(index)}
-                              class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
-                              aria-label="Remove"
-                            >
-                              <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
-                            </button>
-                          </div>
-                        {/each}
-                      </div>
-                    </div>
-
-                    <!-- Portfolio Images -->
-                    <div class="border-t border-[var(--dash-border)] pt-4 mt-4">
-                      <h4 class="text-sm font-medium text-[var(--dash-text)] mb-1">Portfolio Images</h4>
-                      <p class="text-xs text-[var(--dash-text-secondary)] mb-3">
-                        These images are used for your portfolio display. They are not required for job search or matching.
-                      </p>
-                      <div class="flex gap-6">
-                        <div class="max-w-xs">
-                          <MediaUpload
-                            entityType="side_project"
-                            entityId={project.id}
-                            field="image_path"
-                            currentUrl={editImageUrl}
-                            label="Project Image"
-                            onUpload={(url) => (editImageUrl = url)}
-                            onDelete={() => (editImageUrl = null)}
-                          />
-                        </div>
-                        <div class="flex-1">
-                          <MediaUpload
-                            entityType="side_project"
-                            entityId={project.id}
-                            field="banner_path"
-                            currentUrl={editBannerUrl}
-                            label="Project Banner"
-                            onUpload={(url) => (editBannerUrl = url)}
-                            onDelete={() => (editBannerUrl = null)}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="flex justify-end gap-2 mt-4">
-                    <button
-                      type="button"
-                      onclick={cancelEdit}
-                      class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
-                    >
-                      Save Changes
-                    </button>
-                  </div>
-                </form>
-              {:else}
-                <!-- View Mode -->
-                <div class="space-y-4 text-sm">
-                  {#if project.summary}
-                    <p class="text-[var(--dash-text)]">{project.summary}</p>
-                  {/if}
-
-                  {#if project.url}
-                    <p>
-                      <a
-                        href={project.url}
-                        target="_blank"
-                        rel="noopener"
-                        class="text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)]"
-                      >
-                        {project.url_label || project.url}
-                      </a>
-                    </p>
-                  {/if}
-
-                  {#if project.start_date || project.end_date}
-                    <p>
-                      <span class="text-[var(--dash-text-secondary)]">Period:</span>
-                      <span class="text-[var(--dash-text)]">
-                        {formatDisplayDate(project.start_date) || "N/A"} - {
-                          formatDisplayDate(project.end_date) ||
-                            "Present"
-                        }
-                      </span>
-                    </p>
-                  {/if}
-
-                  {#if project.side_project_achievements.length > 0}
-                    <div>
-                      <p class="text-[var(--dash-text-secondary)] mb-1">Achievements:</p>
-                      <ul class="list-disc list-inside text-[var(--dash-text)] space-y-1">
-                        {#each project.side_project_achievements as achievement}
-                          <li>{achievement.description}</li>
-                        {/each}
-                      </ul>
-                    </div>
-                  {/if}
+              {#if project.side_project_achievements.length > 0}
+                <div>
+                  <p class="text-[var(--dash-text-secondary)] text-sm mb-1">Achievements:</p>
+                  <ul class="list-disc list-inside text-[var(--dash-text)] text-sm space-y-1">
+                    {#each project.side_project_achievements as achievement}
+                      <li>{achievement.description}</li>
+                    {/each}
+                  </ul>
                 </div>
               {/if}
+
+              <a
+                href="/dashboard/profile/side-projects/{project.id}"
+                class="inline-flex items-center gap-2 text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] text-sm"
+              >
+                <FontAwesomeIcon icon={faPencil} class="w-3 h-3" />
+                Edit full details
+              </a>
             </div>
           {/if}
         </div>

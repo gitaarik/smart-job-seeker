@@ -13,6 +13,7 @@ const UPLOADS_DIR = join(process.cwd(), "uploads");
 
 // Allowed entity types and their valid fields
 const ENTITY_CONFIG: Record<string, { fields: string[]; table: string }> = {
+  profile: { fields: ["profile_photo_path"], table: "profiles" },
   work_experience: { fields: ["logo_path", "banner_path"], table: "work_experiences" },
   education: { fields: ["logo_path", "banner_path"], table: "education" },
   side_project: { fields: ["image_path", "banner_path"], table: "side_projects" },
@@ -51,6 +52,11 @@ export async function validateEntityOwnership(
   let profileId: number | null = null;
 
   switch (entityType) {
+    case "profile": {
+      // For profiles, entityId is the profile id directly
+      profileId = entityId;
+      break;
+    }
     case "work_experience": {
       const entity = await dbDirect.work_experiences.findUnique({
         where: { id: entityId },
@@ -237,6 +243,14 @@ async function getEntityMediaPath(
   field: string,
 ): Promise<string | null> {
   switch (entityType) {
+    case "profile": {
+      const entity = await dbDirect.profiles.findUnique({
+        where: { id: entityId },
+        select: { profile_photo_path: true },
+      });
+      if (field === "profile_photo_path") return entity?.profile_photo_path ?? null;
+      return null;
+    }
     case "work_experience": {
       const entity = await dbDirect.work_experiences.findUnique({
         where: { id: entityId },
@@ -279,6 +293,14 @@ async function updateEntityMediaPath(
   path: string | null,
 ): Promise<void> {
   switch (entityType) {
+    case "profile":
+      if (field === "profile_photo_path") {
+        await dbDirect.profiles.update({
+          where: { id: entityId },
+          data: { profile_photo_path: path, date_updated: new Date() },
+        });
+      }
+      break;
     case "work_experience":
       if (field === "logo_path") {
         await dbDirect.work_experiences.update({

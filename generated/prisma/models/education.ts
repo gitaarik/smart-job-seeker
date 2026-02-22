@@ -58,6 +58,7 @@ export type EducationMinAggregateOutputType = {
   summary: string | null
   logo: string | null
   logo_path: string | null
+  banner_path: string | null
 }
 
 export type EducationMaxAggregateOutputType = {
@@ -78,6 +79,7 @@ export type EducationMaxAggregateOutputType = {
   summary: string | null
   logo: string | null
   logo_path: string | null
+  banner_path: string | null
 }
 
 export type EducationCountAggregateOutputType = {
@@ -98,6 +100,7 @@ export type EducationCountAggregateOutputType = {
   summary: number
   logo: number
   logo_path: number
+  banner_path: number
   tags: number
   _all: number
 }
@@ -135,6 +138,7 @@ export type EducationMinAggregateInputType = {
   summary?: true
   logo?: true
   logo_path?: true
+  banner_path?: true
 }
 
 export type EducationMaxAggregateInputType = {
@@ -155,6 +159,7 @@ export type EducationMaxAggregateInputType = {
   summary?: true
   logo?: true
   logo_path?: true
+  banner_path?: true
 }
 
 export type EducationCountAggregateInputType = {
@@ -175,6 +180,7 @@ export type EducationCountAggregateInputType = {
   summary?: true
   logo?: true
   logo_path?: true
+  banner_path?: true
   tags?: true
   _all?: true
 }
@@ -283,6 +289,7 @@ export type EducationGroupByOutputType = {
   summary: string | null
   logo: string | null
   logo_path: string | null
+  banner_path: string | null
   tags: runtime.JsonValue | null
   _count: EducationCountAggregateOutputType | null
   _avg: EducationAvgAggregateOutputType | null
@@ -327,6 +334,7 @@ export type educationWhereInput = {
   summary?: Prisma.StringNullableFilter<"education"> | string | null
   logo?: Prisma.UuidNullableFilter<"education"> | string | null
   logo_path?: Prisma.StringNullableFilter<"education"> | string | null
+  banner_path?: Prisma.StringNullableFilter<"education"> | string | null
   tags?: Prisma.JsonNullableFilter<"education">
   directus_files?: Prisma.XOR<Prisma.Directus_filesNullableScalarRelationFilter, Prisma.directus_filesWhereInput> | null
   profiles?: Prisma.XOR<Prisma.ProfilesScalarRelationFilter, Prisma.profilesWhereInput>
@@ -350,6 +358,7 @@ export type educationOrderByWithRelationInput = {
   summary?: Prisma.SortOrderInput | Prisma.SortOrder
   logo?: Prisma.SortOrderInput | Prisma.SortOrder
   logo_path?: Prisma.SortOrderInput | Prisma.SortOrder
+  banner_path?: Prisma.SortOrderInput | Prisma.SortOrder
   tags?: Prisma.SortOrderInput | Prisma.SortOrder
   directus_files?: Prisma.directus_filesOrderByWithRelationInput
   profiles?: Prisma.profilesOrderByWithRelationInput
@@ -376,6 +385,7 @@ export type educationWhereUniqueInput = Prisma.AtLeast<{
   summary?: Prisma.StringNullableFilter<"education"> | string | null
   logo?: Prisma.UuidNullableFilter<"education"> | string | null
   logo_path?: Prisma.StringNullableFilter<"education"> | string | null
+  banner_path?: Prisma.StringNullableFilter<"education"> | string | null
   tags?: Prisma.JsonNullableFilter<"education">
   directus_files?: Prisma.XOR<Prisma.Directus_filesNullableScalarRelationFilter, Prisma.directus_filesWhereInput> | null
   profiles?: Prisma.XOR<Prisma.ProfilesScalarRelationFilter, Prisma.profilesWhereInput>
@@ -399,6 +409,7 @@ export type educationOrderByWithAggregationInput = {
   summary?: Prisma.SortOrderInput | Prisma.SortOrder
   logo?: Prisma.SortOrderInput | Prisma.SortOrder
   logo_path?: Prisma.SortOrderInput | Prisma.SortOrder
+  banner_path?: Prisma.SortOrderInput | Prisma.SortOrder
   tags?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.educationCountOrderByAggregateInput
   _avg?: Prisma.educationAvgOrderByAggregateInput
@@ -428,6 +439,7 @@ export type educationScalarWhereWithAggregatesInput = {
   summary?: Prisma.StringNullableWithAggregatesFilter<"education"> | string | null
   logo?: Prisma.UuidNullableWithAggregatesFilter<"education"> | string | null
   logo_path?: Prisma.StringNullableWithAggregatesFilter<"education"> | string | null
+  banner_path?: Prisma.StringNullableWithAggregatesFilter<"education"> | string | null
   tags?: Prisma.JsonNullableWithAggregatesFilter<"education">
 }
 
@@ -446,6 +458,7 @@ export type educationCreateInput = {
   end_date?: Date | string | null
   summary?: string | null
   logo_path?: string | null
+  banner_path?: string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutEducationInput
   profiles: Prisma.profilesCreateNestedOneWithoutEducationInput
@@ -469,6 +482,7 @@ export type educationUncheckedCreateInput = {
   summary?: string | null
   logo?: string | null
   logo_path?: string | null
+  banner_path?: string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
@@ -487,6 +501,7 @@ export type educationUpdateInput = {
   end_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   directus_files?: Prisma.directus_filesUpdateOneWithoutEducationNestedInput
   profiles?: Prisma.profilesUpdateOneRequiredWithoutEducationNestedInput
@@ -510,6 +525,7 @@ export type educationUncheckedUpdateInput = {
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
@@ -531,6 +547,7 @@ export type educationCreateManyInput = {
   summary?: string | null
   logo?: string | null
   logo_path?: string | null
+  banner_path?: string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
@@ -549,6 +566,7 @@ export type educationUpdateManyMutationInput = {
   end_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
@@ -570,6 +588,7 @@ export type educationUncheckedUpdateManyInput = {
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
@@ -601,6 +620,7 @@ export type educationCountOrderByAggregateInput = {
   summary?: Prisma.SortOrder
   logo?: Prisma.SortOrder
   logo_path?: Prisma.SortOrder
+  banner_path?: Prisma.SortOrder
   tags?: Prisma.SortOrder
 }
 
@@ -629,6 +649,7 @@ export type educationMaxOrderByAggregateInput = {
   summary?: Prisma.SortOrder
   logo?: Prisma.SortOrder
   logo_path?: Prisma.SortOrder
+  banner_path?: Prisma.SortOrder
 }
 
 export type educationMinOrderByAggregateInput = {
@@ -649,6 +670,7 @@ export type educationMinOrderByAggregateInput = {
   summary?: Prisma.SortOrder
   logo?: Prisma.SortOrder
   logo_path?: Prisma.SortOrder
+  banner_path?: Prisma.SortOrder
 }
 
 export type educationSumOrderByAggregateInput = {
@@ -757,6 +779,7 @@ export type educationCreateWithoutDirectus_filesInput = {
   end_date?: Date | string | null
   summary?: string | null
   logo_path?: string | null
+  banner_path?: string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   profiles: Prisma.profilesCreateNestedOneWithoutEducationInput
 }
@@ -778,6 +801,7 @@ export type educationUncheckedCreateWithoutDirectus_filesInput = {
   profile: number
   summary?: string | null
   logo_path?: string | null
+  banner_path?: string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
@@ -828,6 +852,7 @@ export type educationScalarWhereInput = {
   summary?: Prisma.StringNullableFilter<"education"> | string | null
   logo?: Prisma.UuidNullableFilter<"education"> | string | null
   logo_path?: Prisma.StringNullableFilter<"education"> | string | null
+  banner_path?: Prisma.StringNullableFilter<"education"> | string | null
   tags?: Prisma.JsonNullableFilter<"education">
 }
 
@@ -846,6 +871,7 @@ export type educationCreateWithoutProfilesInput = {
   end_date?: Date | string | null
   summary?: string | null
   logo_path?: string | null
+  banner_path?: string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutEducationInput
 }
@@ -867,6 +893,7 @@ export type educationUncheckedCreateWithoutProfilesInput = {
   summary?: string | null
   logo?: string | null
   logo_path?: string | null
+  banner_path?: string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
@@ -913,6 +940,7 @@ export type educationCreateManyDirectus_filesInput = {
   profile: number
   summary?: string | null
   logo_path?: string | null
+  banner_path?: string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
@@ -931,6 +959,7 @@ export type educationUpdateWithoutDirectus_filesInput = {
   end_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   profiles?: Prisma.profilesUpdateOneRequiredWithoutEducationNestedInput
 }
@@ -952,6 +981,7 @@ export type educationUncheckedUpdateWithoutDirectus_filesInput = {
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
@@ -972,6 +1002,7 @@ export type educationUncheckedUpdateManyWithoutDirectus_filesInput = {
   profile?: Prisma.IntFieldUpdateOperationsInput | number
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
@@ -992,6 +1023,7 @@ export type educationCreateManyProfilesInput = {
   summary?: string | null
   logo?: string | null
   logo_path?: string | null
+  banner_path?: string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
@@ -1010,6 +1042,7 @@ export type educationUpdateWithoutProfilesInput = {
   end_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   directus_files?: Prisma.directus_filesUpdateOneWithoutEducationNestedInput
 }
@@ -1031,6 +1064,7 @@ export type educationUncheckedUpdateWithoutProfilesInput = {
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
@@ -1051,6 +1085,7 @@ export type educationUncheckedUpdateManyWithoutProfilesInput = {
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
 }
 
@@ -1074,6 +1109,7 @@ export type educationSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   summary?: boolean
   logo?: boolean
   logo_path?: boolean
+  banner_path?: boolean
   tags?: boolean
   directus_files?: boolean | Prisma.education$directus_filesArgs<ExtArgs>
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
@@ -1097,6 +1133,7 @@ export type educationSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ext
   summary?: boolean
   logo?: boolean
   logo_path?: boolean
+  banner_path?: boolean
   tags?: boolean
   directus_files?: boolean | Prisma.education$directus_filesArgs<ExtArgs>
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
@@ -1120,6 +1157,7 @@ export type educationSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ext
   summary?: boolean
   logo?: boolean
   logo_path?: boolean
+  banner_path?: boolean
   tags?: boolean
   directus_files?: boolean | Prisma.education$directus_filesArgs<ExtArgs>
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
@@ -1143,10 +1181,11 @@ export type educationSelectScalar = {
   summary?: boolean
   logo?: boolean
   logo_path?: boolean
+  banner_path?: boolean
   tags?: boolean
 }
 
-export type educationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "sort" | "date_created" | "date_updated" | "institution" | "location" | "url" | "area" | "study_type" | "graduation_year" | "start_date" | "end_date" | "profile" | "summary" | "logo" | "logo_path" | "tags", ExtArgs["result"]["education"]>
+export type educationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "sort" | "date_created" | "date_updated" | "institution" | "location" | "url" | "area" | "study_type" | "graduation_year" | "start_date" | "end_date" | "profile" | "summary" | "logo" | "logo_path" | "banner_path" | "tags", ExtArgs["result"]["education"]>
 export type educationInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   directus_files?: boolean | Prisma.education$directus_filesArgs<ExtArgs>
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
@@ -1184,6 +1223,7 @@ export type $educationPayload<ExtArgs extends runtime.Types.Extensions.InternalA
     summary: string | null
     logo: string | null
     logo_path: string | null
+    banner_path: string | null
     tags: runtime.JsonValue | null
   }, ExtArgs["result"]["education"]>
   composites: {}
@@ -1627,6 +1667,7 @@ export interface educationFieldRefs {
   readonly summary: Prisma.FieldRef<"education", 'String'>
   readonly logo: Prisma.FieldRef<"education", 'String'>
   readonly logo_path: Prisma.FieldRef<"education", 'String'>
+  readonly banner_path: Prisma.FieldRef<"education", 'String'>
   readonly tags: Prisma.FieldRef<"education", 'Json'>
 }
     

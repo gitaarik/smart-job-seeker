@@ -767,6 +767,7 @@ export const EducationScalarFieldEnum = {
   summary: 'summary',
   logo: 'logo',
   logo_path: 'logo_path',
+  banner_path: 'banner_path',
   tags: 'tags'
 } as const
 
@@ -1180,6 +1181,7 @@ export const Side_projectsScalarFieldEnum = {
   summary: 'summary',
   url_label: 'url_label',
   image_path: 'image_path',
+  banner_path: 'banner_path',
   tags: 'tags'
 } as const
 
@@ -1297,6 +1299,7 @@ export const Work_experiencesScalarFieldEnum = {
   id: 'id',
   logo: 'logo',
   logo_path: 'logo_path',
+  banner_path: 'banner_path',
   status: 'status',
   sort: 'sort',
   profile: 'profile',

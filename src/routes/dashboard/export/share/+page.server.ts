@@ -22,7 +22,7 @@ export const load: PageServerLoad = async ({ parent }) => {
   const layoutData = await parent();
 
   if (!layoutData.selectedProfile) {
-    redirect(302, "/dashboard/profile");
+    redirect(302, "/dashboard");
   }
 
   // Get profile versions for this profile to use in the dropdown

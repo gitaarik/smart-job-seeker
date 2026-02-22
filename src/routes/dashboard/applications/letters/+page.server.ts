@@ -7,7 +7,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
   const layoutData = await parent();
 
   if (!layoutData.selectedProfile) {
-    redirect(302, "/dashboard/profile");
+    redirect(302, "/dashboard");
   }
 
   const type = url.searchParams.get("type") || "all";

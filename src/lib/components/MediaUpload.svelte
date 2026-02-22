@@ -5,6 +5,7 @@
     faTimes,
     faImage,
     faExpand,
+    faCheck,
   } from "@fortawesome/free-solid-svg-icons";
 
   interface Props {
@@ -14,6 +15,7 @@
     currentUrl?: string | null;
     label?: string;
     accept?: string;
+    showHint?: boolean;
     onUpload?: (url: string) => void;
     onDelete?: () => void;
   }
@@ -24,7 +26,8 @@
     field,
     currentUrl = null,
     label = "Upload image",
-    accept = "image/jpeg,image/png,image/webp",
+    accept = "image/jpeg,image/png,image/webp,image/gif",
+    showHint = true,
     onUpload,
     onDelete,
   }: Props = $props();
@@ -35,6 +38,7 @@
   let previewUrl = $state<string | null>(currentUrl);
   let showFullPreview = $state(false);
   let markedForDeletion = $state(false);
+  let showSuccess = $state(false);
 
   // Update preview when currentUrl prop changes
   $effect(() => {
@@ -68,6 +72,8 @@
 
       previewUrl = result.url;
       markedForDeletion = false;
+      showSuccess = true;
+      setTimeout(() => (showSuccess = false), 2000);
       onUpload?.(result.url);
     } catch (e) {
       error = e instanceof Error ? e.message : "Upload failed";
@@ -132,17 +138,29 @@
       <img
         src={previewUrl}
         alt="Preview"
-        class="w-24 h-24 object-cover rounded-lg border border-[var(--dash-border)]"
+        class="w-24 h-24 object-cover rounded-lg border-2 transition-colors
+          {showSuccess ? 'border-[var(--dash-success)]' : 'border-[var(--dash-border)]'}"
       />
-      <!-- Overlay with expand button on hover -->
-      <button
-        type="button"
-        onclick={() => (showFullPreview = true)}
-        class="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-        aria-label="View full image"
-      >
-        <FontAwesomeIcon icon={faExpand} class="w-6 h-6 text-white" />
-      </button>
+      <!-- Success indicator -->
+      {#if showSuccess}
+        <div
+          class="absolute inset-0 bg-[var(--dash-success)]/20 rounded-lg flex items-center justify-center transition-opacity"
+        >
+          <div class="w-8 h-8 bg-[var(--dash-success)] rounded-full flex items-center justify-center">
+            <FontAwesomeIcon icon={faCheck} class="w-4 h-4 text-white" />
+          </div>
+        </div>
+      {:else}
+        <!-- Overlay with expand button on hover -->
+        <button
+          type="button"
+          onclick={() => (showFullPreview = true)}
+          class="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+          aria-label="View full image"
+        >
+          <FontAwesomeIcon icon={faExpand} class="w-6 h-6 text-white" />
+        </button>
+      {/if}
       <!-- Delete button -->
       <button
         type="button"
@@ -195,6 +213,12 @@
         class="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
       />
     </div>
+  {/if}
+
+  {#if showHint}
+    <p class="text-xs text-[var(--dash-text-secondary)]">
+      JPEG, PNG, WebP, or GIF. Max 5MB.
+    </p>
   {/if}
 </div>
 

@@ -131,7 +131,7 @@
     <h3 class="text-base font-semibold text-[var(--dash-text)] mb-3">Quick Actions</h3>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       <a
-        href="/dashboard/profile"
+        href="/dashboard/profile/edit"
         class="p-3 rounded-lg border border-[var(--dash-border)] hover:border-[var(--dash-primary)] hover:bg-[var(--dash-bg)] transition-colors text-center"
       >
         <FontAwesomeIcon
