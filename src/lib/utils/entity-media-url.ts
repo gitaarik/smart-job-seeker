@@ -30,6 +30,15 @@ export function getWorkExperienceLogoUrl(workExp: {
 }
 
 /**
+ * Get work experience banner URL
+ */
+export function getWorkExperienceBannerUrl(workExp: {
+  banner_path?: string | null;
+}): string | null {
+  return getEntityMediaUrl(workExp.banner_path);
+}
+
+/**
  * Get education logo URL
  */
 export function getEducationLogoUrl(edu: {

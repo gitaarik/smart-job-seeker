@@ -35,11 +35,16 @@ export const load: PageServerLoad = async ({ params, parent }) => {
       ? `/assets/${experience.logo}`
       : null;
 
+  // Get banner URL
+  const bannerUrl = experience?.banner_path
+    ? `/uploads/${experience.banner_path}`
+    : null;
+
   if (!experience) {
     redirect(302, "/dashboard/profile/work-experience");
   }
 
-  return { experience, logoUrl };
+  return { experience, logoUrl, bannerUrl };
 };
 
 export const actions: Actions = {
@@ -80,6 +85,7 @@ export const actions: Actions = {
     const achievementsJson = formData.get("achievements") as string;
     const technologiesJson = formData.get("technologies") as string;
     const deleteLogoPath = formData.get("delete_logo_path") as string;
+    const deleteBannerPath = formData.get("delete_banner_path") as string;
 
     if (!name || name.trim().length === 0) {
       return fail(400, { error: "Company name is required" });
@@ -92,6 +98,11 @@ export const actions: Actions = {
     // Handle logo deletion if marked
     if (deleteLogoPath === "true") {
       await deleteEntityMedia("work_experience", id, "logo_path");
+    }
+
+    // Handle banner deletion if marked
+    if (deleteBannerPath === "true") {
+      await deleteEntityMedia("work_experience", id, "banner_path");
     }
 
     // Update main experience

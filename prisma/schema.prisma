@@ -1165,6 +1165,7 @@ model work_experiences {
   id                           Int                            @id @default(autoincrement())
   logo                         String?                        @db.Uuid
   logo_path                    String?                        @db.VarChar(255)
+  banner_path                  String?                        @db.VarChar(255)
   status                       String                         @default("draft") @db.VarChar(255)
   sort                         Int?
   profile                      Int

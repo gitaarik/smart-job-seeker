@@ -13,7 +13,7 @@ const UPLOADS_DIR = join(process.cwd(), "uploads");
 
 // Allowed entity types and their valid fields
 const ENTITY_CONFIG: Record<string, { fields: string[]; table: string }> = {
-  work_experience: { fields: ["logo_path"], table: "work_experiences" },
+  work_experience: { fields: ["logo_path", "banner_path"], table: "work_experiences" },
   education: { fields: ["logo_path"], table: "education" },
   side_project: { fields: ["image_path"], table: "side_projects" },
 };
@@ -240,9 +240,11 @@ async function getEntityMediaPath(
     case "work_experience": {
       const entity = await dbDirect.work_experiences.findUnique({
         where: { id: entityId },
-        select: { logo_path: true },
+        select: { logo_path: true, banner_path: true },
       });
-      return field === "logo_path" ? entity?.logo_path ?? null : null;
+      if (field === "logo_path") return entity?.logo_path ?? null;
+      if (field === "banner_path") return entity?.banner_path ?? null;
+      return null;
     }
     case "education": {
       const entity = await dbDirect.education.findUnique({
@@ -278,6 +280,11 @@ async function updateEntityMediaPath(
         await dbDirect.work_experiences.update({
           where: { id: entityId },
           data: { logo_path: path },
+        });
+      } else if (field === "banner_path") {
+        await dbDirect.work_experiences.update({
+          where: { id: entityId },
+          data: { banner_path: path },
         });
       }
       break;
