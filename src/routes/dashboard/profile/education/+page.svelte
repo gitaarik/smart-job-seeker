@@ -428,32 +428,6 @@
                 >
                   <input type="hidden" name="id" value={edu.id} />
                   <div class="space-y-4">
-                    <!-- Institution Logo and Banner -->
-                    <div class="flex gap-6">
-                      <div class="max-w-xs">
-                        <MediaUpload
-                          entityType="education"
-                          entityId={edu.id}
-                          field="logo_path"
-                          currentUrl={editLogoUrl}
-                          label="Institution Logo"
-                          onUpload={(url) => (editLogoUrl = url)}
-                          onDelete={() => (editLogoUrl = null)}
-                        />
-                      </div>
-                      <div class="flex-1">
-                        <MediaUpload
-                          entityType="education"
-                          entityId={edu.id}
-                          field="banner_path"
-                          currentUrl={editBannerUrl}
-                          label="Institution Banner"
-                          onUpload={(url) => (editBannerUrl = url)}
-                          onDelete={() => (editBannerUrl = null)}
-                        />
-                      </div>
-                    </div>
-
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label
@@ -601,6 +575,38 @@
                         rows={3}
                         class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
                       ></textarea>
+                    </div>
+
+                    <!-- Portfolio Images -->
+                    <div class="border-t border-[var(--dash-border)] pt-4 mt-4">
+                      <h4 class="text-sm font-medium text-[var(--dash-text)] mb-1">Portfolio Images</h4>
+                      <p class="text-xs text-[var(--dash-text-secondary)] mb-3">
+                        These images are used for your portfolio display. They are not required for job search or matching.
+                      </p>
+                      <div class="flex gap-6">
+                        <div class="max-w-xs">
+                          <MediaUpload
+                            entityType="education"
+                            entityId={edu.id}
+                            field="logo_path"
+                            currentUrl={editLogoUrl}
+                            label="Institution Logo"
+                            onUpload={(url) => (editLogoUrl = url)}
+                            onDelete={() => (editLogoUrl = null)}
+                          />
+                        </div>
+                        <div class="flex-1">
+                          <MediaUpload
+                            entityType="education"
+                            entityId={edu.id}
+                            field="banner_path"
+                            currentUrl={editBannerUrl}
+                            label="Institution Banner"
+                            onUpload={(url) => (editBannerUrl = url)}
+                            onDelete={() => (editBannerUrl = null)}
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
 

@@ -429,32 +429,6 @@
                   />
 
                   <div class="space-y-4">
-                    <!-- Project Image and Banner -->
-                    <div class="flex gap-6">
-                      <div class="max-w-xs">
-                        <MediaUpload
-                          entityType="side_project"
-                          entityId={project.id}
-                          field="image_path"
-                          currentUrl={editImageUrl}
-                          label="Project Image"
-                          onUpload={(url) => (editImageUrl = url)}
-                          onDelete={() => (editImageUrl = null)}
-                        />
-                      </div>
-                      <div class="flex-1">
-                        <MediaUpload
-                          entityType="side_project"
-                          entityId={project.id}
-                          field="banner_path"
-                          currentUrl={editBannerUrl}
-                          label="Project Banner"
-                          onUpload={(url) => (editBannerUrl = url)}
-                          onDelete={() => (editBannerUrl = null)}
-                        />
-                      </div>
-                    </div>
-
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label
@@ -640,6 +614,38 @@
                             </button>
                           </div>
                         {/each}
+                      </div>
+                    </div>
+
+                    <!-- Portfolio Images -->
+                    <div class="border-t border-[var(--dash-border)] pt-4 mt-4">
+                      <h4 class="text-sm font-medium text-[var(--dash-text)] mb-1">Portfolio Images</h4>
+                      <p class="text-xs text-[var(--dash-text-secondary)] mb-3">
+                        These images are used for your portfolio display. They are not required for job search or matching.
+                      </p>
+                      <div class="flex gap-6">
+                        <div class="max-w-xs">
+                          <MediaUpload
+                            entityType="side_project"
+                            entityId={project.id}
+                            field="image_path"
+                            currentUrl={editImageUrl}
+                            label="Project Image"
+                            onUpload={(url) => (editImageUrl = url)}
+                            onDelete={() => (editImageUrl = null)}
+                          />
+                        </div>
+                        <div class="flex-1">
+                          <MediaUpload
+                            entityType="side_project"
+                            entityId={project.id}
+                            field="banner_path"
+                            currentUrl={editBannerUrl}
+                            label="Project Banner"
+                            onUpload={(url) => (editBannerUrl = url)}
+                            onDelete={() => (editBannerUrl = null)}
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
