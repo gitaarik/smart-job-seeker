@@ -36,6 +36,7 @@
   let editAchievements = $state<string[]>(
     experience.work_experience_achievements.map((a) => a.description || ""),
   );
+  let deletedAchievements = $state<Set<number>>(new Set());
   let editTechnologies = $state<string[]>(
     experience.work_experience_technologies.map((t) => t.name || ""),
   );
@@ -111,7 +112,7 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           section: "achievements",
-          achievements: editAchievements.filter((a) => a.trim()),
+          achievements: editAchievements.filter((a, i) => a.trim() && !deletedAchievements.has(i)),
         }),
       });
 
@@ -133,7 +134,26 @@
   }
 
   function removeAchievement(index: number) {
-    editAchievements = editAchievements.filter((_, i) => i !== index);
+    if (!editAchievements[index]?.trim()) {
+      // Empty item - remove immediately
+      editAchievements = editAchievements.filter((_, i) => i !== index);
+      // Adjust deleted indices for removed item
+      const newDeleted = new Set<number>();
+      deletedAchievements.forEach((i) => {
+        if (i > index) newDeleted.add(i - 1);
+        else if (i < index) newDeleted.add(i);
+      });
+      deletedAchievements = newDeleted;
+    } else {
+      // Has content - soft delete
+      deletedAchievements = new Set([...deletedAchievements, index]);
+    }
+  }
+
+  function undoRemoveAchievement(index: number) {
+    const newSet = new Set(deletedAchievements);
+    newSet.delete(index);
+    deletedAchievements = newSet;
   }
 
   function addTechnology() {
@@ -381,21 +401,34 @@
     {:else}
       <div class="border border-[var(--dash-border)] rounded-md overflow-hidden">
         {#each editAchievements as achievement, index}
-          <div class="flex items-center {index > 0 ? 'border-t border-[var(--dash-border)]' : ''}">
-            <input
-              type="text"
-              bind:value={editAchievements[index]}
-              placeholder="Achievement description"
-              class="flex-1 px-4 py-3 border-none focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:ring-inset"
-            />
-            <button
-              type="button"
-              onclick={() => removeAchievement(index)}
-              class="p-3 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
-              aria-label="Remove"
-            >
-              <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
-            </button>
+          {@const isDeleted = deletedAchievements.has(index)}
+          <div class="flex items-center {index > 0 ? 'border-t border-[var(--dash-border)]' : ''} {isDeleted ? 'opacity-50 bg-[var(--dash-bg)]/50' : ''}">
+            {#if isDeleted}
+              <span class="flex-1 px-4 py-3 text-[var(--dash-text-secondary)] line-through">{editAchievements[index]}</span>
+              <button
+                type="button"
+                onclick={() => undoRemoveAchievement(index)}
+                class="p-3 text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] transition-colors"
+                aria-label="Undo"
+              >
+                <FontAwesomeIcon icon={faUndo} class="w-4 h-4" />
+              </button>
+            {:else}
+              <input
+                type="text"
+                bind:value={editAchievements[index]}
+                placeholder="Achievement description"
+                class="flex-1 px-4 py-3 border-none focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:ring-inset"
+              />
+              <button
+                type="button"
+                onclick={() => removeAchievement(index)}
+                class="p-3 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
+                aria-label="Remove"
+              >
+                <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
+              </button>
+            {/if}
           </div>
         {/each}
       </div>

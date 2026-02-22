@@ -82,11 +82,26 @@
     }
   }
 
-  function handleDelete() {
-    // Just mark for deletion locally - actual deletion happens on form save
-    previewUrl = null;
-    markedForDeletion = true;
-    onDelete?.();
+  async function handleDelete() {
+    if (!confirm("Delete this image?")) return;
+
+    try {
+      const response = await fetch(
+        `/api/media/${entityType}/${entityId}/${field}`,
+        { method: "DELETE" },
+      );
+
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.message || "Delete failed");
+      }
+
+      previewUrl = null;
+      markedForDeletion = true;
+      onDelete?.();
+    } catch (e) {
+      error = e instanceof Error ? e.message : "Delete failed";
+    }
   }
 
   function handleFileSelect(event: Event) {
@@ -222,6 +237,10 @@
   {/if}
 </div>
 
+<svelte:window onkeydown={(e) => {
+  if (e.key === "Escape" && showFullPreview) showFullPreview = false;
+}} />
+
 <!-- Full preview modal -->
 {#if showFullPreview && previewUrl}
   <div
@@ -229,7 +248,6 @@
     aria-modal="true"
     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80"
     onclick={() => (showFullPreview = false)}
-    onkeydown={(e) => e.key === "Escape" && (showFullPreview = false)}
   >
     <button
       type="button"
