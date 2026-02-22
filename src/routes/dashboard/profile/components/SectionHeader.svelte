@@ -54,10 +54,10 @@
     <button
       type="button"
       onclick={onAdd}
-      class="flex items-center gap-2 px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
+      class="flex items-center justify-center gap-2 p-3 sm:px-4 sm:py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
     >
-      <FontAwesomeIcon icon={faPlus} class="w-4 h-4" />
-      {addLabel}
+      <FontAwesomeIcon icon={faPlus} class="w-5 h-5 sm:w-4 sm:h-4" />
+      <span class="hidden sm:inline">{addLabel}</span>
     </button>
   {/if}
 </div>

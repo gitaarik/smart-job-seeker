@@ -389,7 +389,11 @@
                       <div
                         class="flex items-center justify-between py-2 px-3 bg-[var(--dash-bg)] rounded-lg"
                       >
-                        <div>
+                        <button
+                          type="button"
+                          onclick={() => startEditSkill(skill)}
+                          class="flex-1 text-left hover:opacity-75 transition-opacity"
+                        >
                           <span class="font-medium text-[var(--dash-text)]">{
                             skill.name
                           }</span>
@@ -402,25 +406,15 @@
                                 skill.years_experience
                               } yrs</span>
                           {/if}
-                        </div>
-                        <div class="flex items-center gap-1">
-                          <button
-                            type="button"
-                            onclick={() => startEditSkill(skill)}
-                            class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
-                            aria-label="Edit skill"
-                          >
-                            <FontAwesomeIcon icon={faPencil} class="w-3 h-3" />
-                          </button>
-                          <button
-                            type="button"
-                            onclick={() => (deleteSkillId = skill.id)}
-                            class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
-                            aria-label="Delete skill"
-                          >
-                            <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
-                          </button>
-                        </div>
+                        </button>
+                        <button
+                          type="button"
+                          onclick={() => (deleteSkillId = skill.id)}
+                          class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
+                          aria-label="Delete skill"
+                        >
+                          <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
+                        </button>
                       </div>
                     {/if}
                   {/each}

@@ -23,11 +23,9 @@
 
   // Form states
   let newName = $state("");
-  let newLanguageCode = $state("");
   let newProficiency = $state("");
 
   let editName = $state("");
-  let editLanguageCode = $state("");
   let editProficiency = $state("");
 
   const proficiencyOptions = [
@@ -41,7 +39,6 @@
   function startEdit(lang: typeof languages[0]) {
     editingId = lang.id;
     editName = lang.name || "";
-    editLanguageCode = lang.language_code || "";
     editProficiency = lang.proficiency || "";
   }
 
@@ -52,7 +49,6 @@
   function resetAddForm() {
     showAddForm = false;
     newName = "";
-    newLanguageCode = "";
     newProficiency = "";
   }
 
@@ -128,7 +124,7 @@
       class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-primary)] p-4"
     >
       <h3 class="font-medium text-[var(--dash-text)] mb-4">Add New Language</h3>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label
             for="new-name"
@@ -143,24 +139,6 @@
             bind:value={newName}
             placeholder="e.g., English"
             required
-            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-          />
-        </div>
-
-        <div>
-          <label
-            for="new-code"
-            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-          >
-            Code
-          </label>
-          <input
-            type="text"
-            id="new-code"
-            name="language_code"
-            bind:value={newLanguageCode}
-            placeholder="e.g., en"
-            maxlength={10}
             class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
           />
         </div>
@@ -225,7 +203,7 @@
               use:enhance={handleEditSubmit}
             >
               <input type="hidden" name="id" value={lang.id} />
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label
                     for="edit-name-{lang.id}"
@@ -239,23 +217,6 @@
                     name="name"
                     bind:value={editName}
                     required
-                    class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    for="edit-code-{lang.id}"
-                    class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-                  >
-                    Code
-                  </label>
-                  <input
-                    type="text"
-                    id="edit-code-{lang.id}"
-                    name="language_code"
-                    bind:value={editLanguageCode}
-                    maxlength={10}
                     class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                   />
                 </div>
@@ -311,10 +272,6 @@
                 <div>
                   <h3 class="font-medium text-[var(--dash-text)]">
                     {lang.name}
-                    {#if lang.language_code}
-                      <span class="text-[var(--dash-text-secondary)] text-sm"
-                      >({lang.language_code})</span>
-                    {/if}
                   </h3>
                   <p class="text-sm text-[var(--dash-text-secondary)]">
                     {getProficiencyLabel(lang.proficiency)}
