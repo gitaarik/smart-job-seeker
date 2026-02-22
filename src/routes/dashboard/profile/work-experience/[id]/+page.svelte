@@ -6,6 +6,7 @@
     faBriefcase,
     faPlus,
     faTimes,
+    faUndo,
   } from "@fortawesome/free-solid-svg-icons";
   import MediaUpload from "$lib/components/MediaUpload.svelte";
   import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
@@ -41,6 +42,7 @@
     experience.work_experience_technologies.map((t) => t.name || ""),
   );
   let deletedTechnologies = $state<Set<number>>(new Set());
+  let lastAddedTechIndex = $state<number | null>(null);
 
   function formatDate(date: Date | string | null): string {
     if (!date) return "";
@@ -129,8 +131,11 @@
     }
   }
 
+  let lastAddedAchievementIndex = $state<number | null>(null);
+
   function addAchievement() {
     editAchievements = [...editAchievements, ""];
+    lastAddedAchievementIndex = editAchievements.length - 1;
   }
 
   function removeAchievement(index: number) {
@@ -158,6 +163,14 @@
 
   function addTechnology() {
     editTechnologies = [...editTechnologies, ""];
+    lastAddedTechIndex = editTechnologies.length - 1;
+  }
+
+  function focusIfNew(node: HTMLInputElement, isNew: boolean) {
+    if (isNew) {
+      node.focus();
+      lastAddedTechIndex = null;
+    }
   }
 
   function removeTechnology(index: number) {
@@ -353,6 +366,7 @@
                   type="text"
                   bind:value={editTechnologies[index]}
                   placeholder="Technology"
+                  use:focusIfNew={index === lastAddedTechIndex}
                   class="absolute inset-0 bg-transparent border-none focus:outline-none text-[var(--dash-text)] text-sm w-full pr-3"
                 />
               {/if}
@@ -399,9 +413,11 @@
     <AchievementsList
       bind:achievements={editAchievements}
       deletedIndices={deletedAchievements}
+      lastAddedIndex={lastAddedAchievementIndex}
       onAdd={addAchievement}
       onRemove={removeAchievement}
       onUndoRemove={undoRemoveAchievement}
+      onFocused={() => (lastAddedAchievementIndex = null)}
     />
     <div class="flex justify-end mt-4">
       <SectionSaveButton state={achievementsSaveState} onClick={saveAchievements} />

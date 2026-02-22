@@ -5,18 +5,29 @@
   interface Props {
     achievements: string[];
     deletedIndices: Set<number>;
+    lastAddedIndex: number | null;
     onAdd: () => void;
     onRemove: (index: number) => void;
     onUndoRemove: (index: number) => void;
+    onFocused: () => void;
   }
 
   let {
     achievements = $bindable(),
     deletedIndices,
+    lastAddedIndex,
     onAdd,
     onRemove,
     onUndoRemove,
+    onFocused,
   }: Props = $props();
+
+  function focusIfNew(node: HTMLInputElement, isNew: boolean) {
+    if (isNew) {
+      node.focus();
+      onFocused();
+    }
+  }
 </script>
 
 {#if achievements.length === 0}
@@ -41,6 +52,7 @@
             type="text"
             bind:value={achievements[index]}
             placeholder="Achievement description"
+            use:focusIfNew={index === lastAddedIndex}
             class="flex-1 px-4 py-3 border-none focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:ring-inset"
           />
           <button
