@@ -49,6 +49,15 @@ export function getEducationLogoUrl(edu: {
 }
 
 /**
+ * Get education banner URL
+ */
+export function getEducationBannerUrl(edu: {
+  banner_path?: string | null;
+}): string | null {
+  return getEntityMediaUrl(edu.banner_path);
+}
+
+/**
  * Get side project image URL
  */
 export function getSideProjectImageUrl(project: {

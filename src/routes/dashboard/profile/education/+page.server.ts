@@ -96,6 +96,7 @@ export const actions: Actions = {
     const end_date = formData.get("end_date") as string;
     const summary = formData.get("summary") as string;
     const deleteLogoPath = formData.get("delete_logo_path") as string;
+    const deleteBannerPath = formData.get("delete_banner_path") as string;
 
     if (isNaN(id)) {
       return fail(400, { error: "Invalid education ID" });
@@ -117,6 +118,11 @@ export const actions: Actions = {
     // Handle logo deletion if marked
     if (deleteLogoPath === "true") {
       await deleteEntityMedia("education", id, "logo_path");
+    }
+
+    // Handle banner deletion if marked
+    if (deleteBannerPath === "true") {
+      await deleteEntityMedia("education", id, "banner_path");
     }
 
     await db.education.update({
