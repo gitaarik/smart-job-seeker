@@ -6,10 +6,10 @@
     faBriefcase,
     faPlus,
     faTimes,
-    faUndo,
   } from "@fortawesome/free-solid-svg-icons";
   import MediaUpload from "$lib/components/MediaUpload.svelte";
   import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
+  import AchievementsList from "$lib/components/AchievementsList.svelte";
 
   type SaveState = "idle" | "saving" | "saved" | "error";
 
@@ -396,51 +396,13 @@
   <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
     <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">Achievements</h2>
 
-    {#if editAchievements.length === 0}
-      <p class="text-[var(--dash-text-secondary)] text-sm">No achievements added yet.</p>
-    {:else}
-      <div class="border border-[var(--dash-border)] rounded-md overflow-hidden">
-        {#each editAchievements as achievement, index}
-          {@const isDeleted = deletedAchievements.has(index)}
-          <div class="flex items-center {index > 0 ? 'border-t border-[var(--dash-border)]' : ''} {isDeleted ? 'opacity-50 bg-[var(--dash-bg)]/50' : ''}">
-            {#if isDeleted}
-              <span class="flex-1 px-4 py-3 text-[var(--dash-text-secondary)] line-through">{editAchievements[index]}</span>
-              <button
-                type="button"
-                onclick={() => undoRemoveAchievement(index)}
-                class="p-3 text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] transition-colors"
-                aria-label="Undo"
-              >
-                <FontAwesomeIcon icon={faUndo} class="w-4 h-4" />
-              </button>
-            {:else}
-              <input
-                type="text"
-                bind:value={editAchievements[index]}
-                placeholder="Achievement description"
-                class="flex-1 px-4 py-3 border-none focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:ring-inset"
-              />
-              <button
-                type="button"
-                onclick={() => removeAchievement(index)}
-                class="p-3 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
-                aria-label="Remove"
-              >
-                <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
-              </button>
-            {/if}
-          </div>
-        {/each}
-      </div>
-    {/if}
-    <button
-      type="button"
-      onclick={addAchievement}
-      class="text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] text-sm flex items-center gap-1 mt-3"
-    >
-      <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
-      Add Achievement
-    </button>
+    <AchievementsList
+      bind:achievements={editAchievements}
+      deletedIndices={deletedAchievements}
+      onAdd={addAchievement}
+      onRemove={removeAchievement}
+      onUndoRemove={undoRemoveAchievement}
+    />
     <div class="flex justify-end mt-4">
       <SectionSaveButton state={achievementsSaveState} onClick={saveAchievements} />
     </div>

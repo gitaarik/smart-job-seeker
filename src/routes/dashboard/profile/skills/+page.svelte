@@ -311,78 +311,6 @@
           <!-- Skills List (Expanded) -->
           {#if expandedCategoryId === category.id}
             <div class="border-t border-[var(--dash-border)] p-4">
-              <!-- Add Skill Button -->
-              {#if addingSkillToCategoryId !== category.id}
-                <button
-                  type="button"
-                  onclick={() => (addingSkillToCategoryId = category.id)}
-                  class="w-full flex items-center justify-center gap-2 py-2 border border-dashed border-[var(--dash-border)] rounded-lg text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] hover:border-[var(--dash-primary)] transition-colors mb-4"
-                >
-                  <FontAwesomeIcon icon={faPlus} class="w-4 h-4" />
-                  Add Skill
-                </button>
-              {:else}
-                <!-- Add Skill Form -->
-                <form
-                  method="POST"
-                  action="?/createSkill"
-                  use:enhance={handleAddSkillSubmit}
-                  class="bg-[var(--dash-bg)] rounded-lg p-3 mb-4"
-                >
-                  <input type="hidden" name="categoryId" value={category.id} />
-                  <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div>
-                      <input
-                        type="text"
-                        name="name"
-                        bind:value={newSkillName}
-                        placeholder="Skill name *"
-                        required
-                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                      />
-                    </div>
-                    <div>
-                      <select
-                        name="level"
-                        bind:value={newSkillLevel}
-                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                      >
-                        <option value="">Level</option>
-                        {#each levelOptions as option}
-                          <option value={option.value}>{option.label}</option>
-                        {/each}
-                      </select>
-                    </div>
-                    <div>
-                      <input
-                        type="number"
-                        name="years_experience"
-                        bind:value={newSkillYears}
-                        placeholder="Years"
-                        min="0"
-                        max="50"
-                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                      />
-                    </div>
-                  </div>
-                  <div class="flex justify-end gap-2 mt-3">
-                    <button
-                      type="button"
-                      onclick={resetAddSkill}
-                      class="px-3 py-1 text-sm text-[var(--dash-text)] hover:text-[var(--dash-error)] transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      class="px-3 py-1 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
-                    >
-                      Add
-                    </button>
-                  </div>
-                </form>
-              {/if}
-
               <!-- Skills -->
               {#if category.tech_skills.length === 0}
                 <p class="text-[var(--dash-text-secondary)] text-sm text-center py-4">
@@ -402,6 +330,7 @@
                         <input type="hidden" name="id" value={skill.id} />
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                           <div>
+                            <label class="block text-xs text-[var(--dash-text-secondary)] mb-1">Skill</label>
                             <input
                               type="text"
                               name="name"
@@ -411,12 +340,13 @@
                             />
                           </div>
                           <div>
+                            <label class="block text-xs text-[var(--dash-text-secondary)] mb-1">Level</label>
                             <select
                               name="level"
                               bind:value={editSkillLevel}
                               class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                             >
-                              <option value="">Level</option>
+                              <option value="">—</option>
                               {#each levelOptions as option}
                                 <option value={option.value}>
                                   {option.label}
@@ -425,11 +355,11 @@
                             </select>
                           </div>
                           <div>
+                            <label class="block text-xs text-[var(--dash-text-secondary)] mb-1">Years experience</label>
                             <input
                               type="number"
                               name="years_experience"
                               bind:value={editSkillYears}
-                              placeholder="Years"
                               min="0"
                               max="50"
                               class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
@@ -495,6 +425,79 @@
                     {/if}
                   {/each}
                 </div>
+              {/if}
+
+              <!-- Add Skill Button -->
+              {#if addingSkillToCategoryId !== category.id}
+                <button
+                  type="button"
+                  onclick={() => (addingSkillToCategoryId = category.id)}
+                  class="w-full flex items-center justify-center gap-2 py-2 border border-dashed border-[var(--dash-border)] rounded-lg text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] hover:border-[var(--dash-primary)] transition-colors mt-4"
+                >
+                  <FontAwesomeIcon icon={faPlus} class="w-4 h-4" />
+                  Add Skill
+                </button>
+              {:else}
+                <!-- Add Skill Form -->
+                <form
+                  method="POST"
+                  action="?/createSkill"
+                  use:enhance={handleAddSkillSubmit}
+                  class="bg-[var(--dash-bg)] rounded-lg p-3 mt-4"
+                >
+                  <input type="hidden" name="categoryId" value={category.id} />
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                      <label class="block text-xs text-[var(--dash-text-secondary)] mb-1">Skill <span class="text-[var(--dash-error)]">*</span></label>
+                      <input
+                        type="text"
+                        name="name"
+                        bind:value={newSkillName}
+                        required
+                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label class="block text-xs text-[var(--dash-text-secondary)] mb-1">Level</label>
+                      <select
+                        name="level"
+                        bind:value={newSkillLevel}
+                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                      >
+                        <option value="">—</option>
+                        {#each levelOptions as option}
+                          <option value={option.value}>{option.label}</option>
+                        {/each}
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-xs text-[var(--dash-text-secondary)] mb-1">Years experience</label>
+                      <input
+                        type="number"
+                        name="years_experience"
+                        bind:value={newSkillYears}
+                        min="0"
+                        max="50"
+                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                  <div class="flex justify-end gap-2 mt-3">
+                    <button
+                      type="button"
+                      onclick={resetAddSkill}
+                      class="px-3 py-1 text-sm text-[var(--dash-text)] hover:text-[var(--dash-error)] transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      class="px-3 py-1 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </form>
               {/if}
             </div>
           {/if}

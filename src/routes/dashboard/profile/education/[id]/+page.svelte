@@ -108,7 +108,7 @@
   <!-- Basic Info -->
   <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
     <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">Basic Information</h2>
-    <div class="space-y-4">
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label
@@ -235,7 +235,7 @@
         </div>
       </div>
 
-      <div>
+      <div class="flex flex-col">
         <label
           for="edit-summary"
           class="block text-sm font-medium text-[var(--dash-text)] mb-1"
@@ -245,9 +245,9 @@
         <textarea
           id="edit-summary"
           bind:value={editSummary}
-          rows={3}
+          rows={5}
           placeholder="Brief description of your studies, achievements, etc."
-          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
+          class="w-full flex-1 min-h-[120px] px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
         ></textarea>
       </div>
     </div>
