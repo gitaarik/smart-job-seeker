@@ -385,7 +385,7 @@ async function importProfileEntities(
         profile: profileId,
         name: w.name || "",
         location: w.location || "",
-        description: w.description || "",
+        description: "", // Field deprecated
         position: w.position || "",
         summary: w.summary || "",
         status: w.status || "draft",

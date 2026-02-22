@@ -24,7 +24,6 @@
   let editPosition = $state(experience.position || "");
   let editLocation = $state(experience.location || "");
   let editWebsite = $state(experience.website || "");
-  let editDescription = $state(experience.description || "");
   let editSummary = $state(experience.summary || "");
   let editStartDate = $state(formatDate(experience.start_date));
   let editEndDate = $state(formatDate(experience.end_date));
@@ -95,11 +94,19 @@
   </div>
 
   <div class="flex items-center gap-4">
-    <div
-      class="w-12 h-12 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center"
-    >
-      <FontAwesomeIcon icon={faBriefcase} class="w-6 h-6 text-[var(--dash-primary)]" />
-    </div>
+    {#if logoUrl}
+      <img
+        src={logoUrl}
+        alt="{experience.name} logo"
+        class="w-12 h-12 rounded-lg object-cover"
+      />
+    {:else}
+      <div
+        class="w-12 h-12 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center"
+      >
+        <FontAwesomeIcon icon={faBriefcase} class="w-6 h-6 text-[var(--dash-primary)]" />
+      </div>
+    {/if}
     <div>
       <h1 class="text-2xl font-bold text-[var(--dash-text)]">Edit Work Experience</h1>
       <p class="text-[var(--dash-text-secondary)]">{experience.name} - {experience.position}</p>
@@ -241,22 +248,6 @@
 
         <div>
           <label
-            for="edit-description"
-            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-          >
-            Company Description
-          </label>
-          <textarea
-            id="edit-description"
-            name="description"
-            bind:value={editDescription}
-            rows={2}
-            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
-          ></textarea>
-        </div>
-
-        <div>
-          <label
             for="edit-summary"
             class="block text-sm font-medium text-[var(--dash-text)] mb-1"
           >
@@ -377,6 +368,7 @@
             field="logo_path"
             currentUrl={logoUrl}
             label="Company Logo"
+            showHint={false}
             onUpload={(url) => (logoUrl = url)}
             onDelete={() => (logoUrl = null)}
           />
@@ -388,11 +380,15 @@
             field="banner_path"
             currentUrl={bannerUrl}
             label="Company Banner"
+            showHint={false}
             onUpload={(url) => (bannerUrl = url)}
             onDelete={() => (bannerUrl = null)}
           />
         </div>
       </div>
+      <p class="text-xs text-[var(--dash-text-secondary)] mt-3">
+        JPEG, PNG, WebP, or GIF. Max 5MB.
+      </p>
     </div>
 
     <!-- Actions -->

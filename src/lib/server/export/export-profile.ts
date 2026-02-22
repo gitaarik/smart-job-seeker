@@ -67,7 +67,6 @@ export async function buildProfileExport(
           id: true,
           name: true,
           location: true,
-          description: true,
           position: true,
           summary: true,
           status: true,
@@ -318,7 +317,6 @@ export async function buildProfileExport(
     work_experiences: profile.work_experiences.map((work) => ({
       name: work.name || undefined,
       location: work.location || undefined,
-      description: work.description || undefined,
       position: work.position || undefined,
       summary: work.summary || undefined,
       status: work.status || undefined,

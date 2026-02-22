@@ -8,7 +8,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   const layoutData = await parent();
 
   if (!layoutData.selectedProfile) {
-    redirect(302, "/dashboard/profile");
+    redirect(302, "/dashboard");
   }
 
   const id = parseInt(params.id);
@@ -78,7 +78,6 @@ export const actions: Actions = {
     const position = formData.get("position") as string;
     const location = formData.get("location") as string;
     const website = formData.get("website") as string;
-    const description = formData.get("description") as string;
     const summary = formData.get("summary") as string;
     const start_date = formData.get("start_date") as string;
     const end_date = formData.get("end_date") as string;
@@ -113,7 +112,6 @@ export const actions: Actions = {
         position: position.trim(),
         location: location?.trim() || "",
         website: website?.trim() || null,
-        description: description?.trim() || "",
         summary: summary?.trim() || "",
         start_date: start_date ? new Date(start_date) : null,
         end_date: end_date ? new Date(end_date) : null,

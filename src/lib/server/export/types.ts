@@ -138,7 +138,6 @@ export interface ExportedTechSkill {
 export interface ExportedWorkExperience {
   name?: string;
   location?: string;
-  description?: string;
   position?: string;
   summary?: string;
   status?: string;

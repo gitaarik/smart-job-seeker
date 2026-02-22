@@ -51,7 +51,6 @@ const PROFILE_SCHEMA_MAPPING = {
         fields: [
           "name",
           "location",
-          "description",
           "position",
           "summary",
           "start_date",
@@ -251,7 +250,6 @@ async function fetchProfileData(profileId: number) {
         select: {
           name: true,
           location: true,
-          description: true,
           position: true,
           summary: true,
           start_date: true,

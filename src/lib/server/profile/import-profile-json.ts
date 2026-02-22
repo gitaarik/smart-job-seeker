@@ -376,7 +376,7 @@ export async function importProfileFromJson(
         profile: profileId,
         name: w.name || "",
         location: w.location || "",
-        description: w.description || "",
+        description: "", // Field deprecated, kept for schema compatibility
         position: w.position || "",
         summary: w.summary || "",
         status: w.status || "draft",

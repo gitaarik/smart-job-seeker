@@ -35,7 +35,6 @@ export interface WorkExperience {
   startDate?: string;
   endDate?: string;
   summary?: string;
-  description?: string;
   achievements?: string[];
   technologies?: string[];
 }

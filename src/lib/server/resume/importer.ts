@@ -154,7 +154,7 @@ async function createWorkExperience(
       name: work.name,
       position: work.position,
       location: work.location || "",
-      description: work.description || "",
+      description: "", // Field deprecated
       summary: work.summary || "",
       website: work.website || null,
       start_date: work.startDate ? new Date(work.startDate) : null,
