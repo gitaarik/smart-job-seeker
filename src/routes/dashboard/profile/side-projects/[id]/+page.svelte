@@ -1,6 +1,5 @@
 <script lang="ts">
-  import type { ActionData, PageData } from "./$types";
-  import { enhance } from "$app/forms";
+  import type { PageData } from "./$types";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faArrowLeft,
@@ -10,15 +9,21 @@
     faTimes,
   } from "@fortawesome/free-solid-svg-icons";
   import MediaUpload from "$lib/components/MediaUpload.svelte";
+  import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
 
-  let { data, form }: { data: PageData; form: ActionData } = $props();
+  type SaveState = "idle" | "saving" | "saved" | "error";
+
+  let { data }: { data: PageData } = $props();
 
   let imageUrl = $state(data.imageUrl);
   let bannerUrl = $state(data.bannerUrl);
 
   let project = $derived(data.project);
-  let saving = $state(false);
-  let showSuccess = $state(false);
+
+  // Section save states
+  let basicSaveState = $state<SaveState>("idle");
+  let techSaveState = $state<SaveState>("idle");
+  let achievementsSaveState = $state<SaveState>("idle");
 
   // Form states
   let editName = $state(project.name || "");
@@ -41,22 +46,85 @@
     return d.toISOString().split("T")[0];
   }
 
-  function handleSubmit() {
-    saving = true;
-    showSuccess = false;
-    return async (
-      { result, update }: {
-        result: { type: string };
-        update: () => Promise<void>;
-      },
-    ) => {
-      await update();
-      saving = false;
-      if (result.type === "success") {
-        showSuccess = true;
-        setTimeout(() => (showSuccess = false), 3000);
+  async function saveBasicInfo() {
+    basicSaveState = "saving";
+    try {
+      const response = await fetch(`/api/side-project/${project.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          section: "basic",
+          name: editName,
+          url: editUrl,
+          url_label: editUrlLabel,
+          summary: editSummary,
+          stars: editStars || null,
+          start_date: editStartDate || null,
+          end_date: editEndDate || null,
+        }),
+      });
+
+      if (response.ok) {
+        basicSaveState = "saved";
+        setTimeout(() => (basicSaveState = "idle"), 2000);
+      } else {
+        basicSaveState = "error";
+        setTimeout(() => (basicSaveState = "idle"), 3000);
       }
-    };
+    } catch {
+      basicSaveState = "error";
+      setTimeout(() => (basicSaveState = "idle"), 3000);
+    }
+  }
+
+  async function saveTechnologies() {
+    techSaveState = "saving";
+    try {
+      const response = await fetch(`/api/side-project/${project.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          section: "technologies",
+          technologies: editTechnologies.filter((t) => t.trim()),
+        }),
+      });
+
+      if (response.ok) {
+        techSaveState = "saved";
+        setTimeout(() => (techSaveState = "idle"), 2000);
+      } else {
+        techSaveState = "error";
+        setTimeout(() => (techSaveState = "idle"), 3000);
+      }
+    } catch {
+      techSaveState = "error";
+      setTimeout(() => (techSaveState = "idle"), 3000);
+    }
+  }
+
+  async function saveAchievements() {
+    achievementsSaveState = "saving";
+    try {
+      const response = await fetch(`/api/side-project/${project.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          section: "achievements",
+          achievements: editAchievements.filter((a) => a.trim()),
+        }),
+      });
+
+      if (response.ok) {
+        achievementsSaveState = "saved";
+        setTimeout(() => (achievementsSaveState = "idle"), 2000);
+      } else {
+        achievementsSaveState = "error";
+        setTimeout(() => (achievementsSaveState = "idle"), 3000);
+      }
+    } catch {
+      achievementsSaveState = "error";
+      setTimeout(() => (achievementsSaveState = "idle"), 3000);
+    }
   }
 
   function addAchievement() {
@@ -116,294 +184,252 @@
     </div>
   </div>
 
-  {#if form?.error}
-    <div class="bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg p-4">
-      <p class="text-[var(--dash-error)] text-sm">{form.error}</p>
-    </div>
-  {/if}
-
-  {#if showSuccess}
-    <div class="bg-[var(--dash-success-light)] border border-[var(--dash-success)] rounded-lg p-4">
-      <p class="text-[var(--dash-success)] text-sm">Project updated successfully!</p>
-    </div>
-  {/if}
-
-  <form
-    method="POST"
-    action="?/update"
-    use:enhance={handleSubmit}
-    class="space-y-6"
-  >
-    <input
-      type="hidden"
-      name="achievements"
-      value={JSON.stringify(editAchievements)}
-    />
-    <input
-      type="hidden"
-      name="technologies"
-      value={JSON.stringify(editTechnologies)}
-    />
-
-    <!-- Basic Info -->
-    <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
-      <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">Basic Information</h2>
-      <div class="space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label
-              for="edit-name"
-              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-            >
-              Project Name <span class="text-[var(--dash-error)]">*</span>
-            </label>
-            <input
-              type="text"
-              id="edit-name"
-              name="name"
-              bind:value={editName}
-              required
-              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label
-              for="edit-url"
-              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-            >
-              URL
-            </label>
-            <input
-              type="url"
-              id="edit-url"
-              name="url"
-              bind:value={editUrl}
-              placeholder="https://github.com/user/project"
-              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label
-              for="edit-url-label"
-              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-            >
-              URL Label
-            </label>
-            <input
-              type="text"
-              id="edit-url-label"
-              name="url_label"
-              bind:value={editUrlLabel}
-              placeholder="e.g., View on GitHub"
-              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label
-              for="edit-stars"
-              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-            >
-              GitHub Stars
-            </label>
-            <input
-              type="number"
-              id="edit-stars"
-              name="stars"
-              bind:value={editStars}
-              min="0"
-              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label
-              for="edit-start-date"
-              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-            >
-              Start Date
-            </label>
-            <input
-              type="date"
-              id="edit-start-date"
-              name="start_date"
-              bind:value={editStartDate}
-              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label
-              for="edit-end-date"
-              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-            >
-              End Date
-            </label>
-            <input
-              type="date"
-              id="edit-end-date"
-              name="end_date"
-              bind:value={editEndDate}
-              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-            />
-          </div>
+  <!-- Basic Info -->
+  <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
+    <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">Basic Information</h2>
+    <div class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label
+            for="edit-name"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+          >
+            Project Name <span class="text-[var(--dash-error)]">*</span>
+          </label>
+          <input
+            type="text"
+            id="edit-name"
+            bind:value={editName}
+            required
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+          />
         </div>
 
         <div>
           <label
-            for="edit-summary"
+            for="edit-url"
             class="block text-sm font-medium text-[var(--dash-text)] mb-1"
           >
-            Summary
+            URL
           </label>
-          <textarea
-            id="edit-summary"
-            name="summary"
-            bind:value={editSummary}
-            rows={3}
-            placeholder="Brief description of the project..."
-            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
-          ></textarea>
+          <input
+            type="url"
+            id="edit-url"
+            bind:value={editUrl}
+            placeholder="https://github.com/user/project"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+          />
+        </div>
+
+        <div>
+          <label
+            for="edit-url-label"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+          >
+            URL Label
+          </label>
+          <input
+            type="text"
+            id="edit-url-label"
+            bind:value={editUrlLabel}
+            placeholder="e.g., View on GitHub"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+          />
+        </div>
+
+        <div>
+          <label
+            for="edit-stars"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+          >
+            GitHub Stars
+          </label>
+          <input
+            type="number"
+            id="edit-stars"
+            bind:value={editStars}
+            min="0"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+          />
+        </div>
+
+        <div>
+          <label
+            for="edit-start-date"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+          >
+            Start Date
+          </label>
+          <input
+            type="date"
+            id="edit-start-date"
+            bind:value={editStartDate}
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+          />
+        </div>
+
+        <div>
+          <label
+            for="edit-end-date"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+          >
+            End Date
+          </label>
+          <input
+            type="date"
+            id="edit-end-date"
+            bind:value={editEndDate}
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+          />
         </div>
       </div>
+
+      <div>
+        <label
+          for="edit-summary"
+          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+        >
+          Summary
+        </label>
+        <textarea
+          id="edit-summary"
+          bind:value={editSummary}
+          rows={3}
+          placeholder="Brief description of the project..."
+          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
+        ></textarea>
+      </div>
+    </div>
+    <div class="flex justify-end mt-4">
+      <SectionSaveButton state={basicSaveState} onClick={saveBasicInfo} />
+    </div>
+  </div>
+
+  <!-- Technologies -->
+  <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-semibold text-[var(--dash-text)]">Technologies</h2>
+      <button
+        type="button"
+        onclick={addTechnology}
+        class="text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] text-sm flex items-center gap-1"
+      >
+        <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
+        Add Technology
+      </button>
     </div>
 
-    <!-- Technologies -->
-    <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-semibold text-[var(--dash-text)]">Technologies</h2>
-        <button
-          type="button"
-          onclick={addTechnology}
-          class="text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] text-sm flex items-center gap-1"
-        >
-          <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
-          Add Technology
-        </button>
-      </div>
-
-      {#if editTechnologies.length === 0}
-        <p class="text-[var(--dash-text-secondary)] text-sm">No technologies added yet.</p>
-      {:else}
-        <div class="flex flex-wrap gap-2">
-          {#each editTechnologies as tech, index}
-            <div
-              class="flex items-center gap-1 bg-[var(--dash-bg)] rounded-lg pl-3 pr-1 py-1"
-            >
+    {#if editTechnologies.length === 0}
+      <p class="text-[var(--dash-text-secondary)] text-sm">No technologies added yet.</p>
+    {:else}
+      <div class="flex flex-wrap gap-2">
+        {#each editTechnologies as tech, index}
+          <div
+            class="flex items-center gap-1 bg-[var(--dash-bg)] rounded-lg pl-3 pr-1 py-1"
+          >
+            <div class="relative pr-3">
+              <span class="invisible whitespace-pre text-sm min-w-[3ch]">{editTechnologies[index] || "Technology"}</span>
               <input
                 type="text"
                 bind:value={editTechnologies[index]}
                 placeholder="Technology"
-                class="bg-transparent border-none focus:outline-none text-[var(--dash-text)] text-sm w-24"
+                class="absolute inset-0 bg-transparent border-none focus:outline-none text-[var(--dash-text)] text-sm w-full pr-3"
               />
-              <button
-                type="button"
-                onclick={() => removeTechnology(index)}
-                class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
-                aria-label="Remove"
-              >
-                <FontAwesomeIcon icon={faTimes} class="w-3 h-3" />
-              </button>
             </div>
-          {/each}
-        </div>
-      {/if}
-    </div>
-
-    <!-- Achievements -->
-    <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-semibold text-[var(--dash-text)]">Achievements</h2>
-        <button
-          type="button"
-          onclick={addAchievement}
-          class="text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] text-sm flex items-center gap-1"
-        >
-          <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
-          Add Achievement
-        </button>
+            <button
+              type="button"
+              onclick={() => removeTechnology(index)}
+              class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
+              aria-label="Remove"
+            >
+              <FontAwesomeIcon icon={faTimes} class="w-3 h-3" />
+            </button>
+          </div>
+        {/each}
       </div>
-
-      {#if editAchievements.length === 0}
-        <p class="text-[var(--dash-text-secondary)] text-sm">No achievements added yet.</p>
-      {:else}
-        <div class="space-y-3">
-          {#each editAchievements as achievement, index}
-            <div class="flex items-center gap-3">
-              <input
-                type="text"
-                bind:value={editAchievements[index]}
-                placeholder="Achievement description"
-                class="flex-1 px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-              />
-              <button
-                type="button"
-                onclick={() => removeAchievement(index)}
-                class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
-                aria-label="Remove"
-              >
-                <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
-              </button>
-            </div>
-          {/each}
-        </div>
-      {/if}
+    {/if}
+    <div class="flex justify-end mt-4">
+      <SectionSaveButton state={techSaveState} onClick={saveTechnologies} />
     </div>
+  </div>
 
-    <!-- Portfolio Images -->
-    <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
-      <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-2">Portfolio Images</h2>
-      <p class="text-sm text-[var(--dash-text-secondary)] mb-4">
-        These images are used for your portfolio display. They are not required for job search or matching.
-      </p>
-      <div class="flex gap-6">
-        <div class="max-w-xs">
-          <MediaUpload
-            entityType="side_project"
-            entityId={project.id}
-            field="image_path"
-            currentUrl={imageUrl}
-            label="Project Image"
-            showHint={false}
-            onUpload={(url) => (imageUrl = url)}
-            onDelete={() => (imageUrl = null)}
-          />
-        </div>
-        <div class="flex-1">
-          <MediaUpload
-            entityType="side_project"
-            entityId={project.id}
-            field="banner_path"
-            currentUrl={bannerUrl}
-            label="Project Banner"
-            showHint={false}
-            onUpload={(url) => (bannerUrl = url)}
-            onDelete={() => (bannerUrl = null)}
-          />
-        </div>
-      </div>
-      <p class="text-xs text-[var(--dash-text-secondary)] mt-3">
-        JPEG, PNG, WebP, or GIF. Max 5MB.
-      </p>
-    </div>
-
-    <!-- Actions -->
-    <div class="flex justify-end gap-3">
-      <a
-        href="/dashboard/profile/side-projects"
-        class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-      >
-        Cancel
-      </a>
+  <!-- Achievements -->
+  <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-semibold text-[var(--dash-text)]">Achievements</h2>
       <button
-        type="submit"
-        disabled={saving}
-        class="px-6 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50"
+        type="button"
+        onclick={addAchievement}
+        class="text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] text-sm flex items-center gap-1"
       >
-        {saving ? "Saving..." : "Save Changes"}
+        <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
+        Add Achievement
       </button>
     </div>
-  </form>
+
+    {#if editAchievements.length === 0}
+      <p class="text-[var(--dash-text-secondary)] text-sm">No achievements added yet.</p>
+    {:else}
+      <div class="space-y-3">
+        {#each editAchievements as achievement, index}
+          <div class="flex items-center gap-3">
+            <input
+              type="text"
+              bind:value={editAchievements[index]}
+              placeholder="Achievement description"
+              class="flex-1 px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+            />
+            <button
+              type="button"
+              onclick={() => removeAchievement(index)}
+              class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
+              aria-label="Remove"
+            >
+              <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
+            </button>
+          </div>
+        {/each}
+      </div>
+    {/if}
+    <div class="flex justify-end mt-4">
+      <SectionSaveButton state={achievementsSaveState} onClick={saveAchievements} />
+    </div>
+  </div>
+
+  <!-- Portfolio Images -->
+  <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
+    <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-2">Portfolio Images</h2>
+    <p class="text-sm text-[var(--dash-text-secondary)] mb-4">
+      These images are used for your portfolio display. They are not required for job search or matching.
+    </p>
+    <div class="flex gap-6">
+      <div class="max-w-xs">
+        <MediaUpload
+          entityType="side_project"
+          entityId={project.id}
+          field="image_path"
+          currentUrl={imageUrl}
+          label="Project Image"
+          showHint={false}
+          onUpload={(url) => (imageUrl = url)}
+          onDelete={() => (imageUrl = null)}
+        />
+      </div>
+      <div class="flex-1">
+        <MediaUpload
+          entityType="side_project"
+          entityId={project.id}
+          field="banner_path"
+          currentUrl={bannerUrl}
+          label="Project Banner"
+          showHint={false}
+          onUpload={(url) => (bannerUrl = url)}
+          onDelete={() => (bannerUrl = null)}
+        />
+      </div>
+    </div>
+    <p class="text-xs text-[var(--dash-text-secondary)] mt-3">
+      JPEG, PNG, WebP, or GIF. Max 5MB.
+    </p>
+  </div>
 </div>

@@ -1,21 +1,24 @@
 <script lang="ts">
-  import type { ActionData, PageData } from "./$types";
-  import { enhance } from "$app/forms";
+  import type { PageData } from "./$types";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faArrowLeft,
     faGraduationCap,
   } from "@fortawesome/free-solid-svg-icons";
   import MediaUpload from "$lib/components/MediaUpload.svelte";
+  import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
 
-  let { data, form }: { data: PageData; form: ActionData } = $props();
+  type SaveState = "idle" | "saving" | "saved" | "error";
+
+  let { data }: { data: PageData } = $props();
 
   let logoUrl = $state(data.logoUrl);
   let bannerUrl = $state(data.bannerUrl);
 
   let education = $derived(data.education);
-  let saving = $state(false);
-  let showSuccess = $state(false);
+
+  // Section save state
+  let basicSaveState = $state<SaveState>("idle");
 
   // Form states
   let editInstitution = $state(education.institution || "");
@@ -34,22 +37,36 @@
     return d.toISOString().split("T")[0];
   }
 
-  function handleSubmit() {
-    saving = true;
-    showSuccess = false;
-    return async (
-      { result, update }: {
-        result: { type: string };
-        update: () => Promise<void>;
-      },
-    ) => {
-      await update();
-      saving = false;
-      if (result.type === "success") {
-        showSuccess = true;
-        setTimeout(() => (showSuccess = false), 3000);
+  async function saveBasicInfo() {
+    basicSaveState = "saving";
+    try {
+      const response = await fetch(`/api/education/${education.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          institution: editInstitution,
+          area: editArea,
+          study_type: editStudyType,
+          location: editLocation,
+          url: editUrl,
+          graduation_year: editGraduationYear || null,
+          start_date: editStartDate || null,
+          end_date: editEndDate || null,
+          summary: editSummary,
+        }),
+      });
+
+      if (response.ok) {
+        basicSaveState = "saved";
+        setTimeout(() => (basicSaveState = "idle"), 2000);
+      } else {
+        basicSaveState = "error";
+        setTimeout(() => (basicSaveState = "idle"), 3000);
       }
-    };
+    } catch {
+      basicSaveState = "error";
+      setTimeout(() => (basicSaveState = "idle"), 3000);
+    }
   }
 </script>
 
@@ -88,233 +105,191 @@
     </div>
   </div>
 
-  {#if form?.error}
-    <div class="bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg p-4">
-      <p class="text-[var(--dash-error)] text-sm">{form.error}</p>
-    </div>
-  {/if}
-
-  {#if showSuccess}
-    <div class="bg-[var(--dash-success-light)] border border-[var(--dash-success)] rounded-lg p-4">
-      <p class="text-[var(--dash-success)] text-sm">Education updated successfully!</p>
-    </div>
-  {/if}
-
-  <form
-    method="POST"
-    action="?/update"
-    use:enhance={handleSubmit}
-    class="space-y-6"
-  >
-    <!-- Basic Info -->
-    <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
-      <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">Basic Information</h2>
-      <div class="space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label
-              for="edit-institution"
-              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-            >
-              Institution <span class="text-[var(--dash-error)]">*</span>
-            </label>
-            <input
-              type="text"
-              id="edit-institution"
-              name="institution"
-              bind:value={editInstitution}
-              required
-              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label
-              for="edit-area"
-              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-            >
-              Field of Study
-            </label>
-            <input
-              type="text"
-              id="edit-area"
-              name="area"
-              bind:value={editArea}
-              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label
-              for="edit-study-type"
-              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-            >
-              Degree Type
-            </label>
-            <input
-              type="text"
-              id="edit-study-type"
-              name="study_type"
-              bind:value={editStudyType}
-              placeholder="e.g., Bachelor's, Master's, PhD"
-              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label
-              for="edit-location"
-              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-            >
-              Location
-            </label>
-            <input
-              type="text"
-              id="edit-location"
-              name="location"
-              bind:value={editLocation}
-              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label
-              for="edit-url"
-              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-            >
-              Website URL
-            </label>
-            <input
-              type="url"
-              id="edit-url"
-              name="url"
-              bind:value={editUrl}
-              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label
-              for="edit-graduation-year"
-              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-            >
-              Graduation Year
-            </label>
-            <input
-              type="number"
-              id="edit-graduation-year"
-              name="graduation_year"
-              bind:value={editGraduationYear}
-              min="1950"
-              max="2100"
-              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label
-              for="edit-start-date"
-              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-            >
-              Start Date
-            </label>
-            <input
-              type="date"
-              id="edit-start-date"
-              name="start_date"
-              bind:value={editStartDate}
-              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label
-              for="edit-end-date"
-              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-            >
-              End Date
-            </label>
-            <input
-              type="date"
-              id="edit-end-date"
-              name="end_date"
-              bind:value={editEndDate}
-              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-            />
-          </div>
+  <!-- Basic Info -->
+  <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
+    <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">Basic Information</h2>
+    <div class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label
+            for="edit-institution"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+          >
+            Institution <span class="text-[var(--dash-error)]">*</span>
+          </label>
+          <input
+            type="text"
+            id="edit-institution"
+            bind:value={editInstitution}
+            required
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+          />
         </div>
 
         <div>
           <label
-            for="edit-summary"
+            for="edit-area"
             class="block text-sm font-medium text-[var(--dash-text)] mb-1"
           >
-            Summary
+            Field of Study
           </label>
-          <textarea
-            id="edit-summary"
-            name="summary"
-            bind:value={editSummary}
-            rows={3}
-            placeholder="Brief description of your studies, achievements, etc."
-            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
-          ></textarea>
-        </div>
-      </div>
-    </div>
-
-    <!-- Portfolio Images -->
-    <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
-      <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-2">Portfolio Images</h2>
-      <p class="text-sm text-[var(--dash-text-secondary)] mb-4">
-        These images are used for your portfolio display. They are not required for job search or matching.
-      </p>
-      <div class="flex gap-6">
-        <div class="max-w-xs">
-          <MediaUpload
-            entityType="education"
-            entityId={education.id}
-            field="logo_path"
-            currentUrl={logoUrl}
-            label="Institution Logo"
-            showHint={false}
-            onUpload={(url) => (logoUrl = url)}
-            onDelete={() => (logoUrl = null)}
+          <input
+            type="text"
+            id="edit-area"
+            bind:value={editArea}
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
           />
         </div>
-        <div class="flex-1">
-          <MediaUpload
-            entityType="education"
-            entityId={education.id}
-            field="banner_path"
-            currentUrl={bannerUrl}
-            label="Institution Banner"
-            showHint={false}
-            onUpload={(url) => (bannerUrl = url)}
-            onDelete={() => (bannerUrl = null)}
+
+        <div>
+          <label
+            for="edit-study-type"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+          >
+            Degree Type
+          </label>
+          <input
+            type="text"
+            id="edit-study-type"
+            bind:value={editStudyType}
+            placeholder="e.g., Bachelor's, Master's, PhD"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+          />
+        </div>
+
+        <div>
+          <label
+            for="edit-location"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+          >
+            Location
+          </label>
+          <input
+            type="text"
+            id="edit-location"
+            bind:value={editLocation}
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+          />
+        </div>
+
+        <div>
+          <label
+            for="edit-url"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+          >
+            Website URL
+          </label>
+          <input
+            type="url"
+            id="edit-url"
+            bind:value={editUrl}
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+          />
+        </div>
+
+        <div>
+          <label
+            for="edit-graduation-year"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+          >
+            Graduation Year
+          </label>
+          <input
+            type="number"
+            id="edit-graduation-year"
+            bind:value={editGraduationYear}
+            min="1950"
+            max="2100"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+          />
+        </div>
+
+        <div>
+          <label
+            for="edit-start-date"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+          >
+            Start Date
+          </label>
+          <input
+            type="date"
+            id="edit-start-date"
+            bind:value={editStartDate}
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+          />
+        </div>
+
+        <div>
+          <label
+            for="edit-end-date"
+            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+          >
+            End Date
+          </label>
+          <input
+            type="date"
+            id="edit-end-date"
+            bind:value={editEndDate}
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
           />
         </div>
       </div>
-      <p class="text-xs text-[var(--dash-text-secondary)] mt-3">
-        JPEG, PNG, WebP, or GIF. Max 5MB.
-      </p>
-    </div>
 
-    <!-- Actions -->
-    <div class="flex justify-end gap-3">
-      <a
-        href="/dashboard/profile/education"
-        class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
-      >
-        Cancel
-      </a>
-      <button
-        type="submit"
-        disabled={saving}
-        class="px-6 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50"
-      >
-        {saving ? "Saving..." : "Save Changes"}
-      </button>
+      <div>
+        <label
+          for="edit-summary"
+          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+        >
+          Summary
+        </label>
+        <textarea
+          id="edit-summary"
+          bind:value={editSummary}
+          rows={3}
+          placeholder="Brief description of your studies, achievements, etc."
+          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
+        ></textarea>
+      </div>
     </div>
-  </form>
+    <div class="flex justify-end mt-4">
+      <SectionSaveButton state={basicSaveState} onClick={saveBasicInfo} />
+    </div>
+  </div>
+
+  <!-- Portfolio Images -->
+  <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
+    <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-2">Portfolio Images</h2>
+    <p class="text-sm text-[var(--dash-text-secondary)] mb-4">
+      These images are used for your portfolio display. They are not required for job search or matching.
+    </p>
+    <div class="flex gap-6">
+      <div class="max-w-xs">
+        <MediaUpload
+          entityType="education"
+          entityId={education.id}
+          field="logo_path"
+          currentUrl={logoUrl}
+          label="Institution Logo"
+          showHint={false}
+          onUpload={(url) => (logoUrl = url)}
+          onDelete={() => (logoUrl = null)}
+        />
+      </div>
+      <div class="flex-1">
+        <MediaUpload
+          entityType="education"
+          entityId={education.id}
+          field="banner_path"
+          currentUrl={bannerUrl}
+          label="Institution Banner"
+          showHint={false}
+          onUpload={(url) => (bannerUrl = url)}
+          onDelete={() => (bannerUrl = null)}
+        />
+      </div>
+    </div>
+    <p class="text-xs text-[var(--dash-text-secondary)] mt-3">
+      JPEG, PNG, WebP, or GIF. Max 5MB.
+    </p>
+  </div>
 </div>
