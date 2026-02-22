@@ -112,10 +112,7 @@ async function updateTechnologies(id: number, technologies: string[]) {
   return json({ success: true });
 }
 
-async function updateAchievements(
-  id: number,
-  achievements: { title: string; description: string }[],
-) {
+async function updateAchievements(id: number, achievements: string[]) {
   // Delete existing achievements
   await db.work_experience_achievements.deleteMany({
     where: { work_experience: id },
@@ -123,12 +120,12 @@ async function updateAchievements(
 
   // Create new achievements
   for (let i = 0; i < achievements.length; i++) {
-    const ach = achievements[i];
-    if (ach.title?.trim() || ach.description?.trim()) {
+    const description = achievements[i];
+    if (description?.trim()) {
       await db.work_experience_achievements.create({
         data: {
-          title: ach.title?.trim() || null,
-          description: ach.description?.trim() || null,
+          title: null,
+          description: description.trim(),
           work_experience: id,
           sort: i,
           status: "published",

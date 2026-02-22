@@ -7,6 +7,7 @@
     faPlus,
     faStar,
     faTimes,
+    faUndo,
   } from "@fortawesome/free-solid-svg-icons";
   import MediaUpload from "$lib/components/MediaUpload.svelte";
   import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
@@ -39,6 +40,7 @@
   let editTechnologies = $state<string[]>(
     project.side_project_technologies.map((t) => t.name || ""),
   );
+  let deletedTechnologies = $state<Set<number>>(new Set());
 
   function formatDate(date: Date | string | null): string {
     if (!date) return "";
@@ -85,7 +87,7 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           section: "technologies",
-          technologies: editTechnologies.filter((t) => t.trim()),
+          technologies: editTechnologies.filter((t, i) => t.trim() && !deletedTechnologies.has(i)),
         }),
       });
 
@@ -140,7 +142,26 @@
   }
 
   function removeTechnology(index: number) {
-    editTechnologies = editTechnologies.filter((_, i) => i !== index);
+    if (!editTechnologies[index]?.trim()) {
+      // Empty tag - remove immediately
+      editTechnologies = editTechnologies.filter((_, i) => i !== index);
+      // Adjust deleted indices for removed item
+      const newDeleted = new Set<number>();
+      deletedTechnologies.forEach((i) => {
+        if (i > index) newDeleted.add(i - 1);
+        else if (i < index) newDeleted.add(i);
+      });
+      deletedTechnologies = newDeleted;
+    } else {
+      // Has content - soft delete
+      deletedTechnologies = new Set([...deletedTechnologies, index]);
+    }
+  }
+
+  function undoRemoveTechnology(index: number) {
+    const newSet = new Set(deletedTechnologies);
+    newSet.delete(index);
+    deletedTechnologies = newSet;
   }
 </script>
 
@@ -307,47 +328,57 @@
 
   <!-- Technologies -->
   <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-lg font-semibold text-[var(--dash-text)]">Technologies</h2>
-      <button
-        type="button"
-        onclick={addTechnology}
-        class="text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] text-sm flex items-center gap-1"
-      >
-        <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
-        Add Technology
-      </button>
-    </div>
+    <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">Technologies</h2>
 
-    {#if editTechnologies.length === 0}
-      <p class="text-[var(--dash-text-secondary)] text-sm">No technologies added yet.</p>
-    {:else}
-      <div class="flex flex-wrap gap-2">
+    <div class="flex flex-wrap gap-2">
         {#each editTechnologies as tech, index}
+          {@const isDeleted = deletedTechnologies.has(index)}
           <div
-            class="flex items-center gap-1 bg-[var(--dash-bg)] rounded-lg pl-3 pr-1 py-1"
+            class="flex items-center gap-1 rounded-lg pl-3 pr-1 py-1 {isDeleted ? 'bg-[var(--dash-bg)]/50 opacity-50' : 'bg-[var(--dash-bg)]'}"
           >
             <div class="relative pr-3">
-              <span class="invisible whitespace-pre text-sm min-w-[3ch]">{editTechnologies[index] || "Technology"}</span>
-              <input
-                type="text"
-                bind:value={editTechnologies[index]}
-                placeholder="Technology"
-                class="absolute inset-0 bg-transparent border-none focus:outline-none text-[var(--dash-text)] text-sm w-full pr-3"
-              />
+              <span class="invisible whitespace-pre text-sm min-w-[3ch] {isDeleted ? 'line-through' : ''}">{editTechnologies[index] || "Technology"}</span>
+              {#if isDeleted}
+                <span class="absolute inset-0 text-[var(--dash-text-secondary)] text-sm line-through pr-3">{editTechnologies[index]}</span>
+              {:else}
+                <input
+                  type="text"
+                  bind:value={editTechnologies[index]}
+                  placeholder="Technology"
+                  class="absolute inset-0 bg-transparent border-none focus:outline-none text-[var(--dash-text)] text-sm w-full pr-3"
+                />
+              {/if}
             </div>
-            <button
-              type="button"
-              onclick={() => removeTechnology(index)}
-              class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
-              aria-label="Remove"
-            >
-              <FontAwesomeIcon icon={faTimes} class="w-3 h-3" />
-            </button>
+            {#if isDeleted}
+              <button
+                type="button"
+                onclick={() => undoRemoveTechnology(index)}
+                class="p-1 text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] transition-colors"
+                aria-label="Undo"
+              >
+                <FontAwesomeIcon icon={faUndo} class="w-3 h-3" />
+              </button>
+            {:else}
+              <button
+                type="button"
+                onclick={() => removeTechnology(index)}
+                class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
+                aria-label="Remove"
+              >
+                <FontAwesomeIcon icon={faTimes} class="w-3 h-3" />
+              </button>
+            {/if}
           </div>
         {/each}
+        <button
+          type="button"
+          onclick={addTechnology}
+          class="flex items-center gap-1 text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] text-sm px-3 py-1"
+        >
+          <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
+          Add
+        </button>
       </div>
-    {/if}
     <div class="flex justify-end mt-4">
       <SectionSaveButton state={techSaveState} onClick={saveTechnologies} />
     </div>
