@@ -149,16 +149,12 @@
       <h3 class="font-medium text-[var(--dash-text)] mb-4">
         Add New Project Story
       </h3>
-      <p class="text-sm text-[var(--dash-text-secondary)] mb-4">
-        Use the STAR method to structure your interview stories: Situation,
-        Task, Action, Result.
-      </p>
       <div class="space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label
               for="new-title"
-              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+              class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
             >
               Title <span class="text-[var(--dash-error)]">*</span>
             </label>
@@ -176,7 +172,7 @@
           <div>
             <label
               for="new-category"
-              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+              class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
             >
               Category
             </label>
@@ -194,12 +190,16 @@
           </div>
         </div>
 
+        <p class="text-sm text-[var(--dash-text-secondary)]">
+          Use the STAR method to structure your story: Situation, Task, Action, Result.
+        </p>
+
         <div>
           <label
             for="new-situation"
-            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+            class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
           >
-            <span class="text-blue-600 font-bold">S</span>ituation
+            Situation
           </label>
           <textarea
             id="new-situation"
@@ -214,9 +214,9 @@
         <div>
           <label
             for="new-task"
-            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+            class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
           >
-            <span class="text-green-600 font-bold">T</span>ask
+            Task
           </label>
           <textarea
             id="new-task"
@@ -231,9 +231,9 @@
         <div>
           <label
             for="new-action"
-            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+            class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
           >
-            <span class="text-yellow-600 font-bold">A</span>ction
+            Action
           </label>
           <textarea
             id="new-action"
@@ -248,9 +248,9 @@
         <div>
           <label
             for="new-result"
-            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+            class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
           >
-            <span class="text-red-600 font-bold">R</span>esult
+            Result
           </label>
           <textarea
             id="new-result"
@@ -262,12 +262,16 @@
           ></textarea>
         </div>
 
+        <p class="text-sm text-[var(--dash-text-secondary)]">
+          Optional: Add a reflection on what you learned from this experience.
+        </p>
+
         <div>
           <label
             for="new-reflection"
-            class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+            class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
           >
-            Reflection (Optional)
+            Reflection (optional)
           </label>
           <textarea
             id="new-reflection"
@@ -372,7 +376,7 @@
                       <div>
                         <label
                           for="edit-title-{story.id}"
-                          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+                          class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
                         >
                           Title <span class="text-[var(--dash-error)]">*</span>
                         </label>
@@ -389,7 +393,7 @@
                       <div>
                         <label
                           for="edit-category-{story.id}"
-                          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+                          class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
                         >
                           Category
                         </label>
@@ -412,9 +416,9 @@
                     <div>
                       <label
                         for="edit-situation-{story.id}"
-                        class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+                        class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
                       >
-                        <span class="text-blue-600 font-bold">S</span>ituation
+                        Situation
                       </label>
                       <textarea
                         id="edit-situation-{story.id}"
@@ -428,9 +432,9 @@
                     <div>
                       <label
                         for="edit-task-{story.id}"
-                        class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+                        class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
                       >
-                        <span class="text-green-600 font-bold">T</span>ask
+                        Task
                       </label>
                       <textarea
                         id="edit-task-{story.id}"
@@ -444,9 +448,9 @@
                     <div>
                       <label
                         for="edit-action-{story.id}"
-                        class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+                        class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
                       >
-                        <span class="text-yellow-600 font-bold">A</span>ction
+                        Action
                       </label>
                       <textarea
                         id="edit-action-{story.id}"
@@ -460,9 +464,9 @@
                     <div>
                       <label
                         for="edit-result-{story.id}"
-                        class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+                        class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
                       >
-                        <span class="text-red-600 font-bold">R</span>esult
+                        Result
                       </label>
                       <textarea
                         id="edit-result-{story.id}"
@@ -476,9 +480,9 @@
                     <div>
                       <label
                         for="edit-reflection-{story.id}"
-                        class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+                        class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
                       >
-                        Reflection
+                        Reflection (optional)
                       </label>
                       <textarea
                         id="edit-reflection-{story.id}"
@@ -513,7 +517,7 @@
                 <div class="space-y-4">
                   {#if story.situation}
                     <div>
-                      <p class="text-sm font-medium text-blue-600 mb-1">
+                      <p class="text-sm font-semibold text-[var(--dash-text)] mb-1">
                         Situation
                       </p>
                       <p class="text-[var(--dash-text)] whitespace-pre-wrap">
@@ -524,7 +528,7 @@
 
                   {#if story.task}
                     <div>
-                      <p class="text-sm font-medium text-green-600 mb-1">
+                      <p class="text-sm font-semibold text-[var(--dash-text)] mb-1">
                         Task
                       </p>
                       <p class="text-[var(--dash-text)] whitespace-pre-wrap">
@@ -535,7 +539,7 @@
 
                   {#if story.action}
                     <div>
-                      <p class="text-sm font-medium text-yellow-600 mb-1">
+                      <p class="text-sm font-semibold text-[var(--dash-text)] mb-1">
                         Action
                       </p>
                       <p class="text-[var(--dash-text)] whitespace-pre-wrap">
@@ -546,7 +550,7 @@
 
                   {#if story.result}
                     <div>
-                      <p class="text-sm font-medium text-red-600 mb-1">
+                      <p class="text-sm font-semibold text-[var(--dash-text)] mb-1">
                         Result
                       </p>
                       <p class="text-[var(--dash-text)] whitespace-pre-wrap">
