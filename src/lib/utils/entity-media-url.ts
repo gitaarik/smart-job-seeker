@@ -65,3 +65,12 @@ export function getSideProjectImageUrl(project: {
 }): string | null {
   return getEntityMediaUrl(project.image_path);
 }
+
+/**
+ * Get side project banner URL
+ */
+export function getSideProjectBannerUrl(project: {
+  banner_path?: string | null;
+}): string | null {
+  return getEntityMediaUrl(project.banner_path);
+}

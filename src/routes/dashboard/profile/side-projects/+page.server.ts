@@ -100,6 +100,7 @@ export const actions: Actions = {
     const achievementsJson = formData.get("achievements") as string;
     const technologiesJson = formData.get("technologies") as string;
     const deleteImagePath = formData.get("delete_image_path") as string;
+    const deleteBannerPath = formData.get("delete_banner_path") as string;
 
     if (isNaN(id)) {
       return fail(400, { error: "Invalid project ID" });
@@ -121,6 +122,11 @@ export const actions: Actions = {
     // Handle image deletion if marked
     if (deleteImagePath === "true") {
       await deleteEntityMedia("side_project", id, "image_path");
+    }
+
+    // Handle banner deletion if marked
+    if (deleteBannerPath === "true") {
+      await deleteEntityMedia("side_project", id, "banner_path");
     }
 
     // Update main project

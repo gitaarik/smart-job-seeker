@@ -1060,6 +1060,7 @@ model side_projects {
   summary                   String?
   url_label                 String?                     @db.VarChar(255)
   image_path                String?                     @db.VarChar(255)
+  banner_path               String?                     @db.VarChar(255)
   tags                      Json?                       @db.Json
   side_project_achievements side_project_achievements[]
   side_project_technologies side_project_technologies[]

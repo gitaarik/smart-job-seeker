@@ -15,7 +15,7 @@ const UPLOADS_DIR = join(process.cwd(), "uploads");
 const ENTITY_CONFIG: Record<string, { fields: string[]; table: string }> = {
   work_experience: { fields: ["logo_path", "banner_path"], table: "work_experiences" },
   education: { fields: ["logo_path", "banner_path"], table: "education" },
-  side_project: { fields: ["image_path"], table: "side_projects" },
+  side_project: { fields: ["image_path", "banner_path"], table: "side_projects" },
 };
 
 interface UploadResult {
@@ -258,9 +258,11 @@ async function getEntityMediaPath(
     case "side_project": {
       const entity = await dbDirect.side_projects.findUnique({
         where: { id: entityId },
-        select: { image_path: true },
+        select: { image_path: true, banner_path: true },
       });
-      return field === "image_path" ? entity?.image_path ?? null : null;
+      if (field === "image_path") return entity?.image_path ?? null;
+      if (field === "banner_path") return entity?.banner_path ?? null;
+      return null;
     }
     default:
       return null;
@@ -308,6 +310,11 @@ async function updateEntityMediaPath(
         await dbDirect.side_projects.update({
           where: { id: entityId },
           data: { image_path: path },
+        });
+      } else if (field === "banner_path") {
+        await dbDirect.side_projects.update({
+          where: { id: entityId },
+          data: { banner_path: path },
         });
       }
       break;

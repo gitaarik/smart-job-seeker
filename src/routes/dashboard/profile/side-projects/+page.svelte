@@ -17,7 +17,7 @@
   import EmptyState from "../components/EmptyState.svelte";
   import DeleteConfirmModal from "../components/DeleteConfirmModal.svelte";
   import MediaUpload from "$lib/components/MediaUpload.svelte";
-  import { getSideProjectImageUrl } from "$lib/utils/entity-media-url";
+  import { getSideProjectImageUrl, getSideProjectBannerUrl } from "$lib/utils/entity-media-url";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -47,6 +47,7 @@
   let editAchievements = $state<string[]>([]);
   let editTechnologies = $state<string[]>([]);
   let editImageUrl = $state<string | null>(null);
+  let editBannerUrl = $state<string | null>(null);
 
   function formatDate(date: Date | string | null): string {
     if (!date) return "";
@@ -80,6 +81,7 @@
       t.name || ""
     );
     editImageUrl = getSideProjectImageUrl(project);
+    editBannerUrl = getSideProjectBannerUrl(project);
   }
 
   function cancelEdit() {
@@ -427,17 +429,30 @@
                   />
 
                   <div class="space-y-4">
-                    <!-- Project Image -->
-                    <div class="max-w-xs">
-                      <MediaUpload
-                        entityType="side_project"
-                        entityId={project.id}
-                        field="image_path"
-                        currentUrl={editImageUrl}
-                        label="Project Image"
-                        onUpload={(url) => (editImageUrl = url)}
-                        onDelete={() => (editImageUrl = null)}
-                      />
+                    <!-- Project Image and Banner -->
+                    <div class="flex gap-6">
+                      <div class="max-w-xs">
+                        <MediaUpload
+                          entityType="side_project"
+                          entityId={project.id}
+                          field="image_path"
+                          currentUrl={editImageUrl}
+                          label="Project Image"
+                          onUpload={(url) => (editImageUrl = url)}
+                          onDelete={() => (editImageUrl = null)}
+                        />
+                      </div>
+                      <div class="flex-1">
+                        <MediaUpload
+                          entityType="side_project"
+                          entityId={project.id}
+                          field="banner_path"
+                          currentUrl={editBannerUrl}
+                          label="Project Banner"
+                          onUpload={(url) => (editBannerUrl = url)}
+                          onDelete={() => (editBannerUrl = null)}
+                        />
+                      </div>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
