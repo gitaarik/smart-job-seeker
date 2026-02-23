@@ -436,12 +436,25 @@ async function generateWithLangChain(
 
         // Add JSON mode instruction with schema to the last user message
         // Use compact JSON (no pretty-printing) to reduce token usage
+        // IMPORTANT: Use simple format description - Llama 4 tends to echo JSON schemas
         const lastMessage = langChainMessages[langChainMessages.length - 1];
         if (lastMessage instanceof HumanMessage) {
+          // Extract just the properties from the schema for a cleaner prompt
+          const schemaObj = jsonSchema as Record<string, unknown>;
+          const properties = (schemaObj.properties || schemaObj) as Record<string, unknown>;
+
+          // Build a simple example-based format description
+          let formatDesc = "Respond with a JSON object using these exact field names:\n";
+          for (const [key, value] of Object.entries(properties)) {
+            const prop = value as Record<string, unknown>;
+            const typeInfo = prop.type || (prop.items ? "array" : "object");
+            formatDesc += `- "${key}": ${typeInfo}\n`;
+          }
+
           lastMessage.content = lastMessage.content +
-            "\n\nRespond with valid JSON only matching this schema:\n\n" +
-            JSON.stringify(jsonSchema) +
-            "\n\nUse exact field names from schema.";
+            "\n\n## OUTPUT FORMAT\n" +
+            formatDesc +
+            "\nRespond with ONLY the JSON object. No schema definitions, no explanations.";
         }
 
         // Invoke with JSON mode enabled to ensure valid JSON output
