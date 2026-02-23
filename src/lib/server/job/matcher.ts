@@ -243,6 +243,78 @@ export async function calculateMatch(
 }
 
 /**
+ * Get jobs that need matching (no existing match for this profile)
+ * Uses an efficient LEFT JOIN query to find unmatched jobs
+ * @param profileId - Profile ID to check matches for
+ * @param preferences - User's matching preferences for filtering
+ * @param profileSkills - User's technical skills for filtering
+ * @param limit - Maximum number of jobs to return
+ * @returns Array of unmatched eligible jobs
+ */
+export async function getUnmatchedJobs(
+  profileId: number,
+  preferences: JobMatchPreferences,
+  profileSkills: string[],
+  limit: number = 50,
+): Promise<jobs[]> {
+  // Validate required preferences
+  if (
+    !preferences.remote_options ||
+    preferences.remote_options.length === 0
+  ) {
+    throw new Error(
+      "Remote options preferences are required for job matching",
+    );
+  }
+
+  if (!preferences.job_types || preferences.job_types.length === 0) {
+    throw new Error("Job types preferences are required for job matching");
+  }
+
+  if (!profileSkills || profileSkills.length === 0) {
+    throw new Error(
+      "Profile must have at least one skill for job matching",
+    );
+  }
+
+  // Query for jobs that have no match record for this profile
+  // Combined with the same eligibility filters as filterEligibleJobs
+  const jobs = await db.$queryRaw<jobs[]>`
+    SELECT j.* FROM jobs j
+    LEFT JOIN job_matches jm ON j.id = jm.job AND jm.profile = ${profileId}
+    WHERE jm.id IS NULL
+    AND j.status != 'archived'
+    -- Work location overlap (REQUIRED)
+    AND (
+      j.work_location IS NULL
+      OR j.work_location::jsonb ?| array[${Prisma.join(preferences.remote_options)}]::text[]
+    )
+    -- Job types overlap (REQUIRED)
+    AND (
+      j.job_types IS NULL
+      OR j.job_types::jsonb ?| array[${Prisma.join(preferences.job_types)}]::text[]
+    )
+    -- Skills overlap (AT LEAST ONE match in required OR preferred)
+    AND (
+      (j.skills_required IS NULL AND j.skills_preferred IS NULL)
+      OR j.skills_required::jsonb ?| array[${Prisma.join(profileSkills)}]::text[]
+      OR j.skills_preferred::jsonb ?| array[${Prisma.join(profileSkills)}]::text[]
+    )
+    ORDER BY j.date_created DESC
+    LIMIT ${limit}
+  `;
+
+  // Apply location filter in memory (more flexible matching)
+  if (preferences.locations && preferences.locations.length > 0) {
+    return jobs.filter((job) =>
+      matchesLocation(job.office_location, preferences.locations!)
+    );
+  }
+
+  return jobs;
+}
+
+/**
  * Create or update job match record
  * @param match - Match result to save
  * @returns Object with match ID and whether it was created or updated
