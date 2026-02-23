@@ -4,11 +4,11 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faCheck,
-    faCog,
     faExclamationTriangle,
     faExternalLinkAlt,
     faPencil,
     faPlay,
+    faSearch,
     faSpinner,
     faTimes,
     faTrash,
@@ -102,8 +102,8 @@
 
 <div class="space-y-6">
   <SectionHeader
-    title="Search Settings"
-    icon={faCog}
+    title="Search Tasks"
+    icon={faSearch}
     showAddButton={!showAddForm && jobSearches.length > 0}
     addLabel="Add Search"
     onAdd={() => (showAddForm = true)}
@@ -230,9 +230,9 @@
   <!-- Job Searches List -->
   {#if jobSearches.length === 0 && !showAddForm}
     <EmptyState
-      icon={faCog}
-      title="No job searches yet"
-      description="Create job search configurations to automatically find matching jobs from LinkedIn, Indeed, and other platforms."
+      icon={faSearch}
+      title="No search tasks yet"
+      description="Create search tasks to automatically find matching jobs from LinkedIn, Indeed, and other platforms."
       actionLabel="Add First Search"
       onAction={() => (showAddForm = true)}
     />
@@ -358,7 +358,7 @@
                   "
                 >
                   <FontAwesomeIcon
-                    icon={faCog}
+                    icon={faSearch}
                     class="
                       w-5 h-5 {search.status === 'active'
                       ? 'text-[var(--dash-success)]'

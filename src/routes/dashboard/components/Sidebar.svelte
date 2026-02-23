@@ -56,9 +56,9 @@
       icon: faSearch,
       children: [
         {
-          label: "Search Settings",
+          label: "Search Tasks",
           href: "/dashboard/jobs/settings",
-          icon: faCog,
+          icon: faSearch,
         },
         {
           label: "Job Matches",
