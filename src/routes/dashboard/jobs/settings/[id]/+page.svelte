@@ -13,6 +13,7 @@
     faExclamationTriangle,
     faExternalLinkAlt,
     faEye,
+    faForward,
     faHistory,
     faPlay,
     faSpinner,
@@ -25,6 +26,7 @@
   let jobSearch = $state(data.jobSearch);
   let isStarting = $state(false);
   let isStopping = $state(false);
+  let isSendingFeedback = $state(false);
   let errorMessage = $state<string | null>(null);
   let showBrowser = $state(false);
   let liveUrl = $state<string | null>(null);
@@ -351,6 +353,47 @@
     }
   }
 
+  async function sendFeedback(response: "continue" | "skip" | "cancel") {
+    if (!currentRunId) {
+      errorMessage = "No active run to respond to";
+      return;
+    }
+
+    isSendingFeedback = true;
+    errorMessage = null;
+
+    try {
+      const res = await fetch(`/api/job-searches/${jobSearch.id}/runs/${currentRunId}/respond`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ response }),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        errorMessage = result.message || `Failed to send ${response} response`;
+        return;
+      }
+
+      // If cancelled, update UI immediately
+      if (response === "cancel") {
+        jobSearch.status = "cancelled";
+        jobSearch.status_message = "Cancelled by user";
+        stopPolling();
+        showBrowser = false;
+        liveUrl = null;
+        await loadRuns();
+      }
+      // For continue/skip, the scraper will pick it up and status will update via polling
+    } catch (err) {
+      errorMessage = `Failed to send ${response} response`;
+      console.error(err);
+    } finally {
+      isSendingFeedback = false;
+    }
+  }
+
   onMount(() => {
     // Load runs history
     loadRuns();
@@ -458,11 +501,34 @@
         <div class="w-10 h-10 rounded-full bg-[var(--dash-warning-light)] flex items-center justify-center">
           <FontAwesomeIcon icon={faExclamationTriangle} class="w-5 h-5 text-[var(--dash-warning)]" />
         </div>
-        <div>
+        <div class="flex-1">
           <p class="font-medium text-[var(--dash-warning)]">{jobSearch.status_message}</p>
           <p class="text-sm text-[var(--dash-text-secondary)]">
-            Manual action needed - use the browser view below
+            Complete the action in the browser view, then click Continue
           </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button
+            onclick={() => sendFeedback("continue")}
+            disabled={isSendingFeedback}
+            class="flex items-center gap-2 px-4 py-2 bg-[var(--dash-success)] text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {#if isSendingFeedback}
+              <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 animate-spin" />
+            {:else}
+              <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
+            {/if}
+            <span>Continue</span>
+          </button>
+          <button
+            onclick={() => sendFeedback("skip")}
+            disabled={isSendingFeedback}
+            class="flex items-center gap-2 px-3 py-2 bg-[var(--dash-bg)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg hover:bg-[var(--dash-border)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Skip current action and move to next"
+          >
+            <FontAwesomeIcon icon={faForward} class="w-4 h-4" />
+            <span>Skip</span>
+          </button>
         </div>
       {:else if jobSearch.status === "success"}
         <div class="w-10 h-10 rounded-full bg-[var(--dash-success-light)] flex items-center justify-center">
@@ -569,16 +635,44 @@
         ></iframe>
       </div>
       <div class="p-3 bg-[var(--dash-bg)] border-t border-[var(--dash-border)]">
-        <p class="text-sm text-[var(--dash-text-secondary)]">
-          {#if isBlocked}
-            Complete the required action (login, CAPTCHA, or verification) in the browser above.
-            The scrape will continue automatically when done.
-          {:else if isRunning}
+        {#if isBlocked}
+          <div class="flex items-center justify-between">
+            <p class="text-sm text-[var(--dash-text-secondary)]">
+              Complete the required action (login, CAPTCHA, or verification) in the browser above, then click Continue.
+            </p>
+            <div class="flex items-center gap-2 ml-4">
+              <button
+                onclick={() => sendFeedback("continue")}
+                disabled={isSendingFeedback}
+                class="flex items-center gap-2 px-4 py-2 bg-[var(--dash-success)] text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              >
+                {#if isSendingFeedback}
+                  <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
+                {:else}
+                  <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                {/if}
+                <span>Continue</span>
+              </button>
+              <button
+                onclick={() => sendFeedback("skip")}
+                disabled={isSendingFeedback}
+                class="flex items-center gap-2 px-3 py-2 bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg hover:bg-[var(--dash-border)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                title="Skip current action"
+              >
+                <FontAwesomeIcon icon={faForward} class="w-3 h-3" />
+                <span>Skip</span>
+              </button>
+            </div>
+          </div>
+        {:else if isRunning}
+          <p class="text-sm text-[var(--dash-text-secondary)]">
             Watch the scrape progress. You may need to intervene if a CAPTCHA or login is required.
-          {:else}
+          </p>
+        {:else}
+          <p class="text-sm text-[var(--dash-text-secondary)]">
             Browser session view. Start a scrape to see activity.
-          {/if}
-        </p>
+          </p>
+        {/if}
       </div>
     </div>
   {:else}

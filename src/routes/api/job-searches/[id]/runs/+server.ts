@@ -54,6 +54,7 @@ export const GET: RequestHandler = async ({ params, locals, url }) => {
         error_message: true,
         triggered_by: true,
         live_url: true,
+        user_response: true,
       },
     }),
     db.job_search_runs.count({

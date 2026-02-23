@@ -6968,7 +6968,8 @@ export const Job_search_runsScalarFieldEnum = {
   error_message: 'error_message',
   triggered_by: 'triggered_by',
   bullmq_job_id: 'bullmq_job_id',
-  live_url: 'live_url'
+  live_url: 'live_url',
+  user_response: 'user_response'
 } as const
 
 export type Job_search_runsScalarFieldEnum = (typeof Job_search_runsScalarFieldEnum)[keyof typeof Job_search_runsScalarFieldEnum]
