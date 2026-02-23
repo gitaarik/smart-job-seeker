@@ -31,13 +31,14 @@ export const GET: RequestHandler = async ({ url, locals }) => {
   const jobSearchId = jobSearchIdParam ? parseInt(jobSearchIdParam) : undefined;
 
   // Create readable stream for SSE
+  const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
       let lastTimestamp = new Date();
       let isActive = true;
 
       // Send initial connection message
-      controller.enqueue(`data: ${JSON.stringify({ type: "connected" })}\n\n`);
+      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "connected" })}\n\n`));
 
       // Poll for new logs
       const poll = async () => {
@@ -79,12 +80,12 @@ export const GET: RequestHandler = async ({ url, locals }) => {
               jobSearchId: log.job_search_id,
               jobSearchName: log.job_searches?.name,
             };
-            controller.enqueue(`data: ${JSON.stringify(data)}\n\n`);
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
             lastTimestamp = log.timestamp;
           }
 
           // Send heartbeat to keep connection alive
-          controller.enqueue(`data: ${JSON.stringify({ type: "heartbeat" })}\n\n`);
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "heartbeat" })}\n\n`));
         } catch (err) {
           console.error("SSE poll error:", err);
         }
