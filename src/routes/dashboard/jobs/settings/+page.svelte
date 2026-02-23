@@ -161,7 +161,7 @@
             >
               <option value="">Select a platform</option>
               {#each platforms as platform}
-                <option value={platform.id}>{platform.name}</option>
+                <option value={String(platform.id)}>{platform.name}</option>
               {/each}
             </select>
           </div>
@@ -283,7 +283,7 @@
                     >
                       <option value="">Select a platform</option>
                       {#each platforms as platform}
-                        <option value={platform.id}>{platform.name}</option>
+                        <option value={String(platform.id)}>{platform.name}</option>
                       {/each}
                     </select>
                   </div>

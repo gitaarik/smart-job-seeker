@@ -14,6 +14,7 @@
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import EmptyState from "../../profile/components/EmptyState.svelte";
   import DeleteConfirmModal from "../../profile/components/DeleteConfirmModal.svelte";
+  import SimpleEditor from "$lib/components/SimpleEditor.svelte";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -139,22 +140,15 @@
 
         <div>
           <label
-            for="new-content"
             class="block text-sm font-medium text-[var(--dash-text)] mb-1"
           >
             Content
           </label>
-          <textarea
-            id="new-content"
-            name="content"
-            bind:value={newContent}
-            rows={12}
+          <input type="hidden" name="content" value={newContent} />
+          <SimpleEditor
+            bind:content={newContent}
             placeholder="Add your notes, key points, or reference material..."
-            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent font-mono text-sm resize-y"
-          ></textarea>
-          <p class="text-xs text-[var(--dash-text-secondary)] mt-1">
-            Plain text format. Great for quick reference during interview prep.
-          </p>
+          />
         </div>
       </div>
 
@@ -254,18 +248,15 @@
 
                     <div>
                       <label
-                        for="edit-content-{sheet.id}"
                         class="block text-sm font-medium text-[var(--dash-text)] mb-1"
                       >
                         Content
                       </label>
-                      <textarea
-                        id="edit-content-{sheet.id}"
-                        name="content"
-                        bind:value={editContent}
-                        rows={15}
-                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent font-mono text-sm resize-y"
-                      ></textarea>
+                      <input type="hidden" name="content" value={editContent} />
+                      <SimpleEditor
+                        bind:content={editContent}
+                        placeholder="Add your notes..."
+                      />
                     </div>
                   </div>
 
@@ -291,9 +282,9 @@
                 <!-- View Mode -->
                 <div class="space-y-4">
                   {#if sheet.content}
-                    <pre
-                      class="whitespace-pre-wrap text-sm text-[var(--dash-text)] bg-[var(--dash-bg)] p-4 rounded-lg overflow-x-auto font-mono"
-                    >{sheet.content}</pre>
+                    <div class="cheatsheet-content text-sm text-[var(--dash-text)]">
+                      {@html sheet.content}
+                    </div>
                   {:else}
                     <p class="text-[var(--dash-text-secondary)] italic">
                       No content yet
@@ -351,3 +342,35 @@
     }
   }}
 />
+
+<style>
+  .cheatsheet-content :global(h3) {
+    font-size: 1.1em;
+    font-weight: 600;
+    margin-top: 0.75em;
+    margin-bottom: 0.5em;
+  }
+  .cheatsheet-content :global(p) {
+    margin-bottom: 0.5em;
+  }
+  .cheatsheet-content :global(ul),
+  .cheatsheet-content :global(ol) {
+    margin-left: 1.25em;
+    margin-bottom: 0.5em;
+  }
+  .cheatsheet-content :global(ul) {
+    list-style-type: disc;
+  }
+  .cheatsheet-content :global(ol) {
+    list-style-type: decimal;
+  }
+  .cheatsheet-content :global(li) {
+    margin-bottom: 0.25em;
+  }
+  .cheatsheet-content :global(strong) {
+    font-weight: 600;
+  }
+  .cheatsheet-content :global(em) {
+    font-style: italic;
+  }
+</style>
