@@ -9,6 +9,8 @@
     faPause,
     faPlay,
     faDownload,
+    faCopy,
+    faCheck,
   } from "@fortawesome/free-solid-svg-icons";
 
   let { data }: { data: PageData } = $props();
@@ -26,6 +28,7 @@
   let selectedJobSearch = $state<string>("");
   let isPaused = $state(false);
   let autoScroll = $state(true);
+  let copied = $state(false);
   let eventSource: EventSource | null = null;
   let logContainer: HTMLDivElement | null = null;
 
@@ -123,14 +126,17 @@
     logs = [];
   }
 
-  function downloadLogs() {
-    const content = logs
+  function formatLogsAsText(): string {
+    return logs
       .map((log) => {
         const prefix = log.jobSearchName ? `[${log.jobSearchName}]` : "";
         return `${log.timestamp} [${log.level.toUpperCase()}] ${prefix} ${log.message}`;
       })
       .join("\n");
+  }
 
+  function downloadLogs() {
+    const content = formatLogsAsText();
     const blob = new Blob([content], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -138,6 +144,15 @@
     a.download = `scraper-logs-${new Date().toISOString().slice(0, 10)}.txt`;
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  async function copyLogs() {
+    const content = formatLogsAsText();
+    await navigator.clipboard.writeText(content);
+    copied = true;
+    setTimeout(() => {
+      copied = false;
+    }, 2000);
   }
 
   function handleScroll() {
@@ -209,6 +224,18 @@
       >
         <FontAwesomeIcon icon={isPaused ? faPlay : faPause} class="w-3 h-3" />
         {isPaused ? "Resume" : "Pause"}
+      </button>
+
+      <!-- Copy -->
+      <button
+        onclick={copyLogs}
+        class="flex items-center gap-2 px-3 py-1.5 rounded text-sm transition-colors {copied
+          ? 'bg-green-500/20 text-green-400'
+          : 'bg-[var(--dash-bg)] text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]'}"
+        title="Copy logs to clipboard"
+      >
+        <FontAwesomeIcon icon={copied ? faCheck : faCopy} class="w-3 h-3" />
+        {copied ? "Copied!" : "Copy"}
       </button>
 
       <!-- Download -->
