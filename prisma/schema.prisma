@@ -738,6 +738,9 @@ model job_searches {
   name                   String                   @db.VarChar(255)
   profile                Int
   last_run               DateTime?                @db.Timestamptz(6)
+  last_run_status        String?                  @db.VarChar(50)
+  last_run_error         String?                  @db.VarChar(255)
+  last_run_jobs_found    Int?
   search_url             String?
   platform               Int?
   navigation_type        String?                  @db.VarChar(255)

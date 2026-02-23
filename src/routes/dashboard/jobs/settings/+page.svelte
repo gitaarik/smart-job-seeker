@@ -5,9 +5,11 @@
   import {
     faCheck,
     faCog,
+    faExclamationTriangle,
     faExternalLinkAlt,
     faPencil,
     faPlay,
+    faSpinner,
     faTimes,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
@@ -381,11 +383,36 @@
                       {search.status}
                     </span>
                   </div>
-                  <p class="text-sm text-[var(--dash-text-secondary)]">
+                  <p class="text-sm text-[var(--dash-text-secondary)] flex items-center gap-1 flex-wrap">
                     {#if search.job_platforms}
-                      {search.job_platforms.name} •
+                      <span>{search.job_platforms.name}</span>
+                      <span>•</span>
                     {/if}
-                    Last run: {formatDate(search.last_run)}
+                    {#if search.last_run_status === "running"}
+                      <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 text-[var(--dash-primary)] animate-spin" />
+                      <span>Running...</span>
+                    {:else if search.last_run_status === "success"}
+                      <FontAwesomeIcon icon={faCheck} class="w-3 h-3 text-[var(--dash-success)]" />
+                      <span>{formatDate(search.last_run)}</span>
+                      {#if search.last_run_jobs_found}
+                        <span class="text-[var(--dash-text-muted)]">({search.last_run_jobs_found} jobs)</span>
+                      {/if}
+                    {:else if search.last_run_status === "blocked"}
+                      <FontAwesomeIcon icon={faExclamationTriangle} class="w-3 h-3 text-[var(--dash-warning)]" />
+                      <span class="text-[var(--dash-warning)]">{search.last_run_error}</span>
+                    {:else if search.last_run_status === "partial"}
+                      <FontAwesomeIcon icon={faExclamationTriangle} class="w-3 h-3 text-[var(--dash-warning)]" />
+                      <span>{formatDate(search.last_run)}</span>
+                      <span class="text-[var(--dash-text-muted)]">— {search.last_run_error}</span>
+                    {:else if search.last_run_status === "error"}
+                      <FontAwesomeIcon icon={faTimes} class="w-3 h-3 text-[var(--dash-error)]" />
+                      <span class="text-[var(--dash-error)]">{search.last_run_error}</span>
+                    {:else if search.last_run}
+                      <FontAwesomeIcon icon={faCheck} class="w-3 h-3 text-[var(--dash-success)]" />
+                      <span>{formatDate(search.last_run)}</span>
+                    {:else}
+                      <span class="text-[var(--dash-text-muted)]">Never run</span>
+                    {/if}
                   </p>
                 </div>
               </div>
