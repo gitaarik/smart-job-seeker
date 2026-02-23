@@ -209,6 +209,21 @@
   let mobileMenuOpen = $state(false);
   let expandedSections = $state<Set<string>>(new Set());
 
+  // Check if a child menu item should be considered active
+  function isChildHrefActive(href: string, currentPath: string): boolean {
+    if (currentPath === href || currentPath.startsWith(href + "/")) {
+      return true;
+    }
+    // Job detail pages (/dashboard/jobs/123) should be considered part of "Browse All Jobs"
+    if (href === "/dashboard/jobs/browse") {
+      const jobDetailMatch = currentPath.match(/^\/dashboard\/jobs\/(\d+)$/);
+      if (jobDetailMatch) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   // Auto-expand sections that contain the active menu item
   $effect(() => {
     const currentPath = $page.url.pathname;
@@ -216,9 +231,8 @@
 
     for (const item of menuItems) {
       if (item.children) {
-        const hasActiveChild = item.children.some(
-          (child) =>
-            currentPath === child.href || currentPath.startsWith(child.href + "/"),
+        const hasActiveChild = item.children.some((child) =>
+          isChildHrefActive(child.href, currentPath),
         );
         if (hasActiveChild) {
           sectionsToExpand.add(item.label);
@@ -250,14 +264,7 @@
     if (href === "/dashboard") {
       return currentPath === "/dashboard";
     }
-    // Job detail pages (/dashboard/jobs/123) should highlight "Browse All Jobs"
-    if (href === "/dashboard/jobs/browse") {
-      const jobDetailMatch = currentPath.match(/^\/dashboard\/jobs\/(\d+)$/);
-      if (jobDetailMatch) {
-        return true;
-      }
-    }
-    return currentPath === href || currentPath.startsWith(href + "/");
+    return isChildHrefActive(href, currentPath);
   }
 
   function isChildActive(item: MenuItem): boolean {
