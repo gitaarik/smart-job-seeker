@@ -191,9 +191,9 @@ export const extractJobsFromSearchPageSchema = z.object({
       date_posted: z.string().nullable().describe(
         "Date posted - preserve original format from HTML",
       ),
-    }),
+    }).passthrough(), // Allow extra fields LLMs might add
   ),
-});
+}).passthrough(); // Allow extra keys like pattern, jobCount that LLMs might add
 
 /**
  * Schema for classify_clickables prompt

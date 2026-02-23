@@ -520,9 +520,25 @@ async function generateWithLangChain(
           }
         }
 
+        // Normalize response format before validation
+        // LLMs sometimes return unwrapped responses (single object or array instead of {jobs: [...]})
+        let normalizedParsed = parsed;
+        if (structuredOutput.name.includes("extract_jobs")) {
+          // For job extraction, ensure response has {jobs: [...]} wrapper
+          if (Array.isArray(parsed)) {
+            // LLM returned bare array - wrap it
+            normalizedParsed = { jobs: parsed };
+          } else if (parsed && typeof parsed === "object" && !("jobs" in parsed)) {
+            // LLM returned single job object - wrap in array
+            if ("clickableId" in parsed || "title" in parsed) {
+              normalizedParsed = { jobs: [parsed] };
+            }
+          }
+        }
+
         // Validate against Zod schema
         try {
-          const validated = zodSchema.parse(parsed);
+          const validated = zodSchema.parse(normalizedParsed);
           return JSON.stringify(validated);
         } catch (zodError) {
           const errorMsg = zodError instanceof Error
