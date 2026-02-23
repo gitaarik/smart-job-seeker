@@ -6,6 +6,7 @@ import {
   getActiveJobForSearch,
   getWaitingJobForSearch,
   removeWaitingJob,
+  removeActiveJob,
 } from "$lib/server/queue";
 
 /**
@@ -48,10 +49,23 @@ export const POST: RequestHandler = async ({ params, locals }) => {
     throw error(403, "Not authorized to run this job search");
   }
 
-  // Check if this search is already running
+  // Check if this search is already running in BullMQ
   const activeJob = await getActiveJobForSearch(jobSearchId);
   if (activeJob) {
-    return json({ status: "already_running" });
+    // Check if the DB thinks it's actually running
+    // If DB says idle/error but BullMQ says active, the job is stale — clean it up
+    if (
+      jobSearch.status !== "running" &&
+      jobSearch.status !== "queued" &&
+      jobSearch.status !== "blocked"
+    ) {
+      console.log(
+        `[API] Cleaning up stale BullMQ job for search ${jobSearchId} (DB status: ${jobSearch.status})`,
+      );
+      await removeActiveJob(jobSearchId);
+    } else {
+      return json({ status: "already_running" });
+    }
   }
 
   // Check if already in queue
@@ -187,6 +201,9 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
   // Check if it's currently running
   const activeJob = await getActiveJobForSearch(jobSearchId);
   if (activeJob) {
+    // Force-fail the BullMQ job so it doesn't block future runs
+    await removeActiveJob(jobSearchId);
+
     // Find the running run and mark as cancelled
     const runningRun = await db.job_search_runs.findFirst({
       where: {
@@ -211,15 +228,15 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
     await db.job_searches.update({
       where: { id: jobSearchId },
       data: {
-        status: "error",
+        status: "idle",
         status_message: "Cancelled by user",
         date_updated: new Date(),
         live_url: null,
       },
     });
 
-    console.log(`[API] Requested cancellation for running search ${jobSearchId}`);
-    return json({ status: "cancellation_requested" });
+    console.log(`[API] Cancelled running search ${jobSearchId}`);
+    return json({ status: "cancelled" });
   }
 
   return json({ status: "not_found" });

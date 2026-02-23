@@ -98,6 +98,25 @@ export async function removeWaitingJob(jobSearchId: number): Promise<boolean> {
 }
 
 /**
+ * Force-fail and remove an active job from the queue.
+ * Used when cancelling a running scrape or cleaning up stale jobs.
+ */
+export async function removeActiveJob(
+  jobSearchId: number,
+): Promise<boolean> {
+  const activeJob = await getActiveJobForSearch(jobSearchId);
+  if (activeJob) {
+    await activeJob.moveToFailed(
+      new Error("Cancelled by user"),
+      "0",
+      true,
+    );
+    return true;
+  }
+  return false;
+}
+
+/**
  * Get queue stats
  */
 export async function getQueueStats() {
