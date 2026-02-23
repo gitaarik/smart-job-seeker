@@ -475,12 +475,11 @@ async function generateWithLangChain(
           jsonContent = codeBlockMatch[1].trim();
         }
 
+        // Try to parse JSON, with repair attempt for truncated responses
+        let parsed: unknown;
         try {
-          const parsed = JSON.parse(jsonContent);
-          // Validate against Zod schema
-          const validated = zodSchema.parse(parsed);
-          return JSON.stringify(validated);
-        } catch (parseError) {
+          parsed = JSON.parse(jsonContent);
+        } catch (jsonError) {
           // Check if JSON appears truncated (missing closing braces/brackets)
           const openBraces = (jsonContent.match(/{/g) || []).length;
           const closeBraces = (jsonContent.match(/}/g) || []).length;
@@ -489,22 +488,63 @@ async function generateWithLangChain(
           const isTruncated = openBraces > closeBraces ||
             openBrackets > closeBrackets;
 
-          const errorMsg = parseError instanceof Error
-            ? parseError.message
-            : String(parseError);
-
           if (isTruncated) {
+            // Try to repair truncated JSON by closing incomplete strings and adding missing brackets/braces
+            let repairedJson = jsonContent;
+
+            // If we're inside a string (odd number of unescaped quotes after last complete value)
+            // Try to close it
+            const lastQuoteIndex = repairedJson.lastIndexOf('"');
+            const afterLastQuote = repairedJson.substring(lastQuoteIndex + 1);
+            if (lastQuoteIndex > 0 && !afterLastQuote.includes('"') && !afterLastQuote.match(/[}\],:]/)) {
+              // We're likely inside an unclosed string - close it with null
+              // Find the last complete key-value and truncate there
+              const lastCompleteMatch = repairedJson.match(/^([\s\S]*[}\],])\s*"[^"]*"?\s*:?\s*"?[^"]*$/);
+              if (lastCompleteMatch) {
+                repairedJson = lastCompleteMatch[1];
+              }
+            }
+
+            // Add missing closing brackets and braces
+            const missingBrackets = openBrackets - (repairedJson.match(/]/g) || []).length;
+            const missingBraces = openBraces - (repairedJson.match(/}/g) || []).length;
+            repairedJson += "]".repeat(missingBrackets) + "}".repeat(missingBraces);
+
+            try {
+              parsed = JSON.parse(repairedJson);
+              console.log(`      ⚠️ Repaired truncated JSON (closed ${missingBrackets} brackets, ${missingBraces} braces)`);
+            } catch {
+              // Repair failed, throw original error with truncation details
+              throw new Error(
+                `${provider} JSON response appears truncated (output token limit likely exceeded). ` +
+                  `Missing ${openBraces - closeBraces} closing braces, ${
+                    openBrackets - closeBrackets
+                  } closing brackets. ` +
+                  `Response length: ${responseContent.length} chars. Last 200 chars: ...${
+                    responseContent.slice(-200)
+                  }`,
+              );
+            }
+          } else {
+            const errorMsg = jsonError instanceof Error
+              ? jsonError.message
+              : String(jsonError);
             throw new Error(
-              `${provider} JSON response appears truncated (output token limit likely exceeded). ` +
-                `Missing ${openBraces - closeBraces} closing braces, ${
-                  openBrackets - closeBrackets
-                } closing brackets. ` +
-                `Response length: ${responseContent.length} chars. Last 200 chars: ...${
-                  responseContent.slice(-200)
-                }`,
+              `Failed to parse JSON response from ${provider}: ${errorMsg}\nResponse was: ${
+                responseContent.substring(0, 500)
+              }`,
             );
           }
+        }
 
+        // Validate against Zod schema
+        try {
+          const validated = zodSchema.parse(parsed);
+          return JSON.stringify(validated);
+        } catch (zodError) {
+          const errorMsg = zodError instanceof Error
+            ? zodError.message
+            : String(zodError);
           throw new Error(
             `Failed to parse JSON response from ${provider}: ${errorMsg}\nResponse was: ${
               responseContent.substring(0, 500)

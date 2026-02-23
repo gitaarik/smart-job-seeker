@@ -64,7 +64,7 @@ export const extractJobDataSchema = z.object({
   status: optionalNullableString().describe(
     "Whether the job is currently accepting applications",
   ),
-});
+}).passthrough(); // Allow extra keys LLMs may add like $schema, definitions
 
 /**
  * Schema for score_job_match prompt
@@ -199,6 +199,7 @@ export const extractJobsFromSearchPageSchema = z.object({
  * Schema for classify_clickables prompt
  * Classifies clickable elements as view-details or action buttons
  * Made flexible to handle various LLM response formats
+ * Uses passthrough() to allow extra keys like $schema, definitions that LLMs may add
  */
 export const classifyClickablesSchema = z.object({
   clickables: z.array(
@@ -213,7 +214,7 @@ export const classifyClickablesSchema = z.object({
         .enum(["view-details", "action"])
         .optional()
         .describe("Alternative: Clickable classification"),
-    }),
+    }).passthrough(),
   ).optional(),
   // Handle alternative response format where LLM uses schema name as key
   classify_clickables: z.array(
@@ -222,9 +223,9 @@ export const classifyClickablesSchema = z.object({
       ID: z.number().int().optional(),
       type: z.enum(["view-details", "action"]).optional(),
       classification: z.enum(["view-details", "action"]).optional(),
-    }),
+    }).passthrough(),
   ).optional(),
-});
+}).passthrough();
 
 /**
  * Schema registry mapping request identifiers to Zod schemas
