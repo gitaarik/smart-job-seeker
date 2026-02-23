@@ -3,7 +3,7 @@
  */
 
 import { dbDirect as db } from "$lib/server/db";
-import type { jobs } from "../../../generated/prisma/client";
+import type { jobs } from "../../../../generated/prisma/client";
 
 /**
  * Extract tech skills from a profile

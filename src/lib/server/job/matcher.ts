@@ -3,14 +3,14 @@
  * Filters jobs based on preferences and calculates LLM-based match scores
  */
 
-import { Prisma } from "../../../generated/prisma/client";
+import { Prisma } from "../../../../generated/prisma/client";
 import { dbDirect as db } from "$lib/server/db";
 import { createJobMatchingAiChat } from "$lib/server/ai-chat/job-utils";
 import { hasArrayOverlap, matchesLocation } from "./match-utils";
 import type {
   job_match_preferences,
   jobs,
-} from "../../../generated/prisma/client";
+} from "../../../../generated/prisma/client";
 
 /**
  * Job match preferences type
