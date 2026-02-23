@@ -250,6 +250,13 @@
     if (href === "/dashboard") {
       return currentPath === "/dashboard";
     }
+    // Job detail pages (/dashboard/jobs/123) should highlight "Browse All Jobs"
+    if (href === "/dashboard/jobs/browse") {
+      const jobDetailMatch = currentPath.match(/^\/dashboard\/jobs\/(\d+)$/);
+      if (jobDetailMatch) {
+        return true;
+      }
+    }
     return currentPath === href || currentPath.startsWith(href + "/");
   }
 
