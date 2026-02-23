@@ -418,6 +418,14 @@
               </div>
 
               <div class="flex items-center gap-2">
+                <a
+                  href="/dashboard/jobs/settings/{search.id}"
+                  class="p-2 text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] transition-colors"
+                  aria-label="View and run scrape"
+                  title="View details and run scrape"
+                >
+                  <FontAwesomeIcon icon={faPlay} class="w-4 h-4" />
+                </a>
                 {#if search.search_url}
                   <a
                     href={search.search_url}
