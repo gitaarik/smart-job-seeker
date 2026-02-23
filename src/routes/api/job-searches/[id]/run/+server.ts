@@ -38,7 +38,7 @@ export const POST: RequestHandler = async ({ params, locals }) => {
   }
 
   // Verify the user owns this profile
-  if (jobSearch.profiles.user !== user.id) {
+  if (jobSearch.profiles.user_id !== user.id) {
     throw error(403, "Not authorized to run this job search");
   }
 
@@ -139,7 +139,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
     throw error(404, "Job search not found");
   }
 
-  if (jobSearch.profiles.user !== user.id) {
+  if (jobSearch.profiles.user_id !== user.id) {
     throw error(403, "Not authorized");
   }
 
