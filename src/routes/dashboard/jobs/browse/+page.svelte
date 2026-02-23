@@ -307,12 +307,13 @@
           class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden"
         >
           <!-- Header -->
-          <button
-            type="button"
-            onclick={() => toggleExpand(job.id)}
-            class="w-full flex items-center justify-between p-4 hover:bg-[var(--dash-bg)] transition-colors text-left"
-          >
-            <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between p-4 hover:bg-[var(--dash-bg)] transition-colors">
+            <!-- Clickable area for expand/collapse -->
+            <button
+              type="button"
+              onclick={() => toggleExpand(job.id)}
+              class="flex-1 min-w-0 text-left"
+            >
               <div class="flex items-center gap-2 flex-wrap">
                 <h3 class="font-medium text-[var(--dash-text)]">
                   {job.title || "Untitled Job"}
@@ -353,8 +354,9 @@
                   </span>
                 {/if}
               </div>
-            </div>
+            </button>
 
+            <!-- Action buttons (outside the expand button) -->
             <div class="flex items-center gap-2 ml-4">
               <!-- Save/Unsave Button -->
               <form
@@ -372,7 +374,6 @@
                 <input type="hidden" name="jobId" value={job.id} />
                 <button
                   type="submit"
-                  onclick={(e) => e.stopPropagation()}
                   disabled={savingJobId === job.id}
                   class="p-2 transition-colors {isSaved ? 'text-[var(--dash-primary)]' : 'text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)]'} disabled:opacity-50"
                   aria-label={isSaved ? "Unsave job" : "Save job"}
@@ -388,7 +389,6 @@
               <!-- View Details Link -->
               <a
                 href="/dashboard/jobs/{job.id}"
-                onclick={(e) => e.stopPropagation()}
                 class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
                 aria-label="View job details"
                 title="View full details"
@@ -402,7 +402,6 @@
                   href={job.source_url}
                   target="_blank"
                   rel="noopener"
-                  onclick={(e) => e.stopPropagation()}
                   class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
                   aria-label="View job posting"
                   title="Open original posting"
@@ -410,12 +409,21 @@
                   <FontAwesomeIcon icon={faExternalLinkAlt} class="w-4 h-4" />
                 </a>
               {/if}
-              <FontAwesomeIcon
-                icon={expandedId === job.id ? faChevronUp : faChevronDown}
-                class="w-4 h-4 text-[var(--dash-text-secondary)]"
-              />
+
+              <!-- Expand/Collapse toggle -->
+              <button
+                type="button"
+                onclick={() => toggleExpand(job.id)}
+                class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
+                aria-label={expandedId === job.id ? "Collapse" : "Expand"}
+              >
+                <FontAwesomeIcon
+                  icon={expandedId === job.id ? faChevronUp : faChevronDown}
+                  class="w-4 h-4"
+                />
+              </button>
             </div>
-          </button>
+          </div>
 
           <!-- Expanded Content -->
           {#if expandedId === job.id}
