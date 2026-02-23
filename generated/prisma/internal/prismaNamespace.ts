@@ -6839,9 +6839,9 @@ export const EducationScalarFieldEnum = {
   profile: 'profile',
   summary: 'summary',
   logo: 'logo',
+  tags: 'tags',
   logo_path: 'logo_path',
-  banner_path: 'banner_path',
-  tags: 'tags'
+  banner_path: 'banner_path'
 } as const
 
 export type EducationScalarFieldEnum = (typeof EducationScalarFieldEnum)[keyof typeof EducationScalarFieldEnum]
@@ -6931,20 +6931,20 @@ export type Job_resourcesScalarFieldEnum = (typeof Job_resourcesScalarFieldEnum)
 
 export const Job_searchesScalarFieldEnum = {
   id: 'id',
-  is_active: 'is_active',
   status: 'status',
-  status_message: 'status_message',
   date_created: 'date_created',
   date_updated: 'date_updated',
   name: 'name',
   profile: 'profile',
   last_run: 'last_run',
-  last_run_jobs_found: 'last_run_jobs_found',
-  live_url: 'live_url',
   search_url: 'search_url',
   platform: 'platform',
   navigation_type: 'navigation_type',
-  stripped_html: 'stripped_html'
+  stripped_html: 'stripped_html',
+  last_run_jobs_found: 'last_run_jobs_found',
+  live_url: 'live_url',
+  is_active: 'is_active',
+  status_message: 'status_message'
 } as const
 
 export type Job_searchesScalarFieldEnum = (typeof Job_searchesScalarFieldEnum)[keyof typeof Job_searchesScalarFieldEnum]
@@ -7015,7 +7015,9 @@ export const JobsScalarFieldEnum = {
   skills_required: 'skills_required',
   skills_preferred: 'skills_preferred',
   responsibilities: 'responsibilities',
-  soft_skills: 'soft_skills'
+  soft_skills: 'soft_skills',
+  rescrape_status: 'rescrape_status',
+  rescrape_message: 'rescrape_message'
 } as const
 
 export type JobsScalarFieldEnum = (typeof JobsScalarFieldEnum)[keyof typeof JobsScalarFieldEnum]
@@ -7099,15 +7101,15 @@ export const Profile_tokensScalarFieldEnum = {
   token: 'token',
   token_hash: 'token_hash',
   profile_version: 'profile_version',
-  format: 'format',
-  view_mode: 'view_mode',
   visit_count: 'visit_count',
   visit_limit: 'visit_limit',
   expires_at: 'expires_at',
   name: 'name',
   notes: 'notes',
   last_accessed_at: 'last_accessed_at',
-  last_accessed_ip: 'last_accessed_ip'
+  last_accessed_ip: 'last_accessed_ip',
+  format: 'format',
+  view_mode: 'view_mode'
 } as const
 
 export type Profile_tokensScalarFieldEnum = (typeof Profile_tokensScalarFieldEnum)[keyof typeof Profile_tokensScalarFieldEnum]
@@ -7154,13 +7156,11 @@ export const ProfilesScalarFieldEnum = {
   stackoverflow_profile: 'stackoverflow_profile',
   headline: 'headline',
   profile_picture: 'profile_picture',
-  profile_photo_path: 'profile_photo_path',
   summary: 'summary',
   nationality: 'nationality',
   location_url: 'location_url',
   location_timezone: 'location_timezone',
   sort: 'sort',
-  location: 'location',
   city: 'city',
   region: 'region',
   country_code: 'country_code',
@@ -7187,7 +7187,9 @@ export const ProfilesScalarFieldEnum = {
   user_id: 'user_id',
   public_cv_version: 'public_cv_version',
   public_resume_version: 'public_resume_version',
-  source_cv: 'source_cv'
+  source_cv: 'source_cv',
+  location: 'location',
+  profile_photo_path: 'profile_photo_path'
 } as const
 
 export type ProfilesScalarFieldEnum = (typeof ProfilesScalarFieldEnum)[keyof typeof ProfilesScalarFieldEnum]
@@ -7285,9 +7287,9 @@ export const Side_projectsScalarFieldEnum = {
   stars: 'stars',
   summary: 'summary',
   url_label: 'url_label',
+  tags: 'tags',
   image_path: 'image_path',
-  banner_path: 'banner_path',
-  tags: 'tags'
+  banner_path: 'banner_path'
 } as const
 
 export type Side_projectsScalarFieldEnum = (typeof Side_projectsScalarFieldEnum)[keyof typeof Side_projectsScalarFieldEnum]
@@ -7403,8 +7405,6 @@ export const Work_experiencesScalarFieldEnum = {
   summary: 'summary',
   id: 'id',
   logo: 'logo',
-  logo_path: 'logo_path',
-  banner_path: 'banner_path',
   status: 'status',
   sort: 'sort',
   profile: 'profile',
@@ -7413,7 +7413,9 @@ export const Work_experiencesScalarFieldEnum = {
   start_date: 'start_date',
   end_date: 'end_date',
   website: 'website',
-  tags: 'tags'
+  tags: 'tags',
+  logo_path: 'logo_path',
+  banner_path: 'banner_path'
 } as const
 
 export type Work_experiencesScalarFieldEnum = (typeof Work_experiencesScalarFieldEnum)[keyof typeof Work_experiencesScalarFieldEnum]
@@ -7528,9 +7530,9 @@ export const UsersScalarFieldEnum = {
   emailVerified: 'emailVerified',
   name: 'name',
   image: 'image',
-  is_admin: 'is_admin',
   createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  updatedAt: 'updatedAt',
+  is_admin: 'is_admin'
 } as const
 
 export type UsersScalarFieldEnum = (typeof UsersScalarFieldEnum)[keyof typeof UsersScalarFieldEnum]

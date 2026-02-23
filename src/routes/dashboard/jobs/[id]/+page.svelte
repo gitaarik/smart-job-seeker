@@ -12,6 +12,7 @@
     faExternalLinkAlt,
     faMapMarkerAlt,
     faMoneyBillWave,
+    faSync,
     faTimes,
   } from "@fortawesome/free-solid-svg-icons";
   import { faBookmark as faBookmarkRegular } from "@fortawesome/free-regular-svg-icons";
@@ -19,9 +20,78 @@
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
-  let job = $derived(data.job);
+  let job = $state(data.job);
   let match = $state(data.match);
   let isSaving = $state(false);
+
+  // Rescrape state
+  let rescrapeStatus = $state(data.job.rescrape_status || "idle");
+  let rescrapeMessage = $state(data.job.rescrape_message || "");
+  let isRescraping = $derived(rescrapeStatus === "queued" || rescrapeStatus === "scraping");
+  let rescrapePollingInterval: ReturnType<typeof setInterval> | null = null;
+
+  // Start polling when rescraping
+  $effect(() => {
+    if (isRescraping && !rescrapePollingInterval) {
+      rescrapePollingInterval = setInterval(pollRescrapeStatus, 2000);
+    } else if (!isRescraping && rescrapePollingInterval) {
+      clearInterval(rescrapePollingInterval);
+      rescrapePollingInterval = null;
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (rescrapePollingInterval) {
+        clearInterval(rescrapePollingInterval);
+      }
+    };
+  });
+
+  async function pollRescrapeStatus() {
+    try {
+      const response = await fetch(`/api/jobs/${job.id}/rescrape`);
+      if (response.ok) {
+        const result = await response.json();
+        rescrapeStatus = result.status;
+        rescrapeMessage = result.message || "";
+
+        // If completed, refresh job data
+        if (result.status === "completed") {
+          window.location.reload();
+        }
+      }
+    } catch {
+      // Ignore polling errors
+    }
+  }
+
+  async function triggerRescrape() {
+    try {
+      rescrapeStatus = "queued";
+      rescrapeMessage = "Starting rescrape...";
+
+      const response = await fetch(`/api/jobs/${job.id}/rescrape`, {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        rescrapeStatus = "error";
+        rescrapeMessage = error.error || "Failed to start rescrape";
+        return;
+      }
+
+      const result = await response.json();
+      if (result.status === "already_queued") {
+        rescrapeMessage = "Already queued for rescrape";
+      } else {
+        rescrapeMessage = "Queued for rescrape...";
+      }
+    } catch (error) {
+      rescrapeStatus = "error";
+      rescrapeMessage = error instanceof Error ? error.message : "Failed to start rescrape";
+    }
+  }
 
   // Update match when form action completes
   $effect(() => {
@@ -187,6 +257,27 @@
               </button>
             </form>
 
+            <!-- Rescrape Button -->
+            {#if job.source_url}
+              <button
+                type="button"
+                onclick={triggerRescrape}
+                disabled={isRescraping}
+                class="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50"
+                title={isRescraping ? rescrapeMessage : "Re-fetch job data from source"}
+              >
+                <FontAwesomeIcon
+                  icon={faSync}
+                  class="w-4 h-4 {isRescraping ? 'animate-spin' : ''}"
+                />
+                {#if isRescraping}
+                  {rescrapeStatus === "queued" ? "Queued..." : "Scraping..."}
+                {:else}
+                  Rescrape
+                {/if}
+              </button>
+            {/if}
+
             <!-- External Link -->
             {#if job.source_url}
               <a
@@ -201,6 +292,21 @@
             {/if}
           </div>
         </div>
+
+        <!-- Rescrape Status Message -->
+        {#if rescrapeStatus === "error" && rescrapeMessage}
+          <div class="mt-4 p-3 bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg">
+            <p class="text-sm text-[var(--dash-error)]">
+              <strong>Rescrape failed:</strong> {rescrapeMessage}
+            </p>
+          </div>
+        {:else if isRescraping && rescrapeMessage}
+          <div class="mt-4 p-3 bg-[var(--dash-primary-light)] border border-[var(--dash-primary)] rounded-lg">
+            <p class="text-sm text-[var(--dash-primary)]">
+              {rescrapeMessage}
+            </p>
+          </div>
+        {/if}
 
         <!-- Tags -->
         <div class="flex flex-wrap gap-2 mt-4">

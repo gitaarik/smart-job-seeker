@@ -646,9 +646,9 @@ model education {
   profile         Int
   summary         String?
   logo            String?         @db.Uuid
+  tags            Json?           @db.Json
   logo_path       String?         @db.VarChar(255)
   banner_path     String?         @db.VarChar(255)
-  tags            Json?           @db.Json
   directus_files  directus_files? @relation(fields: [logo], references: [id], onUpdate: NoAction, map: "education_logo_foreign")
   profiles        profiles        @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "education_profile_foreign")
 }
@@ -732,24 +732,24 @@ model job_resources {
 
 model job_searches {
   id                     Int                      @id @default(autoincrement())
-  is_active              Boolean                  @default(true)
   status                 String?                  @db.VarChar(50)
-  status_message         String?                  @db.VarChar(255)
   date_created           DateTime?                @db.Timestamptz(6)
   date_updated           DateTime?                @db.Timestamptz(6)
   name                   String                   @db.VarChar(255)
   profile                Int
   last_run               DateTime?                @db.Timestamptz(6)
-  last_run_jobs_found    Int?
-  live_url               String?                  @db.VarChar(500)
   search_url             String?
   platform               Int?
   navigation_type        String?                  @db.VarChar(255)
   stripped_html          String?
+  last_run_jobs_found    Int?
+  live_url               String?                  @db.VarChar(500)
+  is_active              Boolean                  @default(true)
+  status_message         String?                  @db.VarChar(255)
+  runs                   job_search_runs[]
   job_platforms          job_platforms?           @relation(fields: [platform], references: [id], onUpdate: NoAction, map: "job_searches_platform_foreign")
   profiles               profiles                 @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_searches_profile_foreign")
   job_searches_job_sites job_searches_job_sites[]
-  runs                   job_search_runs[]
 }
 
 model job_searches_job_sites {
@@ -759,31 +759,30 @@ model job_searches_job_sites {
 }
 
 model job_search_runs {
-  id            Int           @id @default(autoincrement())
+  id            Int            @id @default(autoincrement())
   job_search_id Int
-  status        String        @db.VarChar(50) // queued, running, success, partial, error, cancelled
-  started_at    DateTime      @default(now()) @db.Timestamptz(6)
-  finished_at   DateTime?     @db.Timestamptz(6)
+  status        String         @db.VarChar(50)
+  started_at    DateTime       @default(now()) @db.Timestamptz(6)
+  finished_at   DateTime?      @db.Timestamptz(6)
   jobs_found    Int?
   error_message String?
-  triggered_by  String        @db.VarChar(20) // user, scheduler
-  bullmq_job_id String?       @db.VarChar(100)
-  live_url      String?       @db.VarChar(500)
-  user_response String?       @db.VarChar(20) // Dashboard feedback: continue, skip, cancel
-
-  job_searches  job_searches  @relation(fields: [job_search_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  triggered_by  String         @db.VarChar(20)
+  bullmq_job_id String?        @db.VarChar(100)
+  live_url      String?        @db.VarChar(500)
+  user_response String?        @db.VarChar(20)
+  job_searches  job_searches   @relation(fields: [job_search_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   logs          scraper_logs[]
 
   @@index([job_search_id, started_at])
 }
 
 model scraper_logs {
-  id        Int              @id @default(autoincrement())
+  id        Int             @id @default(autoincrement())
   run_id    Int
-  level     String           @db.VarChar(10)
+  level     String          @db.VarChar(10)
   message   String
-  timestamp DateTime         @default(now()) @db.Timestamptz(6)
-  run       job_search_runs  @relation(fields: [run_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  timestamp DateTime        @default(now()) @db.Timestamptz(6)
+  run       job_search_runs @relation(fields: [run_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([run_id, timestamp])
 }
@@ -818,6 +817,8 @@ model jobs {
   skills_preferred     Json?           @db.Json
   responsibilities     Json?
   soft_skills          Json?
+  rescrape_status      String?         @db.VarChar(50)
+  rescrape_message     String?
   applications         applications[]
   job_matches          job_matches[]
   job_resources        job_resources[]
@@ -899,8 +900,6 @@ model profile_tokens {
   token            String    @unique(map: "profile_tokens_token_unique") @db.VarChar(255)
   token_hash       String    @unique(map: "profile_tokens_token_hash_unique") @db.VarChar(255)
   profile_version  Int
-  format           String    @default("resume") @db.VarChar(20)
-  view_mode        String    @default("html") @db.VarChar(10)
   visit_count      Int       @default(0)
   visit_limit      Int?
   expires_at       DateTime? @db.Timestamptz(6)
@@ -908,6 +907,8 @@ model profile_tokens {
   notes            String?
   last_accessed_at DateTime? @db.Timestamptz(6)
   last_accessed_ip String?   @db.VarChar(45)
+  format           String    @default("resume") @db.VarChar(20)
+  view_mode        String    @default("html") @db.VarChar(10)
 }
 
 model profile_version_extensions {
@@ -952,13 +953,11 @@ model profiles {
   stackoverflow_profile                                             String?                 @db.VarChar(255)
   headline                                                          String?                 @db.VarChar(255)
   profile_picture                                                   String?                 @db.Uuid
-  profile_photo_path                                                String?                 @db.VarChar(255)
   summary                                                           String?
   nationality                                                       String?                 @db.VarChar(255)
   location_url                                                      String?                 @db.VarChar(255)
   location_timezone                                                 String?                 @db.VarChar(255)
   sort                                                              Int?
-  location                                                          String?                 @db.VarChar(255)
   city                                                              String?                 @db.VarChar(255)
   region                                                            String?                 @db.VarChar(255)
   country_code                                                      String?                 @db.VarChar(10)
@@ -986,6 +985,8 @@ model profiles {
   public_cv_version                                                 Int?
   public_resume_version                                             Int?
   source_cv                                                         String?                 @db.Uuid
+  location                                                          String?                 @db.VarChar(255)
+  profile_photo_path                                                String?                 @db.VarChar(255)
   ai_chats                                                          ai_chats[]
   applications                                                      applications[]
   cheat_sheets                                                      cheat_sheets[]
@@ -1094,9 +1095,9 @@ model side_projects {
   stars                     Int?
   summary                   String?
   url_label                 String?                     @db.VarChar(255)
+  tags                      Json?                       @db.Json
   image_path                String?                     @db.VarChar(255)
   banner_path               String?                     @db.VarChar(255)
-  tags                      Json?                       @db.Json
   side_project_achievements side_project_achievements[]
   side_project_technologies side_project_technologies[]
   profiles                  profiles                    @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "side_projects_profile_foreign")
@@ -1201,8 +1202,6 @@ model work_experiences {
   summary                      String
   id                           Int                            @id @default(autoincrement())
   logo                         String?                        @db.Uuid
-  logo_path                    String?                        @db.VarChar(255)
-  banner_path                  String?                        @db.VarChar(255)
   status                       String                         @default("draft") @db.VarChar(255)
   sort                         Int?
   profile                      Int
@@ -1212,6 +1211,8 @@ model work_experiences {
   end_date                     DateTime?                      @db.Date
   website                      String?                        @db.VarChar(255)
   tags                         Json?                          @db.Json
+  logo_path                    String?                        @db.VarChar(255)
+  banner_path                  String?                        @db.VarChar(255)
   work_experience_achievements work_experience_achievements[]
   work_experience_projects     work_experience_projects[]
   work_experience_technologies work_experience_technologies[]
@@ -1327,9 +1328,9 @@ model users {
   emailVerified Boolean?   @default(false)
   name          String?    @db.VarChar(255)
   image         String?    @db.VarChar(255)
-  is_admin      Boolean    @default(false)
   createdAt     DateTime?  @db.Timestamptz(6)
   updatedAt     DateTime?  @db.Timestamptz(6)
+  is_admin      Boolean    @default(false)
   accounts      accounts[]
   sessions      sessions[]
 }

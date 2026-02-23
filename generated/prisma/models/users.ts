@@ -30,9 +30,9 @@ export type UsersMinAggregateOutputType = {
   emailVerified: boolean | null
   name: string | null
   image: string | null
-  is_admin: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
+  is_admin: boolean | null
 }
 
 export type UsersMaxAggregateOutputType = {
@@ -41,9 +41,9 @@ export type UsersMaxAggregateOutputType = {
   emailVerified: boolean | null
   name: string | null
   image: string | null
-  is_admin: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
+  is_admin: boolean | null
 }
 
 export type UsersCountAggregateOutputType = {
@@ -52,9 +52,9 @@ export type UsersCountAggregateOutputType = {
   emailVerified: number
   name: number
   image: number
-  is_admin: number
   createdAt: number
   updatedAt: number
+  is_admin: number
   _all: number
 }
 
@@ -65,9 +65,9 @@ export type UsersMinAggregateInputType = {
   emailVerified?: true
   name?: true
   image?: true
-  is_admin?: true
   createdAt?: true
   updatedAt?: true
+  is_admin?: true
 }
 
 export type UsersMaxAggregateInputType = {
@@ -76,9 +76,9 @@ export type UsersMaxAggregateInputType = {
   emailVerified?: true
   name?: true
   image?: true
-  is_admin?: true
   createdAt?: true
   updatedAt?: true
+  is_admin?: true
 }
 
 export type UsersCountAggregateInputType = {
@@ -87,9 +87,9 @@ export type UsersCountAggregateInputType = {
   emailVerified?: true
   name?: true
   image?: true
-  is_admin?: true
   createdAt?: true
   updatedAt?: true
+  is_admin?: true
   _all?: true
 }
 
@@ -171,9 +171,9 @@ export type UsersGroupByOutputType = {
   emailVerified: boolean | null
   name: string | null
   image: string | null
-  is_admin: boolean
   createdAt: Date | null
   updatedAt: Date | null
+  is_admin: boolean
   _count: UsersCountAggregateOutputType | null
   _min: UsersMinAggregateOutputType | null
   _max: UsersMaxAggregateOutputType | null
@@ -203,9 +203,9 @@ export type usersWhereInput = {
   emailVerified?: Prisma.BoolNullableFilter<"users"> | boolean | null
   name?: Prisma.StringNullableFilter<"users"> | string | null
   image?: Prisma.StringNullableFilter<"users"> | string | null
-  is_admin?: Prisma.BoolFilter<"users"> | boolean
   createdAt?: Prisma.DateTimeNullableFilter<"users"> | Date | string | null
   updatedAt?: Prisma.DateTimeNullableFilter<"users"> | Date | string | null
+  is_admin?: Prisma.BoolFilter<"users"> | boolean
   accounts?: Prisma.AccountsListRelationFilter
   sessions?: Prisma.SessionsListRelationFilter
 }
@@ -216,9 +216,9 @@ export type usersOrderByWithRelationInput = {
   emailVerified?: Prisma.SortOrderInput | Prisma.SortOrder
   name?: Prisma.SortOrderInput | Prisma.SortOrder
   image?: Prisma.SortOrderInput | Prisma.SortOrder
-  is_admin?: Prisma.SortOrder
   createdAt?: Prisma.SortOrderInput | Prisma.SortOrder
   updatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  is_admin?: Prisma.SortOrder
   accounts?: Prisma.accountsOrderByRelationAggregateInput
   sessions?: Prisma.sessionsOrderByRelationAggregateInput
 }
@@ -232,9 +232,9 @@ export type usersWhereUniqueInput = Prisma.AtLeast<{
   emailVerified?: Prisma.BoolNullableFilter<"users"> | boolean | null
   name?: Prisma.StringNullableFilter<"users"> | string | null
   image?: Prisma.StringNullableFilter<"users"> | string | null
-  is_admin?: Prisma.BoolFilter<"users"> | boolean
   createdAt?: Prisma.DateTimeNullableFilter<"users"> | Date | string | null
   updatedAt?: Prisma.DateTimeNullableFilter<"users"> | Date | string | null
+  is_admin?: Prisma.BoolFilter<"users"> | boolean
   accounts?: Prisma.AccountsListRelationFilter
   sessions?: Prisma.SessionsListRelationFilter
 }, "id">
@@ -245,9 +245,9 @@ export type usersOrderByWithAggregationInput = {
   emailVerified?: Prisma.SortOrderInput | Prisma.SortOrder
   name?: Prisma.SortOrderInput | Prisma.SortOrder
   image?: Prisma.SortOrderInput | Prisma.SortOrder
-  is_admin?: Prisma.SortOrder
   createdAt?: Prisma.SortOrderInput | Prisma.SortOrder
   updatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  is_admin?: Prisma.SortOrder
   _count?: Prisma.usersCountOrderByAggregateInput
   _max?: Prisma.usersMaxOrderByAggregateInput
   _min?: Prisma.usersMinOrderByAggregateInput
@@ -262,9 +262,9 @@ export type usersScalarWhereWithAggregatesInput = {
   emailVerified?: Prisma.BoolNullableWithAggregatesFilter<"users"> | boolean | null
   name?: Prisma.StringNullableWithAggregatesFilter<"users"> | string | null
   image?: Prisma.StringNullableWithAggregatesFilter<"users"> | string | null
-  is_admin?: Prisma.BoolWithAggregatesFilter<"users"> | boolean
   createdAt?: Prisma.DateTimeNullableWithAggregatesFilter<"users"> | Date | string | null
   updatedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"users"> | Date | string | null
+  is_admin?: Prisma.BoolWithAggregatesFilter<"users"> | boolean
 }
 
 export type usersCreateInput = {
@@ -273,9 +273,9 @@ export type usersCreateInput = {
   emailVerified?: boolean | null
   name?: string | null
   image?: string | null
-  is_admin?: boolean
   createdAt?: Date | string | null
   updatedAt?: Date | string | null
+  is_admin?: boolean
   accounts?: Prisma.accountsCreateNestedManyWithoutUserInput
   sessions?: Prisma.sessionsCreateNestedManyWithoutUserInput
 }
@@ -286,9 +286,9 @@ export type usersUncheckedCreateInput = {
   emailVerified?: boolean | null
   name?: string | null
   image?: string | null
-  is_admin?: boolean
   createdAt?: Date | string | null
   updatedAt?: Date | string | null
+  is_admin?: boolean
   accounts?: Prisma.accountsUncheckedCreateNestedManyWithoutUserInput
   sessions?: Prisma.sessionsUncheckedCreateNestedManyWithoutUserInput
 }
@@ -299,9 +299,9 @@ export type usersUpdateInput = {
   emailVerified?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  is_admin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  is_admin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   accounts?: Prisma.accountsUpdateManyWithoutUserNestedInput
   sessions?: Prisma.sessionsUpdateManyWithoutUserNestedInput
 }
@@ -312,9 +312,9 @@ export type usersUncheckedUpdateInput = {
   emailVerified?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  is_admin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  is_admin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   accounts?: Prisma.accountsUncheckedUpdateManyWithoutUserNestedInput
   sessions?: Prisma.sessionsUncheckedUpdateManyWithoutUserNestedInput
 }
@@ -325,9 +325,9 @@ export type usersCreateManyInput = {
   emailVerified?: boolean | null
   name?: string | null
   image?: string | null
-  is_admin?: boolean
   createdAt?: Date | string | null
   updatedAt?: Date | string | null
+  is_admin?: boolean
 }
 
 export type usersUpdateManyMutationInput = {
@@ -336,9 +336,9 @@ export type usersUpdateManyMutationInput = {
   emailVerified?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  is_admin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  is_admin?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type usersUncheckedUpdateManyInput = {
@@ -347,9 +347,9 @@ export type usersUncheckedUpdateManyInput = {
   emailVerified?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  is_admin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  is_admin?: Prisma.BoolFieldUpdateOperationsInput | boolean
 }
 
 export type UsersScalarRelationFilter = {
@@ -363,9 +363,9 @@ export type usersCountOrderByAggregateInput = {
   emailVerified?: Prisma.SortOrder
   name?: Prisma.SortOrder
   image?: Prisma.SortOrder
-  is_admin?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  is_admin?: Prisma.SortOrder
 }
 
 export type usersMaxOrderByAggregateInput = {
@@ -374,9 +374,9 @@ export type usersMaxOrderByAggregateInput = {
   emailVerified?: Prisma.SortOrder
   name?: Prisma.SortOrder
   image?: Prisma.SortOrder
-  is_admin?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  is_admin?: Prisma.SortOrder
 }
 
 export type usersMinOrderByAggregateInput = {
@@ -385,9 +385,9 @@ export type usersMinOrderByAggregateInput = {
   emailVerified?: Prisma.SortOrder
   name?: Prisma.SortOrder
   image?: Prisma.SortOrder
-  is_admin?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  is_admin?: Prisma.SortOrder
 }
 
 export type usersCreateNestedOneWithoutAccountsInput = {
@@ -424,9 +424,9 @@ export type usersCreateWithoutAccountsInput = {
   emailVerified?: boolean | null
   name?: string | null
   image?: string | null
-  is_admin?: boolean
   createdAt?: Date | string | null
   updatedAt?: Date | string | null
+  is_admin?: boolean
   sessions?: Prisma.sessionsCreateNestedManyWithoutUserInput
 }
 
@@ -436,9 +436,9 @@ export type usersUncheckedCreateWithoutAccountsInput = {
   emailVerified?: boolean | null
   name?: string | null
   image?: string | null
-  is_admin?: boolean
   createdAt?: Date | string | null
   updatedAt?: Date | string | null
+  is_admin?: boolean
   sessions?: Prisma.sessionsUncheckedCreateNestedManyWithoutUserInput
 }
 
@@ -464,9 +464,9 @@ export type usersUpdateWithoutAccountsInput = {
   emailVerified?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  is_admin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  is_admin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.sessionsUpdateManyWithoutUserNestedInput
 }
 
@@ -476,9 +476,9 @@ export type usersUncheckedUpdateWithoutAccountsInput = {
   emailVerified?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  is_admin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  is_admin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   sessions?: Prisma.sessionsUncheckedUpdateManyWithoutUserNestedInput
 }
 
@@ -488,9 +488,9 @@ export type usersCreateWithoutSessionsInput = {
   emailVerified?: boolean | null
   name?: string | null
   image?: string | null
-  is_admin?: boolean
   createdAt?: Date | string | null
   updatedAt?: Date | string | null
+  is_admin?: boolean
   accounts?: Prisma.accountsCreateNestedManyWithoutUserInput
 }
 
@@ -500,9 +500,9 @@ export type usersUncheckedCreateWithoutSessionsInput = {
   emailVerified?: boolean | null
   name?: string | null
   image?: string | null
-  is_admin?: boolean
   createdAt?: Date | string | null
   updatedAt?: Date | string | null
+  is_admin?: boolean
   accounts?: Prisma.accountsUncheckedCreateNestedManyWithoutUserInput
 }
 
@@ -528,9 +528,9 @@ export type usersUpdateWithoutSessionsInput = {
   emailVerified?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  is_admin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  is_admin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   accounts?: Prisma.accountsUpdateManyWithoutUserNestedInput
 }
 
@@ -540,9 +540,9 @@ export type usersUncheckedUpdateWithoutSessionsInput = {
   emailVerified?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  is_admin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   updatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  is_admin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   accounts?: Prisma.accountsUncheckedUpdateManyWithoutUserNestedInput
 }
 
@@ -592,9 +592,9 @@ export type usersSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   emailVerified?: boolean
   name?: boolean
   image?: boolean
-  is_admin?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  is_admin?: boolean
   accounts?: boolean | Prisma.users$accountsArgs<ExtArgs>
   sessions?: boolean | Prisma.users$sessionsArgs<ExtArgs>
   _count?: boolean | Prisma.UsersCountOutputTypeDefaultArgs<ExtArgs>
@@ -606,9 +606,9 @@ export type usersSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   emailVerified?: boolean
   name?: boolean
   image?: boolean
-  is_admin?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  is_admin?: boolean
 }, ExtArgs["result"]["users"]>
 
 export type usersSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -617,9 +617,9 @@ export type usersSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   emailVerified?: boolean
   name?: boolean
   image?: boolean
-  is_admin?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  is_admin?: boolean
 }, ExtArgs["result"]["users"]>
 
 export type usersSelectScalar = {
@@ -628,12 +628,12 @@ export type usersSelectScalar = {
   emailVerified?: boolean
   name?: boolean
   image?: boolean
-  is_admin?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  is_admin?: boolean
 }
 
-export type usersOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "emailVerified" | "name" | "image" | "is_admin" | "createdAt" | "updatedAt", ExtArgs["result"]["users"]>
+export type usersOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "emailVerified" | "name" | "image" | "createdAt" | "updatedAt" | "is_admin", ExtArgs["result"]["users"]>
 export type usersInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   accounts?: boolean | Prisma.users$accountsArgs<ExtArgs>
   sessions?: boolean | Prisma.users$sessionsArgs<ExtArgs>
@@ -654,9 +654,9 @@ export type $usersPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     emailVerified: boolean | null
     name: string | null
     image: string | null
-    is_admin: boolean
     createdAt: Date | null
     updatedAt: Date | null
+    is_admin: boolean
   }, ExtArgs["result"]["users"]>
   composites: {}
 }
@@ -1087,9 +1087,9 @@ export interface usersFieldRefs {
   readonly emailVerified: Prisma.FieldRef<"users", 'Boolean'>
   readonly name: Prisma.FieldRef<"users", 'String'>
   readonly image: Prisma.FieldRef<"users", 'String'>
-  readonly is_admin: Prisma.FieldRef<"users", 'Boolean'>
   readonly createdAt: Prisma.FieldRef<"users", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"users", 'DateTime'>
+  readonly is_admin: Prisma.FieldRef<"users", 'Boolean'>
 }
     
 

@@ -46,8 +46,6 @@ export type Work_experiencesMinAggregateOutputType = {
   summary: string | null
   id: number | null
   logo: string | null
-  logo_path: string | null
-  banner_path: string | null
   status: string | null
   sort: number | null
   profile: number | null
@@ -56,6 +54,8 @@ export type Work_experiencesMinAggregateOutputType = {
   start_date: Date | null
   end_date: Date | null
   website: string | null
+  logo_path: string | null
+  banner_path: string | null
 }
 
 export type Work_experiencesMaxAggregateOutputType = {
@@ -66,8 +66,6 @@ export type Work_experiencesMaxAggregateOutputType = {
   summary: string | null
   id: number | null
   logo: string | null
-  logo_path: string | null
-  banner_path: string | null
   status: string | null
   sort: number | null
   profile: number | null
@@ -76,6 +74,8 @@ export type Work_experiencesMaxAggregateOutputType = {
   start_date: Date | null
   end_date: Date | null
   website: string | null
+  logo_path: string | null
+  banner_path: string | null
 }
 
 export type Work_experiencesCountAggregateOutputType = {
@@ -86,8 +86,6 @@ export type Work_experiencesCountAggregateOutputType = {
   summary: number
   id: number
   logo: number
-  logo_path: number
-  banner_path: number
   status: number
   sort: number
   profile: number
@@ -97,6 +95,8 @@ export type Work_experiencesCountAggregateOutputType = {
   end_date: number
   website: number
   tags: number
+  logo_path: number
+  banner_path: number
   _all: number
 }
 
@@ -121,8 +121,6 @@ export type Work_experiencesMinAggregateInputType = {
   summary?: true
   id?: true
   logo?: true
-  logo_path?: true
-  banner_path?: true
   status?: true
   sort?: true
   profile?: true
@@ -131,6 +129,8 @@ export type Work_experiencesMinAggregateInputType = {
   start_date?: true
   end_date?: true
   website?: true
+  logo_path?: true
+  banner_path?: true
 }
 
 export type Work_experiencesMaxAggregateInputType = {
@@ -141,8 +141,6 @@ export type Work_experiencesMaxAggregateInputType = {
   summary?: true
   id?: true
   logo?: true
-  logo_path?: true
-  banner_path?: true
   status?: true
   sort?: true
   profile?: true
@@ -151,6 +149,8 @@ export type Work_experiencesMaxAggregateInputType = {
   start_date?: true
   end_date?: true
   website?: true
+  logo_path?: true
+  banner_path?: true
 }
 
 export type Work_experiencesCountAggregateInputType = {
@@ -161,8 +161,6 @@ export type Work_experiencesCountAggregateInputType = {
   summary?: true
   id?: true
   logo?: true
-  logo_path?: true
-  banner_path?: true
   status?: true
   sort?: true
   profile?: true
@@ -172,6 +170,8 @@ export type Work_experiencesCountAggregateInputType = {
   end_date?: true
   website?: true
   tags?: true
+  logo_path?: true
+  banner_path?: true
   _all?: true
 }
 
@@ -269,8 +269,6 @@ export type Work_experiencesGroupByOutputType = {
   summary: string
   id: number
   logo: string | null
-  logo_path: string | null
-  banner_path: string | null
   status: string
   sort: number | null
   profile: number
@@ -280,6 +278,8 @@ export type Work_experiencesGroupByOutputType = {
   end_date: Date | null
   website: string | null
   tags: runtime.JsonValue | null
+  logo_path: string | null
+  banner_path: string | null
   _count: Work_experiencesCountAggregateOutputType | null
   _avg: Work_experiencesAvgAggregateOutputType | null
   _sum: Work_experiencesSumAggregateOutputType | null
@@ -313,8 +313,6 @@ export type work_experiencesWhereInput = {
   summary?: Prisma.StringFilter<"work_experiences"> | string
   id?: Prisma.IntFilter<"work_experiences"> | number
   logo?: Prisma.UuidNullableFilter<"work_experiences"> | string | null
-  logo_path?: Prisma.StringNullableFilter<"work_experiences"> | string | null
-  banner_path?: Prisma.StringNullableFilter<"work_experiences"> | string | null
   status?: Prisma.StringFilter<"work_experiences"> | string
   sort?: Prisma.IntNullableFilter<"work_experiences"> | number | null
   profile?: Prisma.IntFilter<"work_experiences"> | number
@@ -324,6 +322,8 @@ export type work_experiencesWhereInput = {
   end_date?: Prisma.DateTimeNullableFilter<"work_experiences"> | Date | string | null
   website?: Prisma.StringNullableFilter<"work_experiences"> | string | null
   tags?: Prisma.JsonNullableFilter<"work_experiences">
+  logo_path?: Prisma.StringNullableFilter<"work_experiences"> | string | null
+  banner_path?: Prisma.StringNullableFilter<"work_experiences"> | string | null
   work_experience_achievements?: Prisma.Work_experience_achievementsListRelationFilter
   work_experience_projects?: Prisma.Work_experience_projectsListRelationFilter
   work_experience_technologies?: Prisma.Work_experience_technologiesListRelationFilter
@@ -339,8 +339,6 @@ export type work_experiencesOrderByWithRelationInput = {
   summary?: Prisma.SortOrder
   id?: Prisma.SortOrder
   logo?: Prisma.SortOrderInput | Prisma.SortOrder
-  logo_path?: Prisma.SortOrderInput | Prisma.SortOrder
-  banner_path?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   sort?: Prisma.SortOrderInput | Prisma.SortOrder
   profile?: Prisma.SortOrder
@@ -350,6 +348,8 @@ export type work_experiencesOrderByWithRelationInput = {
   end_date?: Prisma.SortOrderInput | Prisma.SortOrder
   website?: Prisma.SortOrderInput | Prisma.SortOrder
   tags?: Prisma.SortOrderInput | Prisma.SortOrder
+  logo_path?: Prisma.SortOrderInput | Prisma.SortOrder
+  banner_path?: Prisma.SortOrderInput | Prisma.SortOrder
   work_experience_achievements?: Prisma.work_experience_achievementsOrderByRelationAggregateInput
   work_experience_projects?: Prisma.work_experience_projectsOrderByRelationAggregateInput
   work_experience_technologies?: Prisma.work_experience_technologiesOrderByRelationAggregateInput
@@ -368,8 +368,6 @@ export type work_experiencesWhereUniqueInput = Prisma.AtLeast<{
   position?: Prisma.StringFilter<"work_experiences"> | string
   summary?: Prisma.StringFilter<"work_experiences"> | string
   logo?: Prisma.UuidNullableFilter<"work_experiences"> | string | null
-  logo_path?: Prisma.StringNullableFilter<"work_experiences"> | string | null
-  banner_path?: Prisma.StringNullableFilter<"work_experiences"> | string | null
   status?: Prisma.StringFilter<"work_experiences"> | string
   sort?: Prisma.IntNullableFilter<"work_experiences"> | number | null
   profile?: Prisma.IntFilter<"work_experiences"> | number
@@ -379,6 +377,8 @@ export type work_experiencesWhereUniqueInput = Prisma.AtLeast<{
   end_date?: Prisma.DateTimeNullableFilter<"work_experiences"> | Date | string | null
   website?: Prisma.StringNullableFilter<"work_experiences"> | string | null
   tags?: Prisma.JsonNullableFilter<"work_experiences">
+  logo_path?: Prisma.StringNullableFilter<"work_experiences"> | string | null
+  banner_path?: Prisma.StringNullableFilter<"work_experiences"> | string | null
   work_experience_achievements?: Prisma.Work_experience_achievementsListRelationFilter
   work_experience_projects?: Prisma.Work_experience_projectsListRelationFilter
   work_experience_technologies?: Prisma.Work_experience_technologiesListRelationFilter
@@ -394,8 +394,6 @@ export type work_experiencesOrderByWithAggregationInput = {
   summary?: Prisma.SortOrder
   id?: Prisma.SortOrder
   logo?: Prisma.SortOrderInput | Prisma.SortOrder
-  logo_path?: Prisma.SortOrderInput | Prisma.SortOrder
-  banner_path?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   sort?: Prisma.SortOrderInput | Prisma.SortOrder
   profile?: Prisma.SortOrder
@@ -405,6 +403,8 @@ export type work_experiencesOrderByWithAggregationInput = {
   end_date?: Prisma.SortOrderInput | Prisma.SortOrder
   website?: Prisma.SortOrderInput | Prisma.SortOrder
   tags?: Prisma.SortOrderInput | Prisma.SortOrder
+  logo_path?: Prisma.SortOrderInput | Prisma.SortOrder
+  banner_path?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.work_experiencesCountOrderByAggregateInput
   _avg?: Prisma.work_experiencesAvgOrderByAggregateInput
   _max?: Prisma.work_experiencesMaxOrderByAggregateInput
@@ -423,8 +423,6 @@ export type work_experiencesScalarWhereWithAggregatesInput = {
   summary?: Prisma.StringWithAggregatesFilter<"work_experiences"> | string
   id?: Prisma.IntWithAggregatesFilter<"work_experiences"> | number
   logo?: Prisma.UuidNullableWithAggregatesFilter<"work_experiences"> | string | null
-  logo_path?: Prisma.StringNullableWithAggregatesFilter<"work_experiences"> | string | null
-  banner_path?: Prisma.StringNullableWithAggregatesFilter<"work_experiences"> | string | null
   status?: Prisma.StringWithAggregatesFilter<"work_experiences"> | string
   sort?: Prisma.IntNullableWithAggregatesFilter<"work_experiences"> | number | null
   profile?: Prisma.IntWithAggregatesFilter<"work_experiences"> | number
@@ -434,6 +432,8 @@ export type work_experiencesScalarWhereWithAggregatesInput = {
   end_date?: Prisma.DateTimeNullableWithAggregatesFilter<"work_experiences"> | Date | string | null
   website?: Prisma.StringNullableWithAggregatesFilter<"work_experiences"> | string | null
   tags?: Prisma.JsonNullableWithAggregatesFilter<"work_experiences">
+  logo_path?: Prisma.StringNullableWithAggregatesFilter<"work_experiences"> | string | null
+  banner_path?: Prisma.StringNullableWithAggregatesFilter<"work_experiences"> | string | null
 }
 
 export type work_experiencesCreateInput = {
@@ -442,8 +442,6 @@ export type work_experiencesCreateInput = {
   description: string
   position: string
   summary: string
-  logo_path?: string | null
-  banner_path?: string | null
   status?: string
   sort?: number | null
   date_created?: Date | string | null
@@ -452,6 +450,8 @@ export type work_experiencesCreateInput = {
   end_date?: Date | string | null
   website?: string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  logo_path?: string | null
+  banner_path?: string | null
   work_experience_achievements?: Prisma.work_experience_achievementsCreateNestedManyWithoutWork_experiencesInput
   work_experience_projects?: Prisma.work_experience_projectsCreateNestedManyWithoutWork_experiencesInput
   work_experience_technologies?: Prisma.work_experience_technologiesCreateNestedManyWithoutWork_experiencesInput
@@ -467,8 +467,6 @@ export type work_experiencesUncheckedCreateInput = {
   summary: string
   id?: number
   logo?: string | null
-  logo_path?: string | null
-  banner_path?: string | null
   status?: string
   sort?: number | null
   profile: number
@@ -478,6 +476,8 @@ export type work_experiencesUncheckedCreateInput = {
   end_date?: Date | string | null
   website?: string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  logo_path?: string | null
+  banner_path?: string | null
   work_experience_achievements?: Prisma.work_experience_achievementsUncheckedCreateNestedManyWithoutWork_experiencesInput
   work_experience_projects?: Prisma.work_experience_projectsUncheckedCreateNestedManyWithoutWork_experiencesInput
   work_experience_technologies?: Prisma.work_experience_technologiesUncheckedCreateNestedManyWithoutWork_experiencesInput
@@ -489,8 +489,6 @@ export type work_experiencesUpdateInput = {
   description?: Prisma.StringFieldUpdateOperationsInput | string
   position?: Prisma.StringFieldUpdateOperationsInput | string
   summary?: Prisma.StringFieldUpdateOperationsInput | string
-  logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -499,6 +497,8 @@ export type work_experiencesUpdateInput = {
   end_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   work_experience_achievements?: Prisma.work_experience_achievementsUpdateManyWithoutWork_experiencesNestedInput
   work_experience_projects?: Prisma.work_experience_projectsUpdateManyWithoutWork_experiencesNestedInput
   work_experience_technologies?: Prisma.work_experience_technologiesUpdateManyWithoutWork_experiencesNestedInput
@@ -514,8 +514,6 @@ export type work_experiencesUncheckedUpdateInput = {
   summary?: Prisma.StringFieldUpdateOperationsInput | string
   id?: Prisma.IntFieldUpdateOperationsInput | number
   logo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
@@ -525,6 +523,8 @@ export type work_experiencesUncheckedUpdateInput = {
   end_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   work_experience_achievements?: Prisma.work_experience_achievementsUncheckedUpdateManyWithoutWork_experiencesNestedInput
   work_experience_projects?: Prisma.work_experience_projectsUncheckedUpdateManyWithoutWork_experiencesNestedInput
   work_experience_technologies?: Prisma.work_experience_technologiesUncheckedUpdateManyWithoutWork_experiencesNestedInput
@@ -538,8 +538,6 @@ export type work_experiencesCreateManyInput = {
   summary: string
   id?: number
   logo?: string | null
-  logo_path?: string | null
-  banner_path?: string | null
   status?: string
   sort?: number | null
   profile: number
@@ -549,6 +547,8 @@ export type work_experiencesCreateManyInput = {
   end_date?: Date | string | null
   website?: string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  logo_path?: string | null
+  banner_path?: string | null
 }
 
 export type work_experiencesUpdateManyMutationInput = {
@@ -557,8 +557,6 @@ export type work_experiencesUpdateManyMutationInput = {
   description?: Prisma.StringFieldUpdateOperationsInput | string
   position?: Prisma.StringFieldUpdateOperationsInput | string
   summary?: Prisma.StringFieldUpdateOperationsInput | string
-  logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -567,6 +565,8 @@ export type work_experiencesUpdateManyMutationInput = {
   end_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type work_experiencesUncheckedUpdateManyInput = {
@@ -577,8 +577,6 @@ export type work_experiencesUncheckedUpdateManyInput = {
   summary?: Prisma.StringFieldUpdateOperationsInput | string
   id?: Prisma.IntFieldUpdateOperationsInput | number
   logo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
@@ -588,6 +586,8 @@ export type work_experiencesUncheckedUpdateManyInput = {
   end_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type Work_experiencesListRelationFilter = {
@@ -618,8 +618,6 @@ export type work_experiencesCountOrderByAggregateInput = {
   summary?: Prisma.SortOrder
   id?: Prisma.SortOrder
   logo?: Prisma.SortOrder
-  logo_path?: Prisma.SortOrder
-  banner_path?: Prisma.SortOrder
   status?: Prisma.SortOrder
   sort?: Prisma.SortOrder
   profile?: Prisma.SortOrder
@@ -629,6 +627,8 @@ export type work_experiencesCountOrderByAggregateInput = {
   end_date?: Prisma.SortOrder
   website?: Prisma.SortOrder
   tags?: Prisma.SortOrder
+  logo_path?: Prisma.SortOrder
+  banner_path?: Prisma.SortOrder
 }
 
 export type work_experiencesAvgOrderByAggregateInput = {
@@ -645,8 +645,6 @@ export type work_experiencesMaxOrderByAggregateInput = {
   summary?: Prisma.SortOrder
   id?: Prisma.SortOrder
   logo?: Prisma.SortOrder
-  logo_path?: Prisma.SortOrder
-  banner_path?: Prisma.SortOrder
   status?: Prisma.SortOrder
   sort?: Prisma.SortOrder
   profile?: Prisma.SortOrder
@@ -655,6 +653,8 @@ export type work_experiencesMaxOrderByAggregateInput = {
   start_date?: Prisma.SortOrder
   end_date?: Prisma.SortOrder
   website?: Prisma.SortOrder
+  logo_path?: Prisma.SortOrder
+  banner_path?: Prisma.SortOrder
 }
 
 export type work_experiencesMinOrderByAggregateInput = {
@@ -665,8 +665,6 @@ export type work_experiencesMinOrderByAggregateInput = {
   summary?: Prisma.SortOrder
   id?: Prisma.SortOrder
   logo?: Prisma.SortOrder
-  logo_path?: Prisma.SortOrder
-  banner_path?: Prisma.SortOrder
   status?: Prisma.SortOrder
   sort?: Prisma.SortOrder
   profile?: Prisma.SortOrder
@@ -675,6 +673,8 @@ export type work_experiencesMinOrderByAggregateInput = {
   start_date?: Prisma.SortOrder
   end_date?: Prisma.SortOrder
   website?: Prisma.SortOrder
+  logo_path?: Prisma.SortOrder
+  banner_path?: Prisma.SortOrder
 }
 
 export type work_experiencesSumOrderByAggregateInput = {
@@ -817,8 +817,6 @@ export type work_experiencesCreateWithoutDirectus_filesInput = {
   description: string
   position: string
   summary: string
-  logo_path?: string | null
-  banner_path?: string | null
   status?: string
   sort?: number | null
   date_created?: Date | string | null
@@ -827,6 +825,8 @@ export type work_experiencesCreateWithoutDirectus_filesInput = {
   end_date?: Date | string | null
   website?: string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  logo_path?: string | null
+  banner_path?: string | null
   work_experience_achievements?: Prisma.work_experience_achievementsCreateNestedManyWithoutWork_experiencesInput
   work_experience_projects?: Prisma.work_experience_projectsCreateNestedManyWithoutWork_experiencesInput
   work_experience_technologies?: Prisma.work_experience_technologiesCreateNestedManyWithoutWork_experiencesInput
@@ -840,8 +840,6 @@ export type work_experiencesUncheckedCreateWithoutDirectus_filesInput = {
   position: string
   summary: string
   id?: number
-  logo_path?: string | null
-  banner_path?: string | null
   status?: string
   sort?: number | null
   profile: number
@@ -851,6 +849,8 @@ export type work_experiencesUncheckedCreateWithoutDirectus_filesInput = {
   end_date?: Date | string | null
   website?: string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  logo_path?: string | null
+  banner_path?: string | null
   work_experience_achievements?: Prisma.work_experience_achievementsUncheckedCreateNestedManyWithoutWork_experiencesInput
   work_experience_projects?: Prisma.work_experience_projectsUncheckedCreateNestedManyWithoutWork_experiencesInput
   work_experience_technologies?: Prisma.work_experience_technologiesUncheckedCreateNestedManyWithoutWork_experiencesInput
@@ -893,8 +893,6 @@ export type work_experiencesScalarWhereInput = {
   summary?: Prisma.StringFilter<"work_experiences"> | string
   id?: Prisma.IntFilter<"work_experiences"> | number
   logo?: Prisma.UuidNullableFilter<"work_experiences"> | string | null
-  logo_path?: Prisma.StringNullableFilter<"work_experiences"> | string | null
-  banner_path?: Prisma.StringNullableFilter<"work_experiences"> | string | null
   status?: Prisma.StringFilter<"work_experiences"> | string
   sort?: Prisma.IntNullableFilter<"work_experiences"> | number | null
   profile?: Prisma.IntFilter<"work_experiences"> | number
@@ -904,6 +902,8 @@ export type work_experiencesScalarWhereInput = {
   end_date?: Prisma.DateTimeNullableFilter<"work_experiences"> | Date | string | null
   website?: Prisma.StringNullableFilter<"work_experiences"> | string | null
   tags?: Prisma.JsonNullableFilter<"work_experiences">
+  logo_path?: Prisma.StringNullableFilter<"work_experiences"> | string | null
+  banner_path?: Prisma.StringNullableFilter<"work_experiences"> | string | null
 }
 
 export type work_experiencesCreateWithoutProfilesInput = {
@@ -912,8 +912,6 @@ export type work_experiencesCreateWithoutProfilesInput = {
   description: string
   position: string
   summary: string
-  logo_path?: string | null
-  banner_path?: string | null
   status?: string
   sort?: number | null
   date_created?: Date | string | null
@@ -922,6 +920,8 @@ export type work_experiencesCreateWithoutProfilesInput = {
   end_date?: Date | string | null
   website?: string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  logo_path?: string | null
+  banner_path?: string | null
   work_experience_achievements?: Prisma.work_experience_achievementsCreateNestedManyWithoutWork_experiencesInput
   work_experience_projects?: Prisma.work_experience_projectsCreateNestedManyWithoutWork_experiencesInput
   work_experience_technologies?: Prisma.work_experience_technologiesCreateNestedManyWithoutWork_experiencesInput
@@ -936,8 +936,6 @@ export type work_experiencesUncheckedCreateWithoutProfilesInput = {
   summary: string
   id?: number
   logo?: string | null
-  logo_path?: string | null
-  banner_path?: string | null
   status?: string
   sort?: number | null
   date_created?: Date | string | null
@@ -946,6 +944,8 @@ export type work_experiencesUncheckedCreateWithoutProfilesInput = {
   end_date?: Date | string | null
   website?: string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  logo_path?: string | null
+  banner_path?: string | null
   work_experience_achievements?: Prisma.work_experience_achievementsUncheckedCreateNestedManyWithoutWork_experiencesInput
   work_experience_projects?: Prisma.work_experience_projectsUncheckedCreateNestedManyWithoutWork_experiencesInput
   work_experience_technologies?: Prisma.work_experience_technologiesUncheckedCreateNestedManyWithoutWork_experiencesInput
@@ -983,8 +983,6 @@ export type work_experiencesCreateWithoutWork_experience_achievementsInput = {
   description: string
   position: string
   summary: string
-  logo_path?: string | null
-  banner_path?: string | null
   status?: string
   sort?: number | null
   date_created?: Date | string | null
@@ -993,6 +991,8 @@ export type work_experiencesCreateWithoutWork_experience_achievementsInput = {
   end_date?: Date | string | null
   website?: string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  logo_path?: string | null
+  banner_path?: string | null
   work_experience_projects?: Prisma.work_experience_projectsCreateNestedManyWithoutWork_experiencesInput
   work_experience_technologies?: Prisma.work_experience_technologiesCreateNestedManyWithoutWork_experiencesInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutWork_experiencesInput
@@ -1007,8 +1007,6 @@ export type work_experiencesUncheckedCreateWithoutWork_experience_achievementsIn
   summary: string
   id?: number
   logo?: string | null
-  logo_path?: string | null
-  banner_path?: string | null
   status?: string
   sort?: number | null
   profile: number
@@ -1018,6 +1016,8 @@ export type work_experiencesUncheckedCreateWithoutWork_experience_achievementsIn
   end_date?: Date | string | null
   website?: string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  logo_path?: string | null
+  banner_path?: string | null
   work_experience_projects?: Prisma.work_experience_projectsUncheckedCreateNestedManyWithoutWork_experiencesInput
   work_experience_technologies?: Prisma.work_experience_technologiesUncheckedCreateNestedManyWithoutWork_experiencesInput
 }
@@ -1044,8 +1044,6 @@ export type work_experiencesUpdateWithoutWork_experience_achievementsInput = {
   description?: Prisma.StringFieldUpdateOperationsInput | string
   position?: Prisma.StringFieldUpdateOperationsInput | string
   summary?: Prisma.StringFieldUpdateOperationsInput | string
-  logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1054,6 +1052,8 @@ export type work_experiencesUpdateWithoutWork_experience_achievementsInput = {
   end_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   work_experience_projects?: Prisma.work_experience_projectsUpdateManyWithoutWork_experiencesNestedInput
   work_experience_technologies?: Prisma.work_experience_technologiesUpdateManyWithoutWork_experiencesNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutWork_experiencesNestedInput
@@ -1068,8 +1068,6 @@ export type work_experiencesUncheckedUpdateWithoutWork_experience_achievementsIn
   summary?: Prisma.StringFieldUpdateOperationsInput | string
   id?: Prisma.IntFieldUpdateOperationsInput | number
   logo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1079,6 +1077,8 @@ export type work_experiencesUncheckedUpdateWithoutWork_experience_achievementsIn
   end_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   work_experience_projects?: Prisma.work_experience_projectsUncheckedUpdateManyWithoutWork_experiencesNestedInput
   work_experience_technologies?: Prisma.work_experience_technologiesUncheckedUpdateManyWithoutWork_experiencesNestedInput
 }
@@ -1089,8 +1089,6 @@ export type work_experiencesCreateWithoutWork_experience_projectsInput = {
   description: string
   position: string
   summary: string
-  logo_path?: string | null
-  banner_path?: string | null
   status?: string
   sort?: number | null
   date_created?: Date | string | null
@@ -1099,6 +1097,8 @@ export type work_experiencesCreateWithoutWork_experience_projectsInput = {
   end_date?: Date | string | null
   website?: string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  logo_path?: string | null
+  banner_path?: string | null
   work_experience_achievements?: Prisma.work_experience_achievementsCreateNestedManyWithoutWork_experiencesInput
   work_experience_technologies?: Prisma.work_experience_technologiesCreateNestedManyWithoutWork_experiencesInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutWork_experiencesInput
@@ -1113,8 +1113,6 @@ export type work_experiencesUncheckedCreateWithoutWork_experience_projectsInput 
   summary: string
   id?: number
   logo?: string | null
-  logo_path?: string | null
-  banner_path?: string | null
   status?: string
   sort?: number | null
   profile: number
@@ -1124,6 +1122,8 @@ export type work_experiencesUncheckedCreateWithoutWork_experience_projectsInput 
   end_date?: Date | string | null
   website?: string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  logo_path?: string | null
+  banner_path?: string | null
   work_experience_achievements?: Prisma.work_experience_achievementsUncheckedCreateNestedManyWithoutWork_experiencesInput
   work_experience_technologies?: Prisma.work_experience_technologiesUncheckedCreateNestedManyWithoutWork_experiencesInput
 }
@@ -1150,8 +1150,6 @@ export type work_experiencesUpdateWithoutWork_experience_projectsInput = {
   description?: Prisma.StringFieldUpdateOperationsInput | string
   position?: Prisma.StringFieldUpdateOperationsInput | string
   summary?: Prisma.StringFieldUpdateOperationsInput | string
-  logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1160,6 +1158,8 @@ export type work_experiencesUpdateWithoutWork_experience_projectsInput = {
   end_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   work_experience_achievements?: Prisma.work_experience_achievementsUpdateManyWithoutWork_experiencesNestedInput
   work_experience_technologies?: Prisma.work_experience_technologiesUpdateManyWithoutWork_experiencesNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutWork_experiencesNestedInput
@@ -1174,8 +1174,6 @@ export type work_experiencesUncheckedUpdateWithoutWork_experience_projectsInput 
   summary?: Prisma.StringFieldUpdateOperationsInput | string
   id?: Prisma.IntFieldUpdateOperationsInput | number
   logo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1185,6 +1183,8 @@ export type work_experiencesUncheckedUpdateWithoutWork_experience_projectsInput 
   end_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   work_experience_achievements?: Prisma.work_experience_achievementsUncheckedUpdateManyWithoutWork_experiencesNestedInput
   work_experience_technologies?: Prisma.work_experience_technologiesUncheckedUpdateManyWithoutWork_experiencesNestedInput
 }
@@ -1195,8 +1195,6 @@ export type work_experiencesCreateWithoutWork_experience_technologiesInput = {
   description: string
   position: string
   summary: string
-  logo_path?: string | null
-  banner_path?: string | null
   status?: string
   sort?: number | null
   date_created?: Date | string | null
@@ -1205,6 +1203,8 @@ export type work_experiencesCreateWithoutWork_experience_technologiesInput = {
   end_date?: Date | string | null
   website?: string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  logo_path?: string | null
+  banner_path?: string | null
   work_experience_achievements?: Prisma.work_experience_achievementsCreateNestedManyWithoutWork_experiencesInput
   work_experience_projects?: Prisma.work_experience_projectsCreateNestedManyWithoutWork_experiencesInput
   directus_files?: Prisma.directus_filesCreateNestedOneWithoutWork_experiencesInput
@@ -1219,8 +1219,6 @@ export type work_experiencesUncheckedCreateWithoutWork_experience_technologiesIn
   summary: string
   id?: number
   logo?: string | null
-  logo_path?: string | null
-  banner_path?: string | null
   status?: string
   sort?: number | null
   profile: number
@@ -1230,6 +1228,8 @@ export type work_experiencesUncheckedCreateWithoutWork_experience_technologiesIn
   end_date?: Date | string | null
   website?: string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  logo_path?: string | null
+  banner_path?: string | null
   work_experience_achievements?: Prisma.work_experience_achievementsUncheckedCreateNestedManyWithoutWork_experiencesInput
   work_experience_projects?: Prisma.work_experience_projectsUncheckedCreateNestedManyWithoutWork_experiencesInput
 }
@@ -1256,8 +1256,6 @@ export type work_experiencesUpdateWithoutWork_experience_technologiesInput = {
   description?: Prisma.StringFieldUpdateOperationsInput | string
   position?: Prisma.StringFieldUpdateOperationsInput | string
   summary?: Prisma.StringFieldUpdateOperationsInput | string
-  logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1266,6 +1264,8 @@ export type work_experiencesUpdateWithoutWork_experience_technologiesInput = {
   end_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   work_experience_achievements?: Prisma.work_experience_achievementsUpdateManyWithoutWork_experiencesNestedInput
   work_experience_projects?: Prisma.work_experience_projectsUpdateManyWithoutWork_experiencesNestedInput
   directus_files?: Prisma.directus_filesUpdateOneWithoutWork_experiencesNestedInput
@@ -1280,8 +1280,6 @@ export type work_experiencesUncheckedUpdateWithoutWork_experience_technologiesIn
   summary?: Prisma.StringFieldUpdateOperationsInput | string
   id?: Prisma.IntFieldUpdateOperationsInput | number
   logo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1291,6 +1289,8 @@ export type work_experiencesUncheckedUpdateWithoutWork_experience_technologiesIn
   end_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   work_experience_achievements?: Prisma.work_experience_achievementsUncheckedUpdateManyWithoutWork_experiencesNestedInput
   work_experience_projects?: Prisma.work_experience_projectsUncheckedUpdateManyWithoutWork_experiencesNestedInput
 }
@@ -1302,8 +1302,6 @@ export type work_experiencesCreateManyDirectus_filesInput = {
   position: string
   summary: string
   id?: number
-  logo_path?: string | null
-  banner_path?: string | null
   status?: string
   sort?: number | null
   profile: number
@@ -1313,6 +1311,8 @@ export type work_experiencesCreateManyDirectus_filesInput = {
   end_date?: Date | string | null
   website?: string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  logo_path?: string | null
+  banner_path?: string | null
 }
 
 export type work_experiencesUpdateWithoutDirectus_filesInput = {
@@ -1321,8 +1321,6 @@ export type work_experiencesUpdateWithoutDirectus_filesInput = {
   description?: Prisma.StringFieldUpdateOperationsInput | string
   position?: Prisma.StringFieldUpdateOperationsInput | string
   summary?: Prisma.StringFieldUpdateOperationsInput | string
-  logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1331,6 +1329,8 @@ export type work_experiencesUpdateWithoutDirectus_filesInput = {
   end_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   work_experience_achievements?: Prisma.work_experience_achievementsUpdateManyWithoutWork_experiencesNestedInput
   work_experience_projects?: Prisma.work_experience_projectsUpdateManyWithoutWork_experiencesNestedInput
   work_experience_technologies?: Prisma.work_experience_technologiesUpdateManyWithoutWork_experiencesNestedInput
@@ -1344,8 +1344,6 @@ export type work_experiencesUncheckedUpdateWithoutDirectus_filesInput = {
   position?: Prisma.StringFieldUpdateOperationsInput | string
   summary?: Prisma.StringFieldUpdateOperationsInput | string
   id?: Prisma.IntFieldUpdateOperationsInput | number
-  logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1355,6 +1353,8 @@ export type work_experiencesUncheckedUpdateWithoutDirectus_filesInput = {
   end_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   work_experience_achievements?: Prisma.work_experience_achievementsUncheckedUpdateManyWithoutWork_experiencesNestedInput
   work_experience_projects?: Prisma.work_experience_projectsUncheckedUpdateManyWithoutWork_experiencesNestedInput
   work_experience_technologies?: Prisma.work_experience_technologiesUncheckedUpdateManyWithoutWork_experiencesNestedInput
@@ -1367,8 +1367,6 @@ export type work_experiencesUncheckedUpdateManyWithoutDirectus_filesInput = {
   position?: Prisma.StringFieldUpdateOperationsInput | string
   summary?: Prisma.StringFieldUpdateOperationsInput | string
   id?: Prisma.IntFieldUpdateOperationsInput | number
-  logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   profile?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1378,6 +1376,8 @@ export type work_experiencesUncheckedUpdateManyWithoutDirectus_filesInput = {
   end_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type work_experiencesCreateManyProfilesInput = {
@@ -1388,8 +1388,6 @@ export type work_experiencesCreateManyProfilesInput = {
   summary: string
   id?: number
   logo?: string | null
-  logo_path?: string | null
-  banner_path?: string | null
   status?: string
   sort?: number | null
   date_created?: Date | string | null
@@ -1398,6 +1396,8 @@ export type work_experiencesCreateManyProfilesInput = {
   end_date?: Date | string | null
   website?: string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  logo_path?: string | null
+  banner_path?: string | null
 }
 
 export type work_experiencesUpdateWithoutProfilesInput = {
@@ -1406,8 +1406,6 @@ export type work_experiencesUpdateWithoutProfilesInput = {
   description?: Prisma.StringFieldUpdateOperationsInput | string
   position?: Prisma.StringFieldUpdateOperationsInput | string
   summary?: Prisma.StringFieldUpdateOperationsInput | string
-  logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1416,6 +1414,8 @@ export type work_experiencesUpdateWithoutProfilesInput = {
   end_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   work_experience_achievements?: Prisma.work_experience_achievementsUpdateManyWithoutWork_experiencesNestedInput
   work_experience_projects?: Prisma.work_experience_projectsUpdateManyWithoutWork_experiencesNestedInput
   work_experience_technologies?: Prisma.work_experience_technologiesUpdateManyWithoutWork_experiencesNestedInput
@@ -1430,8 +1430,6 @@ export type work_experiencesUncheckedUpdateWithoutProfilesInput = {
   summary?: Prisma.StringFieldUpdateOperationsInput | string
   id?: Prisma.IntFieldUpdateOperationsInput | number
   logo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1440,6 +1438,8 @@ export type work_experiencesUncheckedUpdateWithoutProfilesInput = {
   end_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   work_experience_achievements?: Prisma.work_experience_achievementsUncheckedUpdateManyWithoutWork_experiencesNestedInput
   work_experience_projects?: Prisma.work_experience_projectsUncheckedUpdateManyWithoutWork_experiencesNestedInput
   work_experience_technologies?: Prisma.work_experience_technologiesUncheckedUpdateManyWithoutWork_experiencesNestedInput
@@ -1453,8 +1453,6 @@ export type work_experiencesUncheckedUpdateManyWithoutProfilesInput = {
   summary?: Prisma.StringFieldUpdateOperationsInput | string
   id?: Prisma.IntFieldUpdateOperationsInput | number
   logo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   date_created?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1463,6 +1461,8 @@ export type work_experiencesUncheckedUpdateManyWithoutProfilesInput = {
   end_date?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   tags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  logo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banner_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 
@@ -1522,8 +1522,6 @@ export type work_experiencesSelect<ExtArgs extends runtime.Types.Extensions.Inte
   summary?: boolean
   id?: boolean
   logo?: boolean
-  logo_path?: boolean
-  banner_path?: boolean
   status?: boolean
   sort?: boolean
   profile?: boolean
@@ -1533,6 +1531,8 @@ export type work_experiencesSelect<ExtArgs extends runtime.Types.Extensions.Inte
   end_date?: boolean
   website?: boolean
   tags?: boolean
+  logo_path?: boolean
+  banner_path?: boolean
   work_experience_achievements?: boolean | Prisma.work_experiences$work_experience_achievementsArgs<ExtArgs>
   work_experience_projects?: boolean | Prisma.work_experiences$work_experience_projectsArgs<ExtArgs>
   work_experience_technologies?: boolean | Prisma.work_experiences$work_experience_technologiesArgs<ExtArgs>
@@ -1549,8 +1549,6 @@ export type work_experiencesSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   summary?: boolean
   id?: boolean
   logo?: boolean
-  logo_path?: boolean
-  banner_path?: boolean
   status?: boolean
   sort?: boolean
   profile?: boolean
@@ -1560,6 +1558,8 @@ export type work_experiencesSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   end_date?: boolean
   website?: boolean
   tags?: boolean
+  logo_path?: boolean
+  banner_path?: boolean
   directus_files?: boolean | Prisma.work_experiences$directus_filesArgs<ExtArgs>
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["work_experiences"]>
@@ -1572,8 +1572,6 @@ export type work_experiencesSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   summary?: boolean
   id?: boolean
   logo?: boolean
-  logo_path?: boolean
-  banner_path?: boolean
   status?: boolean
   sort?: boolean
   profile?: boolean
@@ -1583,6 +1581,8 @@ export type work_experiencesSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   end_date?: boolean
   website?: boolean
   tags?: boolean
+  logo_path?: boolean
+  banner_path?: boolean
   directus_files?: boolean | Prisma.work_experiences$directus_filesArgs<ExtArgs>
   profiles?: boolean | Prisma.profilesDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["work_experiences"]>
@@ -1595,8 +1595,6 @@ export type work_experiencesSelectScalar = {
   summary?: boolean
   id?: boolean
   logo?: boolean
-  logo_path?: boolean
-  banner_path?: boolean
   status?: boolean
   sort?: boolean
   profile?: boolean
@@ -1606,9 +1604,11 @@ export type work_experiencesSelectScalar = {
   end_date?: boolean
   website?: boolean
   tags?: boolean
+  logo_path?: boolean
+  banner_path?: boolean
 }
 
-export type work_experiencesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"name" | "location" | "description" | "position" | "summary" | "id" | "logo" | "logo_path" | "banner_path" | "status" | "sort" | "profile" | "date_created" | "date_updated" | "start_date" | "end_date" | "website" | "tags", ExtArgs["result"]["work_experiences"]>
+export type work_experiencesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"name" | "location" | "description" | "position" | "summary" | "id" | "logo" | "status" | "sort" | "profile" | "date_created" | "date_updated" | "start_date" | "end_date" | "website" | "tags" | "logo_path" | "banner_path", ExtArgs["result"]["work_experiences"]>
 export type work_experiencesInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   work_experience_achievements?: boolean | Prisma.work_experiences$work_experience_achievementsArgs<ExtArgs>
   work_experience_projects?: boolean | Prisma.work_experiences$work_experience_projectsArgs<ExtArgs>
@@ -1643,8 +1643,6 @@ export type $work_experiencesPayload<ExtArgs extends runtime.Types.Extensions.In
     summary: string
     id: number
     logo: string | null
-    logo_path: string | null
-    banner_path: string | null
     status: string
     sort: number | null
     profile: number
@@ -1654,6 +1652,8 @@ export type $work_experiencesPayload<ExtArgs extends runtime.Types.Extensions.In
     end_date: Date | null
     website: string | null
     tags: runtime.JsonValue | null
+    logo_path: string | null
+    banner_path: string | null
   }, ExtArgs["result"]["work_experiences"]>
   composites: {}
 }
@@ -2089,8 +2089,6 @@ export interface work_experiencesFieldRefs {
   readonly summary: Prisma.FieldRef<"work_experiences", 'String'>
   readonly id: Prisma.FieldRef<"work_experiences", 'Int'>
   readonly logo: Prisma.FieldRef<"work_experiences", 'String'>
-  readonly logo_path: Prisma.FieldRef<"work_experiences", 'String'>
-  readonly banner_path: Prisma.FieldRef<"work_experiences", 'String'>
   readonly status: Prisma.FieldRef<"work_experiences", 'String'>
   readonly sort: Prisma.FieldRef<"work_experiences", 'Int'>
   readonly profile: Prisma.FieldRef<"work_experiences", 'Int'>
@@ -2100,6 +2098,8 @@ export interface work_experiencesFieldRefs {
   readonly end_date: Prisma.FieldRef<"work_experiences", 'DateTime'>
   readonly website: Prisma.FieldRef<"work_experiences", 'String'>
   readonly tags: Prisma.FieldRef<"work_experiences", 'Json'>
+  readonly logo_path: Prisma.FieldRef<"work_experiences", 'String'>
+  readonly banner_path: Prisma.FieldRef<"work_experiences", 'String'>
 }
     
 

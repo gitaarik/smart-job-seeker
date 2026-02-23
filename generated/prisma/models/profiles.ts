@@ -62,13 +62,11 @@ export type ProfilesMinAggregateOutputType = {
   stackoverflow_profile: string | null
   headline: string | null
   profile_picture: string | null
-  profile_photo_path: string | null
   summary: string | null
   nationality: string | null
   location_url: string | null
   location_timezone: string | null
   sort: number | null
-  location: string | null
   city: string | null
   region: string | null
   country_code: string | null
@@ -96,6 +94,8 @@ export type ProfilesMinAggregateOutputType = {
   public_cv_version: number | null
   public_resume_version: number | null
   source_cv: string | null
+  location: string | null
+  profile_photo_path: string | null
 }
 
 export type ProfilesMaxAggregateOutputType = {
@@ -114,13 +114,11 @@ export type ProfilesMaxAggregateOutputType = {
   stackoverflow_profile: string | null
   headline: string | null
   profile_picture: string | null
-  profile_photo_path: string | null
   summary: string | null
   nationality: string | null
   location_url: string | null
   location_timezone: string | null
   sort: number | null
-  location: string | null
   city: string | null
   region: string | null
   country_code: string | null
@@ -148,6 +146,8 @@ export type ProfilesMaxAggregateOutputType = {
   public_cv_version: number | null
   public_resume_version: number | null
   source_cv: string | null
+  location: string | null
+  profile_photo_path: string | null
 }
 
 export type ProfilesCountAggregateOutputType = {
@@ -166,13 +166,11 @@ export type ProfilesCountAggregateOutputType = {
   stackoverflow_profile: number
   headline: number
   profile_picture: number
-  profile_photo_path: number
   summary: number
   nationality: number
   location_url: number
   location_timezone: number
   sort: number
-  location: number
   city: number
   region: number
   country_code: number
@@ -200,6 +198,8 @@ export type ProfilesCountAggregateOutputType = {
   public_cv_version: number
   public_resume_version: number
   source_cv: number
+  location: number
+  profile_photo_path: number
   _all: number
 }
 
@@ -240,13 +240,11 @@ export type ProfilesMinAggregateInputType = {
   stackoverflow_profile?: true
   headline?: true
   profile_picture?: true
-  profile_photo_path?: true
   summary?: true
   nationality?: true
   location_url?: true
   location_timezone?: true
   sort?: true
-  location?: true
   city?: true
   region?: true
   country_code?: true
@@ -274,6 +272,8 @@ export type ProfilesMinAggregateInputType = {
   public_cv_version?: true
   public_resume_version?: true
   source_cv?: true
+  location?: true
+  profile_photo_path?: true
 }
 
 export type ProfilesMaxAggregateInputType = {
@@ -292,13 +292,11 @@ export type ProfilesMaxAggregateInputType = {
   stackoverflow_profile?: true
   headline?: true
   profile_picture?: true
-  profile_photo_path?: true
   summary?: true
   nationality?: true
   location_url?: true
   location_timezone?: true
   sort?: true
-  location?: true
   city?: true
   region?: true
   country_code?: true
@@ -326,6 +324,8 @@ export type ProfilesMaxAggregateInputType = {
   public_cv_version?: true
   public_resume_version?: true
   source_cv?: true
+  location?: true
+  profile_photo_path?: true
 }
 
 export type ProfilesCountAggregateInputType = {
@@ -344,13 +344,11 @@ export type ProfilesCountAggregateInputType = {
   stackoverflow_profile?: true
   headline?: true
   profile_picture?: true
-  profile_photo_path?: true
   summary?: true
   nationality?: true
   location_url?: true
   location_timezone?: true
   sort?: true
-  location?: true
   city?: true
   region?: true
   country_code?: true
@@ -378,6 +376,8 @@ export type ProfilesCountAggregateInputType = {
   public_cv_version?: true
   public_resume_version?: true
   source_cv?: true
+  location?: true
+  profile_photo_path?: true
   _all?: true
 }
 
@@ -483,13 +483,11 @@ export type ProfilesGroupByOutputType = {
   stackoverflow_profile: string | null
   headline: string | null
   profile_picture: string | null
-  profile_photo_path: string | null
   summary: string | null
   nationality: string | null
   location_url: string | null
   location_timezone: string | null
   sort: number | null
-  location: string | null
   city: string | null
   region: string | null
   country_code: string | null
@@ -517,6 +515,8 @@ export type ProfilesGroupByOutputType = {
   public_cv_version: number | null
   public_resume_version: number | null
   source_cv: string | null
+  location: string | null
+  profile_photo_path: string | null
   _count: ProfilesCountAggregateOutputType | null
   _avg: ProfilesAvgAggregateOutputType | null
   _sum: ProfilesSumAggregateOutputType | null
@@ -558,13 +558,11 @@ export type profilesWhereInput = {
   stackoverflow_profile?: Prisma.StringNullableFilter<"profiles"> | string | null
   headline?: Prisma.StringNullableFilter<"profiles"> | string | null
   profile_picture?: Prisma.UuidNullableFilter<"profiles"> | string | null
-  profile_photo_path?: Prisma.StringNullableFilter<"profiles"> | string | null
   summary?: Prisma.StringNullableFilter<"profiles"> | string | null
   nationality?: Prisma.StringNullableFilter<"profiles"> | string | null
   location_url?: Prisma.StringNullableFilter<"profiles"> | string | null
   location_timezone?: Prisma.StringNullableFilter<"profiles"> | string | null
   sort?: Prisma.IntNullableFilter<"profiles"> | number | null
-  location?: Prisma.StringNullableFilter<"profiles"> | string | null
   city?: Prisma.StringNullableFilter<"profiles"> | string | null
   region?: Prisma.StringNullableFilter<"profiles"> | string | null
   country_code?: Prisma.StringNullableFilter<"profiles"> | string | null
@@ -592,6 +590,8 @@ export type profilesWhereInput = {
   public_cv_version?: Prisma.IntNullableFilter<"profiles"> | number | null
   public_resume_version?: Prisma.IntNullableFilter<"profiles"> | number | null
   source_cv?: Prisma.UuidNullableFilter<"profiles"> | string | null
+  location?: Prisma.StringNullableFilter<"profiles"> | string | null
+  profile_photo_path?: Prisma.StringNullableFilter<"profiles"> | string | null
   ai_chats?: Prisma.Ai_chatsListRelationFilter
   applications?: Prisma.ApplicationsListRelationFilter
   cheat_sheets?: Prisma.Cheat_sheetsListRelationFilter
@@ -634,13 +634,11 @@ export type profilesOrderByWithRelationInput = {
   stackoverflow_profile?: Prisma.SortOrderInput | Prisma.SortOrder
   headline?: Prisma.SortOrderInput | Prisma.SortOrder
   profile_picture?: Prisma.SortOrderInput | Prisma.SortOrder
-  profile_photo_path?: Prisma.SortOrderInput | Prisma.SortOrder
   summary?: Prisma.SortOrderInput | Prisma.SortOrder
   nationality?: Prisma.SortOrderInput | Prisma.SortOrder
   location_url?: Prisma.SortOrderInput | Prisma.SortOrder
   location_timezone?: Prisma.SortOrderInput | Prisma.SortOrder
   sort?: Prisma.SortOrderInput | Prisma.SortOrder
-  location?: Prisma.SortOrderInput | Prisma.SortOrder
   city?: Prisma.SortOrderInput | Prisma.SortOrder
   region?: Prisma.SortOrderInput | Prisma.SortOrder
   country_code?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -668,6 +666,8 @@ export type profilesOrderByWithRelationInput = {
   public_cv_version?: Prisma.SortOrderInput | Prisma.SortOrder
   public_resume_version?: Prisma.SortOrderInput | Prisma.SortOrder
   source_cv?: Prisma.SortOrderInput | Prisma.SortOrder
+  location?: Prisma.SortOrderInput | Prisma.SortOrder
+  profile_photo_path?: Prisma.SortOrderInput | Prisma.SortOrder
   ai_chats?: Prisma.ai_chatsOrderByRelationAggregateInput
   applications?: Prisma.applicationsOrderByRelationAggregateInput
   cheat_sheets?: Prisma.cheat_sheetsOrderByRelationAggregateInput
@@ -714,13 +714,11 @@ export type profilesWhereUniqueInput = Prisma.AtLeast<{
   stackoverflow_profile?: Prisma.StringNullableFilter<"profiles"> | string | null
   headline?: Prisma.StringNullableFilter<"profiles"> | string | null
   profile_picture?: Prisma.UuidNullableFilter<"profiles"> | string | null
-  profile_photo_path?: Prisma.StringNullableFilter<"profiles"> | string | null
   summary?: Prisma.StringNullableFilter<"profiles"> | string | null
   nationality?: Prisma.StringNullableFilter<"profiles"> | string | null
   location_url?: Prisma.StringNullableFilter<"profiles"> | string | null
   location_timezone?: Prisma.StringNullableFilter<"profiles"> | string | null
   sort?: Prisma.IntNullableFilter<"profiles"> | number | null
-  location?: Prisma.StringNullableFilter<"profiles"> | string | null
   city?: Prisma.StringNullableFilter<"profiles"> | string | null
   region?: Prisma.StringNullableFilter<"profiles"> | string | null
   country_code?: Prisma.StringNullableFilter<"profiles"> | string | null
@@ -747,6 +745,8 @@ export type profilesWhereUniqueInput = Prisma.AtLeast<{
   public_cv_version?: Prisma.IntNullableFilter<"profiles"> | number | null
   public_resume_version?: Prisma.IntNullableFilter<"profiles"> | number | null
   source_cv?: Prisma.UuidNullableFilter<"profiles"> | string | null
+  location?: Prisma.StringNullableFilter<"profiles"> | string | null
+  profile_photo_path?: Prisma.StringNullableFilter<"profiles"> | string | null
   ai_chats?: Prisma.Ai_chatsListRelationFilter
   applications?: Prisma.ApplicationsListRelationFilter
   cheat_sheets?: Prisma.Cheat_sheetsListRelationFilter
@@ -789,13 +789,11 @@ export type profilesOrderByWithAggregationInput = {
   stackoverflow_profile?: Prisma.SortOrderInput | Prisma.SortOrder
   headline?: Prisma.SortOrderInput | Prisma.SortOrder
   profile_picture?: Prisma.SortOrderInput | Prisma.SortOrder
-  profile_photo_path?: Prisma.SortOrderInput | Prisma.SortOrder
   summary?: Prisma.SortOrderInput | Prisma.SortOrder
   nationality?: Prisma.SortOrderInput | Prisma.SortOrder
   location_url?: Prisma.SortOrderInput | Prisma.SortOrder
   location_timezone?: Prisma.SortOrderInput | Prisma.SortOrder
   sort?: Prisma.SortOrderInput | Prisma.SortOrder
-  location?: Prisma.SortOrderInput | Prisma.SortOrder
   city?: Prisma.SortOrderInput | Prisma.SortOrder
   region?: Prisma.SortOrderInput | Prisma.SortOrder
   country_code?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -823,6 +821,8 @@ export type profilesOrderByWithAggregationInput = {
   public_cv_version?: Prisma.SortOrderInput | Prisma.SortOrder
   public_resume_version?: Prisma.SortOrderInput | Prisma.SortOrder
   source_cv?: Prisma.SortOrderInput | Prisma.SortOrder
+  location?: Prisma.SortOrderInput | Prisma.SortOrder
+  profile_photo_path?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.profilesCountOrderByAggregateInput
   _avg?: Prisma.profilesAvgOrderByAggregateInput
   _max?: Prisma.profilesMaxOrderByAggregateInput
@@ -849,13 +849,11 @@ export type profilesScalarWhereWithAggregatesInput = {
   stackoverflow_profile?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
   headline?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
   profile_picture?: Prisma.UuidNullableWithAggregatesFilter<"profiles"> | string | null
-  profile_photo_path?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
   summary?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
   nationality?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
   location_url?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
   location_timezone?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
   sort?: Prisma.IntNullableWithAggregatesFilter<"profiles"> | number | null
-  location?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
   city?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
   region?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
   country_code?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
@@ -883,6 +881,8 @@ export type profilesScalarWhereWithAggregatesInput = {
   public_cv_version?: Prisma.IntNullableWithAggregatesFilter<"profiles"> | number | null
   public_resume_version?: Prisma.IntNullableWithAggregatesFilter<"profiles"> | number | null
   source_cv?: Prisma.UuidNullableWithAggregatesFilter<"profiles"> | string | null
+  location?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
+  profile_photo_path?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
 }
 
 export type profilesCreateInput = {
@@ -899,13 +899,11 @@ export type profilesCreateInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -931,6 +929,8 @@ export type profilesCreateInput = {
   telegram_username?: string | null
   user_id?: string | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -973,13 +973,11 @@ export type profilesUncheckedCreateInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -1007,6 +1005,8 @@ export type profilesUncheckedCreateInput = {
   public_cv_version?: number | null
   public_resume_version?: number | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -1044,13 +1044,11 @@ export type profilesUpdateInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1076,6 +1074,8 @@ export type profilesUpdateInput = {
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -1118,13 +1118,11 @@ export type profilesUncheckedUpdateInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1152,6 +1150,8 @@ export type profilesUncheckedUpdateInput = {
   public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -1191,13 +1191,11 @@ export type profilesCreateManyInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -1225,6 +1223,8 @@ export type profilesCreateManyInput = {
   public_cv_version?: number | null
   public_resume_version?: number | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
 }
 
 export type profilesUpdateManyMutationInput = {
@@ -1241,13 +1241,11 @@ export type profilesUpdateManyMutationInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1273,6 +1271,8 @@ export type profilesUpdateManyMutationInput = {
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type profilesUncheckedUpdateManyInput = {
@@ -1291,13 +1291,11 @@ export type profilesUncheckedUpdateManyInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1325,6 +1323,8 @@ export type profilesUncheckedUpdateManyInput = {
   public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type ProfilesScalarRelationFilter = {
@@ -1363,13 +1363,11 @@ export type profilesCountOrderByAggregateInput = {
   stackoverflow_profile?: Prisma.SortOrder
   headline?: Prisma.SortOrder
   profile_picture?: Prisma.SortOrder
-  profile_photo_path?: Prisma.SortOrder
   summary?: Prisma.SortOrder
   nationality?: Prisma.SortOrder
   location_url?: Prisma.SortOrder
   location_timezone?: Prisma.SortOrder
   sort?: Prisma.SortOrder
-  location?: Prisma.SortOrder
   city?: Prisma.SortOrder
   region?: Prisma.SortOrder
   country_code?: Prisma.SortOrder
@@ -1397,6 +1395,8 @@ export type profilesCountOrderByAggregateInput = {
   public_cv_version?: Prisma.SortOrder
   public_resume_version?: Prisma.SortOrder
   source_cv?: Prisma.SortOrder
+  location?: Prisma.SortOrder
+  profile_photo_path?: Prisma.SortOrder
 }
 
 export type profilesAvgOrderByAggregateInput = {
@@ -1425,13 +1425,11 @@ export type profilesMaxOrderByAggregateInput = {
   stackoverflow_profile?: Prisma.SortOrder
   headline?: Prisma.SortOrder
   profile_picture?: Prisma.SortOrder
-  profile_photo_path?: Prisma.SortOrder
   summary?: Prisma.SortOrder
   nationality?: Prisma.SortOrder
   location_url?: Prisma.SortOrder
   location_timezone?: Prisma.SortOrder
   sort?: Prisma.SortOrder
-  location?: Prisma.SortOrder
   city?: Prisma.SortOrder
   region?: Prisma.SortOrder
   country_code?: Prisma.SortOrder
@@ -1459,6 +1457,8 @@ export type profilesMaxOrderByAggregateInput = {
   public_cv_version?: Prisma.SortOrder
   public_resume_version?: Prisma.SortOrder
   source_cv?: Prisma.SortOrder
+  location?: Prisma.SortOrder
+  profile_photo_path?: Prisma.SortOrder
 }
 
 export type profilesMinOrderByAggregateInput = {
@@ -1477,13 +1477,11 @@ export type profilesMinOrderByAggregateInput = {
   stackoverflow_profile?: Prisma.SortOrder
   headline?: Prisma.SortOrder
   profile_picture?: Prisma.SortOrder
-  profile_photo_path?: Prisma.SortOrder
   summary?: Prisma.SortOrder
   nationality?: Prisma.SortOrder
   location_url?: Prisma.SortOrder
   location_timezone?: Prisma.SortOrder
   sort?: Prisma.SortOrder
-  location?: Prisma.SortOrder
   city?: Prisma.SortOrder
   region?: Prisma.SortOrder
   country_code?: Prisma.SortOrder
@@ -1511,6 +1509,8 @@ export type profilesMinOrderByAggregateInput = {
   public_cv_version?: Prisma.SortOrder
   public_resume_version?: Prisma.SortOrder
   source_cv?: Prisma.SortOrder
+  location?: Prisma.SortOrder
+  profile_photo_path?: Prisma.SortOrder
 }
 
 export type profilesSumOrderByAggregateInput = {
@@ -1963,13 +1963,11 @@ export type profilesCreateWithoutApplicationsInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -1995,6 +1993,8 @@ export type profilesCreateWithoutApplicationsInput = {
   telegram_username?: string | null
   user_id?: string | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
   collected_data?: Prisma.collected_dataCreateNestedManyWithoutProfilesInput
@@ -2036,13 +2036,11 @@ export type profilesUncheckedCreateWithoutApplicationsInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -2070,6 +2068,8 @@ export type profilesUncheckedCreateWithoutApplicationsInput = {
   public_cv_version?: number | null
   public_resume_version?: number | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
   collected_data?: Prisma.collected_dataUncheckedCreateNestedManyWithoutProfilesInput
@@ -2122,13 +2122,11 @@ export type profilesUpdateWithoutApplicationsInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2154,6 +2152,8 @@ export type profilesUpdateWithoutApplicationsInput = {
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
   collected_data?: Prisma.collected_dataUpdateManyWithoutProfilesNestedInput
@@ -2195,13 +2195,11 @@ export type profilesUncheckedUpdateWithoutApplicationsInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2229,6 +2227,8 @@ export type profilesUncheckedUpdateWithoutApplicationsInput = {
   public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
   collected_data?: Prisma.collected_dataUncheckedUpdateManyWithoutProfilesNestedInput
@@ -2265,13 +2265,11 @@ export type profilesCreateWithoutCheat_sheetsInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -2297,6 +2295,8 @@ export type profilesCreateWithoutCheat_sheetsInput = {
   telegram_username?: string | null
   user_id?: string | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   collected_data?: Prisma.collected_dataCreateNestedManyWithoutProfilesInput
@@ -2338,13 +2338,11 @@ export type profilesUncheckedCreateWithoutCheat_sheetsInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -2372,6 +2370,8 @@ export type profilesUncheckedCreateWithoutCheat_sheetsInput = {
   public_cv_version?: number | null
   public_resume_version?: number | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   collected_data?: Prisma.collected_dataUncheckedCreateNestedManyWithoutProfilesInput
@@ -2424,13 +2424,11 @@ export type profilesUpdateWithoutCheat_sheetsInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2456,6 +2454,8 @@ export type profilesUpdateWithoutCheat_sheetsInput = {
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   collected_data?: Prisma.collected_dataUpdateManyWithoutProfilesNestedInput
@@ -2497,13 +2497,11 @@ export type profilesUncheckedUpdateWithoutCheat_sheetsInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2531,6 +2529,8 @@ export type profilesUncheckedUpdateWithoutCheat_sheetsInput = {
   public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   collected_data?: Prisma.collected_dataUncheckedUpdateManyWithoutProfilesNestedInput
@@ -2567,13 +2567,11 @@ export type profilesCreateWithoutCollected_dataInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -2599,6 +2597,8 @@ export type profilesCreateWithoutCollected_dataInput = {
   telegram_username?: string | null
   user_id?: string | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -2640,13 +2640,11 @@ export type profilesUncheckedCreateWithoutCollected_dataInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -2674,6 +2672,8 @@ export type profilesUncheckedCreateWithoutCollected_dataInput = {
   public_cv_version?: number | null
   public_resume_version?: number | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -2726,13 +2726,11 @@ export type profilesUpdateWithoutCollected_dataInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2758,6 +2756,8 @@ export type profilesUpdateWithoutCollected_dataInput = {
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -2799,13 +2799,11 @@ export type profilesUncheckedUpdateWithoutCollected_dataInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2833,6 +2831,8 @@ export type profilesUncheckedUpdateWithoutCollected_dataInput = {
   public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -2869,13 +2869,11 @@ export type profilesCreateWithoutConfigInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -2901,6 +2899,8 @@ export type profilesCreateWithoutConfigInput = {
   telegram_username?: string | null
   user_id?: string | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -2942,13 +2942,11 @@ export type profilesUncheckedCreateWithoutConfigInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -2976,6 +2974,8 @@ export type profilesUncheckedCreateWithoutConfigInput = {
   public_cv_version?: number | null
   public_resume_version?: number | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -3028,13 +3028,11 @@ export type profilesUpdateWithoutConfigInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3060,6 +3058,8 @@ export type profilesUpdateWithoutConfigInput = {
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -3101,13 +3101,11 @@ export type profilesUncheckedUpdateWithoutConfigInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3135,6 +3133,8 @@ export type profilesUncheckedUpdateWithoutConfigInput = {
   public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -3171,13 +3171,11 @@ export type profilesCreateWithoutDirectus_filesInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -3203,6 +3201,8 @@ export type profilesCreateWithoutDirectus_filesInput = {
   telegram_username?: string | null
   user_id?: string | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -3243,13 +3243,11 @@ export type profilesUncheckedCreateWithoutDirectus_filesInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -3277,6 +3275,8 @@ export type profilesUncheckedCreateWithoutDirectus_filesInput = {
   public_cv_version?: number | null
   public_resume_version?: number | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -3345,13 +3345,11 @@ export type profilesScalarWhereInput = {
   stackoverflow_profile?: Prisma.StringNullableFilter<"profiles"> | string | null
   headline?: Prisma.StringNullableFilter<"profiles"> | string | null
   profile_picture?: Prisma.UuidNullableFilter<"profiles"> | string | null
-  profile_photo_path?: Prisma.StringNullableFilter<"profiles"> | string | null
   summary?: Prisma.StringNullableFilter<"profiles"> | string | null
   nationality?: Prisma.StringNullableFilter<"profiles"> | string | null
   location_url?: Prisma.StringNullableFilter<"profiles"> | string | null
   location_timezone?: Prisma.StringNullableFilter<"profiles"> | string | null
   sort?: Prisma.IntNullableFilter<"profiles"> | number | null
-  location?: Prisma.StringNullableFilter<"profiles"> | string | null
   city?: Prisma.StringNullableFilter<"profiles"> | string | null
   region?: Prisma.StringNullableFilter<"profiles"> | string | null
   country_code?: Prisma.StringNullableFilter<"profiles"> | string | null
@@ -3379,6 +3377,8 @@ export type profilesScalarWhereInput = {
   public_cv_version?: Prisma.IntNullableFilter<"profiles"> | number | null
   public_resume_version?: Prisma.IntNullableFilter<"profiles"> | number | null
   source_cv?: Prisma.UuidNullableFilter<"profiles"> | string | null
+  location?: Prisma.StringNullableFilter<"profiles"> | string | null
+  profile_photo_path?: Prisma.StringNullableFilter<"profiles"> | string | null
 }
 
 export type profilesCreateWithoutEducationInput = {
@@ -3395,13 +3395,11 @@ export type profilesCreateWithoutEducationInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -3427,6 +3425,8 @@ export type profilesCreateWithoutEducationInput = {
   telegram_username?: string | null
   user_id?: string | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -3468,13 +3468,11 @@ export type profilesUncheckedCreateWithoutEducationInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -3502,6 +3500,8 @@ export type profilesUncheckedCreateWithoutEducationInput = {
   public_cv_version?: number | null
   public_resume_version?: number | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -3554,13 +3554,11 @@ export type profilesUpdateWithoutEducationInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3586,6 +3584,8 @@ export type profilesUpdateWithoutEducationInput = {
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -3627,13 +3627,11 @@ export type profilesUncheckedUpdateWithoutEducationInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3661,6 +3659,8 @@ export type profilesUncheckedUpdateWithoutEducationInput = {
   public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -3697,13 +3697,11 @@ export type profilesCreateWithoutHighlightsInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -3729,6 +3727,8 @@ export type profilesCreateWithoutHighlightsInput = {
   telegram_username?: string | null
   user_id?: string | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -3770,13 +3770,11 @@ export type profilesUncheckedCreateWithoutHighlightsInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -3804,6 +3802,8 @@ export type profilesUncheckedCreateWithoutHighlightsInput = {
   public_cv_version?: number | null
   public_resume_version?: number | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -3856,13 +3856,11 @@ export type profilesUpdateWithoutHighlightsInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3888,6 +3886,8 @@ export type profilesUpdateWithoutHighlightsInput = {
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -3929,13 +3929,11 @@ export type profilesUncheckedUpdateWithoutHighlightsInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -3963,6 +3961,8 @@ export type profilesUncheckedUpdateWithoutHighlightsInput = {
   public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -3999,13 +3999,11 @@ export type profilesCreateWithoutJob_match_preferencesInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -4031,6 +4029,8 @@ export type profilesCreateWithoutJob_match_preferencesInput = {
   telegram_username?: string | null
   user_id?: string | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -4072,13 +4072,11 @@ export type profilesUncheckedCreateWithoutJob_match_preferencesInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -4106,6 +4104,8 @@ export type profilesUncheckedCreateWithoutJob_match_preferencesInput = {
   public_cv_version?: number | null
   public_resume_version?: number | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -4158,13 +4158,11 @@ export type profilesUpdateWithoutJob_match_preferencesInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4190,6 +4188,8 @@ export type profilesUpdateWithoutJob_match_preferencesInput = {
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -4231,13 +4231,11 @@ export type profilesUncheckedUpdateWithoutJob_match_preferencesInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4265,6 +4263,8 @@ export type profilesUncheckedUpdateWithoutJob_match_preferencesInput = {
   public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -4301,13 +4301,11 @@ export type profilesCreateWithoutJob_matchesInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -4333,6 +4331,8 @@ export type profilesCreateWithoutJob_matchesInput = {
   telegram_username?: string | null
   user_id?: string | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -4374,13 +4374,11 @@ export type profilesUncheckedCreateWithoutJob_matchesInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -4408,6 +4406,8 @@ export type profilesUncheckedCreateWithoutJob_matchesInput = {
   public_cv_version?: number | null
   public_resume_version?: number | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -4460,13 +4460,11 @@ export type profilesUpdateWithoutJob_matchesInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4492,6 +4490,8 @@ export type profilesUpdateWithoutJob_matchesInput = {
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -4533,13 +4533,11 @@ export type profilesUncheckedUpdateWithoutJob_matchesInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4567,6 +4565,8 @@ export type profilesUncheckedUpdateWithoutJob_matchesInput = {
   public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -4603,13 +4603,11 @@ export type profilesCreateWithoutJob_searchesInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -4635,6 +4633,8 @@ export type profilesCreateWithoutJob_searchesInput = {
   telegram_username?: string | null
   user_id?: string | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -4676,13 +4676,11 @@ export type profilesUncheckedCreateWithoutJob_searchesInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -4710,6 +4708,8 @@ export type profilesUncheckedCreateWithoutJob_searchesInput = {
   public_cv_version?: number | null
   public_resume_version?: number | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -4762,13 +4762,11 @@ export type profilesUpdateWithoutJob_searchesInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4794,6 +4792,8 @@ export type profilesUpdateWithoutJob_searchesInput = {
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -4835,13 +4835,11 @@ export type profilesUncheckedUpdateWithoutJob_searchesInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -4869,6 +4867,8 @@ export type profilesUncheckedUpdateWithoutJob_searchesInput = {
   public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -4905,13 +4905,11 @@ export type profilesCreateWithoutLanguagesInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -4937,6 +4935,8 @@ export type profilesCreateWithoutLanguagesInput = {
   telegram_username?: string | null
   user_id?: string | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -4978,13 +4978,11 @@ export type profilesUncheckedCreateWithoutLanguagesInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -5012,6 +5010,8 @@ export type profilesUncheckedCreateWithoutLanguagesInput = {
   public_cv_version?: number | null
   public_resume_version?: number | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -5064,13 +5064,11 @@ export type profilesUpdateWithoutLanguagesInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5096,6 +5094,8 @@ export type profilesUpdateWithoutLanguagesInput = {
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -5137,13 +5137,11 @@ export type profilesUncheckedUpdateWithoutLanguagesInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5171,6 +5169,8 @@ export type profilesUncheckedUpdateWithoutLanguagesInput = {
   public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -5207,13 +5207,11 @@ export type profilesCreateWithoutOs_contributionsInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -5239,6 +5237,8 @@ export type profilesCreateWithoutOs_contributionsInput = {
   telegram_username?: string | null
   user_id?: string | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -5280,13 +5280,11 @@ export type profilesUncheckedCreateWithoutOs_contributionsInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -5314,6 +5312,8 @@ export type profilesUncheckedCreateWithoutOs_contributionsInput = {
   public_cv_version?: number | null
   public_resume_version?: number | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -5366,13 +5366,11 @@ export type profilesUpdateWithoutOs_contributionsInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5398,6 +5396,8 @@ export type profilesUpdateWithoutOs_contributionsInput = {
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -5439,13 +5439,11 @@ export type profilesUncheckedUpdateWithoutOs_contributionsInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5473,6 +5471,8 @@ export type profilesUncheckedUpdateWithoutOs_contributionsInput = {
   public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -5509,13 +5509,11 @@ export type profilesCreateWithoutPlatform_profilesInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -5541,6 +5539,8 @@ export type profilesCreateWithoutPlatform_profilesInput = {
   telegram_username?: string | null
   user_id?: string | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -5582,13 +5582,11 @@ export type profilesUncheckedCreateWithoutPlatform_profilesInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -5616,6 +5614,8 @@ export type profilesUncheckedCreateWithoutPlatform_profilesInput = {
   public_cv_version?: number | null
   public_resume_version?: number | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -5668,13 +5668,11 @@ export type profilesUpdateWithoutPlatform_profilesInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5700,6 +5698,8 @@ export type profilesUpdateWithoutPlatform_profilesInput = {
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -5741,13 +5741,11 @@ export type profilesUncheckedUpdateWithoutPlatform_profilesInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -5775,6 +5773,8 @@ export type profilesUncheckedUpdateWithoutPlatform_profilesInput = {
   public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -5811,13 +5811,11 @@ export type profilesCreateWithoutProfile_exportsInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -5843,6 +5841,8 @@ export type profilesCreateWithoutProfile_exportsInput = {
   telegram_username?: string | null
   user_id?: string | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -5884,13 +5884,11 @@ export type profilesUncheckedCreateWithoutProfile_exportsInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -5918,6 +5916,8 @@ export type profilesUncheckedCreateWithoutProfile_exportsInput = {
   public_cv_version?: number | null
   public_resume_version?: number | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -5970,13 +5970,11 @@ export type profilesUpdateWithoutProfile_exportsInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6002,6 +6000,8 @@ export type profilesUpdateWithoutProfile_exportsInput = {
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -6043,13 +6043,11 @@ export type profilesUncheckedUpdateWithoutProfile_exportsInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6077,6 +6075,8 @@ export type profilesUncheckedUpdateWithoutProfile_exportsInput = {
   public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -6113,13 +6113,11 @@ export type profilesCreateWithoutProfile_versions_profile_versions_profileToprof
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -6145,6 +6143,8 @@ export type profilesCreateWithoutProfile_versions_profile_versions_profileToprof
   telegram_username?: string | null
   user_id?: string | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -6186,13 +6186,11 @@ export type profilesUncheckedCreateWithoutProfile_versions_profile_versions_prof
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -6220,6 +6218,8 @@ export type profilesUncheckedCreateWithoutProfile_versions_profile_versions_prof
   public_cv_version?: number | null
   public_resume_version?: number | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -6261,13 +6261,11 @@ export type profilesCreateWithoutProfile_versions_profiles_public_cv_versionTopr
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -6293,6 +6291,8 @@ export type profilesCreateWithoutProfile_versions_profiles_public_cv_versionTopr
   telegram_username?: string | null
   user_id?: string | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -6334,13 +6334,11 @@ export type profilesUncheckedCreateWithoutProfile_versions_profiles_public_cv_ve
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -6367,6 +6365,8 @@ export type profilesUncheckedCreateWithoutProfile_versions_profiles_public_cv_ve
   user_id?: string | null
   public_resume_version?: number | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -6414,13 +6414,11 @@ export type profilesCreateWithoutProfile_versions_profiles_public_resume_version
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -6446,6 +6444,8 @@ export type profilesCreateWithoutProfile_versions_profiles_public_resume_version
   telegram_username?: string | null
   user_id?: string | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -6487,13 +6487,11 @@ export type profilesUncheckedCreateWithoutProfile_versions_profiles_public_resum
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -6520,6 +6518,8 @@ export type profilesUncheckedCreateWithoutProfile_versions_profiles_public_resum
   user_id?: string | null
   public_cv_version?: number | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -6578,13 +6578,11 @@ export type profilesUpdateWithoutProfile_versions_profile_versions_profileToprof
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6610,6 +6608,8 @@ export type profilesUpdateWithoutProfile_versions_profile_versions_profileToprof
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -6651,13 +6651,11 @@ export type profilesUncheckedUpdateWithoutProfile_versions_profile_versions_prof
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6685,6 +6683,8 @@ export type profilesUncheckedUpdateWithoutProfile_versions_profile_versions_prof
   public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -6753,13 +6753,11 @@ export type profilesCreateWithoutProject_storiesInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -6785,6 +6783,8 @@ export type profilesCreateWithoutProject_storiesInput = {
   telegram_username?: string | null
   user_id?: string | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -6826,13 +6826,11 @@ export type profilesUncheckedCreateWithoutProject_storiesInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -6860,6 +6858,8 @@ export type profilesUncheckedCreateWithoutProject_storiesInput = {
   public_cv_version?: number | null
   public_resume_version?: number | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -6912,13 +6912,11 @@ export type profilesUpdateWithoutProject_storiesInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -6944,6 +6942,8 @@ export type profilesUpdateWithoutProject_storiesInput = {
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -6985,13 +6985,11 @@ export type profilesUncheckedUpdateWithoutProject_storiesInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7019,6 +7017,8 @@ export type profilesUncheckedUpdateWithoutProject_storiesInput = {
   public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -7055,13 +7055,11 @@ export type profilesCreateWithoutReferencesInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -7087,6 +7085,8 @@ export type profilesCreateWithoutReferencesInput = {
   telegram_username?: string | null
   user_id?: string | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -7128,13 +7128,11 @@ export type profilesUncheckedCreateWithoutReferencesInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -7162,6 +7160,8 @@ export type profilesUncheckedCreateWithoutReferencesInput = {
   public_cv_version?: number | null
   public_resume_version?: number | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -7214,13 +7214,11 @@ export type profilesUpdateWithoutReferencesInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7246,6 +7244,8 @@ export type profilesUpdateWithoutReferencesInput = {
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -7287,13 +7287,11 @@ export type profilesUncheckedUpdateWithoutReferencesInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7321,6 +7319,8 @@ export type profilesUncheckedUpdateWithoutReferencesInput = {
   public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -7357,13 +7357,11 @@ export type profilesCreateWithoutSalary_expectationsInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -7389,6 +7387,8 @@ export type profilesCreateWithoutSalary_expectationsInput = {
   telegram_username?: string | null
   user_id?: string | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -7430,13 +7430,11 @@ export type profilesUncheckedCreateWithoutSalary_expectationsInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -7464,6 +7462,8 @@ export type profilesUncheckedCreateWithoutSalary_expectationsInput = {
   public_cv_version?: number | null
   public_resume_version?: number | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -7516,13 +7516,11 @@ export type profilesUpdateWithoutSalary_expectationsInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7548,6 +7546,8 @@ export type profilesUpdateWithoutSalary_expectationsInput = {
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -7589,13 +7589,11 @@ export type profilesUncheckedUpdateWithoutSalary_expectationsInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7623,6 +7621,8 @@ export type profilesUncheckedUpdateWithoutSalary_expectationsInput = {
   public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -7659,13 +7659,11 @@ export type profilesCreateWithoutSide_projectsInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -7691,6 +7689,8 @@ export type profilesCreateWithoutSide_projectsInput = {
   telegram_username?: string | null
   user_id?: string | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -7732,13 +7732,11 @@ export type profilesUncheckedCreateWithoutSide_projectsInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -7766,6 +7764,8 @@ export type profilesUncheckedCreateWithoutSide_projectsInput = {
   public_cv_version?: number | null
   public_resume_version?: number | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -7818,13 +7818,11 @@ export type profilesUpdateWithoutSide_projectsInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7850,6 +7848,8 @@ export type profilesUpdateWithoutSide_projectsInput = {
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -7891,13 +7891,11 @@ export type profilesUncheckedUpdateWithoutSide_projectsInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -7925,6 +7923,8 @@ export type profilesUncheckedUpdateWithoutSide_projectsInput = {
   public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -7961,13 +7961,11 @@ export type profilesCreateWithoutTech_skill_categoriesInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -7993,6 +7991,8 @@ export type profilesCreateWithoutTech_skill_categoriesInput = {
   telegram_username?: string | null
   user_id?: string | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -8034,13 +8034,11 @@ export type profilesUncheckedCreateWithoutTech_skill_categoriesInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -8068,6 +8066,8 @@ export type profilesUncheckedCreateWithoutTech_skill_categoriesInput = {
   public_cv_version?: number | null
   public_resume_version?: number | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -8120,13 +8120,11 @@ export type profilesUpdateWithoutTech_skill_categoriesInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8152,6 +8150,8 @@ export type profilesUpdateWithoutTech_skill_categoriesInput = {
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -8193,13 +8193,11 @@ export type profilesUncheckedUpdateWithoutTech_skill_categoriesInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8227,6 +8225,8 @@ export type profilesUncheckedUpdateWithoutTech_skill_categoriesInput = {
   public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -8263,13 +8263,11 @@ export type profilesCreateWithoutWork_experiencesInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -8295,6 +8293,8 @@ export type profilesCreateWithoutWork_experiencesInput = {
   telegram_username?: string | null
   user_id?: string | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -8336,13 +8336,11 @@ export type profilesUncheckedCreateWithoutWork_experiencesInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -8370,6 +8368,8 @@ export type profilesUncheckedCreateWithoutWork_experiencesInput = {
   public_cv_version?: number | null
   public_resume_version?: number | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -8422,13 +8422,11 @@ export type profilesUpdateWithoutWork_experiencesInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8454,6 +8452,8 @@ export type profilesUpdateWithoutWork_experiencesInput = {
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -8495,13 +8495,11 @@ export type profilesUncheckedUpdateWithoutWork_experiencesInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8529,6 +8527,8 @@ export type profilesUncheckedUpdateWithoutWork_experiencesInput = {
   public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -8565,13 +8565,11 @@ export type profilesCreateWithoutAi_chatsInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -8597,6 +8595,8 @@ export type profilesCreateWithoutAi_chatsInput = {
   telegram_username?: string | null
   user_id?: string | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
   collected_data?: Prisma.collected_dataCreateNestedManyWithoutProfilesInput
@@ -8638,13 +8638,11 @@ export type profilesUncheckedCreateWithoutAi_chatsInput = {
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -8672,6 +8670,8 @@ export type profilesUncheckedCreateWithoutAi_chatsInput = {
   public_cv_version?: number | null
   public_resume_version?: number | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
   collected_data?: Prisma.collected_dataUncheckedCreateNestedManyWithoutProfilesInput
@@ -8724,13 +8724,11 @@ export type profilesUpdateWithoutAi_chatsInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8756,6 +8754,8 @@ export type profilesUpdateWithoutAi_chatsInput = {
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
   collected_data?: Prisma.collected_dataUpdateManyWithoutProfilesNestedInput
@@ -8797,13 +8797,11 @@ export type profilesUncheckedUpdateWithoutAi_chatsInput = {
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8831,6 +8829,8 @@ export type profilesUncheckedUpdateWithoutAi_chatsInput = {
   public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
   collected_data?: Prisma.collected_dataUncheckedUpdateManyWithoutProfilesNestedInput
@@ -8868,13 +8868,11 @@ export type profilesCreateManyDirectus_filesInput = {
   github_profile?: string | null
   stackoverflow_profile?: string | null
   headline?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -8902,6 +8900,8 @@ export type profilesCreateManyDirectus_filesInput = {
   public_cv_version?: number | null
   public_resume_version?: number | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
 }
 
 export type profilesUpdateWithoutDirectus_filesInput = {
@@ -8918,13 +8918,11 @@ export type profilesUpdateWithoutDirectus_filesInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -8950,6 +8948,8 @@ export type profilesUpdateWithoutDirectus_filesInput = {
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -8990,13 +8990,11 @@ export type profilesUncheckedUpdateWithoutDirectus_filesInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9024,6 +9022,8 @@ export type profilesUncheckedUpdateWithoutDirectus_filesInput = {
   public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -9062,13 +9062,11 @@ export type profilesUncheckedUpdateManyWithoutDirectus_filesInput = {
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9096,6 +9094,8 @@ export type profilesUncheckedUpdateManyWithoutDirectus_filesInput = {
   public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type profilesCreateManyProfile_versions_profiles_public_cv_versionToprofile_versionsInput = {
@@ -9114,13 +9114,11 @@ export type profilesCreateManyProfile_versions_profiles_public_cv_versionToprofi
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -9147,6 +9145,8 @@ export type profilesCreateManyProfile_versions_profiles_public_cv_versionToprofi
   user_id?: string | null
   public_resume_version?: number | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
 }
 
 export type profilesCreateManyProfile_versions_profiles_public_resume_versionToprofile_versionsInput = {
@@ -9165,13 +9165,11 @@ export type profilesCreateManyProfile_versions_profiles_public_resume_versionTop
   stackoverflow_profile?: string | null
   headline?: string | null
   profile_picture?: string | null
-  profile_photo_path?: string | null
   summary?: string | null
   nationality?: string | null
   location_url?: string | null
   location_timezone?: string | null
   sort?: number | null
-  location?: string | null
   city?: string | null
   region?: string | null
   country_code?: string | null
@@ -9198,6 +9196,8 @@ export type profilesCreateManyProfile_versions_profiles_public_resume_versionTop
   user_id?: string | null
   public_cv_version?: number | null
   source_cv?: string | null
+  location?: string | null
+  profile_photo_path?: string | null
 }
 
 export type profilesUpdateWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput = {
@@ -9214,13 +9214,11 @@ export type profilesUpdateWithoutProfile_versions_profiles_public_cv_versionTopr
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9246,6 +9244,8 @@ export type profilesUpdateWithoutProfile_versions_profiles_public_cv_versionTopr
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -9287,13 +9287,11 @@ export type profilesUncheckedUpdateWithoutProfile_versions_profiles_public_cv_ve
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9320,6 +9318,8 @@ export type profilesUncheckedUpdateWithoutProfile_versions_profiles_public_cv_ve
   user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -9359,13 +9359,11 @@ export type profilesUncheckedUpdateManyWithoutProfile_versions_profiles_public_c
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9392,6 +9390,8 @@ export type profilesUncheckedUpdateManyWithoutProfile_versions_profiles_public_c
   user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   public_resume_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type profilesUpdateWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput = {
@@ -9408,13 +9408,11 @@ export type profilesUpdateWithoutProfile_versions_profiles_public_resume_version
   github_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9440,6 +9438,8 @@ export type profilesUpdateWithoutProfile_versions_profiles_public_resume_version
   telegram_username?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -9481,13 +9481,11 @@ export type profilesUncheckedUpdateWithoutProfile_versions_profiles_public_resum
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9514,6 +9512,8 @@ export type profilesUncheckedUpdateWithoutProfile_versions_profiles_public_resum
   user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -9553,13 +9553,11 @@ export type profilesUncheckedUpdateManyWithoutProfile_versions_profiles_public_r
   stackoverflow_profile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_picture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   summary?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   nationality?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   sort?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   region?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   country_code?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -9586,6 +9584,8 @@ export type profilesUncheckedUpdateManyWithoutProfile_versions_profiles_public_r
   user_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   public_cv_version?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 
@@ -9815,13 +9815,11 @@ export type profilesSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   stackoverflow_profile?: boolean
   headline?: boolean
   profile_picture?: boolean
-  profile_photo_path?: boolean
   summary?: boolean
   nationality?: boolean
   location_url?: boolean
   location_timezone?: boolean
   sort?: boolean
-  location?: boolean
   city?: boolean
   region?: boolean
   country_code?: boolean
@@ -9849,6 +9847,8 @@ export type profilesSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   public_cv_version?: boolean
   public_resume_version?: boolean
   source_cv?: boolean
+  location?: boolean
+  profile_photo_path?: boolean
   ai_chats?: boolean | Prisma.profiles$ai_chatsArgs<ExtArgs>
   applications?: boolean | Prisma.profiles$applicationsArgs<ExtArgs>
   cheat_sheets?: boolean | Prisma.profiles$cheat_sheetsArgs<ExtArgs>
@@ -9892,13 +9892,11 @@ export type profilesSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   stackoverflow_profile?: boolean
   headline?: boolean
   profile_picture?: boolean
-  profile_photo_path?: boolean
   summary?: boolean
   nationality?: boolean
   location_url?: boolean
   location_timezone?: boolean
   sort?: boolean
-  location?: boolean
   city?: boolean
   region?: boolean
   country_code?: boolean
@@ -9926,6 +9924,8 @@ export type profilesSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   public_cv_version?: boolean
   public_resume_version?: boolean
   source_cv?: boolean
+  location?: boolean
+  profile_photo_path?: boolean
   directus_files?: boolean | Prisma.profiles$directus_filesArgs<ExtArgs>
   profile_versions_profiles_public_cv_versionToprofile_versions?: boolean | Prisma.profiles$profile_versions_profiles_public_cv_versionToprofile_versionsArgs<ExtArgs>
   profile_versions_profiles_public_resume_versionToprofile_versions?: boolean | Prisma.profiles$profile_versions_profiles_public_resume_versionToprofile_versionsArgs<ExtArgs>
@@ -9947,13 +9947,11 @@ export type profilesSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   stackoverflow_profile?: boolean
   headline?: boolean
   profile_picture?: boolean
-  profile_photo_path?: boolean
   summary?: boolean
   nationality?: boolean
   location_url?: boolean
   location_timezone?: boolean
   sort?: boolean
-  location?: boolean
   city?: boolean
   region?: boolean
   country_code?: boolean
@@ -9981,6 +9979,8 @@ export type profilesSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   public_cv_version?: boolean
   public_resume_version?: boolean
   source_cv?: boolean
+  location?: boolean
+  profile_photo_path?: boolean
   directus_files?: boolean | Prisma.profiles$directus_filesArgs<ExtArgs>
   profile_versions_profiles_public_cv_versionToprofile_versions?: boolean | Prisma.profiles$profile_versions_profiles_public_cv_versionToprofile_versionsArgs<ExtArgs>
   profile_versions_profiles_public_resume_versionToprofile_versions?: boolean | Prisma.profiles$profile_versions_profiles_public_resume_versionToprofile_versionsArgs<ExtArgs>
@@ -10002,13 +10002,11 @@ export type profilesSelectScalar = {
   stackoverflow_profile?: boolean
   headline?: boolean
   profile_picture?: boolean
-  profile_photo_path?: boolean
   summary?: boolean
   nationality?: boolean
   location_url?: boolean
   location_timezone?: boolean
   sort?: boolean
-  location?: boolean
   city?: boolean
   region?: boolean
   country_code?: boolean
@@ -10036,9 +10034,11 @@ export type profilesSelectScalar = {
   public_cv_version?: boolean
   public_resume_version?: boolean
   source_cv?: boolean
+  location?: boolean
+  profile_photo_path?: boolean
 }
 
-export type profilesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "date_created" | "date_updated" | "name" | "title" | "phone_number" | "email_address" | "personal_website" | "subtitle" | "core_stack" | "linkedin_profile" | "github_profile" | "stackoverflow_profile" | "headline" | "profile_picture" | "profile_photo_path" | "summary" | "nationality" | "location_url" | "location_timezone" | "sort" | "location" | "city" | "region" | "country_code" | "location_city" | "location_region" | "location_country_code" | "is_default" | "slug" | "npm_profile" | "pypi_profile" | "company_name" | "street_address" | "postal_code" | "vat_id" | "kvk_number" | "about_me_text" | "meta_image_url" | "dev_start_year" | "python_js_start_year" | "remote_start_year" | "signal_profile" | "whatsapp_number" | "telegram_username" | "user_id" | "public_cv_version" | "public_resume_version" | "source_cv", ExtArgs["result"]["profiles"]>
+export type profilesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "date_created" | "date_updated" | "name" | "title" | "phone_number" | "email_address" | "personal_website" | "subtitle" | "core_stack" | "linkedin_profile" | "github_profile" | "stackoverflow_profile" | "headline" | "profile_picture" | "summary" | "nationality" | "location_url" | "location_timezone" | "sort" | "city" | "region" | "country_code" | "location_city" | "location_region" | "location_country_code" | "is_default" | "slug" | "npm_profile" | "pypi_profile" | "company_name" | "street_address" | "postal_code" | "vat_id" | "kvk_number" | "about_me_text" | "meta_image_url" | "dev_start_year" | "python_js_start_year" | "remote_start_year" | "signal_profile" | "whatsapp_number" | "telegram_username" | "user_id" | "public_cv_version" | "public_resume_version" | "source_cv" | "location" | "profile_photo_path", ExtArgs["result"]["profiles"]>
 export type profilesInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   ai_chats?: boolean | Prisma.profiles$ai_chatsArgs<ExtArgs>
   applications?: boolean | Prisma.profiles$applicationsArgs<ExtArgs>
@@ -10121,13 +10121,11 @@ export type $profilesPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     stackoverflow_profile: string | null
     headline: string | null
     profile_picture: string | null
-    profile_photo_path: string | null
     summary: string | null
     nationality: string | null
     location_url: string | null
     location_timezone: string | null
     sort: number | null
-    location: string | null
     city: string | null
     region: string | null
     country_code: string | null
@@ -10155,6 +10153,8 @@ export type $profilesPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     public_cv_version: number | null
     public_resume_version: number | null
     source_cv: string | null
+    location: string | null
+    profile_photo_path: string | null
   }, ExtArgs["result"]["profiles"]>
   composites: {}
 }
@@ -10617,13 +10617,11 @@ export interface profilesFieldRefs {
   readonly stackoverflow_profile: Prisma.FieldRef<"profiles", 'String'>
   readonly headline: Prisma.FieldRef<"profiles", 'String'>
   readonly profile_picture: Prisma.FieldRef<"profiles", 'String'>
-  readonly profile_photo_path: Prisma.FieldRef<"profiles", 'String'>
   readonly summary: Prisma.FieldRef<"profiles", 'String'>
   readonly nationality: Prisma.FieldRef<"profiles", 'String'>
   readonly location_url: Prisma.FieldRef<"profiles", 'String'>
   readonly location_timezone: Prisma.FieldRef<"profiles", 'String'>
   readonly sort: Prisma.FieldRef<"profiles", 'Int'>
-  readonly location: Prisma.FieldRef<"profiles", 'String'>
   readonly city: Prisma.FieldRef<"profiles", 'String'>
   readonly region: Prisma.FieldRef<"profiles", 'String'>
   readonly country_code: Prisma.FieldRef<"profiles", 'String'>
@@ -10651,6 +10649,8 @@ export interface profilesFieldRefs {
   readonly public_cv_version: Prisma.FieldRef<"profiles", 'Int'>
   readonly public_resume_version: Prisma.FieldRef<"profiles", 'Int'>
   readonly source_cv: Prisma.FieldRef<"profiles", 'String'>
+  readonly location: Prisma.FieldRef<"profiles", 'String'>
+  readonly profile_photo_path: Prisma.FieldRef<"profiles", 'String'>
 }
     
 
