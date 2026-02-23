@@ -61,11 +61,6 @@
           icon: faSearch,
         },
         {
-          label: "Browse All Jobs",
-          href: "/dashboard/jobs/browse",
-          icon: faBriefcase,
-        },
-        {
           label: "Job Matches",
           href: "/dashboard/jobs/matches",
           icon: faListCheck,
@@ -74,6 +69,11 @@
           label: "Saved Jobs",
           href: "/dashboard/jobs/saved",
           icon: faBookmark,
+        },
+        {
+          label: "Browse All Jobs",
+          href: "/dashboard/jobs/browse",
+          icon: faBriefcase,
         },
       ],
     },
