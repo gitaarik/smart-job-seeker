@@ -13,88 +13,57 @@ import { z } from "zod";
  * Schema for extract_job_data prompt
  * Extracts structured data from individual job posting pages
  */
+// Helper for optional nullable fields (field can be missing, null, or have a value)
+const optionalNullableString = () => z.string().optional().nullable();
+const optionalNullableNumber = () => z.number().int().optional().nullable();
+const optionalNullableArray = () => z.array(z.string()).optional().nullable();
+
 export const extractJobDataSchema = z.object({
-  title: z.string().nullable().describe("Job title"),
-  job_description: z.string().nullable().describe("Full job description"),
-  company_description: z
-    .string()
-    .nullable()
-    .describe("Company description"),
-  company: z
-    .string()
-    .nullable()
-    .describe("Name of the company that is hiring for this position"),
-  job_poster: z
-    .string()
-    .nullable()
-    .describe(
-      "Name of recruiter, recruitment agency, or person who posted the job (NOT the hiring company)",
-    ),
-  date_posted: z
-    .string()
-    .nullable()
-    .describe("Date the job was posted (ISO 8601 format)"),
-  location: z
-    .string()
-    .nullable()
-    .describe("Physical office location (city, region, country)"),
-  remote: z
-    .string()
-    .nullable()
-    .describe("Work location type (remote, hybrid, or onsite)"),
-  experience_levels: z
-    .array(z.string())
-    .nullable()
-    .describe(
-      "Array of applicable experience levels (entry, junior, mid, senior, lead, principal, executive)",
-    ),
-  job_type: z.string().nullable().describe("Employment type"),
-  salary_min: z
-    .number()
-    .int()
-    .nullable()
-    .describe("Minimum salary amount"),
-  salary_max: z
-    .number()
-    .int()
-    .nullable()
-    .describe("Maximum salary amount"),
-  salary_currency: z
-    .string()
-    .nullable()
-    .describe("Currency code (EUR, USD, GBP)"),
-  salary_period: z
-    .string()
-    .nullable()
-    .describe("Pay period (hour, day, month, year)"),
-  skills_required: z
-    .array(z.string())
-    .nullable()
-    .describe(
-      "Array of REQUIRED TECHNICAL skills/technologies, ordered by importance (most critical first)",
-    ),
-  skills_preferred: z
-    .array(z.string())
-    .nullable()
-    .describe(
-      "Array of PREFERRED/nice-to-have TECHNICAL skills, ordered by importance (most desired first)",
-    ),
-  responsibilities: z
-    .array(z.string())
-    .nullable()
-    .describe(
-      "Array of key job responsibilities/duties, ordered by importance",
-    ),
-  soft_skills: z
-    .array(z.string())
-    .nullable()
-    .describe(
-      "Array of soft skills/personality traits (communication, leadership, teamwork, etc.)",
-    ),
-  status: z
-    .string()
-    .nullable()
-    .describe("Whether the job is currently accepting applications"),
+  title: optionalNullableString().describe("Job title"),
+  job_description: optionalNullableString().describe("Full job description"),
+  company_description: optionalNullableString().describe("Company description"),
+  company: optionalNullableString().describe(
+    "Name of the company that is hiring for this position",
+  ),
+  job_poster: optionalNullableString().describe(
+    "Name of recruiter, recruitment agency, or person who posted the job (NOT the hiring company)",
+  ),
+  date_posted: optionalNullableString().describe(
+    "Date the job was posted (ISO 8601 format)",
+  ),
+  location: optionalNullableString().describe(
+    "Physical office location (city, region, country)",
+  ),
+  remote: optionalNullableString().describe(
+    "Work location type (remote, hybrid, or onsite)",
+  ),
+  experience_levels: optionalNullableArray().describe(
+    "Array of applicable experience levels (entry, junior, mid, senior, lead, principal, executive)",
+  ),
+  job_type: optionalNullableString().describe("Employment type"),
+  salary_min: optionalNullableNumber().describe("Minimum salary amount"),
+  salary_max: optionalNullableNumber().describe("Maximum salary amount"),
+  salary_currency: optionalNullableString().describe(
+    "Currency code (EUR, USD, GBP)",
+  ),
+  salary_period: optionalNullableString().describe(
+    "Pay period (hour, day, month, year)",
+  ),
+  skills_required: optionalNullableArray().describe(
+    "Array of REQUIRED TECHNICAL skills/technologies, ordered by importance (most critical first)",
+  ),
+  skills_preferred: optionalNullableArray().describe(
+    "Array of PREFERRED/nice-to-have TECHNICAL skills, ordered by importance (most desired first)",
+  ),
+  responsibilities: optionalNullableArray().describe(
+    "Array of key job responsibilities/duties, ordered by importance",
+  ),
+  soft_skills: optionalNullableArray().describe(
+    "Array of soft skills/personality traits (communication, leadership, teamwork, etc.)",
+  ),
+  status: optionalNullableString().describe(
+    "Whether the job is currently accepting applications",
+  ),
 });
 
 /**
@@ -229,16 +198,32 @@ export const extractJobsFromSearchPageSchema = z.object({
 /**
  * Schema for classify_clickables prompt
  * Classifies clickable elements as view-details or action buttons
+ * Made flexible to handle various LLM response formats
  */
 export const classifyClickablesSchema = z.object({
   clickables: z.array(
     z.object({
-      id: z.number().int().describe("The data-xxx value"),
+      id: z.number().int().optional().describe("The data-xxx value"),
+      ID: z.number().int().optional().describe("Alternative: The data-xxx value"),
       type: z
         .enum(["view-details", "action"])
+        .optional()
         .describe("Clickable classification"),
+      classification: z
+        .enum(["view-details", "action"])
+        .optional()
+        .describe("Alternative: Clickable classification"),
     }),
-  ),
+  ).optional(),
+  // Handle alternative response format where LLM uses schema name as key
+  classify_clickables: z.array(
+    z.object({
+      id: z.number().int().optional(),
+      ID: z.number().int().optional(),
+      type: z.enum(["view-details", "action"]).optional(),
+      classification: z.enum(["view-details", "action"]).optional(),
+    }),
+  ).optional(),
 });
 
 /**
