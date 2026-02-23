@@ -867,6 +867,7 @@ export const Job_searchesScalarFieldEnum = {
   last_run_status: 'last_run_status',
   last_run_error: 'last_run_error',
   last_run_jobs_found: 'last_run_jobs_found',
+  live_url: 'live_url',
   search_url: 'search_url',
   platform: 'platform',
   navigation_type: 'navigation_type',

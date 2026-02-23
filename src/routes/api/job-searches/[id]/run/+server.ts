@@ -148,5 +148,6 @@ export const GET: RequestHandler = async ({ params, locals }) => {
     error: jobSearch.last_run_error,
     lastRun: jobSearch.last_run,
     jobsFound: jobSearch.last_run_jobs_found,
+    liveUrl: jobSearch.live_url,
   });
 };

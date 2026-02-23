@@ -5,7 +5,9 @@
   import {
     faArrowLeft,
     faCheck,
+    faCloud,
     faCog,
+    faDesktop,
     faExclamationTriangle,
     faExternalLinkAlt,
     faEye,
@@ -19,13 +21,16 @@
   let jobSearch = $state(data.jobSearch);
   let isStarting = $state(false);
   let errorMessage = $state<string | null>(null);
-  let showVnc = $state(false);
+  let showBrowser = $state(false);
+  let liveUrl = $state<string | null>(null);
   let pollInterval: ReturnType<typeof setInterval> | null = null;
 
   // Computed states
   let isRunning = $derived(jobSearch.last_run_status === "running");
   let isBlocked = $derived(jobSearch.last_run_status === "blocked");
   let needsIntervention = $derived(isRunning || isBlocked);
+  let isCloudMode = $derived(!!liveUrl);
+  let browserViewUrl = $derived(liveUrl || "/vnc/vnc.html?autoconnect=true&resize=scale");
 
   function formatDate(date: Date | string | null): string {
     if (!date) return "Never";
@@ -65,10 +70,10 @@
         return;
       }
 
-      // Started successfully - update local state and show VNC
+      // Started successfully - update local state and show browser
       jobSearch.last_run_status = "running";
       jobSearch.last_run_error = null;
-      showVnc = true;
+      showBrowser = true;
 
       // Start polling for status updates
       startPolling();
@@ -92,10 +97,12 @@
         jobSearch.last_run_error = result.error;
         jobSearch.last_run = result.lastRun;
         jobSearch.last_run_jobs_found = result.jobsFound;
+        liveUrl = result.liveUrl || null;
 
         // Stop polling when scrape is complete
         if (result.status !== "running" && result.status !== "blocked") {
           stopPolling();
+          liveUrl = null; // Clear live URL when done
         }
       } catch (err) {
         console.error("Failed to poll status:", err);
@@ -113,7 +120,7 @@
   onMount(() => {
     // Start polling if already running/blocked
     if (needsIntervention) {
-      showVnc = true;
+      showBrowser = true;
       startPolling();
     }
   });
@@ -253,29 +260,47 @@
     {/if}
   </div>
 
-  <!-- VNC Browser View -->
-  {#if showVnc || needsIntervention}
+  <!-- Browser View (VNC for local, iframe for cloud) -->
+  {#if showBrowser || needsIntervention}
     <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden">
       <div class="flex items-center justify-between p-4 border-b border-[var(--dash-border)]">
         <div class="flex items-center gap-2">
-          <FontAwesomeIcon icon={faEye} class="w-4 h-4 text-[var(--dash-text-secondary)]" />
+          <FontAwesomeIcon icon={isCloudMode ? faCloud : faDesktop} class="w-4 h-4 text-[var(--dash-text-secondary)]" />
           <h2 class="font-medium text-[var(--dash-text)]">Browser View</h2>
+          {#if isCloudMode}
+            <span class="text-xs text-[var(--dash-text-muted)] bg-[var(--dash-bg)] px-2 py-0.5 rounded">
+              Cloud
+            </span>
+          {/if}
         </div>
-        {#if isBlocked}
-          <span class="text-sm text-[var(--dash-warning)] bg-[var(--dash-warning-light)] px-2 py-1 rounded">
-            Action needed
-          </span>
-        {/if}
-        <button
-          onclick={() => showVnc = false}
-          class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
-        >
-          <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
-        </button>
+        <div class="flex items-center gap-2">
+          {#if isBlocked}
+            <span class="text-sm text-[var(--dash-warning)] bg-[var(--dash-warning-light)] px-2 py-1 rounded">
+              Action needed
+            </span>
+          {/if}
+          {#if isCloudMode && liveUrl}
+            <a
+              href={liveUrl}
+              target="_blank"
+              rel="noopener"
+              class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
+              title="Open in new tab"
+            >
+              <FontAwesomeIcon icon={faExternalLinkAlt} class="w-4 h-4" />
+            </a>
+          {/if}
+          <button
+            onclick={() => showBrowser = false}
+            class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
+          >
+            <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
+          </button>
+        </div>
       </div>
       <div class="relative" style="padding-bottom: 56.25%;">
         <iframe
-          src="/vnc/vnc.html?autoconnect=true&resize=scale"
+          src={browserViewUrl}
           class="absolute inset-0 w-full h-full border-0"
           title="Browser view for manual intervention"
         ></iframe>
@@ -295,7 +320,7 @@
     </div>
   {:else}
     <button
-      onclick={() => showVnc = true}
+      onclick={() => showBrowser = true}
       class="w-full p-4 border-2 border-dashed border-[var(--dash-border)] rounded-lg text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] hover:border-[var(--dash-text-secondary)] transition-colors flex items-center justify-center gap-2"
     >
       <FontAwesomeIcon icon={faEye} class="w-4 h-4" />
