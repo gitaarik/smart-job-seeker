@@ -46,7 +46,7 @@ export const actions: Actions = {
     const name = formData.get("name") as string;
     const search_url = formData.get("search_url") as string;
     const platform = formData.get("platform") as string;
-    const status = (formData.get("status") as string) || "active";
+    const is_active = formData.get("is_active") !== "false";
 
     if (!name || name.trim().length === 0) {
       return fail(400, { error: "Name is required" });
@@ -57,7 +57,7 @@ export const actions: Actions = {
         name: name.trim(),
         search_url: search_url?.trim() || null,
         platform: platform ? parseInt(platform) : null,
-        status,
+        is_active,
         profile: profileId,
         date_created: new Date(),
       },
@@ -82,7 +82,7 @@ export const actions: Actions = {
     const name = formData.get("name") as string;
     const search_url = formData.get("search_url") as string;
     const platform = formData.get("platform") as string;
-    const status = formData.get("status") as string;
+    const is_active = formData.get("is_active") !== "false";
 
     if (isNaN(id)) {
       return fail(400, { error: "Invalid search ID" });
@@ -106,7 +106,7 @@ export const actions: Actions = {
         name: name.trim(),
         search_url: search_url?.trim() || null,
         platform: platform ? parseInt(platform) : null,
-        status: status || "active",
+        is_active,
         date_updated: new Date(),
       },
     });

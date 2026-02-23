@@ -1,17 +1,23 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import {
+  addScrapeJob,
+  getActiveJobForSearch,
+  getWaitingJobForSearch,
+  removeWaitingJob,
+} from "$lib/server/queue";
 
 /**
  * POST /api/job-searches/[id]/run
  *
  * Triggers a scrape for the given job search.
- * Returns immediately - the scrape runs in the background.
+ * Creates a run record and adds the job to the BullMQ queue.
  *
  * Response:
- * - { status: 'started' } - Scrape has been started
+ * - { status: 'queued', runId: N } - Job has been queued
  * - { status: 'already_running' } - This search is already running
- * - { status: 'queued', position: N } - Another scrape is running, this one is queued
+ * - { status: 'already_queued' } - This search is already in queue
  */
 export const POST: RequestHandler = async ({ params, locals }) => {
   const user = locals.user;
@@ -43,25 +49,15 @@ export const POST: RequestHandler = async ({ params, locals }) => {
   }
 
   // Check if this search is already running
-  if (jobSearch.last_run_status === "running") {
+  const activeJob = await getActiveJobForSearch(jobSearchId);
+  if (activeJob) {
     return json({ status: "already_running" });
   }
 
-  // Check if any other search is currently running (single-browser limitation)
-  const runningSearch = await db.job_searches.findFirst({
-    where: {
-      last_run_status: "running",
-      id: { not: jobSearchId },
-    },
-  });
-
-  if (runningSearch) {
-    // Queue this search - for now just mark it as queued
-    // TODO: Implement proper queue with scrape_queue table
-    return json({
-      status: "queued",
-      message: "Another scrape is currently running. Please wait.",
-    });
+  // Check if already in queue
+  const waitingJob = await getWaitingJobForSearch(jobSearchId);
+  if (waitingJob) {
+    return json({ status: "already_queued" });
   }
 
   // Validate required fields
@@ -73,44 +69,161 @@ export const POST: RequestHandler = async ({ params, locals }) => {
     throw error(400, "Job search has no platform configured");
   }
 
-  // Mark as running immediately so UI updates
+  // Create a run record
+  const run = await db.job_search_runs.create({
+    data: {
+      job_search_id: jobSearchId,
+      status: "queued",
+      triggered_by: "user",
+    },
+  });
+
+  // Update job_searches status to queued
   await db.job_searches.update({
     where: { id: jobSearchId },
     data: {
-      last_run_status: "running",
-      last_run_error: null,
+      status: "queued",
+      status_message: "Waiting in queue",
       date_updated: new Date(),
     },
   });
 
-  // Trigger the scrape in background via the scraper service
-  // We call the scraper container's API or use a message queue
-  // For now, we'll use a simple HTTP call to the scraper service
-  triggerScrapeAsync(jobSearchId, jobSearch.search_url, jobSearch.platform);
+  // Add to BullMQ queue
+  const job = await addScrapeJob({
+    jobSearchId,
+    runId: run.id,
+    searchUrl: jobSearch.search_url,
+    platformId: String(jobSearch.platform),
+    triggeredBy: "user",
+  });
+
+  // Update run with BullMQ job ID
+  await db.job_search_runs.update({
+    where: { id: run.id },
+    data: { bullmq_job_id: job.id },
+  });
+
+  console.log(
+    `[API] Queued scrape for job search ${jobSearchId}, run ${run.id}, BullMQ job ${job.id}`,
+  );
 
   return json({
-    status: "started",
+    status: "queued",
+    runId: run.id,
+    jobId: job.id,
     vncUrl: "/vnc/vnc.html?autoconnect=true",
   });
 };
 
 /**
- * Trigger the scrape asynchronously without blocking the response.
- * This calls the scraper worker to pick up the job.
+ * DELETE /api/job-searches/[id]/run
+ *
+ * Cancel a running or queued scrape.
  */
-async function triggerScrapeAsync(
-  jobSearchId: number,
-  searchUrl: string,
-  platformId: number
-): Promise<void> {
-  // For now, we rely on the scraper worker to pick up jobs with status="running"
-  // The worker polls every 60 seconds, but we can also add a direct trigger later
+export const DELETE: RequestHandler = async ({ params, locals }) => {
+  const user = locals.user;
+  if (!user) {
+    throw error(401, "Not authenticated");
+  }
 
-  // Future improvement: Add a /trigger endpoint to the scraper service
-  // or use Redis pub/sub for instant notification
+  const jobSearchId = parseInt(params.id);
+  if (isNaN(jobSearchId)) {
+    throw error(400, "Invalid job search ID");
+  }
 
-  console.log(`[API] Triggered scrape for job search ${jobSearchId}`);
-}
+  // Get the job search and verify ownership
+  const jobSearch = await db.job_searches.findFirst({
+    where: { id: jobSearchId },
+    include: {
+      profiles: true,
+    },
+  });
+
+  if (!jobSearch) {
+    throw error(404, "Job search not found");
+  }
+
+  // Verify the user owns this profile
+  if (jobSearch.profiles.user_id !== user.id) {
+    throw error(403, "Not authorized to stop this job search");
+  }
+
+  // Try to remove from queue if waiting
+  const removed = await removeWaitingJob(jobSearchId);
+  if (removed) {
+    // Find the queued run and update it
+    const queuedRun = await db.job_search_runs.findFirst({
+      where: {
+        job_search_id: jobSearchId,
+        status: "queued",
+      },
+      orderBy: { started_at: "desc" },
+    });
+
+    if (queuedRun) {
+      await db.job_search_runs.update({
+        where: { id: queuedRun.id },
+        data: {
+          status: "cancelled",
+          error_message: "Cancelled before start",
+          finished_at: new Date(),
+        },
+      });
+    }
+
+    await db.job_searches.update({
+      where: { id: jobSearchId },
+      data: {
+        status: "idle",
+        status_message: null,
+        date_updated: new Date(),
+      },
+    });
+
+    console.log(`[API] Removed queued job for search ${jobSearchId}`);
+    return json({ status: "removed_from_queue" });
+  }
+
+  // Check if it's currently running
+  const activeJob = await getActiveJobForSearch(jobSearchId);
+  if (activeJob) {
+    // Find the running run and mark as cancelled
+    const runningRun = await db.job_search_runs.findFirst({
+      where: {
+        job_search_id: jobSearchId,
+        status: { in: ["running", "blocked"] },
+      },
+      orderBy: { started_at: "desc" },
+    });
+
+    if (runningRun) {
+      await db.job_search_runs.update({
+        where: { id: runningRun.id },
+        data: {
+          status: "cancelled",
+          error_message: "Cancelled by user",
+          finished_at: new Date(),
+          live_url: null,
+        },
+      });
+    }
+
+    await db.job_searches.update({
+      where: { id: jobSearchId },
+      data: {
+        status: "error",
+        status_message: "Cancelled by user",
+        date_updated: new Date(),
+        live_url: null,
+      },
+    });
+
+    console.log(`[API] Requested cancellation for running search ${jobSearchId}`);
+    return json({ status: "cancellation_requested" });
+  }
+
+  return json({ status: "not_found" });
+};
 
 /**
  * GET /api/job-searches/[id]/run
@@ -143,11 +256,19 @@ export const GET: RequestHandler = async ({ params, locals }) => {
     throw error(403, "Not authorized");
   }
 
+  // Get the most recent run
+  const latestRun = await db.job_search_runs.findFirst({
+    where: { job_search_id: jobSearchId },
+    orderBy: { started_at: "desc" },
+  });
+
   return json({
-    status: jobSearch.last_run_status,
-    error: jobSearch.last_run_error,
+    status: jobSearch.status,
+    statusMessage: jobSearch.status_message,
     lastRun: jobSearch.last_run,
     jobsFound: jobSearch.last_run_jobs_found,
-    liveUrl: jobSearch.live_url,
+    liveUrl: latestRun?.live_url || jobSearch.live_url,
+    currentRunId: latestRun?.id,
+    currentRunStatus: latestRun?.status,
   });
 };

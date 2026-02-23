@@ -206,7 +206,7 @@
           {#each data.jobSearches as search}
             <option value={String(search.id)}>
               {search.name}
-              {#if search.last_run_status === "running"}
+              {#if search.status === "running"}
                 (running)
               {/if}
             </option>

@@ -94,6 +94,7 @@ export const ModelName = {
   job_resources: 'job_resources',
   job_searches: 'job_searches',
   job_searches_job_sites: 'job_searches_job_sites',
+  job_search_runs: 'job_search_runs',
   scraper_logs: 'scraper_logs',
   jobs: 'jobs',
   languages: 'languages',
@@ -859,14 +860,14 @@ export type Job_resourcesScalarFieldEnum = (typeof Job_resourcesScalarFieldEnum)
 
 export const Job_searchesScalarFieldEnum = {
   id: 'id',
+  is_active: 'is_active',
   status: 'status',
+  status_message: 'status_message',
   date_created: 'date_created',
   date_updated: 'date_updated',
   name: 'name',
   profile: 'profile',
   last_run: 'last_run',
-  last_run_status: 'last_run_status',
-  last_run_error: 'last_run_error',
   last_run_jobs_found: 'last_run_jobs_found',
   live_url: 'live_url',
   search_url: 'search_url',
@@ -886,9 +887,25 @@ export const Job_searches_job_sitesScalarFieldEnum = {
 export type Job_searches_job_sitesScalarFieldEnum = (typeof Job_searches_job_sitesScalarFieldEnum)[keyof typeof Job_searches_job_sitesScalarFieldEnum]
 
 
-export const Scraper_logsScalarFieldEnum = {
+export const Job_search_runsScalarFieldEnum = {
   id: 'id',
   job_search_id: 'job_search_id',
+  status: 'status',
+  started_at: 'started_at',
+  finished_at: 'finished_at',
+  jobs_found: 'jobs_found',
+  error_message: 'error_message',
+  triggered_by: 'triggered_by',
+  bullmq_job_id: 'bullmq_job_id',
+  live_url: 'live_url'
+} as const
+
+export type Job_search_runsScalarFieldEnum = (typeof Job_search_runsScalarFieldEnum)[keyof typeof Job_search_runsScalarFieldEnum]
+
+
+export const Scraper_logsScalarFieldEnum = {
+  id: 'id',
+  run_id: 'run_id',
   level: 'level',
   message: 'message',
   timestamp: 'timestamp'

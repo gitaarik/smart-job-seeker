@@ -427,6 +427,7 @@ export const ModelName = {
   job_resources: 'job_resources',
   job_searches: 'job_searches',
   job_searches_job_sites: 'job_searches_job_sites',
+  job_search_runs: 'job_search_runs',
   scraper_logs: 'scraper_logs',
   jobs: 'jobs',
   languages: 'languages',
@@ -475,7 +476,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "ai_prompts" | "application_activity_log" | "application_letters" | "application_questions" | "applications" | "applications_files" | "cheat_sheets" | "collected_data" | "config" | "directus_access" | "directus_activity" | "directus_collections" | "directus_comments" | "directus_dashboards" | "directus_extensions" | "directus_fields" | "directus_files" | "directus_flows" | "directus_folders" | "directus_migrations" | "directus_notifications" | "directus_operations" | "directus_panels" | "directus_permissions" | "directus_policies" | "directus_presets" | "directus_relations" | "directus_revisions" | "directus_roles" | "directus_sessions" | "directus_settings" | "directus_shares" | "directus_translations" | "directus_users" | "directus_versions" | "education" | "highlights" | "job_match_preferences" | "job_matches" | "job_platforms" | "job_resources" | "job_searches" | "job_searches_job_sites" | "scraper_logs" | "jobs" | "languages" | "os_contributions" | "platform_profiles" | "profile_exports" | "profile_tokens" | "profile_version_extensions" | "profile_versions" | "profiles" | "project_stories" | "references" | "salary_expectations" | "side_project_achievements" | "side_project_technologies" | "side_projects" | "tech_skill_categories" | "tech_skill_types" | "tech_skills" | "work_experience_achievements" | "work_experience_project_technologies" | "work_experience_projects" | "work_experience_technologies" | "work_experiences" | "ai_chats" | "ai_chat_templates" | "directus_deployment_projects" | "directus_deployment_runs" | "directus_deployments" | "accounts" | "sessions" | "users" | "verifications"
+    modelProps: "ai_prompts" | "application_activity_log" | "application_letters" | "application_questions" | "applications" | "applications_files" | "cheat_sheets" | "collected_data" | "config" | "directus_access" | "directus_activity" | "directus_collections" | "directus_comments" | "directus_dashboards" | "directus_extensions" | "directus_fields" | "directus_files" | "directus_flows" | "directus_folders" | "directus_migrations" | "directus_notifications" | "directus_operations" | "directus_panels" | "directus_permissions" | "directus_policies" | "directus_presets" | "directus_relations" | "directus_revisions" | "directus_roles" | "directus_sessions" | "directus_settings" | "directus_shares" | "directus_translations" | "directus_users" | "directus_versions" | "education" | "highlights" | "job_match_preferences" | "job_matches" | "job_platforms" | "job_resources" | "job_searches" | "job_searches_job_sites" | "job_search_runs" | "scraper_logs" | "jobs" | "languages" | "os_contributions" | "platform_profiles" | "profile_exports" | "profile_tokens" | "profile_version_extensions" | "profile_versions" | "profiles" | "project_stories" | "references" | "salary_expectations" | "side_project_achievements" | "side_project_technologies" | "side_projects" | "tech_skill_categories" | "tech_skill_types" | "tech_skills" | "work_experience_achievements" | "work_experience_project_technologies" | "work_experience_projects" | "work_experience_technologies" | "work_experiences" | "ai_chats" | "ai_chat_templates" | "directus_deployment_projects" | "directus_deployment_runs" | "directus_deployments" | "accounts" | "sessions" | "users" | "verifications"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -3658,6 +3659,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.job_searches_job_sitesCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.Job_searches_job_sitesCountAggregateOutputType> | number
+        }
+      }
+    }
+    job_search_runs: {
+      payload: Prisma.$job_search_runsPayload<ExtArgs>
+      fields: Prisma.job_search_runsFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.job_search_runsFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_search_runsPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.job_search_runsFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_search_runsPayload>
+        }
+        findFirst: {
+          args: Prisma.job_search_runsFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_search_runsPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.job_search_runsFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_search_runsPayload>
+        }
+        findMany: {
+          args: Prisma.job_search_runsFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_search_runsPayload>[]
+        }
+        create: {
+          args: Prisma.job_search_runsCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_search_runsPayload>
+        }
+        createMany: {
+          args: Prisma.job_search_runsCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.job_search_runsCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_search_runsPayload>[]
+        }
+        delete: {
+          args: Prisma.job_search_runsDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_search_runsPayload>
+        }
+        update: {
+          args: Prisma.job_search_runsUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_search_runsPayload>
+        }
+        deleteMany: {
+          args: Prisma.job_search_runsDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.job_search_runsUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.job_search_runsUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_search_runsPayload>[]
+        }
+        upsert: {
+          args: Prisma.job_search_runsUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$job_search_runsPayload>
+        }
+        aggregate: {
+          args: Prisma.Job_search_runsAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateJob_search_runs>
+        }
+        groupBy: {
+          args: Prisma.job_search_runsGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Job_search_runsGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.job_search_runsCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.Job_search_runsCountAggregateOutputType> | number
         }
       }
     }
@@ -6856,14 +6931,14 @@ export type Job_resourcesScalarFieldEnum = (typeof Job_resourcesScalarFieldEnum)
 
 export const Job_searchesScalarFieldEnum = {
   id: 'id',
+  is_active: 'is_active',
   status: 'status',
+  status_message: 'status_message',
   date_created: 'date_created',
   date_updated: 'date_updated',
   name: 'name',
   profile: 'profile',
   last_run: 'last_run',
-  last_run_status: 'last_run_status',
-  last_run_error: 'last_run_error',
   last_run_jobs_found: 'last_run_jobs_found',
   live_url: 'live_url',
   search_url: 'search_url',
@@ -6883,9 +6958,25 @@ export const Job_searches_job_sitesScalarFieldEnum = {
 export type Job_searches_job_sitesScalarFieldEnum = (typeof Job_searches_job_sitesScalarFieldEnum)[keyof typeof Job_searches_job_sitesScalarFieldEnum]
 
 
-export const Scraper_logsScalarFieldEnum = {
+export const Job_search_runsScalarFieldEnum = {
   id: 'id',
   job_search_id: 'job_search_id',
+  status: 'status',
+  started_at: 'started_at',
+  finished_at: 'finished_at',
+  jobs_found: 'jobs_found',
+  error_message: 'error_message',
+  triggered_by: 'triggered_by',
+  bullmq_job_id: 'bullmq_job_id',
+  live_url: 'live_url'
+} as const
+
+export type Job_search_runsScalarFieldEnum = (typeof Job_search_runsScalarFieldEnum)[keyof typeof Job_search_runsScalarFieldEnum]
+
+
+export const Scraper_logsScalarFieldEnum = {
+  id: 'id',
+  run_id: 'run_id',
   level: 'level',
   message: 'message',
   timestamp: 'timestamp'
@@ -7745,6 +7836,7 @@ export type GlobalOmitConfig = {
   job_resources?: Prisma.job_resourcesOmit
   job_searches?: Prisma.job_searchesOmit
   job_searches_job_sites?: Prisma.job_searches_job_sitesOmit
+  job_search_runs?: Prisma.job_search_runsOmit
   scraper_logs?: Prisma.scraper_logsOmit
   jobs?: Prisma.jobsOmit
   languages?: Prisma.languagesOmit

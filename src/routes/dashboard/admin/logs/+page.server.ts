@@ -24,21 +24,27 @@ export const load: PageServerLoad = async ({ parent }) => {
     select: {
       id: true,
       name: true,
-      last_run_status: true,
+      status: true,
     },
     orderBy: { date_updated: "desc" },
     take: 50,
   });
 
-  // Get initial logs
+  // Get initial logs (via run -> job_search relation)
   const logs = await db.scraper_logs.findMany({
     orderBy: { timestamp: "desc" },
     take: 100,
     include: {
-      job_searches: {
+      run: {
         select: {
           id: true,
-          name: true,
+          job_search_id: true,
+          job_searches: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
         },
       },
     },
@@ -51,8 +57,9 @@ export const load: PageServerLoad = async ({ parent }) => {
       level: log.level,
       message: log.message,
       timestamp: log.timestamp.toISOString(),
-      jobSearchId: log.job_search_id,
-      jobSearchName: log.job_searches?.name,
+      runId: log.run_id,
+      jobSearchId: log.run?.job_search_id,
+      jobSearchName: log.run?.job_searches?.name,
     })),
   };
 };

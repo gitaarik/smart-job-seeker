@@ -732,14 +732,14 @@ model job_resources {
 
 model job_searches {
   id                     Int                      @id @default(autoincrement())
-  status                 String                   @default("active") @db.VarChar(255)
+  is_active              Boolean                  @default(true)
+  status                 String?                  @db.VarChar(50)
+  status_message         String?                  @db.VarChar(255)
   date_created           DateTime?                @db.Timestamptz(6)
   date_updated           DateTime?                @db.Timestamptz(6)
   name                   String                   @db.VarChar(255)
   profile                Int
   last_run               DateTime?                @db.Timestamptz(6)
-  last_run_status        String?                  @db.VarChar(50)
-  last_run_error         String?                  @db.VarChar(255)
   last_run_jobs_found    Int?
   live_url               String?                  @db.VarChar(500)
   search_url             String?
@@ -749,7 +749,7 @@ model job_searches {
   job_platforms          job_platforms?           @relation(fields: [platform], references: [id], onUpdate: NoAction, map: "job_searches_platform_foreign")
   profiles               profiles                 @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_searches_profile_foreign")
   job_searches_job_sites job_searches_job_sites[]
-  scraper_logs           scraper_logs[]
+  runs                   job_search_runs[]
 }
 
 model job_searches_job_sites {
@@ -758,15 +758,33 @@ model job_searches_job_sites {
   job_searches    job_searches? @relation(fields: [job_searches_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_searches_job_sites_job_searches_id_foreign")
 }
 
-model scraper_logs {
-  id            Int          @id @default(autoincrement())
-  job_search_id Int?
-  level         String       @db.VarChar(10)
-  message       String
-  timestamp     DateTime     @default(now()) @db.Timestamptz(6)
-  job_searches  job_searches? @relation(fields: [job_search_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+model job_search_runs {
+  id            Int           @id @default(autoincrement())
+  job_search_id Int
+  status        String        @db.VarChar(50) // queued, running, success, partial, error, cancelled
+  started_at    DateTime      @default(now()) @db.Timestamptz(6)
+  finished_at   DateTime?     @db.Timestamptz(6)
+  jobs_found    Int?
+  error_message String?
+  triggered_by  String        @db.VarChar(20) // user, scheduler
+  bullmq_job_id String?       @db.VarChar(100)
+  live_url      String?       @db.VarChar(500)
 
-  @@index([job_search_id, timestamp])
+  job_searches  job_searches  @relation(fields: [job_search_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  logs          scraper_logs[]
+
+  @@index([job_search_id, started_at])
+}
+
+model scraper_logs {
+  id        Int              @id @default(autoincrement())
+  run_id    Int
+  level     String           @db.VarChar(10)
+  message   String
+  timestamp DateTime         @default(now()) @db.Timestamptz(6)
+  run       job_search_runs  @relation(fields: [run_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([run_id, timestamp])
 }
 
 model jobs {
