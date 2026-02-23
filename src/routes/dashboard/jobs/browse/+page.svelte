@@ -1,8 +1,10 @@
 <script lang="ts">
-  import type { PageData } from "./$types";
+  import type { ActionData, PageData } from "./$types";
+  import { enhance } from "$app/forms";
   import { goto } from "$app/navigation";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
+    faBookmark as faBookmarkSolid,
     faBriefcase,
     faBuilding,
     faCalendar,
@@ -11,16 +13,18 @@
     faChevronRight,
     faChevronUp,
     faExternalLinkAlt,
+    faEye,
     faFilter,
     faMapMarkerAlt,
     faMoneyBillWave,
     faSearch,
     faTimes,
   } from "@fortawesome/free-solid-svg-icons";
+  import { faBookmark as faBookmarkRegular } from "@fortawesome/free-regular-svg-icons";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import EmptyState from "../../profile/components/EmptyState.svelte";
 
-  let { data }: { data: PageData } = $props();
+  let { data, form }: { data: PageData; form: ActionData } = $props();
 
   let jobs = $derived(data.jobs);
   let platforms = $derived(data.platforms);
@@ -28,6 +32,20 @@
   let currentPage = $derived(data.currentPage);
   let totalPages = $derived(data.totalPages);
   let filters = $derived(data.filters);
+  let savedJobIds = $state(new Set(data.savedJobIds));
+
+  // Update savedJobIds when form action completes
+  $effect(() => {
+    if (form?.success && form?.jobId) {
+      if (form.action === "saved") {
+        savedJobIds = new Set([...savedJobIds, form.jobId]);
+      } else if (form.action === "unsaved") {
+        const newSet = new Set(savedJobIds);
+        newSet.delete(form.jobId);
+        savedJobIds = newSet;
+      }
+    }
+  });
 
   // Local state for form inputs
   let searchInput = $state(filters.search);
@@ -37,6 +55,7 @@
   let sortOrder = $state(filters.sortOrder);
   let showFilters = $state(false);
   let expandedId = $state<number | null>(null);
+  let savingJobId = $state<number | null>(null);
 
   const statusOptions = [
     { value: "", label: "All Statuses" },
@@ -283,6 +302,7 @@
   {:else}
     <div class="space-y-3">
       {#each jobs as job (job.id)}
+        {@const isSaved = savedJobIds.has(job.id)}
         <div
           class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden"
         >
@@ -302,6 +322,11 @@
                 >
                   {job.status}
                 </span>
+                {#if isSaved}
+                  <span class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-primary-light)] text-[var(--dash-primary)]">
+                    Saved
+                  </span>
+                {/if}
               </div>
               <div class="flex items-center gap-3 mt-1 text-sm text-[var(--dash-text-secondary)] flex-wrap">
                 {#if job.company}
@@ -330,7 +355,48 @@
               </div>
             </div>
 
-            <div class="flex items-center gap-3 ml-4">
+            <div class="flex items-center gap-2 ml-4">
+              <!-- Save/Unsave Button -->
+              <form
+                method="POST"
+                action={isSaved ? "?/unsaveJob" : "?/saveJob"}
+                use:enhance={() => {
+                  savingJobId = job.id;
+                  return async ({ update }) => {
+                    await update();
+                    savingJobId = null;
+                  };
+                }}
+                class="inline"
+              >
+                <input type="hidden" name="jobId" value={job.id} />
+                <button
+                  type="submit"
+                  onclick={(e) => e.stopPropagation()}
+                  disabled={savingJobId === job.id}
+                  class="p-2 transition-colors {isSaved ? 'text-[var(--dash-primary)]' : 'text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)]'} disabled:opacity-50"
+                  aria-label={isSaved ? "Unsave job" : "Save job"}
+                  title={isSaved ? "Unsave job" : "Save job"}
+                >
+                  <FontAwesomeIcon
+                    icon={isSaved ? faBookmarkSolid : faBookmarkRegular}
+                    class="w-4 h-4"
+                  />
+                </button>
+              </form>
+
+              <!-- View Details Link -->
+              <a
+                href="/dashboard/jobs/{job.id}"
+                onclick={(e) => e.stopPropagation()}
+                class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
+                aria-label="View job details"
+                title="View full details"
+              >
+                <FontAwesomeIcon icon={faEye} class="w-4 h-4" />
+              </a>
+
+              <!-- External Link -->
               {#if job.source_url}
                 <a
                   href={job.source_url}
@@ -339,6 +405,7 @@
                   onclick={(e) => e.stopPropagation()}
                   class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
                   aria-label="View job posting"
+                  title="Open original posting"
                 >
                   <FontAwesomeIcon icon={faExternalLinkAlt} class="w-4 h-4" />
                 </a>
@@ -438,6 +505,14 @@
                   <p class="text-sm text-[var(--dash-text)] whitespace-pre-wrap">
                     {truncate(job.job_description, 500)}
                   </p>
+                  {#if job.job_description.length > 500}
+                    <a
+                      href="/dashboard/jobs/{job.id}"
+                      class="text-sm text-[var(--dash-primary)] hover:underline mt-2 inline-block"
+                    >
+                      View full description →
+                    </a>
+                  {/if}
                 </div>
               {/if}
 

@@ -10,6 +10,7 @@
     faChevronDown,
     faChevronUp,
     faExternalLinkAlt,
+    faEye,
     faListCheck,
     faMapMarkerAlt,
     faMoneyBillWave,
@@ -186,6 +187,14 @@
             </div>
 
             <div class="flex items-center gap-3 ml-4">
+              <a
+                href="/dashboard/jobs/{job.id}"
+                onclick={(e) => e.stopPropagation()}
+                class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
+                aria-label="View job details"
+              >
+                <FontAwesomeIcon icon={faEye} class="w-4 h-4" />
+              </a>
               {#if job.source_url}
                 <a
                   href={job.source_url}

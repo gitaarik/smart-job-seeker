@@ -1,6 +1,7 @@
-import type { PageServerLoad } from "./$types";
-import { redirect } from "@sveltejs/kit";
+import type { Actions, PageServerLoad } from "./$types";
+import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { getSelectedProfileId } from "../../profile/utils";
 
 export const load: PageServerLoad = async ({ parent, url }) => {
   const layoutData = await parent();
@@ -8,6 +9,8 @@ export const load: PageServerLoad = async ({ parent, url }) => {
   if (!layoutData.selectedProfile) {
     redirect(302, "/dashboard");
   }
+
+  const profileId = layoutData.selectedProfile.id;
 
   // Parse query parameters
   const search = url.searchParams.get("q") || "";
@@ -59,6 +62,17 @@ export const load: PageServerLoad = async ({ parent, url }) => {
     db.jobs.count({ where }),
   ]);
 
+  // Get saved job IDs for this profile (to show save state)
+  const savedMatches = await db.job_matches.findMany({
+    where: {
+      profile: profileId,
+      job: { in: jobs.map((j) => j.id) },
+      status: "saved",
+    },
+    select: { job: true },
+  });
+  const savedJobIds = new Set(savedMatches.map((m) => m.job));
+
   // Get all platforms for filter dropdown
   const platforms = await db.job_platforms.findMany({
     where: { status: "published" },
@@ -77,6 +91,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
     totalCount,
     currentPage: page,
     totalPages,
+    savedJobIds: Array.from(savedJobIds),
     filters: {
       search,
       platform,
@@ -85,4 +100,108 @@ export const load: PageServerLoad = async ({ parent, url }) => {
       sortOrder,
     },
   };
+};
+
+export const actions: Actions = {
+  saveJob: async ({ request, locals, cookies }) => {
+    const user = locals.user;
+    if (!user) {
+      return fail(401, { error: "Not authenticated" });
+    }
+
+    const profileId = await getSelectedProfileId(cookies, user.id);
+    if (!profileId) {
+      return fail(400, { error: "No profile selected" });
+    }
+
+    const formData = await request.formData();
+    const jobId = parseInt(formData.get("jobId") as string);
+
+    if (isNaN(jobId)) {
+      return fail(400, { error: "Invalid job ID" });
+    }
+
+    // Check if job exists
+    const job = await db.jobs.findUnique({
+      where: { id: jobId },
+    });
+
+    if (!job) {
+      return fail(404, { error: "Job not found" });
+    }
+
+    // Check if match already exists
+    const existingMatch = await db.job_matches.findFirst({
+      where: { profile: profileId, job: jobId },
+    });
+
+    if (existingMatch) {
+      // Update existing match to saved
+      await db.job_matches.update({
+        where: { id: existingMatch.id },
+        data: {
+          status: "saved",
+          date_updated: new Date(),
+        },
+      });
+    } else {
+      // Create new match with saved status (no AI scoring)
+      await db.job_matches.create({
+        data: {
+          profile: profileId,
+          job: jobId,
+          status: "saved",
+          score: 0, // No AI score for manually saved jobs
+          date_created: new Date(),
+          date_updated: new Date(),
+        },
+      });
+    }
+
+    return { success: true, action: "saved", jobId };
+  },
+
+  unsaveJob: async ({ request, locals, cookies }) => {
+    const user = locals.user;
+    if (!user) {
+      return fail(401, { error: "Not authenticated" });
+    }
+
+    const profileId = await getSelectedProfileId(cookies, user.id);
+    if (!profileId) {
+      return fail(400, { error: "No profile selected" });
+    }
+
+    const formData = await request.formData();
+    const jobId = parseInt(formData.get("jobId") as string);
+
+    if (isNaN(jobId)) {
+      return fail(400, { error: "Invalid job ID" });
+    }
+
+    // Find the match
+    const match = await db.job_matches.findFirst({
+      where: { profile: profileId, job: jobId },
+    });
+
+    if (match) {
+      // If the match has AI scoring data, just update status to "new"
+      // If it was manually saved (score=0), delete it
+      if (match.score === 0 && !match.reasoning) {
+        await db.job_matches.delete({
+          where: { id: match.id },
+        });
+      } else {
+        await db.job_matches.update({
+          where: { id: match.id },
+          data: {
+            status: "new",
+            date_updated: new Date(),
+          },
+        });
+      }
+    }
+
+    return { success: true, action: "unsaved", jobId };
+  },
 };
