@@ -15,7 +15,6 @@ import {
   SystemMessage,
 } from "@langchain/core/messages";
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 import { getEnv } from "$lib/tools/get-env";
 import { llmCache } from "./cache";
 import { isRetryableError, withRetry } from "$lib/server/utils/retry";
@@ -428,33 +427,17 @@ async function generateWithLangChain(
       // For Groq and Cerebras, use JSON mode instead of structured output (tool calling)
       // These providers' tool calling has strict validation that conflicts with our schemas
       if (provider === "groq" || provider === "cerebras") {
-        // Convert Zod schema to JSON Schema for the prompt
-        const jsonSchema = zodToJsonSchema(zodSchema, {
-          name: structuredOutput.name,
-          $refStrategy: "none", // Inline all definitions
-        });
+        // IMPORTANT: Do NOT use zodToJsonSchema here - Llama 4 tends to echo JSON schema definitions
+        // Instead, we rely on the system prompt already describing the expected output format
+        // The structuredOutput.name tells us what type of response we expect
 
-        // Add JSON mode instruction with schema to the last user message
-        // Use compact JSON (no pretty-printing) to reduce token usage
-        // IMPORTANT: Use simple format description - Llama 4 tends to echo JSON schemas
+        // Add a simple reminder to output JSON data (not schema)
         const lastMessage = langChainMessages[langChainMessages.length - 1];
         if (lastMessage instanceof HumanMessage) {
-          // Extract just the properties from the schema for a cleaner prompt
-          const schemaObj = jsonSchema as Record<string, unknown>;
-          const properties = (schemaObj.properties || schemaObj) as Record<string, unknown>;
-
-          // Build a simple example-based format description
-          let formatDesc = "Respond with a JSON object using these exact field names:\n";
-          for (const [key, value] of Object.entries(properties)) {
-            const prop = value as Record<string, unknown>;
-            const typeInfo = prop.type || (prop.items ? "array" : "object");
-            formatDesc += `- "${key}": ${typeInfo}\n`;
-          }
-
           lastMessage.content = lastMessage.content +
-            "\n\n## OUTPUT FORMAT\n" +
-            formatDesc +
-            "\nRespond with ONLY the JSON object. No schema definitions, no explanations.";
+            "\n\nIMPORTANT: Output ONLY a valid JSON object with actual DATA values. " +
+            "Do NOT output a JSON Schema definition. Do NOT include $ref, definitions, type declarations, or schema metadata. " +
+            "Just output the extracted data as JSON.";
         }
 
         // Invoke with JSON mode enabled to ensure valid JSON output
