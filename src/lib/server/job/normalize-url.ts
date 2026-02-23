@@ -29,6 +29,11 @@ const TRACKING_PARAMS = [
   "_gl",
   "mc_cid",
   "mc_eid",
+  // LinkedIn tracking
+  "eBP",
+  "refId",
+  "trackingId",
+  "trk",
 ];
 
 /**

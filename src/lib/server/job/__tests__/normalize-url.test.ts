@@ -46,21 +46,30 @@ describe("normalizeJobUrl", () => {
   });
 
   describe("LinkedIn URL handling", () => {
-    it("should preserve job identifiers in LinkedIn URLs", () => {
+    it("should remove LinkedIn tracking params (eBP, refId, trackingId, trk)", () => {
       const url =
-        "https://www.linkedin.com/jobs/view/123456?trackingId=abc&refId=xyz";
-      // trackingId and refId are not in our tracking params list, so they're preserved
+        "https://www.linkedin.com/jobs/view/123456?trackingId=abc&refId=xyz&trk=flagship3_search_srp_jobs&eBP=CwEAAAGci3ssFIlzMkdNdUi37nd";
       expect(normalizeJobUrl(url)).toBe(
-        "https://www.linkedin.com/jobs/view/123456?trackingId=abc&refId=xyz",
+        "https://www.linkedin.com/jobs/view/123456",
       );
     });
 
-    it("should remove tracking params from LinkedIn URLs", () => {
+    it("should remove generic tracking params from LinkedIn URLs", () => {
       const url =
         "https://linkedin.com/jobs/view/123456?tracking=abc&utm_source=google";
       expect(normalizeJobUrl(url)).toBe(
         "https://linkedin.com/jobs/view/123456",
       );
+    });
+
+    it("should normalize long LinkedIn URLs to short form", () => {
+      const longUrl =
+        "https://www.linkedin.com/jobs/view/4359834666/?eBP=CwEAAAGci3ssFIlzMkdNdUi37ndlMm4dF8m5NPBXxtgGxofnZRpOQqUBSMdK9vI755b0EZau62EAxhSxewOTndSdwzrfYi_ln0wildHexdbbQyO9BzCiPGGnOhb6CSPnzlnxPQoUrv8K8Htn87QF7Y4uvX6tXRdijmdX8QSVp9Zkeb_7OMkhNX5OSsTVUD0kSh_LgKVuAzZPlPO3UsYzWe9LMz5T7zAiEiQMgT_PqutFsOkSlmXe18e6k7Y6_cjSD4qJtJkMQuGyv9vvn9JJtoueOFhCzLxpwjoVTcfM12tMkTDjIHfx9GOlXUSUDA5NW7qrjQ0QlxJ1327SQMvj&refId=CTuHn76pNm3SxPiaS5Fskw%3D%3D&trackingId=UmIzmp4OAsM0X4STknIcUA%3D%3D&trk=flagship3_search_srp_jobs";
+      const normalized = normalizeJobUrl(longUrl);
+      expect(normalized).toBe(
+        "https://www.linkedin.com/jobs/view/4359834666",
+      );
+      expect(normalized.length).toBeLessThan(255);
     });
 
     it("should preserve currentJobId in LinkedIn search URLs", () => {

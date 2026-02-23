@@ -792,7 +792,7 @@ model jobs {
   status               String          @default("draft") @db.VarChar(255)
   date_created         DateTime?       @db.Timestamptz(6)
   date_updated         DateTime?       @db.Timestamptz(6)
-  source_url           String?         @db.VarChar(255)
+  source_url           String?         @db.VarChar(2048)
   title                String?         @db.VarChar(255)
   job_description      String?
   job_poster           String?         @db.VarChar(255)
