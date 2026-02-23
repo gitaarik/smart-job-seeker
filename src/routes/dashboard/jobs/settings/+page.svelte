@@ -371,15 +371,13 @@
                     <h3 class="font-medium text-[var(--dash-text)]">
                       {search.name}
                     </h3>
-                    <span
-                      class="
-                        text-xs px-2 py-0.5 rounded-full {search.is_active
-                        ? 'bg-[var(--dash-success-light)] text-[var(--dash-success)]'
-                        : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)]'}
-                      "
-                    >
-                      {search.is_active ? 'Active' : 'Inactive'}
-                    </span>
+                    {#if !search.is_active}
+                      <span
+                        class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-bg)] text-[var(--dash-text-muted)]"
+                      >
+                        Inactive
+                      </span>
+                    {/if}
                   </div>
                   <p class="text-sm text-[var(--dash-text-secondary)] flex items-center gap-1 flex-wrap">
                     {#if search.job_platforms}
