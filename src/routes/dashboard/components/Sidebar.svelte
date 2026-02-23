@@ -25,6 +25,7 @@
     faRobot,
     faSearch,
     faStickyNote,
+    faTerminal,
     faTimes,
     faTrash,
     faUser,
@@ -33,6 +34,8 @@
     faWrench,
   } from "@fortawesome/free-solid-svg-icons";
   import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
+
+  let { isAdmin = false }: { isAdmin?: boolean } = $props();
 
   interface MenuItem {
     label: string;
@@ -186,6 +189,15 @@
       label: "AI Assistant",
       href: "/dashboard/ai",
       icon: faRobot,
+    },
+  ];
+
+  // Admin menu items (only shown for admin users)
+  const adminMenuItems: MenuItem[] = [
+    {
+      label: "Scraper Logs",
+      href: "/dashboard/admin/logs",
+      icon: faTerminal,
     },
   ];
 
@@ -352,5 +364,34 @@
         {/if}
       {/each}
     </ul>
+
+    <!-- Admin section (only visible to admins) -->
+    {#if isAdmin}
+      <div class="mt-6 pt-4 border-t border-[var(--dash-border)]">
+        <p class="px-2.5 mb-2 text-xs font-semibold text-[var(--dash-text-muted)] uppercase tracking-wide">
+          Admin
+        </p>
+        <ul class="space-y-1">
+          {#each adminMenuItems as item}
+            <li>
+              <a
+                href={item.href}
+                onclick={closeMobileMenu}
+                class="
+                  flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-sm transition-colors {isActive(
+                  item.href,
+                  )
+                  ? 'bg-[var(--dash-primary)] text-white'
+                  : 'text-[var(--dash-text)] hover:bg-[var(--dash-bg)]'}
+                "
+              >
+                <FontAwesomeIcon icon={item.icon} class="w-4 h-4" />
+                <span class="font-medium">{item.label}</span>
+              </a>
+            </li>
+          {/each}
+        </ul>
+      </div>
+    {/if}
   </nav>
 </aside>

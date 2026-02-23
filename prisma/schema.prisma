@@ -749,12 +749,24 @@ model job_searches {
   job_platforms          job_platforms?           @relation(fields: [platform], references: [id], onUpdate: NoAction, map: "job_searches_platform_foreign")
   profiles               profiles                 @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_searches_profile_foreign")
   job_searches_job_sites job_searches_job_sites[]
+  scraper_logs           scraper_logs[]
 }
 
 model job_searches_job_sites {
   id              Int           @id @default(autoincrement())
   job_searches_id Int?
   job_searches    job_searches? @relation(fields: [job_searches_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_searches_job_sites_job_searches_id_foreign")
+}
+
+model scraper_logs {
+  id            Int          @id @default(autoincrement())
+  job_search_id Int?
+  level         String       @db.VarChar(10)
+  message       String
+  timestamp     DateTime     @default(now()) @db.Timestamptz(6)
+  job_searches  job_searches? @relation(fields: [job_search_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([job_search_id, timestamp])
 }
 
 model jobs {
@@ -1296,6 +1308,7 @@ model users {
   emailVerified Boolean?   @default(false)
   name          String?    @db.VarChar(255)
   image         String?    @db.VarChar(255)
+  is_admin      Boolean    @default(false)
   createdAt     DateTime?  @db.Timestamptz(6)
   updatedAt     DateTime?  @db.Timestamptz(6)
   accounts      accounts[]

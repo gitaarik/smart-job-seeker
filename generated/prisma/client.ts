@@ -255,6 +255,11 @@ export type job_searches = Prisma.job_searchesModel
  */
 export type job_searches_job_sites = Prisma.job_searches_job_sitesModel
 /**
+ * Model scraper_logs
+ * 
+ */
+export type scraper_logs = Prisma.scraper_logsModel
+/**
  * Model jobs
  * 
  */

@@ -2,6 +2,7 @@ import type { LayoutServerLoad } from "./$types";
 import { requireAuth } from "$lib/server/auth/guards";
 import { redirect } from "@sveltejs/kit";
 import { getProfilesByUserId } from "$lib/server/profile/user-profiles";
+import { dbDirect as db } from "$lib/server/db";
 
 export const load: LayoutServerLoad = async (event) => {
   // Require authentication - redirects to /login?redirect=/dashboard
@@ -62,9 +63,16 @@ export const load: LayoutServerLoad = async (event) => {
 
   const selectedProfile = profiles.find((p) => p.id === selectedProfileId)!;
 
+  // Check if user is admin
+  const dbUser = await db.users.findUnique({
+    where: { id: user.id },
+    select: { is_admin: true },
+  });
+
   return {
     user,
     profiles,
     selectedProfile,
+    isAdmin: dbUser?.is_admin ?? false,
   };
 };

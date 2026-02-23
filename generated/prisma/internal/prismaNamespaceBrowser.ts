@@ -94,6 +94,7 @@ export const ModelName = {
   job_resources: 'job_resources',
   job_searches: 'job_searches',
   job_searches_job_sites: 'job_searches_job_sites',
+  scraper_logs: 'scraper_logs',
   jobs: 'jobs',
   languages: 'languages',
   os_contributions: 'os_contributions',
@@ -885,6 +886,17 @@ export const Job_searches_job_sitesScalarFieldEnum = {
 export type Job_searches_job_sitesScalarFieldEnum = (typeof Job_searches_job_sitesScalarFieldEnum)[keyof typeof Job_searches_job_sitesScalarFieldEnum]
 
 
+export const Scraper_logsScalarFieldEnum = {
+  id: 'id',
+  job_search_id: 'job_search_id',
+  level: 'level',
+  message: 'message',
+  timestamp: 'timestamp'
+} as const
+
+export type Scraper_logsScalarFieldEnum = (typeof Scraper_logsScalarFieldEnum)[keyof typeof Scraper_logsScalarFieldEnum]
+
+
 export const JobsScalarFieldEnum = {
   id: 'id',
   status: 'status',
@@ -1427,6 +1439,7 @@ export const UsersScalarFieldEnum = {
   emailVerified: 'emailVerified',
   name: 'name',
   image: 'image',
+  is_admin: 'is_admin',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
