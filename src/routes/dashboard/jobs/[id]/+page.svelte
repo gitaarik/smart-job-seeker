@@ -186,14 +186,14 @@
   <!-- Header with Back Button -->
   <div class="flex items-center gap-4">
     <a
-      href="/dashboard/jobs/browse"
+      href="/dashboard/jobs"
       class="p-2 rounded-lg border border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] transition-colors"
       aria-label="Back to jobs"
     >
       <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />
     </a>
     <SectionHeader
-      title={job.title || "Job Details"}
+      title={isSaved ? "Saved Job" : match ? "Job Match" : "Job Details"}
       icon={faBriefcase}
     />
   </div>

@@ -60,17 +60,17 @@
         },
         {
           label: "Job Matches",
-          href: "/dashboard/jobs/matches",
+          href: "/dashboard/jobs?filter=matches",
           icon: faListCheck,
         },
         {
           label: "Saved Jobs",
-          href: "/dashboard/jobs/saved",
+          href: "/dashboard/jobs?filter=saved",
           icon: faBookmark,
         },
         {
-          label: "Browse All Jobs",
-          href: "/dashboard/jobs/browse",
+          label: "All Jobs",
+          href: "/dashboard/jobs",
           icon: faBriefcase,
         },
       ],
@@ -200,12 +200,29 @@
   let expandedSections = $state<Set<string>>(new Set());
 
   // Check if a child menu item should be considered active
-  function isChildHrefActive(href: string, currentPath: string): boolean {
+  function isChildHrefActive(href: string, currentPath: string, currentSearch: string): boolean {
+    // Handle hrefs with query params (e.g., /dashboard/jobs?filter=matches)
+    const [hrefPath, hrefSearch] = href.split("?");
+
+    if (hrefSearch) {
+      // For hrefs with query params, match path and check if the filter param matches
+      if (currentPath === hrefPath) {
+        const hrefParams = new URLSearchParams(hrefSearch);
+        const currentParams = new URLSearchParams(currentSearch);
+        const hrefFilter = hrefParams.get("filter");
+        const currentFilter = currentParams.get("filter");
+        return hrefFilter === currentFilter;
+      }
+      return false;
+    }
+
+    // For plain paths
     if (currentPath === href || currentPath.startsWith(href + "/")) {
       return true;
     }
-    // Job detail pages (/dashboard/jobs/123) should be considered part of "Browse All Jobs"
-    if (href === "/dashboard/jobs/browse") {
+
+    // Job detail pages (/dashboard/jobs/123) should be considered part of "All Jobs"
+    if (href === "/dashboard/jobs") {
       const jobDetailMatch = currentPath.match(/^\/dashboard\/jobs\/(\d+)$/);
       if (jobDetailMatch) {
         return true;
@@ -217,12 +234,13 @@
   // Auto-expand sections that contain the active menu item
   $effect(() => {
     const currentPath = $page.url.pathname;
+    const currentSearch = $page.url.search;
     const sectionsToExpand = new Set<string>();
 
     for (const item of menuItems) {
       if (item.children) {
         const hasActiveChild = item.children.some((child) =>
-          isChildHrefActive(child.href, currentPath),
+          isChildHrefActive(child.href, currentPath, currentSearch),
         );
         if (hasActiveChild) {
           sectionsToExpand.add(item.label);
@@ -251,10 +269,11 @@
 
   function isActive(href: string): boolean {
     const currentPath = $page.url.pathname;
+    const currentSearch = $page.url.search;
     if (href === "/dashboard") {
       return currentPath === "/dashboard";
     }
-    return isChildHrefActive(href, currentPath);
+    return isChildHrefActive(href, currentPath, currentSearch);
   }
 
   function isChildActive(item: MenuItem): boolean {
