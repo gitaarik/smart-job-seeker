@@ -32,6 +32,7 @@ export interface MatchResult {
   jobId: number;
   score: number;
   reasoning: string;
+  match_summary: string;
   skill_match_percentage: number;
   matched_skills: string[];
   strengths: string[];
@@ -176,6 +177,7 @@ export async function calculateMatch(
   // Call AI chat utility to calculate job match score
   const aiResult = await createJobMatchingAiChat<{
     score: number;
+    summary: string;
     reasoning: string;
     skill_match_percentage: number;
     matched_skills: string[];
@@ -278,6 +280,7 @@ export async function calculateMatch(
     jobId: job.id,
     score: result.score,
     reasoning: result.reasoning,
+    match_summary: result.summary || "",
     skill_match_percentage: result.skill_match_percentage,
     matched_skills: validatedMatchedSkills,
     strengths: result.strengths,
@@ -382,6 +385,7 @@ export async function upsertJobMatch(
   const matchData = {
     score: match.score,
     reasoning: match.reasoning,
+    match_summary: match.match_summary,
     skill_match_percentage: match.skill_match_percentage,
     matched_skills: match.matched_skills,
     strengths: match.strengths,

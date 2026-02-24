@@ -684,6 +684,7 @@ model job_matches {
   id                            Int       @id @default(autoincrement())
   score                         Int       @default(0)
   reasoning                     String?
+  match_summary                 String?
   skill_match_percentage        Int?
   matched_skills                Json?     @db.Json
   strengths                     Json?     @db.Json

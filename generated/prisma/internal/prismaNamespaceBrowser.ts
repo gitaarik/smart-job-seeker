@@ -127,7 +127,8 @@ export const ModelName = {
   accounts: 'accounts',
   sessions: 'sessions',
   users: 'users',
-  verifications: 'verifications'
+  verifications: 'verifications',
+  job_search_run_items: 'job_search_run_items'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -811,7 +812,9 @@ export const Job_matchesScalarFieldEnum = {
   id: 'id',
   score: 'score',
   reasoning: 'reasoning',
+  match_summary: 'match_summary',
   skill_match_percentage: 'skill_match_percentage',
+  matched_skills: 'matched_skills',
   strengths: 'strengths',
   gaps: 'gaps',
   recommendation: 'recommendation',
@@ -1477,6 +1480,25 @@ export const VerificationsScalarFieldEnum = {
 } as const
 
 export type VerificationsScalarFieldEnum = (typeof VerificationsScalarFieldEnum)[keyof typeof VerificationsScalarFieldEnum]
+
+
+export const Job_search_run_itemsScalarFieldEnum = {
+  id: 'id',
+  run_id: 'run_id',
+  position: 'position',
+  clickable_id: 'clickable_id',
+  title: 'title',
+  company: 'company',
+  location: 'location',
+  status: 'status',
+  status_message: 'status_message',
+  job_id: 'job_id',
+  was_created: 'was_created',
+  created_at: 'created_at',
+  processed_at: 'processed_at'
+} as const
+
+export type Job_search_run_itemsScalarFieldEnum = (typeof Job_search_run_itemsScalarFieldEnum)[keyof typeof Job_search_run_itemsScalarFieldEnum]
 
 
 export const SortOrder = {

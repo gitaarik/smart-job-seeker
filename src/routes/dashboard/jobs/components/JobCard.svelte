@@ -40,6 +40,7 @@
     score: number;
     skill_match_percentage: number | null;
     matched_skills?: string[] | null;
+    match_summary?: string | null;
     status: string;
   }
 
@@ -210,6 +211,13 @@
               </span>
             {/if}
           </div>
+
+          <!-- Match Summary -->
+          {#if hasMatch && match!.match_summary}
+            <p class="mt-1.5 text-xs text-[var(--dash-text-secondary)] italic line-clamp-1">
+              {match!.match_summary}
+            </p>
+          {/if}
         </div>
       </button>
 

@@ -109,6 +109,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
           score: m.score,
           skill_match_percentage: m.skill_match_percentage,
           matched_skills: m.matched_skills,
+          match_summary: m.match_summary,
           status: m.status,
         },
       ])
@@ -168,6 +169,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
         score: true,
         skill_match_percentage: true,
         matched_skills: true,
+        match_summary: true,
         status: true,
       },
     });

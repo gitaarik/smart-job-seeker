@@ -424,3 +424,8 @@ export type users = Prisma.usersModel
  * 
  */
 export type verifications = Prisma.verificationsModel
+/**
+ * Model job_search_run_items
+ * This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+ */
+export type job_search_run_items = Prisma.job_search_run_itemsModel

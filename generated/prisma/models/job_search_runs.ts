@@ -272,6 +272,7 @@ export type job_search_runsWhereInput = {
   bullmq_job_id?: Prisma.StringNullableFilter<"job_search_runs"> | string | null
   live_url?: Prisma.StringNullableFilter<"job_search_runs"> | string | null
   user_response?: Prisma.StringNullableFilter<"job_search_runs"> | string | null
+  job_search_run_items?: Prisma.Job_search_run_itemsListRelationFilter
   job_searches?: Prisma.XOR<Prisma.Job_searchesScalarRelationFilter, Prisma.job_searchesWhereInput>
   logs?: Prisma.Scraper_logsListRelationFilter
 }
@@ -288,6 +289,7 @@ export type job_search_runsOrderByWithRelationInput = {
   bullmq_job_id?: Prisma.SortOrderInput | Prisma.SortOrder
   live_url?: Prisma.SortOrderInput | Prisma.SortOrder
   user_response?: Prisma.SortOrderInput | Prisma.SortOrder
+  job_search_run_items?: Prisma.job_search_run_itemsOrderByRelationAggregateInput
   job_searches?: Prisma.job_searchesOrderByWithRelationInput
   logs?: Prisma.scraper_logsOrderByRelationAggregateInput
 }
@@ -307,6 +309,7 @@ export type job_search_runsWhereUniqueInput = Prisma.AtLeast<{
   bullmq_job_id?: Prisma.StringNullableFilter<"job_search_runs"> | string | null
   live_url?: Prisma.StringNullableFilter<"job_search_runs"> | string | null
   user_response?: Prisma.StringNullableFilter<"job_search_runs"> | string | null
+  job_search_run_items?: Prisma.Job_search_run_itemsListRelationFilter
   job_searches?: Prisma.XOR<Prisma.Job_searchesScalarRelationFilter, Prisma.job_searchesWhereInput>
   logs?: Prisma.Scraper_logsListRelationFilter
 }, "id">
@@ -357,6 +360,7 @@ export type job_search_runsCreateInput = {
   bullmq_job_id?: string | null
   live_url?: string | null
   user_response?: string | null
+  job_search_run_items?: Prisma.job_search_run_itemsCreateNestedManyWithoutJob_search_runsInput
   job_searches: Prisma.job_searchesCreateNestedOneWithoutRunsInput
   logs?: Prisma.scraper_logsCreateNestedManyWithoutRunInput
 }
@@ -373,6 +377,7 @@ export type job_search_runsUncheckedCreateInput = {
   bullmq_job_id?: string | null
   live_url?: string | null
   user_response?: string | null
+  job_search_run_items?: Prisma.job_search_run_itemsUncheckedCreateNestedManyWithoutJob_search_runsInput
   logs?: Prisma.scraper_logsUncheckedCreateNestedManyWithoutRunInput
 }
 
@@ -386,6 +391,7 @@ export type job_search_runsUpdateInput = {
   bullmq_job_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_response?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  job_search_run_items?: Prisma.job_search_run_itemsUpdateManyWithoutJob_search_runsNestedInput
   job_searches?: Prisma.job_searchesUpdateOneRequiredWithoutRunsNestedInput
   logs?: Prisma.scraper_logsUpdateManyWithoutRunNestedInput
 }
@@ -402,6 +408,7 @@ export type job_search_runsUncheckedUpdateInput = {
   bullmq_job_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_response?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  job_search_run_items?: Prisma.job_search_run_itemsUncheckedUpdateManyWithoutJob_search_runsNestedInput
   logs?: Prisma.scraper_logsUncheckedUpdateManyWithoutRunNestedInput
 }
 
@@ -570,6 +577,20 @@ export type job_search_runsUpdateOneRequiredWithoutLogsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.job_search_runsUpdateToOneWithWhereWithoutLogsInput, Prisma.job_search_runsUpdateWithoutLogsInput>, Prisma.job_search_runsUncheckedUpdateWithoutLogsInput>
 }
 
+export type job_search_runsCreateNestedOneWithoutJob_search_run_itemsInput = {
+  create?: Prisma.XOR<Prisma.job_search_runsCreateWithoutJob_search_run_itemsInput, Prisma.job_search_runsUncheckedCreateWithoutJob_search_run_itemsInput>
+  connectOrCreate?: Prisma.job_search_runsCreateOrConnectWithoutJob_search_run_itemsInput
+  connect?: Prisma.job_search_runsWhereUniqueInput
+}
+
+export type job_search_runsUpdateOneRequiredWithoutJob_search_run_itemsNestedInput = {
+  create?: Prisma.XOR<Prisma.job_search_runsCreateWithoutJob_search_run_itemsInput, Prisma.job_search_runsUncheckedCreateWithoutJob_search_run_itemsInput>
+  connectOrCreate?: Prisma.job_search_runsCreateOrConnectWithoutJob_search_run_itemsInput
+  upsert?: Prisma.job_search_runsUpsertWithoutJob_search_run_itemsInput
+  connect?: Prisma.job_search_runsWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.job_search_runsUpdateToOneWithWhereWithoutJob_search_run_itemsInput, Prisma.job_search_runsUpdateWithoutJob_search_run_itemsInput>, Prisma.job_search_runsUncheckedUpdateWithoutJob_search_run_itemsInput>
+}
+
 export type job_search_runsCreateWithoutJob_searchesInput = {
   status: string
   started_at?: Date | string
@@ -580,6 +601,7 @@ export type job_search_runsCreateWithoutJob_searchesInput = {
   bullmq_job_id?: string | null
   live_url?: string | null
   user_response?: string | null
+  job_search_run_items?: Prisma.job_search_run_itemsCreateNestedManyWithoutJob_search_runsInput
   logs?: Prisma.scraper_logsCreateNestedManyWithoutRunInput
 }
 
@@ -594,6 +616,7 @@ export type job_search_runsUncheckedCreateWithoutJob_searchesInput = {
   bullmq_job_id?: string | null
   live_url?: string | null
   user_response?: string | null
+  job_search_run_items?: Prisma.job_search_run_itemsUncheckedCreateNestedManyWithoutJob_search_runsInput
   logs?: Prisma.scraper_logsUncheckedCreateNestedManyWithoutRunInput
 }
 
@@ -650,6 +673,7 @@ export type job_search_runsCreateWithoutLogsInput = {
   bullmq_job_id?: string | null
   live_url?: string | null
   user_response?: string | null
+  job_search_run_items?: Prisma.job_search_run_itemsCreateNestedManyWithoutJob_search_runsInput
   job_searches: Prisma.job_searchesCreateNestedOneWithoutRunsInput
 }
 
@@ -665,6 +689,7 @@ export type job_search_runsUncheckedCreateWithoutLogsInput = {
   bullmq_job_id?: string | null
   live_url?: string | null
   user_response?: string | null
+  job_search_run_items?: Prisma.job_search_run_itemsUncheckedCreateNestedManyWithoutJob_search_runsInput
 }
 
 export type job_search_runsCreateOrConnectWithoutLogsInput = {
@@ -693,6 +718,7 @@ export type job_search_runsUpdateWithoutLogsInput = {
   bullmq_job_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_response?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  job_search_run_items?: Prisma.job_search_run_itemsUpdateManyWithoutJob_search_runsNestedInput
   job_searches?: Prisma.job_searchesUpdateOneRequiredWithoutRunsNestedInput
 }
 
@@ -708,6 +734,81 @@ export type job_search_runsUncheckedUpdateWithoutLogsInput = {
   bullmq_job_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_response?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  job_search_run_items?: Prisma.job_search_run_itemsUncheckedUpdateManyWithoutJob_search_runsNestedInput
+}
+
+export type job_search_runsCreateWithoutJob_search_run_itemsInput = {
+  status: string
+  started_at?: Date | string
+  finished_at?: Date | string | null
+  jobs_found?: number | null
+  error_message?: string | null
+  triggered_by: string
+  bullmq_job_id?: string | null
+  live_url?: string | null
+  user_response?: string | null
+  job_searches: Prisma.job_searchesCreateNestedOneWithoutRunsInput
+  logs?: Prisma.scraper_logsCreateNestedManyWithoutRunInput
+}
+
+export type job_search_runsUncheckedCreateWithoutJob_search_run_itemsInput = {
+  id?: number
+  job_search_id: number
+  status: string
+  started_at?: Date | string
+  finished_at?: Date | string | null
+  jobs_found?: number | null
+  error_message?: string | null
+  triggered_by: string
+  bullmq_job_id?: string | null
+  live_url?: string | null
+  user_response?: string | null
+  logs?: Prisma.scraper_logsUncheckedCreateNestedManyWithoutRunInput
+}
+
+export type job_search_runsCreateOrConnectWithoutJob_search_run_itemsInput = {
+  where: Prisma.job_search_runsWhereUniqueInput
+  create: Prisma.XOR<Prisma.job_search_runsCreateWithoutJob_search_run_itemsInput, Prisma.job_search_runsUncheckedCreateWithoutJob_search_run_itemsInput>
+}
+
+export type job_search_runsUpsertWithoutJob_search_run_itemsInput = {
+  update: Prisma.XOR<Prisma.job_search_runsUpdateWithoutJob_search_run_itemsInput, Prisma.job_search_runsUncheckedUpdateWithoutJob_search_run_itemsInput>
+  create: Prisma.XOR<Prisma.job_search_runsCreateWithoutJob_search_run_itemsInput, Prisma.job_search_runsUncheckedCreateWithoutJob_search_run_itemsInput>
+  where?: Prisma.job_search_runsWhereInput
+}
+
+export type job_search_runsUpdateToOneWithWhereWithoutJob_search_run_itemsInput = {
+  where?: Prisma.job_search_runsWhereInput
+  data: Prisma.XOR<Prisma.job_search_runsUpdateWithoutJob_search_run_itemsInput, Prisma.job_search_runsUncheckedUpdateWithoutJob_search_run_itemsInput>
+}
+
+export type job_search_runsUpdateWithoutJob_search_run_itemsInput = {
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  started_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  finished_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  jobs_found?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  error_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  triggered_by?: Prisma.StringFieldUpdateOperationsInput | string
+  bullmq_job_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  user_response?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  job_searches?: Prisma.job_searchesUpdateOneRequiredWithoutRunsNestedInput
+  logs?: Prisma.scraper_logsUpdateManyWithoutRunNestedInput
+}
+
+export type job_search_runsUncheckedUpdateWithoutJob_search_run_itemsInput = {
+  id?: Prisma.IntFieldUpdateOperationsInput | number
+  job_search_id?: Prisma.IntFieldUpdateOperationsInput | number
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  started_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  finished_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  jobs_found?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  error_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  triggered_by?: Prisma.StringFieldUpdateOperationsInput | string
+  bullmq_job_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  user_response?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  logs?: Prisma.scraper_logsUncheckedUpdateManyWithoutRunNestedInput
 }
 
 export type job_search_runsCreateManyJob_searchesInput = {
@@ -733,6 +834,7 @@ export type job_search_runsUpdateWithoutJob_searchesInput = {
   bullmq_job_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_response?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  job_search_run_items?: Prisma.job_search_run_itemsUpdateManyWithoutJob_search_runsNestedInput
   logs?: Prisma.scraper_logsUpdateManyWithoutRunNestedInput
 }
 
@@ -747,6 +849,7 @@ export type job_search_runsUncheckedUpdateWithoutJob_searchesInput = {
   bullmq_job_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   user_response?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  job_search_run_items?: Prisma.job_search_run_itemsUncheckedUpdateManyWithoutJob_search_runsNestedInput
   logs?: Prisma.scraper_logsUncheckedUpdateManyWithoutRunNestedInput
 }
 
@@ -769,10 +872,12 @@ export type job_search_runsUncheckedUpdateManyWithoutJob_searchesInput = {
  */
 
 export type Job_search_runsCountOutputType = {
+  job_search_run_items: number
   logs: number
 }
 
 export type Job_search_runsCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  job_search_run_items?: boolean | Job_search_runsCountOutputTypeCountJob_search_run_itemsArgs
   logs?: boolean | Job_search_runsCountOutputTypeCountLogsArgs
 }
 
@@ -784,6 +889,13 @@ export type Job_search_runsCountOutputTypeDefaultArgs<ExtArgs extends runtime.Ty
    * Select specific fields to fetch from the Job_search_runsCountOutputType
    */
   select?: Prisma.Job_search_runsCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * Job_search_runsCountOutputType without action
+ */
+export type Job_search_runsCountOutputTypeCountJob_search_run_itemsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.job_search_run_itemsWhereInput
 }
 
 /**
@@ -806,6 +918,7 @@ export type job_search_runsSelect<ExtArgs extends runtime.Types.Extensions.Inter
   bullmq_job_id?: boolean
   live_url?: boolean
   user_response?: boolean
+  job_search_run_items?: boolean | Prisma.job_search_runs$job_search_run_itemsArgs<ExtArgs>
   job_searches?: boolean | Prisma.job_searchesDefaultArgs<ExtArgs>
   logs?: boolean | Prisma.job_search_runs$logsArgs<ExtArgs>
   _count?: boolean | Prisma.Job_search_runsCountOutputTypeDefaultArgs<ExtArgs>
@@ -857,6 +970,7 @@ export type job_search_runsSelectScalar = {
 
 export type job_search_runsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "job_search_id" | "status" | "started_at" | "finished_at" | "jobs_found" | "error_message" | "triggered_by" | "bullmq_job_id" | "live_url" | "user_response", ExtArgs["result"]["job_search_runs"]>
 export type job_search_runsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  job_search_run_items?: boolean | Prisma.job_search_runs$job_search_run_itemsArgs<ExtArgs>
   job_searches?: boolean | Prisma.job_searchesDefaultArgs<ExtArgs>
   logs?: boolean | Prisma.job_search_runs$logsArgs<ExtArgs>
   _count?: boolean | Prisma.Job_search_runsCountOutputTypeDefaultArgs<ExtArgs>
@@ -871,6 +985,7 @@ export type job_search_runsIncludeUpdateManyAndReturn<ExtArgs extends runtime.Ty
 export type $job_search_runsPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "job_search_runs"
   objects: {
+    job_search_run_items: Prisma.$job_search_run_itemsPayload<ExtArgs>[]
     job_searches: Prisma.$job_searchesPayload<ExtArgs>
     logs: Prisma.$scraper_logsPayload<ExtArgs>[]
   }
@@ -1280,6 +1395,7 @@ readonly fields: job_search_runsFieldRefs;
  */
 export interface Prisma__job_search_runsClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  job_search_run_items<T extends Prisma.job_search_runs$job_search_run_itemsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.job_search_runs$job_search_run_itemsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$job_search_run_itemsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   job_searches<T extends Prisma.job_searchesDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.job_searchesDefaultArgs<ExtArgs>>): Prisma.Prisma__job_searchesClient<runtime.Types.Result.GetResult<Prisma.$job_searchesPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   logs<T extends Prisma.job_search_runs$logsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.job_search_runs$logsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$scraper_logsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
@@ -1715,6 +1831,30 @@ export type job_search_runsDeleteManyArgs<ExtArgs extends runtime.Types.Extensio
    * Limit how many job_search_runs to delete.
    */
   limit?: number
+}
+
+/**
+ * job_search_runs.job_search_run_items
+ */
+export type job_search_runs$job_search_run_itemsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the job_search_run_items
+   */
+  select?: Prisma.job_search_run_itemsSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the job_search_run_items
+   */
+  omit?: Prisma.job_search_run_itemsOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.job_search_run_itemsInclude<ExtArgs> | null
+  where?: Prisma.job_search_run_itemsWhereInput
+  orderBy?: Prisma.job_search_run_itemsOrderByWithRelationInput | Prisma.job_search_run_itemsOrderByWithRelationInput[]
+  cursor?: Prisma.job_search_run_itemsWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.Job_search_run_itemsScalarFieldEnum | Prisma.Job_search_run_itemsScalarFieldEnum[]
 }
 
 /**
