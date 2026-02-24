@@ -29,6 +29,7 @@
     salary_currency: string | null;
     salary_period: string | null;
     skills_required: unknown; // JsonValue from Prisma
+    date_posted: Date | string | null;
     date_created: Date | string | null;
     job_platforms?: { name: string } | null;
   }
@@ -128,81 +129,84 @@
 
 <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden">
   <!-- Header -->
-  <div class="flex items-center justify-between p-4 hover:bg-[var(--dash-bg)] transition-colors">
-    <!-- Clickable area for expand/collapse -->
-    <button
-      type="button"
-      onclick={() => onToggleExpand?.()}
-      class="flex items-center gap-4 flex-1 min-w-0 text-left"
-    >
-      <!-- Score Badge or Icon -->
-      {#if hasMatch}
-        <div
-          class="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 {getScoreColor(match!.score)}"
-        >
-          <span class="font-bold text-lg">{match!.score}</span>
-        </div>
-      {:else}
-        <div
-          class="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 bg-[var(--dash-bg)] text-[var(--dash-text-muted)]"
-        >
-          <FontAwesomeIcon icon={faBriefcase} class="w-5 h-5" />
-        </div>
-      {/if}
+  <div class="p-3 sm:p-4 hover:bg-[var(--dash-bg)] transition-colors">
+    <!-- Mobile: Stack vertically, Desktop: Horizontal layout -->
+    <div class="flex items-start sm:items-center gap-3 sm:gap-4">
+      <!-- Clickable area for expand/collapse -->
+      <button
+        type="button"
+        onclick={() => onToggleExpand?.()}
+        class="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0 text-left"
+      >
+        <!-- Score Badge or Icon -->
+        {#if hasMatch}
+          <div
+            class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center flex-shrink-0 {getScoreColor(match!.score)}"
+          >
+            <span class="font-bold text-base sm:text-lg">{match!.score}</span>
+          </div>
+        {:else}
+          <div
+            class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center flex-shrink-0 bg-[var(--dash-bg)] text-[var(--dash-text-muted)]"
+          >
+            <FontAwesomeIcon icon={faBriefcase} class="w-4 h-4 sm:w-5 sm:h-5" />
+          </div>
+        {/if}
 
-      <div class="flex-1 min-w-0">
-        <!-- Title -->
-        <h3 class="font-medium text-[var(--dash-text)] truncate">
-          {job.title || "Untitled Job"}
-        </h3>
+        <div class="flex-1 min-w-0">
+          <!-- Title -->
+          <h3 class="font-medium text-[var(--dash-text)] text-sm sm:text-base line-clamp-2 sm:truncate">
+            {job.title || "Untitled Job"}
+          </h3>
 
-        <!-- Company and location -->
-        <div class="flex items-center gap-3 mt-1 text-sm text-[var(--dash-text-secondary)] flex-wrap">
-          {#if job.company}
-            <span class="flex items-center gap-1">
-              <FontAwesomeIcon icon={faBuilding} class="w-3 h-3" />
-              {job.company}
-            </span>
-          {/if}
-          {#if job.office_location}
-            <span class="flex items-center gap-1">
-              <FontAwesomeIcon icon={faMapMarkerAlt} class="w-3 h-3" />
-              {job.office_location}
-            </span>
-          {/if}
-          {#if job.job_platforms}
-            <span class="text-[var(--dash-text-muted)]">
-              {job.job_platforms.name}
-            </span>
-          {/if}
+          <!-- Company and location -->
+          <div class="flex items-center gap-2 sm:gap-3 mt-1 text-xs sm:text-sm text-[var(--dash-text-secondary)] flex-wrap">
+            {#if job.company}
+              <span class="flex items-center gap-1">
+                <FontAwesomeIcon icon={faBuilding} class="w-3 h-3" />
+                <span class="truncate max-w-[120px] sm:max-w-none">{job.company}</span>
+              </span>
+            {/if}
+            {#if job.office_location}
+              <span class="flex items-center gap-1">
+                <FontAwesomeIcon icon={faMapMarkerAlt} class="w-3 h-3" />
+                <span class="truncate max-w-[100px] sm:max-w-none">{job.office_location}</span>
+              </span>
+            {/if}
+            {#if job.job_platforms}
+              <span class="text-[var(--dash-text-muted)] hidden sm:inline">
+                {job.job_platforms.name}
+              </span>
+            {/if}
+          </div>
+
+          <!-- Skill Match, Salary, and Date row -->
+          <div class="flex items-center gap-2 sm:gap-4 mt-1.5 sm:mt-2 text-xs sm:text-sm flex-wrap">
+            {#if hasMatch && match!.skill_match_percentage}
+              <span class="flex items-center gap-1 text-[var(--dash-text-secondary)]">
+                <FontAwesomeIcon icon={faChartLine} class="w-3 h-3" />
+                <span class="font-medium">{match!.skill_match_percentage}%</span>
+                <span class="hidden sm:inline">skill match</span>
+              </span>
+            {/if}
+            {#if salaryText}
+              <span class="flex items-center gap-1 text-[var(--dash-success)]">
+                <FontAwesomeIcon icon={faMoneyBillWave} class="w-3 h-3" />
+                <span class="truncate max-w-[140px] sm:max-w-none">{salaryText}</span>
+              </span>
+            {/if}
+            {#if job.date_posted || job.date_created}
+              <span class="flex items-center gap-1 text-[var(--dash-text-muted)] hidden sm:flex">
+                <FontAwesomeIcon icon={faCalendar} class="w-3 h-3" />
+                {formatDate(job.date_posted || job.date_created)}
+              </span>
+            {/if}
+          </div>
         </div>
+      </button>
 
-        <!-- Skill Match, Salary, and Date row -->
-        <div class="flex items-center gap-4 mt-2 text-sm flex-wrap">
-          {#if hasMatch && match!.skill_match_percentage}
-            <span class="flex items-center gap-1 text-[var(--dash-text-secondary)]">
-              <FontAwesomeIcon icon={faChartLine} class="w-3 h-3" />
-              <span class="font-medium">{match!.skill_match_percentage}%</span> skill match
-            </span>
-          {/if}
-          {#if salaryText}
-            <span class="flex items-center gap-1 text-[var(--dash-success)]">
-              <FontAwesomeIcon icon={faMoneyBillWave} class="w-3 h-3" />
-              {salaryText}
-            </span>
-          {/if}
-          {#if job.date_created}
-            <span class="flex items-center gap-1 text-[var(--dash-text-muted)]">
-              <FontAwesomeIcon icon={faCalendar} class="w-3 h-3" />
-              {formatDate(job.date_created)}
-            </span>
-          {/if}
-        </div>
-      </div>
-    </button>
-
-    <!-- Action buttons -->
-    <div class="flex items-center gap-2 ml-4">
+      <!-- Action buttons -->
+      <div class="flex items-center gap-1 sm:gap-2 flex-shrink-0">
       <!-- Save/Unsave Button -->
       {#if showSaveButton}
         <form
@@ -227,7 +231,7 @@
           <button
             type="submit"
             disabled={saving}
-            class="p-2 transition-colors {isSaved ? 'text-[var(--dash-primary)]' : 'text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)]'} disabled:opacity-50"
+            class="p-1.5 sm:p-2 transition-colors {isSaved ? 'text-[var(--dash-primary)]' : 'text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)]'} disabled:opacity-50"
             aria-label={isSaved ? "Unsave job" : "Save job"}
             title={isSaved ? "Unsave job" : "Save job"}
             onclick={(e) => e.stopPropagation()}
@@ -246,21 +250,21 @@
       <a
         href="/dashboard/jobs/{job.id}"
         onclick={(e) => e.stopPropagation()}
-        class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
+        class="p-1.5 sm:p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
         aria-label="View job details"
         title="View full details"
       >
         <FontAwesomeIcon icon={faEye} class="w-4 h-4" />
       </a>
 
-      <!-- External Link -->
+      <!-- External Link - hidden on mobile to save space -->
       {#if job.source_url}
         <a
           href={job.source_url}
           target="_blank"
           rel="noopener"
           onclick={(e) => e.stopPropagation()}
-          class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
+          class="p-1.5 sm:p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors hidden sm:block"
           aria-label="View job posting"
           title="Open original posting"
         >
@@ -276,7 +280,7 @@
             e.stopPropagation();
             onToggleExpand?.();
           }}
-          class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
+          class="p-1.5 sm:p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
           aria-label={isExpanded ? "Collapse" : "Expand"}
         >
           <FontAwesomeIcon
@@ -286,11 +290,12 @@
         </button>
       {/if}
     </div>
+    </div>
   </div>
 
   <!-- Expanded Content -->
   {#if isExpanded}
-    <div class="border-t border-[var(--dash-border)] p-4 space-y-4">
+    <div class="border-t border-[var(--dash-border)] p-3 sm:p-4 space-y-3 sm:space-y-4">
       {#if expandedContent}
         {@render expandedContent()}
       {:else}
