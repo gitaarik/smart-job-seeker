@@ -32,20 +32,22 @@
   let currentPage = $derived(data.currentPage);
   let totalPages = $derived(data.totalPages);
   let filters = $derived(data.filters);
-  let savedJobIds = $state(new Set(data.savedJobIds));
+  // Use a plain object for reactivity (Svelte 5 tracks object property access)
+  let savedJobIds = $state<Record<number, boolean>>(
+    Object.fromEntries(data.savedJobIds.map((id: number) => [id, true]))
+  );
 
-  // Update savedJobIds when form action completes
-  $effect(() => {
-    if (form?.success && form?.jobId) {
-      if (form.action === "saved") {
-        savedJobIds = new Set([...savedJobIds, form.jobId]);
-      } else if (form.action === "unsaved") {
-        const newSet = new Set(savedJobIds);
-        newSet.delete(form.jobId);
-        savedJobIds = newSet;
-      }
+  function isSaved(jobId: number): boolean {
+    return savedJobIds[jobId] === true;
+  }
+
+  function toggleSaved(jobId: number, save: boolean) {
+    if (save) {
+      savedJobIds[jobId] = true;
+    } else {
+      delete savedJobIds[jobId];
     }
-  });
+  }
 
   // Local state for form inputs
   let searchInput = $state(filters.search);
@@ -302,7 +304,7 @@
   {:else}
     <div class="space-y-3">
       {#each jobs as job (job.id)}
-        {@const isSaved = savedJobIds.has(job.id)}
+
         <div
           class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden"
         >
@@ -323,7 +325,7 @@
                 >
                   {job.status}
                 </span>
-                {#if isSaved}
+                {#if isSaved(job.id)}
                   <span class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-primary-light)] text-[var(--dash-primary)]">
                     Saved
                   </span>
@@ -361,12 +363,18 @@
               <!-- Save/Unsave Button -->
               <form
                 method="POST"
-                action={isSaved ? "?/unsaveJob" : "?/saveJob"}
+                action={isSaved(job.id) ? "?/unsaveJob" : "?/saveJob"}
                 use:enhance={() => {
+                  const wasSaved = isSaved(job.id);
                   savingJobId = job.id;
-                  return async ({ update }) => {
-                    await update();
+                  // Optimistic update
+                  toggleSaved(job.id, !wasSaved);
+                  return async ({ result }) => {
                     savingJobId = null;
+                    // Revert on failure
+                    if (result.type === "failure" || result.type === "error") {
+                      toggleSaved(job.id, wasSaved);
+                    }
                   };
                 }}
                 class="inline"
@@ -375,14 +383,16 @@
                 <button
                   type="submit"
                   disabled={savingJobId === job.id}
-                  class="p-2 transition-colors {isSaved ? 'text-[var(--dash-primary)]' : 'text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)]'} disabled:opacity-50"
-                  aria-label={isSaved ? "Unsave job" : "Save job"}
-                  title={isSaved ? "Unsave job" : "Save job"}
+                  class="p-2 transition-colors {isSaved(job.id) ? 'text-[var(--dash-primary)]' : 'text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)]'} disabled:opacity-50"
+                  aria-label={isSaved(job.id) ? "Unsave job" : "Save job"}
+                  title={isSaved(job.id) ? "Unsave job" : "Save job"}
                 >
-                  <FontAwesomeIcon
-                    icon={isSaved ? faBookmarkSolid : faBookmarkRegular}
-                    class="w-4 h-4"
-                  />
+                  {#key isSaved(job.id)}
+                    <FontAwesomeIcon
+                      icon={isSaved(job.id) ? faBookmarkSolid : faBookmarkRegular}
+                      class="w-4 h-4"
+                    />
+                  {/key}
                 </button>
               </form>
 
