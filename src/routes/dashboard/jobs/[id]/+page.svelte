@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { ActionData, PageData } from "./$types";
   import { enhance } from "$app/forms";
+  import { untrack } from "svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faArrowLeft,
@@ -96,16 +97,17 @@
   // Update match when form action completes
   $effect(() => {
     if (form?.success) {
+      const currentMatch = untrack(() => match);
       if (form.action === "saved") {
-        match = { ...match, status: "saved" } as typeof match;
+        match = { ...currentMatch, status: "saved" } as typeof match;
       } else if (form.action === "unsaved") {
-        if (match && match.score === 0 && !match.reasoning) {
+        if (currentMatch && currentMatch.score === 0 && !currentMatch.reasoning) {
           match = null;
-        } else if (match) {
-          match = { ...match, status: "new" };
+        } else if (currentMatch) {
+          match = { ...currentMatch, status: "new" };
         }
       } else if (form.status) {
-        match = { ...match, status: form.status } as typeof match;
+        match = { ...currentMatch, status: form.status } as typeof match;
       }
     }
   });
