@@ -151,17 +151,10 @@
       {/if}
 
       <div class="flex-1 min-w-0">
-        <!-- Title and badges -->
-        <div class="flex items-center gap-2 flex-wrap">
-          <h3 class="font-medium text-[var(--dash-text)] truncate">
-            {job.title || "Untitled Job"}
-          </h3>
-          {#if isSaved}
-            <span class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-primary-light)] text-[var(--dash-primary)]">
-              Saved
-            </span>
-          {/if}
-        </div>
+        <!-- Title -->
+        <h3 class="font-medium text-[var(--dash-text)] truncate">
+          {job.title || "Untitled Job"}
+        </h3>
 
         <!-- Company and location -->
         <div class="flex items-center gap-3 mt-1 text-sm text-[var(--dash-text-secondary)] flex-wrap">
