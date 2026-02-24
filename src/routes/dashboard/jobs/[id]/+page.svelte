@@ -204,34 +204,32 @@
     <div class="lg:col-span-2 space-y-6">
       <!-- Job Header Card -->
       <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
-        <div class="flex items-start justify-between gap-4">
-          <div class="flex-1">
-            <h1 class="text-2xl font-bold text-[var(--dash-text)]">
-              {job.title || "Untitled Job"}
-            </h1>
-            <div class="flex items-center gap-4 mt-2 text-[var(--dash-text-secondary)] flex-wrap">
-              {#if job.company}
-                <span class="flex items-center gap-1">
-                  <FontAwesomeIcon icon={faBuilding} class="w-4 h-4" />
-                  {job.company}
-                </span>
-              {/if}
-              {#if job.office_location}
-                <span class="flex items-center gap-1">
-                  <FontAwesomeIcon icon={faMapMarkerAlt} class="w-4 h-4" />
-                  {job.office_location}
-                </span>
-              {/if}
-              {#if job.job_platforms}
-                <span class="text-[var(--dash-text-muted)]">
-                  via {job.job_platforms.name}
-                </span>
-              {/if}
-            </div>
+        <div>
+          <h1 class="text-2xl font-bold text-[var(--dash-text)]">
+            {job.title || "Untitled Job"}
+          </h1>
+          <div class="flex items-center gap-4 mt-2 text-[var(--dash-text-secondary)] flex-wrap">
+            {#if job.company}
+              <span class="flex items-center gap-1">
+                <FontAwesomeIcon icon={faBuilding} class="w-4 h-4" />
+                {job.company}
+              </span>
+            {/if}
+            {#if job.office_location}
+              <span class="flex items-center gap-1">
+                <FontAwesomeIcon icon={faMapMarkerAlt} class="w-4 h-4" />
+                {job.office_location}
+              </span>
+            {/if}
+            {#if job.job_platforms}
+              <span class="text-[var(--dash-text-muted)]">
+                via {job.job_platforms.name}
+              </span>
+            {/if}
           </div>
 
           <!-- Action Buttons -->
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 mt-4 flex-wrap">
             <!-- Save Button -->
             <form
               method="POST"
