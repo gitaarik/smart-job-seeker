@@ -161,9 +161,9 @@
   }
 
   function getScoreColor(score: number): string {
-    if (score >= 80) return "text-[var(--dash-success)] bg-[var(--dash-success-light)]";
-    if (score >= 60) return "text-[var(--dash-warning)] bg-[var(--dash-warning-light)]";
-    return "text-[var(--dash-text-muted)] bg-[var(--dash-bg)]";
+    if (score >= 80) return "text-[var(--dash-success)] bg-[var(--dash-success-light)]"; // green - strong match
+    if (score >= 60) return "text-[var(--dash-primary)] bg-[var(--dash-primary-light)]"; // blue - good match
+    return "text-[var(--dash-text-muted)] bg-[var(--dash-bg)]"; // gray - moderate/weak match
   }
 
   function getRecommendationLabel(rec: string | null): string {
