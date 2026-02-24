@@ -545,14 +545,14 @@
 
             <!-- Metadata -->
             <div
-              class="pt-2 border-t border-[var(--dash-border)] flex items-center gap-4 text-xs text-[var(--dash-text-muted)]"
+              class="pt-2 border-t border-[var(--dash-border)] flex items-center gap-4 text-xs text-[var(--dash-text-muted)] flex-wrap"
             >
               <span>ID: {job.id}</span>
               {#if job.date_posted}
                 <span>Posted: {formatDate(job.date_posted)}</span>
               {/if}
-              {#if job.last_scraped}
-                <span>Last scraped: {formatDate(job.last_scraped)}</span>
+              {#if job.date_created}
+                <span>Imported: {formatDate(job.date_created)}</span>
               {/if}
               {#if job.scrape_count}
                 <span>Scraped {job.scrape_count}x</span>
