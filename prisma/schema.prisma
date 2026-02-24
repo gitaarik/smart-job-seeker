@@ -685,6 +685,7 @@ model job_matches {
   score                         Int       @default(0)
   reasoning                     String?
   skill_match_percentage        Int?
+  matched_skills                Json?     @db.Json
   strengths                     Json?     @db.Json
   gaps                          Json?     @db.Json
   recommendation                String?   @default("consider") @db.VarChar(255)
@@ -759,19 +760,20 @@ model job_searches_job_sites {
 }
 
 model job_search_runs {
-  id            Int            @id @default(autoincrement())
-  job_search_id Int
-  status        String         @db.VarChar(50)
-  started_at    DateTime       @default(now()) @db.Timestamptz(6)
-  finished_at   DateTime?      @db.Timestamptz(6)
-  jobs_found    Int?
-  error_message String?
-  triggered_by  String         @db.VarChar(20)
-  bullmq_job_id String?        @db.VarChar(100)
-  live_url      String?        @db.VarChar(500)
-  user_response String?        @db.VarChar(20)
-  job_searches  job_searches   @relation(fields: [job_search_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  logs          scraper_logs[]
+  id                   Int                    @id @default(autoincrement())
+  job_search_id        Int
+  status               String                 @db.VarChar(50)
+  started_at           DateTime               @default(now()) @db.Timestamptz(6)
+  finished_at          DateTime?              @db.Timestamptz(6)
+  jobs_found           Int?
+  error_message        String?
+  triggered_by         String                 @db.VarChar(20)
+  bullmq_job_id        String?                @db.VarChar(100)
+  live_url             String?                @db.VarChar(500)
+  user_response        String?                @db.VarChar(20)
+  job_search_run_items job_search_run_items[]
+  job_searches         job_searches           @relation(fields: [job_search_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  logs                 scraper_logs[]
 
   @@index([job_search_id, started_at])
 }
@@ -788,42 +790,43 @@ model scraper_logs {
 }
 
 model jobs {
-  id                   Int             @id @default(autoincrement())
-  status               String          @default("draft") @db.VarChar(255)
-  date_created         DateTime?       @db.Timestamptz(6)
-  date_updated         DateTime?       @db.Timestamptz(6)
-  source_url           String?         @db.VarChar(2048)
-  title                String?         @db.VarChar(255)
+  id                   Int                    @id @default(autoincrement())
+  status               String                 @default("draft") @db.VarChar(255)
+  date_created         DateTime?              @db.Timestamptz(6)
+  date_updated         DateTime?              @db.Timestamptz(6)
+  source_url           String?                @db.VarChar(2048)
+  title                String?                @db.VarChar(255)
   job_description      String?
-  job_poster           String?         @db.VarChar(255)
+  job_poster           String?                @db.VarChar(255)
   company_description  String?
-  date_posted          DateTime?       @db.Date
+  date_posted          DateTime?              @db.Date
   salary_min           Int?
   salary_max           Int?
-  salary_currency      String?         @db.VarChar(255)
-  salary_period        String?         @db.VarChar(255)
+  salary_currency      String?                @db.VarChar(255)
+  salary_period        String?                @db.VarChar(255)
   import_error         String?
-  last_scraped         DateTime?       @db.Timestamptz(6)
-  office_location      String?         @db.VarChar(255)
-  scrape_count         Int?            @default(0)
-  job_types            Json?           @db.Json
-  experience_levels    Json?           @db.Json
-  work_location        Json?           @db.Json
+  last_scraped         DateTime?              @db.Timestamptz(6)
+  office_location      String?                @db.VarChar(255)
+  scrape_count         Int?                   @default(0)
+  job_types            Json?                  @db.Json
+  experience_levels    Json?                  @db.Json
+  work_location        Json?                  @db.Json
   source_html_stripped String?
   job_platform         Int?
   ai_chat_extraction   Int?
-  company              String?         @db.VarChar(255)
-  skills_required      Json?           @db.Json
-  skills_preferred     Json?           @db.Json
+  company              String?                @db.VarChar(255)
+  skills_required      Json?                  @db.Json
+  skills_preferred     Json?                  @db.Json
   responsibilities     Json?
   soft_skills          Json?
-  rescrape_status      String?         @db.VarChar(50)
+  rescrape_status      String?                @db.VarChar(50)
   rescrape_message     String?
   applications         applications[]
   job_matches          job_matches[]
   job_resources        job_resources[]
-  ai_chat              ai_chats?       @relation(fields: [ai_chat_extraction], references: [id], onUpdate: NoAction, map: "jobs_ai_chat_extraction_foreign")
-  job_platforms        job_platforms?  @relation(fields: [job_platform], references: [id], onUpdate: NoAction, map: "jobs_job_platform_foreign")
+  job_search_run_items job_search_run_items[]
+  ai_chat              ai_chats?              @relation(fields: [ai_chat_extraction], references: [id], onUpdate: NoAction, map: "jobs_ai_chat_extraction_foreign")
+  job_platforms        job_platforms?         @relation(fields: [job_platform], references: [id], onUpdate: NoAction, map: "jobs_job_platform_foreign")
 
   @@index([title, job_poster, date_posted], map: "idx_jobs_uniqueness")
 }
@@ -1342,6 +1345,28 @@ model verifications {
   expiresAt  DateTime  @db.Timestamptz(6)
   createdAt  DateTime? @db.Timestamptz(6)
   updatedAt  DateTime? @db.Timestamptz(6)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model job_search_run_items {
+  id              Int             @id @default(autoincrement())
+  run_id          Int
+  position        Int
+  clickable_id    Int?
+  title           String?         @db.VarChar(500)
+  company         String?         @db.VarChar(255)
+  location        String?         @db.VarChar(255)
+  status          String          @default("pending") @db.VarChar(50)
+  status_message  String?
+  job_id          Int?
+  was_created     Boolean?
+  created_at      DateTime?       @default(now()) @db.Timestamptz(6)
+  processed_at    DateTime?       @db.Timestamptz(6)
+  jobs            jobs?           @relation(fields: [job_id], references: [id], onUpdate: NoAction)
+  job_search_runs job_search_runs @relation(fields: [run_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([run_id], map: "idx_job_search_run_items_run_id")
+  @@index([run_id, status], map: "idx_job_search_run_items_run_status")
 }
 
 enum Role {

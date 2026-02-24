@@ -114,6 +114,18 @@
 
   let isSaved = $derived(match?.status === "saved");
 
+  // Helper for matched skills highlighting
+  const matchedSkillsSet = $derived(
+    new Set(
+      (Array.isArray(match?.matched_skills) ? match.matched_skills : [])
+        .map((s: string) => s.toLowerCase())
+    )
+  );
+
+  function isSkillMatched(skill: string): boolean {
+    return matchedSkillsSet.has(skill.toLowerCase());
+  }
+
   const statusOptions = [
     { value: "new", label: "New" },
     { value: "viewed", label: "Viewed" },
@@ -384,9 +396,16 @@
               <p class="text-sm text-[var(--dash-text-secondary)] mb-2">Required</p>
               <div class="flex flex-wrap gap-2">
                 {#each job.skills_required as skill}
-                  <span class="px-3 py-1 text-sm bg-[var(--dash-bg)] text-[var(--dash-text)] rounded-lg">
-                    {skill}
-                  </span>
+                  {#if isSkillMatched(skill)}
+                    <span class="px-3 py-1 text-sm bg-[var(--dash-success-light)] text-[var(--dash-success)] rounded-lg flex items-center gap-1">
+                      <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                      {skill}
+                    </span>
+                  {:else}
+                    <span class="px-3 py-1 text-sm bg-[var(--dash-bg)] text-[var(--dash-text)] rounded-lg">
+                      {skill}
+                    </span>
+                  {/if}
                 {/each}
               </div>
             </div>
@@ -397,9 +416,16 @@
               <p class="text-sm text-[var(--dash-text-secondary)] mb-2">Preferred</p>
               <div class="flex flex-wrap gap-2">
                 {#each job.skills_preferred as skill}
-                  <span class="px-3 py-1 text-sm bg-[var(--dash-primary-light)] text-[var(--dash-primary)] rounded-lg">
-                    {skill}
-                  </span>
+                  {#if isSkillMatched(skill)}
+                    <span class="px-3 py-1 text-sm bg-[var(--dash-success-light)] text-[var(--dash-success)] rounded-lg flex items-center gap-1">
+                      <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                      {skill}
+                    </span>
+                  {:else}
+                    <span class="px-3 py-1 text-sm bg-[var(--dash-primary-light)] text-[var(--dash-primary)] rounded-lg">
+                      {skill}
+                    </span>
+                  {/if}
                 {/each}
               </div>
             </div>

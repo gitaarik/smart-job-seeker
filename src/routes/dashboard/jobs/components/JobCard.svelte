@@ -7,6 +7,7 @@
     faBuilding,
     faCalendar,
     faChartLine,
+    faCheck,
     faChevronDown,
     faChevronUp,
     faExternalLinkAlt,
@@ -38,6 +39,7 @@
     id: number;
     score: number;
     skill_match_percentage: number | null;
+    matched_skills?: string[] | null;
     status: string;
   }
 
@@ -125,6 +127,11 @@
   const hasMatch = $derived(match !== null && match.score > 0);
   const salaryText = $derived(formatSalary(job.salary_min, job.salary_max, job.salary_currency, job.salary_period));
   const skillsRequired = $derived(asStringArray(job.skills_required));
+  const matchedSkillsSet = $derived(new Set((match?.matched_skills || []).map(s => s.toLowerCase())));
+
+  function isSkillMatched(skill: string): boolean {
+    return matchedSkillsSet.has(skill.toLowerCase());
+  }
 </script>
 
 <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden">
@@ -307,9 +314,16 @@
             </p>
             <div class="flex flex-wrap gap-1">
               {#each skillsRequired.slice(0, 15) as skill}
-                <span class="px-2 py-1 text-xs bg-[var(--dash-bg)] text-[var(--dash-text)] rounded">
-                  {skill}
-                </span>
+                {#if isSkillMatched(skill)}
+                  <span class="px-2 py-1 text-xs bg-[var(--dash-success-light)] text-[var(--dash-success)] rounded flex items-center gap-1">
+                    <FontAwesomeIcon icon={faCheck} class="w-2.5 h-2.5" />
+                    {skill}
+                  </span>
+                {:else}
+                  <span class="px-2 py-1 text-xs bg-[var(--dash-bg)] text-[var(--dash-text)] rounded">
+                    {skill}
+                  </span>
+                {/if}
               {/each}
               {#if skillsRequired.length > 15}
                 <span class="px-2 py-1 text-xs text-[var(--dash-text-muted)]">

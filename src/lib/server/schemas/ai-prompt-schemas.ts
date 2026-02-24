@@ -85,6 +85,9 @@ export const scoreJobMatchSchema = z.object({
     .min(0)
     .max(100)
     .describe("Percentage of required skills the candidate has"),
+  matched_skills: z
+    .array(z.string())
+    .describe("Skills from the job's required/preferred skills list that the candidate has or closely matches"),
   strengths: z
     .array(z.string())
     .min(0)

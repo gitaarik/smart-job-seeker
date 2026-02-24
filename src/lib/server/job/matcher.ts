@@ -33,6 +33,7 @@ export interface MatchResult {
   score: number;
   reasoning: string;
   skill_match_percentage: number;
+  matched_skills: string[];
   strengths: string[];
   gaps: string[];
   recommendation: string;
@@ -177,6 +178,7 @@ export async function calculateMatch(
     score: number;
     reasoning: string;
     skill_match_percentage: number;
+    matched_skills: string[];
     strengths: string[];
     gaps: string[];
     recommendation: string;
@@ -233,6 +235,7 @@ export async function calculateMatch(
     score: result.score,
     reasoning: result.reasoning,
     skill_match_percentage: result.skill_match_percentage,
+    matched_skills: result.matched_skills || [],
     strengths: result.strengths,
     gaps: result.gaps,
     recommendation: result.recommendation,
@@ -336,6 +339,7 @@ export async function upsertJobMatch(
     score: match.score,
     reasoning: match.reasoning,
     skill_match_percentage: match.skill_match_percentage,
+    matched_skills: match.matched_skills,
     strengths: match.strengths,
     gaps: match.gaps,
     recommendation: match.recommendation,

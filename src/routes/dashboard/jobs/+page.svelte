@@ -53,6 +53,7 @@
       id: m.id,
       score: m.score,
       skill_match_percentage: m.skill_match_percentage,
+      matched_skills: m.matched_skills as string[] | null,
       status: m.status,
     };
   }
