@@ -63,16 +63,9 @@ export const load: LayoutServerLoad = async (event) => {
 
   const selectedProfile = profiles.find((p) => p.id === selectedProfileId)!;
 
-  // Check if user is admin
-  const dbUser = await db.users.findUnique({
-    where: { id: user.id },
-    select: { is_admin: true },
-  });
-
   return {
     user,
     profiles,
     selectedProfile,
-    isAdmin: dbUser?.is_admin ?? false,
   };
 };

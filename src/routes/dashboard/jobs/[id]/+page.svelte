@@ -56,9 +56,9 @@
         rescrapeStatus = result.status;
         rescrapeMessage = result.message || "";
 
-        // If completed, refresh job data
+        // If completed, refresh job data after a delay so user can see extraction summary
         if (result.status === "completed") {
-          window.location.reload();
+          setTimeout(() => window.location.reload(), 5000);
         }
       }
     } catch {
@@ -302,7 +302,13 @@
           </div>
         {:else if isRescraping && rescrapeMessage}
           <div class="mt-4 p-3 bg-[var(--dash-primary-light)] border border-[var(--dash-primary)] rounded-lg">
-            <p class="text-sm text-[var(--dash-primary)]">
+            <p class="text-sm text-[var(--dash-primary)] whitespace-pre-line">
+              {rescrapeMessage}
+            </p>
+          </div>
+        {:else if rescrapeStatus === "completed" && rescrapeMessage && rescrapeMessage.includes("Extracted data:")}
+          <div class="mt-4 p-3 bg-[var(--dash-success-light)] border border-[var(--dash-success)] rounded-lg">
+            <p class="text-sm text-[var(--dash-success)] whitespace-pre-line">
               {rescrapeMessage}
             </p>
           </div>
