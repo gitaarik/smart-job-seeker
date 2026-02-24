@@ -29,11 +29,11 @@
 
   /* Semantic */
   --dash-error: #dc2626;             /* red-600 */
-  --dash-error-light: #fef2f2;       /* red-50 */
+  --dash-error-light: #fee2e2;       /* red-100 */
   --dash-success: #16a34a;           /* green-600 */
-  --dash-success-light: #f0fdf4;     /* green-50 */
+  --dash-success-light: #dcfce7;     /* green-100 */
   --dash-warning: #d97706;           /* amber-600 */
-  --dash-warning-light: #fffbeb;     /* amber-50 */
+  --dash-warning-light: #fef3c7;     /* amber-100 */
   --dash-warning-border: #fcd34d;    /* amber-300 */
   --dash-info: #2563eb;              /* blue-600 */
   --dash-info-light: #eff6ff;        /* blue-50 */

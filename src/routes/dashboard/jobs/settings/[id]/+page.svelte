@@ -741,6 +741,20 @@
             {jobSearch.status_message || "Cancelled by user"}
           </p>
         </div>
+      {:else if jobSearch.last_run}
+        <!-- Idle but has run before -->
+        <div class="w-10 h-10 rounded-full bg-[var(--dash-bg)] flex items-center justify-center border border-[var(--dash-border)]">
+          <FontAwesomeIcon icon={faCog} class="w-5 h-5 text-[var(--dash-text-muted)]" />
+        </div>
+        <div>
+          <p class="font-medium text-[var(--dash-text)]">Idle</p>
+          <p class="text-sm text-[var(--dash-text-secondary)]">
+            Last run: {formatDate(jobSearch.last_run)}
+            {#if jobSearch.last_run_jobs_found}
+              • {jobSearch.last_run_jobs_found} jobs found
+            {/if}
+          </p>
+        </div>
       {:else}
         <div class="w-10 h-10 rounded-full bg-[var(--dash-bg)] flex items-center justify-center border border-[var(--dash-border)]">
           <FontAwesomeIcon icon={faCog} class="w-5 h-5 text-[var(--dash-text-muted)]" />
