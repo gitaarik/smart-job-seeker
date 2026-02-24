@@ -245,15 +245,15 @@
               <button
                 type="submit"
                 disabled={isSaving}
-                class="flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors {isSaved
+                class="p-2 rounded-lg border transition-colors {isSaved
                   ? 'bg-[var(--dash-primary)] text-white border-[var(--dash-primary)]'
                   : 'border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)]'} disabled:opacity-50"
+                title={isSaved ? "Unsave job" : "Save job"}
               >
                 <FontAwesomeIcon
                   icon={isSaved ? faBookmarkSolid : faBookmarkRegular}
-                  class="w-4 h-4"
+                  class="w-5 h-5"
                 />
-                {isSaved ? "Saved" : "Save"}
               </button>
             </form>
 
