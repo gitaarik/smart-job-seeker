@@ -17,8 +17,8 @@ import {
  * POST - Trigger rescrape for a job
  */
 export const POST: RequestHandler = async ({ params, locals }) => {
-  const session = await locals.auth();
-  if (!session?.user) {
+  const user = locals.user;
+  if (!user) {
     return json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -94,8 +94,8 @@ export const POST: RequestHandler = async ({ params, locals }) => {
  * GET - Check rescrape status
  */
 export const GET: RequestHandler = async ({ params, locals }) => {
-  const session = await locals.auth();
-  if (!session?.user) {
+  const user = locals.user;
+  if (!user) {
     return json({ error: "Unauthorized" }, { status: 401 });
   }
 
