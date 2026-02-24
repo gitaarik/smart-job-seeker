@@ -452,14 +452,6 @@
             </div>
           </div>
 
-          <!-- Reasoning -->
-          {#if match.reasoning}
-            <div class="mb-4">
-              <p class="text-sm text-[var(--dash-text-secondary)] mb-1">Analysis</p>
-              <p class="text-sm text-[var(--dash-text)]">{match.reasoning}</p>
-            </div>
-          {/if}
-
           <!-- Strengths -->
           {#if match.strengths && Array.isArray(match.strengths) && match.strengths.length > 0}
             <div class="mb-4">
@@ -487,6 +479,14 @@
                   </li>
                 {/each}
               </ul>
+            </div>
+          {/if}
+
+          <!-- Reasoning -->
+          {#if match.reasoning}
+            <div>
+              <p class="text-sm text-[var(--dash-text-secondary)] mb-1">Analysis</p>
+              <p class="text-sm text-[var(--dash-text)]">{match.reasoning}</p>
             </div>
           {/if}
         </div>

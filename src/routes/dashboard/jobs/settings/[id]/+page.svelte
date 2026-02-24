@@ -4,9 +4,11 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faArrowLeft,
+    faBuilding,
     faCheck,
     faChevronDown,
     faChevronRight,
+    faChevronUp,
     faCloud,
     faCog,
     faDesktop,
@@ -15,6 +17,8 @@
     faEye,
     faForward,
     faHistory,
+    faMapMarkerAlt,
+    faMoneyBillWave,
     faPlay,
     faSpinner,
     faStop,
@@ -52,11 +56,59 @@
     timestamp: string;
   }
 
+  interface JobDetails {
+    id: number;
+    title: string | null;
+    company: string | null;
+    office_location: string | null;
+    salary_min: number | null;
+    salary_max: number | null;
+    salary_currency: string | null;
+    salary_period: string | null;
+    job_types: string[] | null;
+    work_location: string[] | null;
+    skills_required: string[] | null;
+    skills_preferred: string[] | null;
+    job_description: string | null;
+    source_url: string | null;
+  }
+
+  interface RunItem {
+    id: number;
+    position: number;
+    title: string | null;
+    company: string | null;
+    location: string | null;
+    status: string;
+    status_message: string | null;
+    job_id: number | null;
+    was_created: boolean | null;
+    jobs: JobDetails | null;
+  }
+
+  interface RunItemsData {
+    items: RunItem[];
+    stats: {
+      total: number;
+      pending: number;
+      processing: number;
+      completed: number;
+      skipped: number;
+      error: number;
+    };
+  }
+
   let runs = $state<Run[]>([]);
   let expandedRunId = $state<number | null>(null);
+  let expandedItemId = $state<number | null>(null);
   let runLogs = $state<Record<number, LogEntry[]>>({});
+  let runItems = $state<Record<number, RunItemsData>>({});
   let loadingLogs = $state<Record<number, boolean>>({});
+  let loadingItems = $state<Record<number, boolean>>({});
   let logPollIntervals = $state<Record<number, ReturnType<typeof setInterval>>>({});
+  let itemPollIntervals = $state<Record<number, ReturnType<typeof setInterval>>>({});
+  let showItemsView = $state<Record<number, boolean>>({}); // Toggle between logs and items
+  let logLevelFilter = $state<"debug" | "info" | "warn" | "error">("info");
 
   // Computed states
   let isRunning = $derived(jobSearch.status === "running");
@@ -163,7 +215,7 @@
     loadingLogs[runId] = true;
 
     try {
-      const response = await fetch(`/api/job-searches/${jobSearch.id}/runs/${runId}/logs`);
+      const response = await fetch(`/api/job-searches/${jobSearch.id}/runs/${runId}/logs?level=${logLevelFilter}`);
       if (response.ok) {
         const data = await response.json();
         runLogs[runId] = data.logs;
@@ -175,10 +227,122 @@
     }
   }
 
+  async function loadRunItems(runId: number) {
+    if (loadingItems[runId]) return;
+    loadingItems[runId] = true;
+
+    try {
+      const response = await fetch(`/api/job-searches/${jobSearch.id}/runs/${runId}/items`);
+      if (response.ok) {
+        const data = await response.json();
+        runItems[runId] = data;
+      } else {
+        console.error("Failed to load items:", response.status, await response.text());
+      }
+    } catch (err) {
+      console.error("Failed to load items:", err);
+    } finally {
+      loadingItems[runId] = false;
+    }
+  }
+
+  function startItemPolling(runId: number) {
+    if (itemPollIntervals[runId]) return;
+
+    itemPollIntervals[runId] = setInterval(async () => {
+      await loadRunItems(runId);
+
+      // Stop polling if run is complete
+      const run = runs.find((r) => r.id === runId);
+      if (run && !["running", "blocked", "queued"].includes(run.status)) {
+        stopItemPolling(runId);
+      }
+    }, 2000);
+  }
+
+  function stopItemPolling(runId: number) {
+    if (itemPollIntervals[runId]) {
+      clearInterval(itemPollIntervals[runId]);
+      delete itemPollIntervals[runId];
+    }
+  }
+
+  function getItemStatusColor(status: string): string {
+    switch (status) {
+      case "completed":
+        return "text-[var(--dash-success)]";
+      case "processing":
+        return "text-[var(--dash-primary)]";
+      case "pending":
+        return "text-[var(--dash-text-muted)]";
+      case "skipped":
+        return "text-[var(--dash-warning)]";
+      case "error":
+        return "text-[var(--dash-error)]";
+      default:
+        return "text-[var(--dash-text-secondary)]";
+    }
+  }
+
+  function toggleItemExpanded(itemId: number) {
+    expandedItemId = expandedItemId === itemId ? null : itemId;
+  }
+
+  function formatSalary(
+    min: number | null,
+    max: number | null,
+    currency: string | null,
+    period: string | null,
+  ): string {
+    if (!min && !max) return "";
+    const curr = currency || "USD";
+    const formatter = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: curr,
+      maximumFractionDigits: 0,
+    });
+    let result = "";
+    if (min && max) {
+      result = `${formatter.format(min)} - ${formatter.format(max)}`;
+    } else if (min) {
+      result = `From ${formatter.format(min)}`;
+    } else if (max) {
+      result = `Up to ${formatter.format(max)}`;
+    }
+    if (period) {
+      result += ` / ${period}`;
+    }
+    return result;
+  }
+
+  function truncateText(text: string | null, maxLength: number): string {
+    if (!text) return "";
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + "...";
+  }
+
+  function getItemStatusBg(status: string): string {
+    switch (status) {
+      case "completed":
+        return "bg-[var(--dash-success-light)]";
+      case "processing":
+        return "bg-[var(--dash-primary-light)]";
+      case "pending":
+        return "bg-[var(--dash-bg)]";
+      case "skipped":
+        return "bg-[var(--dash-warning-light)]";
+      case "error":
+        return "bg-[var(--dash-error-light)]";
+      default:
+        return "bg-[var(--dash-bg)]";
+    }
+  }
+
   function toggleRunExpanded(runId: number) {
     if (expandedRunId === runId) {
       expandedRunId = null;
-      // Stop polling logs for this run
+      // Stop polling logs and items for this run
+      stopItemPolling(runId);
       if (logPollIntervals[runId]) {
         clearInterval(logPollIntervals[runId]);
         delete logPollIntervals[runId];
@@ -186,11 +350,13 @@
     } else {
       expandedRunId = runId;
       loadRunLogs(runId);
+      loadRunItems(runId);
 
-      // Start polling logs if run is active
+      // Start polling if run is active
       const run = runs.find((r) => r.id === runId);
       if (run && (run.status === "running" || run.status === "blocked" || run.status === "queued")) {
         startLogPolling(runId);
+        startItemPolling(runId);
       }
     }
   }
@@ -203,9 +369,10 @@
       const lastTimestamp = existingLogs.length > 0 ? existingLogs[existingLogs.length - 1].timestamp : null;
 
       try {
-        const url = lastTimestamp
-          ? `/api/job-searches/${jobSearch.id}/runs/${runId}/logs?after=${encodeURIComponent(lastTimestamp)}`
-          : `/api/job-searches/${jobSearch.id}/runs/${runId}/logs`;
+        let url = `/api/job-searches/${jobSearch.id}/runs/${runId}/logs?level=${logLevelFilter}`;
+        if (lastTimestamp) {
+          url += `&after=${encodeURIComponent(lastTimestamp)}`;
+        }
 
         const response = await fetch(url);
         if (response.ok) {
@@ -407,8 +574,9 @@
 
   onDestroy(() => {
     stopPolling();
-    // Clean up all log polling intervals
+    // Clean up all log and item polling intervals
     Object.values(logPollIntervals).forEach((interval) => clearInterval(interval));
+    Object.values(itemPollIntervals).forEach((interval) => clearInterval(interval));
   });
 </script>
 
@@ -563,6 +731,16 @@
             {jobSearch.status_message}
           </p>
         </div>
+      {:else if jobSearch.status === "cancelled"}
+        <div class="w-10 h-10 rounded-full bg-[var(--dash-error-light)] flex items-center justify-center">
+          <FontAwesomeIcon icon={faTimes} class="w-5 h-5 text-[var(--dash-error)]" />
+        </div>
+        <div>
+          <p class="font-medium text-[var(--dash-text)]">Cancelled</p>
+          <p class="text-sm text-[var(--dash-text-secondary)]">
+            {jobSearch.status_message || "Cancelled by user"}
+          </p>
+        </div>
       {:else}
         <div class="w-10 h-10 rounded-full bg-[var(--dash-bg)] flex items-center justify-center border border-[var(--dash-border)]">
           <FontAwesomeIcon icon={faCog} class="w-5 h-5 text-[var(--dash-text-muted)]" />
@@ -706,8 +884,8 @@
               class="w-full flex items-center gap-3 p-4 hover:bg-[var(--dash-bg)] transition-colors text-left"
             >
               <FontAwesomeIcon
-                icon={expandedRunId === run.id ? faChevronDown : faChevronRight}
-                class="w-3 h-3 text-[var(--dash-text-muted)]"
+                icon={faChevronRight}
+                class="w-3 h-3 text-[var(--dash-text-muted)] transition-transform duration-200 {expandedRunId === run.id ? 'rotate-90' : ''}"
               />
 
               <div class={`w-6 h-6 rounded-full flex items-center justify-center ${run.status === "running" || run.status === "queued" ? "bg-[var(--dash-primary-light)]" : run.status === "success" ? "bg-[var(--dash-success-light)]" : run.status === "blocked" || run.status === "partial" ? "bg-[var(--dash-warning-light)]" : "bg-[var(--dash-error-light)]"}`}>
@@ -741,44 +919,324 @@
               </div>
             </button>
 
-            <!-- Expanded logs -->
+            <!-- Expanded details (tabs: Items / Logs) -->
             {#if expandedRunId === run.id}
               <div class="border-t border-[var(--dash-border)] bg-[var(--dash-bg)]">
-                <div class="p-4">
-                  <div class="flex items-center justify-between mb-2">
-                    <span class="text-sm font-medium text-[var(--dash-text)]">Logs</span>
-                    {#if loadingLogs[run.id]}
-                      <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin" />
+                <!-- Tab buttons -->
+                <div class="flex border-b border-[var(--dash-border)]">
+                  <button
+                    onclick={() => showItemsView[run.id] = true}
+                    class={`px-4 py-2 text-sm font-medium transition-colors ${showItemsView[run.id] !== false ? "text-[var(--dash-primary)] border-b-2 border-[var(--dash-primary)]" : "text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]"}`}
+                  >
+                    Jobs
+                    {#if runItems[run.id]?.stats}
+                      <span class="ml-1 text-xs text-[var(--dash-text-muted)]">
+                        ({runItems[run.id].stats.completed}/{runItems[run.id].stats.total})
+                      </span>
                     {/if}
-                  </div>
+                  </button>
+                  <button
+                    onclick={() => showItemsView[run.id] = false}
+                    class={`px-4 py-2 text-sm font-medium transition-colors ${showItemsView[run.id] === false ? "text-[var(--dash-primary)] border-b-2 border-[var(--dash-primary)]" : "text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]"}`}
+                  >
+                    Logs
+                  </button>
+                </div>
 
-                  <div class="bg-[var(--dash-card)] rounded border border-[var(--dash-border)] max-h-64 overflow-y-auto">
-                    {#if !runLogs[run.id] || runLogs[run.id].length === 0}
-                      <div class="p-4 text-sm text-[var(--dash-text-muted)] text-center">
-                        {#if loadingLogs[run.id]}
-                          Loading logs...
-                        {:else}
-                          No logs available
+                <div class="p-4">
+                  <!-- Items view -->
+                  {#if showItemsView[run.id] !== false}
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="text-sm font-medium text-[var(--dash-text)]">Discovered Jobs</span>
+                      {#if loadingItems[run.id]}
+                        <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin" />
+                      {/if}
+                    </div>
+
+                    <!-- Stats bar -->
+                    {#if runItems[run.id]?.stats}
+                      {@const stats = runItems[run.id].stats}
+                      <div class="flex gap-3 mb-3 text-xs">
+                        <span class="text-[var(--dash-text-muted)]">{stats.total} total</span>
+                        {#if stats.completed > 0}
+                          <span class="text-[var(--dash-success)]">{stats.completed} imported</span>
+                        {/if}
+                        {#if stats.processing > 0}
+                          <span class="text-[var(--dash-primary)]">{stats.processing} processing</span>
+                        {/if}
+                        {#if stats.pending > 0}
+                          <span class="text-[var(--dash-text-muted)]">{stats.pending} pending</span>
+                        {/if}
+                        {#if stats.skipped > 0}
+                          <span class="text-[var(--dash-warning)]">{stats.skipped} skipped</span>
+                        {/if}
+                        {#if stats.error > 0}
+                          <span class="text-[var(--dash-error)]">{stats.error} errors</span>
                         {/if}
                       </div>
-                    {:else}
-                      <div class="p-2 space-y-0.5 font-mono text-xs">
-                        {#each runLogs[run.id] as log (log.id)}
-                          <div class="flex gap-2 py-0.5 px-1 hover:bg-[var(--dash-bg)] rounded">
-                            <span class="text-[var(--dash-text-muted)] whitespace-nowrap">
-                              {new Date(log.timestamp).toLocaleTimeString()}
-                            </span>
-                            <span class={`uppercase w-12 ${getLogLevelColor(log.level)}`}>
-                              {log.level}
-                            </span>
-                            <span class="text-[var(--dash-text)] break-all">
-                              {log.message}
-                            </span>
-                          </div>
-                        {/each}
-                      </div>
                     {/if}
-                  </div>
+
+                    <div class="bg-[var(--dash-card)] rounded border border-[var(--dash-border)] max-h-80 overflow-y-auto">
+                      {#if !runItems[run.id]?.items || runItems[run.id].items.length === 0}
+                        <div class="p-4 text-sm text-[var(--dash-text-muted)] text-center">
+                          {#if loadingItems[run.id]}
+                            Loading jobs...
+                          {:else}
+                            No jobs discovered yet
+                          {/if}
+                        </div>
+                      {:else}
+                        <div class="divide-y divide-[var(--dash-border)]">
+                          {#each runItems[run.id].items as item (item.id)}
+                            <div class={`${getItemStatusBg(item.status)}`}>
+                              <!-- Item header (clickable for completed items with job details) -->
+                              <button
+                                type="button"
+                                onclick={() => item.jobs && toggleItemExpanded(item.id)}
+                                class={`w-full flex items-center gap-3 px-3 py-2 text-left transition-all ${item.jobs ? "cursor-pointer hover:bg-black/5 dark:hover:bg-white/5" : "cursor-default"}`}
+                                disabled={!item.jobs}
+                              >
+                                <!-- Position -->
+                                <span class="text-xs text-[var(--dash-text-muted)] w-5 text-right">
+                                  {item.position}
+                                </span>
+
+                                <!-- Status indicator -->
+                                <div class={`w-2 h-2 rounded-full flex-shrink-0 ${item.status === "completed" ? "bg-[var(--dash-success)]" : item.status === "processing" ? "bg-[var(--dash-primary)] animate-pulse" : item.status === "skipped" ? "bg-[var(--dash-warning)]" : item.status === "error" ? "bg-[var(--dash-error)]" : "bg-[var(--dash-text-muted)]"}`}></div>
+
+                                <!-- Job info -->
+                                <div class="flex-1 min-w-0">
+                                  <div class="flex items-center gap-2">
+                                    {#if item.job_id && item.status === "completed"}
+                                      <span class="text-sm font-medium text-[var(--dash-primary)] truncate">
+                                        {item.jobs?.title || item.title || "Untitled"}
+                                      </span>
+                                    {:else}
+                                      <span class="text-sm font-medium text-[var(--dash-text)] truncate">
+                                        {item.title || "Untitled"}
+                                      </span>
+                                    {/if}
+                                    {#if item.was_created === true}
+                                      <span class="text-xs px-1.5 py-0.5 rounded bg-[var(--dash-success-light)] text-[var(--dash-success)]">new</span>
+                                    {:else if item.was_created === false && item.status === "completed"}
+                                      <span class="text-xs px-1.5 py-0.5 rounded bg-[var(--dash-bg)] text-[var(--dash-text-muted)]">updated</span>
+                                    {/if}
+                                  </div>
+                                  <div class="flex items-center gap-2 text-xs text-[var(--dash-text-secondary)]">
+                                    {#if item.jobs?.company || item.company}
+                                      <span class="flex items-center gap-1">
+                                        <FontAwesomeIcon icon={faBuilding} class="w-3 h-3" />
+                                        {item.jobs?.company || item.company}
+                                      </span>
+                                    {/if}
+                                    {#if item.jobs?.office_location || item.location}
+                                      <span class="flex items-center gap-1">
+                                        <FontAwesomeIcon icon={faMapMarkerAlt} class="w-3 h-3" />
+                                        {item.jobs?.office_location || item.location}
+                                      </span>
+                                    {/if}
+                                  </div>
+                                  {#if item.status_message && (item.status === "skipped" || item.status === "error")}
+                                    <div class={`text-xs mt-0.5 ${getItemStatusColor(item.status)}`}>
+                                      {item.status_message}
+                                    </div>
+                                  {/if}
+                                </div>
+
+                                <!-- Status badge and expand icon -->
+                                <span class={`text-xs capitalize ${getItemStatusColor(item.status)}`}>
+                                  {item.status}
+                                </span>
+                                {#if item.jobs}
+                                  <FontAwesomeIcon
+                                    icon={expandedItemId === item.id ? faChevronUp : faChevronDown}
+                                    class="w-3 h-3 text-[var(--dash-text-muted)]"
+                                  />
+                                {/if}
+                              </button>
+
+                              <!-- Expanded job details -->
+                              {#if expandedItemId === item.id && item.jobs}
+                                {@const job = item.jobs}
+                                <div class="border-t border-[var(--dash-border)] p-4 space-y-4 {getItemStatusBg(item.status)}">
+                                  <!-- Job Info Grid -->
+                                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    {#if job.salary_min || job.salary_max}
+                                      <div>
+                                        <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">
+                                          Salary
+                                        </p>
+                                        <p class="font-medium text-[var(--dash-text)] flex items-center gap-1">
+                                          <FontAwesomeIcon icon={faMoneyBillWave} class="w-4 h-4 text-[var(--dash-success)]" />
+                                          {formatSalary(job.salary_min, job.salary_max, job.salary_currency, job.salary_period)}
+                                        </p>
+                                      </div>
+                                    {/if}
+                                    {#if job.job_types && Array.isArray(job.job_types) && job.job_types.length > 0}
+                                      <div>
+                                        <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">
+                                          Job Type
+                                        </p>
+                                        <p class="font-medium text-[var(--dash-text)]">
+                                          {job.job_types.join(", ")}
+                                        </p>
+                                      </div>
+                                    {/if}
+                                    {#if job.work_location && Array.isArray(job.work_location) && job.work_location.length > 0}
+                                      <div>
+                                        <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">
+                                          Work Location
+                                        </p>
+                                        <p class="font-medium text-[var(--dash-text)]">
+                                          {job.work_location.join(", ")}
+                                        </p>
+                                      </div>
+                                    {/if}
+                                  </div>
+
+                                  <!-- Skills -->
+                                  {#if job.skills_required && Array.isArray(job.skills_required) && job.skills_required.length > 0}
+                                    <div>
+                                      <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2">
+                                        Required Skills
+                                      </p>
+                                      <div class="flex flex-wrap gap-1">
+                                        {#each job.skills_required.slice(0, 10) as skill}
+                                          <span class="px-2 py-1 text-xs bg-[var(--dash-bg)] text-[var(--dash-text)] rounded">
+                                            {skill}
+                                          </span>
+                                        {/each}
+                                        {#if job.skills_required.length > 10}
+                                          <span class="px-2 py-1 text-xs text-[var(--dash-text-muted)]">
+                                            +{job.skills_required.length - 10} more
+                                          </span>
+                                        {/if}
+                                      </div>
+                                    </div>
+                                  {/if}
+
+                                  {#if job.skills_preferred && Array.isArray(job.skills_preferred) && job.skills_preferred.length > 0}
+                                    <div>
+                                      <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2">
+                                        Preferred Skills
+                                      </p>
+                                      <div class="flex flex-wrap gap-1">
+                                        {#each job.skills_preferred.slice(0, 10) as skill}
+                                          <span class="px-2 py-1 text-xs bg-[var(--dash-primary-light)] text-[var(--dash-primary)] rounded">
+                                            {skill}
+                                          </span>
+                                        {/each}
+                                        {#if job.skills_preferred.length > 10}
+                                          <span class="px-2 py-1 text-xs text-[var(--dash-text-muted)]">
+                                            +{job.skills_preferred.length - 10} more
+                                          </span>
+                                        {/if}
+                                      </div>
+                                    </div>
+                                  {/if}
+
+                                  <!-- Description Preview -->
+                                  {#if job.job_description}
+                                    <div>
+                                      <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">
+                                        Description
+                                      </p>
+                                      <p class="text-sm text-[var(--dash-text)] whitespace-pre-wrap">
+                                        {truncateText(job.job_description, 500)}
+                                      </p>
+                                      {#if job.job_description.length > 500}
+                                        <a
+                                          href="/dashboard/jobs/{job.id}"
+                                          class="text-sm text-[var(--dash-primary)] hover:underline mt-2 inline-block"
+                                        >
+                                          View full description →
+                                        </a>
+                                      {/if}
+                                    </div>
+                                  {/if}
+
+                                  <!-- Footer with links -->
+                                  <div class="pt-2 border-t border-[var(--dash-border)] flex items-center gap-4 text-xs text-[var(--dash-text-muted)]">
+                                    <span>ID: {job.id}</span>
+                                    <a
+                                      href="/dashboard/jobs/{job.id}"
+                                      class="text-[var(--dash-primary)] hover:underline flex items-center gap-1"
+                                    >
+                                      <FontAwesomeIcon icon={faEye} class="w-3 h-3" />
+                                      View details
+                                    </a>
+                                    {#if job.source_url}
+                                      <a
+                                        href={job.source_url}
+                                        target="_blank"
+                                        rel="noopener"
+                                        class="hover:text-[var(--dash-primary)] flex items-center gap-1"
+                                      >
+                                        <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3 h-3" />
+                                        Source
+                                      </a>
+                                    {/if}
+                                  </div>
+                                </div>
+                              {/if}
+                            </div>
+                          {/each}
+                        </div>
+                      {/if}
+                    </div>
+                  {:else}
+                    <!-- Logs view -->
+                    <div class="flex items-center justify-between mb-2">
+                      <div class="flex items-center gap-2">
+                        <span class="text-sm font-medium text-[var(--dash-text)]">Logs</span>
+                        <select
+                          bind:value={logLevelFilter}
+                          onchange={() => {
+                            // Clear and reload logs with new filter
+                            runLogs[run.id] = [];
+                            loadRunLogs(run.id);
+                          }}
+                          class="text-xs px-2 py-1 rounded border border-[var(--dash-border)] bg-[var(--dash-card)] text-[var(--dash-text)]"
+                        >
+                          <option value="debug">Debug</option>
+                          <option value="info">Info</option>
+                          <option value="warn">Warn</option>
+                          <option value="error">Error</option>
+                        </select>
+                      </div>
+                      {#if loadingLogs[run.id]}
+                        <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin" />
+                      {/if}
+                    </div>
+
+                    <div class="bg-[var(--dash-card)] rounded border border-[var(--dash-border)] max-h-64 overflow-y-auto">
+                      {#if !runLogs[run.id] || runLogs[run.id].length === 0}
+                        <div class="p-4 text-sm text-[var(--dash-text-muted)] text-center">
+                          {#if loadingLogs[run.id]}
+                            Loading logs...
+                          {:else}
+                            No logs available
+                          {/if}
+                        </div>
+                      {:else}
+                        <div class="p-2 space-y-0.5 font-mono text-xs">
+                          {#each runLogs[run.id] as log (log.id)}
+                            <div class="flex gap-2 py-0.5 px-1 hover:bg-[var(--dash-bg)] rounded">
+                              <span class="text-[var(--dash-text-muted)] whitespace-nowrap">
+                                {new Date(log.timestamp).toLocaleTimeString()}
+                              </span>
+                              <span class={`uppercase w-12 ${getLogLevelColor(log.level)}`}>
+                                {log.level}
+                              </span>
+                              <span class="text-[var(--dash-text)] break-all">
+                                {log.message}
+                              </span>
+                            </div>
+                          {/each}
+                        </div>
+                      {/if}
+                    </div>
+                  {/if}
                 </div>
               </div>
             {/if}

@@ -47,10 +47,24 @@ export const GET: RequestHandler = async ({ params, locals, url }) => {
   // Parse query params
   const limit = Math.min(parseInt(url.searchParams.get("limit") || "100"), 500);
   const afterTimestamp = url.searchParams.get("after");
+  const minLevel = url.searchParams.get("level") || "info"; // debug, info, warn, error
+
+  // Map log level to numeric priority for filtering
+  const levelPriority: Record<string, number> = {
+    debug: 0,
+    info: 1,
+    warn: 2,
+    error: 3,
+  };
+  const minPriority = levelPriority[minLevel] ?? 1;
+  const includedLevels = Object.entries(levelPriority)
+    .filter(([, priority]) => priority >= minPriority)
+    .map(([level]) => level);
 
   // Build where clause
-  const where: { run_id: number; timestamp?: { gt: Date } } = {
+  const where: { run_id: number; timestamp?: { gt: Date }; level?: { in: string[] } } = {
     run_id: runId,
+    level: { in: includedLevels },
   };
 
   if (afterTimestamp) {
