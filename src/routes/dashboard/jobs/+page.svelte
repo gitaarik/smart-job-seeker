@@ -5,6 +5,7 @@
   import {
     faBriefcase,
     faBookmark,
+    faCheck,
     faListCheck,
     faChevronLeft,
     faChevronRight,
@@ -56,6 +57,12 @@
       matched_skills: m.matched_skills as string[] | null,
       status: m.status,
     };
+  }
+
+  function isSkillMatched(jobId: number, skill: string): boolean {
+    const match = getMatch(jobId);
+    if (!match?.matched_skills) return false;
+    return match.matched_skills.includes(skill);
   }
 
   // Local state for form inputs
@@ -483,11 +490,20 @@
                 </p>
                 <div class="flex flex-wrap gap-1">
                   {#each job.skills_required.slice(0, 10) as skill}
-                    <span
-                      class="px-2 py-1 text-xs bg-[var(--dash-bg)] text-[var(--dash-text)] rounded"
-                    >
-                      {skill}
-                    </span>
+                    {#if isSkillMatched(job.id, skill)}
+                      <span
+                        class="px-2 py-1 text-xs bg-[var(--dash-success-light)] text-[var(--dash-success)] rounded flex items-center gap-1"
+                      >
+                        <FontAwesomeIcon icon={faCheck} class="w-2.5 h-2.5" />
+                        {skill}
+                      </span>
+                    {:else}
+                      <span
+                        class="px-2 py-1 text-xs bg-[var(--dash-bg)] text-[var(--dash-text)] rounded"
+                      >
+                        {skill}
+                      </span>
+                    {/if}
                   {/each}
                   {#if job.skills_required.length > 10}
                     <span class="px-2 py-1 text-xs text-[var(--dash-text-muted)]">
@@ -507,11 +523,20 @@
                 </p>
                 <div class="flex flex-wrap gap-1">
                   {#each job.skills_preferred.slice(0, 10) as skill}
-                    <span
-                      class="px-2 py-1 text-xs bg-[var(--dash-primary-light)] text-[var(--dash-primary)] rounded"
-                    >
-                      {skill}
-                    </span>
+                    {#if isSkillMatched(job.id, skill)}
+                      <span
+                        class="px-2 py-1 text-xs bg-[var(--dash-success-light)] text-[var(--dash-success)] rounded flex items-center gap-1"
+                      >
+                        <FontAwesomeIcon icon={faCheck} class="w-2.5 h-2.5" />
+                        {skill}
+                      </span>
+                    {:else}
+                      <span
+                        class="px-2 py-1 text-xs bg-[var(--dash-primary-light)] text-[var(--dash-primary)] rounded"
+                      >
+                        {skill}
+                      </span>
+                    {/if}
                   {/each}
                   {#if job.skills_preferred.length > 10}
                     <span class="px-2 py-1 text-xs text-[var(--dash-text-muted)]">

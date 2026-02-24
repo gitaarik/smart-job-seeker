@@ -127,10 +127,11 @@
   const hasMatch = $derived(match !== null && match.score > 0);
   const salaryText = $derived(formatSalary(job.salary_min, job.salary_max, job.salary_currency, job.salary_period));
   const skillsRequired = $derived(asStringArray(job.skills_required));
-  const matchedSkillsSet = $derived(new Set((match?.matched_skills || []).map(s => s.toLowerCase())));
+  const matchedSkillsSet = $derived(new Set(match?.matched_skills || []));
 
   function isSkillMatched(skill: string): boolean {
-    return matchedSkillsSet.has(skill.toLowerCase());
+    // Exact match - matched_skills contains validated skill strings from the job's skill lists
+    return matchedSkillsSet.has(skill);
   }
 </script>
 

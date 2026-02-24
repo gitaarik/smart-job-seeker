@@ -87,7 +87,8 @@ export const scoreJobMatchSchema = z.object({
     .describe("Percentage of required skills the candidate has"),
   matched_skills: z
     .array(z.string())
-    .describe("Skills from the job's required/preferred skills list that the candidate has or closely matches"),
+    .default([])
+    .describe("EXACT skill names from job.skills_required or job.skills_preferred that the candidate has. Copy strings verbatim - do not paraphrase."),
   strengths: z
     .array(z.string())
     .min(0)
@@ -231,6 +232,23 @@ export const classifyClickablesSchema = z.object({
 }).passthrough();
 
 /**
+ * Schema for extract_matched_skills prompt
+ * Extracts which job skills the candidate has - simple focused request
+ * Accepts either array format or object format (skill names as keys with boolean values)
+ */
+export const extractMatchedSkillsSchema = z.union([
+  // Preferred format: array of skill names
+  z.object({
+    matched_skills: z
+      .array(z.string())
+      .describe("Skills from the provided list that the candidate possesses. Use EXACT strings from the list."),
+  }),
+  // Alternative format: object with skill names as keys and boolean/array values
+  // We'll extract keys where value is truthy
+  z.record(z.string(), z.union([z.boolean(), z.array(z.any()), z.any()])),
+]);
+
+/**
  * Schema registry mapping request identifiers to Zod schemas
  * This provides type-safe lookup of schemas by prompt request name
  *
@@ -243,6 +261,7 @@ export const aiPromptSchemas = {
   extract_job_data_browser_use: extractJobDataSchema, // Same schema, different prompt
   extract_jobs_from_search_page: extractJobsFromSearchPageSchema,
   score_job_match: scoreJobMatchSchema,
+  extract_matched_skills: extractMatchedSkillsSchema,
   detect_login_page: detectLoginPageSchema,
   find_next_page_button: findNextPageButtonSchema,
   classify_clickables: classifyClickablesSchema,

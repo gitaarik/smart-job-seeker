@@ -116,14 +116,12 @@
 
   // Helper for matched skills highlighting
   const matchedSkillsSet = $derived(
-    new Set(
-      (Array.isArray(match?.matched_skills) ? match.matched_skills : [])
-        .map((s: string) => s.toLowerCase())
-    )
+    new Set(Array.isArray(match?.matched_skills) ? match.matched_skills : [])
   );
 
   function isSkillMatched(skill: string): boolean {
-    return matchedSkillsSet.has(skill.toLowerCase());
+    // Exact match - matched_skills contains validated skill strings from the job's skill lists
+    return matchedSkillsSet.has(skill);
   }
 
   const statusOptions = [
