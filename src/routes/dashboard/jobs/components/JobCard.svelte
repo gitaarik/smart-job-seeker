@@ -196,7 +196,7 @@
               </span>
             {/if}
             {#if job.date_posted || job.date_created}
-              <span class="flex items-center gap-1 text-[var(--dash-text-muted)] hidden sm:flex">
+              <span class="flex items-center gap-1 text-[var(--dash-text-muted)]">
                 <FontAwesomeIcon icon={faCalendar} class="w-3 h-3" />
                 {formatDate(job.date_posted || job.date_created)}
               </span>
