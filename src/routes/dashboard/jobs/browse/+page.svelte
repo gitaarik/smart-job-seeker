@@ -1,28 +1,19 @@
 <script lang="ts">
   import type { ActionData, PageData } from "./$types";
-  import { enhance } from "$app/forms";
   import { goto } from "$app/navigation";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
-    faBookmark as faBookmarkSolid,
     faBriefcase,
-    faBuilding,
-    faCalendar,
-    faChevronDown,
     faChevronLeft,
     faChevronRight,
-    faChevronUp,
-    faExternalLinkAlt,
-    faEye,
     faFilter,
-    faMapMarkerAlt,
     faMoneyBillWave,
     faSearch,
     faTimes,
   } from "@fortawesome/free-solid-svg-icons";
-  import { faBookmark as faBookmarkRegular } from "@fortawesome/free-regular-svg-icons";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import EmptyState from "../../profile/components/EmptyState.svelte";
+  import JobCard from "../components/JobCard.svelte";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -32,10 +23,14 @@
   let currentPage = $derived(data.currentPage);
   let totalPages = $derived(data.totalPages);
   let filters = $derived(data.filters);
+
   // Use a plain object for reactivity (Svelte 5 tracks object property access)
   let savedJobIds = $state<Record<number, boolean>>(
     Object.fromEntries(data.savedJobIds.map((id: number) => [id, true]))
   );
+
+  // Store match data by job ID
+  let matchesByJobId = $derived(data.matchesByJobId);
 
   function isSaved(jobId: number): boolean {
     return savedJobIds[jobId] === true;
@@ -49,6 +44,17 @@
     }
   }
 
+  function getMatch(jobId: number) {
+    const m = matchesByJobId[jobId];
+    if (!m || m.score === 0) return null;
+    return {
+      id: m.id,
+      score: m.score,
+      skill_match_percentage: m.skill_match_percentage,
+      status: m.status,
+    };
+  }
+
   // Local state for form inputs
   let searchInput = $state(filters.search);
   let platformFilter = $state(filters.platform);
@@ -57,7 +63,6 @@
   let sortOrder = $state(filters.sortOrder);
   let showFilters = $state(false);
   let expandedId = $state<number | null>(null);
-  let savingJobId = $state<number | null>(null);
 
   const statusOptions = [
     { value: "", label: "All Statuses" },
@@ -304,252 +309,126 @@
   {:else}
     <div class="space-y-3">
       {#each jobs as job (job.id)}
-
-        <div
-          class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden"
+        <JobCard
+          {job}
+          match={getMatch(job.id)}
+          isSaved={isSaved(job.id)}
+          isExpanded={expandedId === job.id}
+          onToggleExpand={() => toggleExpand(job.id)}
+          onToggleSaved={(saved) => toggleSaved(job.id, saved)}
         >
-          <!-- Header -->
-          <div class="flex items-center justify-between p-4 hover:bg-[var(--dash-bg)] transition-colors">
-            <!-- Clickable area for expand/collapse -->
-            <button
-              type="button"
-              onclick={() => toggleExpand(job.id)}
-              class="flex-1 min-w-0 text-left"
-            >
-              <div class="flex items-center gap-2 flex-wrap">
-                <h3 class="font-medium text-[var(--dash-text)]">
-                  {job.title || "Untitled Job"}
-                </h3>
-                <span
-                  class="text-xs px-2 py-0.5 rounded-full {job.status === 'published' ? 'bg-[var(--dash-success-light)] text-[var(--dash-success)]' : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)]'}"
-                >
-                  {job.status}
-                </span>
-                {#if isSaved(job.id)}
-                  <span class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-primary-light)] text-[var(--dash-primary)]">
-                    Saved
-                  </span>
-                {/if}
-              </div>
-              <div class="flex items-center gap-3 mt-1 text-sm text-[var(--dash-text-secondary)] flex-wrap">
-                {#if job.company}
-                  <span class="flex items-center gap-1">
-                    <FontAwesomeIcon icon={faBuilding} class="w-3 h-3" />
-                    {job.company}
-                  </span>
-                {/if}
-                {#if job.office_location}
-                  <span class="flex items-center gap-1">
-                    <FontAwesomeIcon icon={faMapMarkerAlt} class="w-3 h-3" />
-                    {job.office_location}
-                  </span>
-                {/if}
-                {#if job.job_platforms}
-                  <span class="text-[var(--dash-text-muted)]">
-                    {job.job_platforms.name}
-                  </span>
-                {/if}
-                {#if job.date_created}
-                  <span class="flex items-center gap-1 text-[var(--dash-text-muted)]">
-                    <FontAwesomeIcon icon={faCalendar} class="w-3 h-3" />
-                    {formatDate(job.date_created)}
-                  </span>
-                {/if}
-              </div>
-            </button>
-
-            <!-- Action buttons (outside the expand button) -->
-            <div class="flex items-center gap-2 ml-4">
-              <!-- Save/Unsave Button -->
-              <form
-                method="POST"
-                action={isSaved(job.id) ? "?/unsaveJob" : "?/saveJob"}
-                use:enhance={() => {
-                  const wasSaved = isSaved(job.id);
-                  savingJobId = job.id;
-                  // Optimistic update
-                  toggleSaved(job.id, !wasSaved);
-                  return async ({ result }) => {
-                    savingJobId = null;
-                    // Revert on failure
-                    if (result.type === "failure" || result.type === "error") {
-                      toggleSaved(job.id, wasSaved);
-                    }
-                  };
-                }}
-                class="inline"
-              >
-                <input type="hidden" name="jobId" value={job.id} />
-                <button
-                  type="submit"
-                  disabled={savingJobId === job.id}
-                  class="p-2 transition-colors {isSaved(job.id) ? 'text-[var(--dash-primary)]' : 'text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)]'} disabled:opacity-50"
-                  aria-label={isSaved(job.id) ? "Unsave job" : "Save job"}
-                  title={isSaved(job.id) ? "Unsave job" : "Save job"}
-                >
-                  {#key isSaved(job.id)}
-                    <FontAwesomeIcon
-                      icon={isSaved(job.id) ? faBookmarkSolid : faBookmarkRegular}
-                      class="w-4 h-4"
-                    />
-                  {/key}
-                </button>
-              </form>
-
-              <!-- View Details Link -->
-              <a
-                href="/dashboard/jobs/{job.id}"
-                class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
-                aria-label="View job details"
-                title="View full details"
-              >
-                <FontAwesomeIcon icon={faEye} class="w-4 h-4" />
-              </a>
-
-              <!-- External Link -->
-              {#if job.source_url}
-                <a
-                  href={job.source_url}
-                  target="_blank"
-                  rel="noopener"
-                  class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
-                  aria-label="View job posting"
-                  title="Open original posting"
-                >
-                  <FontAwesomeIcon icon={faExternalLinkAlt} class="w-4 h-4" />
-                </a>
-              {/if}
-
-              <!-- Expand/Collapse toggle -->
-              <button
-                type="button"
-                onclick={() => toggleExpand(job.id)}
-                class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
-                aria-label={expandedId === job.id ? "Collapse" : "Expand"}
-              >
-                <FontAwesomeIcon
-                  icon={expandedId === job.id ? faChevronUp : faChevronDown}
-                  class="w-4 h-4"
-                />
-              </button>
-            </div>
-          </div>
-
-          <!-- Expanded Content -->
-          {#if expandedId === job.id}
-            <div class="border-t border-[var(--dash-border)] p-4 space-y-4">
-              <!-- Job Info Grid -->
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {#if job.salary_min || job.salary_max}
-                  <div>
-                    <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">
-                      Salary
-                    </p>
-                    <p class="font-medium text-[var(--dash-text)] flex items-center gap-1">
-                      <FontAwesomeIcon icon={faMoneyBillWave} class="w-4 h-4 text-[var(--dash-success)]" />
-                      {formatSalary(job.salary_min, job.salary_max, job.salary_currency, job.salary_period)}
-                    </p>
-                  </div>
-                {/if}
-                {#if job.job_types && Array.isArray(job.job_types) && job.job_types.length > 0}
-                  <div>
-                    <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">
-                      Job Type
-                    </p>
-                    <p class="font-medium text-[var(--dash-text)]">
-                      {job.job_types.join(", ")}
-                    </p>
-                  </div>
-                {/if}
-                {#if job.work_location && Array.isArray(job.work_location) && job.work_location.length > 0}
-                  <div>
-                    <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">
-                      Work Location
-                    </p>
-                    <p class="font-medium text-[var(--dash-text)]">
-                      {job.work_location.join(", ")}
-                    </p>
-                  </div>
-                {/if}
-              </div>
-
-              <!-- Skills -->
-              {#if job.skills_required && Array.isArray(job.skills_required) && job.skills_required.length > 0}
-                <div>
-                  <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2">
-                    Required Skills
-                  </p>
-                  <div class="flex flex-wrap gap-1">
-                    {#each job.skills_required.slice(0, 10) as skill}
-                      <span class="px-2 py-1 text-xs bg-[var(--dash-bg)] text-[var(--dash-text)] rounded">
-                        {skill}
-                      </span>
-                    {/each}
-                    {#if job.skills_required.length > 10}
-                      <span class="px-2 py-1 text-xs text-[var(--dash-text-muted)]">
-                        +{job.skills_required.length - 10} more
-                      </span>
-                    {/if}
-                  </div>
-                </div>
-              {/if}
-
-              {#if job.skills_preferred && Array.isArray(job.skills_preferred) && job.skills_preferred.length > 0}
-                <div>
-                  <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2">
-                    Preferred Skills
-                  </p>
-                  <div class="flex flex-wrap gap-1">
-                    {#each job.skills_preferred.slice(0, 10) as skill}
-                      <span class="px-2 py-1 text-xs bg-[var(--dash-primary-light)] text-[var(--dash-primary)] rounded">
-                        {skill}
-                      </span>
-                    {/each}
-                    {#if job.skills_preferred.length > 10}
-                      <span class="px-2 py-1 text-xs text-[var(--dash-text-muted)]">
-                        +{job.skills_preferred.length - 10} more
-                      </span>
-                    {/if}
-                  </div>
-                </div>
-              {/if}
-
-              <!-- Description Preview -->
-              {#if job.job_description}
+          {#snippet expandedContent()}
+            <!-- Job Info Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {#if job.salary_min || job.salary_max}
                 <div>
                   <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">
-                    Description
+                    Salary
                   </p>
-                  <p class="text-sm text-[var(--dash-text)] whitespace-pre-wrap">
-                    {truncate(job.job_description, 500)}
+                  <p class="font-medium text-[var(--dash-text)] flex items-center gap-1">
+                    <FontAwesomeIcon icon={faMoneyBillWave} class="w-4 h-4 text-[var(--dash-success)]" />
+                    {formatSalary(job.salary_min, job.salary_max, job.salary_currency, job.salary_period)}
                   </p>
-                  {#if job.job_description.length > 500}
-                    <a
-                      href="/dashboard/jobs/{job.id}"
-                      class="text-sm text-[var(--dash-primary)] hover:underline mt-2 inline-block"
-                    >
-                      View full description →
-                    </a>
-                  {/if}
                 </div>
               {/if}
+              {#if job.job_types && Array.isArray(job.job_types) && job.job_types.length > 0}
+                <div>
+                  <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">
+                    Job Type
+                  </p>
+                  <p class="font-medium text-[var(--dash-text)]">
+                    {job.job_types.join(", ")}
+                  </p>
+                </div>
+              {/if}
+              {#if job.work_location && Array.isArray(job.work_location) && job.work_location.length > 0}
+                <div>
+                  <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">
+                    Work Location
+                  </p>
+                  <p class="font-medium text-[var(--dash-text)]">
+                    {job.work_location.join(", ")}
+                  </p>
+                </div>
+              {/if}
+            </div>
 
-              <!-- Metadata -->
-              <div class="pt-2 border-t border-[var(--dash-border)] flex items-center gap-4 text-xs text-[var(--dash-text-muted)]">
-                <span>ID: {job.id}</span>
-                {#if job.date_posted}
-                  <span>Posted: {formatDate(job.date_posted)}</span>
-                {/if}
-                {#if job.last_scraped}
-                  <span>Last scraped: {formatDate(job.last_scraped)}</span>
-                {/if}
-                {#if job.scrape_count}
-                  <span>Scraped {job.scrape_count}x</span>
+            <!-- Skills -->
+            {#if job.skills_required && Array.isArray(job.skills_required) && job.skills_required.length > 0}
+              <div>
+                <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2">
+                  Required Skills
+                </p>
+                <div class="flex flex-wrap gap-1">
+                  {#each job.skills_required.slice(0, 10) as skill}
+                    <span class="px-2 py-1 text-xs bg-[var(--dash-bg)] text-[var(--dash-text)] rounded">
+                      {skill}
+                    </span>
+                  {/each}
+                  {#if job.skills_required.length > 10}
+                    <span class="px-2 py-1 text-xs text-[var(--dash-text-muted)]">
+                      +{job.skills_required.length - 10} more
+                    </span>
+                  {/if}
+                </div>
+              </div>
+            {/if}
+
+            {#if job.skills_preferred && Array.isArray(job.skills_preferred) && job.skills_preferred.length > 0}
+              <div>
+                <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2">
+                  Preferred Skills
+                </p>
+                <div class="flex flex-wrap gap-1">
+                  {#each job.skills_preferred.slice(0, 10) as skill}
+                    <span class="px-2 py-1 text-xs bg-[var(--dash-primary-light)] text-[var(--dash-primary)] rounded">
+                      {skill}
+                    </span>
+                  {/each}
+                  {#if job.skills_preferred.length > 10}
+                    <span class="px-2 py-1 text-xs text-[var(--dash-text-muted)]">
+                      +{job.skills_preferred.length - 10} more
+                    </span>
+                  {/if}
+                </div>
+              </div>
+            {/if}
+
+            <!-- Description Preview -->
+            {#if job.job_description}
+              <div>
+                <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">
+                  Description
+                </p>
+                <p class="text-sm text-[var(--dash-text)] whitespace-pre-wrap">
+                  {truncate(job.job_description, 500)}
+                </p>
+                {#if job.job_description.length > 500}
+                  <a
+                    href="/dashboard/jobs/{job.id}"
+                    class="text-sm text-[var(--dash-primary)] hover:underline mt-2 inline-block"
+                  >
+                    View full description →
+                  </a>
                 {/if}
               </div>
+            {/if}
+
+            <!-- Metadata -->
+            <div class="pt-2 border-t border-[var(--dash-border)] flex items-center gap-4 text-xs text-[var(--dash-text-muted)]">
+              <span>ID: {job.id}</span>
+              {#if job.date_posted}
+                <span>Posted: {formatDate(job.date_posted)}</span>
+              {/if}
+              {#if job.last_scraped}
+                <span>Last scraped: {formatDate(job.last_scraped)}</span>
+              {/if}
+              {#if job.scrape_count}
+                <span>Scraped {job.scrape_count}x</span>
+              {/if}
             </div>
-          {/if}
-        </div>
+          {/snippet}
+        </JobCard>
       {/each}
     </div>
   {/if}

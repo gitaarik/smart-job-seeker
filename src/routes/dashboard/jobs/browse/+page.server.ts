@@ -62,16 +62,30 @@ export const load: PageServerLoad = async ({ parent, url }) => {
     db.jobs.count({ where }),
   ]);
 
-  // Get saved job IDs for this profile (to show save state)
-  const savedMatches = await db.job_matches.findMany({
+  // Get all matches for this profile (to show match scores and save state)
+  const jobMatches = await db.job_matches.findMany({
     where: {
       profile: profileId,
       job: { in: jobs.map((j) => j.id) },
-      status: "saved",
     },
-    select: { job: true },
+    select: {
+      id: true,
+      job: true,
+      score: true,
+      skill_match_percentage: true,
+      status: true,
+    },
   });
-  const savedJobIds = new Set(savedMatches.map((m) => m.job));
+
+  // Create a map of job ID to match data for easy lookup
+  const matchesByJobId = Object.fromEntries(
+    jobMatches.map((m) => [m.job, m])
+  );
+
+  // Keep savedJobIds for backward compatibility
+  const savedJobIds = new Set(
+    jobMatches.filter((m) => m.status === "saved").map((m) => m.job)
+  );
 
   // Get all platforms for filter dropdown
   const platforms = await db.job_platforms.findMany({
@@ -92,6 +106,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
     currentPage: page,
     totalPages,
     savedJobIds: Array.from(savedJobIds),
+    matchesByJobId,
     filters: {
       search,
       platform,
