@@ -545,7 +545,7 @@
 
             <!-- Metadata -->
             <div
-              class="pt-2 border-t border-[var(--dash-border)] flex items-center gap-4 text-xs text-[var(--dash-text-muted)] flex-wrap leading-tight"
+              class="pt-2 border-t border-[var(--dash-border)] flex items-center gap-x-4 gap-y-1 text-xs text-[var(--dash-text-muted)] flex-wrap"
             >
               <span>ID: {job.id}</span>
               {#if job.date_posted}
