@@ -235,6 +235,12 @@
 
     // For plain paths
     if (currentPath === href || currentPath.startsWith(href + "/")) {
+      // Special case: if URL has a filter param but href doesn't, don't match
+      // This prevents "All Jobs" from matching when viewing "?filter=matches" or "?filter=saved"
+      const currentParams = new URLSearchParams(currentSearch);
+      if (currentParams.get("filter") && !hrefSearch) {
+        return false;
+      }
       return true;
     }
 
