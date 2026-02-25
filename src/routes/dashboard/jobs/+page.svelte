@@ -489,7 +489,7 @@
                 >
                   Required Skills
                   {#if getMatch(job.id)?.skill_match_percentage}
-                    <span class="text-[var(--dash-success)] font-medium ml-2">
+                    <span class="text-[var(--dash-info)] font-medium ml-2">
                       {getMatch(job.id)!.skill_match_percentage}% match
                     </span>
                   {/if}
