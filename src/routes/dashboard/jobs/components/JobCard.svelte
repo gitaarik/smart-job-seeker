@@ -286,7 +286,7 @@
     </div>
 
     <!-- Details Button - bottom right -->
-    <div class="flex justify-end px-3 sm:px-4 pb-3 sm:pb-4">
+    <div class="flex justify-end px-3 sm:px-4 pb-2 sm:pb-3">
       <a
         href="/dashboard/jobs/{job.id}"
         class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-border)] transition-colors flex items-center gap-1.5"
