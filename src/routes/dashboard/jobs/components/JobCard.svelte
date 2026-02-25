@@ -145,7 +145,25 @@
   }
 </script>
 
-<div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden">
+<div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden relative">
+  <!-- Desktop: Chevron in top right corner -->
+  {#if onToggleExpand}
+    <button
+      type="button"
+      onclick={(e) => {
+        e.stopPropagation();
+        onToggleExpand?.();
+      }}
+      class="hidden md:flex absolute top-3 right-3 p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
+      aria-label={isExpanded ? "Collapse" : "Expand"}
+    >
+      <FontAwesomeIcon
+        icon={isExpanded ? faChevronUp : faChevronDown}
+        class="w-4 h-4"
+      />
+    </button>
+  {/if}
+
   <!-- Header -->
   <div class="p-3 sm:p-4 hover:bg-[var(--dash-bg)] transition-colors">
     <!-- Mobile: Stack vertically, Desktop: Horizontal layout -->
@@ -235,9 +253,7 @@
         </div>
       </button>
 
-      <!-- Action buttons -->
-      <div class="flex items-center gap-1 flex-shrink-0">
-      <!-- Expand/Collapse toggle -->
+      <!-- Mobile: Expand/Collapse toggle inline -->
       {#if onToggleExpand}
         <button
           type="button"
@@ -245,7 +261,7 @@
             e.stopPropagation();
             onToggleExpand?.();
           }}
-          class="p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
+          class="md:hidden p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors flex-shrink-0"
           aria-label={isExpanded ? "Collapse" : "Expand"}
         >
           <FontAwesomeIcon
@@ -254,7 +270,6 @@
           />
         </button>
       {/if}
-    </div>
     </div>
 
     <!-- Action buttons row -->
