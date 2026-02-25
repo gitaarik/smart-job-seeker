@@ -488,6 +488,11 @@
                   class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2"
                 >
                   Required Skills
+                  {#if getMatch(job.id)?.skill_match_percentage}
+                    <span class="text-[var(--dash-success)] font-medium ml-2">
+                      {getMatch(job.id)!.skill_match_percentage}% match
+                    </span>
+                  {/if}
                 </p>
                 <div class="flex flex-wrap gap-1">
                   {#each job.skills_required.slice(0, 10) as skill}

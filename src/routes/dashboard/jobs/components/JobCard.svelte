@@ -6,7 +6,6 @@
     faBriefcase,
     faBuilding,
     faCalendar,
-    faChartLine,
     faCheck,
     faChevronDown,
     faChevronUp,
@@ -189,15 +188,8 @@
             {/if}
           </div>
 
-          <!-- Skill Match, Salary, and Date row -->
+          <!-- Salary and Date row -->
           <div class="flex items-center gap-2 sm:gap-4 mt-1.5 sm:mt-2 text-xs sm:text-sm flex-wrap">
-            {#if hasMatch && match!.skill_match_percentage}
-              <span class="flex items-center gap-1 text-[var(--dash-text-secondary)]">
-                <FontAwesomeIcon icon={faChartLine} class="w-3 h-3" />
-                <span class="font-medium">{match!.skill_match_percentage}%</span>
-                <span class="hidden sm:inline">skill match</span>
-              </span>
-            {/if}
             {#if salaryText}
               <span class="flex items-center gap-1 text-[var(--dash-success)]">
                 <FontAwesomeIcon icon={faMoneyBillWave} class="w-3 h-3" />
