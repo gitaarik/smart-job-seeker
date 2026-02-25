@@ -146,7 +146,7 @@
         onclick={() => onToggleExpand?.()}
         class="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0 text-left"
       >
-        <!-- Score Badge and Save Button -->
+        <!-- Score Badge and Save Button (mobile only) -->
         <div class="flex flex-col items-center gap-1 flex-shrink-0">
           {#if hasMatch}
             <div
@@ -162,6 +162,7 @@
             </div>
           {/if}
 
+          <!-- Mobile save button -->
           {#if showSaveButton}
             <form
               method="POST"
@@ -177,7 +178,7 @@
                   }
                 };
               }}
-              class="inline mt-1"
+              class="inline mt-1 sm:hidden"
             >
               <input type="hidden" name="jobId" value={job.id} />
               <button
@@ -191,7 +192,7 @@
                 {#key isSaved}
                   <FontAwesomeIcon
                     icon={isSaved ? faStarSolid : faStarRegular}
-                    class="w-7 h-7 sm:w-8 sm:h-8"
+                    class="w-7 h-7"
                   />
                 {/key}
               </button>
@@ -249,6 +250,43 @@
 
       <!-- Action buttons -->
       <div class="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+      <!-- Desktop save button -->
+      {#if showSaveButton}
+        <form
+          method="POST"
+          action={isSaved ? unsaveAction : saveAction}
+          use:enhance={() => {
+            const wasSaved = isSaved;
+            saving = true;
+            onToggleSaved?.(!wasSaved);
+            return async ({ result }) => {
+              saving = false;
+              if (result.type === "failure" || result.type === "error") {
+                onToggleSaved?.(wasSaved);
+              }
+            };
+          }}
+          class="hidden sm:inline"
+        >
+          <input type="hidden" name="jobId" value={job.id} />
+          <button
+            type="submit"
+            disabled={saving}
+            class="p-1.5 sm:p-2 transition-colors {isSaved ? 'text-amber-500' : 'text-[var(--dash-text-muted)] hover:text-amber-500'} disabled:opacity-50"
+            aria-label={isSaved ? "Unsave job" : "Save job"}
+            title={isSaved ? "Unsave job" : "Save job"}
+            onclick={(e) => e.stopPropagation()}
+          >
+            {#key isSaved}
+              <FontAwesomeIcon
+                icon={isSaved ? faStarSolid : faStarRegular}
+                class="w-5 h-5"
+              />
+            {/key}
+          </button>
+        </form>
+      {/if}
+
       <!-- External Link - hidden on mobile to save space -->
       {#if job.source_url}
         <a
