@@ -488,6 +488,11 @@
                   class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-2"
                 >
                   Required Skills
+                  {#if getMatch(job.id)?.skill_match_percentage}
+                    <span class="text-[var(--dash-info)] font-medium ml-2 normal-case">
+                      {getMatch(job.id)!.skill_match_percentage}% match
+                    </span>
+                  {/if}
                 </p>
                 <div class="flex flex-wrap gap-1">
                   {#each job.skills_required.slice(0, 10) as skill}
@@ -512,11 +517,6 @@
                     </span>
                   {/if}
                 </div>
-                {#if getMatch(job.id)?.skill_match_percentage}
-                  <p class="text-xs text-[var(--dash-info)] mt-2">
-                    {getMatch(job.id)!.skill_match_percentage}% skill match
-                  </p>
-                {/if}
               </div>
             {/if}
 
