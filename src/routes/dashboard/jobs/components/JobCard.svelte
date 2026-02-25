@@ -4,7 +4,6 @@
   import {
     faArrowRight,
     faBan,
-    faBriefcase,
     faBuilding,
     faCalendar,
     faCheck,
@@ -17,6 +16,7 @@
   } from "@fortawesome/free-solid-svg-icons";
   import { faStar as faStarRegular } from "@fortawesome/free-regular-svg-icons";
   import type { Snippet } from "svelte";
+  import ScoreBadge from "./ScoreBadge.svelte";
 
   interface Job {
     id: number;
@@ -81,44 +81,6 @@
   let saving = $state(false);
   let rejecting = $state(false);
 
-  function getScoreGradient(score: number): { bg: string; text: string; glow: string | null } {
-    // Gradient from blue (0) -> cyan (50) -> green (80+)
-    // Clamp score to 0-100
-    const s = Math.max(0, Math.min(100, score));
-
-    // Color stops: blue (210°) -> cyan (180°) -> green (140°)
-    // Reach full green by score 80
-    let h: number, sat: number, lightBg: number, lightText: number;
-
-    if (s <= 50) {
-      // Blue to Cyan: hue 210 -> 180
-      h = 210 - (s / 50) * 30;
-    } else if (s <= 80) {
-      // Cyan to Green: hue 180 -> 140 (complete by 80)
-      h = 180 - ((s - 50) / 30) * 40;
-    } else {
-      // Stay green for 80+
-      h = 140;
-    }
-
-    sat = 60 + (Math.min(s, 80) / 80) * 20; // 60% to 80% saturation, max at 80
-    lightBg = 92 - (Math.min(s, 80) / 80) * 10; // background: 92% to 82% lightness
-    lightText = 35 - (Math.min(s, 80) / 80) * 10; // text: 35% to 25% lightness
-
-    // Add glow effect for scores above 80
-    let glow: string | null = null;
-    if (s >= 80) {
-      const glowIntensity = ((s - 80) / 20) * 0.4 + 0.3; // 0.3 to 0.7 opacity
-      glow = `0 0 12px hsla(${h}, ${sat}%, 50%, ${glowIntensity})`;
-    }
-
-    return {
-      bg: `hsl(${h}, ${sat}%, ${lightBg}%)`,
-      text: `hsl(${h}, ${sat}%, ${lightText}%)`,
-      glow
-    };
-  }
-
   function formatSalary(
     min: number | null,
     max: number | null,
@@ -166,7 +128,6 @@
     return Array.isArray(value) ? value : [];
   }
 
-  const hasMatch = $derived(match !== null && match.score > 0);
   const salaryText = $derived(formatSalary(job.salary_min, job.salary_max, job.salary_currency, job.salary_period));
   const skillsRequired = $derived(asStringArray(job.skills_required));
   const matchedSkillsSet = $derived(new Set(match?.matched_skills || []));
@@ -203,22 +164,7 @@
     <div class="flex items-start gap-3">
       <!-- Desktop: Score Badge on the left -->
       <div class="hidden md:flex flex-shrink-0">
-        {#if hasMatch}
-          {@const colors = getScoreGradient(match!.score)}
-          <div
-            class="w-15 h-15 rounded-lg flex flex-col items-center justify-center"
-            style="background-color: {colors.bg}; color: {colors.text};{colors.glow ? ` box-shadow: ${colors.glow};` : ''}"
-          >
-            <span class="font-bold text-2xl leading-none">{match!.score}</span>
-            <span class="text-xs opacity-60 whitespace-nowrap">AI Score</span>
-          </div>
-        {:else}
-          <div
-            class="w-15 h-15 rounded-lg flex items-center justify-center bg-[var(--dash-bg)] text-[var(--dash-text-muted)]"
-          >
-            <FontAwesomeIcon icon={faBriefcase} class="w-6 h-6" />
-          </div>
-        {/if}
+        <ScoreBadge score={match?.score ?? null} size="lg" />
       </div>
 
       <!-- Clickable area for expand/collapse -->
@@ -296,22 +242,7 @@
         {/if}
 
         <!-- Score Badge -->
-        {#if hasMatch}
-          {@const colors = getScoreGradient(match!.score)}
-          <div
-            class="w-10 h-10 rounded-lg flex flex-col items-center justify-center"
-            style="background-color: {colors.bg}; color: {colors.text};{colors.glow ? ` box-shadow: ${colors.glow};` : ''}"
-          >
-            <span class="font-bold text-lg leading-none">{match!.score}</span>
-            <span class="text-[7px] opacity-60">AI Score</span>
-          </div>
-        {:else}
-          <div
-            class="w-10 h-10 rounded-lg flex items-center justify-center bg-[var(--dash-bg)] text-[var(--dash-text-muted)]"
-          >
-            <FontAwesomeIcon icon={faBriefcase} class="w-4 h-4" />
-          </div>
-        {/if}
+        <ScoreBadge score={match?.score ?? null} size="sm" />
       </div>
     </div>
   </div>
