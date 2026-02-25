@@ -81,30 +81,41 @@
   let saving = $state(false);
   let rejecting = $state(false);
 
-  function getScoreGradient(score: number): { bg: string; text: string } {
-    // Gradient from blue (0) -> cyan (50) -> green (100)
+  function getScoreGradient(score: number): { bg: string; text: string; glow: string | null } {
+    // Gradient from blue (0) -> cyan (50) -> green (80+)
     // Clamp score to 0-100
     const s = Math.max(0, Math.min(100, score));
 
     // Color stops: blue (210°) -> cyan (180°) -> green (140°)
-    // Saturation and lightness for a nice look
+    // Reach full green by score 80
     let h: number, sat: number, lightBg: number, lightText: number;
 
     if (s <= 50) {
       // Blue to Cyan: hue 210 -> 180
       h = 210 - (s / 50) * 30;
+    } else if (s <= 80) {
+      // Cyan to Green: hue 180 -> 140 (complete by 80)
+      h = 180 - ((s - 50) / 30) * 40;
     } else {
-      // Cyan to Green: hue 180 -> 140
-      h = 180 - ((s - 50) / 50) * 40;
+      // Stay green for 80+
+      h = 140;
     }
 
-    sat = 60 + (s / 100) * 20; // 60% to 80% saturation as score increases
-    lightBg = 92 - (s / 100) * 10; // background: 92% to 82% lightness
-    lightText = 35 - (s / 100) * 10; // text: 35% to 25% lightness (darker for contrast)
+    sat = 60 + (Math.min(s, 80) / 80) * 20; // 60% to 80% saturation, max at 80
+    lightBg = 92 - (Math.min(s, 80) / 80) * 10; // background: 92% to 82% lightness
+    lightText = 35 - (Math.min(s, 80) / 80) * 10; // text: 35% to 25% lightness
+
+    // Add glow effect for scores above 80
+    let glow: string | null = null;
+    if (s >= 80) {
+      const glowIntensity = ((s - 80) / 20) * 0.4 + 0.3; // 0.3 to 0.7 opacity
+      glow = `0 0 12px hsla(${h}, ${sat}%, 50%, ${glowIntensity})`;
+    }
 
     return {
       bg: `hsl(${h}, ${sat}%, ${lightBg}%)`,
-      text: `hsl(${h}, ${sat}%, ${lightText}%)`
+      text: `hsl(${h}, ${sat}%, ${lightText}%)`,
+      glow
     };
   }
 
@@ -191,7 +202,7 @@
       {@const colors = getScoreGradient(match!.score)}
       <div
         class="w-15 h-15 rounded-lg flex flex-col items-center justify-center"
-        style="background-color: {colors.bg}; color: {colors.text};"
+        style="background-color: {colors.bg}; color: {colors.text};{colors.glow ? ` box-shadow: ${colors.glow};` : ''}"
       >
         <span class="font-bold text-2xl leading-none">{match!.score}</span>
         <span class="text-xs opacity-60 whitespace-nowrap">AI Score</span>
@@ -287,7 +298,7 @@
           {@const colors = getScoreGradient(match!.score)}
           <div
             class="w-10 h-10 rounded-lg flex flex-col items-center justify-center"
-            style="background-color: {colors.bg}; color: {colors.text};"
+            style="background-color: {colors.bg}; color: {colors.text};{colors.glow ? ` box-shadow: ${colors.glow};` : ''}"
           >
             <span class="font-bold text-lg leading-none">{match!.score}</span>
             <span class="text-[7px] opacity-60">AI Score</span>
