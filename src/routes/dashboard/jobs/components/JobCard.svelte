@@ -283,9 +283,10 @@
         </button>
       {/if}
     </div>
+    </div>
 
-    <!-- Details Button -->
-    <div class="flex justify-end mt-2">
+    <!-- Details Button - bottom right -->
+    <div class="flex justify-end px-3 sm:px-4 pb-3 sm:pb-4">
       <a
         href="/dashboard/jobs/{job.id}"
         class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-border)] transition-colors flex items-center gap-1.5"
@@ -293,7 +294,6 @@
         Details
         <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
       </a>
-    </div>
     </div>
   </div>
 
