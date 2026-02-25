@@ -313,4 +313,62 @@ export const actions: Actions = {
 
     return { success: true, action: "unsaved", jobId };
   },
+
+  rejectJob: async ({ request, locals, cookies }) => {
+    const user = locals.user;
+    if (!user) {
+      return fail(401, { error: "Not authenticated" });
+    }
+
+    const profileId = await getSelectedProfileId(cookies, user.id);
+    if (!profileId) {
+      return fail(400, { error: "No profile selected" });
+    }
+
+    const formData = await request.formData();
+    const jobId = parseInt(formData.get("jobId") as string);
+
+    if (isNaN(jobId)) {
+      return fail(400, { error: "Invalid job ID" });
+    }
+
+    // Check if job exists
+    const job = await db.jobs.findUnique({
+      where: { id: jobId },
+    });
+
+    if (!job) {
+      return fail(404, { error: "Job not found" });
+    }
+
+    // Check if match already exists
+    const existingMatch = await db.job_matches.findFirst({
+      where: { profile: profileId, job: jobId },
+    });
+
+    if (existingMatch) {
+      // Update existing match to rejected
+      await db.job_matches.update({
+        where: { id: existingMatch.id },
+        data: {
+          status: "rejected",
+          date_updated: new Date(),
+        },
+      });
+    } else {
+      // Create new match with rejected status
+      await db.job_matches.create({
+        data: {
+          profile: profileId,
+          job: jobId,
+          status: "rejected",
+          score: 0,
+          date_created: new Date(),
+          date_updated: new Date(),
+        },
+      });
+    }
+
+    return { success: true, action: "rejected", jobId };
+  },
 };

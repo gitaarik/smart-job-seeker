@@ -33,6 +33,15 @@
     Object.fromEntries(data.savedJobIds.map((id: number) => [id, true]))
   );
 
+  // Track rejected jobs
+  let rejectedJobIds = $state<Record<number, boolean>>(
+    Object.fromEntries(
+      Object.entries(data.matchesByJobId)
+        .filter(([_, m]) => m.status === "rejected")
+        .map(([id, _]) => [parseInt(id), true])
+    )
+  );
+
   // Store match data by job ID
   let matchesByJobId = $derived(data.matchesByJobId);
 
@@ -40,11 +49,25 @@
     return savedJobIds[jobId] === true;
   }
 
+  function isRejected(jobId: number): boolean {
+    return rejectedJobIds[jobId] === true;
+  }
+
   function toggleSaved(jobId: number, save: boolean) {
     if (save) {
       savedJobIds[jobId] = true;
     } else {
       delete savedJobIds[jobId];
+    }
+  }
+
+  function toggleRejected(jobId: number, rejected: boolean) {
+    if (rejected) {
+      rejectedJobIds[jobId] = true;
+      // Also unsave if it was saved
+      delete savedJobIds[jobId];
+    } else {
+      delete rejectedJobIds[jobId];
     }
   }
 
@@ -426,9 +449,11 @@
           {job}
           match={getMatch(job.id)}
           isSaved={isSaved(job.id)}
+          isRejected={isRejected(job.id)}
           isExpanded={expandedId === job.id}
           onToggleExpand={() => toggleExpand(job.id)}
           onToggleSaved={(saved) => toggleSaved(job.id, saved)}
+          onToggleRejected={(rejected) => toggleRejected(job.id, rejected)}
         >
           {#snippet expandedContent()}
             <!-- Job Info Grid -->
