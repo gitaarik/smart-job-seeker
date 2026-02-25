@@ -167,13 +167,11 @@
 
     <!-- Score Badge -->
     {#if hasMatch}
-      <div class="flex flex-col items-center">
-        <div
-          class="w-12 h-12 rounded-lg flex items-center justify-center {getScoreColor(match!.score)}"
-        >
-          <span class="font-bold text-lg">{match!.score}</span>
-        </div>
-        <span class="text-[10px] text-[var(--dash-text-muted)] mt-0.5">AI Score</span>
+      <div
+        class="w-12 h-12 rounded-lg flex flex-col items-center justify-center {getScoreColor(match!.score)}"
+      >
+        <span class="font-bold text-lg leading-none">{match!.score}</span>
+        <span class="text-[8px] opacity-60 mt-0.5">AI Score</span>
       </div>
     {:else}
       <div
@@ -263,13 +261,11 @@
 
         <!-- Score Badge -->
         {#if hasMatch}
-          <div class="flex flex-col items-center">
-            <div
-              class="w-10 h-10 rounded-lg flex items-center justify-center {getScoreColor(match!.score)}"
-            >
-              <span class="font-bold text-base">{match!.score}</span>
-            </div>
-            <span class="text-[10px] text-[var(--dash-text-muted)] mt-0.5">AI Score</span>
+          <div
+            class="w-10 h-10 rounded-lg flex flex-col items-center justify-center {getScoreColor(match!.score)}"
+          >
+            <span class="font-bold text-base leading-none">{match!.score}</span>
+            <span class="text-[7px] opacity-60 mt-0.5">AI Score</span>
           </div>
         {:else}
           <div
