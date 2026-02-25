@@ -191,7 +191,7 @@
                 {#key isSaved}
                   <FontAwesomeIcon
                     icon={isSaved ? faStarSolid : faStarRegular}
-                    class="w-5 h-5 sm:w-6 sm:h-6"
+                    class="w-6 h-6 sm:w-7 sm:h-7"
                   />
                 {/key}
               </button>
