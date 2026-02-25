@@ -10,7 +10,7 @@
     faChevronDown,
     faChevronUp,
     faExternalLinkAlt,
-    faEye,
+    faFileAlt,
     faMapMarkerAlt,
     faMoneyBillWave,
   } from "@fortawesome/free-solid-svg-icons";
@@ -256,7 +256,7 @@
         aria-label="View job details"
         title="View full details"
       >
-        <FontAwesomeIcon icon={faEye} class="w-4 h-4" />
+        <FontAwesomeIcon icon={faFileAlt} class="w-4 h-4" />
       </a>
 
       <!-- External Link - hidden on mobile to save space -->
