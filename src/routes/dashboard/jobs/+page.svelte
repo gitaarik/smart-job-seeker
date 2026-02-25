@@ -564,14 +564,6 @@
                 <p class="text-sm text-[var(--dash-text)] whitespace-pre-wrap">
                   {truncate(job.job_description, 500)}
                 </p>
-                {#if job.job_description.length > 500}
-                  <a
-                    href="/dashboard/jobs/{job.id}"
-                    class="text-sm text-[var(--dash-primary)] hover:underline mt-2 inline-block"
-                  >
-                    View full description →
-                  </a>
-                {/if}
               </div>
             {/if}
 
@@ -588,6 +580,16 @@
                 </p>
               </div>
             {/if}
+
+            <!-- Details Button -->
+            <div class="flex justify-end">
+              <a
+                href="/dashboard/jobs/{job.id}"
+                class="text-xs text-[var(--dash-primary)] hover:underline"
+              >
+                Details →
+              </a>
+            </div>
 
             <!-- Metadata -->
             <div

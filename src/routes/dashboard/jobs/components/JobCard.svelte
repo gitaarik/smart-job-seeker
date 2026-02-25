@@ -189,19 +189,29 @@
           </div>
 
           <!-- Salary and Date row -->
-          <div class="flex items-center gap-2 sm:gap-4 mt-1.5 sm:mt-2 text-xs sm:text-sm flex-wrap">
-            {#if salaryText}
-              <span class="flex items-center gap-1 text-[var(--dash-success)]">
-                <FontAwesomeIcon icon={faMoneyBillWave} class="w-3 h-3" />
-                <span class="truncate max-w-[140px] sm:max-w-none">{salaryText}</span>
-              </span>
-            {/if}
-            {#if job.date_posted || job.date_created}
-              <span class="flex items-center gap-1 text-[var(--dash-text-muted)]">
-                <FontAwesomeIcon icon={faCalendar} class="w-3 h-3" />
-                {formatDate(job.date_posted || job.date_created)}
-              </span>
-            {/if}
+          <div class="flex items-center justify-between mt-1.5 sm:mt-2">
+            <div class="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm flex-wrap">
+              {#if salaryText}
+                <span class="flex items-center gap-1 text-[var(--dash-success)]">
+                  <FontAwesomeIcon icon={faMoneyBillWave} class="w-3 h-3" />
+                  <span class="truncate max-w-[140px] sm:max-w-none">{salaryText}</span>
+                </span>
+              {/if}
+              {#if job.date_posted || job.date_created}
+                <span class="flex items-center gap-1 text-[var(--dash-text-muted)]">
+                  <FontAwesomeIcon icon={faCalendar} class="w-3 h-3" />
+                  {formatDate(job.date_posted || job.date_created)}
+                </span>
+              {/if}
+            </div>
+            <a
+              href="/dashboard/jobs/{job.id}"
+              onclick={(e) => e.stopPropagation()}
+              class="text-xs text-[var(--dash-primary)] hover:underline flex items-center gap-1"
+            >
+              <FontAwesomeIcon icon={faFileAlt} class="w-3 h-3" />
+              Details
+            </a>
           </div>
 
         </div>
@@ -247,17 +257,6 @@
           </button>
         </form>
       {/if}
-
-      <!-- View Details Link -->
-      <a
-        href="/dashboard/jobs/{job.id}"
-        onclick={(e) => e.stopPropagation()}
-        class="p-1.5 sm:p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
-        aria-label="View job details"
-        title="View full details"
-      >
-        <FontAwesomeIcon icon={faFileAlt} class="w-4 h-4" />
-      </a>
 
       <!-- External Link - hidden on mobile to save space -->
       {#if job.source_url}
@@ -337,14 +336,6 @@
             <p class="text-sm text-[var(--dash-text)] whitespace-pre-wrap">
               {truncate(job.job_description, 300)}
             </p>
-            {#if job.job_description.length > 300}
-              <a
-                href="/dashboard/jobs/{job.id}"
-                class="text-sm text-[var(--dash-primary)] hover:underline mt-2 inline-block"
-              >
-                View full description →
-              </a>
-            {/if}
           </div>
         {/if}
 
@@ -359,6 +350,17 @@
             </p>
           </div>
         {/if}
+
+        <!-- Details Button -->
+        <div class="flex justify-end">
+          <a
+            href="/dashboard/jobs/{job.id}"
+            class="text-xs text-[var(--dash-primary)] hover:underline flex items-center gap-1"
+          >
+            <FontAwesomeIcon icon={faFileAlt} class="w-3 h-3" />
+            Details
+          </a>
+        </div>
       {/if}
     </div>
   {/if}
