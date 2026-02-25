@@ -242,7 +242,7 @@
         {/if}
 
         <!-- Score Badge -->
-        <ScoreBadge score={match?.score ?? null} size="sm" />
+        <ScoreBadge score={match?.score ?? null} size="lg" />
       </div>
     </div>
   </div>
