@@ -171,7 +171,7 @@
   }
 
   function getScoreColor(score: number): string {
-    if (score >= 80) return "text-[var(--dash-success)] bg-[var(--dash-success-light)]"; // green - strong match
+    if (score >= 75) return "text-[var(--dash-success)] bg-[var(--dash-success-light)]"; // green - strong match
     if (score >= 60) return "text-[var(--dash-info)] bg-[var(--dash-info-light)]"; // blue - good match
     return "text-[var(--dash-text-muted)] bg-[var(--dash-bg)]"; // gray - moderate/weak match
   }
