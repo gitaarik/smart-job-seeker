@@ -3,7 +3,6 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faArrowRight,
-    faBookmark as faBookmarkSolid,
     faBriefcase,
     faBuilding,
     faCalendar,
@@ -13,8 +12,9 @@
     faExternalLinkAlt,
     faMapMarkerAlt,
     faMoneyBillWave,
+    faStar as faStarSolid,
   } from "@fortawesome/free-solid-svg-icons";
-  import { faBookmark as faBookmarkRegular } from "@fortawesome/free-regular-svg-icons";
+  import { faStar as faStarRegular } from "@fortawesome/free-regular-svg-icons";
   import type { Snippet } from "svelte";
 
   interface Job {
@@ -146,20 +146,58 @@
         onclick={() => onToggleExpand?.()}
         class="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0 text-left"
       >
-        <!-- Score Badge or Icon -->
-        {#if hasMatch}
-          <div
-            class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center flex-shrink-0 {getScoreColor(match!.score)}"
-          >
-            <span class="font-bold text-base sm:text-lg">{match!.score}</span>
-          </div>
-        {:else}
-          <div
-            class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center flex-shrink-0 bg-[var(--dash-bg)] text-[var(--dash-text-muted)]"
-          >
-            <FontAwesomeIcon icon={faBriefcase} class="w-4 h-4 sm:w-5 sm:h-5" />
-          </div>
-        {/if}
+        <!-- Score Badge and Save Button -->
+        <div class="flex flex-col items-center gap-1 flex-shrink-0">
+          {#if hasMatch}
+            <div
+              class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center {getScoreColor(match!.score)}"
+            >
+              <span class="font-bold text-base sm:text-lg">{match!.score}</span>
+            </div>
+          {:else}
+            <div
+              class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center bg-[var(--dash-bg)] text-[var(--dash-text-muted)]"
+            >
+              <FontAwesomeIcon icon={faBriefcase} class="w-4 h-4 sm:w-5 sm:h-5" />
+            </div>
+          {/if}
+
+          {#if showSaveButton}
+            <form
+              method="POST"
+              action={isSaved ? unsaveAction : saveAction}
+              use:enhance={() => {
+                const wasSaved = isSaved;
+                saving = true;
+                onToggleSaved?.(!wasSaved);
+                return async ({ result }) => {
+                  saving = false;
+                  if (result.type === "failure" || result.type === "error") {
+                    onToggleSaved?.(wasSaved);
+                  }
+                };
+              }}
+              class="inline"
+            >
+              <input type="hidden" name="jobId" value={job.id} />
+              <button
+                type="submit"
+                disabled={saving}
+                class="p-1 transition-colors {isSaved ? 'text-amber-500' : 'text-[var(--dash-text-muted)] hover:text-amber-500'} disabled:opacity-50"
+                aria-label={isSaved ? "Unsave job" : "Save job"}
+                title={isSaved ? "Unsave job" : "Save job"}
+                onclick={(e) => e.stopPropagation()}
+              >
+                {#key isSaved}
+                  <FontAwesomeIcon
+                    icon={isSaved ? faStarSolid : faStarRegular}
+                    class="w-4 h-4"
+                  />
+                {/key}
+              </button>
+            </form>
+          {/if}
+        </div>
 
         <div class="flex-1 min-w-0">
           <!-- Title -->
@@ -211,45 +249,6 @@
 
       <!-- Action buttons -->
       <div class="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-      <!-- Save/Unsave Button -->
-      {#if showSaveButton}
-        <form
-          method="POST"
-          action={isSaved ? unsaveAction : saveAction}
-          use:enhance={() => {
-            const wasSaved = isSaved;
-            saving = true;
-            // Optimistic update
-            onToggleSaved?.(!wasSaved);
-            return async ({ result }) => {
-              saving = false;
-              // Revert on failure
-              if (result.type === "failure" || result.type === "error") {
-                onToggleSaved?.(wasSaved);
-              }
-            };
-          }}
-          class="inline"
-        >
-          <input type="hidden" name="jobId" value={job.id} />
-          <button
-            type="submit"
-            disabled={saving}
-            class="p-1.5 sm:p-2 transition-colors {isSaved ? 'text-[var(--dash-primary)]' : 'text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)]'} disabled:opacity-50"
-            aria-label={isSaved ? "Unsave job" : "Save job"}
-            title={isSaved ? "Unsave job" : "Save job"}
-            onclick={(e) => e.stopPropagation()}
-          >
-            {#key isSaved}
-              <FontAwesomeIcon
-                icon={isSaved ? faBookmarkSolid : faBookmarkRegular}
-                class="w-4 h-4"
-              />
-            {/key}
-          </button>
-        </form>
-      {/if}
-
       <!-- External Link - hidden on mobile to save space -->
       {#if job.source_url}
         <a
