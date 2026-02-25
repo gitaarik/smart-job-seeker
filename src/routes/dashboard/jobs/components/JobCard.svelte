@@ -177,7 +177,7 @@
                   }
                 };
               }}
-              class="inline"
+              class="inline mt-1"
             >
               <input type="hidden" name="jobId" value={job.id} />
               <button
@@ -191,7 +191,7 @@
                 {#key isSaved}
                   <FontAwesomeIcon
                     icon={isSaved ? faStarSolid : faStarRegular}
-                    class="w-4 h-4"
+                    class="w-5 h-5 sm:w-6 sm:h-6"
                   />
                 {/key}
               </button>
@@ -285,7 +285,7 @@
     </div>
 
     <!-- Details Button - bottom right -->
-    <div class="flex justify-end px-3 sm:px-4 pb-2 sm:pb-3">
+    <div class="flex justify-end mt-2">
       <a
         href="/dashboard/jobs/{job.id}"
         class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-border)] transition-colors flex items-center gap-1.5"
@@ -293,6 +293,7 @@
         Details
         <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
       </a>
+    </div>
     </div>
   </div>
 
