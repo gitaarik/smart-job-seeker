@@ -250,41 +250,42 @@
 
         </div>
 
-        <!-- Score Badge on the right (mobile only) -->
-        <div class="flex flex-col items-center gap-1 flex-shrink-0 md:hidden">
-          {#if hasMatch}
-            <div
-              class="w-10 h-10 rounded-lg flex items-center justify-center {getScoreColor(match!.score)}"
-            >
-              <span class="font-bold text-base">{match!.score}</span>
-            </div>
-          {:else}
-            <div
-              class="w-10 h-10 rounded-lg flex items-center justify-center bg-[var(--dash-bg)] text-[var(--dash-text-muted)]"
-            >
-              <FontAwesomeIcon icon={faBriefcase} class="w-4 h-4" />
-            </div>
-          {/if}
-        </div>
       </button>
 
-      <!-- Mobile: Expand/Collapse toggle inline -->
-      {#if onToggleExpand}
-        <button
-          type="button"
-          onclick={(e) => {
-            e.stopPropagation();
-            onToggleExpand?.();
-          }}
-          class="md:hidden p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors flex-shrink-0"
-          aria-label={isExpanded ? "Collapse" : "Expand"}
-        >
-          <FontAwesomeIcon
-            icon={isExpanded ? faChevronUp : faChevronDown}
-            class="w-4 h-4"
-          />
-        </button>
-      {/if}
+      <!-- Mobile: Chevron and Score on the right -->
+      <div class="flex flex-col items-center gap-1 flex-shrink-0 md:hidden">
+        {#if onToggleExpand}
+          <button
+            type="button"
+            onclick={(e) => {
+              e.stopPropagation();
+              onToggleExpand?.();
+            }}
+            class="p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
+            aria-label={isExpanded ? "Collapse" : "Expand"}
+          >
+            <FontAwesomeIcon
+              icon={isExpanded ? faChevronUp : faChevronDown}
+              class="w-4 h-4"
+            />
+          </button>
+        {/if}
+
+        <!-- Score Badge -->
+        {#if hasMatch}
+          <div
+            class="w-10 h-10 rounded-lg flex items-center justify-center {getScoreColor(match!.score)}"
+          >
+            <span class="font-bold text-base">{match!.score}</span>
+          </div>
+        {:else}
+          <div
+            class="w-10 h-10 rounded-lg flex items-center justify-center bg-[var(--dash-bg)] text-[var(--dash-text-muted)]"
+          >
+            <FontAwesomeIcon icon={faBriefcase} class="w-4 h-4" />
+          </div>
+        {/if}
+      </div>
     </div>
   </div>
 
