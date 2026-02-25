@@ -212,12 +212,6 @@
             {/if}
           </div>
 
-          <!-- Match Summary -->
-          {#if hasMatch && match!.match_summary}
-            <p class="mt-1.5 text-xs text-[var(--dash-text-secondary)] italic line-clamp-1">
-              {match!.match_summary}
-            </p>
-          {/if}
         </div>
       </button>
 
@@ -315,6 +309,13 @@
       {#if expandedContent}
         {@render expandedContent()}
       {:else}
+        <!-- Match Summary -->
+        {#if hasMatch && match!.match_summary}
+          <p class="text-sm text-[var(--dash-text-secondary)] italic">
+            {match!.match_summary}
+          </p>
+        {/if}
+
         <!-- Default expanded content: Required Skills and Description -->
         {#if skillsRequired.length > 0}
           <div>
