@@ -178,8 +178,8 @@
 </script>
 
 <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden relative">
-  <!-- Desktop: Chevron and Score in top right corner -->
-  <div class="hidden md:flex flex-col items-center absolute top-3 right-3">
+  <!-- Desktop: Chevron in top right corner -->
+  <div class="hidden md:flex absolute top-3 right-3">
     {#if onToggleExpand}
       <button
         type="button"
@@ -196,29 +196,31 @@
         />
       </button>
     {/if}
-
-    <!-- Score Badge -->
-    {#if hasMatch}
-      {@const colors = getScoreGradient(match!.score)}
-      <div
-        class="w-15 h-15 rounded-lg flex flex-col items-center justify-center"
-        style="background-color: {colors.bg}; color: {colors.text};{colors.glow ? ` box-shadow: ${colors.glow};` : ''}"
-      >
-        <span class="font-bold text-2xl leading-none">{match!.score}</span>
-        <span class="text-xs opacity-60 whitespace-nowrap">AI Score</span>
-      </div>
-    {:else}
-      <div
-        class="w-12 h-12 rounded-lg flex items-center justify-center bg-[var(--dash-bg)] text-[var(--dash-text-muted)]"
-      >
-        <FontAwesomeIcon icon={faBriefcase} class="w-5 h-5" />
-      </div>
-    {/if}
   </div>
 
   <!-- Header -->
   <div class="p-3 sm:p-4 hover:bg-[var(--dash-bg)] transition-colors">
     <div class="flex items-start gap-3">
+      <!-- Desktop: Score Badge on the left -->
+      <div class="hidden md:flex flex-shrink-0">
+        {#if hasMatch}
+          {@const colors = getScoreGradient(match!.score)}
+          <div
+            class="w-15 h-15 rounded-lg flex flex-col items-center justify-center"
+            style="background-color: {colors.bg}; color: {colors.text};{colors.glow ? ` box-shadow: ${colors.glow};` : ''}"
+          >
+            <span class="font-bold text-2xl leading-none">{match!.score}</span>
+            <span class="text-xs opacity-60 whitespace-nowrap">AI Score</span>
+          </div>
+        {:else}
+          <div
+            class="w-15 h-15 rounded-lg flex items-center justify-center bg-[var(--dash-bg)] text-[var(--dash-text-muted)]"
+          >
+            <FontAwesomeIcon icon={faBriefcase} class="w-6 h-6" />
+          </div>
+        {/if}
+      </div>
+
       <!-- Clickable area for expand/collapse -->
       <button
         type="button"
