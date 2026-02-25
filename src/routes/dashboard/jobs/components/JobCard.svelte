@@ -195,9 +195,22 @@
               </span>
             {/if}
             {#if job.job_platforms}
-              <span class="text-[var(--dash-text-muted)] hidden sm:inline">
-                {job.job_platforms.name}
-              </span>
+              {#if job.source_url}
+                <a
+                  href={job.source_url}
+                  target="_blank"
+                  rel="noopener"
+                  onclick={(e) => e.stopPropagation()}
+                  class="flex items-center gap-1 text-[var(--dash-text-muted)] hover:text-[var(--dash-primary)] transition-colors"
+                >
+                  {job.job_platforms.name}
+                  <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3 h-3" />
+                </a>
+              {:else}
+                <span class="text-[var(--dash-text-muted)]">
+                  {job.job_platforms.name}
+                </span>
+              {/if}
             {/if}
           </div>
 
@@ -223,22 +236,7 @@
       </button>
 
       <!-- Action buttons -->
-      <div class="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-      <!-- External Link - hidden on mobile to save space -->
-      {#if job.source_url}
-        <a
-          href={job.source_url}
-          target="_blank"
-          rel="noopener"
-          onclick={(e) => e.stopPropagation()}
-          class="p-1.5 sm:p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors hidden sm:block"
-          aria-label="View job posting"
-          title="Open original posting"
-        >
-          <FontAwesomeIcon icon={faExternalLinkAlt} class="w-4 h-4" />
-        </a>
-      {/if}
-
+      <div class="flex items-center gap-1 flex-shrink-0">
       <!-- Expand/Collapse toggle -->
       {#if onToggleExpand}
         <button
@@ -247,7 +245,7 @@
             e.stopPropagation();
             onToggleExpand?.();
           }}
-          class="p-1.5 sm:p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
+          class="p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
           aria-label={isExpanded ? "Collapse" : "Expand"}
         >
           <FontAwesomeIcon
