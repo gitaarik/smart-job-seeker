@@ -294,7 +294,6 @@
         <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
       </a>
     </div>
-    </div>
   </div>
 
   <!-- Expanded Content -->
