@@ -170,8 +170,8 @@
       <div
         class="w-12 h-12 rounded-lg flex flex-col items-center justify-center {getScoreColor(match!.score)}"
       >
-        <span class="font-bold text-lg leading-none">{match!.score}</span>
-        <span class="text-[8px] opacity-60 mt-0.5">AI Score</span>
+        <span class="font-bold text-xl leading-none">{match!.score}</span>
+        <span class="text-[8px] opacity-60">AI Score</span>
       </div>
     {:else}
       <div
@@ -264,8 +264,8 @@
           <div
             class="w-10 h-10 rounded-lg flex flex-col items-center justify-center {getScoreColor(match!.score)}"
           >
-            <span class="font-bold text-base leading-none">{match!.score}</span>
-            <span class="text-[7px] opacity-60 mt-0.5">AI Score</span>
+            <span class="font-bold text-lg leading-none">{match!.score}</span>
+            <span class="text-[7px] opacity-60">AI Score</span>
           </div>
         {:else}
           <div
