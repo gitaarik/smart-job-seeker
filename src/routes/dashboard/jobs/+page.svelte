@@ -3,6 +3,7 @@
   import { goto } from "$app/navigation";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
+    faArrowRight,
     faBriefcase,
     faBookmark,
     faCheck,
@@ -585,9 +586,10 @@
             <div class="flex justify-end">
               <a
                 href="/dashboard/jobs/{job.id}"
-                class="text-xs text-[var(--dash-primary)] hover:underline"
+                class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-border)] transition-colors flex items-center gap-1.5"
               >
-                Details →
+                Details
+                <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
               </a>
             </div>
 

@@ -2,6 +2,7 @@
   import { enhance } from "$app/forms";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
+    faArrowRight,
     faBookmark as faBookmarkSolid,
     faBriefcase,
     faBuilding,
@@ -10,7 +11,6 @@
     faChevronDown,
     faChevronUp,
     faExternalLinkAlt,
-    faFileAlt,
     faMapMarkerAlt,
     faMoneyBillWave,
   } from "@fortawesome/free-solid-svg-icons";
@@ -204,14 +204,6 @@
                 </span>
               {/if}
             </div>
-            <a
-              href="/dashboard/jobs/{job.id}"
-              onclick={(e) => e.stopPropagation()}
-              class="text-xs text-[var(--dash-primary)] hover:underline flex items-center gap-1"
-            >
-              <FontAwesomeIcon icon={faFileAlt} class="w-3 h-3" />
-              Details
-            </a>
           </div>
 
         </div>
@@ -291,6 +283,17 @@
         </button>
       {/if}
     </div>
+
+    <!-- Details Button -->
+    <div class="flex justify-end mt-2">
+      <a
+        href="/dashboard/jobs/{job.id}"
+        class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-border)] transition-colors flex items-center gap-1.5"
+      >
+        Details
+        <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
+      </a>
+    </div>
     </div>
   </div>
 
@@ -355,10 +358,10 @@
         <div class="flex justify-end">
           <a
             href="/dashboard/jobs/{job.id}"
-            class="text-xs text-[var(--dash-primary)] hover:underline flex items-center gap-1"
+            class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-border)] transition-colors flex items-center gap-1.5"
           >
-            <FontAwesomeIcon icon={faFileAlt} class="w-3 h-3" />
             Details
+            <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
           </a>
         </div>
       {/if}
