@@ -204,6 +204,23 @@
     // Handle hrefs with query params (e.g., /dashboard/jobs?filter=matches)
     const [hrefPath, hrefSearch] = href.split("?");
 
+    // Job detail pages (/dashboard/jobs/123) - check jobCategory from page data first
+    const jobDetailMatch = currentPath.match(/^\/dashboard\/jobs\/(\d+)$/);
+    if (jobDetailMatch) {
+      const jobCategory = $page.data?.jobCategory;
+      // Match the appropriate sidebar item based on job category
+      if (href === "/dashboard/jobs?filter=saved" && jobCategory === "saved") {
+        return true;
+      }
+      if (href === "/dashboard/jobs?filter=matches" && jobCategory === "matches") {
+        return true;
+      }
+      if (href === "/dashboard/jobs" && (jobCategory === "all" || !jobCategory)) {
+        return true;
+      }
+      return false;
+    }
+
     if (hrefSearch) {
       // For hrefs with query params, match path and check if the filter param matches
       if (currentPath === hrefPath) {
@@ -221,22 +238,6 @@
       return true;
     }
 
-    // Job detail pages (/dashboard/jobs/123) - check jobCategory from page data
-    const jobDetailMatch = currentPath.match(/^\/dashboard\/jobs\/(\d+)$/);
-    if (jobDetailMatch) {
-      const jobCategory = $page.data?.jobCategory;
-      // Match the appropriate sidebar item based on job category
-      if (href === "/dashboard/jobs?filter=saved" && jobCategory === "saved") {
-        return true;
-      }
-      if (href === "/dashboard/jobs?filter=matches" && jobCategory === "matches") {
-        return true;
-      }
-      if (href === "/dashboard/jobs" && (jobCategory === "all" || !jobCategory)) {
-        return true;
-      }
-      return false;
-    }
     return false;
   }
 
