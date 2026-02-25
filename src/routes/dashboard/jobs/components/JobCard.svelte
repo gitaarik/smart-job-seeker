@@ -138,7 +138,7 @@
   }
 </script>
 
-<div class="bg-[var(--dash-card)] rounded-lg border overflow-hidden relative transition-all {isRejected ? 'opacity-50 grayscale border-[var(--dash-border)]' : isSaved ? 'border-green-500/50 ring-1 ring-green-500/20' : 'border-[var(--dash-border)]'}">
+<div class="bg-[var(--dash-card)] rounded-lg border overflow-hidden relative transition-all {isRejected ? 'opacity-50 grayscale border-[var(--dash-border)]' : isSaved ? 'border-green-500 ring-2 ring-green-500/30' : 'border-[var(--dash-border)]'}">
   <!-- Desktop: Chevron in top right corner -->
   <div class="hidden md:flex absolute top-3 right-3">
     {#if onToggleExpand}
