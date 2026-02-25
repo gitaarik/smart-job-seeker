@@ -379,18 +379,6 @@
           </div>
         {/if}
 
-        <!-- Match Summary -->
-        {#if hasMatch && match!.match_summary}
-          <div>
-            <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">
-              Match Analysis
-            </p>
-            <p class="text-sm text-[var(--dash-text)]">
-              {match!.match_summary}
-            </p>
-          </div>
-        {/if}
-
         <!-- Details Button -->
         <div class="flex justify-end">
           <a
