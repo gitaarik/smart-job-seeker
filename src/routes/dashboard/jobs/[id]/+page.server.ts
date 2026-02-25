@@ -42,10 +42,14 @@ export const load: PageServerLoad = async ({ parent, params }) => {
     },
   });
 
+  // Determine job category for sidebar highlighting
+  const jobCategory = match?.status === "saved" ? "saved" : match && match.score > 0 ? "matches" : "all";
+
   return {
     job,
     match,
     profileId,
+    jobCategory,
   };
 };
 

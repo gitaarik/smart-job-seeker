@@ -221,12 +221,21 @@
       return true;
     }
 
-    // Job detail pages (/dashboard/jobs/123) should be considered part of "All Jobs"
-    if (href === "/dashboard/jobs") {
-      const jobDetailMatch = currentPath.match(/^\/dashboard\/jobs\/(\d+)$/);
-      if (jobDetailMatch) {
+    // Job detail pages (/dashboard/jobs/123) - check jobCategory from page data
+    const jobDetailMatch = currentPath.match(/^\/dashboard\/jobs\/(\d+)$/);
+    if (jobDetailMatch) {
+      const jobCategory = $page.data?.jobCategory;
+      // Match the appropriate sidebar item based on job category
+      if (href === "/dashboard/jobs?filter=saved" && jobCategory === "saved") {
         return true;
       }
+      if (href === "/dashboard/jobs?filter=matches" && jobCategory === "matches") {
+        return true;
+      }
+      if (href === "/dashboard/jobs" && (jobCategory === "all" || !jobCategory)) {
+        return true;
+      }
+      return false;
     }
     return false;
   }
