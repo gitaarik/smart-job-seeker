@@ -166,32 +166,13 @@
 
   <!-- Header -->
   <div class="p-3 sm:p-4 hover:bg-[var(--dash-bg)] transition-colors">
-    <!-- Mobile: Stack vertically, Desktop: Horizontal layout -->
-    <div class="flex items-start sm:items-center gap-3 sm:gap-4">
+    <div class="flex items-start gap-3">
       <!-- Clickable area for expand/collapse -->
       <button
         type="button"
         onclick={() => onToggleExpand?.()}
-        class="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0 text-left"
+        class="flex items-start gap-3 flex-1 min-w-0 text-left"
       >
-        <!-- Score Badge and Save Button (mobile only) -->
-        <div class="flex flex-col items-center gap-1 flex-shrink-0">
-          {#if hasMatch}
-            <div
-              class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center {getScoreColor(match!.score)}"
-            >
-              <span class="font-bold text-base sm:text-lg">{match!.score}</span>
-            </div>
-          {:else}
-            <div
-              class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center bg-[var(--dash-bg)] text-[var(--dash-text-muted)]"
-            >
-              <FontAwesomeIcon icon={faBriefcase} class="w-4 h-4 sm:w-5 sm:h-5" />
-            </div>
-          {/if}
-
-        </div>
-
         <div class="flex-1 min-w-0">
           <!-- Title -->
           <h3 class="font-medium text-[var(--dash-text)] text-sm sm:text-base line-clamp-2 sm:truncate">
@@ -250,6 +231,23 @@
             </div>
           </div>
 
+        </div>
+
+        <!-- Score Badge on the right -->
+        <div class="flex flex-col items-center gap-1 flex-shrink-0">
+          {#if hasMatch}
+            <div
+              class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center {getScoreColor(match!.score)}"
+            >
+              <span class="font-bold text-base sm:text-lg">{match!.score}</span>
+            </div>
+          {:else}
+            <div
+              class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center bg-[var(--dash-bg)] text-[var(--dash-text-muted)]"
+            >
+              <FontAwesomeIcon icon={faBriefcase} class="w-4 h-4 sm:w-5 sm:h-5" />
+            </div>
+          {/if}
         </div>
       </button>
 
