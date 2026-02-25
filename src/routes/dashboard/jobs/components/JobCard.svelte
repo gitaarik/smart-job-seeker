@@ -178,7 +178,7 @@
                   }
                 };
               }}
-              class="inline mt-1 sm:hidden"
+              class="inline mt-1 md:hidden"
             >
               <input type="hidden" name="jobId" value={job.id} />
               <button
@@ -192,7 +192,7 @@
                 {#key isSaved}
                   <FontAwesomeIcon
                     icon={isSaved ? faStarSolid : faStarRegular}
-                    class="w-7 h-7"
+                    class="w-9 h-9"
                   />
                 {/key}
               </button>
@@ -266,13 +266,13 @@
               }
             };
           }}
-          class="hidden sm:inline"
+          class="hidden md:inline"
         >
           <input type="hidden" name="jobId" value={job.id} />
           <button
             type="submit"
             disabled={saving}
-            class="p-1.5 sm:p-2 transition-colors {isSaved ? 'text-amber-500' : 'text-[var(--dash-text-muted)] hover:text-amber-500'} disabled:opacity-50"
+            class="p-1.5 md:p-2 transition-colors {isSaved ? 'text-amber-500' : 'text-[var(--dash-text-muted)] hover:text-amber-500'} disabled:opacity-50"
             aria-label={isSaved ? "Unsave job" : "Save job"}
             title={isSaved ? "Unsave job" : "Save job"}
             onclick={(e) => e.stopPropagation()}
