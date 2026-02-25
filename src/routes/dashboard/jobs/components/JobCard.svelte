@@ -170,75 +170,6 @@
             </div>
           {/if}
 
-          <!-- Mobile action buttons (below score, hidden on md+) -->
-          {#if showSaveButton}
-            <div class="mt-2 flex flex-col gap-1 md:hidden">
-              <!-- Save button -->
-              <form
-                method="POST"
-                action={isSaved ? unsaveAction : saveAction}
-                use:enhance={() => {
-                  const wasSaved = isSaved;
-                  saving = true;
-                  onToggleSaved?.(!wasSaved);
-                  return async ({ result }) => {
-                    saving = false;
-                    if (result.type === "failure" || result.type === "error") {
-                      onToggleSaved?.(wasSaved);
-                    }
-                  };
-                }}
-              >
-                <input type="hidden" name="jobId" value={job.id} />
-                <button
-                  type="submit"
-                  disabled={saving}
-                  class="flex items-center gap-1 p-1 transition-colors {isSaved ? 'text-amber-500' : 'text-[var(--dash-text-muted)] hover:text-amber-500'} disabled:opacity-50"
-                  aria-label={isSaved ? "Unsave job" : "Save job"}
-                  onclick={(e) => e.stopPropagation()}
-                >
-                  {#key isSaved}
-                    <FontAwesomeIcon
-                      icon={isSaved ? faStarSolid : faStarRegular}
-                      class="w-6 h-6"
-                    />
-                  {/key}
-                  <span class="text-xs">{isSaved ? "Saved" : "Save"}</span>
-                </button>
-              </form>
-
-              <!-- Reject button -->
-              <form
-                method="POST"
-                action={rejectAction}
-                use:enhance={() => {
-                  rejecting = true;
-                  onToggleRejected?.(true);
-                  return async ({ result }) => {
-                    rejecting = false;
-                    if (result.type === "failure" || result.type === "error") {
-                      onToggleRejected?.(false);
-                    }
-                  };
-                }}
-              >
-                <input type="hidden" name="jobId" value={job.id} />
-                <button
-                  type="submit"
-                  disabled={rejecting || isRejected}
-                  class="flex items-center gap-1 p-1 transition-colors {isRejected ? 'text-red-500' : 'text-[var(--dash-text-muted)] hover:text-red-500'} disabled:opacity-50"
-                  aria-label="Not interested"
-                  onclick={(e) => e.stopPropagation()}
-                >
-                  <FontAwesomeIcon
-                    icon={faBan}
-                    class="w-6 h-6"
-                  />
-                  <span class="text-xs">{isRejected ? "Rejected" : "Not interested"}</span>
-                </button>
-              </form>
-            </div>
-          {/if}
         </div>
 
         <div class="flex-1 min-w-0">
@@ -291,76 +222,6 @@
 
       <!-- Action buttons -->
       <div class="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-      <!-- Desktop action buttons (hidden on mobile, shown on md+) -->
-      {#if showSaveButton}
-        <!-- Save button -->
-        <form
-          method="POST"
-          action={isSaved ? unsaveAction : saveAction}
-          use:enhance={() => {
-            const wasSaved = isSaved;
-            saving = true;
-            onToggleSaved?.(!wasSaved);
-            return async ({ result }) => {
-              saving = false;
-              if (result.type === "failure" || result.type === "error") {
-                onToggleSaved?.(wasSaved);
-              }
-            };
-          }}
-          class="hidden md:block"
-        >
-          <input type="hidden" name="jobId" value={job.id} />
-          <button
-            type="submit"
-            disabled={saving}
-            class="p-2 transition-colors {isSaved ? 'text-amber-500' : 'text-[var(--dash-text-muted)] hover:text-amber-500'} disabled:opacity-50"
-            aria-label={isSaved ? "Unsave job" : "Save job"}
-            title={isSaved ? "Unsave job" : "Save job"}
-            onclick={(e) => e.stopPropagation()}
-          >
-            {#key isSaved}
-              <FontAwesomeIcon
-                icon={isSaved ? faStarSolid : faStarRegular}
-                class="w-5 h-5"
-              />
-            {/key}
-          </button>
-        </form>
-
-        <!-- Reject button -->
-        <form
-          method="POST"
-          action={rejectAction}
-          use:enhance={() => {
-            rejecting = true;
-            onToggleRejected?.(true);
-            return async ({ result }) => {
-              rejecting = false;
-              if (result.type === "failure" || result.type === "error") {
-                onToggleRejected?.(false);
-              }
-            };
-          }}
-          class="hidden md:block"
-        >
-          <input type="hidden" name="jobId" value={job.id} />
-          <button
-            type="submit"
-            disabled={rejecting || isRejected}
-            class="p-2 transition-colors {isRejected ? 'text-red-500' : 'text-[var(--dash-text-muted)] hover:text-red-500'} disabled:opacity-50"
-            aria-label="Not interested"
-            title={isRejected ? "Already rejected" : "Not interested"}
-            onclick={(e) => e.stopPropagation()}
-          >
-            <FontAwesomeIcon
-              icon={faBan}
-              class="w-5 h-5"
-            />
-          </button>
-        </form>
-      {/if}
-
       <!-- External Link - hidden on mobile to save space -->
       {#if job.source_url}
         <a
@@ -396,8 +257,70 @@
     </div>
     </div>
 
-    <!-- Details Button - bottom right -->
-    <div class="flex justify-end mt-2">
+    <!-- Action buttons row -->
+    <div class="flex justify-end items-center gap-2 mt-2">
+      {#if showSaveButton}
+        <!-- Not interested button -->
+        <form
+          method="POST"
+          action={rejectAction}
+          use:enhance={() => {
+            rejecting = true;
+            onToggleRejected?.(true);
+            return async ({ result }) => {
+              rejecting = false;
+              if (result.type === "failure" || result.type === "error") {
+                onToggleRejected?.(false);
+              }
+            };
+          }}
+          class="inline"
+        >
+          <input type="hidden" name="jobId" value={job.id} />
+          <button
+            type="submit"
+            disabled={rejecting || isRejected}
+            class="px-3 py-1.5 text-xs border rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50 {isRejected ? 'bg-red-500/10 border-red-500/30 text-red-500' : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:border-red-500/50 hover:text-red-500'}"
+            onclick={(e) => e.stopPropagation()}
+          >
+            <FontAwesomeIcon icon={faBan} class="w-3 h-3" />
+            {isRejected ? "Rejected" : "Not interested"}
+          </button>
+        </form>
+
+        <!-- Save button -->
+        <form
+          method="POST"
+          action={isSaved ? unsaveAction : saveAction}
+          use:enhance={() => {
+            const wasSaved = isSaved;
+            saving = true;
+            onToggleSaved?.(!wasSaved);
+            return async ({ result }) => {
+              saving = false;
+              if (result.type === "failure" || result.type === "error") {
+                onToggleSaved?.(wasSaved);
+              }
+            };
+          }}
+          class="inline"
+        >
+          <input type="hidden" name="jobId" value={job.id} />
+          <button
+            type="submit"
+            disabled={saving}
+            class="px-3 py-1.5 text-xs border rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50 {isSaved ? 'bg-amber-500/10 border-amber-500/30 text-amber-500' : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:border-amber-500/50 hover:text-amber-500'}"
+            onclick={(e) => e.stopPropagation()}
+          >
+            {#key isSaved}
+              <FontAwesomeIcon icon={isSaved ? faStarSolid : faStarRegular} class="w-3 h-3" />
+            {/key}
+            {isSaved ? "Saved" : "Save"}
+          </button>
+        </form>
+      {/if}
+
+      <!-- Details button -->
       <a
         href="/dashboard/jobs/{job.id}"
         class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-border)] transition-colors flex items-center gap-1.5"
@@ -453,8 +376,70 @@
           </div>
         {/if}
 
-        <!-- Details Button -->
-        <div class="flex justify-end">
+        <!-- Action buttons row -->
+        <div class="flex justify-end items-center gap-2">
+          {#if showSaveButton}
+            <!-- Not interested button -->
+            <form
+              method="POST"
+              action={rejectAction}
+              use:enhance={() => {
+                rejecting = true;
+                onToggleRejected?.(true);
+                return async ({ result }) => {
+                  rejecting = false;
+                  if (result.type === "failure" || result.type === "error") {
+                    onToggleRejected?.(false);
+                  }
+                };
+              }}
+              class="inline"
+            >
+              <input type="hidden" name="jobId" value={job.id} />
+              <button
+                type="submit"
+                disabled={rejecting || isRejected}
+                class="px-3 py-1.5 text-xs border rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50 {isRejected ? 'bg-red-500/10 border-red-500/30 text-red-500' : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:border-red-500/50 hover:text-red-500'}"
+                onclick={(e) => e.stopPropagation()}
+              >
+                <FontAwesomeIcon icon={faBan} class="w-3 h-3" />
+                {isRejected ? "Rejected" : "Not interested"}
+              </button>
+            </form>
+
+            <!-- Save button -->
+            <form
+              method="POST"
+              action={isSaved ? unsaveAction : saveAction}
+              use:enhance={() => {
+                const wasSaved = isSaved;
+                saving = true;
+                onToggleSaved?.(!wasSaved);
+                return async ({ result }) => {
+                  saving = false;
+                  if (result.type === "failure" || result.type === "error") {
+                    onToggleSaved?.(wasSaved);
+                  }
+                };
+              }}
+              class="inline"
+            >
+              <input type="hidden" name="jobId" value={job.id} />
+              <button
+                type="submit"
+                disabled={saving}
+                class="px-3 py-1.5 text-xs border rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50 {isSaved ? 'bg-amber-500/10 border-amber-500/30 text-amber-500' : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:border-amber-500/50 hover:text-amber-500'}"
+                onclick={(e) => e.stopPropagation()}
+              >
+                {#key isSaved}
+                  <FontAwesomeIcon icon={isSaved ? faStarSolid : faStarRegular} class="w-3 h-3" />
+                {/key}
+                {isSaved ? "Saved" : "Save"}
+              </button>
+            </form>
+          {/if}
+
+          <!-- Details button -->
           <a
             href="/dashboard/jobs/{job.id}"
             class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-border)] transition-colors flex items-center gap-1.5"
