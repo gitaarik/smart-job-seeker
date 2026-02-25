@@ -602,12 +602,13 @@
               <!-- Not interested button -->
               <form
                 method="POST"
-                action="?/rejectJob"
+                action={isRejected(job.id) ? "?/unrejectJob" : "?/rejectJob"}
                 use:enhance={() => {
-                  toggleRejected(job.id, true);
+                  const wasRejected = isRejected(job.id);
+                  toggleRejected(job.id, !wasRejected);
                   return async ({ result }) => {
                     if (result.type === "failure" || result.type === "error") {
-                      toggleRejected(job.id, false);
+                      toggleRejected(job.id, wasRejected);
                     }
                   };
                 }}
@@ -616,12 +617,11 @@
                 <input type="hidden" name="jobId" value={job.id} />
                 <button
                   type="submit"
-                  disabled={isRejected(job.id)}
-                  class="px-3 py-1.5 text-xs border rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50 {isRejected(job.id) ? 'bg-red-500/10 border-red-500/30 text-red-500' : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:border-red-500/50 hover:text-red-500'}"
+                  class="px-3 py-1.5 text-xs border rounded-lg transition-colors flex items-center gap-1.5 {isRejected(job.id) ? 'bg-gray-500/20 border-gray-500/40 text-gray-500' : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-gray-500/10 hover:border-gray-500/30'}"
                   onclick={(e) => e.stopPropagation()}
                 >
                   <FontAwesomeIcon icon={faBan} class="w-3 h-3" />
-                  {isRejected(job.id) ? "Rejected" : "Not interested"}
+                  Not interested
                 </button>
               </form>
 
@@ -643,7 +643,7 @@
                 <input type="hidden" name="jobId" value={job.id} />
                 <button
                   type="submit"
-                  class="px-3 py-1.5 text-xs border rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50 {isSaved(job.id) ? 'bg-amber-500/10 border-amber-500/30 text-amber-500' : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:border-amber-500/50 hover:text-amber-500'}"
+                  class="px-3 py-1.5 text-xs border rounded-lg transition-colors flex items-center gap-1.5 {isSaved(job.id) ? 'bg-green-500/20 border-green-500/40 text-green-600' : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-green-500/10 hover:border-green-500/30 hover:text-green-600'}"
                   onclick={(e) => e.stopPropagation()}
                 >
                   <FontAwesomeIcon icon={isSaved(job.id) ? faStarSolid : faStarRegular} class="w-3 h-3" />
@@ -654,7 +654,7 @@
               <!-- Details button -->
               <a
                 href="/dashboard/jobs/{job.id}"
-                class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-border)] transition-colors flex items-center gap-1.5"
+                class="px-3 py-1.5 text-xs bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-500 hover:bg-blue-500/20 hover:border-blue-500/50 transition-colors flex items-center gap-1.5"
               >
                 Details
                 <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />

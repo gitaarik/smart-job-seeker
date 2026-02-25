@@ -371,4 +371,48 @@ export const actions: Actions = {
 
     return { success: true, action: "rejected", jobId };
   },
+
+  unrejectJob: async ({ request, locals, cookies }) => {
+    const user = locals.user;
+    if (!user) {
+      return fail(401, { error: "Not authenticated" });
+    }
+
+    const profileId = await getSelectedProfileId(cookies, user.id);
+    if (!profileId) {
+      return fail(400, { error: "No profile selected" });
+    }
+
+    const formData = await request.formData();
+    const jobId = parseInt(formData.get("jobId") as string);
+
+    if (isNaN(jobId)) {
+      return fail(400, { error: "Invalid job ID" });
+    }
+
+    // Find the match
+    const match = await db.job_matches.findFirst({
+      where: { profile: profileId, job: jobId },
+    });
+
+    if (match) {
+      // If the match has AI scoring data, update status to "new"
+      // If it was manually rejected (score=0), delete it
+      if (match.score === 0 && !match.reasoning) {
+        await db.job_matches.delete({
+          where: { id: match.id },
+        });
+      } else {
+        await db.job_matches.update({
+          where: { id: match.id },
+          data: {
+            status: "new",
+            date_updated: new Date(),
+          },
+        });
+      }
+    }
+
+    return { success: true, action: "unrejected", jobId };
+  },
 };
