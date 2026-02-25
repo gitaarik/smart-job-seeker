@@ -309,13 +309,6 @@
       {#if expandedContent}
         {@render expandedContent()}
       {:else}
-        <!-- Match Summary -->
-        {#if hasMatch && match!.match_summary}
-          <p class="text-sm text-[var(--dash-text-secondary)] italic">
-            {match!.match_summary}
-          </p>
-        {/if}
-
         <!-- Default expanded content: Required Skills and Description -->
         {#if skillsRequired.length > 0}
           <div>
@@ -360,6 +353,18 @@
                 View full description →
               </a>
             {/if}
+          </div>
+        {/if}
+
+        <!-- Match Summary -->
+        {#if hasMatch && match!.match_summary}
+          <div>
+            <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">
+              Match Analysis
+            </p>
+            <p class="text-sm text-[var(--dash-text)]">
+              {match!.match_summary}
+            </p>
           </div>
         {/if}
       {/if}

@@ -430,13 +430,6 @@
           onToggleSaved={(saved) => toggleSaved(job.id, saved)}
         >
           {#snippet expandedContent()}
-            <!-- Match Summary -->
-            {#if getMatch(job.id)?.match_summary}
-              <p class="text-sm text-[var(--dash-text-secondary)] italic">
-                {getMatch(job.id)!.match_summary}
-              </p>
-            {/if}
-
             <!-- Job Info Grid -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               {#if job.salary_min || job.salary_max}
@@ -574,6 +567,20 @@
                     View full description →
                   </a>
                 {/if}
+              </div>
+            {/if}
+
+            <!-- Match Summary -->
+            {#if getMatch(job.id)?.match_summary}
+              <div>
+                <p
+                  class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1"
+                >
+                  Match Analysis
+                </p>
+                <p class="text-sm text-[var(--dash-text)]">
+                  {getMatch(job.id)!.match_summary}
+                </p>
               </div>
             {/if}
 
