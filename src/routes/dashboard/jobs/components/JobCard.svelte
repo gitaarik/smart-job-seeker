@@ -81,10 +81,31 @@
   let saving = $state(false);
   let rejecting = $state(false);
 
-  function getScoreColor(score: number): string {
-    if (score >= 75) return "text-[var(--dash-success)] bg-[var(--dash-success-light)]"; // green - strong match
-    if (score >= 60) return "text-[var(--dash-info)] bg-[var(--dash-info-light)]"; // blue - good match
-    return "text-[var(--dash-text-muted)] bg-[var(--dash-bg)]"; // gray - moderate/weak match
+  function getScoreGradient(score: number): { bg: string; text: string } {
+    // Gradient from blue (0) -> cyan (50) -> green (100)
+    // Clamp score to 0-100
+    const s = Math.max(0, Math.min(100, score));
+
+    // Color stops: blue (210°) -> cyan (180°) -> green (140°)
+    // Saturation and lightness for a nice look
+    let h: number, sat: number, lightBg: number, lightText: number;
+
+    if (s <= 50) {
+      // Blue to Cyan: hue 210 -> 180
+      h = 210 - (s / 50) * 30;
+    } else {
+      // Cyan to Green: hue 180 -> 140
+      h = 180 - ((s - 50) / 50) * 40;
+    }
+
+    sat = 60 + (s / 100) * 20; // 60% to 80% saturation as score increases
+    lightBg = 92 - (s / 100) * 10; // background: 92% to 82% lightness
+    lightText = 35 - (s / 100) * 10; // text: 35% to 25% lightness (darker for contrast)
+
+    return {
+      bg: `hsl(${h}, ${sat}%, ${lightBg}%)`,
+      text: `hsl(${h}, ${sat}%, ${lightText}%)`
+    };
   }
 
   function formatSalary(
@@ -147,7 +168,7 @@
 
 <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden relative">
   <!-- Desktop: Chevron and Score in top right corner -->
-  <div class="hidden md:flex flex-col items-center gap-2 absolute top-3 right-3">
+  <div class="hidden md:flex flex-col items-center absolute top-3 right-3">
     {#if onToggleExpand}
       <button
         type="button"
@@ -167,11 +188,13 @@
 
     <!-- Score Badge -->
     {#if hasMatch}
+      {@const colors = getScoreGradient(match!.score)}
       <div
-        class="w-12 h-12 rounded-lg flex flex-col items-center justify-center {getScoreColor(match!.score)}"
+        class="w-15 h-15 rounded-lg flex flex-col items-center justify-center"
+        style="background-color: {colors.bg}; color: {colors.text};"
       >
-        <span class="font-bold text-xl leading-none">{match!.score}</span>
-        <span class="text-[8px] opacity-60">AI Score</span>
+        <span class="font-bold text-2xl leading-none">{match!.score}</span>
+        <span class="text-xs opacity-60 whitespace-nowrap">AI Score</span>
       </div>
     {:else}
       <div
@@ -261,8 +284,10 @@
 
         <!-- Score Badge -->
         {#if hasMatch}
+          {@const colors = getScoreGradient(match!.score)}
           <div
-            class="w-10 h-10 rounded-lg flex flex-col items-center justify-center {getScoreColor(match!.score)}"
+            class="w-10 h-10 rounded-lg flex flex-col items-center justify-center"
+            style="background-color: {colors.bg}; color: {colors.text};"
           >
             <span class="font-bold text-lg leading-none">{match!.score}</span>
             <span class="text-[7px] opacity-60">AI Score</span>
