@@ -139,25 +139,23 @@
 </script>
 
 <div class="bg-[var(--dash-card)] rounded-lg border overflow-hidden relative transition-all {isRejected ? 'opacity-50 grayscale border-[var(--dash-border)]' : isSaved ? 'border-green-500 ring-2 ring-green-500/30' : 'border-[var(--dash-border)]'}">
-  <!-- Desktop: Chevron in top right corner -->
-  <div class="hidden md:flex absolute top-3 right-3">
-    {#if onToggleExpand}
-      <button
-        type="button"
-        onclick={(e) => {
-          e.stopPropagation();
-          onToggleExpand?.();
-        }}
-        class="p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
-        aria-label={isExpanded ? "Collapse" : "Expand"}
-      >
-        <FontAwesomeIcon
-          icon={isExpanded ? faChevronUp : faChevronDown}
-          class="w-4 h-4"
-        />
-      </button>
-    {/if}
-  </div>
+  <!-- Chevron in top right corner -->
+  {#if onToggleExpand}
+    <button
+      type="button"
+      onclick={(e) => {
+        e.stopPropagation();
+        onToggleExpand?.();
+      }}
+      class="absolute top-3 right-3 p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
+      aria-label={isExpanded ? "Collapse" : "Expand"}
+    >
+      <FontAwesomeIcon
+        icon={isExpanded ? faChevronUp : faChevronDown}
+        class="w-4 h-4"
+      />
+    </button>
+  {/if}
 
   <!-- Header -->
   <div class="p-3 sm:p-4 hover:bg-[var(--dash-bg)] transition-colors">
@@ -222,28 +220,14 @@
 
       </button>
 
-      <!-- Mobile: Chevron and Score on the right -->
-      <div class="flex flex-col items-center gap-1 flex-shrink-0 md:hidden">
-        {#if onToggleExpand}
-          <button
-            type="button"
-            onclick={(e) => {
-              e.stopPropagation();
-              onToggleExpand?.();
-            }}
-            class="p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
-            aria-label={isExpanded ? "Collapse" : "Expand"}
-          >
-            <FontAwesomeIcon
-              icon={isExpanded ? faChevronUp : faChevronDown}
-              class="w-4 h-4"
-            />
-          </button>
-        {/if}
-
-        <!-- Score Badge -->
+      <!-- Mobile: Score on the right, below chevron -->
+      <button
+        type="button"
+        onclick={() => onToggleExpand?.()}
+        class="flex-shrink-0 md:hidden self-end"
+      >
         <ScoreBadge score={match?.score ?? null} size="lg" />
-      </div>
+      </button>
     </div>
   </div>
 
@@ -332,10 +316,11 @@
         <button
           type="submit"
           disabled={rejecting}
-          class="px-3 py-1.5 text-xs border rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50 {isRejected ? 'bg-gray-500/20 border-gray-500/40 text-gray-500' : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-gray-500/10 hover:border-gray-500/30'}"
+          class="px-3 py-1.5 text-xs border rounded-lg transition-colors flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50 {isRejected ? 'bg-gray-500/20 border-gray-500/40 text-gray-500' : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-gray-500/10 hover:border-gray-500/30'}"
         >
           <FontAwesomeIcon icon={faBan} class="w-3 h-3" />
-          Not interested
+          <span class="sm:hidden">No interest</span>
+          <span class="hidden sm:inline">Not interested</span>
         </button>
       </form>
 
@@ -360,7 +345,7 @@
         <button
           type="submit"
           disabled={saving}
-          class="px-3 py-1.5 text-xs border rounded-lg transition-colors flex items-center gap-1.5 disabled:opacity-50 {isSaved ? 'bg-green-500/20 border-green-500/40 text-green-600' : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-green-500/10 hover:border-green-500/30 hover:text-green-600'}"
+          class="px-3 py-1.5 text-xs border rounded-lg transition-colors flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50 {isSaved ? 'bg-green-500/20 border-green-500/40 text-green-600' : 'bg-[var(--dash-bg)] border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-green-500/10 hover:border-green-500/30 hover:text-green-600'}"
         >
           {#key isSaved}
             <FontAwesomeIcon icon={isSaved ? faStarSolid : faStarRegular} class="w-3 h-3" />
@@ -373,9 +358,10 @@
     <!-- Details button -->
     <a
       href="/dashboard/jobs/{job.id}"
-      class="px-3 py-1.5 text-xs bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-500 hover:bg-blue-500/20 hover:border-blue-500/50 transition-colors flex items-center gap-1.5"
+      class="px-3 py-1.5 text-xs bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-500 hover:bg-blue-500/20 hover:border-blue-500/50 transition-colors flex items-center gap-1.5 whitespace-nowrap"
     >
-      Job Description
+      <span class="sm:hidden">Details</span>
+      <span class="hidden sm:inline">Job Description</span>
       <FontAwesomeIcon icon={faArrowRight} class="w-3 h-3" />
     </a>
   </div>

@@ -24,6 +24,7 @@
     faPaperPlane,
     faRobot,
     faSearch,
+    faSliders,
     faStickyNote,
     faTimes,
     faTrash,
@@ -57,6 +58,11 @@
           label: "Search Tasks",
           href: "/dashboard/jobs/settings",
           icon: faSearch,
+        },
+        {
+          label: "Match Config",
+          href: "/dashboard/jobs/preferences",
+          icon: faSliders,
         },
         {
           label: "Job Matches",
@@ -234,13 +240,18 @@
     }
 
     // For plain paths
-    if (currentPath === href || currentPath.startsWith(href + "/")) {
-      // Special case: if URL has a filter param but href doesn't, don't match
-      // This prevents "All Jobs" from matching when viewing "?filter=matches" or "?filter=saved"
+    if (currentPath === href) {
+      // Exact match - but check for filter params
       const currentParams = new URLSearchParams(currentSearch);
       if (currentParams.get("filter") && !hrefSearch) {
         return false;
       }
+      return true;
+    }
+
+    // Subpath matching - but NOT for /dashboard/jobs (All Jobs)
+    // This prevents "All Jobs" from matching /dashboard/jobs/settings, /dashboard/jobs/123, etc.
+    if (href !== "/dashboard/jobs" && currentPath.startsWith(href + "/")) {
       return true;
     }
 

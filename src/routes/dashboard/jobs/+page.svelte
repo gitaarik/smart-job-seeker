@@ -60,6 +60,8 @@
   function toggleSaved(jobId: number, save: boolean) {
     if (save) {
       savedJobIds[jobId] = true;
+      // Also unreject if it was rejected
+      delete rejectedJobIds[jobId];
     } else {
       delete savedJobIds[jobId];
     }
