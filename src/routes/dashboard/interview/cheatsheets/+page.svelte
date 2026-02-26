@@ -182,44 +182,57 @@
   {:else}
     <div class="space-y-3">
       {#each cheatsheets as sheet (sheet.id)}
-        <div
-          class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden"
-        >
-          <!-- Header -->
+        <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden relative transition-all">
+          <!-- Chevron in top right corner -->
+          <button
+            type="button"
+            onclick={(e) => {
+              e.stopPropagation();
+              toggleExpand(sheet.id);
+            }}
+            class="absolute top-3 right-3 p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors z-10"
+            aria-label={expandedId === sheet.id ? "Collapse" : "Expand"}
+          >
+            <FontAwesomeIcon
+              icon={expandedId === sheet.id ? faChevronUp : faChevronDown}
+              class="w-4 h-4"
+            />
+          </button>
+
+          <!-- Header (clickable to expand/collapse) -->
           <button
             type="button"
             onclick={() => toggleExpand(sheet.id)}
-            class="w-full flex items-center justify-between p-4 hover:bg-[var(--dash-bg)] transition-colors text-left"
+            class="w-full p-3 sm:p-4 hover:bg-[var(--dash-bg)] transition-colors text-left cursor-pointer"
           >
-            <div class="flex items-center gap-4 flex-1 min-w-0">
-              <div
-                class="w-10 h-10 rounded-full bg-[var(--dash-bg)] flex items-center justify-center flex-shrink-0"
-              >
-                <FontAwesomeIcon
-                  icon={faFileAlt}
-                  class="w-5 h-5 text-purple-600"
-                />
+            <div class="flex items-start gap-3">
+              <!-- Desktop: Icon on the left -->
+              <div class="hidden md:flex flex-shrink-0">
+                <div class="w-12 h-12 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center">
+                  <FontAwesomeIcon icon={faFileAlt} class="w-6 h-6 text-purple-600" />
+                </div>
               </div>
 
               <div class="flex-1 min-w-0">
-                <h3 class="font-medium text-[var(--dash-text)] truncate">
+                <!-- Title -->
+                <h3 class="font-medium text-[var(--dash-text)] text-sm sm:text-base line-clamp-2 sm:truncate pr-8">
                   {sheet.title || "Untitled"}
                 </h3>
-                <p class="text-sm text-[var(--dash-text-secondary)] truncate">
-                  {getPreview(sheet.content)}
-                </p>
+              </div>
+
+              <!-- Mobile: Icon on the right, below chevron -->
+              <div class="flex-shrink-0 md:hidden flex flex-col items-end">
+                <div class="h-6 mb-1"></div> <!-- Spacer for chevron -->
+                <div class="w-12 h-12 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center">
+                  <FontAwesomeIcon icon={faFileAlt} class="w-6 h-6 text-purple-600" />
+                </div>
               </div>
             </div>
-
-            <FontAwesomeIcon
-              icon={expandedId === sheet.id ? faChevronUp : faChevronDown}
-              class="w-4 h-4 text-[var(--dash-text-secondary)]"
-            />
           </button>
 
           <!-- Expanded Content -->
           {#if expandedId === sheet.id}
-            <div class="border-t border-[var(--dash-border)] p-4">
+            <div class="border-t border-[var(--dash-border)] p-3 sm:p-4">
               {#if editingId === sheet.id}
                 <!-- Edit Mode -->
                 <form
@@ -280,7 +293,7 @@
                 </form>
               {:else}
                 <!-- View Mode -->
-                <div class="space-y-4">
+                <div class="space-y-3 sm:space-y-4">
                   {#if sheet.content}
                     <div class="cheatsheet-content text-sm text-[var(--dash-text)]">
                       {@html sheet.content}
@@ -290,31 +303,30 @@
                       No content yet
                     </p>
                   {/if}
-
-                  <div
-                    class="flex items-center justify-end gap-2 pt-2 border-t border-[var(--dash-border)]"
-                  >
-                    <button
-                      type="button"
-                      onclick={() => startEdit(sheet)}
-                      class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
-                      aria-label="Edit"
-                    >
-                      <FontAwesomeIcon icon={faPencil} class="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onclick={() => (deleteId = sheet.id)}
-                      class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
-                      aria-label="Delete"
-                    >
-                      <FontAwesomeIcon icon={faTrash} class="w-4 h-4" />
-                    </button>
-                  </div>
                 </div>
               {/if}
             </div>
           {/if}
+
+          <!-- Footer with action buttons -->
+          <div class="border-t border-[var(--dash-border)] px-3 py-2 sm:px-4 flex justify-end md:justify-start items-center gap-2">
+            <button
+              type="button"
+              onclick={() => deleteId = sheet.id}
+              class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-500 transition-colors flex items-center gap-1.5 whitespace-nowrap"
+            >
+              <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
+              Delete
+            </button>
+            <button
+              type="button"
+              onclick={() => startEdit(sheet)}
+              class="px-3 py-1.5 text-xs bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-500 hover:bg-blue-500/20 hover:border-blue-500/50 transition-colors flex items-center gap-1.5 whitespace-nowrap"
+            >
+              <FontAwesomeIcon icon={faPencil} class="w-3 h-3" />
+              Edit
+            </button>
+          </div>
         </div>
       {/each}
     </div>

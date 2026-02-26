@@ -1,21 +1,20 @@
 <script lang="ts">
-  import type { ActionData, PageData } from "./$types";
-  import { enhance } from "$app/forms";
+  import type { PageData } from "./$types";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faBook,
-    faCheck,
     faChevronDown,
     faChevronUp,
     faPencil,
-    faTimes,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import EmptyState from "../../profile/components/EmptyState.svelte";
   import DeleteConfirmModal from "../../profile/components/DeleteConfirmModal.svelte";
+  import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
+  import { invalidateAll } from "$app/navigation";
 
-  let { data, form }: { data: PageData; form: ActionData } = $props();
+  let { data }: { data: PageData } = $props();
 
   let stories = $derived(data.stories);
   let expandedId = $state<number | null>(null);
@@ -52,6 +51,12 @@
   let editResult = $state("");
   let editReflection = $state("");
 
+  // Save states
+  type SaveState = "idle" | "saving" | "saved" | "error";
+  let addSaveState = $state<SaveState>("idle");
+  let editSaveState = $state<SaveState>("idle");
+  let errorMessage = $state("");
+
   function toggleExpand(id: number) {
     if (editingId === id) return;
     expandedId = expandedId === id ? null : id;
@@ -67,10 +72,12 @@
     editAction = story.action || "";
     editResult = story.result || "";
     editReflection = story.reflection || "";
+    editSaveState = "idle";
   }
 
   function cancelEdit() {
     editingId = null;
+    editSaveState = "idle";
   }
 
   function resetAddForm() {
@@ -82,36 +89,133 @@
     newAction = "";
     newResult = "";
     newReflection = "";
+    addSaveState = "idle";
+    errorMessage = "";
   }
 
-  function handleAddSubmit() {
-    return async ({
-      result,
-      update,
-    }: {
-      result: { type: string };
-      update: () => Promise<void>;
-    }) => {
-      await update();
-      if (result.type === "success") {
+  async function saveNewStory() {
+    if (!newTitle.trim()) {
+      errorMessage = "Title is required";
+      addSaveState = "error";
+      setTimeout(() => (addSaveState = "idle"), 2000);
+      return;
+    }
+
+    addSaveState = "saving";
+    errorMessage = "";
+
+    try {
+      const response = await fetch("/api/interview-stories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          profile_id: data.profileId,
+          title: newTitle,
+          category: newCategory,
+          situation: newSituation,
+          task: newTask,
+          action: newAction,
+          result: newResult,
+          reflection: newReflection,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        errorMessage = error.error || "Failed to create story";
+        addSaveState = "error";
+        setTimeout(() => (addSaveState = "idle"), 2000);
+        return;
+      }
+
+      addSaveState = "saved";
+      await invalidateAll();
+      setTimeout(() => {
         resetAddForm();
-      }
-    };
+      }, 500);
+    } catch (error) {
+      console.error("Save failed:", error);
+      errorMessage = "Failed to create story";
+      addSaveState = "error";
+      setTimeout(() => (addSaveState = "idle"), 2000);
+    }
   }
 
-  function handleEditSubmit() {
-    return async ({
-      result,
-      update,
-    }: {
-      result: { type: string };
-      update: () => Promise<void>;
-    }) => {
-      await update();
-      if (result.type === "success") {
-        editingId = null;
+  async function saveEditedStory() {
+    if (!editTitle.trim()) {
+      errorMessage = "Title is required";
+      editSaveState = "error";
+      setTimeout(() => (editSaveState = "idle"), 2000);
+      return;
+    }
+
+    editSaveState = "saving";
+    errorMessage = "";
+
+    try {
+      const response = await fetch("/api/interview-stories", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          profile_id: data.profileId,
+          id: editingId,
+          title: editTitle,
+          category: editCategory,
+          situation: editSituation,
+          task: editTask,
+          action: editAction,
+          result: editResult,
+          reflection: editReflection,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        errorMessage = error.error || "Failed to update story";
+        editSaveState = "error";
+        setTimeout(() => (editSaveState = "idle"), 2000);
+        return;
       }
-    };
+
+      editSaveState = "saved";
+      await invalidateAll();
+      setTimeout(() => {
+        editingId = null;
+        editSaveState = "idle";
+      }, 500);
+    } catch (error) {
+      console.error("Save failed:", error);
+      errorMessage = "Failed to update story";
+      editSaveState = "error";
+      setTimeout(() => (editSaveState = "idle"), 2000);
+    }
+  }
+
+  async function deleteStory() {
+    if (deleteId === null) return;
+
+    try {
+      const response = await fetch("/api/interview-stories", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          profile_id: data.profileId,
+          id: deleteId,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        errorMessage = error.error || "Failed to delete story";
+        return;
+      }
+
+      await invalidateAll();
+      deleteId = null;
+    } catch (error) {
+      console.error("Delete failed:", error);
+      errorMessage = "Failed to delete story";
+    }
   }
 
   function getCategoryLabel(value: string | null): string {
@@ -130,20 +234,17 @@
     onAdd={() => (showAddForm = true)}
   />
 
-  {#if form?.error}
+  {#if errorMessage && (addSaveState === "error" || editSaveState === "error")}
     <div
       class="bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg p-4"
     >
-      <p class="text-[var(--dash-error)] text-sm">{form.error}</p>
+      <p class="text-[var(--dash-error)] text-sm">{errorMessage}</p>
     </div>
   {/if}
 
   <!-- Add Form -->
   {#if showAddForm}
-    <form
-      method="POST"
-      action="?/create"
-      use:enhance={handleAddSubmit}
+    <div
       class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-primary)] p-4"
     >
       <h3 class="font-medium text-[var(--dash-text)] mb-4">
@@ -161,10 +262,8 @@
             <input
               type="text"
               id="new-title"
-              name="title"
               bind:value={newTitle}
               placeholder="e.g., Led migration to microservices"
-              required
               class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
             />
           </div>
@@ -178,7 +277,6 @@
             </label>
             <select
               id="new-category"
-              name="category"
               bind:value={newCategory}
               class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
             >
@@ -203,11 +301,10 @@
           </label>
           <textarea
             id="new-situation"
-            name="situation"
             bind:value={newSituation}
             rows={3}
             placeholder="Describe the context and background..."
-            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y min-h-[120px] sm:min-h-0"
           ></textarea>
         </div>
 
@@ -220,11 +317,10 @@
           </label>
           <textarea
             id="new-task"
-            name="task"
             bind:value={newTask}
             rows={2}
             placeholder="What was your responsibility or goal?"
-            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y min-h-[100px] sm:min-h-0"
           ></textarea>
         </div>
 
@@ -237,11 +333,10 @@
           </label>
           <textarea
             id="new-action"
-            name="action"
             bind:value={newAction}
             rows={4}
             placeholder="What specific steps did you take?"
-            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y min-h-[150px] sm:min-h-0"
           ></textarea>
         </div>
 
@@ -254,11 +349,10 @@
           </label>
           <textarea
             id="new-result"
-            name="result"
             bind:value={newResult}
             rows={3}
             placeholder="What was the outcome? Include metrics if possible."
-            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y min-h-[120px] sm:min-h-0"
           ></textarea>
         </div>
 
@@ -275,11 +369,10 @@
           </label>
           <textarea
             id="new-reflection"
-            name="reflection"
             bind:value={newReflection}
             rows={2}
             placeholder="What did you learn? What would you do differently?"
-            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
+            class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y min-h-[100px] sm:min-h-0"
           ></textarea>
         </div>
       </div>
@@ -292,14 +385,9 @@
         >
           Cancel
         </button>
-        <button
-          type="submit"
-          class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
-        >
-          Add Story
-        </button>
+        <SectionSaveButton state={addSaveState} onClick={saveNewStory} />
       </div>
-    </form>
+    </div>
   {/if}
 
   <!-- Stories List -->
@@ -314,286 +402,254 @@
   {:else}
     <div class="space-y-3">
       {#each stories as story (story.id)}
-        <div
-          class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden"
-        >
-          <!-- Header -->
+        <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden relative transition-all">
+          <!-- Chevron in top right corner -->
+          <button
+            type="button"
+            onclick={(e) => {
+              e.stopPropagation();
+              toggleExpand(story.id);
+            }}
+            class="absolute top-3 right-3 p-1.5 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors z-10"
+            aria-label={expandedId === story.id ? "Collapse" : "Expand"}
+          >
+            <FontAwesomeIcon
+              icon={expandedId === story.id ? faChevronUp : faChevronDown}
+              class="w-4 h-4"
+            />
+          </button>
+
+          <!-- Header (clickable to expand/collapse) -->
           <button
             type="button"
             onclick={() => toggleExpand(story.id)}
-            class="w-full flex items-center justify-between p-4 hover:bg-[var(--dash-bg)] transition-colors text-left"
+            class="w-full p-3 sm:p-4 hover:bg-[var(--dash-bg)] transition-colors text-left cursor-pointer"
           >
-            <div class="flex items-center gap-4 flex-1 min-w-0">
-              <div
-                class="w-10 h-10 rounded-full bg-[var(--dash-bg)] flex items-center justify-center flex-shrink-0"
-              >
-                <FontAwesomeIcon icon={faBook} class="w-5 h-5 text-blue-600" />
+            <div class="flex items-start gap-3">
+              <!-- Desktop: Icon on the left -->
+              <div class="hidden md:flex flex-shrink-0">
+                <div class="w-12 h-12 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center">
+                  <FontAwesomeIcon icon={faBook} class="w-6 h-6 text-blue-600" />
+                </div>
               </div>
 
               <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2 flex-wrap">
-                  <h3 class="font-medium text-[var(--dash-text)] truncate">
-                    {story.title || "Untitled Story"}
-                  </h3>
+                <!-- Title -->
+                <h3 class="font-medium text-[var(--dash-text)] text-sm sm:text-base line-clamp-2 sm:truncate pr-8">
+                  {story.title || "Untitled Story"}
+                </h3>
+
+                <!-- Category -->
+                <div class="flex items-center gap-2 sm:gap-3 mt-1 text-xs sm:text-sm text-[var(--dash-text-secondary)] flex-wrap">
                   {#if story.category}
-                    <span
-                      class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-bg)] text-gray-600"
-                    >
+                    <span class="px-2 py-0.5 rounded-full bg-[var(--dash-bg)] text-gray-600">
                       {getCategoryLabel(story.category)}
                     </span>
                   {/if}
                 </div>
-                <p class="text-sm text-[var(--dash-text-secondary)] truncate">
-                  {
-                    story.situation?.substring(0, 100) ||
-                      "No situation described"
-                  }
-                  {#if                 story.situation &&
-                  story.situation.length > 100}...{/if}
-                </p>
+              </div>
+
+              <!-- Mobile: Icon on the right, below chevron -->
+              <div class="flex-shrink-0 md:hidden flex flex-col items-end">
+                <div class="h-6 mb-1"></div> <!-- Spacer for chevron -->
+                <div class="w-12 h-12 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center">
+                  <FontAwesomeIcon icon={faBook} class="w-6 h-6 text-blue-600" />
+                </div>
               </div>
             </div>
-
-            <FontAwesomeIcon
-              icon={expandedId === story.id ? faChevronUp : faChevronDown}
-              class="w-4 h-4 text-[var(--dash-text-secondary)]"
-            />
           </button>
 
           <!-- Expanded Content -->
           {#if expandedId === story.id}
-            <div class="border-t border-[var(--dash-border)] p-4">
+            <div class="border-t border-[var(--dash-border)] p-3 sm:p-4">
               {#if editingId === story.id}
                 <!-- Edit Mode -->
-                <form
-                  method="POST"
-                  action="?/update"
-                  use:enhance={handleEditSubmit}
-                >
-                  <input type="hidden" name="id" value={story.id} />
-                  <div class="space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label
-                          for="edit-title-{story.id}"
-                          class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
-                        >
-                          Title <span class="text-[var(--dash-error)]">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          id="edit-title-{story.id}"
-                          name="title"
-                          bind:value={editTitle}
-                          required
-                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                        />
-                      </div>
-
-                      <div>
-                        <label
-                          for="edit-category-{story.id}"
-                          class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
-                        >
-                          Category
-                        </label>
-                        <select
-                          id="edit-category-{story.id}"
-                          name="category"
-                          bind:value={editCategory}
-                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                        >
-                          <option value="">Select a category</option>
-                          {#each categories as category}
-                            <option value={category.value}>
-                              {category.label}
-                            </option>
-                          {/each}
-                        </select>
-                      </div>
+                <div class="space-y-4">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label
+                        for="edit-title-{story.id}"
+                        class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
+                      >
+                        Title <span class="text-[var(--dash-error)]">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        id="edit-title-{story.id}"
+                        bind:value={editTitle}
+                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                      />
                     </div>
 
                     <div>
                       <label
-                        for="edit-situation-{story.id}"
+                        for="edit-category-{story.id}"
                         class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
                       >
-                        Situation
+                        Category
                       </label>
-                      <textarea
-                        id="edit-situation-{story.id}"
-                        name="situation"
-                        bind:value={editSituation}
-                        rows={3}
-                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
-                      ></textarea>
-                    </div>
-
-                    <div>
-                      <label
-                        for="edit-task-{story.id}"
-                        class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
+                      <select
+                        id="edit-category-{story.id}"
+                        bind:value={editCategory}
+                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                       >
-                        Task
-                      </label>
-                      <textarea
-                        id="edit-task-{story.id}"
-                        name="task"
-                        bind:value={editTask}
-                        rows={2}
-                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
-                      ></textarea>
-                    </div>
-
-                    <div>
-                      <label
-                        for="edit-action-{story.id}"
-                        class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
-                      >
-                        Action
-                      </label>
-                      <textarea
-                        id="edit-action-{story.id}"
-                        name="action"
-                        bind:value={editAction}
-                        rows={4}
-                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
-                      ></textarea>
-                    </div>
-
-                    <div>
-                      <label
-                        for="edit-result-{story.id}"
-                        class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
-                      >
-                        Result
-                      </label>
-                      <textarea
-                        id="edit-result-{story.id}"
-                        name="result"
-                        bind:value={editResult}
-                        rows={3}
-                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
-                      ></textarea>
-                    </div>
-
-                    <div>
-                      <label
-                        for="edit-reflection-{story.id}"
-                        class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
-                      >
-                        Reflection (optional)
-                      </label>
-                      <textarea
-                        id="edit-reflection-{story.id}"
-                        name="reflection"
-                        bind:value={editReflection}
-                        rows={2}
-                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
-                      ></textarea>
+                        <option value="">Select a category</option>
+                        {#each categories as category}
+                          <option value={category.value}>
+                            {category.label}
+                          </option>
+                        {/each}
+                      </select>
                     </div>
                   </div>
 
-                  <div class="flex justify-end gap-2 mt-4">
-                    <button
-                      type="button"
-                      onclick={cancelEdit}
-                      class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
-                      aria-label="Cancel"
+                  <div>
+                    <label
+                      for="edit-situation-{story.id}"
+                      class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
                     >
-                      <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
-                    </button>
-                    <button
-                      type="submit"
-                      class="p-2 text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] transition-colors"
-                      aria-label="Save"
-                    >
-                      <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
-                    </button>
+                      Situation
+                    </label>
+                    <textarea
+                      id="edit-situation-{story.id}"
+                      bind:value={editSituation}
+                      rows={3}
+                      class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y min-h-[120px] sm:min-h-0"
+                    ></textarea>
                   </div>
-                </form>
+
+                  <div>
+                    <label
+                      for="edit-task-{story.id}"
+                      class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
+                    >
+                      Task
+                    </label>
+                    <textarea
+                      id="edit-task-{story.id}"
+                      bind:value={editTask}
+                      rows={2}
+                      class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y min-h-[100px] sm:min-h-0"
+                    ></textarea>
+                  </div>
+
+                  <div>
+                    <label
+                      for="edit-action-{story.id}"
+                      class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
+                    >
+                      Action
+                    </label>
+                    <textarea
+                      id="edit-action-{story.id}"
+                      bind:value={editAction}
+                      rows={4}
+                      class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y min-h-[150px] sm:min-h-0"
+                    ></textarea>
+                  </div>
+
+                  <div>
+                    <label
+                      for="edit-result-{story.id}"
+                      class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
+                    >
+                      Result
+                    </label>
+                    <textarea
+                      id="edit-result-{story.id}"
+                      bind:value={editResult}
+                      rows={3}
+                      class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y min-h-[120px] sm:min-h-0"
+                    ></textarea>
+                  </div>
+
+                  <div>
+                    <label
+                      for="edit-reflection-{story.id}"
+                      class="block text-sm font-semibold text-[var(--dash-text)] mb-1"
+                    >
+                      Reflection (optional)
+                    </label>
+                    <textarea
+                      id="edit-reflection-{story.id}"
+                      bind:value={editReflection}
+                      rows={2}
+                      class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y min-h-[100px] sm:min-h-0"
+                    ></textarea>
+                  </div>
+                </div>
+
+                <div class="flex justify-end gap-2 mt-4">
+                  <button
+                    type="button"
+                    onclick={cancelEdit}
+                    class="px-4 py-2 border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <SectionSaveButton state={editSaveState} onClick={saveEditedStory} />
+                </div>
               {:else}
                 <!-- View Mode -->
-                <div class="space-y-4">
+                <div class="space-y-3 sm:space-y-4">
                   {#if story.situation}
                     <div>
-                      <p class="text-sm font-semibold text-[var(--dash-text)] mb-1">
-                        Situation
-                      </p>
-                      <p class="text-[var(--dash-text)] whitespace-pre-wrap">
-                        {story.situation}
-                      </p>
+                      <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">Situation</p>
+                      <p class="text-sm text-[var(--dash-text)] whitespace-pre-wrap">{story.situation}</p>
                     </div>
                   {/if}
 
                   {#if story.task}
                     <div>
-                      <p class="text-sm font-semibold text-[var(--dash-text)] mb-1">
-                        Task
-                      </p>
-                      <p class="text-[var(--dash-text)] whitespace-pre-wrap">
-                        {story.task}
-                      </p>
+                      <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">Task</p>
+                      <p class="text-sm text-[var(--dash-text)] whitespace-pre-wrap">{story.task}</p>
                     </div>
                   {/if}
 
                   {#if story.action}
                     <div>
-                      <p class="text-sm font-semibold text-[var(--dash-text)] mb-1">
-                        Action
-                      </p>
-                      <p class="text-[var(--dash-text)] whitespace-pre-wrap">
-                        {story.action}
-                      </p>
+                      <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">Action</p>
+                      <p class="text-sm text-[var(--dash-text)] whitespace-pre-wrap">{story.action}</p>
                     </div>
                   {/if}
 
                   {#if story.result}
                     <div>
-                      <p class="text-sm font-semibold text-[var(--dash-text)] mb-1">
-                        Result
-                      </p>
-                      <p class="text-[var(--dash-text)] whitespace-pre-wrap">
-                        {story.result}
-                      </p>
+                      <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">Result</p>
+                      <p class="text-sm text-[var(--dash-text)] whitespace-pre-wrap">{story.result}</p>
                     </div>
                   {/if}
 
                   {#if story.reflection}
                     <div>
-                      <p
-                        class="text-sm font-medium text-[var(--dash-text-secondary)] mb-1"
-                      >
-                        Reflection
-                      </p>
-                      <p class="text-[var(--dash-text)] whitespace-pre-wrap">
-                        {story.reflection}
-                      </p>
+                      <p class="text-xs text-[var(--dash-text-secondary)] uppercase tracking-wide mb-1">Reflection</p>
+                      <p class="text-sm text-[var(--dash-text)] whitespace-pre-wrap">{story.reflection}</p>
                     </div>
                   {/if}
-
-                  <div
-                    class="flex items-center justify-end gap-2 pt-2 border-t border-[var(--dash-border)]"
-                  >
-                    <button
-                      type="button"
-                      onclick={() => startEdit(story)}
-                      class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
-                      aria-label="Edit"
-                    >
-                      <FontAwesomeIcon icon={faPencil} class="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onclick={() => (deleteId = story.id)}
-                      class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
-                      aria-label="Delete"
-                    >
-                      <FontAwesomeIcon icon={faTrash} class="w-4 h-4" />
-                    </button>
-                  </div>
                 </div>
               {/if}
+            </div>
+          {/if}
+
+          <!-- Footer with action buttons (hidden in edit mode) -->
+          {#if editingId !== story.id}
+            <div class="border-t border-[var(--dash-border)] px-3 py-2 sm:px-4 flex justify-end md:justify-start items-center gap-2">
+              <button
+                type="button"
+                onclick={() => deleteId = story.id}
+                class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-500 transition-colors flex items-center gap-1.5 whitespace-nowrap"
+              >
+                <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
+                Delete
+              </button>
+              <button
+                type="button"
+                onclick={() => startEdit(story)}
+                class="px-3 py-1.5 text-xs bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-500 hover:bg-blue-500/20 hover:border-blue-500/50 transition-colors flex items-center gap-1.5 whitespace-nowrap"
+              >
+                <FontAwesomeIcon icon={faPencil} class="w-3 h-3" />
+                Edit
+              </button>
             </div>
           {/if}
         </div>
@@ -608,18 +664,5 @@
   title="Delete Story"
   message="Are you sure you want to delete this project story? This action cannot be undone."
   onCancel={() => (deleteId = null)}
-  onConfirm={() => {
-    if (deleteId !== null) {
-      const form = document.createElement("form");
-      form.method = "POST";
-      form.action = "?/delete";
-      const input = document.createElement("input");
-      input.type = "hidden";
-      input.name = "id";
-      input.value = String(deleteId);
-      form.appendChild(input);
-      document.body.appendChild(form);
-      form.submit();
-    }
-  }}
+  onConfirm={deleteStory}
 />

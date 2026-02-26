@@ -201,127 +201,147 @@
   {:else}
     <div class="space-y-4">
       {#each references as ref (ref.id)}
-        <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4">
+        <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden relative transition-all">
           {#if editingId === ref.id}
             <!-- Edit Mode -->
-            <form
-              method="POST"
-              action="?/update"
-              use:enhance={handleEditSubmit}
-            >
-              <input type="hidden" name="id" value={ref.id} />
-              <div class="space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label
-                      for="edit-author-{ref.id}"
-                      class="block text-sm font-medium text-[var(--dash-text)] mb-1"
-                    >
-                      Author Name <span class="text-[var(--dash-error)]">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      id="edit-author-{ref.id}"
-                      name="author"
-                      bind:value={editAuthor}
-                      required
-                      class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                    />
+            <div class="p-3 sm:p-4">
+              <form
+                method="POST"
+                action="?/update"
+                use:enhance={handleEditSubmit}
+              >
+                <input type="hidden" name="id" value={ref.id} />
+                <div class="space-y-4">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label
+                        for="edit-author-{ref.id}"
+                        class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+                      >
+                        Author Name <span class="text-[var(--dash-error)]">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        id="edit-author-{ref.id}"
+                        name="author"
+                        bind:value={editAuthor}
+                        required
+                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                      />
+                    </div>
+
+                    <div>
+                      <label
+                        for="edit-position-{ref.id}"
+                        class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+                      >
+                        Position
+                      </label>
+                      <input
+                        type="text"
+                        id="edit-position-{ref.id}"
+                        name="author_position"
+                        bind:value={editAuthorPosition}
+                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                      />
+                    </div>
                   </div>
 
                   <div>
                     <label
-                      for="edit-position-{ref.id}"
+                      for="edit-text-{ref.id}"
                       class="block text-sm font-medium text-[var(--dash-text)] mb-1"
                     >
-                      Position
+                      Reference Text
                     </label>
-                    <input
-                      type="text"
-                      id="edit-position-{ref.id}"
-                      name="author_position"
-                      bind:value={editAuthorPosition}
-                      class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-                    />
+                    <textarea
+                      id="edit-text-{ref.id}"
+                      name="text"
+                      bind:value={editText}
+                      rows={4}
+                      class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
+                    ></textarea>
                   </div>
                 </div>
 
-                <div>
-                  <label
-                    for="edit-text-{ref.id}"
-                    class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+                <div class="flex justify-end gap-2 mt-4">
+                  <button
+                    type="button"
+                    onclick={cancelEdit}
+                    class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
+                    aria-label="Cancel"
                   >
-                    Reference Text
-                  </label>
-                  <textarea
-                    id="edit-text-{ref.id}"
-                    name="text"
-                    bind:value={editText}
-                    rows={4}
-                    class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent resize-y"
-                  ></textarea>
+                    <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
+                  </button>
+                  <button
+                    type="submit"
+                    class="p-2 text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] transition-colors"
+                    aria-label="Save"
+                  >
+                    <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
+                  </button>
                 </div>
-              </div>
-
-              <div class="flex justify-end gap-2 mt-4">
-                <button
-                  type="button"
-                  onclick={cancelEdit}
-                  class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] transition-colors"
-                  aria-label="Cancel"
-                >
-                  <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
-                </button>
-                <button
-                  type="submit"
-                  class="p-2 text-[var(--dash-primary)] hover:text-[var(--dash-primary-hover)] transition-colors"
-                  aria-label="Save"
-                >
-                  <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
-                </button>
-              </div>
-            </form>
+              </form>
+            </div>
           {:else}
             <!-- View Mode -->
-            <div class="flex items-start justify-between">
-              <div class="flex items-start gap-4">
-                <div
-                  class="w-10 h-10 rounded-full bg-[var(--dash-bg)] flex items-center justify-center flex-shrink-0 mt-1"
-                >
-                  <FontAwesomeIcon
-                    icon={faQuoteLeft}
-                    class="w-5 h-5 text-[var(--dash-primary)]"
-                  />
+            <!-- Header -->
+            <div class="p-3 sm:p-4 hover:bg-[var(--dash-bg)] transition-colors">
+              <div class="flex items-start gap-3">
+                <!-- Desktop: Icon on the left -->
+                <div class="hidden md:flex flex-shrink-0">
+                  <div class="w-12 h-12 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center">
+                    <FontAwesomeIcon icon={faQuoteLeft} class="w-6 h-6 text-[var(--dash-primary)]" />
+                  </div>
                 </div>
-                <div>
-                  <h3 class="font-medium text-[var(--dash-text)]">{ref.author}</h3>
-                  {#if ref.author_position}
-                    <p class="text-sm text-[var(--dash-text-secondary)]">{ref.author_position}</p>
-                  {/if}
-                  {#if ref.text}
-                    <p class="text-[var(--dash-text)] mt-2 italic">"{ref.text}"</p>
-                  {/if}
-                </div>
-              </div>
 
-              <div class="flex items-center gap-2 flex-shrink-0">
-                <button
-                  type="button"
-                  onclick={() => startEdit(ref)}
-                  class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
-                  aria-label="Edit"
-                >
-                  <FontAwesomeIcon icon={faPencil} class="w-4 h-4" />
-                </button>
-                <button
-                  type="button"
-                  onclick={() => (deleteId = ref.id)}
-                  class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-error)] transition-colors"
-                  aria-label="Delete"
-                >
-                  <FontAwesomeIcon icon={faTrash} class="w-4 h-4" />
-                </button>
+                <!-- Content -->
+                <div class="flex-1 min-w-0">
+                  <!-- Author Name -->
+                  <h3 class="font-medium text-[var(--dash-text)] text-sm sm:text-base">
+                    {ref.author}
+                  </h3>
+
+                  <!-- Position -->
+                  {#if ref.author_position}
+                    <div class="mt-1 text-xs sm:text-sm text-[var(--dash-text-secondary)]">
+                      {ref.author_position}
+                    </div>
+                  {/if}
+
+                  <!-- Quote -->
+                  {#if ref.text}
+                    <p class="text-[var(--dash-text)] mt-2 text-sm italic">"{ref.text}"</p>
+                  {/if}
+                </div>
+
+                <!-- Mobile: Icon on the right -->
+                <div class="flex-shrink-0 md:hidden">
+                  <div class="w-12 h-12 rounded-lg bg-[var(--dash-bg)] flex items-center justify-center">
+                    <FontAwesomeIcon icon={faQuoteLeft} class="w-6 h-6 text-[var(--dash-primary)]" />
+                  </div>
+                </div>
               </div>
+            </div>
+
+            <!-- Footer with action buttons -->
+            <div class="border-t border-[var(--dash-border)] px-3 py-2 sm:px-4 flex justify-end md:justify-start items-center gap-2">
+              <button
+                type="button"
+                onclick={() => deleteId = ref.id}
+                class="px-3 py-1.5 text-xs bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-500 transition-colors flex items-center gap-1.5 whitespace-nowrap"
+              >
+                <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
+                Delete
+              </button>
+              <button
+                type="button"
+                onclick={() => startEdit(ref)}
+                class="px-3 py-1.5 text-xs bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-500 hover:bg-blue-500/20 hover:border-blue-500/50 transition-colors flex items-center gap-1.5 whitespace-nowrap"
+              >
+                <FontAwesomeIcon icon={faPencil} class="w-3 h-3" />
+                Edit
+              </button>
             </div>
           {/if}
         </div>
