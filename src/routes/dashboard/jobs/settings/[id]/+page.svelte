@@ -22,6 +22,7 @@
     faPlay,
     faSpinner,
     faStop,
+    faSync,
     faTerminal,
     faTimes,
   } from "@fortawesome/free-solid-svg-icons";
@@ -123,6 +124,23 @@
   let browserUseLogPollInterval: ReturnType<typeof setInterval> | null = null;
   let browserUseLogLevelFilter = $state<"debug" | "info" | "warn" | "error">("debug");
   let showBrowserUseLogs = $state(false);
+  let isRestartingBrowserUse = $state(false);
+
+  // Browser-Use health status (staff only)
+  interface BrowserUseHealth {
+    service_healthy: boolean;
+    chrome_running: boolean;
+    chrome_pid?: number;
+    cdp_responsive: boolean;
+    cdp_port: number;
+    current_url?: string;
+    page_count: number;
+    socat_running: boolean;
+    memory_mb?: number;
+    error?: string;
+  }
+  let browserUseHealth = $state<BrowserUseHealth | null>(null);
+  let loadingHealth = $state(false);
 
   // Computed states
   let isRunning = $derived(jobSearch.status === "running");
@@ -407,12 +425,30 @@
     }
   }
 
+  async function loadBrowserUseHealth() {
+    if (!data.isStaff || loadingHealth) return;
+    loadingHealth = true;
+
+    try {
+      const response = await fetch("/api/staff/browser-use/health");
+      if (response.ok) {
+        browserUseHealth = await response.json();
+      }
+    } catch (err) {
+      console.error("Failed to load browser-use health:", err);
+    } finally {
+      loadingHealth = false;
+    }
+  }
+
   function startBrowserUseLogPolling() {
     if (!data.isStaff || browserUseLogPollInterval) return;
 
     loadBrowserUseLogs();
+    loadBrowserUseHealth();
     browserUseLogPollInterval = setInterval(() => {
       loadBrowserUseLogs();
+      loadBrowserUseHealth();
     }, 2000);
   }
 
@@ -420,6 +456,35 @@
     if (browserUseLogPollInterval) {
       clearInterval(browserUseLogPollInterval);
       browserUseLogPollInterval = null;
+    }
+  }
+
+  async function restartBrowserUse() {
+    if (!data.isStaff || isRestartingBrowserUse) return;
+
+    if (!confirm("Restart the browser-use service? This will interrupt any running scrapes.")) {
+      return;
+    }
+
+    isRestartingBrowserUse = true;
+    try {
+      const response = await fetch("/api/staff/browser-use/restart", {
+        method: "POST",
+      });
+
+      if (response.ok) {
+        // Clear logs and reload after restart
+        browserUseLogs = [];
+        await loadBrowserUseLogs();
+      } else {
+        const result = await response.json();
+        alert(result.message || "Failed to restart browser-use service");
+      }
+    } catch (err) {
+      console.error("Failed to restart browser-use:", err);
+      alert("Failed to restart browser-use service");
+    } finally {
+      isRestartingBrowserUse = false;
     }
   }
 
@@ -1357,6 +1422,19 @@
                         >
                           Clear
                         </button>
+                        <button
+                          onclick={restartBrowserUse}
+                          disabled={isRestartingBrowserUse}
+                          class="text-xs px-2 py-1 rounded border border-[var(--dash-warning)] bg-[var(--dash-warning-light)] text-[var(--dash-warning)] hover:bg-[var(--dash-warning)] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                          title="Restart browser-use service (clears zombie processes)"
+                        >
+                          {#if isRestartingBrowserUse}
+                            <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
+                          {:else}
+                            <FontAwesomeIcon icon={faSync} class="w-3 h-3" />
+                          {/if}
+                          Restart
+                        </button>
                       </div>
                     </div>
 
@@ -1390,6 +1468,52 @@
                         </div>
                       {/if}
                     </div>
+                    <!-- Health Status Panel -->
+                    {#if browserUseHealth}
+                      <div class="mt-3 p-3 rounded border {browserUseHealth.service_healthy ? 'border-[var(--dash-success)] bg-[var(--dash-success-light)]' : 'border-[var(--dash-error)] bg-[var(--dash-error-light)]'}">
+                        <div class="flex items-center justify-between mb-2">
+                          <span class="text-sm font-medium {browserUseHealth.service_healthy ? 'text-[var(--dash-success)]' : 'text-[var(--dash-error)]'}">
+                            {browserUseHealth.service_healthy ? '✓ Service Healthy' : '✗ Service Unhealthy'}
+                          </span>
+                          {#if loadingHealth}
+                            <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin" />
+                          {/if}
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                          <div>
+                            <span class="text-[var(--dash-text-muted)]">Chrome:</span>
+                            <span class={browserUseHealth.chrome_running ? 'text-[var(--dash-success)]' : 'text-[var(--dash-text-secondary)]'}>
+                              {browserUseHealth.chrome_running ? `Running (PID ${browserUseHealth.chrome_pid})` : 'Not running'}
+                            </span>
+                          </div>
+                          <div>
+                            <span class="text-[var(--dash-text-muted)]">CDP:</span>
+                            <span class={browserUseHealth.cdp_responsive ? 'text-[var(--dash-success)]' : browserUseHealth.chrome_running ? 'text-[var(--dash-error)]' : 'text-[var(--dash-text-secondary)]'}>
+                              {browserUseHealth.cdp_responsive ? 'Responsive' : browserUseHealth.chrome_running ? 'NOT RESPONDING' : 'N/A'}
+                            </span>
+                          </div>
+                          <div>
+                            <span class="text-[var(--dash-text-muted)]">Pages:</span>
+                            <span class="text-[var(--dash-text)]">{browserUseHealth.page_count}</span>
+                          </div>
+                          <div>
+                            <span class="text-[var(--dash-text-muted)]">Memory:</span>
+                            <span class="text-[var(--dash-text)]">{browserUseHealth.memory_mb ? `${browserUseHealth.memory_mb} MB` : 'N/A'}</span>
+                          </div>
+                        </div>
+                        {#if browserUseHealth.current_url}
+                          <div class="mt-2 text-xs">
+                            <span class="text-[var(--dash-text-muted)]">URL:</span>
+                            <span class="text-[var(--dash-text)] break-all">{browserUseHealth.current_url}</span>
+                          </div>
+                        {/if}
+                        {#if browserUseHealth.error}
+                          <div class="mt-2 text-xs text-[var(--dash-error)]">
+                            <strong>Error:</strong> {browserUseHealth.error}
+                          </div>
+                        {/if}
+                      </div>
+                    {/if}
                     <p class="mt-2 text-xs text-[var(--dash-text-muted)]">
                       Live logs from browser automation service. Auto-refreshes every 2s.
                     </p>
