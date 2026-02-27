@@ -2,6 +2,7 @@
   import type { ActionData, PageData } from "./$types";
   import { enhance } from "$app/forms";
   import { goto } from "$app/navigation";
+  import { navigating } from "$app/stores";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faArrowRight,
@@ -15,6 +16,7 @@
     faFilter,
     faMoneyBillWave,
     faSearch,
+    faSpinner,
     faStar as faStarSolid,
     faTimes,
   } from "@fortawesome/free-solid-svg-icons";
@@ -105,12 +107,13 @@
   let sortOrder = $state(filters.sortOrder);
   let showFilters = $state(false);
   let expandedId = $state<number | null>(null);
+  let searchInputEl: HTMLInputElement;
 
   // Filter type options (tabs)
   const filterTabs = [
-    { value: "all", label: "All Jobs", icon: faBriefcase },
-    { value: "matches", label: "Matches", icon: faListCheck },
-    { value: "saved", label: "Saved", icon: faBookmark },
+    { value: "all", label: "All Jobs", mobileLabel: "All", icon: faBriefcase },
+    { value: "matches", label: "Matches", mobileLabel: "Matches", icon: faListCheck },
+    { value: "saved", label: "Saved", mobileLabel: "Saved", icon: faBookmark },
   ];
 
   // Match status options (for matches filter)
@@ -123,8 +126,7 @@
   ];
 
   const sortOptions = [
-    { value: "date_created", label: "Date Added" },
-    { value: "date_updated", label: "Last Updated" },
+    { value: "date", label: "Date" },
     { value: "title", label: "Title" },
     { value: "company", label: "Company" },
   ];
@@ -160,7 +162,7 @@
     if (q) params.set("q", q);
     if (p) params.set("platform", p);
     if (ms && f === "matches") params.set("matchStatus", ms);
-    if (s !== "date_created") params.set("sort", s);
+    if (s !== "date") params.set("sort", s);
     if (o !== "desc") params.set("order", o);
     if (pg !== "1") params.set("page", pg);
 
@@ -184,13 +186,13 @@
     searchInput = "";
     platformFilter = "";
     matchStatusFilter = "";
-    sortBy = "date_created";
+    sortBy = "date";
     sortOrder = "desc";
     goto(buildUrl({
       search: "",
       platform: "",
       matchStatus: "",
-      sortBy: "date_created",
+      sortBy: "date",
       sortOrder: "desc",
       page: "1",
     }));
@@ -252,7 +254,7 @@
     filters.search ||
       filters.platform ||
       filters.matchStatus ||
-      filters.sortBy !== "date_created" ||
+      filters.sortBy !== "date" ||
       filters.sortOrder !== "desc"
   );
 
@@ -293,20 +295,21 @@
       <button
         type="button"
         onclick={() => switchFilter(tab.value)}
-        class="px-4 py-2 rounded-lg transition-colors flex items-center gap-2 {filterType ===
+        class="px-3 sm:px-4 py-2 rounded-lg transition-colors flex items-center gap-2 {filterType ===
         tab.value
           ? 'bg-[var(--dash-primary)] text-white'
           : 'bg-[var(--dash-card)] border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)]'}"
       >
         <FontAwesomeIcon icon={tab.icon} class="w-4 h-4" />
-        {tab.label}
+        <span class="sm:hidden">{tab.mobileLabel}</span>
+        <span class="hidden sm:inline">{tab.label}</span>
       </button>
     {/each}
   </div>
 
   <!-- Search Bar -->
   <div class="flex gap-2">
-    <div class="relative flex-1">
+    <div class="relative flex-1 flex">
       <FontAwesomeIcon
         icon={faSearch}
         class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--dash-text-muted)]"
@@ -314,27 +317,43 @@
       <input
         type="text"
         bind:value={searchInput}
+        bind:this={searchInputEl}
         onkeydown={(e) => e.key === "Enter" && applyFilters()}
-        placeholder="Search jobs by title, company, location..."
-        class="w-full pl-10 pr-4 py-2 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+        placeholder="Search jobs..."
+        class="w-full pl-10 pr-8 py-2 bg-[var(--dash-card)] border border-[var(--dash-border)] border-r-0 rounded-l-lg text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
       />
+      {#if searchInput}
+        <button
+          type="button"
+          onclick={() => {
+            searchInput = "";
+            applyFilters();
+            searchInputEl?.focus();
+          }}
+          class="absolute right-12 top-1/2 -translate-y-1/2 p-1 text-[var(--dash-text-muted)] hover:text-[var(--dash-text)] transition-colors"
+          aria-label="Clear search"
+        >
+          <FontAwesomeIcon icon={faTimes} class="w-4 h-4" />
+        </button>
+      {/if}
+      <button
+        type="button"
+        onclick={applyFilters}
+        class="px-3 py-2 bg-[var(--dash-primary)] text-white rounded-r-lg hover:bg-[var(--dash-primary-hover)] transition-colors flex items-center justify-center"
+        aria-label="Search"
+      >
+        <FontAwesomeIcon icon={faArrowRight} class="w-4 h-4" />
+      </button>
     </div>
     <button
       type="button"
-      onclick={applyFilters}
-      class="px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors"
-    >
-      Search
-    </button>
-    <button
-      type="button"
       onclick={() => (showFilters = !showFilters)}
-      class="px-4 py-2 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors flex items-center gap-2"
+      class="px-3 py-2 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors flex items-center justify-center relative"
+      aria-label="Filters"
     >
       <FontAwesomeIcon icon={faFilter} class="w-4 h-4" />
-      Filters
       {#if hasActiveFilters}
-        <span class="w-2 h-2 bg-[var(--dash-primary)] rounded-full"></span>
+        <span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[var(--dash-primary)] rounded-full"></span>
       {/if}
     </button>
   </div>
@@ -432,16 +451,21 @@
 
   <!-- Results Count -->
   <div class="text-sm text-[var(--dash-text-secondary)]">
-    {#if totalCount === 0}
+    {#if $navigating}
+      <span class="flex items-center gap-2">
+        <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 animate-spin" />
+        Loading...
+      </span>
+    {:else if totalCount === 0}
       No jobs found
     {:else if totalCount === 1}
       1 job found
     {:else}
       {totalCount.toLocaleString()} jobs found
-    {/if}
-    {#if currentPage > 1 || totalPages > 1}
-      <span class="mx-1">•</span>
-      Page {currentPage} of {totalPages}
+      {#if currentPage > 1 || totalPages > 1}
+        <span class="mx-1">•</span>
+        Page {currentPage} of {totalPages}
+      {/if}
     {/if}
   </div>
 
@@ -607,8 +631,8 @@
               {#if job.date_posted}
                 <span>Posted: {formatDate(job.date_posted)}</span>
               {/if}
-              {#if job.date_created}
-                <span>Imported: {formatDate(job.date_created)}</span>
+              {#if job.date}
+                <span>Imported: {formatDate(job.date)}</span>
               {/if}
               {#if job.scrape_count}
                 <span>Scraped {job.scrape_count}x</span>

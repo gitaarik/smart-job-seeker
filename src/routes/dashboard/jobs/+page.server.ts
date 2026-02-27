@@ -17,7 +17,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
   const search = url.searchParams.get("q") || "";
   const platform = url.searchParams.get("platform") || "";
   const matchStatus = url.searchParams.get("matchStatus") || ""; // For filtering match statuses (new, viewed, applied, etc.)
-  const sortBy = url.searchParams.get("sort") || "date_created";
+  const sortBy = url.searchParams.get("sort") || "date";
   const sortOrder = url.searchParams.get("order") || "desc";
   const page = parseInt(url.searchParams.get("page") || "1");
   const limit = 20;
@@ -71,6 +71,12 @@ export const load: PageServerLoad = async ({ parent, url }) => {
     let orderBy: any;
     if (sortBy === "score") {
       orderBy = { score: sortOrder };
+    } else if (sortBy === "date") {
+      // Sort by date_posted first (nulls last), then date_created as fallback
+      orderBy = [
+        { jobs: { date_posted: { sort: sortOrder, nulls: "last" } } },
+        { jobs: { date_created: sortOrder } },
+      ];
     } else {
       // Sort by job fields - need to use nested ordering
       orderBy = { jobs: { [sortBy]: sortOrder } };
@@ -136,6 +142,19 @@ export const load: PageServerLoad = async ({ parent, url }) => {
       where.job_platform = parseInt(platform);
     }
 
+    // Determine sort order
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let jobOrderBy: any;
+    if (sortBy === "date") {
+      // Sort by date_posted first (nulls last), then date_created as fallback
+      jobOrderBy = [
+        { date_posted: { sort: sortOrder, nulls: "last" } },
+        { date_created: sortOrder },
+      ];
+    } else {
+      jobOrderBy = { [sortBy]: sortOrder };
+    }
+
     const [jobResults, jobCount] = await Promise.all([
       db.jobs.findMany({
         where,
@@ -147,7 +166,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
             },
           },
         },
-        orderBy: { [sortBy]: sortOrder },
+        orderBy: jobOrderBy,
         take: limit,
         skip: offset,
       }),
