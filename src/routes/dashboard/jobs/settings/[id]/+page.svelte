@@ -217,7 +217,9 @@
       const response = await fetch(`/api/job-searches/${jobSearch.id}/runs?limit=10`);
       if (response.ok) {
         const data = await response.json();
-        runs = data.runs;
+        // Spread each run object to ensure Svelte 5 reactivity detects changes
+        // This forces re-render even when only nested properties change
+        runs = data.runs.map((run: Run) => ({ ...run }));
       }
     } catch (err) {
       console.error("Failed to load runs:", err);

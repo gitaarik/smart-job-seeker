@@ -246,11 +246,15 @@
   }
 
   function getStatusColor(search: (typeof jobSearches)[0]): string {
+    if (search.status === "running" || search.status === "queued") return "text-blue-500";
+    if (search.status === "blocked") return "text-yellow-600";
     if (search.status === "active") return "text-[var(--dash-success)]";
     return "text-[var(--dash-text-muted)]";
   }
 
   function getStatusBgColor(search: (typeof jobSearches)[0]): string {
+    if (search.status === "running" || search.status === "queued") return "bg-blue-500/10";
+    if (search.status === "blocked") return "bg-yellow-500/10";
     if (search.status === "active") return "bg-green-500/10";
     return "bg-[var(--dash-bg)]";
   }
@@ -538,13 +542,20 @@
 
               <div class="flex-1 min-w-0">
                 <!-- Title -->
-                <div class="flex items-center gap-2 pr-8">
+                <div class="flex items-center gap-2 pr-8 flex-wrap">
                   <h3
                     class="font-medium text-[var(--dash-text)] text-sm sm:text-base truncate"
                   >
                     {search.name}
                   </h3>
-                  {#if !search.is_active}
+                  {#if search.status === "running" || search.status === "queued" || search.status === "blocked"}
+                    <span
+                      class="text-xs px-2 py-0.5 rounded-full whitespace-nowrap flex items-center gap-1 {search.status === 'blocked' ? 'bg-yellow-500/20 text-yellow-600 animate-pulse' : 'bg-blue-500/20 text-blue-600'}"
+                    >
+                      <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 {search.status !== 'blocked' ? 'animate-spin' : ''}" />
+                      {search.status === "queued" ? "Queued" : search.status === "blocked" ? "Action needed" : "Running"}
+                    </span>
+                  {:else if !search.is_active}
                     <span
                       class="text-xs px-2 py-0.5 rounded-full bg-[var(--dash-bg)] text-[var(--dash-text-muted)] whitespace-nowrap"
                     >
@@ -569,7 +580,9 @@
                     <span>{search.job_platforms.name}</span>
                     <span>•</span>
                   {/if}
-                  {#if search.status === "running"}
+                  {#if search.status === "queued"}
+                    <span class="text-[var(--dash-text-muted)]">{search.status_message || "Waiting in queue..."}</span>
+                  {:else if search.status === "running"}
                     <FontAwesomeIcon
                       icon={faSpinner}
                       class="w-3 h-3 text-[var(--dash-primary)] animate-spin"
