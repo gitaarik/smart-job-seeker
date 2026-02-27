@@ -22,6 +22,7 @@
     faPlay,
     faSpinner,
     faStop,
+    faTerminal,
     faTimes,
   } from "@fortawesome/free-solid-svg-icons";
 
@@ -107,8 +108,21 @@
   let loadingItems = $state<Record<number, boolean>>({});
   let logPollIntervals = $state<Record<number, ReturnType<typeof setInterval>>>({});
   let itemPollIntervals = $state<Record<number, ReturnType<typeof setInterval>>>({});
-  let showItemsView = $state<Record<number, boolean>>({}); // Toggle between logs and items
+  let runTabView = $state<Record<number, "jobs" | "logs" | "browser-use">>({}); // Tab view per run
   let logLevelFilter = $state<"debug" | "info" | "warn" | "error">("info");
+
+  // Browser-Use logs (staff only)
+  interface BrowserUseLogEntry {
+    timestamp: string;
+    level: string;
+    logger: string;
+    message: string;
+  }
+  let browserUseLogs = $state<BrowserUseLogEntry[]>([]);
+  let loadingBrowserUseLogs = $state(false);
+  let browserUseLogPollInterval: ReturnType<typeof setInterval> | null = null;
+  let browserUseLogLevelFilter = $state<"debug" | "info" | "warn" | "error">("debug");
+  let showBrowserUseLogs = $state(false);
 
   // Computed states
   let isRunning = $derived(jobSearch.status === "running");
@@ -343,12 +357,14 @@
       expandedRunId = null;
       // Stop polling logs and items for this run
       stopItemPolling(runId);
+      stopBrowserUseLogPolling();
       if (logPollIntervals[runId]) {
         clearInterval(logPollIntervals[runId]);
         delete logPollIntervals[runId];
       }
     } else {
       expandedRunId = runId;
+      runTabView[runId] = runTabView[runId] || "jobs"; // Default to jobs tab
       loadRunLogs(runId);
       loadRunItems(runId);
 
@@ -358,6 +374,50 @@
         startLogPolling(runId);
         startItemPolling(runId);
       }
+    }
+  }
+
+  // Browser-Use log functions (staff only)
+  async function loadBrowserUseLogs() {
+    if (!data.isStaff || loadingBrowserUseLogs) return;
+    loadingBrowserUseLogs = true;
+
+    try {
+      const lastTimestamp = browserUseLogs.length > 0 ? browserUseLogs[browserUseLogs.length - 1].timestamp : null;
+      let url = `/api/staff/browser-use/logs?level=${browserUseLogLevelFilter}&limit=200`;
+      if (lastTimestamp) {
+        url += `&after=${encodeURIComponent(lastTimestamp)}`;
+      }
+
+      const response = await fetch(url);
+      if (response.ok) {
+        const data = await response.json();
+        if (lastTimestamp && data.logs.length > 0) {
+          browserUseLogs = [...browserUseLogs, ...data.logs];
+        } else if (!lastTimestamp) {
+          browserUseLogs = data.logs;
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load browser-use logs:", err);
+    } finally {
+      loadingBrowserUseLogs = false;
+    }
+  }
+
+  function startBrowserUseLogPolling() {
+    if (!data.isStaff || browserUseLogPollInterval) return;
+
+    loadBrowserUseLogs();
+    browserUseLogPollInterval = setInterval(() => {
+      loadBrowserUseLogs();
+    }, 2000);
+  }
+
+  function stopBrowserUseLogPolling() {
+    if (browserUseLogPollInterval) {
+      clearInterval(browserUseLogPollInterval);
+      browserUseLogPollInterval = null;
     }
   }
 
@@ -574,6 +634,7 @@
 
   onDestroy(() => {
     stopPolling();
+    stopBrowserUseLogPolling();
     // Clean up all log and item polling intervals
     Object.values(logPollIntervals).forEach((interval) => clearInterval(interval));
     Object.values(itemPollIntervals).forEach((interval) => clearInterval(interval));
@@ -939,8 +1000,8 @@
                 <!-- Tab buttons -->
                 <div class="flex border-b border-[var(--dash-border)]">
                   <button
-                    onclick={() => showItemsView[run.id] = true}
-                    class={`px-4 py-2 text-sm font-medium transition-colors ${showItemsView[run.id] !== false ? "text-[var(--dash-primary)] border-b-2 border-[var(--dash-primary)]" : "text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]"}`}
+                    onclick={() => runTabView[run.id] = "jobs"}
+                    class={`px-4 py-2 text-sm font-medium transition-colors ${!runTabView[run.id] || runTabView[run.id] === "jobs" ? "text-[var(--dash-primary)] border-b-2 border-[var(--dash-primary)]" : "text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]"}`}
                   >
                     Jobs
                     {#if runItems[run.id]?.stats}
@@ -950,16 +1011,28 @@
                     {/if}
                   </button>
                   <button
-                    onclick={() => showItemsView[run.id] = false}
-                    class={`px-4 py-2 text-sm font-medium transition-colors ${showItemsView[run.id] === false ? "text-[var(--dash-primary)] border-b-2 border-[var(--dash-primary)]" : "text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]"}`}
+                    onclick={() => runTabView[run.id] = "logs"}
+                    class={`px-4 py-2 text-sm font-medium transition-colors ${runTabView[run.id] === "logs" ? "text-[var(--dash-primary)] border-b-2 border-[var(--dash-primary)]" : "text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]"}`}
                   >
                     Logs
                   </button>
+                  {#if data.isStaff}
+                    <button
+                      onclick={() => {
+                        runTabView[run.id] = "browser-use";
+                        startBrowserUseLogPolling();
+                      }}
+                      class={`px-4 py-2 text-sm font-medium transition-colors flex items-center gap-1 ${runTabView[run.id] === "browser-use" ? "text-[var(--dash-primary)] border-b-2 border-[var(--dash-primary)]" : "text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]"}`}
+                    >
+                      <FontAwesomeIcon icon={faTerminal} class="w-3 h-3" />
+                      Browser-Use
+                    </button>
+                  {/if}
                 </div>
 
                 <div class="p-4">
-                  <!-- Items view -->
-                  {#if showItemsView[run.id] !== false}
+                  <!-- Jobs view -->
+                  {#if !runTabView[run.id] || runTabView[run.id] === "jobs"}
                     <div class="flex items-center justify-between mb-2">
                       <span class="text-sm font-medium text-[var(--dash-text)]">Discovered Jobs</span>
                       {#if loadingItems[run.id]}
@@ -1198,7 +1271,7 @@
                         </div>
                       {/if}
                     </div>
-                  {:else}
+                  {:else if runTabView[run.id] === "logs"}
                     <!-- Logs view -->
                     <div class="flex items-center justify-between mb-2">
                       <div class="flex items-center gap-2">
@@ -1250,6 +1323,74 @@
                         </div>
                       {/if}
                     </div>
+                  {:else if runTabView[run.id] === "browser-use"}
+                    <!-- Browser-Use Logs view (Staff only) -->
+                    <div class="flex items-center justify-between mb-2">
+                      <div class="flex items-center gap-2">
+                        <span class="text-sm font-medium text-[var(--dash-text)]">Browser-Use Logs</span>
+                        <select
+                          bind:value={browserUseLogLevelFilter}
+                          onchange={() => {
+                            browserUseLogs = [];
+                            loadBrowserUseLogs();
+                          }}
+                          class="text-xs px-2 py-1 rounded border border-[var(--dash-border)] bg-[var(--dash-card)] text-[var(--dash-text)]"
+                        >
+                          <option value="debug">Debug</option>
+                          <option value="info">Info</option>
+                          <option value="warn">Warn</option>
+                          <option value="error">Error</option>
+                        </select>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        {#if loadingBrowserUseLogs}
+                          <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin" />
+                        {/if}
+                        <button
+                          onclick={() => {
+                            browserUseLogs = [];
+                            loadBrowserUseLogs();
+                          }}
+                          class="text-xs px-2 py-1 rounded border border-[var(--dash-border)] bg-[var(--dash-card)] text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] hover:bg-[var(--dash-bg)]"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="bg-[var(--dash-card)] rounded border border-[var(--dash-border)] max-h-64 overflow-y-auto">
+                      {#if browserUseLogs.length === 0}
+                        <div class="p-4 text-sm text-[var(--dash-text-muted)] text-center">
+                          {#if loadingBrowserUseLogs}
+                            Loading browser-use logs...
+                          {:else}
+                            No logs available. Logs appear when the scraper uses browser automation.
+                          {/if}
+                        </div>
+                      {:else}
+                        <div class="p-2 space-y-0.5 font-mono text-xs">
+                          {#each browserUseLogs as log}
+                            <div class="flex gap-2 py-0.5 px-1 hover:bg-[var(--dash-bg)] rounded">
+                              <span class="text-[var(--dash-text-muted)] whitespace-nowrap">
+                                {new Date(log.timestamp).toLocaleTimeString()}
+                              </span>
+                              <span class={`uppercase w-12 flex-shrink-0 ${getLogLevelColor(log.level)}`}>
+                                {log.level}
+                              </span>
+                              <span class="text-[var(--dash-primary)] flex-shrink-0 max-w-20 truncate" title={log.logger}>
+                                {log.logger.split('.').pop()}
+                              </span>
+                              <span class="text-[var(--dash-text)] break-all">
+                                {log.message}
+                              </span>
+                            </div>
+                          {/each}
+                        </div>
+                      {/if}
+                    </div>
+                    <p class="mt-2 text-xs text-[var(--dash-text-muted)]">
+                      Live logs from browser automation service. Auto-refreshes every 2s.
+                    </p>
                   {/if}
                 </div>
               </div>

@@ -15,7 +15,19 @@ export const auth = betterAuth({
   secret: getEnv("SJS_AUTH_SECRET"),
   baseURL: getEnv("SJS_APP_URL_HOST", "http://localhost:5173"),
 
-  user: { modelName: "users" },
+  user: {
+    modelName: "users",
+    additionalFields: {
+      is_admin: {
+        type: "boolean",
+        defaultValue: false,
+      },
+      is_staff: {
+        type: "boolean",
+        defaultValue: false,
+      },
+    },
+  },
   account: { modelName: "accounts" },
   verification: { modelName: "verifications" },
 

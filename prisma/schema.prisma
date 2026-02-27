@@ -1322,6 +1322,7 @@ model users {
   createdAt     DateTime?  @db.Timestamptz(6)
   updatedAt     DateTime?  @db.Timestamptz(6)
   is_admin      Boolean    @default(false)
+  is_staff      Boolean    @default(false)
   accounts      accounts[]
   sessions      sessions[]
 }

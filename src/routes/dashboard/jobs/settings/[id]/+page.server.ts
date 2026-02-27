@@ -28,7 +28,12 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     throw error(404, "Job search not found");
   }
 
+  // Check if user is staff or admin for browser-use logs access
+  const user = layoutData.user;
+  const isStaff = (user as { is_staff?: boolean })?.is_staff || (user as { is_admin?: boolean })?.is_admin || false;
+
   return {
     jobSearch,
+    isStaff,
   };
 };
