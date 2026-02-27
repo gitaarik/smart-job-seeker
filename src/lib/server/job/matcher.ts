@@ -110,33 +110,30 @@ export async function filterEligibleJobs(
   }
 
   // Use raw SQL with PostgreSQL's ?| operator for JSON array overlap
+  // Note: JSON columns can have JSON null (literal 'null') vs SQL NULL, so we check both
   const jobs = await db.$queryRaw<jobs[]>`
     SELECT j.* FROM jobs j
     WHERE j.status != 'archived'
     ${jobIdFilter}
-    -- Work location overlap (REQUIRED)
+    -- Work location overlap (REQUIRED) - check both SQL NULL and JSON null
     AND (
       j.work_location IS NULL
-      OR j.work_location::jsonb ?| array[${
-    Prisma.join(config.work_location)
-  }]::text[]
+      OR j.work_location::text = 'null'
+      OR j.work_location::jsonb ?| array[${Prisma.join(config.work_location)}]::text[]
     )
-    -- Job types overlap (REQUIRED)
+    -- Job types overlap (REQUIRED) - check both SQL NULL and JSON null
     AND (
       j.job_types IS NULL
-      OR j.job_types::jsonb ?| array[${
-    Prisma.join(config.job_types)
-  }]::text[]
+      OR j.job_types::text = 'null'
+      OR j.job_types::jsonb ?| array[${Prisma.join(config.job_types)}]::text[]
     )
     -- Skills overlap (AT LEAST ONE match in required OR preferred)
     AND (
       (j.skills_required IS NULL AND j.skills_preferred IS NULL)
-      OR j.skills_required::jsonb ?| array[${
-    Prisma.join(profileSkills)
-  }]::text[]
-      OR j.skills_preferred::jsonb ?| array[${
-    Prisma.join(profileSkills)
-  }]::text[]
+      OR j.skills_required::text = 'null'
+      OR j.skills_preferred::text = 'null'
+      OR j.skills_required::jsonb ?| array[${Prisma.join(profileSkills)}]::text[]
+      OR j.skills_preferred::jsonb ?| array[${Prisma.join(profileSkills)}]::text[]
     )
   `;
 
@@ -329,24 +326,29 @@ export async function getUnmatchedJobs(
 
   // Query for jobs that have no match record for this profile
   // Combined with the same eligibility filters as filterEligibleJobs
+  // Note: JSON columns can have JSON null (literal 'null') vs SQL NULL, so we check both
   const jobs = await db.$queryRaw<jobs[]>`
     SELECT j.* FROM jobs j
     LEFT JOIN job_matches jm ON j.id = jm.job AND jm.profile = ${profileId}
     WHERE jm.id IS NULL
     AND j.status != 'archived'
-    -- Work location overlap (REQUIRED)
+    -- Work location overlap (REQUIRED) - check both SQL NULL and JSON null
     AND (
       j.work_location IS NULL
+      OR j.work_location::text = 'null'
       OR j.work_location::jsonb ?| array[${Prisma.join(config.work_location)}]::text[]
     )
-    -- Job types overlap (REQUIRED)
+    -- Job types overlap (REQUIRED) - check both SQL NULL and JSON null
     AND (
       j.job_types IS NULL
+      OR j.job_types::text = 'null'
       OR j.job_types::jsonb ?| array[${Prisma.join(config.job_types)}]::text[]
     )
     -- Skills overlap (AT LEAST ONE match in required OR preferred)
     AND (
       (j.skills_required IS NULL AND j.skills_preferred IS NULL)
+      OR j.skills_required::text = 'null'
+      OR j.skills_preferred::text = 'null'
       OR j.skills_required::jsonb ?| array[${Prisma.join(profileSkills)}]::text[]
       OR j.skills_preferred::jsonb ?| array[${Prisma.join(profileSkills)}]::text[]
     )
