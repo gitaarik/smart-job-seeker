@@ -19,7 +19,7 @@ const EXPERIENCE_LEVELS = [
   "Executive",
 ];
 
-const REMOTE_OPTIONS = ["Remote", "Hybrid", "On-site"];
+const WORK_LOCATION_OPTIONS = ["Remote", "Hybrid", "On-site"];
 
 export const load: PageServerLoad = async ({ parent }) => {
   const layoutData = await parent();
@@ -30,25 +30,25 @@ export const load: PageServerLoad = async ({ parent }) => {
 
   const profileId = layoutData.selectedProfile.id;
 
-  // Get existing preferences for this profile
-  const preferences = await db.job_match_preferences.findFirst({
+  // Get existing config for this profile
+  const config = await db.job_match_config.findFirst({
     where: { profile: profileId },
   });
 
   return {
-    preferences: preferences
+    config: config
       ? {
-          id: preferences.id,
-          job_types: (preferences.job_types as string[]) || [],
-          experience_levels: (preferences.experience_levels as string[]) || [],
-          remote_options: (preferences.remote_options as string[]) || [],
-          locations: (preferences.locations as string[]) || [],
+          id: config.id,
+          job_types: (config.job_types as string[]) || [],
+          experience_levels: (config.experience_levels as string[]) || [],
+          work_location: (config.work_location as string[]) || [],
+          locations: (config.locations as string[]) || [],
         }
       : null,
     options: {
       jobTypes: JOB_TYPES,
       experienceLevels: EXPERIENCE_LEVELS,
-      remoteOptions: REMOTE_OPTIONS,
+      workLocationOptions: WORK_LOCATION_OPTIONS,
     },
     profileId,
   };

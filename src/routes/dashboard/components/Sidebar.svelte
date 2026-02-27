@@ -61,7 +61,7 @@
         },
         {
           label: "Match Config",
-          href: "/dashboard/jobs/preferences",
+          href: "/dashboard/jobs/match-config",
           icon: faSliders,
         },
         {

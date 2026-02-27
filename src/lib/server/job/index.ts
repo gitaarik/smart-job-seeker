@@ -6,8 +6,8 @@
 export {
   calculateMatch,
   filterEligibleJobs,
-  getMatchingPreferences,
-  type JobMatchPreferences,
+  getMatchingConfig,
+  type JobMatchConfig,
   type MatchResult,
   upsertJobMatch,
 } from "./matcher";

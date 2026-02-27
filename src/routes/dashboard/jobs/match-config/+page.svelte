@@ -15,26 +15,26 @@
       .filter((s): s is string => s !== undefined);
   }
 
-  // Form state - initialize from existing preferences, normalizing to match option casing
+  // Form state - initialize from existing config, normalizing to match option casing
   let jobTypes = $state<string[]>(
     normalizeToOptions(
-      data.preferences?.job_types || [],
+      data.config?.job_types || [],
       data.options.jobTypes
     )
   );
   let experienceLevels = $state<string[]>(
     normalizeToOptions(
-      data.preferences?.experience_levels || [],
+      data.config?.experience_levels || [],
       data.options.experienceLevels
     )
   );
-  let remoteOptions = $state<string[]>(
+  let workLocation = $state<string[]>(
     normalizeToOptions(
-      data.preferences?.remote_options || [],
-      data.options.remoteOptions
+      data.config?.work_location || [],
+      data.options.workLocationOptions
     )
   );
-  let locations = $state<string[]>(data.preferences?.locations || []);
+  let locations = $state<string[]>(data.config?.locations || []);
 
   // Location input state
   let locationInput = $state("");
@@ -70,7 +70,7 @@
     }
   }
 
-  async function savePreferences() {
+  async function saveConfig() {
     // Client-side validation
     if (jobTypes.length === 0) {
       errorMessage = "Please select at least one job type";
@@ -79,7 +79,7 @@
       return;
     }
 
-    if (remoteOptions.length === 0) {
+    if (workLocation.length === 0) {
       errorMessage = "Please select at least one work location option";
       saveState = "error";
       setTimeout(() => (saveState = "idle"), 2000);
@@ -97,14 +97,14 @@
           profile_id: data.profileId,
           job_types: jobTypes,
           experience_levels: experienceLevels,
-          remote_options: remoteOptions,
+          work_location: workLocation,
           locations: locations,
         }),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        errorMessage = error.error || "Failed to save preferences";
+        errorMessage = error.error || "Failed to save config";
         saveState = "error";
         setTimeout(() => (saveState = "idle"), 2000);
         return;
@@ -114,7 +114,7 @@
       setTimeout(() => (saveState = "idle"), 2000);
     } catch (error) {
       console.error("Save failed:", error);
-      errorMessage = "Failed to save preferences";
+      errorMessage = "Failed to save config";
       saveState = "error";
       setTimeout(() => (saveState = "idle"), 2000);
     }
@@ -122,7 +122,7 @@
 </script>
 
 <div class="space-y-6">
-  <SectionHeader title="Match Preferences" icon={faSliders} />
+  <SectionHeader title="Match Config" icon={faSliders} />
 
   <p class="text-sm text-[var(--dash-text-secondary)]">
     Configure your job matching preferences. The AI matcher uses these settings
@@ -189,9 +189,9 @@
       </div>
     </div>
     <div class="flex flex-wrap gap-2">
-      {#each data.options.remoteOptions as option}
+      {#each data.options.workLocationOptions as option}
         <label
-          class="cursor-pointer px-4 py-2 rounded-lg border transition-colors {remoteOptions.includes(
+          class="cursor-pointer px-4 py-2 rounded-lg border transition-colors {workLocation.includes(
             option
           )
             ? 'bg-[var(--dash-primary)] border-[var(--dash-primary)] text-white'
@@ -199,11 +199,11 @@
         >
           <input
             type="checkbox"
-            name="remote_options"
+            name="work_location"
             value={option}
-            checked={remoteOptions.includes(option)}
+            checked={workLocation.includes(option)}
             onchange={() =>
-              (remoteOptions = toggleArrayValue(remoteOptions, option))}
+              (workLocation = toggleArrayValue(workLocation, option))}
             class="sr-only"
           />
           {option}
@@ -305,7 +305,7 @@
 
   <!-- Save Button -->
   <div class="flex justify-end">
-    <SectionSaveButton state={saveState} onClick={savePreferences} />
+    <SectionSaveButton state={saveState} onClick={saveConfig} />
   </div>
 
   <!-- Info Box -->

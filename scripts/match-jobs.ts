@@ -9,7 +9,7 @@ import { dbDirect } from "$lib/server/db";
 import {
   calculateMatch,
   filterEligibleJobs,
-  getMatchingPreferences,
+  getMatchingConfig,
   upsertJobMatch,
 } from "$lib/server/job/matcher";
 import { getProfileSkills, needsRematching } from "$lib/server/job/match-utils";
@@ -176,27 +176,27 @@ async function matchJobs(): Promise<void> {
     console.log(`Job Matching for Profile #${profileId}`);
     console.log("========================================\n");
 
-    // 1. Get matching preferences
-    console.log("📋 Fetching matching preferences...");
-    const preferences = await getMatchingPreferences(profileId);
+    // 1. Get matching config
+    console.log("📋 Fetching matching config...");
+    const config = await getMatchingConfig(profileId);
 
-    if (!preferences) {
+    if (!config) {
       console.error(
-        `❌ No matching preferences found for profile #${profileId}`,
+        `❌ No matching config found for profile #${profileId}`,
       );
       console.log(
-        "\n💡 Tip: Create job matching preferences in Directus for this profile",
+        "\n💡 Tip: Create job matching config in Directus for this profile",
       );
       process.exit(1);
     }
 
-    console.log("✅ Preferences loaded:");
-    console.log(`   Job types: ${preferences.job_types?.join(", ") || "Any"}`);
+    console.log("✅ Config loaded:");
+    console.log(`   Job types: ${config.job_types?.join(", ") || "Any"}`);
     console.log(
-      `   Remote options: ${preferences.remote_options?.join(", ") || "Any"}`,
+      `   Work location: ${config.work_location?.join(", ") || "Any"}`,
     );
     console.log(
-      `   Locations: ${preferences.locations?.join(", ") || "Any"}`,
+      `   Locations: ${config.locations?.join(", ") || "Any"}`,
     );
 
     // 2. Get collected data for profile
@@ -241,7 +241,7 @@ async function matchJobs(): Promise<void> {
     // 4. Filter eligible jobs
     console.log("\n🔎 Filtering eligible jobs...");
     const eligibleJobs = await filterEligibleJobs(
-      preferences,
+      config,
       profileSkills,
       jobIds,
     );
@@ -274,7 +274,7 @@ async function matchJobs(): Promise<void> {
       const batchStats = await processBatch(
         batch,
         profileId,
-        preferences,
+        config,
         force,
       );
 

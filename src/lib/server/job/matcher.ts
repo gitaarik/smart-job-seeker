@@ -8,19 +8,19 @@ import { dbDirect as db } from "$lib/server/db";
 import { createJobMatchingAiChat } from "$lib/server/ai-chat/job-utils";
 import { hasArrayOverlap, matchesLocation } from "./match-utils";
 import type {
-  job_match_preferences,
+  job_match_config,
   jobs,
 } from "../../../../generated/prisma/client";
 
 /**
- * Job match preferences type
+ * Job match config type
  */
-export interface JobMatchPreferences {
+export interface JobMatchConfig {
   id: number;
   profile: number;
   job_types: string[] | null;
   experience_levels: string[] | null;
-  remote_options: string[] | null;
+  work_location: string[] | null;
   locations: string[] | null;
 }
 
@@ -44,41 +44,41 @@ export interface MatchResult {
 }
 
 /**
- * Get matching preferences for a profile
+ * Get matching config for a profile
  * @param profileId - Profile ID
- * @returns Matching preferences or null if not found
+ * @returns Matching config or null if not found
  */
-export async function getMatchingPreferences(
+export async function getMatchingConfig(
   profileId: number,
-): Promise<JobMatchPreferences | null> {
-  const prefs = await db.job_match_preferences.findFirst({
+): Promise<JobMatchConfig | null> {
+  const config = await db.job_match_config.findFirst({
     where: { profile: profileId },
   });
 
-  if (!prefs) {
+  if (!config) {
     return null;
   }
 
   return {
-    id: prefs.id,
-    profile: prefs.profile,
-    job_types: prefs.job_types as string[] | null,
-    experience_levels: prefs.experience_levels as string[] | null,
-    remote_options: prefs.remote_options as string[] | null,
-    locations: prefs.locations as string[] | null,
+    id: config.id,
+    profile: config.profile,
+    job_types: config.job_types as string[] | null,
+    experience_levels: config.experience_levels as string[] | null,
+    work_location: config.work_location as string[] | null,
+    locations: config.locations as string[] | null,
   };
 }
 
 /**
  * Filter jobs that meet basic matching requirements
  * Uses PostgreSQL JSON operators for efficient filtering
- * @param preferences - User's matching preferences
+ * @param config - User's matching config
  * @param profileSkills - User's technical skills
  * @param jobIds - Optional array of specific job IDs to filter
  * @returns Array of eligible jobs
  */
 export async function filterEligibleJobs(
-  preferences: JobMatchPreferences,
+  config: JobMatchConfig,
   profileSkills: string[],
   jobIds?: number[],
 ): Promise<jobs[]> {
@@ -87,19 +87,19 @@ export async function filterEligibleJobs(
     ? Prisma.sql`AND j.id = ANY(${jobIds})`
     : Prisma.empty;
 
-  // Build remote options filter (REQUIRED)
+  // Build work location filter (REQUIRED)
   if (
-    !preferences.remote_options ||
-    preferences.remote_options.length === 0
+    !config.work_location ||
+    config.work_location.length === 0
   ) {
     throw new Error(
-      "Remote options preferences are required for job matching",
+      "Work location config is required for job matching",
     );
   }
 
   // Build job types filter (REQUIRED)
-  if (!preferences.job_types || preferences.job_types.length === 0) {
-    throw new Error("Job types preferences are required for job matching");
+  if (!config.job_types || config.job_types.length === 0) {
+    throw new Error("Job types config is required for job matching");
   }
 
   // Skills filter (AT LEAST ONE match required)
@@ -118,14 +118,14 @@ export async function filterEligibleJobs(
     AND (
       j.work_location IS NULL
       OR j.work_location::jsonb ?| array[${
-    Prisma.join(preferences.remote_options)
+    Prisma.join(config.work_location)
   }]::text[]
     )
     -- Job types overlap (REQUIRED)
     AND (
       j.job_types IS NULL
       OR j.job_types::jsonb ?| array[${
-    Prisma.join(preferences.job_types)
+    Prisma.join(config.job_types)
   }]::text[]
     )
     -- Skills overlap (AT LEAST ONE match in required OR preferred)
@@ -141,9 +141,9 @@ export async function filterEligibleJobs(
   `;
 
   // Apply location filter in memory (more flexible matching)
-  if (preferences.locations && preferences.locations.length > 0) {
+  if (config.locations && config.locations.length > 0) {
     return jobs.filter((job) =>
-      matchesLocation(job.office_location, preferences.locations!)
+      matchesLocation(job.office_location, config.locations!)
     );
   }
 
@@ -154,13 +154,13 @@ export async function filterEligibleJobs(
  * Calculate match score using LLM
  * @param profileId - Profile ID
  * @param job - Job to match against
- * @param preferences - User's matching preferences
+ * @param config - User's matching config
  * @returns Match result with score and details
  */
 export async function calculateMatch(
   profileId: number,
   job: jobs,
-  preferences: JobMatchPreferences,
+  config: JobMatchConfig,
 ): Promise<MatchResult> {
   // Get latest collected data for profile
   const collectedData = await db.collected_data.findFirst({
@@ -188,18 +188,18 @@ export async function calculateMatch(
     schema: collectedData.schema || "",
     data: collectedData.data || "",
 
-    // Preferences variables
-    "preferences.job_types": preferences.job_types
-      ? JSON.stringify(preferences.job_types)
+    // Config variables
+    "preferences.job_types": config.job_types
+      ? JSON.stringify(config.job_types)
       : "Any",
-    "preferences.experience_levels": preferences.experience_levels
-      ? JSON.stringify(preferences.experience_levels)
+    "preferences.experience_levels": config.experience_levels
+      ? JSON.stringify(config.experience_levels)
       : "Any",
-    "preferences.remote_options": preferences.remote_options
-      ? JSON.stringify(preferences.remote_options)
+    "preferences.work_location": config.work_location
+      ? JSON.stringify(config.work_location)
       : "Any",
-    "preferences.locations": preferences.locations
-      ? JSON.stringify(preferences.locations)
+    "preferences.locations": config.locations
+      ? JSON.stringify(config.locations)
       : "Any",
 
     // Job variables
@@ -296,29 +296,29 @@ export async function calculateMatch(
  * Get jobs that need matching (no existing match for this profile)
  * Uses an efficient LEFT JOIN query to find unmatched jobs
  * @param profileId - Profile ID to check matches for
- * @param preferences - User's matching preferences for filtering
+ * @param config - User's matching config for filtering
  * @param profileSkills - User's technical skills for filtering
  * @param limit - Maximum number of jobs to return
  * @returns Array of unmatched eligible jobs
  */
 export async function getUnmatchedJobs(
   profileId: number,
-  preferences: JobMatchPreferences,
+  config: JobMatchConfig,
   profileSkills: string[],
   limit: number = 50,
 ): Promise<jobs[]> {
-  // Validate required preferences
+  // Validate required config
   if (
-    !preferences.remote_options ||
-    preferences.remote_options.length === 0
+    !config.work_location ||
+    config.work_location.length === 0
   ) {
     throw new Error(
-      "Remote options preferences are required for job matching",
+      "Work location config is required for job matching",
     );
   }
 
-  if (!preferences.job_types || preferences.job_types.length === 0) {
-    throw new Error("Job types preferences are required for job matching");
+  if (!config.job_types || config.job_types.length === 0) {
+    throw new Error("Job types config is required for job matching");
   }
 
   if (!profileSkills || profileSkills.length === 0) {
@@ -337,12 +337,12 @@ export async function getUnmatchedJobs(
     -- Work location overlap (REQUIRED)
     AND (
       j.work_location IS NULL
-      OR j.work_location::jsonb ?| array[${Prisma.join(preferences.remote_options)}]::text[]
+      OR j.work_location::jsonb ?| array[${Prisma.join(config.work_location)}]::text[]
     )
     -- Job types overlap (REQUIRED)
     AND (
       j.job_types IS NULL
-      OR j.job_types::jsonb ?| array[${Prisma.join(preferences.job_types)}]::text[]
+      OR j.job_types::jsonb ?| array[${Prisma.join(config.job_types)}]::text[]
     )
     -- Skills overlap (AT LEAST ONE match in required OR preferred)
     AND (
@@ -355,9 +355,9 @@ export async function getUnmatchedJobs(
   `;
 
   // Apply location filter in memory (more flexible matching)
-  if (preferences.locations && preferences.locations.length > 0) {
+  if (config.locations && config.locations.length > 0) {
     return jobs.filter((job) =>
-      matchesLocation(job.office_location, preferences.locations!)
+      matchesLocation(job.office_location, config.locations!)
     );
   }
 

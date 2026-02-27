@@ -203,11 +203,6 @@ export type education = Prisma.educationModel
  */
 export type highlights = Prisma.highlightsModel
 /**
- * Model job_match_preferences
- * 
- */
-export type job_match_preferences = Prisma.job_match_preferencesModel
-/**
  * Model job_matches
  * 
  */
@@ -407,3 +402,8 @@ export type verifications = Prisma.verificationsModel
  * This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
  */
 export type job_search_run_items = Prisma.job_search_run_itemsModel
+/**
+ * Model job_match_config
+ * 
+ */
+export type job_match_config = Prisma.job_match_configModel

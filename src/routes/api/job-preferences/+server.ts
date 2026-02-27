@@ -8,7 +8,7 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
   }
 
   const body = await request.json();
-  const { profile_id, job_types, experience_levels, remote_options, locations } = body;
+  const { profile_id, job_types, experience_levels, work_location, locations } = body;
 
   if (!profile_id) {
     return json({ error: "No profile specified" }, { status: 400 });
@@ -34,9 +34,9 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
   }
 
   if (
-    !remote_options ||
-    !Array.isArray(remote_options) ||
-    remote_options.length === 0
+    !work_location ||
+    !Array.isArray(work_location) ||
+    work_location.length === 0
   ) {
     return json(
       { error: "Please select at least one work location option" },
@@ -44,8 +44,8 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
     );
   }
 
-  // Check if preferences already exist
-  const existing = await db.job_match_preferences.findFirst({
+  // Check if config already exists
+  const existing = await db.job_match_config.findFirst({
     where: { profile: profileId },
   });
 
@@ -55,19 +55,19 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
       experience_levels && experience_levels.length > 0
         ? experience_levels
         : null,
-    remote_options: remote_options,
+    work_location: work_location,
     locations: locations && locations.length > 0 ? locations : null,
     date_updated: new Date(),
   };
 
   let result;
   if (existing) {
-    result = await db.job_match_preferences.update({
+    result = await db.job_match_config.update({
       where: { id: existing.id },
       data,
     });
   } else {
-    result = await db.job_match_preferences.create({
+    result = await db.job_match_config.create({
       data: {
         ...data,
         profile: profileId,

@@ -667,26 +667,11 @@ model highlights {
   profiles     profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "highlights_profile_foreign")
 }
 
-model job_match_preferences {
-  id                Int       @id @default(autoincrement())
-  date_created      DateTime? @db.Timestamptz(6)
-  date_updated      DateTime? @db.Timestamptz(6)
-  job_types         Json?     @db.Json
-  experience_levels Json?     @db.Json
-  remote_options    Json?     @db.Json
-  locations         Json?     @db.Json
-  profile           Int
-  name              String?   @db.VarChar(255)
-  profiles          profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_match_preferences_profile_foreign")
-}
-
 model job_matches {
   id                            Int       @id @default(autoincrement())
   score                         Int       @default(0)
   reasoning                     String?
-  match_summary                 String?
   skill_match_percentage        Int?
-  matched_skills                Json?     @db.Json
   strengths                     Json?     @db.Json
   gaps                          Json?     @db.Json
   recommendation                String?   @default("consider") @db.VarChar(255)
@@ -698,6 +683,8 @@ model job_matches {
   profile                       Int
   llm_prompt                    String?
   ai_chat_scoring               Int?
+  matched_skills                Json?     @db.Json
+  match_summary                 String?
   ai_chat                       ai_chats? @relation(fields: [ai_chat_scoring], references: [id], onUpdate: NoAction, map: "job_matches_ai_chat_scoring_foreign")
   jobs                          jobs      @relation(fields: [job], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_matches_job_foreign")
   profiles                      profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_matches_profile_foreign")
@@ -998,7 +985,7 @@ model profiles {
   config                                                            config[]
   education                                                         education[]
   highlights                                                        highlights[]
-  job_match_preferences                                             job_match_preferences[]
+  job_match_config                                                  job_match_config[]
   job_matches                                                       job_matches[]
   job_searches                                                      job_searches[]
   languages                                                         languages[]
@@ -1368,6 +1355,19 @@ model job_search_run_items {
 
   @@index([run_id], map: "idx_job_search_run_items_run_id")
   @@index([run_id, status], map: "idx_job_search_run_items_run_status")
+}
+
+model job_match_config {
+  id                Int       @id @default(autoincrement())
+  date_created      DateTime? @db.Timestamptz(6)
+  date_updated      DateTime? @db.Timestamptz(6)
+  job_types         Json?     @db.Json
+  experience_levels Json?     @db.Json
+  work_location     Json?     @db.Json
+  locations         Json?     @db.Json
+  profile           Int
+  name              String?   @db.VarChar(255)
+  profiles          profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 enum Role {
