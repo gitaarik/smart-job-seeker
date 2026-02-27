@@ -16,6 +16,10 @@ export const load: PageServerLoad = async ({ parent, url }) => {
   const filter = url.searchParams.get("filter") || "all"; // "all" | "matches" | "saved"
   const search = url.searchParams.get("q") || "";
   const platform = url.searchParams.get("platform") || "";
+  const workLocation = url.searchParams.get("workLocation") || ""; // remote, hybrid, onsite
+  const jobType = url.searchParams.get("jobType") || ""; // full_time, contract, part_time, freelance
+  const minScore = url.searchParams.get("minScore") || ""; // 40, 60, 80
+  const datePosted = url.searchParams.get("datePosted") || ""; // 1, 7, 30 (days)
   const page = parseInt(url.searchParams.get("page") || "1");
   const limit = 20;
   const offset = (page - 1) * limit;
@@ -38,27 +42,39 @@ export const load: PageServerLoad = async ({ parent, url }) => {
       matchWhere.status = "saved";
     } else if (filter === "matches") {
       // Show jobs with AI scoring (score > 0), exclude rejected
-      matchWhere.score = { gt: 0 };
+      matchWhere.score = { gt: minScore ? parseInt(minScore) : 0 };
       matchWhere.status = { not: "rejected" };
     }
 
+    // Build jobs filter conditions
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const jobsFilter: any = {};
+
     // Add search filter on joined jobs
     if (search) {
-      matchWhere.jobs = {
-        OR: [
-          { title: { contains: search, mode: "insensitive" } },
-          { company: { contains: search, mode: "insensitive" } },
-          { office_location: { contains: search, mode: "insensitive" } },
-          { job_description: { contains: search, mode: "insensitive" } },
-        ],
-      };
+      jobsFilter.OR = [
+        { title: { contains: search, mode: "insensitive" } },
+        { company: { contains: search, mode: "insensitive" } },
+        { office_location: { contains: search, mode: "insensitive" } },
+        { job_description: { contains: search, mode: "insensitive" } },
+      ];
     }
 
     if (platform) {
-      matchWhere.jobs = {
-        ...matchWhere.jobs,
-        job_platform: parseInt(platform),
-      };
+      jobsFilter.job_platform = parseInt(platform);
+    }
+
+    // Date posted filter
+    if (datePosted) {
+      const days = parseInt(datePosted);
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - days);
+      jobsFilter.date_posted = { gte: cutoffDate };
+    }
+
+    // Apply jobs filter if any conditions exist
+    if (Object.keys(jobsFilter).length > 0) {
+      matchWhere.jobs = jobsFilter;
     }
 
     // Sort by date_posted first (nulls last), then date_created as fallback
@@ -67,32 +83,60 @@ export const load: PageServerLoad = async ({ parent, url }) => {
       { jobs: { date_created: "desc" as const } },
     ];
 
-    const [matches, matchCount] = await Promise.all([
-      db.job_matches.findMany({
-        where: matchWhere,
-        include: {
-          jobs: {
-            include: {
-              job_platforms: {
-                select: {
-                  id: true,
-                  name: true,
-                },
+    // For JSON array filters, we need to fetch more and filter in memory
+    const hasJsonFilters = workLocation || jobType;
+    const fetchLimit = hasJsonFilters ? limit * 5 : limit; // Fetch extra for filtering
+    const fetchOffset = hasJsonFilters ? 0 : offset;
+
+    let allMatches = await db.job_matches.findMany({
+      where: matchWhere,
+      include: {
+        jobs: {
+          include: {
+            job_platforms: {
+              select: {
+                id: true,
+                name: true,
               },
             },
           },
         },
-        orderBy,
-        take: limit,
-        skip: offset,
-      }),
-      db.job_matches.count({ where: matchWhere }),
-    ]);
+      },
+      orderBy,
+      take: hasJsonFilters ? undefined : fetchLimit,
+      skip: fetchOffset,
+    });
+
+    // Apply JSON array filters in memory
+    if (workLocation) {
+      const targetLocation = workLocation.toLowerCase();
+      allMatches = allMatches.filter((m) => {
+        const locations = m.jobs?.work_location;
+        if (!locations || !Array.isArray(locations)) return false;
+        return locations.some((loc: string) => loc.toLowerCase() === targetLocation);
+      });
+    }
+
+    if (jobType) {
+      const targetType = jobType.toLowerCase();
+      allMatches = allMatches.filter((m) => {
+        const types = m.jobs?.job_types;
+        if (!types || !Array.isArray(types)) return false;
+        return types.some((t: string) => t.toLowerCase() === targetType);
+      });
+    }
+
+    // Calculate total after filtering, then paginate
+    const filteredTotal = allMatches.length;
+    const paginatedMatches = hasJsonFilters
+      ? allMatches.slice(offset, offset + limit)
+      : allMatches;
 
     // Extract jobs from matches and build matchesByJobId
-    jobs = matches.map((m) => m.jobs);
+    jobs = paginatedMatches.map((m) => m.jobs);
+    totalCount = hasJsonFilters ? filteredTotal : await db.job_matches.count({ where: matchWhere });
     matchesByJobId = Object.fromEntries(
-      matches.map((m) => [
+      paginatedMatches.map((m) => [
         m.job,
         {
           id: m.id,
@@ -105,10 +149,9 @@ export const load: PageServerLoad = async ({ parent, url }) => {
         },
       ])
     );
-    savedJobIds = matches
+    savedJobIds = paginatedMatches
       .filter((m) => m.status === "saved")
       .map((m) => m.job);
-    totalCount = matchCount;
   } else {
     // "all" - Query from jobs table directly
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -127,32 +170,65 @@ export const load: PageServerLoad = async ({ parent, url }) => {
       where.job_platform = parseInt(platform);
     }
 
+    // Date posted filter
+    if (datePosted) {
+      const days = parseInt(datePosted);
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - days);
+      where.date_posted = { gte: cutoffDate };
+    }
+
     // Sort by date_posted first (nulls last), then date_created as fallback
     const jobOrderBy = [
       { date_posted: { sort: "desc" as const, nulls: "last" as const } },
       { date_created: "desc" as const },
     ];
 
-    const [jobResults, jobCount] = await Promise.all([
-      db.jobs.findMany({
-        where,
-        include: {
-          job_platforms: {
-            select: {
-              id: true,
-              name: true,
-            },
+    // For JSON array filters, we need to fetch more and filter in memory
+    const hasJsonFilters = workLocation || jobType;
+
+    let allJobs = await db.jobs.findMany({
+      where,
+      include: {
+        job_platforms: {
+          select: {
+            id: true,
+            name: true,
           },
         },
-        orderBy: jobOrderBy,
-        take: limit,
-        skip: offset,
-      }),
-      db.jobs.count({ where }),
-    ]);
+      },
+      orderBy: jobOrderBy,
+      take: hasJsonFilters ? undefined : limit,
+      skip: hasJsonFilters ? 0 : offset,
+    });
 
-    jobs = jobResults;
-    totalCount = jobCount;
+    // Apply JSON array filters in memory
+    if (workLocation) {
+      const targetLocation = workLocation.toLowerCase();
+      allJobs = allJobs.filter((j) => {
+        const locations = j.work_location;
+        if (!locations || !Array.isArray(locations)) return false;
+        return locations.some((loc: string) => loc.toLowerCase() === targetLocation);
+      });
+    }
+
+    if (jobType) {
+      const targetType = jobType.toLowerCase();
+      allJobs = allJobs.filter((j) => {
+        const types = j.job_types;
+        if (!types || !Array.isArray(types)) return false;
+        return types.some((t: string) => t.toLowerCase() === targetType);
+      });
+    }
+
+    // Calculate total after filtering, then paginate
+    if (hasJsonFilters) {
+      totalCount = allJobs.length;
+      jobs = allJobs.slice(offset, offset + limit);
+    } else {
+      jobs = allJobs;
+      totalCount = await db.jobs.count({ where });
+    }
 
     // Get matches for the displayed jobs
     const jobMatches = await db.job_matches.findMany({
@@ -201,6 +277,10 @@ export const load: PageServerLoad = async ({ parent, url }) => {
       filter,
       search,
       platform,
+      workLocation,
+      jobType,
+      minScore,
+      datePosted,
     },
   };
 };

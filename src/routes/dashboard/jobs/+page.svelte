@@ -102,6 +102,10 @@
   let filterType = $state(filters.filter);
   let searchInput = $state(filters.search);
   let platformFilter = $state(filters.platform);
+  let workLocationFilter = $state(filters.workLocation);
+  let jobTypeFilter = $state(filters.jobType);
+  let minScoreFilter = $state(filters.minScore);
+  let datePostedFilter = $state(filters.datePosted);
   let showFilters = $state(false);
   let expandedId = $state<number | null>(null);
   let searchInputEl: HTMLInputElement;
@@ -135,11 +139,19 @@
     const f = overrides.filter ?? filterType;
     const q = overrides.search ?? searchInput;
     const p = overrides.platform ?? platformFilter;
+    const wl = overrides.workLocation ?? workLocationFilter;
+    const jt = overrides.jobType ?? jobTypeFilter;
+    const ms = overrides.minScore ?? minScoreFilter;
+    const dp = overrides.datePosted ?? datePostedFilter;
     const pg = overrides.page ?? "1";
 
     if (f !== "all") params.set("filter", f);
     if (q) params.set("q", q);
     if (p) params.set("platform", p);
+    if (wl) params.set("workLocation", wl);
+    if (jt) params.set("jobType", jt);
+    if (ms) params.set("minScore", ms);
+    if (dp) params.set("datePosted", dp);
     if (pg !== "1") params.set("page", pg);
 
     return `?${params.toString()}`;
@@ -157,9 +169,17 @@
   function clearFilters() {
     searchInput = "";
     platformFilter = "";
+    workLocationFilter = "";
+    jobTypeFilter = "";
+    minScoreFilter = "";
+    datePostedFilter = "";
     goto(buildUrl({
       search: "",
       platform: "",
+      workLocation: "",
+      jobType: "",
+      minScore: "",
+      datePosted: "",
       page: "1",
     }));
   }
@@ -217,7 +237,14 @@
 
   // Check if any filters are active (excluding filter type)
   let hasActiveFilters = $derived(
-    filters.search || filters.platform
+    filters.search || filters.platform || filters.workLocation ||
+    filters.jobType || filters.minScore || filters.datePosted
+  );
+
+  // Count active filters for badge
+  let activeFilterCount = $derived(
+    [filters.platform, filters.workLocation, filters.jobType, filters.minScore, filters.datePosted]
+      .filter(Boolean).length
   );
 
   // Empty state messages
@@ -310,12 +337,14 @@
     <button
       type="button"
       onclick={() => (showFilters = !showFilters)}
-      class="px-3 py-2 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors flex items-center justify-center relative"
+      class="px-3 py-2 bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors flex items-center justify-center gap-2 relative"
       aria-label="Filters"
     >
       <FontAwesomeIcon icon={faFilter} class="w-4 h-4" />
-      {#if hasActiveFilters}
-        <span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[var(--dash-primary)] rounded-full"></span>
+      {#if activeFilterCount > 0}
+        <span class="text-xs font-medium bg-[var(--dash-primary)] text-white rounded-full w-5 h-5 flex items-center justify-center">
+          {activeFilterCount}
+        </span>
       {/if}
     </button>
   </div>
@@ -325,23 +354,79 @@
     <div
       class="bg-[var(--dash-card)] border border-[var(--dash-border)] rounded-lg p-4 space-y-4"
     >
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <!-- Platform Filter -->
         <div>
-          <label class="block text-sm text-[var(--dash-text-secondary)] mb-1"
-            >Platform</label
-          >
+          <label class="block text-sm text-[var(--dash-text-secondary)] mb-1">Platform</label>
           <select
             bind:value={platformFilter}
             class="w-full px-3 py-2 bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)]"
           >
-            <option value="">All Platforms</option>
+            <option value="">All</option>
             {#each platforms as platform}
               <option value={platform.id.toString()}>{platform.name}</option>
             {/each}
           </select>
         </div>
 
+        <!-- Work Location Filter -->
+        <div>
+          <label class="block text-sm text-[var(--dash-text-secondary)] mb-1">Work Location</label>
+          <select
+            bind:value={workLocationFilter}
+            class="w-full px-3 py-2 bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)]"
+          >
+            <option value="">All</option>
+            <option value="remote">Remote</option>
+            <option value="hybrid">Hybrid</option>
+            <option value="onsite">On-site</option>
+          </select>
+        </div>
+
+        <!-- Job Type Filter -->
+        <div>
+          <label class="block text-sm text-[var(--dash-text-secondary)] mb-1">Job Type</label>
+          <select
+            bind:value={jobTypeFilter}
+            class="w-full px-3 py-2 bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)]"
+          >
+            <option value="">All</option>
+            <option value="full_time">Full-time</option>
+            <option value="contract">Contract</option>
+            <option value="part_time">Part-time</option>
+            <option value="freelance">Freelance</option>
+          </select>
+        </div>
+
+        <!-- Date Posted Filter -->
+        <div>
+          <label class="block text-sm text-[var(--dash-text-secondary)] mb-1">Date Posted</label>
+          <select
+            bind:value={datePostedFilter}
+            class="w-full px-3 py-2 bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)]"
+          >
+            <option value="">Any time</option>
+            <option value="1">Last 24 hours</option>
+            <option value="7">Last 7 days</option>
+            <option value="30">Last 30 days</option>
+          </select>
+        </div>
+
+        <!-- Min Score Filter (only on Matches tab) -->
+        {#if filterType === "matches"}
+          <div>
+            <label class="block text-sm text-[var(--dash-text-secondary)] mb-1">Min Score</label>
+            <select
+              bind:value={minScoreFilter}
+              class="w-full px-3 py-2 bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)]"
+            >
+              <option value="">Any</option>
+              <option value="40">40+</option>
+              <option value="60">60+</option>
+              <option value="80">80+</option>
+            </select>
+          </div>
+        {/if}
       </div>
 
       <div class="flex gap-2">
