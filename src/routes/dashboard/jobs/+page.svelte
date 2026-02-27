@@ -102,9 +102,6 @@
   let filterType = $state(filters.filter);
   let searchInput = $state(filters.search);
   let platformFilter = $state(filters.platform);
-  let matchStatusFilter = $state(filters.matchStatus);
-  let sortBy = $state(filters.sortBy);
-  let sortOrder = $state(filters.sortOrder);
   let showFilters = $state(false);
   let expandedId = $state<number | null>(null);
   let searchInputEl: HTMLInputElement;
@@ -114,21 +111,6 @@
     { value: "all", label: "All Jobs", mobileLabel: "All", icon: faBriefcase },
     { value: "matches", label: "Matches", mobileLabel: "Matches", icon: faListCheck },
     { value: "saved", label: "Saved", mobileLabel: "Saved", icon: faBookmark },
-  ];
-
-  // Match status options (for matches filter)
-  const matchStatusOptions = [
-    { value: "", label: "All Statuses" },
-    { value: "new", label: "New" },
-    { value: "viewed", label: "Viewed" },
-    { value: "applied", label: "Applied" },
-    { value: "rejected", label: "Not Interested" },
-  ];
-
-  const sortOptions = [
-    { value: "date", label: "Date" },
-    { value: "title", label: "Title" },
-    { value: "company", label: "Company" },
   ];
 
   // Get page title based on filter
@@ -153,17 +135,11 @@
     const f = overrides.filter ?? filterType;
     const q = overrides.search ?? searchInput;
     const p = overrides.platform ?? platformFilter;
-    const ms = overrides.matchStatus ?? matchStatusFilter;
-    const s = overrides.sortBy ?? sortBy;
-    const o = overrides.sortOrder ?? sortOrder;
     const pg = overrides.page ?? "1";
 
     if (f !== "all") params.set("filter", f);
     if (q) params.set("q", q);
     if (p) params.set("platform", p);
-    if (ms && f === "matches") params.set("matchStatus", ms);
-    if (s !== "date") params.set("sort", s);
-    if (o !== "desc") params.set("order", o);
     if (pg !== "1") params.set("page", pg);
 
     return `?${params.toString()}`;
@@ -171,10 +147,6 @@
 
   function switchFilter(filter: string) {
     filterType = filter;
-    // Reset match status when switching away from matches
-    if (filter !== "matches") {
-      matchStatusFilter = "";
-    }
     goto(buildUrl({ filter, page: "1" }));
   }
 
@@ -185,15 +157,9 @@
   function clearFilters() {
     searchInput = "";
     platformFilter = "";
-    matchStatusFilter = "";
-    sortBy = "date";
-    sortOrder = "desc";
     goto(buildUrl({
       search: "",
       platform: "",
-      matchStatus: "",
-      sortBy: "date",
-      sortOrder: "desc",
       page: "1",
     }));
   }
@@ -251,11 +217,7 @@
 
   // Check if any filters are active (excluding filter type)
   let hasActiveFilters = $derived(
-    filters.search ||
-      filters.platform ||
-      filters.matchStatus ||
-      filters.sortBy !== "date" ||
-      filters.sortOrder !== "desc"
+    filters.search || filters.platform
   );
 
   // Empty state messages
@@ -380,51 +342,6 @@
           </select>
         </div>
 
-        <!-- Match Status Filter (only for matches) -->
-        {#if filterType === "matches"}
-          <div>
-            <label class="block text-sm text-[var(--dash-text-secondary)] mb-1"
-              >Match Status</label
-            >
-            <select
-              bind:value={matchStatusFilter}
-              class="w-full px-3 py-2 bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)]"
-            >
-              {#each matchStatusOptions as option}
-                <option value={option.value}>{option.label}</option>
-              {/each}
-            </select>
-          </div>
-        {/if}
-
-        <!-- Sort By -->
-        <div>
-          <label class="block text-sm text-[var(--dash-text-secondary)] mb-1"
-            >Sort By</label
-          >
-          <select
-            bind:value={sortBy}
-            class="w-full px-3 py-2 bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)]"
-          >
-            {#each sortOptions as option}
-              <option value={option.value}>{option.label}</option>
-            {/each}
-          </select>
-        </div>
-
-        <!-- Sort Order -->
-        <div>
-          <label class="block text-sm text-[var(--dash-text-secondary)] mb-1"
-            >Order</label
-          >
-          <select
-            bind:value={sortOrder}
-            class="w-full px-3 py-2 bg-[var(--dash-bg)] border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)]"
-          >
-            <option value="desc">Newest First</option>
-            <option value="asc">Oldest First</option>
-          </select>
-        </div>
       </div>
 
       <div class="flex gap-2">

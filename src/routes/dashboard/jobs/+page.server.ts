@@ -16,9 +16,6 @@ export const load: PageServerLoad = async ({ parent, url }) => {
   const filter = url.searchParams.get("filter") || "all"; // "all" | "matches" | "saved"
   const search = url.searchParams.get("q") || "";
   const platform = url.searchParams.get("platform") || "";
-  const matchStatus = url.searchParams.get("matchStatus") || ""; // For filtering match statuses (new, viewed, applied, etc.)
-  const sortBy = url.searchParams.get("sort") || "date";
-  const sortOrder = url.searchParams.get("order") || "desc";
   const page = parseInt(url.searchParams.get("page") || "1");
   const limit = 20;
   const offset = (page - 1) * limit;
@@ -40,11 +37,9 @@ export const load: PageServerLoad = async ({ parent, url }) => {
     if (filter === "saved") {
       matchWhere.status = "saved";
     } else if (filter === "matches") {
-      // Show jobs with AI scoring (score > 0)
+      // Show jobs with AI scoring (score > 0), exclude rejected
       matchWhere.score = { gt: 0 };
-      if (matchStatus) {
-        matchWhere.status = matchStatus;
-      }
+      matchWhere.status = { not: "rejected" };
     }
 
     // Add search filter on joined jobs
@@ -66,21 +61,11 @@ export const load: PageServerLoad = async ({ parent, url }) => {
       };
     }
 
-    // Determine sort field - for matches, we sort on match fields or nested job fields
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let orderBy: any;
-    if (sortBy === "score") {
-      orderBy = { score: sortOrder };
-    } else if (sortBy === "date") {
-      // Sort by date_posted first (nulls last), then date_created as fallback
-      orderBy = [
-        { jobs: { date_posted: { sort: sortOrder, nulls: "last" } } },
-        { jobs: { date_created: sortOrder } },
-      ];
-    } else {
-      // Sort by job fields - need to use nested ordering
-      orderBy = { jobs: { [sortBy]: sortOrder } };
-    }
+    // Sort by date_posted first (nulls last), then date_created as fallback
+    const orderBy = [
+      { jobs: { date_posted: { sort: "desc" as const, nulls: "last" as const } } },
+      { jobs: { date_created: "desc" as const } },
+    ];
 
     const [matches, matchCount] = await Promise.all([
       db.job_matches.findMany({
@@ -142,18 +127,11 @@ export const load: PageServerLoad = async ({ parent, url }) => {
       where.job_platform = parseInt(platform);
     }
 
-    // Determine sort order
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let jobOrderBy: any;
-    if (sortBy === "date") {
-      // Sort by date_posted first (nulls last), then date_created as fallback
-      jobOrderBy = [
-        { date_posted: { sort: sortOrder, nulls: "last" } },
-        { date_created: sortOrder },
-      ];
-    } else {
-      jobOrderBy = { [sortBy]: sortOrder };
-    }
+    // Sort by date_posted first (nulls last), then date_created as fallback
+    const jobOrderBy = [
+      { date_posted: { sort: "desc" as const, nulls: "last" as const } },
+      { date_created: "desc" as const },
+    ];
 
     const [jobResults, jobCount] = await Promise.all([
       db.jobs.findMany({
@@ -223,9 +201,6 @@ export const load: PageServerLoad = async ({ parent, url }) => {
       filter,
       search,
       platform,
-      matchStatus,
-      sortBy,
-      sortOrder,
     },
   };
 };
