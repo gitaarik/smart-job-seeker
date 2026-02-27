@@ -142,6 +142,27 @@
   let browserUseHealth = $state<BrowserUseHealth | null>(null);
   let loadingHealth = $state(false);
 
+  // CDP debug info (staff only)
+  interface CDPDebugInfo {
+    timestamp: string;
+    chrome_processes: Array<{
+      pid: string;
+      cpu: string;
+      mem: string;
+      rss: string;
+      stat: string;
+      cmd: string;
+    }>;
+    socat_processes: Array<{ pid: string; cmd: string }>;
+    cdp_version_check: { success: boolean; error?: string; time_ms: number };
+    cdp_pages_check: { success: boolean; error?: string; time_ms: number; data?: { count: number } };
+    websocket_test: { success: boolean; error?: string; time_ms: number };
+    port_listening: { "9222": boolean; "9223": boolean };
+  }
+  let cdpDebugInfo = $state<CDPDebugInfo | null>(null);
+  let loadingCDPDebug = $state(false);
+  let showCDPDebug = $state(false);
+
   // Computed states
   let isRunning = $derived(jobSearch.status === "running");
   let isBlocked = $derived(jobSearch.status === "blocked");
@@ -438,6 +459,22 @@
       console.error("Failed to load browser-use health:", err);
     } finally {
       loadingHealth = false;
+    }
+  }
+
+  async function loadCDPDebug() {
+    if (!data.isStaff || loadingCDPDebug) return;
+    loadingCDPDebug = true;
+
+    try {
+      const response = await fetch("/api/staff/browser-use/debug");
+      if (response.ok) {
+        cdpDebugInfo = await response.json();
+      }
+    } catch (err) {
+      console.error("Failed to load CDP debug info:", err);
+    } finally {
+      loadingCDPDebug = false;
     }
   }
 
@@ -1512,8 +1549,113 @@
                             <strong>Error:</strong> {browserUseHealth.error}
                           </div>
                         {/if}
+                        <!-- CDP Debug toggle -->
+                        <div class="mt-2 pt-2 border-t border-[var(--dash-border)]">
+                          <button
+                            onclick={() => {
+                              showCDPDebug = !showCDPDebug;
+                              if (showCDPDebug) loadCDPDebug();
+                            }}
+                            class="text-xs text-[var(--dash-primary)] hover:underline"
+                          >
+                            {showCDPDebug ? 'Hide' : 'Show'} CDP Debug Info
+                          </button>
+                        </div>
                       </div>
                     {/if}
+
+                    <!-- CDP Debug Panel -->
+                    {#if showCDPDebug}
+                      <div class="mt-3 p-3 rounded border border-[var(--dash-border)] bg-[var(--dash-bg)]">
+                        <div class="flex items-center justify-between mb-2">
+                          <span class="text-sm font-medium text-[var(--dash-text)]">CDP Debug Info</span>
+                          <button
+                            onclick={loadCDPDebug}
+                            disabled={loadingCDPDebug}
+                            class="text-xs px-2 py-1 rounded border border-[var(--dash-border)] bg-[var(--dash-card)] text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] disabled:opacity-50"
+                          >
+                            {#if loadingCDPDebug}
+                              <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
+                            {:else}
+                              Refresh
+                            {/if}
+                          </button>
+                        </div>
+
+                        {#if cdpDebugInfo}
+                          <div class="space-y-3 text-xs font-mono">
+                            <!-- Connection Tests -->
+                            <div>
+                              <div class="font-semibold text-[var(--dash-text)] mb-1">Connection Tests</div>
+                              <div class="grid grid-cols-3 gap-2">
+                                <div class="p-2 rounded {cdpDebugInfo.cdp_version_check.success ? 'bg-[var(--dash-success-light)]' : 'bg-[var(--dash-error-light)]'}">
+                                  <div class="font-medium">Version Check</div>
+                                  <div class={cdpDebugInfo.cdp_version_check.success ? 'text-[var(--dash-success)]' : 'text-[var(--dash-error)]'}>
+                                    {cdpDebugInfo.cdp_version_check.success ? `OK (${cdpDebugInfo.cdp_version_check.time_ms}ms)` : cdpDebugInfo.cdp_version_check.error}
+                                  </div>
+                                </div>
+                                <div class="p-2 rounded {cdpDebugInfo.cdp_pages_check.success ? 'bg-[var(--dash-success-light)]' : 'bg-[var(--dash-error-light)]'}">
+                                  <div class="font-medium">Pages Check</div>
+                                  <div class={cdpDebugInfo.cdp_pages_check.success ? 'text-[var(--dash-success)]' : 'text-[var(--dash-error)]'}>
+                                    {cdpDebugInfo.cdp_pages_check.success ? `${cdpDebugInfo.cdp_pages_check.data?.count || 0} pages (${cdpDebugInfo.cdp_pages_check.time_ms}ms)` : cdpDebugInfo.cdp_pages_check.error}
+                                  </div>
+                                </div>
+                                <div class="p-2 rounded {cdpDebugInfo.websocket_test.success ? 'bg-[var(--dash-success-light)]' : 'bg-[var(--dash-error-light)]'}">
+                                  <div class="font-medium">WebSocket Test</div>
+                                  <div class={cdpDebugInfo.websocket_test.success ? 'text-[var(--dash-success)]' : 'text-[var(--dash-error)]'}>
+                                    {cdpDebugInfo.websocket_test.success ? `OK (${cdpDebugInfo.websocket_test.time_ms}ms)` : cdpDebugInfo.websocket_test.error}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <!-- Ports -->
+                            <div>
+                              <div class="font-semibold text-[var(--dash-text)] mb-1">Port Status</div>
+                              <div class="flex gap-4">
+                                <span>9222 (external): <span class={cdpDebugInfo.port_listening["9222"] ? 'text-[var(--dash-success)]' : 'text-[var(--dash-error)]'}>{cdpDebugInfo.port_listening["9222"] ? 'Listening' : 'Not listening'}</span></span>
+                                <span>9223 (internal): <span class={cdpDebugInfo.port_listening["9223"] ? 'text-[var(--dash-success)]' : 'text-[var(--dash-error)]'}>{cdpDebugInfo.port_listening["9223"] ? 'Listening' : 'Not listening'}</span></span>
+                              </div>
+                            </div>
+
+                            <!-- Chrome Processes -->
+                            {#if cdpDebugInfo.chrome_processes.length > 0}
+                              <div>
+                                <div class="font-semibold text-[var(--dash-text)] mb-1">Chrome Processes ({cdpDebugInfo.chrome_processes.length})</div>
+                                <div class="max-h-32 overflow-y-auto bg-[var(--dash-card)] rounded p-2">
+                                  {#each cdpDebugInfo.chrome_processes as proc}
+                                    <div class="text-[var(--dash-text-secondary)]">
+                                      PID {proc.pid} | CPU {proc.cpu}% | MEM {proc.mem}% | RSS {proc.rss}KB | {proc.stat}
+                                    </div>
+                                  {/each}
+                                </div>
+                              </div>
+                            {/if}
+
+                            <!-- Socat Processes -->
+                            {#if cdpDebugInfo.socat_processes.length > 0}
+                              <div>
+                                <div class="font-semibold text-[var(--dash-text)] mb-1">Socat Processes ({cdpDebugInfo.socat_processes.length})</div>
+                                <div class="text-[var(--dash-text-secondary)]">
+                                  {#each cdpDebugInfo.socat_processes as proc}
+                                    <div>PID {proc.pid}: {proc.cmd}</div>
+                                  {/each}
+                                </div>
+                              </div>
+                            {/if}
+
+                            <div class="text-[var(--dash-text-muted)]">
+                              Last updated: {new Date(cdpDebugInfo.timestamp).toLocaleTimeString()}
+                            </div>
+                          </div>
+                        {:else if loadingCDPDebug}
+                          <div class="text-center text-[var(--dash-text-muted)]">Loading...</div>
+                        {:else}
+                          <div class="text-center text-[var(--dash-text-muted)]">Click refresh to load debug info</div>
+                        {/if}
+                      </div>
+                    {/if}
+
                     <p class="mt-2 text-xs text-[var(--dash-text-muted)]">
                       Live logs from browser automation service. Auto-refreshes every 2s.
                     </p>
