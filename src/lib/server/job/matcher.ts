@@ -234,42 +234,14 @@ export async function calculateMatch(
   const allJobSkills = [...jobSkillsRequired, ...jobSkillsPreferred];
   const jobSkillsLower = new Map(allJobSkills.map(s => [s.toLowerCase(), s]));
 
-  // Extract matched skills via separate focused request (more reliable than getting it from score_job_match)
+  // Use matched_skills from the scoring response, validate against job's actual skills
   let validatedMatchedSkills: string[] = [];
 
-  if (allJobSkills.length > 0) {
-    try {
-      const skillsResult = await createJobMatchingAiChat<
-        { matched_skills: string[] } | Record<string, boolean | unknown[]>
-      >(profileId, "extract_matched_skills", {
-        "job.skills": allJobSkills.join("\n"),
-        "profile.data": collectedData.data || "",
-      });
-
-      if (skillsResult.success && skillsResult.response) {
-        let rawSkills: string[] = [];
-
-        // Handle array format: { matched_skills: ["Python", "React"] }
-        if ("matched_skills" in skillsResult.response && Array.isArray(skillsResult.response.matched_skills)) {
-          rawSkills = skillsResult.response.matched_skills;
-        }
-        // Handle object format: { "Python": true, "React": true, "Go": false }
-        // Extract keys where value is truthy (true or non-empty array)
-        else if (typeof skillsResult.response === "object") {
-          rawSkills = Object.entries(skillsResult.response)
-            .filter(([, value]) => value === true || (Array.isArray(value) && value.length > 0))
-            .map(([skill]) => skill);
-        }
-
-        // Validate: only keep skills that actually exist in the job's skill lists
-        validatedMatchedSkills = rawSkills
-          .map(skill => jobSkillsLower.get(skill.toLowerCase()))
-          .filter((skill): skill is string => skill !== undefined);
-      }
-    } catch (error) {
-      // Log but don't fail the whole match if skill extraction fails
-      console.warn(`[Matcher] Failed to extract matched skills for job ${job.id}:`, error);
-    }
+  if (result.matched_skills && Array.isArray(result.matched_skills)) {
+    // Validate: only keep skills that actually exist in the job's skill lists
+    validatedMatchedSkills = result.matched_skills
+      .map(skill => jobSkillsLower.get(skill.toLowerCase()))
+      .filter((skill): skill is string => skill !== undefined);
   }
 
   return {
