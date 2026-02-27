@@ -18,6 +18,7 @@
     faGlobe,
     faGraduationCap,
     faHome,
+    faKey,
     faLink,
     faListCheck,
     faMoneyBillWave,
@@ -63,6 +64,11 @@
           label: "Match Config",
           href: "/dashboard/jobs/match-config",
           icon: faSliders,
+        },
+        {
+          label: "Platform Credentials",
+          href: "/dashboard/platforms",
+          icon: faKey,
         },
         {
           label: "Job Matches",
