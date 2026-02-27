@@ -735,10 +735,14 @@ model job_searches {
   live_url               String?                  @db.VarChar(500)
   is_active              Boolean                  @default(true)
   status_message         String?                  @db.VarChar(255)
+  platform_profile_id    Int?
   runs                   job_search_runs[]
   job_platforms          job_platforms?           @relation(fields: [platform], references: [id], onUpdate: NoAction, map: "job_searches_platform_foreign")
+  platform_profiles      platform_profiles?       @relation(fields: [platform_profile_id], references: [id], onUpdate: NoAction)
   profiles               profiles                 @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_searches_profile_foreign")
   job_searches_job_sites job_searches_job_sites[]
+
+  @@index([platform_profile_id], map: "idx_job_searches_platform_profile")
 }
 
 model job_searches_job_sites {
@@ -861,6 +865,7 @@ model platform_profiles {
   api_token     String?
   last_login_at DateTime?      @db.Timestamptz(6)
   login_error   String?
+  job_searches  job_searches[]
   job_platforms job_platforms? @relation(fields: [platform], references: [id], onUpdate: NoAction, map: "platform_profiles_platform_foreign")
   profiles      profiles       @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "platform_profiles_profile_foreign")
 }

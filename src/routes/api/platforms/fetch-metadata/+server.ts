@@ -28,6 +28,15 @@ export const GET: RequestHandler = async ({ locals, url }) => {
     throw error(400, "Invalid URL");
   }
 
+  // Extract domain info first (always available even if fetch fails)
+  const parsedUrl = new URL(normalizedUrl);
+  const domain = parsedUrl.hostname.replace(/^www\./, "");
+  const fallbackName = domain;
+  const fallbackKey = domain
+    .replace(/\.[^.]+$/, "")
+    .replace(/[^a-z0-9]/gi, "-")
+    .toLowerCase();
+
   try {
     // Fetch the page with a timeout
     const controller = new AbortController();
@@ -37,15 +46,38 @@ export const GET: RequestHandler = async ({ locals, url }) => {
       signal: controller.signal,
       headers: {
         "User-Agent":
-          "Mozilla/5.0 (compatible; SmartJobSeeker/1.0; +https://smartjobseeker.com)",
-        Accept: "text/html,application/xhtml+xml",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Cache-Control": "no-cache",
+        Pragma: "no-cache",
+        "Sec-Ch-Ua":
+          '"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
+        "Sec-Ch-Ua-Mobile": "?0",
+        "Sec-Ch-Ua-Platform": '"Windows"',
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "none",
+        "Sec-Fetch-User": "?1",
+        "Upgrade-Insecure-Requests": "1",
       },
     });
 
     clearTimeout(timeout);
 
     if (!response.ok) {
-      throw error(400, `Failed to fetch URL: ${response.status}`);
+      // Return fallback data based on domain if fetch fails
+      return json({
+        url: normalizedUrl,
+        domain,
+        title: null,
+        favicon: `${parsedUrl.origin}/favicon.ico`,
+        suggestedName: fallbackName,
+        suggestedKey: fallbackKey,
+        fetchFailed: true,
+      });
     }
 
     const html = await response.text();
@@ -107,25 +139,25 @@ export const GET: RequestHandler = async ({ locals, url }) => {
       favicon = `${baseUrl.origin}/favicon.ico`;
     }
 
-    // Extract domain for key generation
-    const parsedUrl = new URL(normalizedUrl);
-    const domain = parsedUrl.hostname.replace(/^www\./, "");
-
     return json({
       url: normalizedUrl,
       domain,
       title,
       favicon,
-      suggestedName: title || domain,
-      suggestedKey: domain
-        .replace(/\.[^.]+$/, "")
-        .replace(/[^a-z0-9]/gi, "-")
-        .toLowerCase(),
+      suggestedName: title || fallbackName,
+      suggestedKey: fallbackKey,
     });
   } catch (err) {
-    if (err instanceof Error && err.name === "AbortError") {
-      throw error(408, "Request timeout");
-    }
-    throw error(500, `Failed to fetch metadata: ${err}`);
+    // Return fallback data on any error
+    return json({
+      url: normalizedUrl,
+      domain,
+      title: null,
+      favicon: `${parsedUrl.origin}/favicon.ico`,
+      suggestedName: fallbackName,
+      suggestedKey: fallbackKey,
+      fetchFailed: true,
+      error: err instanceof Error ? err.message : "Unknown error",
+    });
   }
 };
