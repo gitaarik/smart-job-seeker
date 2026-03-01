@@ -30,11 +30,18 @@ async function getOrCreatePlatform(
   platformUrl: string | null,
   platformName: string | null,
   isNew: boolean,
+  loginPageUrl: string | null = null,
 ): Promise<number | null> {
   if (!platformUrl) return null;
 
-  // If we have an existing platform ID and it's not new, use it
+  // If we have an existing platform ID and it's not new, update login_page_url if provided
   if (platformId && !isNew) {
+    if (loginPageUrl !== null) {
+      await db.job_platforms.update({
+        where: { id: parseInt(platformId) },
+        data: { login_page_url: loginPageUrl || null },
+      });
+    }
     return parseInt(platformId);
   }
 
@@ -66,6 +73,7 @@ async function getOrCreatePlatform(
       name: platformName || domain,
       url: platformUrl,
       key: `${key}-${Date.now().toString(36)}`, // Ensure unique key
+      login_page_url: loginPageUrl || null,
       status: "published",
       date_created: new Date(),
     },
@@ -135,6 +143,7 @@ export const actions: Actions = {
     const platformUrl = formData.get("platform_url") as string;
     const platformName = formData.get("platform_name") as string;
     const platformIsNew = formData.get("platform_is_new") === "true";
+    const loginPageUrl = formData.get("login_page_url") as string;
 
     // Credentials data
     const credentialId = formData.get("credential_id") as string;
@@ -155,6 +164,7 @@ export const actions: Actions = {
       platformUrl,
       platformName,
       platformIsNew,
+      loginPageUrl,
     );
 
     // Get or create credentials
@@ -206,6 +216,7 @@ export const actions: Actions = {
     const platformUrl = formData.get("platform_url") as string;
     const platformName = formData.get("platform_name") as string;
     const platformIsNew = formData.get("platform_is_new") === "true";
+    const loginPageUrl = formData.get("login_page_url") as string;
 
     // Credentials data
     const credentialId = formData.get("credential_id") as string;
@@ -234,6 +245,7 @@ export const actions: Actions = {
       platformUrl,
       platformName,
       platformIsNew,
+      loginPageUrl,
     );
 
     // Get or create credentials

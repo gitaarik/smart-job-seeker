@@ -1669,23 +1669,37 @@
     {/if}
   </div>
 
-  <!-- Search URL -->
-  {#if jobSearch.search_url}
-    <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4">
-      <h2 class="font-medium text-[var(--dash-text)] mb-2">Search URL</h2>
-      <div class="flex items-center gap-2">
-        <code class="flex-1 text-sm bg-[var(--dash-bg)] px-3 py-2 rounded text-[var(--dash-text-secondary)] overflow-x-auto">
-          {jobSearch.search_url}
-        </code>
-        <a
-          href={jobSearch.search_url}
-          target="_blank"
-          rel="noopener"
-          class="p-2 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
-        >
-          <FontAwesomeIcon icon={faExternalLinkAlt} class="w-4 h-4" />
-        </a>
-      </div>
+  <!-- URLs -->
+  {#if jobSearch.search_url || jobSearch.job_platforms?.login_page_url}
+    <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4 space-y-3">
+      {#if jobSearch.search_url}
+        <div>
+          <h2 class="font-medium text-[var(--dash-text)] mb-1 text-sm">Search URL</h2>
+          <a
+            href={jobSearch.search_url}
+            target="_blank"
+            rel="noopener"
+            class="text-sm text-[var(--dash-primary)] hover:underline break-all flex items-center gap-1"
+          >
+            {jobSearch.search_url}
+            <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3 h-3 flex-shrink-0" />
+          </a>
+        </div>
+      {/if}
+      {#if jobSearch.job_platforms?.login_page_url}
+        <div>
+          <h2 class="font-medium text-[var(--dash-text)] mb-1 text-sm">Login URL</h2>
+          <a
+            href={jobSearch.job_platforms.login_page_url}
+            target="_blank"
+            rel="noopener"
+            class="text-sm text-[var(--dash-primary)] hover:underline break-all flex items-center gap-1"
+          >
+            {jobSearch.job_platforms.login_page_url}
+            <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3 h-3 flex-shrink-0" />
+          </a>
+        </div>
+      {/if}
     </div>
   {/if}
 </div>

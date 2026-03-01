@@ -63,6 +63,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
     id: number | null;
     name: string;
     url: string;
+    loginPageUrl: string | null;
     isNew: boolean;
   };
 
@@ -77,6 +78,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
       id: existingPlatform.id,
       name: existingPlatform.name,
       url: existingPlatform.url,
+      loginPageUrl: existingPlatform.login_page_url,
       isNew: false,
     };
 
@@ -123,6 +125,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
       id: null,
       name: suggestedName,
       url: baseUrl,
+      loginPageUrl: null,
       isNew: true,
     };
   }

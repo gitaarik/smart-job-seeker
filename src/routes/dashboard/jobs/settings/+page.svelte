@@ -35,12 +35,14 @@
   let newName = $state("");
   let newSearchUrl = $state("");
   let newStatus = $state("active");
+  let newLoginPageUrl = $state("");
 
   // Auto-detected platform state
   let detectedPlatform = $state<{
     id: number;
     name: string;
     url: string;
+    loginPageUrl: string | null;
     isNew: boolean;
   } | null>(null);
   let detectingPlatform = $state(false);
@@ -63,6 +65,7 @@
   let editName = $state("");
   let editSearchUrl = $state("");
   let editStatus = $state("");
+  let editLoginPageUrl = $state("");
   let editCredentialId = $state<string>("none");
   let editShowNewCredentials = $state(false);
   let editNewCredUsername = $state("");
@@ -72,6 +75,7 @@
     id: number;
     name: string;
     url: string;
+    loginPageUrl: string | null;
     isNew: boolean;
   } | null>(null);
   let editExistingCredentials = $state<
@@ -137,12 +141,18 @@
         if (isEdit) {
           editDetectedPlatform = result.platform;
           editExistingCredentials = result.credentials || [];
+          if (result.platform.loginPageUrl && !editLoginPageUrl) {
+            editLoginPageUrl = result.platform.loginPageUrl;
+          }
           if (result.credentials?.length > 0 && editCredentialId === "none") {
             // Don't auto-select, let user choose
           }
         } else {
           detectedPlatform = result.platform;
           existingCredentials = result.credentials || [];
+          if (result.platform.loginPageUrl) {
+            newLoginPageUrl = result.platform.loginPageUrl;
+          }
         }
       }
     } catch {
@@ -181,6 +191,7 @@
     editName = search.name || "";
     editSearchUrl = search.search_url || "";
     editStatus = search.status || "active";
+    editLoginPageUrl = search.job_platforms?.login_page_url || "";
     editCredentialId = search.platform_profile_id?.toString() || "none";
     editShowNewCredentials = false;
     editNewCredUsername = "";
@@ -204,6 +215,7 @@
     newName = "";
     newSearchUrl = "";
     newStatus = "active";
+    newLoginPageUrl = "";
     detectedPlatform = null;
     existingCredentials = [];
     selectedCredentialId = "none";
@@ -351,6 +363,28 @@
             <input type="hidden" name="platform_url" value={detectedPlatform.url} />
             <input type="hidden" name="platform_name" value={detectedPlatform.name} />
             <input type="hidden" name="platform_is_new" value={detectedPlatform.isNew} />
+          </div>
+
+          <!-- Login Page URL -->
+          <div>
+            <label
+              for="new-login-url"
+              class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+            >
+              Login Page URL
+              <span class="text-[var(--dash-text-muted)] font-normal">(optional)</span>
+            </label>
+            <input
+              type="url"
+              id="new-login-url"
+              name="login_page_url"
+              bind:value={newLoginPageUrl}
+              placeholder="https://linkedin.com/login"
+              class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+            />
+            <p class="text-xs text-[var(--dash-text-secondary)] mt-1">
+              URL of the login page. Used to auto-fill credentials before scraping.
+            </p>
           </div>
         {/if}
 
@@ -715,6 +749,28 @@
                           name="platform_is_new"
                           value={editDetectedPlatform.isNew}
                         />
+                      </div>
+
+                      <!-- Login Page URL -->
+                      <div>
+                        <label
+                          for="edit-login-url-{search.id}"
+                          class="block text-sm font-medium text-[var(--dash-text)] mb-1"
+                        >
+                          Login Page URL
+                          <span class="text-[var(--dash-text-muted)] font-normal">(optional)</span>
+                        </label>
+                        <input
+                          type="url"
+                          id="edit-login-url-{search.id}"
+                          name="login_page_url"
+                          bind:value={editLoginPageUrl}
+                          placeholder="https://linkedin.com/login"
+                          class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                        />
+                        <p class="text-xs text-[var(--dash-text-secondary)] mt-1">
+                          URL of the login page. Used to auto-fill credentials before scraping.
+                        </p>
                       </div>
                     {/if}
 
