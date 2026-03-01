@@ -1,6 +1,7 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { error, fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { getProfileSkillLevels } from "$lib/server/job/match-utils";
 import { getSelectedProfileId } from "../../profile/utils";
 
 export const load: PageServerLoad = async ({ parent, params }) => {
@@ -45,11 +46,15 @@ export const load: PageServerLoad = async ({ parent, params }) => {
   // Determine job category for sidebar highlighting
   const jobCategory = match?.status === "saved" ? "saved" : match && match.score > 0 ? "matches" : "all";
 
+  // Load user's skill proficiency levels for highlighting
+  const profileSkillLevels = await getProfileSkillLevels(profileId);
+
   return {
     job,
     match,
     profileId,
     jobCategory,
+    profileSkillLevels,
   };
 };
 

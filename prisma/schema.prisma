@@ -736,6 +736,7 @@ model job_searches {
   is_active              Boolean                  @default(true)
   status_message         String?                  @db.VarChar(255)
   platform_profile_id    Int?
+  max_jobs               Int?
   runs                   job_search_runs[]
   job_platforms          job_platforms?           @relation(fields: [platform], references: [id], onUpdate: NoAction, map: "job_searches_platform_foreign")
   platform_profiles      platform_profiles?       @relation(fields: [platform_profile_id], references: [id], onUpdate: NoAction)

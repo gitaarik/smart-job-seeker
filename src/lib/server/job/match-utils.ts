@@ -28,6 +28,52 @@ export async function getProfileSkills(profileId: number): Promise<string[]> {
 }
 
 /**
+ * Extract tech skills from a profile with proficiency info.
+ * Returns a map of lowercase skill name -> proficiency level.
+ * "strong" = expert/proficient or 3+ years
+ * "weak" = beginner/intermediate or <3 years (when level is set)
+ */
+export async function getProfileSkillLevels(
+  profileId: number,
+): Promise<Record<string, "strong" | "weak">> {
+  const skills = await db.tech_skills.findMany({
+    where: {
+      tech_skill_categories: {
+        profile: profileId,
+      },
+    },
+    select: {
+      name: true,
+      level: true,
+      years_experience: true,
+    },
+  });
+
+  const result: Record<string, "strong" | "weak"> = {};
+  for (const skill of skills) {
+    if (!skill.name) continue;
+    const key = skill.name.toLowerCase();
+
+    // Determine proficiency
+    const level = skill.level?.toLowerCase();
+    const years = skill.years_experience;
+
+    if (level === "beginner" || level === "intermediate") {
+      result[key] = "weak";
+    } else if (level === "expert" || level === "proficient") {
+      result[key] = "strong";
+    } else if (years !== null && years !== undefined && years < 3) {
+      // No level set but few years of experience
+      result[key] = "weak";
+    } else {
+      // No level set, no years or 3+ years — assume strong
+      result[key] = "strong";
+    }
+  }
+  return result;
+}
+
+/**
  * Check if two arrays have any overlapping elements
  * @param arr1 - First array
  * @param arr2 - Second array

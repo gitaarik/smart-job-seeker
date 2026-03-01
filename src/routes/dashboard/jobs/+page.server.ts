@@ -1,6 +1,7 @@
 import type { Actions, PageServerLoad } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { getProfileSkillLevels } from "$lib/server/job/match-utils";
 import { getSelectedProfileId } from "../profile/utils";
 
 export const load: PageServerLoad = async ({ parent, url }) => {
@@ -265,6 +266,9 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 
   const totalPages = Math.ceil(totalCount / limit);
 
+  // Load user's skill proficiency levels for highlighting
+  const profileSkillLevels = await getProfileSkillLevels(profileId);
+
   return {
     jobs,
     platforms,
@@ -273,6 +277,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
     totalPages,
     savedJobIds,
     matchesByJobId,
+    profileSkillLevels,
     filters: {
       filter,
       search,

@@ -223,6 +223,18 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
           live_url: null,
         },
       });
+
+      // Mark any in-progress or pending run items as cancelled
+      await db.job_search_run_items.updateMany({
+        where: {
+          run_id: runningRun.id,
+          status: { in: ["processing", "pending"] },
+        },
+        data: {
+          status: "cancelled",
+          status_message: "Cancelled by user",
+        },
+      });
     }
 
     await db.job_searches.update({

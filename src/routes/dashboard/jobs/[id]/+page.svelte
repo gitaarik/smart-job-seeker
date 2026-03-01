@@ -119,9 +119,13 @@
     new Set(Array.isArray(match?.matched_skills) ? match.matched_skills : [])
   );
 
-  function isSkillMatched(skill: string): boolean {
-    // Exact match - matched_skills contains validated skill strings from the job's skill lists
-    return matchedSkillsSet.has(skill);
+  let profileSkillLevels = $derived(data.profileSkillLevels);
+
+  function getSkillMatchStrength(skill: string): "strong" | "weak" | null {
+    if (!matchedSkillsSet.has(skill)) return null;
+    const level = profileSkillLevels[skill.toLowerCase()];
+    if (level === "weak") return "weak";
+    return "strong";
   }
 
   const statusOptions = [
@@ -394,8 +398,14 @@
               <p class="text-sm text-[var(--dash-text-secondary)] mb-2">Required</p>
               <div class="flex flex-wrap gap-2">
                 {#each job.skills_required as skill}
-                  {#if isSkillMatched(skill)}
+                  {@const strength = getSkillMatchStrength(skill)}
+                  {#if strength === "strong"}
                     <span class="px-3 py-1 text-sm bg-[var(--dash-success-light)] text-[var(--dash-success)] rounded-lg flex items-center gap-1">
+                      <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                      {skill}
+                    </span>
+                  {:else if strength === "weak"}
+                    <span class="px-3 py-1 text-sm bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded-lg flex items-center gap-1">
                       <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
                       {skill}
                     </span>
@@ -414,8 +424,14 @@
               <p class="text-sm text-[var(--dash-text-secondary)] mb-2">Preferred</p>
               <div class="flex flex-wrap gap-2">
                 {#each job.skills_preferred as skill}
-                  {#if isSkillMatched(skill)}
+                  {@const strength = getSkillMatchStrength(skill)}
+                  {#if strength === "strong"}
                     <span class="px-3 py-1 text-sm bg-[var(--dash-success-light)] text-[var(--dash-success)] rounded-lg flex items-center gap-1">
+                      <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                      {skill}
+                    </span>
+                  {:else if strength === "weak"}
+                    <span class="px-3 py-1 text-sm bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded-lg flex items-center gap-1">
                       <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
                       {skill}
                     </span>

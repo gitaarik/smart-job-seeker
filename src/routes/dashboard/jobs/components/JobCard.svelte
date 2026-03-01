@@ -47,6 +47,7 @@
   interface Props {
     job: Job;
     match?: Match | null;
+    profileSkillLevels?: Record<string, "strong" | "weak">;
     isSaved?: boolean;
     isRejected?: boolean;
     isExpanded?: boolean;
@@ -64,6 +65,7 @@
   let {
     job,
     match = null,
+    profileSkillLevels = {},
     isSaved = false,
     isRejected = false,
     isExpanded = false,
@@ -132,9 +134,17 @@
   const skillsRequired = $derived(asStringArray(job.skills_required));
   const matchedSkillsSet = $derived(new Set(match?.matched_skills || []));
 
-  function isSkillMatched(skill: string): boolean {
-    // Exact match - matched_skills contains validated skill strings from the job's skill lists
-    return matchedSkillsSet.has(skill);
+  /**
+   * Returns the match strength for a skill:
+   * - "strong": matched and user is proficient/expert
+   * - "weak": matched but user is beginner/intermediate
+   * - null: not matched
+   */
+  function getSkillMatchStrength(skill: string): "strong" | "weak" | null {
+    if (!matchedSkillsSet.has(skill)) return null;
+    const level = profileSkillLevels[skill.toLowerCase()];
+    if (level === "weak") return "weak";
+    return "strong";
   }
 </script>
 
@@ -258,8 +268,14 @@
             </p>
             <div class="flex flex-wrap gap-1">
               {#each skillsRequired.slice(0, 15) as skill}
-                {#if isSkillMatched(skill)}
+                {@const strength = getSkillMatchStrength(skill)}
+                {#if strength === "strong"}
                   <span class="px-2 py-1 text-xs bg-[var(--dash-success-light)] text-[var(--dash-success)] rounded flex items-center gap-1">
+                    <FontAwesomeIcon icon={faCheck} class="w-2.5 h-2.5" />
+                    {skill}
+                  </span>
+                {:else if strength === "weak"}
+                  <span class="px-2 py-1 text-xs bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded flex items-center gap-1">
                     <FontAwesomeIcon icon={faCheck} class="w-2.5 h-2.5" />
                     {skill}
                   </span>

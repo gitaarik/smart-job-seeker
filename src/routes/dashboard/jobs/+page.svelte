@@ -92,10 +92,15 @@
     };
   }
 
-  function isSkillMatched(jobId: number, skill: string): boolean {
+  let profileSkillLevels = $derived(data.profileSkillLevels);
+
+  function getSkillMatchStrength(jobId: number, skill: string): "strong" | "weak" | null {
     const match = getMatch(jobId);
-    if (!match?.matched_skills) return false;
-    return match.matched_skills.includes(skill);
+    if (!match?.matched_skills) return null;
+    if (!match.matched_skills.includes(skill)) return null;
+    const level = profileSkillLevels[skill.toLowerCase()];
+    if (level === "weak") return "weak";
+    return "strong";
   }
 
   // Local state for form inputs
@@ -480,6 +485,7 @@
         <JobCard
           {job}
           match={getMatch(job.id)}
+          {profileSkillLevels}
           isSaved={isSaved(job.id)}
           isRejected={isRejected(job.id)}
           isExpanded={expandedId === job.id}
@@ -554,9 +560,17 @@
                 </p>
                 <div class="flex flex-wrap gap-1">
                   {#each job.skills_required.slice(0, 10) as skill}
-                    {#if isSkillMatched(job.id, skill)}
+                    {@const strength = getSkillMatchStrength(job.id, skill)}
+                    {#if strength === "strong"}
                       <span
                         class="px-2 py-1 text-xs bg-[var(--dash-success-light)] text-[var(--dash-success)] rounded flex items-center gap-1"
+                      >
+                        <FontAwesomeIcon icon={faCheck} class="w-2.5 h-2.5" />
+                        {skill}
+                      </span>
+                    {:else if strength === "weak"}
+                      <span
+                        class="px-2 py-1 text-xs bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded flex items-center gap-1"
                       >
                         <FontAwesomeIcon icon={faCheck} class="w-2.5 h-2.5" />
                         {skill}
@@ -587,9 +601,17 @@
                 </p>
                 <div class="flex flex-wrap gap-1">
                   {#each job.skills_preferred.slice(0, 10) as skill}
-                    {#if isSkillMatched(job.id, skill)}
+                    {@const strength = getSkillMatchStrength(job.id, skill)}
+                    {#if strength === "strong"}
                       <span
                         class="px-2 py-1 text-xs bg-[var(--dash-success-light)] text-[var(--dash-success)] rounded flex items-center gap-1"
+                      >
+                        <FontAwesomeIcon icon={faCheck} class="w-2.5 h-2.5" />
+                        {skill}
+                      </span>
+                    {:else if strength === "weak"}
+                      <span
+                        class="px-2 py-1 text-xs bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded flex items-center gap-1"
                       >
                         <FontAwesomeIcon icon={faCheck} class="w-2.5 h-2.5" />
                         {skill}

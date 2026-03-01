@@ -29,6 +29,8 @@
   let { data }: { data: PageData } = $props();
 
   let jobSearch = $state(data.jobSearch);
+  let maxJobsInput = $state<string>((jobSearch as any).max_jobs?.toString() ?? "");
+  let isSavingMaxJobs = $state(false);
   let isStarting = $state(false);
   let isStopping = $state(false);
   let isSendingFeedback = $state(false);
@@ -110,6 +112,10 @@
   let itemPollIntervals = $state<Record<number, ReturnType<typeof setInterval>>>({});
   let runTabView = $state<Record<number, "jobs" | "logs" | "browser-use">>({}); // Tab view per run
   let logLevelFilter = $state<"debug" | "info" | "warn" | "error">("info");
+
+  // Log auto-scroll: track container refs and whether user has scrolled up
+  let logContainerRefs = $state<Record<number, HTMLElement | null>>({});
+  let logAutoScroll = $state<Record<number, boolean>>({});
 
   // Browser-Use logs (staff only)
   interface BrowserUseLogEntry {
@@ -273,6 +279,7 @@
       if (response.ok) {
         const data = await response.json();
         runLogs[runId] = data.logs;
+        scrollLogToBottom(runId);
       }
     } catch (err) {
       console.error("Failed to load logs:", err);
@@ -524,6 +531,25 @@
     }
   }
 
+  function handleLogScroll(runId: number, event: Event) {
+    const el = event.target as HTMLElement;
+    // Consider "at bottom" if within 20px of the bottom
+    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 20;
+    logAutoScroll[runId] = atBottom;
+  }
+
+  function scrollLogToBottom(runId: number) {
+    // Default to auto-scroll if not explicitly set
+    if (logAutoScroll[runId] === false) return;
+    // Use tick to wait for DOM update
+    requestAnimationFrame(() => {
+      const el = logContainerRefs[runId];
+      if (el) {
+        el.scrollTop = el.scrollHeight;
+      }
+    });
+  }
+
   function startLogPolling(runId: number) {
     if (logPollIntervals[runId]) return;
 
@@ -542,6 +568,7 @@
           const data = await response.json();
           if (data.logs.length > 0) {
             runLogs[runId] = [...existingLogs, ...data.logs];
+            scrollLogToBottom(runId);
           }
 
           // Stop polling if run is complete
@@ -556,6 +583,26 @@
         console.error("Failed to poll logs:", err);
       }
     }, 2000);
+  }
+
+  async function saveMaxJobs() {
+    isSavingMaxJobs = true;
+    try {
+      const value = maxJobsInput.trim();
+      const maxJobs = value === "" ? null : parseInt(value);
+      if (maxJobs !== null && (isNaN(maxJobs) || maxJobs < 1)) return;
+
+      await fetch(`/api/job-searches/${jobSearch.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ max_jobs: maxJobs }),
+      });
+      (jobSearch as any).max_jobs = maxJobs;
+    } catch (err) {
+      console.error("Failed to save max jobs:", err);
+    } finally {
+      isSavingMaxJobs = false;
+    }
   }
 
   async function startScrape() {
@@ -593,10 +640,11 @@
       // Reload runs to show the new one
       await loadRuns();
 
-      // Expand the new run to show logs
+      // Expand the new run to show logs and jobs
       if (result.runId) {
         expandedRunId = result.runId;
         startLogPolling(result.runId);
+        startItemPolling(result.runId);
       }
 
       // Start polling for status updates
@@ -801,6 +849,24 @@
       {/if}
     </div>
 
+    <!-- Max jobs setting -->
+    <div class="flex items-center gap-3 mb-4">
+      <label for="max-jobs" class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap">Max jobs to import</label>
+      <input
+        id="max-jobs"
+        type="number"
+        min="1"
+        placeholder="No limit"
+        bind:value={maxJobsInput}
+        onblur={saveMaxJobs}
+        onkeydown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+        class="w-24 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
+      />
+      {#if isSavingMaxJobs}
+        <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin" />
+      {/if}
+    </div>
+
     {#if errorMessage}
       <div class="mb-4 p-3 bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg">
         <p class="text-[var(--dash-error)] text-sm">{errorMessage}</p>
@@ -824,7 +890,7 @@
           <FontAwesomeIcon icon={faSpinner} class="w-5 h-5 text-[var(--dash-primary)] animate-spin" />
         </div>
         <div>
-          <p class="font-medium text-[var(--dash-text)]">Running...</p>
+          <p class="font-medium text-[var(--dash-text)]">{jobSearch.status_message || "Running..."}</p>
           <p class="text-sm text-[var(--dash-text-secondary)]">
             Scraping jobs from {jobSearch.job_platforms?.name || "platform"}
           </p>
@@ -1074,10 +1140,12 @@
               {/if}
 
               <div class={`w-6 h-6 rounded-full flex items-center justify-center ${run.status === "running" || run.status === "queued" ? "bg-[var(--dash-primary-light)]" : run.status === "success" ? "bg-[var(--dash-success-light)]" : run.status === "blocked" || run.status === "partial" ? "bg-[var(--dash-warning-light)]" : "bg-[var(--dash-error-light)]"}`}>
-                <FontAwesomeIcon
-                  icon={getRunStatusIcon(run.status)}
-                  class={`w-3 h-3 ${getRunStatusColor(run.status)} ${run.status === "running" || run.status === "queued" ? "animate-spin" : ""}`}
-                />
+                {#key run.status}
+                  <FontAwesomeIcon
+                    icon={getRunStatusIcon(run.status)}
+                    class={`w-3 h-3 ${getRunStatusColor(run.status)} ${run.status === "running" || run.status === "queued" ? "animate-spin" : ""}`}
+                  />
+                {/key}
               </div>
 
               <div class="flex-1 min-w-0">
@@ -1214,7 +1282,7 @@
                                       </span>
                                     {/if}
                                     {#if item.was_created === true}
-                                      <span class="text-xs px-1.5 py-0.5 rounded bg-[var(--dash-success-light)] text-[var(--dash-success)]">new</span>
+                                      <span class="text-xs px-1.5 py-0.5 rounded bg-[var(--dash-success)] text-white">new</span>
                                     {:else if item.was_created === false && item.status === "completed"}
                                       <span class="text-xs px-1.5 py-0.5 rounded bg-[var(--dash-bg)] text-[var(--dash-text-muted)]">updated</span>
                                     {/if}
@@ -1233,7 +1301,7 @@
                                       </span>
                                     {/if}
                                   </div>
-                                  {#if item.status_message && (item.status === "skipped" || item.status === "error")}
+                                  {#if item.status_message && (item.status === "skipped" || item.status === "error" || item.status === "cancelled")}
                                     <div class={`text-xs mt-0.5 ${getItemStatusColor(item.status)}`}>
                                       {item.status_message}
                                     </div>
@@ -1413,7 +1481,11 @@
                       {/if}
                     </div>
 
-                    <div class="bg-[var(--dash-card)] rounded border border-[var(--dash-border)] max-h-64 overflow-y-auto">
+                    <div
+                      bind:this={logContainerRefs[run.id]}
+                      onscroll={(e) => handleLogScroll(run.id, e)}
+                      class="bg-[var(--dash-card)] rounded border border-[var(--dash-border)] max-h-64 overflow-y-auto"
+                    >
                       {#if !runLogs[run.id] || runLogs[run.id].length === 0}
                         <div class="p-4 text-sm text-[var(--dash-text-muted)] text-center">
                           {#if loadingLogs[run.id]}
