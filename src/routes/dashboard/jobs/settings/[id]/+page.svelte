@@ -8,7 +8,6 @@
     faCheck,
     faChevronDown,
     faChevronRight,
-    faChevronUp,
     faCloud,
     faCog,
     faDesktop,
@@ -1062,10 +1061,17 @@
               onclick={() => toggleRunExpanded(run.id)}
               class="w-full flex items-center gap-3 p-4 hover:bg-[var(--dash-bg)] transition-colors text-left"
             >
-              <FontAwesomeIcon
-                icon={faChevronRight}
-                class="w-3 h-3 text-[var(--dash-text-muted)] transition-transform duration-200 {expandedRunId === run.id ? 'rotate-90' : ''}"
-              />
+              {#if expandedRunId === run.id}
+                <FontAwesomeIcon
+                  icon={faChevronDown}
+                  class="w-3 h-3 text-[var(--dash-text-muted)]"
+                />
+              {:else}
+                <FontAwesomeIcon
+                  icon={faChevronRight}
+                  class="w-3 h-3 text-[var(--dash-text-muted)]"
+                />
+              {/if}
 
               <div class={`w-6 h-6 rounded-full flex items-center justify-center ${run.status === "running" || run.status === "queued" ? "bg-[var(--dash-primary-light)]" : run.status === "success" ? "bg-[var(--dash-success-light)]" : run.status === "blocked" || run.status === "partial" ? "bg-[var(--dash-warning-light)]" : "bg-[var(--dash-error-light)]"}`}>
                 <FontAwesomeIcon
@@ -1239,10 +1245,17 @@
                                   {item.status}
                                 </span>
                                 {#if item.jobs}
-                                  <FontAwesomeIcon
-                                    icon={expandedItemId === item.id ? faChevronUp : faChevronDown}
-                                    class="w-3 h-3 text-[var(--dash-text-muted)]"
-                                  />
+                                  {#if expandedItemId === item.id}
+                                    <FontAwesomeIcon
+                                      icon={faChevronDown}
+                                      class="w-3 h-3 text-[var(--dash-text-muted)]"
+                                    />
+                                  {:else}
+                                    <FontAwesomeIcon
+                                      icon={faChevronRight}
+                                      class="w-3 h-3 text-[var(--dash-text-muted)]"
+                                    />
+                                  {/if}
                                 {/if}
                               </button>
 
