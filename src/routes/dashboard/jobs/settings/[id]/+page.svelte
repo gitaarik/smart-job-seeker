@@ -53,6 +53,8 @@
   let loginUrlInput = $state<string>(jobSearch.job_platforms?.login_page_url ?? "");
   let isSavingSearchUrl = $state(false);
   let isSavingLoginUrl = $state(false);
+  let searchUrlDirty = $derived(searchUrlInput.trim() !== (jobSearch.search_url ?? ""));
+  let loginUrlDirty = $derived(loginUrlInput.trim() !== (jobSearch.job_platforms?.login_page_url ?? ""));
 
   let isStarting = $state(false);
   let isStopping = $state(false);
@@ -1308,18 +1310,11 @@
           <!-- URLs -->
           <div class="space-y-3 mt-4 pt-4 border-t border-[var(--dash-border)]">
             <div>
-              <div class="flex items-center gap-2 mb-1">
-                <h3 class="text-xs font-medium text-[var(--dash-text-secondary)]">Search URL</h3>
-                {#if isSavingSearchUrl}
-                  <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin" />
-                {/if}
-              </div>
+              <h3 class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1">Search URL</h3>
               <div class="flex items-center gap-2">
                 <input
                   type="url"
                   bind:value={searchUrlInput}
-                  onblur={saveSearchUrl}
-                  onkeydown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
                   placeholder="https://..."
                   class="flex-1 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
                 />
@@ -1335,22 +1330,39 @@
                   </a>
                 {/if}
               </div>
+              {#if searchUrlDirty}
+                <div class="flex items-center gap-2 mt-2">
+                  <button
+                    type="button"
+                    onclick={saveSearchUrl}
+                    disabled={isSavingSearchUrl}
+                    class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
+                  >
+                    {#if isSavingSearchUrl}
+                      <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
+                    {:else}
+                      <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                    {/if}
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    onclick={() => (searchUrlInput = jobSearch.search_url ?? "")}
+                    class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              {/if}
             </div>
 
             <div>
-              <div class="flex items-center gap-2 mb-1">
-                <h3 class="text-xs font-medium text-[var(--dash-text-secondary)]">Login URL</h3>
-                {#if isSavingLoginUrl}
-                  <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin" />
-                {/if}
-              </div>
+              <h3 class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1">Login URL</h3>
               {#if canEditPlatformUrls}
                 <div class="flex items-center gap-2">
                   <input
                     type="url"
                     bind:value={loginUrlInput}
-                    onblur={saveLoginUrl}
-                    onkeydown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
                     placeholder="https://..."
                     class="flex-1 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
                   />
@@ -1366,6 +1378,30 @@
                     </a>
                   {/if}
                 </div>
+                {#if loginUrlDirty}
+                  <div class="flex items-center gap-2 mt-2">
+                    <button
+                      type="button"
+                      onclick={saveLoginUrl}
+                      disabled={isSavingLoginUrl}
+                      class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
+                    >
+                      {#if isSavingLoginUrl}
+                        <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
+                      {:else}
+                        <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                      {/if}
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      onclick={() => (loginUrlInput = jobSearch.job_platforms?.login_page_url ?? "")}
+                      class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                {/if}
               {:else if jobSearch.job_platforms?.login_page_url}
                 <a
                   href={jobSearch.job_platforms.login_page_url}
