@@ -908,355 +908,394 @@
     </div>
   </div>
 
-  <!-- Status Card -->
+  <!-- Scrape Configuration -->
   <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="font-medium text-[var(--dash-text)]">Scrape Status</h2>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Left column: Status + Controls -->
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="font-medium text-[var(--dash-text)]">Scrape Status</h2>
 
-      {#if isRunning || isBlocked || isQueued}
-        <button
-          onclick={stopScrape}
-          disabled={isStopping}
-          class="flex items-center gap-2 px-4 py-2 bg-[var(--dash-error)] text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {#if isStopping}
-            <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 animate-spin" />
-            <span>Stopping...</span>
+          {#if isRunning || isBlocked || isQueued}
+            <button
+              onclick={stopScrape}
+              disabled={isStopping}
+              class="flex items-center gap-2 px-4 py-2 bg-[var(--dash-error)] text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {#if isStopping}
+                <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 animate-spin" />
+                <span>Stopping...</span>
+              {:else}
+                <FontAwesomeIcon icon={faStop} class="w-4 h-4" />
+                <span>Stop Scrape</span>
+              {/if}
+            </button>
           {:else}
-            <FontAwesomeIcon icon={faStop} class="w-4 h-4" />
-            <span>Stop Scrape</span>
+            <button
+              onclick={startScrape}
+              disabled={isStarting || !jobSearch.search_url || !jobSearch.platform}
+              class="flex items-center gap-2 px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {#if isStarting}
+                <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 animate-spin" />
+                <span>Starting...</span>
+              {:else}
+                <FontAwesomeIcon icon={faPlay} class="w-4 h-4" />
+                <span>Run Scrape</span>
+              {/if}
+            </button>
           {/if}
-        </button>
-      {:else}
-        <button
-          onclick={startScrape}
-          disabled={isStarting || !jobSearch.search_url || !jobSearch.platform}
-          class="flex items-center gap-2 px-4 py-2 bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {#if isStarting}
-            <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 animate-spin" />
-            <span>Starting...</span>
-          {:else}
-            <FontAwesomeIcon icon={faPlay} class="w-4 h-4" />
-            <span>Run Scrape</span>
-          {/if}
-        </button>
-      {/if}
-    </div>
+        </div>
 
-    <!-- Max jobs setting -->
-    <div class="flex items-center gap-3 mb-4">
-      <label for="max-jobs" class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap">Max jobs to import</label>
-      <input
-        id="max-jobs"
-        type="number"
-        min="1"
-        placeholder="No limit"
-        bind:value={maxJobsInput}
-        onblur={saveMaxJobs}
-        onkeydown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-        class="w-24 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
-      />
-      {#if isSavingMaxJobs}
-        <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin" />
-      {/if}
-    </div>
-
-    {#if errorMessage}
-      <div class="mb-4 p-3 bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg">
-        <p class="text-[var(--dash-error)] text-sm">{errorMessage}</p>
-      </div>
-    {/if}
-
-    <!-- Status Display -->
-    <div class="flex items-center gap-3 p-4 bg-[var(--dash-bg)] rounded-lg">
-      {#if jobSearch.status === "queued"}
-        <div class="w-10 h-10 rounded-full bg-[var(--dash-primary-light)] flex items-center justify-center">
-          <FontAwesomeIcon icon={faSpinner} class="w-5 h-5 text-[var(--dash-primary)] animate-spin" />
-        </div>
-        <div>
-          <p class="font-medium text-[var(--dash-text)]">Queued</p>
-          <p class="text-sm text-[var(--dash-text-secondary)]">
-            Waiting in queue to start...
-          </p>
-        </div>
-      {:else if jobSearch.status === "running"}
-        <div class="w-10 h-10 rounded-full bg-[var(--dash-primary-light)] flex items-center justify-center">
-          <FontAwesomeIcon icon={faSpinner} class="w-5 h-5 text-[var(--dash-primary)] animate-spin" />
-        </div>
-        <div>
-          <p class="font-medium text-[var(--dash-text)]">{jobSearch.status_message || "Running..."}</p>
-          <p class="text-sm text-[var(--dash-text-secondary)]">
-            Scraping jobs from {jobSearch.job_platforms?.name || "platform"}
-          </p>
-        </div>
-      {:else if jobSearch.status === "blocked"}
-        <div class="w-10 h-10 rounded-full bg-[var(--dash-warning-light)] flex items-center justify-center">
-          <FontAwesomeIcon icon={faExclamationTriangle} class="w-5 h-5 text-[var(--dash-warning)]" />
-        </div>
-        <div class="flex-1">
-          <p class="font-medium text-[var(--dash-warning)]">{jobSearch.status_message}</p>
-          <p class="text-sm text-[var(--dash-text-secondary)]">
-            Complete the action in the browser view, then click Continue
-          </p>
-        </div>
-        <div class="flex items-center gap-2">
-          <button
-            onclick={() => sendFeedback("continue")}
-            disabled={isSendingFeedback}
-            class="flex items-center gap-2 px-4 py-2 bg-[var(--dash-success)] text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {#if isSendingFeedback}
-              <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 animate-spin" />
-            {:else}
-              <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
-            {/if}
-            <span>Continue</span>
-          </button>
-          <button
-            onclick={() => sendFeedback("skip")}
-            disabled={isSendingFeedback}
-            class="flex items-center gap-2 px-3 py-2 bg-[var(--dash-bg)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg hover:bg-[var(--dash-border)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            title="Skip current action and move to next"
-          >
-            <FontAwesomeIcon icon={faForward} class="w-4 h-4" />
-            <span>Skip</span>
-          </button>
-        </div>
-      {:else if jobSearch.status === "success"}
-        <div class="w-10 h-10 rounded-full bg-[var(--dash-success-light)] flex items-center justify-center">
-          <FontAwesomeIcon icon={faCheck} class="w-5 h-5 text-[var(--dash-success)]" />
-        </div>
-        <div>
-          <p class="font-medium text-[var(--dash-text)]">Completed</p>
-          <p class="text-sm text-[var(--dash-text-secondary)]">
-            {formatDate(jobSearch.last_run)}
-            {#if jobSearch.last_run_jobs_found}
-              • {jobSearch.last_run_jobs_found} jobs found
-            {/if}
-          </p>
-        </div>
-      {:else if jobSearch.status === "partial"}
-        <div class="w-10 h-10 rounded-full bg-[var(--dash-warning-light)] flex items-center justify-center">
-          <FontAwesomeIcon icon={faExclamationTriangle} class="w-5 h-5 text-[var(--dash-warning)]" />
-        </div>
-        <div>
-          <p class="font-medium text-[var(--dash-text)]">Completed with issues</p>
-          <p class="text-sm text-[var(--dash-text-secondary)]">
-            {formatDate(jobSearch.last_run)} • {jobSearch.status_message}
-          </p>
-        </div>
-      {:else if jobSearch.status === "error"}
-        <div class="w-10 h-10 rounded-full bg-[var(--dash-error-light)] flex items-center justify-center">
-          <FontAwesomeIcon icon={faTimes} class="w-5 h-5 text-[var(--dash-error)]" />
-        </div>
-        <div>
-          <p class="font-medium text-[var(--dash-error)]">Failed</p>
-          <p class="text-sm text-[var(--dash-text-secondary)]">
-            {jobSearch.status_message}
-          </p>
-        </div>
-      {:else if jobSearch.status === "cancelled"}
-        <div class="w-10 h-10 rounded-full bg-[var(--dash-error-light)] flex items-center justify-center">
-          <FontAwesomeIcon icon={faTimes} class="w-5 h-5 text-[var(--dash-error)]" />
-        </div>
-        <div>
-          <p class="font-medium text-[var(--dash-text)]">Cancelled</p>
-          <p class="text-sm text-[var(--dash-text-secondary)]">
-            {jobSearch.status_message || "Cancelled by user"}
-          </p>
-        </div>
-      {:else if jobSearch.last_run}
-        <!-- Idle but has run before -->
-        <div class="w-10 h-10 rounded-full bg-[var(--dash-bg)] flex items-center justify-center border border-[var(--dash-border)]">
-          <FontAwesomeIcon icon={faCog} class="w-5 h-5 text-[var(--dash-text-muted)]" />
-        </div>
-        <div>
-          <p class="font-medium text-[var(--dash-text)]">Idle</p>
-          <p class="text-sm text-[var(--dash-text-secondary)]">
-            Last run: {formatDate(jobSearch.last_run)}
-            {#if jobSearch.last_run_jobs_found}
-              • {jobSearch.last_run_jobs_found} jobs found
-            {/if}
-          </p>
-        </div>
-      {:else}
-        <div class="w-10 h-10 rounded-full bg-[var(--dash-bg)] flex items-center justify-center border border-[var(--dash-border)]">
-          <FontAwesomeIcon icon={faCog} class="w-5 h-5 text-[var(--dash-text-muted)]" />
-        </div>
-        <div>
-          <p class="font-medium text-[var(--dash-text)]">Never run</p>
-          <p class="text-sm text-[var(--dash-text-secondary)]">
-            Click "Run Scrape" to start importing jobs
-          </p>
-        </div>
-      {/if}
-    </div>
-
-    <!-- Missing config warnings -->
-    {#if !jobSearch.search_url}
-      <p class="mt-3 text-sm text-[var(--dash-warning)]">
-        No search URL configured. Please add a search URL to run scrapes.
-      </p>
-    {/if}
-    {#if !jobSearch.platform}
-      <p class="mt-3 text-sm text-[var(--dash-warning)]">
-        No platform selected. Please select a platform to run scrapes.
-      </p>
-    {/if}
-  </div>
-
-  <!-- Credentials Card -->
-  {#if jobSearch.platform}
-    <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4">
-      <div class="flex items-center justify-between mb-3">
-        <div class="flex items-center gap-2">
-          <FontAwesomeIcon icon={faKey} class="w-4 h-4 text-[var(--dash-text-secondary)]" />
-          <h2 class="font-medium text-[var(--dash-text)] text-sm">
-            {jobSearch.job_platforms?.name || "Platform"} Credentials
-          </h2>
-        </div>
-        <div class="flex items-center gap-2">
-          {#if isSavingCredential}
+        <!-- Max jobs setting -->
+        <div class="flex items-center gap-3">
+          <label for="max-jobs" class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap">Max jobs to import</label>
+          <input
+            id="max-jobs"
+            type="number"
+            min="1"
+            placeholder="No limit"
+            bind:value={maxJobsInput}
+            onblur={saveMaxJobs}
+            onkeydown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+            class="w-24 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
+          />
+          {#if isSavingMaxJobs}
             <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin" />
           {/if}
-          <button
-            type="button"
-            onclick={() => (showAddCredential = !showAddCredential)}
-            class="flex items-center gap-1 px-2 py-1 text-xs text-[var(--dash-primary)] hover:bg-[var(--dash-bg)] rounded transition-colors"
-          >
-            <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
-            Add
-          </button>
         </div>
-      </div>
 
-      <!-- Credential list -->
-      <div class="space-y-1">
-        <!-- No credentials option -->
-        <button
-          type="button"
-          onclick={() => {
-            showAddCredential = false;
-            saveCredential("none");
-          }}
-          class="w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors {selectedCredentialId === 'none'
-            ? 'bg-[var(--dash-primary)]/10 border border-[var(--dash-primary)]/30 text-[var(--dash-text)]'
-            : 'hover:bg-[var(--dash-bg)] text-[var(--dash-text-secondary)]'}"
-        >
-          <span>No credentials (public search)</span>
-          {#if selectedCredentialId === "none"}
-            <span class="text-xs text-[var(--dash-primary)] font-medium">Default</span>
+        {#if errorMessage}
+          <div class="p-3 bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg">
+            <p class="text-[var(--dash-error)] text-sm">{errorMessage}</p>
+          </div>
+        {/if}
+
+        <!-- Status Display -->
+        <div class="flex items-center gap-3 p-4 bg-[var(--dash-bg)] rounded-lg">
+          {#if jobSearch.status === "queued"}
+            <div class="w-10 h-10 rounded-full bg-[var(--dash-primary-light)] flex items-center justify-center">
+              <FontAwesomeIcon icon={faSpinner} class="w-5 h-5 text-[var(--dash-primary)] animate-spin" />
+            </div>
+            <div>
+              <p class="font-medium text-[var(--dash-text)]">Queued</p>
+              <p class="text-sm text-[var(--dash-text-secondary)]">
+                Waiting in queue to start...
+              </p>
+            </div>
+          {:else if jobSearch.status === "running"}
+            <div class="w-10 h-10 rounded-full bg-[var(--dash-primary-light)] flex items-center justify-center">
+              <FontAwesomeIcon icon={faSpinner} class="w-5 h-5 text-[var(--dash-primary)] animate-spin" />
+            </div>
+            <div>
+              <p class="font-medium text-[var(--dash-text)]">{jobSearch.status_message || "Running..."}</p>
+              <p class="text-sm text-[var(--dash-text-secondary)]">
+                Scraping jobs from {jobSearch.job_platforms?.name || "platform"}
+              </p>
+            </div>
+          {:else if jobSearch.status === "blocked"}
+            <div class="w-10 h-10 rounded-full bg-[var(--dash-warning-light)] flex items-center justify-center">
+              <FontAwesomeIcon icon={faExclamationTriangle} class="w-5 h-5 text-[var(--dash-warning)]" />
+            </div>
+            <div class="flex-1">
+              <p class="font-medium text-[var(--dash-warning)]">{jobSearch.status_message}</p>
+              <p class="text-sm text-[var(--dash-text-secondary)]">
+                Complete the action in the browser view, then click Continue
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button
+                onclick={() => sendFeedback("continue")}
+                disabled={isSendingFeedback}
+                class="flex items-center gap-2 px-4 py-2 bg-[var(--dash-success)] text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {#if isSendingFeedback}
+                  <FontAwesomeIcon icon={faSpinner} class="w-4 h-4 animate-spin" />
+                {:else}
+                  <FontAwesomeIcon icon={faCheck} class="w-4 h-4" />
+                {/if}
+                <span>Continue</span>
+              </button>
+              <button
+                onclick={() => sendFeedback("skip")}
+                disabled={isSendingFeedback}
+                class="flex items-center gap-2 px-3 py-2 bg-[var(--dash-bg)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg hover:bg-[var(--dash-border)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Skip current action and move to next"
+              >
+                <FontAwesomeIcon icon={faForward} class="w-4 h-4" />
+                <span>Skip</span>
+              </button>
+            </div>
+          {:else if jobSearch.status === "success"}
+            <div class="w-10 h-10 rounded-full bg-[var(--dash-success-light)] flex items-center justify-center">
+              <FontAwesomeIcon icon={faCheck} class="w-5 h-5 text-[var(--dash-success)]" />
+            </div>
+            <div>
+              <p class="font-medium text-[var(--dash-text)]">Completed</p>
+              <p class="text-sm text-[var(--dash-text-secondary)]">
+                {formatDate(jobSearch.last_run)}
+                {#if jobSearch.last_run_jobs_found}
+                  • {jobSearch.last_run_jobs_found} jobs found
+                {/if}
+              </p>
+            </div>
+          {:else if jobSearch.status === "partial"}
+            <div class="w-10 h-10 rounded-full bg-[var(--dash-warning-light)] flex items-center justify-center">
+              <FontAwesomeIcon icon={faExclamationTriangle} class="w-5 h-5 text-[var(--dash-warning)]" />
+            </div>
+            <div>
+              <p class="font-medium text-[var(--dash-text)]">Completed with issues</p>
+              <p class="text-sm text-[var(--dash-text-secondary)]">
+                {formatDate(jobSearch.last_run)} • {jobSearch.status_message}
+              </p>
+            </div>
+          {:else if jobSearch.status === "error"}
+            <div class="w-10 h-10 rounded-full bg-[var(--dash-error-light)] flex items-center justify-center">
+              <FontAwesomeIcon icon={faTimes} class="w-5 h-5 text-[var(--dash-error)]" />
+            </div>
+            <div>
+              <p class="font-medium text-[var(--dash-error)]">Failed</p>
+              <p class="text-sm text-[var(--dash-text-secondary)]">
+                {jobSearch.status_message}
+              </p>
+            </div>
+          {:else if jobSearch.status === "cancelled"}
+            <div class="w-10 h-10 rounded-full bg-[var(--dash-error-light)] flex items-center justify-center">
+              <FontAwesomeIcon icon={faTimes} class="w-5 h-5 text-[var(--dash-error)]" />
+            </div>
+            <div>
+              <p class="font-medium text-[var(--dash-text)]">Cancelled</p>
+              <p class="text-sm text-[var(--dash-text-secondary)]">
+                {jobSearch.status_message || "Cancelled by user"}
+              </p>
+            </div>
+          {:else if jobSearch.last_run}
+            <!-- Idle but has run before -->
+            <div class="w-10 h-10 rounded-full bg-[var(--dash-bg)] flex items-center justify-center border border-[var(--dash-border)]">
+              <FontAwesomeIcon icon={faCog} class="w-5 h-5 text-[var(--dash-text-muted)]" />
+            </div>
+            <div>
+              <p class="font-medium text-[var(--dash-text)]">Idle</p>
+              <p class="text-sm text-[var(--dash-text-secondary)]">
+                Last run: {formatDate(jobSearch.last_run)}
+                {#if jobSearch.last_run_jobs_found}
+                  • {jobSearch.last_run_jobs_found} jobs found
+                {/if}
+              </p>
+            </div>
+          {:else}
+            <div class="w-10 h-10 rounded-full bg-[var(--dash-bg)] flex items-center justify-center border border-[var(--dash-border)]">
+              <FontAwesomeIcon icon={faCog} class="w-5 h-5 text-[var(--dash-text-muted)]" />
+            </div>
+            <div>
+              <p class="font-medium text-[var(--dash-text)]">Never run</p>
+              <p class="text-sm text-[var(--dash-text-secondary)]">
+                Click "Run Scrape" to start importing jobs
+              </p>
+            </div>
           {/if}
-        </button>
+        </div>
 
-        {#each platformCredentials as cred}
-          <div
-            class="flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors {selectedCredentialId === String(cred.id)
-              ? 'bg-[var(--dash-primary)]/10 border border-[var(--dash-primary)]/30'
-              : 'hover:bg-[var(--dash-bg)]'}"
-          >
-            <button
-              type="button"
-              onclick={() => {
-                showAddCredential = false;
-                saveCredential(String(cred.id));
-              }}
-              class="flex-1 text-left flex items-center gap-2 text-[var(--dash-text)]"
-            >
-              <span>{cred.username || "No username"}</span>
-              {#if selectedCredentialId === String(cred.id)}
-                <span class="text-xs text-[var(--dash-primary)] font-medium">Default</span>
-              {/if}
-            </button>
-            <button
-              type="button"
-              onclick={() => deleteCredential(cred.id)}
-              disabled={isDeletingCredential === cred.id}
-              class="p-1 text-[var(--dash-text-muted)] hover:text-[var(--dash-error)] transition-colors"
-              title="Delete credential"
-            >
-              {#if isDeletingCredential === cred.id}
-                <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
-              {:else}
-                <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
-              {/if}
-            </button>
+        <!-- Missing config warnings -->
+        {#if !jobSearch.search_url}
+          <p class="text-sm text-[var(--dash-warning)]">
+            No search URL configured. Please add a search URL to run scrapes.
+          </p>
+        {/if}
+        {#if !jobSearch.platform}
+          <p class="text-sm text-[var(--dash-warning)]">
+            No platform selected. Please select a platform to run scrapes.
+          </p>
+        {/if}
+
+        <!-- URLs -->
+        {#if jobSearch.search_url || jobSearch.job_platforms?.login_page_url}
+          <div class="space-y-2 pt-2 border-t border-[var(--dash-border)]">
+            {#if jobSearch.search_url}
+              <div>
+                <h3 class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1">Search URL</h3>
+                <a
+                  href={jobSearch.search_url}
+                  target="_blank"
+                  rel="noopener"
+                  class="text-sm text-[var(--dash-primary)] hover:underline break-all flex items-center gap-1"
+                >
+                  {jobSearch.search_url}
+                  <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3 h-3 flex-shrink-0" />
+                </a>
+              </div>
+            {/if}
+            {#if jobSearch.job_platforms?.login_page_url}
+              <div>
+                <h3 class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1">Login URL</h3>
+                <a
+                  href={jobSearch.job_platforms.login_page_url}
+                  target="_blank"
+                  rel="noopener"
+                  class="text-sm text-[var(--dash-primary)] hover:underline break-all flex items-center gap-1"
+                >
+                  {jobSearch.job_platforms.login_page_url}
+                  <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3 h-3 flex-shrink-0" />
+                </a>
+              </div>
+            {/if}
           </div>
-        {/each}
+        {/if}
       </div>
 
-      {#if platformCredentials.length === 0 && !showAddCredential}
-        <p class="mt-2 text-xs text-[var(--dash-text-muted)]">
-          No credentials configured for this platform. Add credentials to enable authenticated scraping.
-        </p>
-      {/if}
-
-      {#if showAddCredential}
-        <div class="mt-3 p-3 bg-[var(--dash-bg)] rounded-lg space-y-3">
-          <div>
-            <label for="new-cred-username" class="block text-sm text-[var(--dash-text)] mb-1">
-              Username / Email
-            </label>
-            <input
-              type="text"
-              id="new-cred-username"
-              bind:value={newCredUsername}
-              placeholder="your@email.com"
-              class="w-full px-3 py-2 text-sm border border-[var(--dash-border)] rounded-md bg-[var(--dash-card)] text-[var(--dash-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-            />
-          </div>
-          <div>
-            <label for="new-cred-password" class="block text-sm text-[var(--dash-text)] mb-1">
-              Password
-            </label>
-            <div class="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                id="new-cred-password"
-                bind:value={newCredPassword}
-                placeholder="Enter password"
-                class="w-full px-3 py-2 pr-10 text-sm border border-[var(--dash-border)] rounded-md bg-[var(--dash-card)] text-[var(--dash-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
-              />
+      <!-- Right column: Credentials -->
+      {#if jobSearch.platform}
+        <div class="lg:border-l lg:border-[var(--dash-border)] lg:pl-6">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <FontAwesomeIcon icon={faKey} class="w-4 h-4 text-[var(--dash-text-secondary)]" />
+              <h2 class="font-medium text-[var(--dash-text)] text-sm">
+                {jobSearch.job_platforms?.name || "Platform"} Credentials
+              </h2>
+            </div>
+            <div class="flex items-center gap-2">
+              {#if isSavingCredential}
+                <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin" />
+              {/if}
               <button
                 type="button"
-                onclick={() => (showPassword = !showPassword)}
-                class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]"
+                onclick={() => (showAddCredential = !showAddCredential)}
+                class="flex items-center gap-1 px-2 py-1 text-xs text-[var(--dash-primary)] hover:bg-[var(--dash-bg)] rounded transition-colors"
               >
-                <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} class="w-4 h-4" />
+                <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
+                Add
               </button>
             </div>
           </div>
-          <div class="flex justify-end gap-2">
+
+          <!-- Credential list -->
+          <div class="space-y-1.5">
+            <!-- No credentials option -->
             <button
               type="button"
               onclick={() => {
                 showAddCredential = false;
-                newCredUsername = "";
-                newCredPassword = "";
+                saveCredential("none");
               }}
-              class="px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-card)] transition-colors"
+              class="w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors {selectedCredentialId === 'none'
+                ? 'bg-[var(--dash-primary)]/10 border border-[var(--dash-primary)]/30 text-[var(--dash-text)]'
+                : 'bg-[var(--dash-bg)] border border-transparent text-[var(--dash-text-secondary)] hover:border-[var(--dash-border)]'}"
             >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onclick={addNewCredential}
-              disabled={!newCredUsername.trim() || isSavingCredential}
-              class="px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-            >
-              {#if isSavingCredential}
-                <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
-              {:else}
-                <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
+              <span>No credentials (public search)</span>
+              {#if selectedCredentialId === "none"}
+                <span class="text-xs text-[var(--dash-primary)] font-medium">Default</span>
               {/if}
-              Add & Select
             </button>
+
+            {#each platformCredentials as cred}
+              <div
+                class="flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors {selectedCredentialId === String(cred.id)
+                  ? 'bg-[var(--dash-primary)]/10 border border-[var(--dash-primary)]/30'
+                  : 'bg-[var(--dash-bg)] border border-transparent hover:border-[var(--dash-border)]'}"
+              >
+                <button
+                  type="button"
+                  onclick={() => {
+                    showAddCredential = false;
+                    saveCredential(String(cred.id));
+                  }}
+                  class="flex-1 text-left flex items-center gap-2 text-[var(--dash-text)]"
+                >
+                  <span>{cred.username || "No username"}</span>
+                  {#if selectedCredentialId === String(cred.id)}
+                    <span class="text-xs text-[var(--dash-primary)] font-medium">Default</span>
+                  {/if}
+                </button>
+                <button
+                  type="button"
+                  onclick={() => deleteCredential(cred.id)}
+                  disabled={isDeletingCredential === cred.id}
+                  class="p-1 text-[var(--dash-text-muted)] hover:text-[var(--dash-error)] transition-colors"
+                  title="Delete credential"
+                >
+                  {#if isDeletingCredential === cred.id}
+                    <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
+                  {:else}
+                    <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
+                  {/if}
+                </button>
+              </div>
+            {/each}
           </div>
+
+          {#if platformCredentials.length === 0 && !showAddCredential}
+            <p class="mt-2 text-xs text-[var(--dash-text-muted)]">
+              No credentials configured. Add credentials to enable authenticated scraping.
+            </p>
+          {/if}
+
+          {#if showAddCredential}
+            <div class="mt-3 p-3 bg-[var(--dash-bg)] rounded-lg space-y-3">
+              <div>
+                <label for="new-cred-username" class="block text-sm text-[var(--dash-text)] mb-1">
+                  Username / Email
+                </label>
+                <input
+                  type="text"
+                  id="new-cred-username"
+                  bind:value={newCredUsername}
+                  placeholder="your@email.com"
+                  class="w-full px-3 py-2 text-sm border border-[var(--dash-border)] rounded-md bg-[var(--dash-card)] text-[var(--dash-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label for="new-cred-password" class="block text-sm text-[var(--dash-text)] mb-1">
+                  Password
+                </label>
+                <div class="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    id="new-cred-password"
+                    bind:value={newCredPassword}
+                    placeholder="Enter password"
+                    class="w-full px-3 py-2 pr-10 text-sm border border-[var(--dash-border)] rounded-md bg-[var(--dash-card)] text-[var(--dash-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                  />
+                  <button
+                    type="button"
+                    onclick={() => (showPassword = !showPassword)}
+                    class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]"
+                  >
+                    <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} class="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+              <div class="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onclick={() => {
+                    showAddCredential = false;
+                    newCredUsername = "";
+                    newCredPassword = "";
+                  }}
+                  class="px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-card)] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onclick={addNewCredential}
+                  disabled={!newCredUsername.trim() || isSavingCredential}
+                  class="px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                >
+                  {#if isSavingCredential}
+                    <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
+                  {:else}
+                    <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
+                  {/if}
+                  Add & Select
+                </button>
+              </div>
+            </div>
+          {/if}
         </div>
       {/if}
     </div>
-  {/if}
+  </div>
 
   <!-- Browser View (VNC for local, iframe for cloud) -->
   {#if showBrowser || needsIntervention}
@@ -2001,37 +2040,4 @@
     {/if}
   </div>
 
-  <!-- URLs -->
-  {#if jobSearch.search_url || jobSearch.job_platforms?.login_page_url}
-    <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4 space-y-3">
-      {#if jobSearch.search_url}
-        <div>
-          <h2 class="font-medium text-[var(--dash-text)] mb-1 text-sm">Search URL</h2>
-          <a
-            href={jobSearch.search_url}
-            target="_blank"
-            rel="noopener"
-            class="text-sm text-[var(--dash-primary)] hover:underline break-all flex items-center gap-1"
-          >
-            {jobSearch.search_url}
-            <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3 h-3 flex-shrink-0" />
-          </a>
-        </div>
-      {/if}
-      {#if jobSearch.job_platforms?.login_page_url}
-        <div>
-          <h2 class="font-medium text-[var(--dash-text)] mb-1 text-sm">Login URL</h2>
-          <a
-            href={jobSearch.job_platforms.login_page_url}
-            target="_blank"
-            rel="noopener"
-            class="text-sm text-[var(--dash-primary)] hover:underline break-all flex items-center gap-1"
-          >
-            {jobSearch.job_platforms.login_page_url}
-            <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3 h-3 flex-shrink-0" />
-          </a>
-        </div>
-      {/if}
-    </div>
-  {/if}
 </div>
