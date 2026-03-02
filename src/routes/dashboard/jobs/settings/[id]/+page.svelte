@@ -35,7 +35,13 @@
   let jobSearch = $state(data.jobSearch);
   let maxJobsInput = $state<string>((jobSearch as any).max_jobs?.toString() ?? "");
   let isSavingMaxJobs = $state(false);
-  let maxJobsDirty = $derived(String(maxJobsInput).trim() !== ((jobSearch as any).max_jobs?.toString() ?? ""));
+
+  function parseMaxJobs(val: unknown): number | null {
+    if (val === undefined || val === null || val === "") return null;
+    const n = typeof val === "number" ? val : parseInt(String(val));
+    return isNaN(n) || n < 1 ? null : n;
+  }
+  let maxJobsDirty = $derived(parseMaxJobs(maxJobsInput) !== ((jobSearch as any).max_jobs ?? null));
 
   // Credentials state
   let platformCredentials = $state(data.platformCredentials);
@@ -613,10 +619,7 @@
   }
 
   async function saveMaxJobs() {
-    const value = String(maxJobsInput).trim();
-    const maxJobs = value === "" ? null : parseInt(value);
-    if (maxJobs !== null && (isNaN(maxJobs) || maxJobs < 1)) return;
-
+    const maxJobs = parseMaxJobs(maxJobsInput);
     isSavingMaxJobs = true;
     try {
       await fetch(`/api/job-searches/${jobSearch.id}`, {
