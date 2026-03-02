@@ -33,7 +33,6 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   let platformCredentials: Array<{
     id: number;
     username: string | null;
-    status: string;
   }> = [];
   if (jobSearch.platform) {
     platformCredentials = await db.platform_profiles.findMany({
@@ -41,7 +40,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
         profile: layoutData.selectedProfile.id,
         platform: jobSearch.platform,
       },
-      select: { id: true, username: true, status: true },
+      select: { id: true, username: true },
       orderBy: { date_created: "asc" },
     });
   }

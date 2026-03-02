@@ -1112,7 +1112,9 @@
       <div class="flex items-center justify-between mb-3">
         <div class="flex items-center gap-2">
           <FontAwesomeIcon icon={faKey} class="w-4 h-4 text-[var(--dash-text-secondary)]" />
-          <h2 class="font-medium text-[var(--dash-text)] text-sm">Login Credentials</h2>
+          <h2 class="font-medium text-[var(--dash-text)] text-sm">
+            {jobSearch.job_platforms?.name || "Platform"} Credentials
+          </h2>
         </div>
         <div class="flex items-center gap-2">
           {#if isSavingCredential}
@@ -1163,11 +1165,6 @@
               class="flex-1 text-left flex items-center gap-2 text-[var(--dash-text)]"
             >
               <span>{cred.username || "No username"}</span>
-              {#if cred.status !== "active"}
-                <span class="text-xs text-[var(--dash-warning)] bg-[var(--dash-warning-light)] px-1.5 py-0.5 rounded">
-                  {cred.status}
-                </span>
-              {/if}
               {#if selectedCredentialId === String(cred.id)}
                 <span class="text-xs text-[var(--dash-primary)] font-medium">Default</span>
               {/if}
