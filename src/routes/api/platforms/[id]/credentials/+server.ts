@@ -89,6 +89,8 @@ export const PUT: RequestHandler = async ({ params, locals, request }) => {
  * DELETE /api/platforms/[id]/credentials
  *
  * Delete credentials for a platform.
+ * Pass ?credentialId=X to delete a specific credential,
+ * or just ?profileId=X to delete all credentials for that platform.
  */
 export const DELETE: RequestHandler = async ({ params, locals, url }) => {
   const user = locals.user;
@@ -118,13 +120,59 @@ export const DELETE: RequestHandler = async ({ params, locals, url }) => {
     throw error(403, "Not authorized");
   }
 
-  // Delete credentials
-  await db.platform_profiles.deleteMany({
-    where: {
-      profile: profile.id,
-      platform: platformId,
-    },
-  });
+  const credentialId = url.searchParams.get("credentialId");
+
+  if (credentialId) {
+    // Delete specific credential
+    const cred = await db.platform_profiles.findFirst({
+      where: {
+        id: parseInt(credentialId),
+        profile: profile.id,
+        platform: platformId,
+      },
+    });
+    if (!cred) {
+      throw error(404, "Credential not found");
+    }
+
+    await db.platform_profiles.delete({
+      where: { id: cred.id },
+    });
+
+    // Clear platform_profile_id on any job searches using this credential
+    await db.job_searches.updateMany({
+      where: {
+        platform_profile_id: cred.id,
+        profile: profile.id,
+      },
+      data: { platform_profile_id: null },
+    });
+  } else {
+    // Delete all credentials for this platform
+    const creds = await db.platform_profiles.findMany({
+      where: { profile: profile.id, platform: platformId },
+      select: { id: true },
+    });
+    const credIds = creds.map((c) => c.id);
+
+    await db.platform_profiles.deleteMany({
+      where: {
+        profile: profile.id,
+        platform: platformId,
+      },
+    });
+
+    // Clear platform_profile_id on any job searches using these credentials
+    if (credIds.length > 0) {
+      await db.job_searches.updateMany({
+        where: {
+          platform_profile_id: { in: credIds },
+          profile: profile.id,
+        },
+        data: { platform_profile_id: null },
+      });
+    }
+  }
 
   return json({ success: true });
 };

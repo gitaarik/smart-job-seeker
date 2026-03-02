@@ -27,6 +27,7 @@
     faSync,
     faTerminal,
     faTimes,
+    faTrash,
   } from "@fortawesome/free-solid-svg-icons";
 
   let { data }: { data: PageData } = $props();
@@ -672,6 +673,33 @@
     }
   }
 
+  let isDeletingCredential = $state<number | null>(null);
+
+  async function deleteCredential(credId: number) {
+    if (!confirm("Delete this credential? Any search tasks using it will be unlinked.")) return;
+    isDeletingCredential = credId;
+    try {
+      const platform = (jobSearch as any).platform;
+      const response = await fetch(
+        `/api/platforms/${platform}/credentials?profileId=${data.profileId}&credentialId=${credId}`,
+        { method: "DELETE" },
+      );
+      if (response.ok) {
+        // Remove from local list
+        platformCredentials = platformCredentials.filter((c) => c.id !== credId);
+        // If this was the selected credential, clear selection
+        if ((jobSearch as any).platform_profile_id === credId) {
+          (jobSearch as any).platform_profile_id = null;
+          selectedCredentialId = "none";
+        }
+      }
+    } catch (err) {
+      console.error("Failed to delete credential:", err);
+    } finally {
+      isDeletingCredential = null;
+    }
+  }
+
   async function startScrape() {
     isStarting = true;
     errorMessage = null;
@@ -1086,32 +1114,86 @@
           <FontAwesomeIcon icon={faKey} class="w-4 h-4 text-[var(--dash-text-secondary)]" />
           <h2 class="font-medium text-[var(--dash-text)] text-sm">Login Credentials</h2>
         </div>
-        {#if isSavingCredential}
-          <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin" />
-        {/if}
+        <div class="flex items-center gap-2">
+          {#if isSavingCredential}
+            <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin" />
+          {/if}
+          <button
+            type="button"
+            onclick={() => (showAddCredential = !showAddCredential)}
+            class="flex items-center gap-1 px-2 py-1 text-xs text-[var(--dash-primary)] hover:bg-[var(--dash-bg)] rounded transition-colors"
+          >
+            <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
+            Add
+          </button>
+        </div>
       </div>
 
-      <div class="flex items-center gap-3">
-        <select
-          value={selectedCredentialId}
-          onchange={(e) => {
-            const value = (e.target as HTMLSelectElement).value;
-            if (value === "new") {
-              showAddCredential = true;
-            } else {
-              showAddCredential = false;
-              saveCredential(value);
-            }
+      <!-- Credential list -->
+      <div class="space-y-1">
+        <!-- No credentials option -->
+        <button
+          type="button"
+          onclick={() => {
+            showAddCredential = false;
+            saveCredential("none");
           }}
-          class="flex-1 px-3 py-2 text-sm border border-[var(--dash-border)] rounded-md bg-[var(--dash-bg)] text-[var(--dash-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+          class="w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors {selectedCredentialId === 'none'
+            ? 'bg-[var(--dash-primary)]/10 border border-[var(--dash-primary)]/30 text-[var(--dash-text)]'
+            : 'hover:bg-[var(--dash-bg)] text-[var(--dash-text-secondary)]'}"
         >
-          <option value="none">No credentials (public search)</option>
-          {#each platformCredentials as cred}
-            <option value={String(cred.id)}>{cred.username}</option>
-          {/each}
-          <option value="new">+ Add new credentials</option>
-        </select>
+          <span>No credentials (public search)</span>
+          {#if selectedCredentialId === "none"}
+            <span class="text-xs text-[var(--dash-primary)] font-medium">Default</span>
+          {/if}
+        </button>
+
+        {#each platformCredentials as cred}
+          <div
+            class="flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors {selectedCredentialId === String(cred.id)
+              ? 'bg-[var(--dash-primary)]/10 border border-[var(--dash-primary)]/30'
+              : 'hover:bg-[var(--dash-bg)]'}"
+          >
+            <button
+              type="button"
+              onclick={() => {
+                showAddCredential = false;
+                saveCredential(String(cred.id));
+              }}
+              class="flex-1 text-left flex items-center gap-2 text-[var(--dash-text)]"
+            >
+              <span>{cred.username || "No username"}</span>
+              {#if cred.status !== "active"}
+                <span class="text-xs text-[var(--dash-warning)] bg-[var(--dash-warning-light)] px-1.5 py-0.5 rounded">
+                  {cred.status}
+                </span>
+              {/if}
+              {#if selectedCredentialId === String(cred.id)}
+                <span class="text-xs text-[var(--dash-primary)] font-medium">Default</span>
+              {/if}
+            </button>
+            <button
+              type="button"
+              onclick={() => deleteCredential(cred.id)}
+              disabled={isDeletingCredential === cred.id}
+              class="p-1 text-[var(--dash-text-muted)] hover:text-[var(--dash-error)] transition-colors"
+              title="Delete credential"
+            >
+              {#if isDeletingCredential === cred.id}
+                <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
+              {:else}
+                <FontAwesomeIcon icon={faTrash} class="w-3 h-3" />
+              {/if}
+            </button>
+          </div>
+        {/each}
       </div>
+
+      {#if platformCredentials.length === 0 && !showAddCredential}
+        <p class="mt-2 text-xs text-[var(--dash-text-muted)]">
+          No credentials configured for this platform. Add credentials to enable authenticated scraping.
+        </p>
+      {/if}
 
       {#if showAddCredential}
         <div class="mt-3 p-3 bg-[var(--dash-bg)] rounded-lg space-y-3">
@@ -1153,7 +1235,6 @@
               type="button"
               onclick={() => {
                 showAddCredential = false;
-                selectedCredentialId = (jobSearch as any).platform_profile_id?.toString() ?? "none";
                 newCredUsername = "";
                 newCredPassword = "";
               }}
