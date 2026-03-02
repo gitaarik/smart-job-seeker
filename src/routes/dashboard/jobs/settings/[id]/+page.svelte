@@ -1108,39 +1108,6 @@
           </p>
         {/if}
 
-        <!-- URLs -->
-        {#if jobSearch.search_url || jobSearch.job_platforms?.login_page_url}
-          <div class="space-y-2 pt-2 border-t border-[var(--dash-border)]">
-            {#if jobSearch.search_url}
-              <div>
-                <h3 class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1">Search URL</h3>
-                <a
-                  href={jobSearch.search_url}
-                  target="_blank"
-                  rel="noopener"
-                  class="text-sm text-[var(--dash-primary)] hover:underline break-all flex items-center gap-1"
-                >
-                  {jobSearch.search_url}
-                  <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3 h-3 flex-shrink-0" />
-                </a>
-              </div>
-            {/if}
-            {#if jobSearch.job_platforms?.login_page_url}
-              <div>
-                <h3 class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1">Login URL</h3>
-                <a
-                  href={jobSearch.job_platforms.login_page_url}
-                  target="_blank"
-                  rel="noopener"
-                  class="text-sm text-[var(--dash-primary)] hover:underline break-all flex items-center gap-1"
-                >
-                  {jobSearch.job_platforms.login_page_url}
-                  <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3 h-3 flex-shrink-0" />
-                </a>
-              </div>
-            {/if}
-          </div>
-        {/if}
       </div>
 
       <!-- Right column: Credentials -->
@@ -1290,6 +1257,40 @@
                   Add & Select
                 </button>
               </div>
+            </div>
+          {/if}
+
+          <!-- URLs -->
+          {#if jobSearch.search_url || jobSearch.job_platforms?.login_page_url}
+            <div class="space-y-2 mt-4 pt-4 border-t border-[var(--dash-border)]">
+              {#if jobSearch.search_url}
+                <div>
+                  <h3 class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1">Search URL</h3>
+                  <a
+                    href={jobSearch.search_url}
+                    target="_blank"
+                    rel="noopener"
+                    class="text-sm text-[var(--dash-primary)] hover:underline break-all flex items-center gap-1"
+                  >
+                    {jobSearch.search_url}
+                    <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3 h-3 flex-shrink-0" />
+                  </a>
+                </div>
+              {/if}
+              {#if jobSearch.job_platforms?.login_page_url}
+                <div>
+                  <h3 class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1">Login URL</h3>
+                  <a
+                    href={jobSearch.job_platforms.login_page_url}
+                    target="_blank"
+                    rel="noopener"
+                    class="text-sm text-[var(--dash-primary)] hover:underline break-all flex items-center gap-1"
+                  >
+                    {jobSearch.job_platforms.login_page_url}
+                    <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3 h-3 flex-shrink-0" />
+                  </a>
+                </div>
+              {/if}
             </div>
           {/if}
         </div>
