@@ -425,7 +425,7 @@
                 handleCredentialSelection((e.target as HTMLSelectElement).value)}
               class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
             >
-              <option value="none">No credentials (public search)</option>
+              <option value="none">No auto-login</option>
               {#each existingCredentials as cred}
                 <option value={String(cred.id)}>{cred.username}</option>
               {/each}
@@ -813,7 +813,7 @@
                             )}
                           class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
                         >
-                          <option value="none">No credentials (public search)</option
+                          <option value="none">No auto-login</option
                           >
                           {#each editExistingCredentials as cred}
                             <option value={String(cred.id)}>{cred.username}</option>

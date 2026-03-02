@@ -89,6 +89,18 @@ describe("AI Prompt Schemas", () => {
       expect(() => extractJobDataSchema.parse(dataWithNulls)).not.toThrow();
     });
 
+    it("should accept float salary values and round them", () => {
+      const dataWithFloats = {
+        title: "Software Engineer",
+        job_description: "Description",
+        salary_min: 80000.0,
+        salary_max: 120000.5,
+      };
+      const result = extractJobDataSchema.parse(dataWithFloats);
+      expect(result.salary_min).toBe(80000);
+      expect(result.salary_max).toBe(120001);
+    });
+
     it("should reject invalid salary values", () => {
       const invalidData = {
         title: "Software Engineer",

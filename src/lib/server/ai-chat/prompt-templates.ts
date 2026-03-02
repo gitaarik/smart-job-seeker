@@ -1226,14 +1226,15 @@ IMPORTANT:
 
 The HTML has been annotated with data-xxx attributes on clickable elements. Your task is to find the button/link that navigates to the NEXT page of results.
 
-Look for:
-- "Next" buttons or arrows (→, >, next, etc.)
-- Numbered page links where the NEXT page number can be clicked
-- "Load More" or "Show More" buttons
+PRIORITY ORDER — pick the first match:
+1. A "Next" button: check title="Next", aria-label="Next", or text content like › » > "Next"
+2. If you can identify the current/active page number N (highlighted, bold, or different style), find the button for page N+1
+3. "Load More" or "Show More" buttons
 
-Return the data-xxx ID of the most likely next page button.
-
-IMPORTANT: Only return a data-xxx ID that actually exists in the HTML. Do not invent IDs.`,
+CRITICAL:
+- Only return a data-xxx ID that actually exists in the HTML. Do not invent IDs
+- Do NOT pick job card links — only pick pagination/navigation buttons
+- Check the title attribute of buttons — it often contains "Next", "Previous", or "Page N"`,
     user_prompt: `Find the next page navigation button in this HTML.
 
 HTML:
@@ -1241,7 +1242,7 @@ HTML:
 
 Return JSON with:
 - found: true if a next page button exists, false otherwise
-- dataXxxId: the data-xxx attribute value (integer) of the next page button, or null if not found  
+- dataXxxId: the data-xxx attribute value (integer) of the next page button, or null if not found
 - paginationType: "next_prev" for traditional pagination, "load_more" for load more buttons, or "none"`,
   },
 

@@ -15,7 +15,8 @@ import { z } from "zod";
  */
 // Helper for optional nullable fields (field can be missing, null, or have a value)
 const optionalNullableString = () => z.string().optional().nullable();
-const optionalNullableNumber = () => z.number().int().optional().nullable();
+const optionalNullableNumber = () =>
+  z.number().optional().nullable().transform((v) => (v != null ? Math.round(v) : v));
 const optionalNullableArray = () => z.array(z.string()).optional().nullable();
 
 export const extractJobDataSchema = z.object({
