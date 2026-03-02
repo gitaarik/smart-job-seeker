@@ -21,11 +21,29 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     },
     include: {
       job_platforms: true,
+      platform_profiles: true,
     },
   });
 
   if (!jobSearch) {
     throw error(404, "Job search not found");
+  }
+
+  // Load all credentials for this platform so user can switch
+  let platformCredentials: Array<{
+    id: number;
+    username: string | null;
+    status: string;
+  }> = [];
+  if (jobSearch.platform) {
+    platformCredentials = await db.platform_profiles.findMany({
+      where: {
+        profile: layoutData.selectedProfile.id,
+        platform: jobSearch.platform,
+      },
+      select: { id: true, username: true, status: true },
+      orderBy: { date_created: "asc" },
+    });
   }
 
   // Check if user is staff or admin for browser-use logs access
@@ -34,6 +52,8 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 
   return {
     jobSearch,
+    platformCredentials,
+    profileId: layoutData.selectedProfile.id,
     isStaff,
   };
 };

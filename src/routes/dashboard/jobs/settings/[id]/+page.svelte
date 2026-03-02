@@ -14,11 +14,14 @@
     faExclamationTriangle,
     faExternalLinkAlt,
     faEye,
+    faEyeSlash,
     faForward,
     faHistory,
+    faKey,
     faMapMarkerAlt,
     faMoneyBillWave,
     faPlay,
+    faPlus,
     faSpinner,
     faStop,
     faSync,
@@ -31,6 +34,17 @@
   let jobSearch = $state(data.jobSearch);
   let maxJobsInput = $state<string>((jobSearch as any).max_jobs?.toString() ?? "");
   let isSavingMaxJobs = $state(false);
+
+  // Credentials state
+  let platformCredentials = $state(data.platformCredentials);
+  let selectedCredentialId = $state<string>(
+    (jobSearch as any).platform_profile_id?.toString() ?? "none",
+  );
+  let isSavingCredential = $state(false);
+  let showAddCredential = $state(false);
+  let newCredUsername = $state("");
+  let newCredPassword = $state("");
+  let showPassword = $state(false);
   let isStarting = $state(false);
   let isStopping = $state(false);
   let isSendingFeedback = $state(false);
@@ -605,6 +619,59 @@
     }
   }
 
+  async function saveCredential(credentialId: string) {
+    isSavingCredential = true;
+    try {
+      const profileId = credentialId === "none" ? null : parseInt(credentialId);
+      await fetch(`/api/job-searches/${jobSearch.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ platform_profile_id: profileId }),
+      });
+      (jobSearch as any).platform_profile_id = profileId;
+      selectedCredentialId = credentialId;
+    } catch (err) {
+      console.error("Failed to save credential:", err);
+    } finally {
+      isSavingCredential = false;
+    }
+  }
+
+  async function addNewCredential() {
+    if (!newCredUsername.trim()) return;
+    isSavingCredential = true;
+    try {
+      const response = await fetch(`/api/job-searches/${jobSearch.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          new_credential: {
+            username: newCredUsername.trim(),
+            password: newCredPassword,
+          },
+        }),
+      });
+      if (response.ok) {
+        // Reload page data to get updated credentials list
+        const pageResponse = await fetch(window.location.href, {
+          headers: { Accept: "application/json" },
+        });
+        if (pageResponse.ok) {
+          // Simpler: just reload the page
+          window.location.reload();
+          return;
+        }
+      }
+    } catch (err) {
+      console.error("Failed to add credential:", err);
+    } finally {
+      isSavingCredential = false;
+      showAddCredential = false;
+      newCredUsername = "";
+      newCredPassword = "";
+    }
+  }
+
   async function startScrape() {
     isStarting = true;
     errorMessage = null;
@@ -1010,6 +1077,108 @@
       </p>
     {/if}
   </div>
+
+  <!-- Credentials Card -->
+  {#if jobSearch.platform}
+    <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-4">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+          <FontAwesomeIcon icon={faKey} class="w-4 h-4 text-[var(--dash-text-secondary)]" />
+          <h2 class="font-medium text-[var(--dash-text)] text-sm">Login Credentials</h2>
+        </div>
+        {#if isSavingCredential}
+          <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin" />
+        {/if}
+      </div>
+
+      <div class="flex items-center gap-3">
+        <select
+          value={selectedCredentialId}
+          onchange={(e) => {
+            const value = (e.target as HTMLSelectElement).value;
+            if (value === "new") {
+              showAddCredential = true;
+            } else {
+              showAddCredential = false;
+              saveCredential(value);
+            }
+          }}
+          class="flex-1 px-3 py-2 text-sm border border-[var(--dash-border)] rounded-md bg-[var(--dash-bg)] text-[var(--dash-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+        >
+          <option value="none">No credentials (public search)</option>
+          {#each platformCredentials as cred}
+            <option value={String(cred.id)}>{cred.username}</option>
+          {/each}
+          <option value="new">+ Add new credentials</option>
+        </select>
+      </div>
+
+      {#if showAddCredential}
+        <div class="mt-3 p-3 bg-[var(--dash-bg)] rounded-lg space-y-3">
+          <div>
+            <label for="new-cred-username" class="block text-sm text-[var(--dash-text)] mb-1">
+              Username / Email
+            </label>
+            <input
+              type="text"
+              id="new-cred-username"
+              bind:value={newCredUsername}
+              placeholder="your@email.com"
+              class="w-full px-3 py-2 text-sm border border-[var(--dash-border)] rounded-md bg-[var(--dash-card)] text-[var(--dash-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label for="new-cred-password" class="block text-sm text-[var(--dash-text)] mb-1">
+              Password
+            </label>
+            <div class="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                id="new-cred-password"
+                bind:value={newCredPassword}
+                placeholder="Enter password"
+                class="w-full px-3 py-2 pr-10 text-sm border border-[var(--dash-border)] rounded-md bg-[var(--dash-card)] text-[var(--dash-text)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+              />
+              <button
+                type="button"
+                onclick={() => (showPassword = !showPassword)}
+                class="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]"
+              >
+                <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} class="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+          <div class="flex justify-end gap-2">
+            <button
+              type="button"
+              onclick={() => {
+                showAddCredential = false;
+                selectedCredentialId = (jobSearch as any).platform_profile_id?.toString() ?? "none";
+                newCredUsername = "";
+                newCredPassword = "";
+              }}
+              class="px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-card)] transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onclick={addNewCredential}
+              disabled={!newCredUsername.trim() || isSavingCredential}
+              class="px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+            >
+              {#if isSavingCredential}
+                <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
+              {:else}
+                <FontAwesomeIcon icon={faPlus} class="w-3 h-3" />
+              {/if}
+              Add & Select
+            </button>
+          </div>
+        </div>
+      {/if}
+    </div>
+  {/if}
 
   <!-- Browser View (VNC for local, iframe for cloud) -->
   {#if showBrowser || needsIntervention}
