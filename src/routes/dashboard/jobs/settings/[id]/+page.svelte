@@ -1196,11 +1196,16 @@
                 showAddCredential = false;
                 selectedCredentialId = "none";
               }}
-              class="w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors {selectedCredentialId === 'none'
+              class="w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-md transition-colors {selectedCredentialId === 'none'
                 ? 'bg-[var(--dash-primary)]/10 border border-[var(--dash-primary)]/30 text-[var(--dash-text)]'
                 : 'bg-[var(--dash-bg)] border border-transparent text-[var(--dash-text-secondary)] hover:border-[var(--dash-border)]'}"
             >
-              <span>No credentials (public search)</span>
+              <span class="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 {selectedCredentialId === 'none' ? 'border-[var(--dash-primary)]' : 'border-[var(--dash-border)]'}">
+                {#if selectedCredentialId === "none"}
+                  <span class="w-2 h-2 rounded-full bg-[var(--dash-primary)]"></span>
+                {/if}
+              </span>
+              <span class="flex-1 text-left">No credentials (public search)</span>
               {#if savedCredentialId === "none"}
                 <span class="text-xs text-[var(--dash-text-muted)] font-medium">Current</span>
               {/if}
@@ -1208,7 +1213,7 @@
 
             {#each platformCredentials as cred}
               <div
-                class="flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors {selectedCredentialId === String(cred.id)
+                class="flex items-center gap-2.5 px-3 py-2 text-sm rounded-md transition-colors {selectedCredentialId === String(cred.id)
                   ? 'bg-[var(--dash-primary)]/10 border border-[var(--dash-primary)]/30'
                   : 'bg-[var(--dash-bg)] border border-transparent hover:border-[var(--dash-border)]'}"
               >
@@ -1218,8 +1223,13 @@
                     showAddCredential = false;
                     selectedCredentialId = String(cred.id);
                   }}
-                  class="flex-1 text-left flex items-center gap-2 text-[var(--dash-text)]"
+                  class="flex-1 text-left flex items-center gap-2.5 text-[var(--dash-text)]"
                 >
+                  <span class="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 {selectedCredentialId === String(cred.id) ? 'border-[var(--dash-primary)]' : 'border-[var(--dash-border)]'}">
+                    {#if selectedCredentialId === String(cred.id)}
+                      <span class="w-2 h-2 rounded-full bg-[var(--dash-primary)]"></span>
+                    {/if}
+                  </span>
                   <span>{cred.username || "No username"}</span>
                   {#if savedCredentialId === String(cred.id)}
                     <span class="text-xs text-[var(--dash-text-muted)] font-medium">Current</span>
