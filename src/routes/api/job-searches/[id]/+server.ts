@@ -33,7 +33,16 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
 
   const body = await request.json();
 
-  const data: { max_jobs?: number | null; platform_profile_id?: number | null } = {};
+  const data: { max_jobs?: number | null; platform_profile_id?: number | null; search_url?: string | null } = {};
+
+  // Validate search_url
+  if ("search_url" in body) {
+    const url = body.search_url?.trim() || null;
+    if (url && !url.startsWith("http")) {
+      throw error(400, "search_url must be a valid URL");
+    }
+    data.search_url = url;
+  }
 
   // Validate max_jobs: null (use default) or positive integer
   if ("max_jobs" in body) {

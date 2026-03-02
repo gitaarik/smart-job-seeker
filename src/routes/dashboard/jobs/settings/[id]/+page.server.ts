@@ -49,10 +49,26 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   const user = layoutData.user;
   const isStaff = (user as { is_staff?: boolean })?.is_staff || (user as { is_admin?: boolean })?.is_admin || false;
 
+  // Check if user can edit platform URLs (login_page_url on job_platforms).
+  // Staff can always edit. Normal users can edit only if no other user's
+  // accounts reference this platform (cheap existence check with LIMIT 1).
+  let canEditPlatformUrls = isStaff;
+  if (!canEditPlatformUrls && jobSearch.platform && user) {
+    const otherUserUsage = await db.job_searches.findFirst({
+      where: {
+        platform: jobSearch.platform,
+        profiles: { user_id: { not: user.id } },
+      },
+      select: { id: true },
+    });
+    canEditPlatformUrls = !otherUserUsage;
+  }
+
   return {
     jobSearch,
     platformCredentials,
     profileId: layoutData.selectedProfile.id,
     isStaff,
+    canEditPlatformUrls,
   };
 };

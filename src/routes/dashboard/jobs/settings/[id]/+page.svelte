@@ -46,6 +46,14 @@
   let newCredUsername = $state("");
   let newCredPassword = $state("");
   let showPassword = $state(false);
+
+  // URL editing state
+  let canEditPlatformUrls = $state(data.canEditPlatformUrls);
+  let searchUrlInput = $state<string>(jobSearch.search_url ?? "");
+  let loginUrlInput = $state<string>(jobSearch.job_platforms?.login_page_url ?? "");
+  let isSavingSearchUrl = $state(false);
+  let isSavingLoginUrl = $state(false);
+
   let isStarting = $state(false);
   let isStopping = $state(false);
   let isSendingFeedback = $state(false);
@@ -617,6 +625,43 @@
       console.error("Failed to save max jobs:", err);
     } finally {
       isSavingMaxJobs = false;
+    }
+  }
+
+  async function saveSearchUrl() {
+    isSavingSearchUrl = true;
+    try {
+      const url = searchUrlInput.trim() || null;
+      await fetch(`/api/job-searches/${jobSearch.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ search_url: url }),
+      });
+      jobSearch.search_url = url;
+    } catch (err) {
+      console.error("Failed to save search URL:", err);
+    } finally {
+      isSavingSearchUrl = false;
+    }
+  }
+
+  async function saveLoginUrl() {
+    if (!jobSearch.platform) return;
+    isSavingLoginUrl = true;
+    try {
+      const url = loginUrlInput.trim() || null;
+      await fetch(`/api/platforms/${jobSearch.platform}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ login_page_url: url }),
+      });
+      if (jobSearch.job_platforms) {
+        jobSearch.job_platforms.login_page_url = url;
+      }
+    } catch (err) {
+      console.error("Failed to save login URL:", err);
+    } finally {
+      isSavingLoginUrl = false;
     }
   }
 
@@ -1261,38 +1306,81 @@
           {/if}
 
           <!-- URLs -->
-          {#if jobSearch.search_url || jobSearch.job_platforms?.login_page_url}
-            <div class="space-y-2 mt-4 pt-4 border-t border-[var(--dash-border)]">
-              {#if jobSearch.search_url}
-                <div>
-                  <h3 class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1">Search URL</h3>
+          <div class="space-y-3 mt-4 pt-4 border-t border-[var(--dash-border)]">
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <h3 class="text-xs font-medium text-[var(--dash-text-secondary)]">Search URL</h3>
+                {#if isSavingSearchUrl}
+                  <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin" />
+                {/if}
+              </div>
+              <div class="flex items-center gap-2">
+                <input
+                  type="url"
+                  bind:value={searchUrlInput}
+                  onblur={saveSearchUrl}
+                  onkeydown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+                  placeholder="https://..."
+                  class="flex-1 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
+                />
+                {#if jobSearch.search_url}
                   <a
                     href={jobSearch.search_url}
                     target="_blank"
                     rel="noopener"
-                    class="text-sm text-[var(--dash-primary)] hover:underline break-all flex items-center gap-1"
+                    class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
+                    title="Open search URL"
                   >
-                    {jobSearch.search_url}
-                    <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3 h-3 flex-shrink-0" />
+                    <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3 h-3" />
                   </a>
+                {/if}
+              </div>
+            </div>
+
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <h3 class="text-xs font-medium text-[var(--dash-text-secondary)]">Login URL</h3>
+                {#if isSavingLoginUrl}
+                  <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin" />
+                {/if}
+              </div>
+              {#if canEditPlatformUrls}
+                <div class="flex items-center gap-2">
+                  <input
+                    type="url"
+                    bind:value={loginUrlInput}
+                    onblur={saveLoginUrl}
+                    onkeydown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+                    placeholder="https://..."
+                    class="flex-1 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
+                  />
+                  {#if jobSearch.job_platforms?.login_page_url}
+                    <a
+                      href={jobSearch.job_platforms.login_page_url}
+                      target="_blank"
+                      rel="noopener"
+                      class="p-1 text-[var(--dash-text-secondary)] hover:text-[var(--dash-primary)] transition-colors"
+                      title="Open login URL"
+                    >
+                      <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3 h-3" />
+                    </a>
+                  {/if}
                 </div>
-              {/if}
-              {#if jobSearch.job_platforms?.login_page_url}
-                <div>
-                  <h3 class="text-xs font-medium text-[var(--dash-text-secondary)] mb-1">Login URL</h3>
-                  <a
-                    href={jobSearch.job_platforms.login_page_url}
-                    target="_blank"
-                    rel="noopener"
-                    class="text-sm text-[var(--dash-primary)] hover:underline break-all flex items-center gap-1"
-                  >
-                    {jobSearch.job_platforms.login_page_url}
-                    <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3 h-3 flex-shrink-0" />
-                  </a>
-                </div>
+              {:else if jobSearch.job_platforms?.login_page_url}
+                <a
+                  href={jobSearch.job_platforms.login_page_url}
+                  target="_blank"
+                  rel="noopener"
+                  class="text-sm text-[var(--dash-primary)] hover:underline break-all flex items-center gap-1"
+                >
+                  {jobSearch.job_platforms.login_page_url}
+                  <FontAwesomeIcon icon={faExternalLinkAlt} class="w-3 h-3 flex-shrink-0" />
+                </a>
+              {:else}
+                <p class="text-sm text-[var(--dash-text-muted)]">Not set</p>
               {/if}
             </div>
-          {/if}
+          </div>
         </div>
       {/if}
     </div>
