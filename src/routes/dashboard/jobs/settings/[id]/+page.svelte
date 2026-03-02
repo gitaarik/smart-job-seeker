@@ -38,9 +38,10 @@
 
   // Credentials state
   let platformCredentials = $state(data.platformCredentials);
-  let selectedCredentialId = $state<string>(
-    (jobSearch as any).platform_profile_id?.toString() ?? "none",
-  );
+  const initialCredentialId = (jobSearch as any).platform_profile_id?.toString() ?? "none";
+  let savedCredentialId = $state<string>(initialCredentialId);
+  let selectedCredentialId = $state<string>(initialCredentialId);
+  let credentialDirty = $derived(selectedCredentialId !== savedCredentialId);
   let isSavingCredential = $state(false);
   let showAddCredential = $state(false);
   let newCredUsername = $state("");
@@ -667,17 +668,17 @@
     }
   }
 
-  async function saveCredential(credentialId: string) {
+  async function saveCredential() {
     isSavingCredential = true;
     try {
-      const profileId = credentialId === "none" ? null : parseInt(credentialId);
+      const profileId = selectedCredentialId === "none" ? null : parseInt(selectedCredentialId);
       await fetch(`/api/job-searches/${jobSearch.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ platform_profile_id: profileId }),
       });
       (jobSearch as any).platform_profile_id = profileId;
-      selectedCredentialId = credentialId;
+      savedCredentialId = selectedCredentialId;
     } catch (err) {
       console.error("Failed to save credential:", err);
     } finally {
@@ -734,10 +735,14 @@
       if (response.ok) {
         // Remove from local list
         platformCredentials = platformCredentials.filter((c) => c.id !== credId);
-        // If this was the selected credential, clear selection
+        // If this was the saved credential, clear it
         if ((jobSearch as any).platform_profile_id === credId) {
           (jobSearch as any).platform_profile_id = null;
-          selectedCredentialId = "none";
+          savedCredentialId = "none";
+        }
+        // If this was the pending selection, reset to saved
+        if (selectedCredentialId === String(credId)) {
+          selectedCredentialId = savedCredentialId;
         }
       }
     } catch (err) {
@@ -1189,15 +1194,15 @@
               type="button"
               onclick={() => {
                 showAddCredential = false;
-                saveCredential("none");
+                selectedCredentialId = "none";
               }}
               class="w-full flex items-center justify-between px-3 py-2 text-sm rounded-md transition-colors {selectedCredentialId === 'none'
                 ? 'bg-[var(--dash-primary)]/10 border border-[var(--dash-primary)]/30 text-[var(--dash-text)]'
                 : 'bg-[var(--dash-bg)] border border-transparent text-[var(--dash-text-secondary)] hover:border-[var(--dash-border)]'}"
             >
               <span>No credentials (public search)</span>
-              {#if selectedCredentialId === "none"}
-                <span class="text-xs text-[var(--dash-primary)] font-medium">Default</span>
+              {#if savedCredentialId === "none"}
+                <span class="text-xs text-[var(--dash-text-muted)] font-medium">Current</span>
               {/if}
             </button>
 
@@ -1211,13 +1216,13 @@
                   type="button"
                   onclick={() => {
                     showAddCredential = false;
-                    saveCredential(String(cred.id));
+                    selectedCredentialId = String(cred.id);
                   }}
                   class="flex-1 text-left flex items-center gap-2 text-[var(--dash-text)]"
                 >
                   <span>{cred.username || "No username"}</span>
-                  {#if selectedCredentialId === String(cred.id)}
-                    <span class="text-xs text-[var(--dash-primary)] font-medium">Default</span>
+                  {#if savedCredentialId === String(cred.id)}
+                    <span class="text-xs text-[var(--dash-text-muted)] font-medium">Current</span>
                   {/if}
                 </button>
                 <button
@@ -1241,6 +1246,31 @@
             <p class="mt-2 text-xs text-[var(--dash-text-muted)]">
               No credentials configured. Add credentials to enable authenticated scraping.
             </p>
+          {/if}
+
+          {#if credentialDirty}
+            <div class="flex items-center gap-2 mt-3">
+              <button
+                type="button"
+                onclick={saveCredential}
+                disabled={isSavingCredential}
+                class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
+              >
+                {#if isSavingCredential}
+                  <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
+                {:else}
+                  <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                {/if}
+                Save
+              </button>
+              <button
+                type="button"
+                onclick={() => (selectedCredentialId = savedCredentialId)}
+                class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
           {/if}
 
           {#if showAddCredential}
