@@ -35,6 +35,7 @@
   let jobSearch = $state(data.jobSearch);
   let maxJobsInput = $state<string>((jobSearch as any).max_jobs?.toString() ?? "");
   let isSavingMaxJobs = $state(false);
+  let maxJobsDirty = $derived(maxJobsInput.trim() !== ((jobSearch as any).max_jobs?.toString() ?? ""));
 
   // Credentials state
   let platformCredentials = $state(data.platformCredentials);
@@ -612,12 +613,12 @@
   }
 
   async function saveMaxJobs() {
+    const value = maxJobsInput.trim();
+    const maxJobs = value === "" ? null : parseInt(value);
+    if (maxJobs !== null && (isNaN(maxJobs) || maxJobs < 1)) return;
+
     isSavingMaxJobs = true;
     try {
-      const value = maxJobsInput.trim();
-      const maxJobs = value === "" ? null : parseInt(value);
-      if (maxJobs !== null && (isNaN(maxJobs) || maxJobs < 1)) return;
-
       await fetch(`/api/job-searches/${jobSearch.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -1000,7 +1001,7 @@
         </div>
 
         <!-- Max jobs setting -->
-        <div class="flex items-center gap-3">
+        <div class="flex items-center flex-wrap gap-3">
           <label for="max-jobs" class="text-sm text-[var(--dash-text-secondary)] whitespace-nowrap">Max jobs to import</label>
           <input
             id="max-jobs"
@@ -1008,12 +1009,31 @@
             min="1"
             placeholder="No limit"
             bind:value={maxJobsInput}
-            onblur={saveMaxJobs}
-            onkeydown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
             class="w-24 px-2 py-1 text-sm rounded border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)]"
           />
-          {#if isSavingMaxJobs}
-            <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin" />
+          {#if maxJobsDirty}
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                onclick={saveMaxJobs}
+                disabled={isSavingMaxJobs}
+                class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
+              >
+                {#if isSavingMaxJobs}
+                  <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
+                {:else}
+                  <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                {/if}
+                Save
+              </button>
+              <button
+                type="button"
+                onclick={() => (maxJobsInput = (jobSearch as any).max_jobs?.toString() ?? "")}
+                class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
           {/if}
         </div>
 
