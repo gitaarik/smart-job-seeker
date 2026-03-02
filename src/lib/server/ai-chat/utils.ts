@@ -11,6 +11,7 @@ import {
   LLMRateLimitError,
 } from "$lib/server/llm";
 import { getSchemaForPrompt } from "$lib/server/schemas/ai-prompt-schemas";
+import { promptTemplates } from "./prompt-templates";
 
 /**
  * Interpolate variables in a prompt string
@@ -59,38 +60,28 @@ ${userPrompt}`;
 }
 
 /**
- * Fetch prompt template from ai_chat_templates by key identifier
- * Returns null if template not found or if prompts are missing
+ * Get prompt template by key identifier.
+ * Reads from code-defined templates (prompt-templates.ts).
  */
-async function fetchPromptTemplate(
+function fetchPromptTemplate(
   key: string,
-): Promise<
-  {
-    id: number;
-    system_prompt: string;
-    user_prompt: string;
-    format: string | null;
-  } | null
-> {
-  const template = await db.ai_chat_templates.findUnique({
-    where: { key },
-    select: {
-      id: true,
-      system_prompt: true,
-      user_prompt: true,
-      format: true,
-    },
-  });
+): {
+  id: number;
+  system_prompt: string;
+  user_prompt: string;
+  format: string | null;
+} | null {
+  const template = promptTemplates[key];
 
   if (!template?.system_prompt || !template?.user_prompt) {
     return null;
   }
 
   return {
-    id: template.id,
+    id: 0, // Not used for code-defined templates
     system_prompt: template.system_prompt,
     user_prompt: template.user_prompt,
-    format: template.format,
+    format: null,
   };
 }
 
@@ -177,14 +168,14 @@ export async function createAndGenerateAiChat(
   let aiChatId: number | undefined;
 
   try {
-    // Step 1: Fetch prompt template from ai_chat_templates
-    const promptTemplate = await fetchPromptTemplate(promptKey);
+    // Step 1: Get prompt template from code
+    const promptTemplate = fetchPromptTemplate(promptKey);
 
     if (!promptTemplate) {
       return {
         success: false,
         message:
-          `AI chat template not found for key: '${promptKey}'. Please ensure the template exists in Directus.`,
+          `AI prompt template not found for key: '${promptKey}'. Please ensure it exists in prompt-templates.ts.`,
       };
     }
 
@@ -244,7 +235,6 @@ export async function createAndGenerateAiChat(
         provider: config.llmProvider,
         model: config.llmModel,
         request_type: "llm",
-        ai_chat_template: promptTemplate.id,
       },
     });
     aiChatId = aiChat.id;
