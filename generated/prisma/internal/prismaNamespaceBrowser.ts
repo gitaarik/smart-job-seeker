@@ -862,7 +862,8 @@ export const Job_searchesScalarFieldEnum = {
   live_url: 'live_url',
   is_active: 'is_active',
   status_message: 'status_message',
-  platform_profile_id: 'platform_profile_id'
+  platform_profile_id: 'platform_profile_id',
+  max_jobs: 'max_jobs'
 } as const
 
 export type Job_searchesScalarFieldEnum = (typeof Job_searchesScalarFieldEnum)[keyof typeof Job_searchesScalarFieldEnum]
