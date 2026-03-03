@@ -7132,7 +7132,8 @@ export const Platform_profilesScalarFieldEnum = {
   password: 'password',
   api_token: 'api_token',
   last_login_at: 'last_login_at',
-  login_error: 'login_error'
+  login_error: 'login_error',
+  provider_profile_id: 'provider_profile_id'
 } as const
 
 export type Platform_profilesScalarFieldEnum = (typeof Platform_profilesScalarFieldEnum)[keyof typeof Platform_profilesScalarFieldEnum]
@@ -7231,6 +7232,7 @@ export const ProfilesScalarFieldEnum = {
   location_city: 'location_city',
   location_region: 'location_region',
   location_country_code: 'location_country_code',
+  browser_country_code: 'browser_country_code',
   is_default: 'is_default',
   slug: 'slug',
   npm_profile: 'npm_profile',
