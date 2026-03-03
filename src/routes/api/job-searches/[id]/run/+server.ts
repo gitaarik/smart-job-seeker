@@ -9,6 +9,10 @@ import {
   removeActiveJob,
 } from "$lib/server/queue";
 
+// Rate limiting: minimum hours between scrapes (per job search)
+const COOLDOWN_HOURS = parseInt(process.env.SJS_SCRAPE_COOLDOWN_HOURS || "6", 10);
+const MAX_RUNS_PER_COOLDOWN = parseInt(process.env.SJS_SCRAPE_MAX_RUNS_PER_COOLDOWN || "1", 10);
+
 /**
  * POST /api/job-searches/[id]/run
  *
@@ -19,6 +23,7 @@ import {
  * - { status: 'queued', runId: N } - Job has been queued
  * - { status: 'already_running' } - This search is already running
  * - { status: 'already_queued' } - This search is already in queue
+ * - { status: 'rate_limited', recentRunCount, cooldownHours } - Too many recent runs
  */
 export const POST: RequestHandler = async ({ params, locals }) => {
   const user = locals.user;
@@ -47,6 +52,26 @@ export const POST: RequestHandler = async ({ params, locals }) => {
   // Verify the user owns this profile
   if (jobSearch.profiles.user_id !== user.id) {
     throw error(403, "Not authorized to run this job search");
+  }
+
+  const isStaff = !!(user as { is_staff?: boolean }).is_staff || !!(user as { is_admin?: boolean }).is_admin;
+
+  // Rate limiting: count recent runs within cooldown period
+  const cooldownSince = new Date(Date.now() - COOLDOWN_HOURS * 60 * 60 * 1000);
+  const recentRunCount = await db.job_search_runs.count({
+    where: {
+      job_search_id: jobSearchId,
+      started_at: { gte: cooldownSince },
+    },
+  });
+
+  if (recentRunCount >= MAX_RUNS_PER_COOLDOWN && !isStaff) {
+    return json({
+      status: "rate_limited",
+      recentRunCount,
+      cooldownHours: COOLDOWN_HOURS,
+      maxRuns: MAX_RUNS_PER_COOLDOWN,
+    });
   }
 
   // Check if this search is already running in BullMQ
@@ -126,6 +151,10 @@ export const POST: RequestHandler = async ({ params, locals }) => {
     runId: run.id,
     jobId: job.id,
     vncUrl: "/vnc/vnc.html?autoconnect=true",
+    // Include run count for staff awareness
+    ...(isStaff && recentRunCount >= MAX_RUNS_PER_COOLDOWN
+      ? { recentRunCount, cooldownHours: COOLDOWN_HOURS }
+      : {}),
   });
 };
 

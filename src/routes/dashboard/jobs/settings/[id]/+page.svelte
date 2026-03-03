@@ -77,6 +77,7 @@
   let isStopping = $state(false);
   let isSendingFeedback = $state(false);
   let errorMessage = $state<string | null>(null);
+  let rateLimitWarning = $state<string | null>(null);
   let showBrowser = $state(false);
   let liveUrl = $state<string | null>(null);
   let pollInterval: ReturnType<typeof setInterval> | null = null;
@@ -787,6 +788,7 @@
   async function startScrape() {
     isStarting = true;
     errorMessage = null;
+    rateLimitWarning = null;
 
     try {
       const response = await fetch(`/api/job-searches/${jobSearch.id}/run`, {
@@ -800,6 +802,11 @@
         return;
       }
 
+      if (result.status === "rate_limited") {
+        errorMessage = `Rate limited: this search has already run ${result.recentRunCount} time${result.recentRunCount === 1 ? "" : "s"} in the last ${result.cooldownHours} hours (max ${result.maxRuns})`;
+        return;
+      }
+
       if (result.status === "already_queued") {
         errorMessage = "This search is already queued";
         return;
@@ -808,6 +815,11 @@
       if (result.status === "already_running") {
         errorMessage = "This search is already running";
         return;
+      }
+
+      // Staff override warning
+      if (result.recentRunCount) {
+        rateLimitWarning = `Staff override: this search has already run ${result.recentRunCount} time${result.recentRunCount === 1 ? "" : "s"} in the last ${result.cooldownHours} hours`;
       }
 
       // Queued successfully
@@ -1071,6 +1083,12 @@
         {#if errorMessage}
           <div class="p-3 bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg">
             <p class="text-[var(--dash-error)] text-sm">{errorMessage}</p>
+          </div>
+        {/if}
+
+        {#if rateLimitWarning}
+          <div class="p-3 bg-amber-50 border border-amber-400 rounded-lg dark:bg-amber-950/30 dark:border-amber-600">
+            <p class="text-amber-700 text-sm dark:text-amber-400">⚠ {rateLimitWarning}</p>
           </div>
         {/if}
 
