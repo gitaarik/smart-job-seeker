@@ -96,6 +96,9 @@ export type ProfilesMinAggregateOutputType = {
   source_cv: string | null
   location: string | null
   profile_photo_path: string | null
+  browser_user_agent: string | null
+  browser_language: string | null
+  browser_timezone: string | null
 }
 
 export type ProfilesMaxAggregateOutputType = {
@@ -148,6 +151,9 @@ export type ProfilesMaxAggregateOutputType = {
   source_cv: string | null
   location: string | null
   profile_photo_path: string | null
+  browser_user_agent: string | null
+  browser_language: string | null
+  browser_timezone: string | null
 }
 
 export type ProfilesCountAggregateOutputType = {
@@ -200,6 +206,9 @@ export type ProfilesCountAggregateOutputType = {
   source_cv: number
   location: number
   profile_photo_path: number
+  browser_user_agent: number
+  browser_language: number
+  browser_timezone: number
   _all: number
 }
 
@@ -274,6 +283,9 @@ export type ProfilesMinAggregateInputType = {
   source_cv?: true
   location?: true
   profile_photo_path?: true
+  browser_user_agent?: true
+  browser_language?: true
+  browser_timezone?: true
 }
 
 export type ProfilesMaxAggregateInputType = {
@@ -326,6 +338,9 @@ export type ProfilesMaxAggregateInputType = {
   source_cv?: true
   location?: true
   profile_photo_path?: true
+  browser_user_agent?: true
+  browser_language?: true
+  browser_timezone?: true
 }
 
 export type ProfilesCountAggregateInputType = {
@@ -378,6 +393,9 @@ export type ProfilesCountAggregateInputType = {
   source_cv?: true
   location?: true
   profile_photo_path?: true
+  browser_user_agent?: true
+  browser_language?: true
+  browser_timezone?: true
   _all?: true
 }
 
@@ -517,6 +535,9 @@ export type ProfilesGroupByOutputType = {
   source_cv: string | null
   location: string | null
   profile_photo_path: string | null
+  browser_user_agent: string | null
+  browser_language: string | null
+  browser_timezone: string | null
   _count: ProfilesCountAggregateOutputType | null
   _avg: ProfilesAvgAggregateOutputType | null
   _sum: ProfilesSumAggregateOutputType | null
@@ -592,6 +613,9 @@ export type profilesWhereInput = {
   source_cv?: Prisma.UuidNullableFilter<"profiles"> | string | null
   location?: Prisma.StringNullableFilter<"profiles"> | string | null
   profile_photo_path?: Prisma.StringNullableFilter<"profiles"> | string | null
+  browser_user_agent?: Prisma.StringNullableFilter<"profiles"> | string | null
+  browser_language?: Prisma.StringNullableFilter<"profiles"> | string | null
+  browser_timezone?: Prisma.StringNullableFilter<"profiles"> | string | null
   ai_chats?: Prisma.Ai_chatsListRelationFilter
   applications?: Prisma.ApplicationsListRelationFilter
   cheat_sheets?: Prisma.Cheat_sheetsListRelationFilter
@@ -668,6 +692,9 @@ export type profilesOrderByWithRelationInput = {
   source_cv?: Prisma.SortOrderInput | Prisma.SortOrder
   location?: Prisma.SortOrderInput | Prisma.SortOrder
   profile_photo_path?: Prisma.SortOrderInput | Prisma.SortOrder
+  browser_user_agent?: Prisma.SortOrderInput | Prisma.SortOrder
+  browser_language?: Prisma.SortOrderInput | Prisma.SortOrder
+  browser_timezone?: Prisma.SortOrderInput | Prisma.SortOrder
   ai_chats?: Prisma.ai_chatsOrderByRelationAggregateInput
   applications?: Prisma.applicationsOrderByRelationAggregateInput
   cheat_sheets?: Prisma.cheat_sheetsOrderByRelationAggregateInput
@@ -747,6 +774,9 @@ export type profilesWhereUniqueInput = Prisma.AtLeast<{
   source_cv?: Prisma.UuidNullableFilter<"profiles"> | string | null
   location?: Prisma.StringNullableFilter<"profiles"> | string | null
   profile_photo_path?: Prisma.StringNullableFilter<"profiles"> | string | null
+  browser_user_agent?: Prisma.StringNullableFilter<"profiles"> | string | null
+  browser_language?: Prisma.StringNullableFilter<"profiles"> | string | null
+  browser_timezone?: Prisma.StringNullableFilter<"profiles"> | string | null
   ai_chats?: Prisma.Ai_chatsListRelationFilter
   applications?: Prisma.ApplicationsListRelationFilter
   cheat_sheets?: Prisma.Cheat_sheetsListRelationFilter
@@ -823,6 +853,9 @@ export type profilesOrderByWithAggregationInput = {
   source_cv?: Prisma.SortOrderInput | Prisma.SortOrder
   location?: Prisma.SortOrderInput | Prisma.SortOrder
   profile_photo_path?: Prisma.SortOrderInput | Prisma.SortOrder
+  browser_user_agent?: Prisma.SortOrderInput | Prisma.SortOrder
+  browser_language?: Prisma.SortOrderInput | Prisma.SortOrder
+  browser_timezone?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.profilesCountOrderByAggregateInput
   _avg?: Prisma.profilesAvgOrderByAggregateInput
   _max?: Prisma.profilesMaxOrderByAggregateInput
@@ -883,6 +916,9 @@ export type profilesScalarWhereWithAggregatesInput = {
   source_cv?: Prisma.UuidNullableWithAggregatesFilter<"profiles"> | string | null
   location?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
   profile_photo_path?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
+  browser_user_agent?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
+  browser_language?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
+  browser_timezone?: Prisma.StringNullableWithAggregatesFilter<"profiles"> | string | null
 }
 
 export type profilesCreateInput = {
@@ -931,6 +967,9 @@ export type profilesCreateInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -1007,6 +1046,9 @@ export type profilesUncheckedCreateInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -1076,6 +1118,9 @@ export type profilesUpdateInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -1152,6 +1197,9 @@ export type profilesUncheckedUpdateInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -1225,6 +1273,9 @@ export type profilesCreateManyInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
 }
 
 export type profilesUpdateManyMutationInput = {
@@ -1273,6 +1324,9 @@ export type profilesUpdateManyMutationInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type profilesUncheckedUpdateManyInput = {
@@ -1325,6 +1379,9 @@ export type profilesUncheckedUpdateManyInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type ProfilesScalarRelationFilter = {
@@ -1397,6 +1454,9 @@ export type profilesCountOrderByAggregateInput = {
   source_cv?: Prisma.SortOrder
   location?: Prisma.SortOrder
   profile_photo_path?: Prisma.SortOrder
+  browser_user_agent?: Prisma.SortOrder
+  browser_language?: Prisma.SortOrder
+  browser_timezone?: Prisma.SortOrder
 }
 
 export type profilesAvgOrderByAggregateInput = {
@@ -1459,6 +1519,9 @@ export type profilesMaxOrderByAggregateInput = {
   source_cv?: Prisma.SortOrder
   location?: Prisma.SortOrder
   profile_photo_path?: Prisma.SortOrder
+  browser_user_agent?: Prisma.SortOrder
+  browser_language?: Prisma.SortOrder
+  browser_timezone?: Prisma.SortOrder
 }
 
 export type profilesMinOrderByAggregateInput = {
@@ -1511,6 +1574,9 @@ export type profilesMinOrderByAggregateInput = {
   source_cv?: Prisma.SortOrder
   location?: Prisma.SortOrder
   profile_photo_path?: Prisma.SortOrder
+  browser_user_agent?: Prisma.SortOrder
+  browser_language?: Prisma.SortOrder
+  browser_timezone?: Prisma.SortOrder
 }
 
 export type profilesSumOrderByAggregateInput = {
@@ -1995,6 +2061,9 @@ export type profilesCreateWithoutApplicationsInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
   collected_data?: Prisma.collected_dataCreateNestedManyWithoutProfilesInput
@@ -2070,6 +2139,9 @@ export type profilesUncheckedCreateWithoutApplicationsInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
   collected_data?: Prisma.collected_dataUncheckedCreateNestedManyWithoutProfilesInput
@@ -2154,6 +2226,9 @@ export type profilesUpdateWithoutApplicationsInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
   collected_data?: Prisma.collected_dataUpdateManyWithoutProfilesNestedInput
@@ -2229,6 +2304,9 @@ export type profilesUncheckedUpdateWithoutApplicationsInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
   collected_data?: Prisma.collected_dataUncheckedUpdateManyWithoutProfilesNestedInput
@@ -2297,6 +2375,9 @@ export type profilesCreateWithoutCheat_sheetsInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   collected_data?: Prisma.collected_dataCreateNestedManyWithoutProfilesInput
@@ -2372,6 +2453,9 @@ export type profilesUncheckedCreateWithoutCheat_sheetsInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   collected_data?: Prisma.collected_dataUncheckedCreateNestedManyWithoutProfilesInput
@@ -2456,6 +2540,9 @@ export type profilesUpdateWithoutCheat_sheetsInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   collected_data?: Prisma.collected_dataUpdateManyWithoutProfilesNestedInput
@@ -2531,6 +2618,9 @@ export type profilesUncheckedUpdateWithoutCheat_sheetsInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   collected_data?: Prisma.collected_dataUncheckedUpdateManyWithoutProfilesNestedInput
@@ -2599,6 +2689,9 @@ export type profilesCreateWithoutCollected_dataInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -2674,6 +2767,9 @@ export type profilesUncheckedCreateWithoutCollected_dataInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -2758,6 +2854,9 @@ export type profilesUpdateWithoutCollected_dataInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -2833,6 +2932,9 @@ export type profilesUncheckedUpdateWithoutCollected_dataInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -2901,6 +3003,9 @@ export type profilesCreateWithoutConfigInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -2976,6 +3081,9 @@ export type profilesUncheckedCreateWithoutConfigInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -3060,6 +3168,9 @@ export type profilesUpdateWithoutConfigInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -3135,6 +3246,9 @@ export type profilesUncheckedUpdateWithoutConfigInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -3203,6 +3317,9 @@ export type profilesCreateWithoutDirectus_filesInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -3277,6 +3394,9 @@ export type profilesUncheckedCreateWithoutDirectus_filesInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -3379,6 +3499,9 @@ export type profilesScalarWhereInput = {
   source_cv?: Prisma.UuidNullableFilter<"profiles"> | string | null
   location?: Prisma.StringNullableFilter<"profiles"> | string | null
   profile_photo_path?: Prisma.StringNullableFilter<"profiles"> | string | null
+  browser_user_agent?: Prisma.StringNullableFilter<"profiles"> | string | null
+  browser_language?: Prisma.StringNullableFilter<"profiles"> | string | null
+  browser_timezone?: Prisma.StringNullableFilter<"profiles"> | string | null
 }
 
 export type profilesCreateWithoutEducationInput = {
@@ -3427,6 +3550,9 @@ export type profilesCreateWithoutEducationInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -3502,6 +3628,9 @@ export type profilesUncheckedCreateWithoutEducationInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -3586,6 +3715,9 @@ export type profilesUpdateWithoutEducationInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -3661,6 +3793,9 @@ export type profilesUncheckedUpdateWithoutEducationInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -3729,6 +3864,9 @@ export type profilesCreateWithoutHighlightsInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -3804,6 +3942,9 @@ export type profilesUncheckedCreateWithoutHighlightsInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -3888,6 +4029,9 @@ export type profilesUpdateWithoutHighlightsInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -3963,6 +4107,9 @@ export type profilesUncheckedUpdateWithoutHighlightsInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -4031,6 +4178,9 @@ export type profilesCreateWithoutJob_matchesInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -4106,6 +4256,9 @@ export type profilesUncheckedCreateWithoutJob_matchesInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -4190,6 +4343,9 @@ export type profilesUpdateWithoutJob_matchesInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -4265,6 +4421,9 @@ export type profilesUncheckedUpdateWithoutJob_matchesInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -4333,6 +4492,9 @@ export type profilesCreateWithoutJob_searchesInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -4408,6 +4570,9 @@ export type profilesUncheckedCreateWithoutJob_searchesInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -4492,6 +4657,9 @@ export type profilesUpdateWithoutJob_searchesInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -4567,6 +4735,9 @@ export type profilesUncheckedUpdateWithoutJob_searchesInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -4635,6 +4806,9 @@ export type profilesCreateWithoutLanguagesInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -4710,6 +4884,9 @@ export type profilesUncheckedCreateWithoutLanguagesInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -4794,6 +4971,9 @@ export type profilesUpdateWithoutLanguagesInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -4869,6 +5049,9 @@ export type profilesUncheckedUpdateWithoutLanguagesInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -4937,6 +5120,9 @@ export type profilesCreateWithoutOs_contributionsInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -5012,6 +5198,9 @@ export type profilesUncheckedCreateWithoutOs_contributionsInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -5096,6 +5285,9 @@ export type profilesUpdateWithoutOs_contributionsInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -5171,6 +5363,9 @@ export type profilesUncheckedUpdateWithoutOs_contributionsInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -5239,6 +5434,9 @@ export type profilesCreateWithoutPlatform_profilesInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -5314,6 +5512,9 @@ export type profilesUncheckedCreateWithoutPlatform_profilesInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -5398,6 +5599,9 @@ export type profilesUpdateWithoutPlatform_profilesInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -5473,6 +5677,9 @@ export type profilesUncheckedUpdateWithoutPlatform_profilesInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -5541,6 +5748,9 @@ export type profilesCreateWithoutProfile_exportsInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -5616,6 +5826,9 @@ export type profilesUncheckedCreateWithoutProfile_exportsInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -5700,6 +5913,9 @@ export type profilesUpdateWithoutProfile_exportsInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -5775,6 +5991,9 @@ export type profilesUncheckedUpdateWithoutProfile_exportsInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -5843,6 +6062,9 @@ export type profilesCreateWithoutProfile_versions_profile_versions_profileToprof
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -5918,6 +6140,9 @@ export type profilesUncheckedCreateWithoutProfile_versions_profile_versions_prof
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -5991,6 +6216,9 @@ export type profilesCreateWithoutProfile_versions_profiles_public_cv_versionTopr
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -6065,6 +6293,9 @@ export type profilesUncheckedCreateWithoutProfile_versions_profiles_public_cv_ve
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -6144,6 +6375,9 @@ export type profilesCreateWithoutProfile_versions_profiles_public_resume_version
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -6218,6 +6452,9 @@ export type profilesUncheckedCreateWithoutProfile_versions_profiles_public_resum
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -6308,6 +6545,9 @@ export type profilesUpdateWithoutProfile_versions_profile_versions_profileToprof
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -6383,6 +6623,9 @@ export type profilesUncheckedUpdateWithoutProfile_versions_profile_versions_prof
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -6483,6 +6726,9 @@ export type profilesCreateWithoutProject_storiesInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -6558,6 +6804,9 @@ export type profilesUncheckedCreateWithoutProject_storiesInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -6642,6 +6891,9 @@ export type profilesUpdateWithoutProject_storiesInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -6717,6 +6969,9 @@ export type profilesUncheckedUpdateWithoutProject_storiesInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -6785,6 +7040,9 @@ export type profilesCreateWithoutReferencesInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -6860,6 +7118,9 @@ export type profilesUncheckedCreateWithoutReferencesInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -6944,6 +7205,9 @@ export type profilesUpdateWithoutReferencesInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -7019,6 +7283,9 @@ export type profilesUncheckedUpdateWithoutReferencesInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -7087,6 +7354,9 @@ export type profilesCreateWithoutSalary_expectationsInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -7162,6 +7432,9 @@ export type profilesUncheckedCreateWithoutSalary_expectationsInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -7246,6 +7519,9 @@ export type profilesUpdateWithoutSalary_expectationsInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -7321,6 +7597,9 @@ export type profilesUncheckedUpdateWithoutSalary_expectationsInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -7389,6 +7668,9 @@ export type profilesCreateWithoutSide_projectsInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -7464,6 +7746,9 @@ export type profilesUncheckedCreateWithoutSide_projectsInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -7548,6 +7833,9 @@ export type profilesUpdateWithoutSide_projectsInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -7623,6 +7911,9 @@ export type profilesUncheckedUpdateWithoutSide_projectsInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -7691,6 +7982,9 @@ export type profilesCreateWithoutTech_skill_categoriesInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -7766,6 +8060,9 @@ export type profilesUncheckedCreateWithoutTech_skill_categoriesInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -7850,6 +8147,9 @@ export type profilesUpdateWithoutTech_skill_categoriesInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -7925,6 +8225,9 @@ export type profilesUncheckedUpdateWithoutTech_skill_categoriesInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -7993,6 +8296,9 @@ export type profilesCreateWithoutWork_experiencesInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -8068,6 +8374,9 @@ export type profilesUncheckedCreateWithoutWork_experiencesInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -8152,6 +8461,9 @@ export type profilesUpdateWithoutWork_experiencesInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -8227,6 +8539,9 @@ export type profilesUncheckedUpdateWithoutWork_experiencesInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -8295,6 +8610,9 @@ export type profilesCreateWithoutAi_chatsInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
   collected_data?: Prisma.collected_dataCreateNestedManyWithoutProfilesInput
@@ -8370,6 +8688,9 @@ export type profilesUncheckedCreateWithoutAi_chatsInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
   collected_data?: Prisma.collected_dataUncheckedCreateNestedManyWithoutProfilesInput
@@ -8454,6 +8775,9 @@ export type profilesUpdateWithoutAi_chatsInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
   collected_data?: Prisma.collected_dataUpdateManyWithoutProfilesNestedInput
@@ -8529,6 +8853,9 @@ export type profilesUncheckedUpdateWithoutAi_chatsInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
   collected_data?: Prisma.collected_dataUncheckedUpdateManyWithoutProfilesNestedInput
@@ -8597,6 +8924,9 @@ export type profilesCreateWithoutJob_match_configInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsCreateNestedManyWithoutProfilesInput
@@ -8672,6 +9002,9 @@ export type profilesUncheckedCreateWithoutJob_match_configInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
   ai_chats?: Prisma.ai_chatsUncheckedCreateNestedManyWithoutProfilesInput
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutProfilesInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedCreateNestedManyWithoutProfilesInput
@@ -8756,6 +9089,9 @@ export type profilesUpdateWithoutJob_match_configInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -8831,6 +9167,9 @@ export type profilesUncheckedUpdateWithoutJob_match_configInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -8902,6 +9241,9 @@ export type profilesCreateManyDirectus_filesInput = {
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
 }
 
 export type profilesUpdateWithoutDirectus_filesInput = {
@@ -8950,6 +9292,9 @@ export type profilesUpdateWithoutDirectus_filesInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -9024,6 +9369,9 @@ export type profilesUncheckedUpdateWithoutDirectus_filesInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -9096,6 +9444,9 @@ export type profilesUncheckedUpdateManyWithoutDirectus_filesInput = {
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type profilesCreateManyProfile_versions_profiles_public_cv_versionToprofile_versionsInput = {
@@ -9147,6 +9498,9 @@ export type profilesCreateManyProfile_versions_profiles_public_cv_versionToprofi
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
 }
 
 export type profilesCreateManyProfile_versions_profiles_public_resume_versionToprofile_versionsInput = {
@@ -9198,6 +9552,9 @@ export type profilesCreateManyProfile_versions_profiles_public_resume_versionTop
   source_cv?: string | null
   location?: string | null
   profile_photo_path?: string | null
+  browser_user_agent?: string | null
+  browser_language?: string | null
+  browser_timezone?: string | null
 }
 
 export type profilesUpdateWithoutProfile_versions_profiles_public_cv_versionToprofile_versionsInput = {
@@ -9246,6 +9603,9 @@ export type profilesUpdateWithoutProfile_versions_profiles_public_cv_versionTopr
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -9320,6 +9680,9 @@ export type profilesUncheckedUpdateWithoutProfile_versions_profiles_public_cv_ve
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -9392,6 +9755,9 @@ export type profilesUncheckedUpdateManyWithoutProfile_versions_profiles_public_c
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type profilesUpdateWithoutProfile_versions_profiles_public_resume_versionToprofile_versionsInput = {
@@ -9440,6 +9806,9 @@ export type profilesUpdateWithoutProfile_versions_profiles_public_resume_version
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUpdateManyWithoutProfilesNestedInput
@@ -9514,6 +9883,9 @@ export type profilesUncheckedUpdateWithoutProfile_versions_profiles_public_resum
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ai_chats?: Prisma.ai_chatsUncheckedUpdateManyWithoutProfilesNestedInput
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutProfilesNestedInput
   cheat_sheets?: Prisma.cheat_sheetsUncheckedUpdateManyWithoutProfilesNestedInput
@@ -9586,6 +9958,9 @@ export type profilesUncheckedUpdateManyWithoutProfile_versions_profiles_public_r
   source_cv?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   profile_photo_path?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_user_agent?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_language?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  browser_timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 
@@ -9849,6 +10224,9 @@ export type profilesSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   source_cv?: boolean
   location?: boolean
   profile_photo_path?: boolean
+  browser_user_agent?: boolean
+  browser_language?: boolean
+  browser_timezone?: boolean
   ai_chats?: boolean | Prisma.profiles$ai_chatsArgs<ExtArgs>
   applications?: boolean | Prisma.profiles$applicationsArgs<ExtArgs>
   cheat_sheets?: boolean | Prisma.profiles$cheat_sheetsArgs<ExtArgs>
@@ -9926,6 +10304,9 @@ export type profilesSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   source_cv?: boolean
   location?: boolean
   profile_photo_path?: boolean
+  browser_user_agent?: boolean
+  browser_language?: boolean
+  browser_timezone?: boolean
   directus_files?: boolean | Prisma.profiles$directus_filesArgs<ExtArgs>
   profile_versions_profiles_public_cv_versionToprofile_versions?: boolean | Prisma.profiles$profile_versions_profiles_public_cv_versionToprofile_versionsArgs<ExtArgs>
   profile_versions_profiles_public_resume_versionToprofile_versions?: boolean | Prisma.profiles$profile_versions_profiles_public_resume_versionToprofile_versionsArgs<ExtArgs>
@@ -9981,6 +10362,9 @@ export type profilesSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   source_cv?: boolean
   location?: boolean
   profile_photo_path?: boolean
+  browser_user_agent?: boolean
+  browser_language?: boolean
+  browser_timezone?: boolean
   directus_files?: boolean | Prisma.profiles$directus_filesArgs<ExtArgs>
   profile_versions_profiles_public_cv_versionToprofile_versions?: boolean | Prisma.profiles$profile_versions_profiles_public_cv_versionToprofile_versionsArgs<ExtArgs>
   profile_versions_profiles_public_resume_versionToprofile_versions?: boolean | Prisma.profiles$profile_versions_profiles_public_resume_versionToprofile_versionsArgs<ExtArgs>
@@ -10036,9 +10420,12 @@ export type profilesSelectScalar = {
   source_cv?: boolean
   location?: boolean
   profile_photo_path?: boolean
+  browser_user_agent?: boolean
+  browser_language?: boolean
+  browser_timezone?: boolean
 }
 
-export type profilesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "date_created" | "date_updated" | "name" | "title" | "phone_number" | "email_address" | "personal_website" | "subtitle" | "core_stack" | "linkedin_profile" | "github_profile" | "stackoverflow_profile" | "headline" | "profile_picture" | "summary" | "nationality" | "location_url" | "location_timezone" | "sort" | "city" | "region" | "country_code" | "location_city" | "location_region" | "location_country_code" | "is_default" | "slug" | "npm_profile" | "pypi_profile" | "company_name" | "street_address" | "postal_code" | "vat_id" | "kvk_number" | "about_me_text" | "meta_image_url" | "dev_start_year" | "python_js_start_year" | "remote_start_year" | "signal_profile" | "whatsapp_number" | "telegram_username" | "user_id" | "public_cv_version" | "public_resume_version" | "source_cv" | "location" | "profile_photo_path", ExtArgs["result"]["profiles"]>
+export type profilesOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "date_created" | "date_updated" | "name" | "title" | "phone_number" | "email_address" | "personal_website" | "subtitle" | "core_stack" | "linkedin_profile" | "github_profile" | "stackoverflow_profile" | "headline" | "profile_picture" | "summary" | "nationality" | "location_url" | "location_timezone" | "sort" | "city" | "region" | "country_code" | "location_city" | "location_region" | "location_country_code" | "is_default" | "slug" | "npm_profile" | "pypi_profile" | "company_name" | "street_address" | "postal_code" | "vat_id" | "kvk_number" | "about_me_text" | "meta_image_url" | "dev_start_year" | "python_js_start_year" | "remote_start_year" | "signal_profile" | "whatsapp_number" | "telegram_username" | "user_id" | "public_cv_version" | "public_resume_version" | "source_cv" | "location" | "profile_photo_path" | "browser_user_agent" | "browser_language" | "browser_timezone", ExtArgs["result"]["profiles"]>
 export type profilesInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   ai_chats?: boolean | Prisma.profiles$ai_chatsArgs<ExtArgs>
   applications?: boolean | Prisma.profiles$applicationsArgs<ExtArgs>
@@ -10155,6 +10542,9 @@ export type $profilesPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     source_cv: string | null
     location: string | null
     profile_photo_path: string | null
+    browser_user_agent: string | null
+    browser_language: string | null
+    browser_timezone: string | null
   }, ExtArgs["result"]["profiles"]>
   composites: {}
 }
@@ -10651,6 +11041,9 @@ export interface profilesFieldRefs {
   readonly source_cv: Prisma.FieldRef<"profiles", 'String'>
   readonly location: Prisma.FieldRef<"profiles", 'String'>
   readonly profile_photo_path: Prisma.FieldRef<"profiles", 'String'>
+  readonly browser_user_agent: Prisma.FieldRef<"profiles", 'String'>
+  readonly browser_language: Prisma.FieldRef<"profiles", 'String'>
+  readonly browser_timezone: Prisma.FieldRef<"profiles", 'String'>
 }
     
 

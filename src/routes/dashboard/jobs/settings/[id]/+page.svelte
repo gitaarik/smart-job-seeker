@@ -73,6 +73,23 @@
   let isSavingBrowserCountry = $state(false);
   let defaultCountryCode = data.defaultCountryCode || "";
 
+  // Browser fingerprint (advanced settings)
+  let showAdvancedBrowser = $state(false);
+  let browserLanguage = $state(data.browserFingerprint.language);
+  let savedBrowserLanguage = $state(data.browserFingerprint.language);
+  let browserTimezone = $state(data.browserFingerprint.timezone);
+  let savedBrowserTimezone = $state(data.browserFingerprint.timezone);
+  let browserUserAgent = $state(data.browserFingerprint.userAgent);
+  let savedBrowserUserAgent = $state(data.browserFingerprint.userAgent);
+  let browserFingerprintDirty = $derived(
+    browserLanguage !== savedBrowserLanguage ||
+    browserTimezone !== savedBrowserTimezone ||
+    browserUserAgent !== savedBrowserUserAgent,
+  );
+  let isSavingBrowserFingerprint = $state(false);
+  let defaultBrowserLanguage = data.browserFingerprintDefaults.language;
+  let defaultBrowserTimezone = data.browserFingerprintDefaults.timezone;
+
   let isStarting = $state(false);
   let isStopping = $state(false);
   let isSendingFeedback = $state(false);
@@ -699,6 +716,35 @@
     } finally {
       isSavingBrowserCountry = false;
     }
+  }
+
+  async function saveBrowserFingerprint() {
+    isSavingBrowserFingerprint = true;
+    try {
+      const fields: Record<string, string | null> = {
+        browser_language: browserLanguage.trim() || null,
+        browser_timezone: browserTimezone.trim() || null,
+        browser_user_agent: browserUserAgent.trim() || null,
+      };
+      await fetch(`/api/profile/${data.profileId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(fields),
+      });
+      savedBrowserLanguage = browserLanguage;
+      savedBrowserTimezone = browserTimezone;
+      savedBrowserUserAgent = browserUserAgent;
+    } catch (err) {
+      console.error("Failed to save browser fingerprint:", err);
+    } finally {
+      isSavingBrowserFingerprint = false;
+    }
+  }
+
+  function resetBrowserFingerprint() {
+    browserLanguage = savedBrowserLanguage;
+    browserTimezone = savedBrowserTimezone;
+    browserUserAgent = savedBrowserUserAgent;
   }
 
   async function saveCredential() {
@@ -1570,6 +1616,105 @@
               <p class="text-xs text-amber-500 mt-1">
                 ⚠ This setting only takes effect when using GoLogin as the browser provider.
               </p>
+            {/if}
+
+            <!-- Advanced: browser fingerprint toggle -->
+            <button
+              type="button"
+              onclick={() => (showAdvancedBrowser = !showAdvancedBrowser)}
+              class="mt-3 flex items-center gap-1.5 text-xs text-[var(--dash-text-muted)] hover:text-[var(--dash-text-secondary)] transition-colors"
+            >
+              <FontAwesomeIcon
+                icon={showAdvancedBrowser ? faChevronDown : faChevronRight}
+                class="w-2.5 h-2.5"
+              />
+              Advanced
+            </button>
+
+            {#if showAdvancedBrowser}
+              <div class="mt-3 pt-3 border-t border-[var(--dash-border)] space-y-3">
+                <div>
+                  <label for="browser_language" class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1">
+                    Language
+                  </label>
+                  <input
+                    type="text"
+                    id="browser_language"
+                    bind:value={browserLanguage}
+                    placeholder={defaultBrowserLanguage}
+                    class="w-full px-2.5 py-1.5 text-sm border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                  />
+                  {#if !browserLanguage}
+                    <p class="text-xs text-[var(--dash-text-muted)] mt-0.5">
+                      Defaults to <span class="font-mono">{defaultBrowserLanguage}</span> based on selected country
+                    </p>
+                  {/if}
+                </div>
+
+                <div>
+                  <label for="browser_timezone" class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1">
+                    Timezone
+                  </label>
+                  <input
+                    type="text"
+                    id="browser_timezone"
+                    bind:value={browserTimezone}
+                    placeholder={defaultBrowserTimezone}
+                    class="w-full px-2.5 py-1.5 text-sm border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                  />
+                  {#if !browserTimezone}
+                    <p class="text-xs text-[var(--dash-text-muted)] mt-0.5">
+                      Defaults to <span class="font-mono">{defaultBrowserTimezone}</span> based on selected country
+                    </p>
+                  {/if}
+                </div>
+
+                <div>
+                  <label for="browser_user_agent" class="block text-xs font-medium text-[var(--dash-text-secondary)] mb-1">
+                    User Agent
+                  </label>
+                  <input
+                    type="text"
+                    id="browser_user_agent"
+                    bind:value={browserUserAgent}
+                    placeholder="Auto-detected or random"
+                    class="w-full px-2.5 py-1.5 text-xs font-mono border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+                  />
+                  {#if !browserUserAgent}
+                    <p class="text-xs text-[var(--dash-text-muted)] mt-0.5">
+                      Auto-detected from your browser, or GoLogin generates a random one
+                    </p>
+                  {/if}
+                </div>
+
+                {#if browserFingerprintDirty}
+                  <div class="flex items-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      onclick={saveBrowserFingerprint}
+                      disabled={isSavingBrowserFingerprint}
+                      class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
+                    >
+                      {#if isSavingBrowserFingerprint}
+                        <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
+                      {:else}
+                        <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                      {/if}
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      onclick={resetBrowserFingerprint}
+                      class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                {/if}
+                {#if isSavingBrowserFingerprint && !browserFingerprintDirty}
+                  <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin" />
+                {/if}
+              </div>
             {/if}
           </div>
         </div>

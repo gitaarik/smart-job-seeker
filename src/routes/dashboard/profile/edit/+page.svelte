@@ -111,6 +111,7 @@
       (s) => (socialState = s),
     );
   }
+
 </script>
 
 <div class="space-y-6">
@@ -414,4 +415,5 @@
       <SectionSaveButton state={socialState} onClick={saveSocial} />
     </div>
   </div>
+
 </div>

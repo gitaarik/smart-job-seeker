@@ -82,6 +82,9 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
     "npm_profile",
     "pypi_profile",
     "country_code",
+    "browser_user_agent",
+    "browser_language",
+    "browser_timezone",
   ];
 
   for (const field of allowedFields) {

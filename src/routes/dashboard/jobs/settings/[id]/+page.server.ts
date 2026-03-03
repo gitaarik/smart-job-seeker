@@ -1,6 +1,7 @@
 import type { PageServerLoad } from "./$types";
 import { error, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { getGeoConfig } from "$lib/server/browser/geo-utils";
 
 export const load: PageServerLoad = async ({ params, parent }) => {
   const layoutData = await parent();
@@ -64,11 +65,20 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     canEditPlatformUrls = !otherUserUsage;
   }
 
-  // Load profile's default country code
+  // Load profile data (country code + browser fingerprint fields)
   const profileData = await db.profiles.findUnique({
     where: { id: layoutData.selectedProfile.id },
-    select: { country_code: true },
+    select: {
+      country_code: true,
+      browser_user_agent: true,
+      browser_language: true,
+      browser_timezone: true,
+    },
   });
+
+  // Compute geo-derived defaults from the effective country code
+  const effectiveCountryCode = jobSearch.browser_country_code || profileData?.country_code || "US";
+  const geoDefaults = getGeoConfig(effectiveCountryCode);
 
   return {
     jobSearch,
@@ -79,5 +89,15 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     browserCountryCode: jobSearch.browser_country_code || "",
     defaultCountryCode: profileData?.country_code || "",
     browserProvider: process.env.SJS_BROWSER_PROVIDER || "local",
+    // Browser fingerprint: saved values + geo-derived defaults
+    browserFingerprint: {
+      userAgent: profileData?.browser_user_agent || "",
+      language: profileData?.browser_language || "",
+      timezone: profileData?.browser_timezone || "",
+    },
+    browserFingerprintDefaults: {
+      language: geoDefaults.language,
+      timezone: geoDefaults.timezone,
+    },
   };
 };

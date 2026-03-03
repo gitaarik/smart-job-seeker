@@ -986,6 +986,9 @@ model profiles {
   source_cv                                                         String?                 @db.Uuid
   location                                                          String?                 @db.VarChar(255)
   profile_photo_path                                                String?                 @db.VarChar(255)
+  browser_user_agent                                                String?                 @db.VarChar(500)
+  browser_language                                                  String?                 @db.VarChar(50)
+  browser_timezone                                                  String?                 @db.VarChar(100)
   ai_chats                                                          ai_chats[]
   applications                                                      applications[]
   cheat_sheets                                                      cheat_sheets[]

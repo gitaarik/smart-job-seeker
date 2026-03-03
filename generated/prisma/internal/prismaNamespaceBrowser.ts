@@ -1110,7 +1110,10 @@ export const ProfilesScalarFieldEnum = {
   public_resume_version: 'public_resume_version',
   source_cv: 'source_cv',
   location: 'location',
-  profile_photo_path: 'profile_photo_path'
+  profile_photo_path: 'profile_photo_path',
+  browser_user_agent: 'browser_user_agent',
+  browser_language: 'browser_language',
+  browser_timezone: 'browser_timezone'
 } as const
 
 export type ProfilesScalarFieldEnum = (typeof ProfilesScalarFieldEnum)[keyof typeof ProfilesScalarFieldEnum]
