@@ -19,6 +19,7 @@
   import SectionHeader from "../components/SectionHeader.svelte";
   import MediaUpload from "$lib/components/MediaUpload.svelte";
   import SectionSaveButton from "$lib/components/SectionSaveButton.svelte";
+  import CountrySelect from "../../jobs/components/CountrySelect.svelte";
   import { getProfilePhotoUrl } from "$lib/utils/profile-photo-url";
 
   let { data }: { data: PageData } = $props();
@@ -44,6 +45,7 @@
   let email_address = $state(data.profile?.email_address || "");
   let phone_number = $state(data.profile?.phone_number || "");
   let location = $state(data.profile?.location || "");
+  let country_code = $state(data.profile?.country_code || "");
   let personal_website = $state(data.profile?.personal_website || "");
 
   // Form values - Social Profiles
@@ -92,7 +94,7 @@
 
   function saveContact() {
     saveSection(
-      { email_address, phone_number, location, personal_website },
+      { email_address, phone_number, location, country_code, personal_website },
       (s) => (contactState = s),
     );
   }
@@ -290,6 +292,17 @@
           placeholder="Amsterdam, Netherlands"
           class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
         />
+      </div>
+
+      <div>
+        <label for="country_code" class="block text-sm font-medium text-[var(--dash-text)] mb-1">
+          <FontAwesomeIcon
+            icon={faMapMarkerAlt}
+            class="w-4 h-4 text-[var(--dash-text-secondary)] mr-1"
+          />
+          Country
+        </label>
+        <CountrySelect bind:value={country_code} placeholder="Select country..." />
       </div>
 
       <div>

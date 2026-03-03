@@ -81,6 +81,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
     "stackoverflow_profile",
     "npm_profile",
     "pypi_profile",
+    "country_code",
   ];
 
   for (const field of allowedFields) {

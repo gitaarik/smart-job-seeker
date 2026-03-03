@@ -2,6 +2,7 @@
   import type { PageData } from "./$types";
   import { onMount, onDestroy } from "svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+  import CountrySelect from "../../components/CountrySelect.svelte";
   import {
     faArrowLeft,
     faBuilding,
@@ -16,6 +17,7 @@
     faEye,
     faEyeSlash,
     faForward,
+    faGlobe,
     faHistory,
     faKey,
     faMapMarkerAlt,
@@ -63,6 +65,13 @@
   let isSavingLoginUrl = $state(false);
   let searchUrlDirty = $derived(searchUrlInput.trim() !== (jobSearch.search_url ?? ""));
   let loginUrlDirty = $derived(loginUrlInput.trim() !== (jobSearch.job_platforms?.login_page_url ?? ""));
+
+  // Browser location state
+  let browserCountryCode = $state(data.browserCountryCode || "");
+  let savedBrowserCountryCode = $state(data.browserCountryCode || "");
+  let browserCountryDirty = $derived(browserCountryCode !== savedBrowserCountryCode);
+  let isSavingBrowserCountry = $state(false);
+  let defaultCountryCode = data.defaultCountryCode || "";
 
   let isStarting = $state(false);
   let isStopping = $state(false);
@@ -669,6 +678,25 @@
       console.error("Failed to save login URL:", err);
     } finally {
       isSavingLoginUrl = false;
+    }
+  }
+
+  async function saveBrowserCountryCode() {
+    isSavingBrowserCountry = true;
+    try {
+      const code = browserCountryCode.trim().toUpperCase() || null;
+      await fetch(`/api/job-searches/${jobSearch.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ browser_country_code: code }),
+      });
+      const normalized = code || "";
+      browserCountryCode = normalized;
+      savedBrowserCountryCode = normalized;
+    } catch (err) {
+      console.error("Failed to save browser country code:", err);
+    } finally {
+      isSavingBrowserCountry = false;
     }
   }
 
@@ -1479,6 +1507,47 @@
                 <p class="text-sm text-[var(--dash-text-muted)]">Not set</p>
               {/if}
             </div>
+          </div>
+
+          <!-- Scraper Browser Location -->
+          <div class="mt-4 pt-4 border-t border-[var(--dash-border)]">
+            <div class="flex items-center gap-2 mb-2">
+              <FontAwesomeIcon icon={faGlobe} class="w-3.5 h-3.5 text-[var(--dash-text-secondary)]" />
+              <h3 class="text-xs font-medium text-[var(--dash-text-secondary)]">Scraper Browser Location</h3>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="flex-1">
+                <CountrySelect bind:value={browserCountryCode} fallback={defaultCountryCode} />
+              </div>
+              {#if browserCountryDirty}
+                <button
+                  type="button"
+                  onclick={saveBrowserCountryCode}
+                  disabled={isSavingBrowserCountry}
+                  class="px-3 py-1 text-xs bg-[var(--dash-primary)] text-white rounded-md hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 flex items-center gap-1"
+                >
+                  {#if isSavingBrowserCountry}
+                    <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
+                  {:else}
+                    <FontAwesomeIcon icon={faCheck} class="w-3 h-3" />
+                  {/if}
+                  Save
+                </button>
+                <button
+                  type="button"
+                  onclick={() => (browserCountryCode = savedBrowserCountryCode)}
+                  class="px-3 py-1 text-xs border border-[var(--dash-border)] rounded-md text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+                >
+                  Cancel
+                </button>
+              {/if}
+              {#if isSavingBrowserCountry && !browserCountryDirty}
+                <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin" />
+              {/if}
+            </div>
+            <p class="text-xs text-[var(--dash-text-muted)] mt-2">
+              The country the scraper will appear to browse from. Set this to match your actual location to avoid your account being flagged for logging in from unusual locations. If unset, your profile's country is used.
+            </p>
           </div>
         </div>
       {/if}

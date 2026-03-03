@@ -33,7 +33,7 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
 
   const body = await request.json();
 
-  const data: { max_jobs?: number | null; platform_profile_id?: number | null; search_url?: string | null } = {};
+  const data: { max_jobs?: number | null; platform_profile_id?: number | null; search_url?: string | null; browser_country_code?: string | null } = {};
 
   // Validate search_url
   if ("search_url" in body) {
@@ -97,6 +97,15 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
       }
       data.platform_profile_id = credId;
     }
+  }
+
+  // Validate browser_country_code
+  if ("browser_country_code" in body) {
+    const code = body.browser_country_code?.trim().toUpperCase() || null;
+    if (code && !/^[A-Z]{2}$/.test(code)) {
+      throw error(400, "browser_country_code must be a 2-letter country code");
+    }
+    data.browser_country_code = code;
   }
 
   await db.job_searches.update({

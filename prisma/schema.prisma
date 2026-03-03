@@ -737,6 +737,7 @@ model job_searches {
   status_message         String?                  @db.VarChar(255)
   platform_profile_id    Int?
   max_jobs               Int?
+  browser_country_code   String?                  @db.VarChar(10)
   runs                   job_search_runs[]
   job_platforms          job_platforms?           @relation(fields: [platform], references: [id], onUpdate: NoAction, map: "job_searches_platform_foreign")
   platform_profiles      platform_profiles?       @relation(fields: [platform_profile_id], references: [id], onUpdate: NoAction)
@@ -962,7 +963,6 @@ model profiles {
   location_city                                                     String?                 @db.VarChar(255)
   location_region                                                   String?                 @db.VarChar(255)
   location_country_code                                             String?                 @db.VarChar(10)
-  browser_country_code                                              String?                 @db.VarChar(10)
   is_default                                                        Boolean?                @default(false)
   slug                                                              String?                 @unique(map: "profiles_slug_unique") @db.VarChar(255)
   npm_profile                                                       String?                 @db.VarChar(255)

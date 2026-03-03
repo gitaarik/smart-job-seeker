@@ -64,11 +64,19 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     canEditPlatformUrls = !otherUserUsage;
   }
 
+  // Load profile's default country code
+  const profileData = await db.profiles.findUnique({
+    where: { id: layoutData.selectedProfile.id },
+    select: { country_code: true },
+  });
+
   return {
     jobSearch,
     platformCredentials,
     profileId: layoutData.selectedProfile.id,
     isStaff,
     canEditPlatformUrls,
+    browserCountryCode: jobSearch.browser_country_code || "",
+    defaultCountryCode: profileData?.country_code || "",
   };
 };

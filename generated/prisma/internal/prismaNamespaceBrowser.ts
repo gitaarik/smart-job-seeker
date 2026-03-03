@@ -863,7 +863,8 @@ export const Job_searchesScalarFieldEnum = {
   is_active: 'is_active',
   status_message: 'status_message',
   platform_profile_id: 'platform_profile_id',
-  max_jobs: 'max_jobs'
+  max_jobs: 'max_jobs',
+  browser_country_code: 'browser_country_code'
 } as const
 
 export type Job_searchesScalarFieldEnum = (typeof Job_searchesScalarFieldEnum)[keyof typeof Job_searchesScalarFieldEnum]
@@ -1087,7 +1088,6 @@ export const ProfilesScalarFieldEnum = {
   location_city: 'location_city',
   location_region: 'location_region',
   location_country_code: 'location_country_code',
-  browser_country_code: 'browser_country_code',
   is_default: 'is_default',
   slug: 'slug',
   npm_profile: 'npm_profile',
