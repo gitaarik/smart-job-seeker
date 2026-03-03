@@ -1546,8 +1546,13 @@
               {/if}
             </div>
             <p class="text-xs text-[var(--dash-text-muted)] mt-2">
-              The country the scraper will appear to browse from. Set this to match your actual location to avoid your account being flagged for logging in from unusual locations. If unset, your profile's country is used.
+              The country the scraper will appear to browse from. Set this to match your actual location to avoid your account being flagged for logging in from unusual locations. If empty, your profile's country is used.
             </p>
+            {#if data.browserProvider !== "goLogin"}
+              <p class="text-xs text-amber-500 mt-1">
+                ⚠ This setting only takes effect when using GoLogin as the browser provider.
+              </p>
+            {/if}
           </div>
         </div>
       {/if}

@@ -78,5 +78,6 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     canEditPlatformUrls,
     browserCountryCode: jobSearch.browser_country_code || "",
     defaultCountryCode: profileData?.country_code || "",
+    browserProvider: process.env.SJS_BROWSER_PROVIDER || "local",
   };
 };
