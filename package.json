@@ -97,9 +97,6 @@
     "wait-on": "^8.0.4"
   },
   "dependencies": {
-    "@aws-crypto/sha256-js": "^5.2.0",
-    "@aws-sdk/credential-provider-node": "^3.965.0",
-    "@aws-sdk/types": "^3.965.0",
     "@directus/sdk": "^20.1.0",
     "@dotenvx/dotenvx": "^1.49.0",
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
