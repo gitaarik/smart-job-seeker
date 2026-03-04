@@ -122,7 +122,7 @@
 
       if (!response.ok) {
         const error = await response.json();
-        errorMessage = error.error || "Failed to create story";
+        errorMessage = error.message || error.error || "Failed to create story";
         addSaveState = "error";
         setTimeout(() => (addSaveState = "idle"), 2000);
         return;
@@ -171,7 +171,7 @@
 
       if (!response.ok) {
         const error = await response.json();
-        errorMessage = error.error || "Failed to update story";
+        errorMessage = error.message || error.error || "Failed to update story";
         editSaveState = "error";
         setTimeout(() => (editSaveState = "idle"), 2000);
         return;
@@ -206,7 +206,7 @@
 
       if (!response.ok) {
         const error = await response.json();
-        errorMessage = error.error || "Failed to delete story";
+        errorMessage = error.message || error.error || "Failed to delete story";
         return;
       }
 

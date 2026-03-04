@@ -2,6 +2,7 @@ import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
+import { browserInfoSchema, parseBody } from "$lib/server/validation/api-schemas";
 
 /**
  * PUT /api/profile/[id]/browser-info
@@ -28,7 +29,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
     throw error(403, "Access denied");
   }
 
-  const body = await request.json();
+  const body = parseBody(browserInfoSchema, await request.json());
   const force = body.force === true;
 
   const updateData: Record<string, string> = {};

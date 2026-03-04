@@ -2,6 +2,12 @@ import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
 import { requireAuth, parseIntParam, buildUpdateData } from "$lib/server/utils/api-helpers";
+import {
+  workExperienceBasicSchema,
+  workExperienceTechSchema,
+  workExperienceAchievementsSchema,
+  parseBody,
+} from "$lib/server/validation/api-schemas";
 
 export const PATCH: RequestHandler = async ({ params, request, locals }) => {
   const user = requireAuth(locals);
@@ -22,30 +28,21 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
     error(403, "Access denied");
   }
 
-  const data = await request.json();
+  const raw = await request.json();
 
-  // Handle different section updates
-  if (data.section === "basic") {
-    return updateBasicInfo(workExperienceId, data);
-  } else if (data.section === "technologies") {
+  if (raw.section === "technologies") {
+    const data = parseBody(workExperienceTechSchema, raw);
     return updateTechnologies(workExperienceId, data.technologies);
-  } else if (data.section === "achievements") {
+  } else if (raw.section === "achievements") {
+    const data = parseBody(workExperienceAchievementsSchema, raw);
     return updateAchievements(workExperienceId, data.achievements);
   }
 
-  // Default: update basic fields
+  const data = parseBody(workExperienceBasicSchema, raw);
   return updateBasicInfo(workExperienceId, data);
 };
 
 async function updateBasicInfo(id: number, data: Record<string, unknown>) {
-  // Validate required fields if provided
-  if (data.name !== undefined && (!data.name || (data.name as string).trim().length === 0)) {
-    error(400, "Company name is required");
-  }
-  if (data.position !== undefined && (!data.position || (data.position as string).trim().length === 0)) {
-    error(400, "Position is required");
-  }
-
   const updateData = buildUpdateData(
     data,
     ["name", "position", "location", "website", "summary", "start_date", "end_date"],
@@ -65,19 +62,20 @@ async function updateTechnologies(id: number, technologies: string[]) {
     where: { work_experience: id },
   });
 
-  for (let i = 0; i < technologies.length; i++) {
-    const techName = technologies[i]?.trim();
-    if (techName) {
-      await db.work_experience_technologies.create({
-        data: {
-          name: techName,
-          work_experience: id,
-          sort: i,
-          status: "published",
-          date_created: new Date(),
-        },
-      });
-    }
+  const now = new Date();
+  const techData = technologies
+    .map((tech, i) => ({ name: tech?.trim(), sort: i }))
+    .filter((t): t is { name: string; sort: number } => !!t.name)
+    .map((t) => ({
+      name: t.name,
+      work_experience: id,
+      sort: t.sort,
+      status: "published",
+      date_created: now,
+    }));
+
+  if (techData.length > 0) {
+    await db.work_experience_technologies.createMany({ data: techData });
   }
 
   return json({ success: true });
@@ -88,20 +86,21 @@ async function updateAchievements(id: number, achievements: string[]) {
     where: { work_experience: id },
   });
 
-  for (let i = 0; i < achievements.length; i++) {
-    const description = achievements[i];
-    if (description?.trim()) {
-      await db.work_experience_achievements.create({
-        data: {
-          title: null,
-          description: description.trim(),
-          work_experience: id,
-          sort: i,
-          status: "published",
-          date_created: new Date(),
-        },
-      });
-    }
+  const now = new Date();
+  const achievementData = achievements
+    .map((desc, i) => ({ description: desc?.trim(), sort: i }))
+    .filter((a): a is { description: string; sort: number } => !!a.description)
+    .map((a) => ({
+      title: null,
+      description: a.description,
+      work_experience: id,
+      sort: a.sort,
+      status: "published",
+      date_created: now,
+    }));
+
+  if (achievementData.length > 0) {
+    await db.work_experience_achievements.createMany({ data: achievementData });
   }
 
   return json({ success: true });

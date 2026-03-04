@@ -2,6 +2,12 @@ import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
 import { requireAuth, parseIntParam, buildUpdateData } from "$lib/server/utils/api-helpers";
+import {
+  sideProjectBasicSchema,
+  sideProjectTechSchema,
+  sideProjectAchievementsSchema,
+  parseBody,
+} from "$lib/server/validation/api-schemas";
 
 export const PATCH: RequestHandler = async ({ params, request, locals }) => {
   const user = requireAuth(locals);
@@ -22,27 +28,21 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
     error(403, "Access denied");
   }
 
-  const data = await request.json();
+  const raw = await request.json();
 
-  // Handle different section updates
-  if (data.section === "basic") {
-    return updateBasicInfo(projectId, data);
-  } else if (data.section === "technologies") {
+  if (raw.section === "technologies") {
+    const data = parseBody(sideProjectTechSchema, raw);
     return updateTechnologies(projectId, data.technologies);
-  } else if (data.section === "achievements") {
+  } else if (raw.section === "achievements") {
+    const data = parseBody(sideProjectAchievementsSchema, raw);
     return updateAchievements(projectId, data.achievements);
   }
 
-  // Default: update basic fields
+  const data = parseBody(sideProjectBasicSchema, raw);
   return updateBasicInfo(projectId, data);
 };
 
 async function updateBasicInfo(id: number, data: Record<string, unknown>) {
-  // Validate required fields if provided
-  if (data.name !== undefined && (!data.name || (data.name as string).trim().length === 0)) {
-    error(400, "Project name is required");
-  }
-
   const updateData = buildUpdateData(
     data,
     ["name", "url", "url_label", "summary", "stars", "start_date", "end_date"],
@@ -62,18 +62,19 @@ async function updateTechnologies(id: number, technologies: string[]) {
     where: { side_project: id },
   });
 
-  for (let i = 0; i < technologies.length; i++) {
-    const techName = technologies[i]?.trim();
-    if (techName) {
-      await db.side_project_technologies.create({
-        data: {
-          name: techName,
-          side_project: id,
-          sort: i,
-          date_created: new Date(),
-        },
-      });
-    }
+  const now = new Date();
+  const techData = technologies
+    .map((tech, i) => ({ name: tech?.trim(), sort: i }))
+    .filter((t): t is { name: string; sort: number } => !!t.name)
+    .map((t) => ({
+      name: t.name,
+      side_project: id,
+      sort: t.sort,
+      date_created: now,
+    }));
+
+  if (techData.length > 0) {
+    await db.side_project_technologies.createMany({ data: techData });
   }
 
   return json({ success: true });
@@ -84,17 +85,17 @@ async function updateAchievements(id: number, achievements: string[]) {
     where: { side_project: id },
   });
 
-  for (let i = 0; i < achievements.length; i++) {
-    const description = achievements[i]?.trim();
-    if (description) {
-      await db.side_project_achievements.create({
-        data: {
-          description,
-          side_project: id,
-          sort: i,
-        },
-      });
-    }
+  const achievementData = achievements
+    .map((desc, i) => ({ description: desc?.trim(), sort: i }))
+    .filter((a): a is { description: string; sort: number } => !!a.description)
+    .map((a) => ({
+      description: a.description,
+      side_project: id,
+      sort: a.sort,
+    }));
+
+  if (achievementData.length > 0) {
+    await db.side_project_achievements.createMany({ data: achievementData });
   }
 
   return json({ success: true });

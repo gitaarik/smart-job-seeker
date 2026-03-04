@@ -78,7 +78,7 @@
       if (!response.ok) {
         const error = await response.json();
         rescrapeStatus = "error";
-        rescrapeMessage = error.error || "Failed to start rescrape";
+        rescrapeMessage = error.message || error.error || "Failed to start rescrape";
         return;
       }
 

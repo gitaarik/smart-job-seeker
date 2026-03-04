@@ -2,6 +2,7 @@ import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
 import { requireAuth } from "$lib/server/utils/api-helpers";
+import { platformCreateSchema, parseBody } from "$lib/server/validation/api-schemas";
 
 /**
  * POST /api/platforms/create
@@ -11,12 +12,7 @@ import { requireAuth } from "$lib/server/utils/api-helpers";
 export const POST: RequestHandler = async ({ locals, request }) => {
   requireAuth(locals);
 
-  const body = await request.json();
-  const { url, name, loginPageUrl } = body;
-
-  if (!url) {
-    throw error(400, "URL is required");
-  }
+  const { url, name, loginPageUrl } = parseBody(platformCreateSchema, await request.json());
 
   // Normalize URL
   let normalizedUrl: string;

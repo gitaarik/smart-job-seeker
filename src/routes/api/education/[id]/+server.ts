@@ -2,6 +2,7 @@ import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
 import { requireAuth, parseIntParam, buildUpdateData } from "$lib/server/utils/api-helpers";
+import { educationUpdateSchema, parseBody } from "$lib/server/validation/api-schemas";
 
 export const PATCH: RequestHandler = async ({ params, request, locals }) => {
   const user = requireAuth(locals);
@@ -22,12 +23,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
     error(403, "Access denied");
   }
 
-  const data = await request.json();
-
-  // Validate required fields if provided
-  if (data.institution !== undefined && (!data.institution || (data.institution as string).trim().length === 0)) {
-    error(400, "Institution is required");
-  }
+  const data = parseBody(educationUpdateSchema, await request.json());
 
   const updateData = buildUpdateData(
     data,

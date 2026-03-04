@@ -1,16 +1,18 @@
 import { json, type RequestHandler } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { requireAuth } from "$lib/server/utils/api-helpers";
+import {
+  interviewStoryCreateSchema,
+  interviewStoryUpdateSchema,
+  interviewStoryDeleteSchema,
+  parseBody,
+} from "$lib/server/validation/api-schemas";
 
 export const POST: RequestHandler = async ({ request, locals }) => {
   const user = requireAuth(locals);
 
-  const body = await request.json();
-  const { profile_id, title, category, situation, task, action, result, reflection } = body;
-
-  if (!profile_id) {
-    return json({ error: "No profile specified" }, { status: 400 });
-  }
+  const { profile_id, title, category, situation, task, action, result, reflection } =
+    parseBody(interviewStoryCreateSchema, await request.json());
 
   // Verify the profile belongs to this user
   const profile = await db.profiles.findFirst({
@@ -19,10 +21,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
   if (!profile) {
     return json({ error: "Profile not found" }, { status: 404 });
-  }
-
-  if (!title || title.trim().length === 0) {
-    return json({ error: "Title is required" }, { status: 400 });
   }
 
   // Get the highest sort value
@@ -52,16 +50,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 export const PUT: RequestHandler = async ({ request, locals }) => {
   const user = requireAuth(locals);
 
-  const body = await request.json();
-  const { profile_id, id, title, category, situation, task, action, result, reflection } = body;
-
-  if (!profile_id) {
-    return json({ error: "No profile specified" }, { status: 400 });
-  }
-
-  if (!id) {
-    return json({ error: "Story ID is required" }, { status: 400 });
-  }
+  const { profile_id, id, title, category, situation, task, action, result, reflection } =
+    parseBody(interviewStoryUpdateSchema, await request.json());
 
   // Verify the profile belongs to this user
   const profile = await db.profiles.findFirst({
@@ -70,10 +60,6 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
 
   if (!profile) {
     return json({ error: "Profile not found" }, { status: 404 });
-  }
-
-  if (!title || title.trim().length === 0) {
-    return json({ error: "Title is required" }, { status: 400 });
   }
 
   // Verify the story belongs to this profile
@@ -105,16 +91,7 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
 export const DELETE: RequestHandler = async ({ request, locals }) => {
   const user = requireAuth(locals);
 
-  const body = await request.json();
-  const { profile_id, id } = body;
-
-  if (!profile_id) {
-    return json({ error: "No profile specified" }, { status: 400 });
-  }
-
-  if (!id) {
-    return json({ error: "Story ID is required" }, { status: 400 });
-  }
+  const { profile_id, id } = parseBody(interviewStoryDeleteSchema, await request.json());
 
   // Verify the profile belongs to this user
   const profile = await db.profiles.findFirst({

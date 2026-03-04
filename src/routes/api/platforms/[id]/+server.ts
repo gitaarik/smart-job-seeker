@@ -2,6 +2,7 @@ import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
+import { platformUpdateSchema, parseBody } from "$lib/server/validation/api-schemas";
 
 /**
  * PATCH /api/platforms/[id]
@@ -53,20 +54,7 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
     }
   }
 
-  const body = await request.json();
-  const data: { login_page_url?: string | null } = {};
-
-  if ("login_page_url" in body) {
-    const url = body.login_page_url?.trim() || null;
-    if (url && !url.startsWith("http")) {
-      throw error(400, "login_page_url must be a valid URL");
-    }
-    data.login_page_url = url;
-  }
-
-  if (Object.keys(data).length === 0) {
-    throw error(400, "No valid fields to update");
-  }
+  const data = parseBody(platformUpdateSchema, await request.json());
 
   await db.job_platforms.update({
     where: { id: platformId },

@@ -2,6 +2,7 @@ import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
 import { requireAuth, parseIntParam, buildUpdateData } from "$lib/server/utils/api-helpers";
+import { profileUpdateSchema, parseBody } from "$lib/server/validation/api-schemas";
 
 export const PATCH: RequestHandler = async ({ params, request, locals }) => {
   const user = requireAuth(locals);
@@ -17,16 +18,11 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
     error(403, "Access denied");
   }
 
-  const data = await request.json();
-
-  // Validate name if provided
-  if (data.name !== undefined && (!data.name || data.name.trim().length === 0)) {
-    error(400, "Name is required");
-  }
+  const data: Record<string, unknown> = parseBody(profileUpdateSchema, await request.json());
 
   // Validate and process slug if provided
-  if (data.slug !== undefined && data.slug && data.slug.trim()) {
-    const slug = data.slug
+  if (data.slug !== undefined && data.slug && (data.slug as string).trim()) {
+    const slug = (data.slug as string)
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "");

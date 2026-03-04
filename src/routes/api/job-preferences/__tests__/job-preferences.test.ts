@@ -42,8 +42,7 @@ describe("PUT /api/job-preferences", () => {
   });
 
   it("rejects missing profile_id", async () => {
-    const res = await PUT(createEvent({ job_types: ["full-time"] }));
-    expect(res.status).toBe(400);
+    await expect(PUT(createEvent({ job_types: ["full-time"] }))).rejects.toMatchObject({ status: 400 });
   });
 
   it("rejects when user doesn't own profile", async () => {
@@ -55,23 +54,15 @@ describe("PUT /api/job-preferences", () => {
   });
 
   it("rejects empty job_types", async () => {
-    mockProfilesFindFirst.mockResolvedValueOnce({ id: 1 });
-    const res = await PUT(createEvent({
+    await expect(PUT(createEvent({
       profile_id: 1, job_types: [], work_location: ["remote"],
-    }));
-    expect(res.status).toBe(400);
-    const data = await res.json();
-    expect(data.error).toContain("job type");
+    }))).rejects.toMatchObject({ status: 400 });
   });
 
   it("rejects empty work_location", async () => {
-    mockProfilesFindFirst.mockResolvedValueOnce({ id: 1 });
-    const res = await PUT(createEvent({
+    await expect(PUT(createEvent({
       profile_id: 1, job_types: ["full-time"], work_location: [],
-    }));
-    expect(res.status).toBe(400);
-    const data = await res.json();
-    expect(data.error).toContain("work location");
+    }))).rejects.toMatchObject({ status: 400 });
   });
 
   it("creates new config when none exists", async () => {

@@ -2,6 +2,7 @@ import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
+import { platformCredentialsSchema, parseBody } from "$lib/server/validation/api-schemas";
 
 /**
  * PUT /api/platforms/[id]/credentials
@@ -12,17 +13,12 @@ export const PUT: RequestHandler = async ({ params, locals, request }) => {
   const user = requireAuth(locals);
   const platformId = parseIntParam(params.id, "platform");
 
-  const body = await request.json();
-  const { profileId, username, password } = body;
-
-  if (!profileId) {
-    throw error(400, "Profile ID required");
-  }
+  const { profileId, username, password } = parseBody(platformCredentialsSchema, await request.json());
 
   // Verify user owns this profile
   const profile = await db.profiles.findFirst({
     where: {
-      id: parseInt(profileId),
+      id: profileId,
       user_id: user.id,
     },
   });

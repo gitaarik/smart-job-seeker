@@ -46,8 +46,7 @@ describe("POST /api/interview-stories", () => {
   });
 
   it("rejects missing profile_id", async () => {
-    const res = await POST(createEvent("POST", { title: "Test" }));
-    expect(res.status).toBe(400);
+    await expect(POST(createEvent("POST", { title: "Test" }))).rejects.toMatchObject({ status: 400 });
   });
 
   it("rejects when user doesn't own profile", async () => {
@@ -57,9 +56,7 @@ describe("POST /api/interview-stories", () => {
   });
 
   it("rejects empty title", async () => {
-    mockProfilesFindFirst.mockResolvedValueOnce({ id: 1 });
-    const res = await POST(createEvent("POST", { profile_id: 1, title: "" }));
-    expect(res.status).toBe(400);
+    await expect(POST(createEvent("POST", { profile_id: 1, title: "" }))).rejects.toMatchObject({ status: 400 });
   });
 
   it("creates story with auto-increment sort", async () => {
@@ -111,8 +108,7 @@ describe("PUT /api/interview-stories", () => {
   });
 
   it("rejects missing story ID", async () => {
-    const res = await PUT(createEvent("PUT", { profile_id: 1, title: "Test" }));
-    expect(res.status).toBe(400);
+    await expect(PUT(createEvent("PUT", { profile_id: 1, title: "Test" }))).rejects.toMatchObject({ status: 400 });
   });
 
   it("rejects when story doesn't belong to profile", async () => {

@@ -688,6 +688,9 @@ model job_matches {
   ai_chat                       ai_chats? @relation(fields: [ai_chat_scoring], references: [id], onUpdate: NoAction, map: "job_matches_ai_chat_scoring_foreign")
   jobs                          jobs      @relation(fields: [job], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_matches_job_foreign")
   profiles                      profiles  @relation(fields: [profile], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "job_matches_profile_foreign")
+
+  @@index([profile, job])
+  @@index([profile, status])
 }
 
 model job_platforms {
@@ -823,6 +826,7 @@ model jobs {
   job_platforms        job_platforms?         @relation(fields: [job_platform], references: [id], onUpdate: NoAction, map: "jobs_job_platform_foreign")
 
   @@index([title, job_poster, date_posted], map: "idx_jobs_uniqueness")
+  @@index([source_url])
 }
 
 model languages {
@@ -1013,6 +1017,8 @@ model profiles {
   side_projects                                                     side_projects[]
   tech_skill_categories                                             tech_skill_categories[]
   work_experiences                                                  work_experiences[]
+
+  @@index([user_id])
 }
 
 model project_stories {

@@ -104,7 +104,7 @@
 
       if (!response.ok) {
         const error = await response.json();
-        errorMessage = error.error || "Failed to save config";
+        errorMessage = error.message || error.error || "Failed to save config";
         saveState = "error";
         setTimeout(() => (saveState = "idle"), 2000);
         return;
