@@ -154,6 +154,34 @@ export const POST: RequestHandler = async ({ params, locals }) => {
 };
 
 /**
+ * Stop a GoLogin cloud browser session.
+ * Best-effort — errors are logged but don't block cancellation.
+ */
+async function stopGoLoginSession(providerProfileId: string): Promise<void> {
+  const token = config.goLoginApiToken;
+  if (!token) return;
+
+  try {
+    const response = await fetch(
+      `https://api.gologin.com/browser/${providerProfileId}/web`,
+      {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
+    if (response.ok) {
+      console.log(`[API] Stopped GoLogin session for profile ${providerProfileId}`);
+    } else {
+      console.warn(
+        `[API] GoLogin stop returned ${response.status} for profile ${providerProfileId}`,
+      );
+    }
+  } catch (err) {
+    console.warn(`[API] Failed to stop GoLogin session: ${err}`);
+  }
+}
+
+/**
  * DELETE /api/job-searches/[id]/run
  *
  * Cancel a running or queued scrape.
@@ -162,11 +190,12 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
   const user = requireAuth(locals);
   const jobSearchId = parseIntParam(params.id, "job search");
 
-  // Get the job search and verify ownership
+  // Get the job search and verify ownership, include platform profile for GoLogin cleanup
   const jobSearch = await db.job_searches.findFirst({
     where: { id: jobSearchId },
     include: {
       profiles: true,
+      platform_profiles: { select: { provider_profile_id: true } },
     },
   });
 
@@ -178,6 +207,8 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
   if (jobSearch.profiles.user_id !== user.id) {
     throw error(403, "Not authorized to stop this job search");
   }
+
+  const goLoginProfileId = jobSearch.platform_profiles?.provider_profile_id;
 
   // Try to remove from queue if waiting
   const removed = await removeWaitingJob(jobSearchId);
@@ -220,6 +251,11 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
   if (activeJob) {
     // Force-fail the BullMQ job so it doesn't block future runs
     await removeActiveJob(jobSearchId);
+
+    // Stop the GoLogin cloud browser session if applicable
+    if (goLoginProfileId && config.browserProvider === "goLogin") {
+      await stopGoLoginSession(goLoginProfileId);
+    }
 
     // Find the running run and mark as cancelled
     const runningRun = await db.job_search_runs.findFirst({
