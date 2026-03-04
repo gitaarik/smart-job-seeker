@@ -13,6 +13,7 @@
     faComments,
     faEnvelope,
     faDatabase,
+    faDesktop,
     faDownload,
     faFileAlt,
     faFileImport,
@@ -187,6 +188,11 @@
           label: "Import Data",
           href: "/dashboard/export/import",
           icon: faFileImport,
+        },
+        {
+          label: "Local Scraping",
+          href: "/dashboard/export/local-setup",
+          icon: faDesktop,
         },
         {
           label: "Delete Profile",
