@@ -210,7 +210,7 @@ export function safeValidateBatchJobImport(data: unknown): {
  * @returns Formatted error message
  */
 export function formatValidationError(error: z.ZodError): string {
-  return error.errors
+  return error.issues
     .map((e) => {
       const path = e.path.join(".");
       return path ? `${path}: ${e.message}` : e.message;
