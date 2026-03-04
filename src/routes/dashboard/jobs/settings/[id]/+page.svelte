@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { PageData } from "./$types";
   import { onMount, onDestroy } from "svelte";
+  import { invalidateAll } from "$app/navigation";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import CountrySelect from "../../components/CountrySelect.svelte";
   import {
@@ -26,8 +27,6 @@
     faPlus,
     faSpinner,
     faStop,
-    faSync,
-    faTerminal,
     faTimes,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
@@ -170,63 +169,12 @@
   let loadingItems = $state<Record<number, boolean>>({});
   let logPollIntervals = $state<Record<number, ReturnType<typeof setInterval>>>({});
   let itemPollIntervals = $state<Record<number, ReturnType<typeof setInterval>>>({});
-  let runTabView = $state<Record<number, "jobs" | "logs" | "browser-use">>({}); // Tab view per run
+  let runTabView = $state<Record<number, "jobs" | "logs">>({}); // Tab view per run
   let logLevelFilter = $state<"debug" | "info" | "warn" | "error">("info");
 
   // Log auto-scroll: track container refs and whether user has scrolled up
   let logContainerRefs = $state<Record<number, HTMLElement | null>>({});
   let logAutoScroll = $state<Record<number, boolean>>({});
-
-  // Browser-Use logs (staff only)
-  interface BrowserUseLogEntry {
-    timestamp: string;
-    level: string;
-    logger: string;
-    message: string;
-  }
-  let browserUseLogs = $state<BrowserUseLogEntry[]>([]);
-  let loadingBrowserUseLogs = $state(false);
-  let browserUseLogPollInterval: ReturnType<typeof setInterval> | null = null;
-  let browserUseLogLevelFilter = $state<"debug" | "info" | "warn" | "error">("debug");
-  let showBrowserUseLogs = $state(false);
-  let isRestartingBrowserUse = $state(false);
-
-  // Browser-Use health status (staff only)
-  interface BrowserUseHealth {
-    service_healthy: boolean;
-    chrome_running: boolean;
-    chrome_pid?: number;
-    cdp_responsive: boolean;
-    cdp_port: number;
-    current_url?: string;
-    page_count: number;
-    socat_running: boolean;
-    memory_mb?: number;
-    error?: string;
-  }
-  let browserUseHealth = $state<BrowserUseHealth | null>(null);
-  let loadingHealth = $state(false);
-
-  // CDP debug info (staff only)
-  interface CDPDebugInfo {
-    timestamp: string;
-    chrome_processes: Array<{
-      pid: string;
-      cpu: string;
-      mem: string;
-      rss: string;
-      stat: string;
-      cmd: string;
-    }>;
-    socat_processes: Array<{ pid: string; cmd: string }>;
-    cdp_version_check: { success: boolean; error?: string; time_ms: number };
-    cdp_pages_check: { success: boolean; error?: string; time_ms: number; data?: { count: number } };
-    websocket_test: { success: boolean; error?: string; time_ms: number };
-    port_listening: { "9222": boolean; "9223": boolean };
-  }
-  let cdpDebugInfo = $state<CDPDebugInfo | null>(null);
-  let loadingCDPDebug = $state(false);
-  let showCDPDebug = $state(false);
 
   // Computed states
   let isRunning = $derived(jobSearch.status === "running");
@@ -464,7 +412,6 @@
       expandedRunId = null;
       // Stop polling logs and items for this run
       stopItemPolling(runId);
-      stopBrowserUseLogPolling();
       if (logPollIntervals[runId]) {
         clearInterval(logPollIntervals[runId]);
         delete logPollIntervals[runId];
@@ -481,113 +428,6 @@
         startLogPolling(runId);
         startItemPolling(runId);
       }
-    }
-  }
-
-  // Browser-Use log functions (staff only)
-  async function loadBrowserUseLogs() {
-    if (!data.isStaff || loadingBrowserUseLogs) return;
-    loadingBrowserUseLogs = true;
-
-    try {
-      const lastTimestamp = browserUseLogs.length > 0 ? browserUseLogs[browserUseLogs.length - 1].timestamp : null;
-      let url = `/api/staff/browser-use/logs?level=${browserUseLogLevelFilter}&limit=200`;
-      if (lastTimestamp) {
-        url += `&after=${encodeURIComponent(lastTimestamp)}`;
-      }
-
-      const response = await fetch(url);
-      if (response.ok) {
-        const data = await response.json();
-        if (lastTimestamp && data.logs.length > 0) {
-          browserUseLogs = [...browserUseLogs, ...data.logs];
-        } else if (!lastTimestamp) {
-          browserUseLogs = data.logs;
-        }
-      }
-    } catch (err) {
-      console.error("Failed to load browser-use logs:", err);
-    } finally {
-      loadingBrowserUseLogs = false;
-    }
-  }
-
-  async function loadBrowserUseHealth() {
-    if (!data.isStaff || loadingHealth) return;
-    loadingHealth = true;
-
-    try {
-      const response = await fetch("/api/staff/browser-use/health");
-      if (response.ok) {
-        browserUseHealth = await response.json();
-      }
-    } catch (err) {
-      console.error("Failed to load browser-use health:", err);
-    } finally {
-      loadingHealth = false;
-    }
-  }
-
-  async function loadCDPDebug() {
-    if (!data.isStaff || loadingCDPDebug) return;
-    loadingCDPDebug = true;
-
-    try {
-      const response = await fetch("/api/staff/browser-use/debug");
-      if (response.ok) {
-        cdpDebugInfo = await response.json();
-      }
-    } catch (err) {
-      console.error("Failed to load CDP debug info:", err);
-    } finally {
-      loadingCDPDebug = false;
-    }
-  }
-
-  function startBrowserUseLogPolling() {
-    if (!data.isStaff || browserUseLogPollInterval) return;
-
-    loadBrowserUseLogs();
-    loadBrowserUseHealth();
-    browserUseLogPollInterval = setInterval(() => {
-      loadBrowserUseLogs();
-      loadBrowserUseHealth();
-    }, 2000);
-  }
-
-  function stopBrowserUseLogPolling() {
-    if (browserUseLogPollInterval) {
-      clearInterval(browserUseLogPollInterval);
-      browserUseLogPollInterval = null;
-    }
-  }
-
-  async function restartBrowserUse() {
-    if (!data.isStaff || isRestartingBrowserUse) return;
-
-    if (!confirm("Restart the browser-use service? This will interrupt any running scrapes.")) {
-      return;
-    }
-
-    isRestartingBrowserUse = true;
-    try {
-      const response = await fetch("/api/staff/browser-use/restart", {
-        method: "POST",
-      });
-
-      if (response.ok) {
-        // Clear logs and reload after restart
-        browserUseLogs = [];
-        await loadBrowserUseLogs();
-      } else {
-        const result = await response.json();
-        alert(result.message || "Failed to restart browser-use service");
-      }
-    } catch (err) {
-      console.error("Failed to restart browser-use:", err);
-      alert("Failed to restart browser-use service");
-    } finally {
-      isRestartingBrowserUse = false;
     }
   }
 
@@ -916,6 +756,8 @@
         if (!["running", "blocked", "queued"].includes(result.status)) {
           stopPolling();
           liveUrl = null;
+          // Invalidate so overview page shows fresh status on navigation
+          invalidateAll();
         }
       } catch (err) {
         console.error("Failed to poll status:", err);
@@ -950,8 +792,8 @@
         return;
       }
 
-      if (result.status === "removed_from_queue" || result.status === "cancellation_requested") {
-        jobSearch.status = "error";
+      if (result.status === "removed_from_queue" || result.status === "cancellation_requested" || result.status === "cancelled") {
+        jobSearch.status = "idle";
         jobSearch.status_message = "Cancelled by user";
         stopPolling();
         showBrowser = false;
@@ -959,6 +801,8 @@
 
         // Reload runs to show updated status
         await loadRuns();
+        // Invalidate all data so the overview page shows fresh status
+        await invalidateAll();
       }
     } catch (err) {
       errorMessage = "Failed to stop scrape";
@@ -1022,7 +866,6 @@
 
   onDestroy(() => {
     stopPolling();
-    stopBrowserUseLogPolling();
     // Clean up all log and item polling intervals
     Object.values(logPollIntervals).forEach((interval) => clearInterval(interval));
     Object.values(itemPollIntervals).forEach((interval) => clearInterval(interval));
@@ -1905,18 +1748,6 @@
                   >
                     Logs
                   </button>
-                  {#if data.isStaff}
-                    <button
-                      onclick={() => {
-                        runTabView[run.id] = "browser-use";
-                        startBrowserUseLogPolling();
-                      }}
-                      class={`px-4 py-2 text-sm font-medium transition-colors flex items-center gap-1 ${runTabView[run.id] === "browser-use" ? "text-[var(--dash-primary)] border-b-2 border-[var(--dash-primary)]" : "text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)]"}`}
-                    >
-                      <FontAwesomeIcon icon={faTerminal} class="w-3 h-3" />
-                      Browser-Use
-                    </button>
-                  {/if}
                 </div>
 
                 <div class="p-4">
@@ -2223,238 +2054,6 @@
                         </div>
                       {/if}
                     </div>
-                  {:else if runTabView[run.id] === "browser-use"}
-                    <!-- Browser-Use Logs view (Staff only) -->
-                    <div class="flex items-center justify-between mb-2">
-                      <div class="flex items-center gap-2">
-                        <span class="text-sm font-medium text-[var(--dash-text)]">Browser-Use Logs</span>
-                        <select
-                          bind:value={browserUseLogLevelFilter}
-                          onchange={() => {
-                            browserUseLogs = [];
-                            loadBrowserUseLogs();
-                          }}
-                          class="text-xs px-2 py-1 rounded border border-[var(--dash-border)] bg-[var(--dash-card)] text-[var(--dash-text)]"
-                        >
-                          <option value="debug">Debug</option>
-                          <option value="info">Info</option>
-                          <option value="warn">Warn</option>
-                          <option value="error">Error</option>
-                        </select>
-                      </div>
-                      <div class="flex items-center gap-2">
-                        {#if loadingBrowserUseLogs}
-                          <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin" />
-                        {/if}
-                        <button
-                          onclick={() => {
-                            browserUseLogs = [];
-                            loadBrowserUseLogs();
-                          }}
-                          class="text-xs px-2 py-1 rounded border border-[var(--dash-border)] bg-[var(--dash-card)] text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] hover:bg-[var(--dash-bg)]"
-                        >
-                          Clear
-                        </button>
-                        <button
-                          onclick={restartBrowserUse}
-                          disabled={isRestartingBrowserUse}
-                          class="text-xs px-2 py-1 rounded border border-[var(--dash-warning)] bg-[var(--dash-warning-light)] text-[var(--dash-warning)] hover:bg-[var(--dash-warning)] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                          title="Restart browser-use service (clears zombie processes)"
-                        >
-                          {#if isRestartingBrowserUse}
-                            <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
-                          {:else}
-                            <FontAwesomeIcon icon={faSync} class="w-3 h-3" />
-                          {/if}
-                          Restart
-                        </button>
-                      </div>
-                    </div>
-
-                    <div class="bg-[var(--dash-card)] rounded border border-[var(--dash-border)] max-h-64 overflow-y-auto">
-                      {#if browserUseLogs.length === 0}
-                        <div class="p-4 text-sm text-[var(--dash-text-muted)] text-center">
-                          {#if loadingBrowserUseLogs}
-                            Loading browser-use logs...
-                          {:else}
-                            No logs available. Logs appear when the scraper uses browser automation.
-                          {/if}
-                        </div>
-                      {:else}
-                        <div class="p-2 space-y-0.5 font-mono text-xs">
-                          {#each browserUseLogs as log}
-                            <div class="flex gap-2 py-0.5 px-1 hover:bg-[var(--dash-bg)] rounded">
-                              <span class="text-[var(--dash-text-muted)] whitespace-nowrap">
-                                {new Date(log.timestamp).toLocaleTimeString()}
-                              </span>
-                              <span class={`uppercase w-12 flex-shrink-0 ${getLogLevelColor(log.level)}`}>
-                                {log.level}
-                              </span>
-                              <span class="text-[var(--dash-primary)] flex-shrink-0 max-w-20 truncate" title={log.logger}>
-                                {log.logger.split('.').pop()}
-                              </span>
-                              <span class="text-[var(--dash-text)] break-all">
-                                {log.message}
-                              </span>
-                            </div>
-                          {/each}
-                        </div>
-                      {/if}
-                    </div>
-                    <!-- Health Status Panel -->
-                    {#if browserUseHealth}
-                      <div class="mt-3 p-3 rounded border {browserUseHealth.service_healthy ? 'border-[var(--dash-success)] bg-[var(--dash-success-light)]' : 'border-[var(--dash-error)] bg-[var(--dash-error-light)]'}">
-                        <div class="flex items-center justify-between mb-2">
-                          <span class="text-sm font-medium {browserUseHealth.service_healthy ? 'text-[var(--dash-success)]' : 'text-[var(--dash-error)]'}">
-                            {browserUseHealth.service_healthy ? '✓ Service Healthy' : '✗ Service Unhealthy'}
-                          </span>
-                          {#if loadingHealth}
-                            <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 text-[var(--dash-text-muted)] animate-spin" />
-                          {/if}
-                        </div>
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-                          <div>
-                            <span class="text-[var(--dash-text-muted)]">Chrome:</span>
-                            <span class={browserUseHealth.chrome_running ? 'text-[var(--dash-success)]' : 'text-[var(--dash-text-secondary)]'}>
-                              {browserUseHealth.chrome_running ? `Running (PID ${browserUseHealth.chrome_pid})` : 'Not running'}
-                            </span>
-                          </div>
-                          <div>
-                            <span class="text-[var(--dash-text-muted)]">CDP:</span>
-                            <span class={browserUseHealth.cdp_responsive ? 'text-[var(--dash-success)]' : browserUseHealth.chrome_running ? 'text-[var(--dash-error)]' : 'text-[var(--dash-text-secondary)]'}>
-                              {browserUseHealth.cdp_responsive ? 'Responsive' : browserUseHealth.chrome_running ? 'NOT RESPONDING' : 'N/A'}
-                            </span>
-                          </div>
-                          <div>
-                            <span class="text-[var(--dash-text-muted)]">Pages:</span>
-                            <span class="text-[var(--dash-text)]">{browserUseHealth.page_count}</span>
-                          </div>
-                          <div>
-                            <span class="text-[var(--dash-text-muted)]">Memory:</span>
-                            <span class="text-[var(--dash-text)]">{browserUseHealth.memory_mb ? `${browserUseHealth.memory_mb} MB` : 'N/A'}</span>
-                          </div>
-                        </div>
-                        {#if browserUseHealth.current_url}
-                          <div class="mt-2 text-xs">
-                            <span class="text-[var(--dash-text-muted)]">URL:</span>
-                            <span class="text-[var(--dash-text)] break-all">{browserUseHealth.current_url}</span>
-                          </div>
-                        {/if}
-                        {#if browserUseHealth.error}
-                          <div class="mt-2 text-xs text-[var(--dash-error)]">
-                            <strong>Error:</strong> {browserUseHealth.error}
-                          </div>
-                        {/if}
-                        <!-- CDP Debug toggle -->
-                        <div class="mt-2 pt-2 border-t border-[var(--dash-border)]">
-                          <button
-                            onclick={() => {
-                              showCDPDebug = !showCDPDebug;
-                              if (showCDPDebug) loadCDPDebug();
-                            }}
-                            class="text-xs text-[var(--dash-primary)] hover:underline"
-                          >
-                            {showCDPDebug ? 'Hide' : 'Show'} CDP Debug Info
-                          </button>
-                        </div>
-                      </div>
-                    {/if}
-
-                    <!-- CDP Debug Panel -->
-                    {#if showCDPDebug}
-                      <div class="mt-3 p-3 rounded border border-[var(--dash-border)] bg-[var(--dash-bg)]">
-                        <div class="flex items-center justify-between mb-2">
-                          <span class="text-sm font-medium text-[var(--dash-text)]">CDP Debug Info</span>
-                          <button
-                            onclick={loadCDPDebug}
-                            disabled={loadingCDPDebug}
-                            class="text-xs px-2 py-1 rounded border border-[var(--dash-border)] bg-[var(--dash-card)] text-[var(--dash-text-secondary)] hover:text-[var(--dash-text)] disabled:opacity-50"
-                          >
-                            {#if loadingCDPDebug}
-                              <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
-                            {:else}
-                              Refresh
-                            {/if}
-                          </button>
-                        </div>
-
-                        {#if cdpDebugInfo}
-                          <div class="space-y-3 text-xs font-mono">
-                            <!-- Connection Tests -->
-                            <div>
-                              <div class="font-semibold text-[var(--dash-text)] mb-1">Connection Tests</div>
-                              <div class="grid grid-cols-3 gap-2">
-                                <div class="p-2 rounded {cdpDebugInfo.cdp_version_check.success ? 'bg-[var(--dash-success-light)]' : 'bg-[var(--dash-error-light)]'}">
-                                  <div class="font-medium">Version Check</div>
-                                  <div class={cdpDebugInfo.cdp_version_check.success ? 'text-[var(--dash-success)]' : 'text-[var(--dash-error)]'}>
-                                    {cdpDebugInfo.cdp_version_check.success ? `OK (${cdpDebugInfo.cdp_version_check.time_ms}ms)` : cdpDebugInfo.cdp_version_check.error}
-                                  </div>
-                                </div>
-                                <div class="p-2 rounded {cdpDebugInfo.cdp_pages_check.success ? 'bg-[var(--dash-success-light)]' : 'bg-[var(--dash-error-light)]'}">
-                                  <div class="font-medium">Pages Check</div>
-                                  <div class={cdpDebugInfo.cdp_pages_check.success ? 'text-[var(--dash-success)]' : 'text-[var(--dash-error)]'}>
-                                    {cdpDebugInfo.cdp_pages_check.success ? `${cdpDebugInfo.cdp_pages_check.data?.count || 0} pages (${cdpDebugInfo.cdp_pages_check.time_ms}ms)` : cdpDebugInfo.cdp_pages_check.error}
-                                  </div>
-                                </div>
-                                <div class="p-2 rounded {cdpDebugInfo.websocket_test.success ? 'bg-[var(--dash-success-light)]' : 'bg-[var(--dash-error-light)]'}">
-                                  <div class="font-medium">WebSocket Test</div>
-                                  <div class={cdpDebugInfo.websocket_test.success ? 'text-[var(--dash-success)]' : 'text-[var(--dash-error)]'}>
-                                    {cdpDebugInfo.websocket_test.success ? `OK (${cdpDebugInfo.websocket_test.time_ms}ms)` : cdpDebugInfo.websocket_test.error}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-
-                            <!-- Ports -->
-                            <div>
-                              <div class="font-semibold text-[var(--dash-text)] mb-1">Port Status</div>
-                              <div class="flex gap-4">
-                                <span>9222 (external): <span class={cdpDebugInfo.port_listening["9222"] ? 'text-[var(--dash-success)]' : 'text-[var(--dash-error)]'}>{cdpDebugInfo.port_listening["9222"] ? 'Listening' : 'Not listening'}</span></span>
-                                <span>9223 (internal): <span class={cdpDebugInfo.port_listening["9223"] ? 'text-[var(--dash-success)]' : 'text-[var(--dash-error)]'}>{cdpDebugInfo.port_listening["9223"] ? 'Listening' : 'Not listening'}</span></span>
-                              </div>
-                            </div>
-
-                            <!-- Chrome Processes -->
-                            {#if cdpDebugInfo.chrome_processes.length > 0}
-                              <div>
-                                <div class="font-semibold text-[var(--dash-text)] mb-1">Chrome Processes ({cdpDebugInfo.chrome_processes.length})</div>
-                                <div class="max-h-32 overflow-y-auto bg-[var(--dash-card)] rounded p-2">
-                                  {#each cdpDebugInfo.chrome_processes as proc}
-                                    <div class="text-[var(--dash-text-secondary)]">
-                                      PID {proc.pid} | CPU {proc.cpu}% | MEM {proc.mem}% | RSS {proc.rss}KB | {proc.stat}
-                                    </div>
-                                  {/each}
-                                </div>
-                              </div>
-                            {/if}
-
-                            <!-- Socat Processes -->
-                            {#if cdpDebugInfo.socat_processes.length > 0}
-                              <div>
-                                <div class="font-semibold text-[var(--dash-text)] mb-1">Socat Processes ({cdpDebugInfo.socat_processes.length})</div>
-                                <div class="text-[var(--dash-text-secondary)]">
-                                  {#each cdpDebugInfo.socat_processes as proc}
-                                    <div>PID {proc.pid}: {proc.cmd}</div>
-                                  {/each}
-                                </div>
-                              </div>
-                            {/if}
-
-                            <div class="text-[var(--dash-text-muted)]">
-                              Last updated: {new Date(cdpDebugInfo.timestamp).toLocaleTimeString()}
-                            </div>
-                          </div>
-                        {:else if loadingCDPDebug}
-                          <div class="text-center text-[var(--dash-text-muted)]">Loading...</div>
-                        {:else}
-                          <div class="text-center text-[var(--dash-text-muted)]">Click refresh to load debug info</div>
-                        {/if}
-                      </div>
-                    {/if}
-
-                    <p class="mt-2 text-xs text-[var(--dash-text-muted)]">
-                      Live logs from browser automation service. Auto-refreshes every 2s.
-                    </p>
                   {/if}
                 </div>
               </div>

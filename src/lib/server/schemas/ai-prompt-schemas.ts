@@ -259,7 +259,6 @@ export const extractMatchedSkillsSchema = z.union([
  */
 export const aiPromptSchemas = {
   extract_job_data: extractJobDataSchema,
-  extract_job_data_browser_use: extractJobDataSchema, // Same schema, different prompt
   extract_jobs_from_search_page: extractJobsFromSearchPageSchema,
   score_job_match: scoreJobMatchSchema,
   extract_matched_skills: extractMatchedSkillsSchema,

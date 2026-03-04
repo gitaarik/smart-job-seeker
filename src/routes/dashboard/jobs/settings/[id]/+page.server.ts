@@ -46,7 +46,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     });
   }
 
-  // Check if user is staff or admin for browser-use logs access
+  // Check if user is staff or admin
   const user = layoutData.user;
   const isStaff = (user as { is_staff?: boolean })?.is_staff || (user as { is_admin?: boolean })?.is_admin || false;
 

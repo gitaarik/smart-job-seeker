@@ -64,7 +64,7 @@ export function findChromeExecutable(): string | undefined {
 
 /**
  * Launch browser with a fresh context
- * Since we use persistent sessions via Browser-Use, this is simplified
+ * Since we use persistent browser sessions, this is simplified
  * and no longer needs fingerprint injection.
  */
 export async function launchBrowser(

@@ -12,7 +12,6 @@ describe("AI Prompt Schemas", () => {
   describe("Schema Registry", () => {
     it("should have all expected schemas in registry", () => {
       expect(aiPromptSchemas).toHaveProperty("extract_job_data");
-      expect(aiPromptSchemas).toHaveProperty("extract_job_data_browser_use");
       expect(aiPromptSchemas).toHaveProperty("score_job_match");
       expect(aiPromptSchemas).toHaveProperty("detect_login_page");
       expect(aiPromptSchemas).toHaveProperty("find_next_page_button");
