@@ -4,6 +4,7 @@
  */
 
 import { exportProfile } from "$lib/server/profile/export";
+import { parseWebhookIds, processBatchWebhook } from "../batch-utils";
 import type { WebhookHandler, WebhookHandlerResult } from "../types";
 
 export const profileExportHandler: WebhookHandler = {
@@ -11,16 +12,9 @@ export const profileExportHandler: WebhookHandler = {
 
   async handle(data: Record<string, unknown>): Promise<WebhookHandlerResult> {
     // Support both profileIds (array) and profileId (single) for backwards compatibility
-    let profileIds: number[] = [];
+    let profileIds = parseWebhookIds(data, "profileIds");
 
-    if (Array.isArray(data.profileIds)) {
-      profileIds = (data.profileIds as unknown[])
-        .map((id) => {
-          const parsed = parseInt(String(id), 10);
-          return isNaN(parsed) ? null : parsed;
-        })
-        .filter((id): id is number => id !== null);
-    } else if (typeof data.profileId === "number") {
+    if (profileIds.length === 0 && typeof data.profileId === "number") {
       profileIds = [data.profileId];
     }
 
@@ -32,55 +26,18 @@ export const profileExportHandler: WebhookHandler = {
       };
     }
 
-    // Try block contains ONLY the async operation
-    let results;
-    try {
-      results = await Promise.allSettled(
-        profileIds.map((profileId) =>
-          exportProfile(profileId)
-            .then((result) => ({
-              profileId,
-              success: result.success,
-              schemaExport: result.schemaResult,
-              dataExport: result.dataResult,
-            }))
-            .catch((error) => ({
-              profileId,
-              success: false,
-              error: error instanceof Error ? error.message : "Unknown error",
-            }))
-        ),
-      );
-    } catch (error) {
-      const errorMessage = error instanceof Error
-        ? error.message
-        : "Unknown error";
-      console.error(`[Webhook] profile.export failed:`, errorMessage);
-      return {
-        processed: false,
-        profileCount: profileIds.length,
-        error: errorMessage,
-      };
-    }
-
-    // Result processing outside try block
-    const successful = results.filter(
-      (r) => r.status === "fulfilled" && (r.value as any).success !== false,
-    );
-    const failed = results.filter(
-      (r) =>
-        r.status === "rejected" ||
-        (r.status === "fulfilled" && (r.value as any).success === false),
-    );
-
-    return {
-      processed: successful.length > 0,
-      profileCount: profileIds.length,
-      successCount: successful.length,
-      results: results.map((r) =>
-        r.status === "fulfilled" ? r.value : r.reason
-      ),
-      ...(failed.length > 0 && { failureCount: failed.length }),
-    };
+    return processBatchWebhook({
+      ids: profileIds,
+      idLabel: "profile",
+      eventType: "profile.export",
+      processOne: (profileId) =>
+        exportProfile(profileId)
+          .then((result) => ({
+            profileId,
+            success: result.success,
+            schemaExport: result.schemaResult,
+            dataExport: result.dataResult,
+          })),
+    });
   },
 };

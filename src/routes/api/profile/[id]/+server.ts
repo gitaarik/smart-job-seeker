@@ -1,17 +1,11 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { requireAuth, parseIntParam, buildUpdateData } from "$lib/server/utils/api-helpers";
 
 export const PATCH: RequestHandler = async ({ params, request, locals }) => {
-  const user = locals.user;
-  if (!user) {
-    error(401, "Not authenticated");
-  }
-
-  const profileId = parseInt(params.id, 10);
-  if (isNaN(profileId)) {
-    error(400, "Invalid profile ID");
-  }
+  const user = requireAuth(locals);
+  const profileId = parseIntParam(params.id, "profile");
 
   // Verify ownership
   const profile = await db.profiles.findFirst({
@@ -60,38 +54,16 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
     data.slug = slug;
   }
 
-  // Build update object with only provided fields
-  const updateData: Record<string, unknown> = {
-    date_updated: new Date(),
-  };
-
-  const allowedFields = [
-    "name",
-    "slug",
-    "title",
-    "subtitle",
-    "headline",
-    "summary",
-    "email_address",
-    "phone_number",
-    "personal_website",
-    "location",
-    "linkedin_profile",
-    "github_profile",
-    "stackoverflow_profile",
-    "npm_profile",
-    "pypi_profile",
-    "country_code",
-    "browser_user_agent",
-    "browser_language",
-    "browser_timezone",
-  ];
-
-  for (const field of allowedFields) {
-    if (data[field] !== undefined) {
-      updateData[field] = data[field]?.trim() || null;
-    }
-  }
+  const updateData = buildUpdateData(
+    data,
+    [
+      "name", "slug", "title", "subtitle", "headline", "summary",
+      "email_address", "phone_number", "personal_website", "location",
+      "linkedin_profile", "github_profile", "stackoverflow_profile",
+      "npm_profile", "pypi_profile", "country_code",
+      "browser_user_agent", "browser_language", "browser_timezone",
+    ],
+  );
 
   await db.profiles.update({
     where: { id: profileId },

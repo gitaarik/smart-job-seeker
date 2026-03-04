@@ -1,17 +1,11 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { requireAuth, parseIntParam, buildUpdateData } from "$lib/server/utils/api-helpers";
 
 export const PATCH: RequestHandler = async ({ params, request, locals }) => {
-  const user = locals.user;
-  if (!user) {
-    error(401, "Not authenticated");
-  }
-
-  const workExperienceId = parseInt(params.id, 10);
-  if (isNaN(workExperienceId)) {
-    error(400, "Invalid work experience ID");
-  }
+  const user = requireAuth(locals);
+  const workExperienceId = parseIntParam(params.id, "work experience");
 
   // Verify ownership through profile
   const workExperience = await db.work_experiences.findFirst({
@@ -44,33 +38,6 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 };
 
 async function updateBasicInfo(id: number, data: Record<string, unknown>) {
-  const updateData: Record<string, unknown> = {
-    date_updated: new Date(),
-  };
-
-  const allowedFields = [
-    "name",
-    "position",
-    "location",
-    "website",
-    "summary",
-    "start_date",
-    "end_date",
-  ];
-
-  for (const field of allowedFields) {
-    if (data[field] !== undefined) {
-      if (field === "start_date" || field === "end_date") {
-        updateData[field] = data[field] ? new Date(data[field] as string) : null;
-      } else {
-        updateData[field] =
-          typeof data[field] === "string"
-            ? data[field].trim() || null
-            : data[field];
-      }
-    }
-  }
-
   // Validate required fields if provided
   if (data.name !== undefined && (!data.name || (data.name as string).trim().length === 0)) {
     error(400, "Company name is required");
@@ -78,6 +45,12 @@ async function updateBasicInfo(id: number, data: Record<string, unknown>) {
   if (data.position !== undefined && (!data.position || (data.position as string).trim().length === 0)) {
     error(400, "Position is required");
   }
+
+  const updateData = buildUpdateData(
+    data,
+    ["name", "position", "location", "website", "summary", "start_date", "end_date"],
+    { start_date: "date", end_date: "date" },
+  );
 
   await db.work_experiences.update({
     where: { id },
@@ -88,12 +61,10 @@ async function updateBasicInfo(id: number, data: Record<string, unknown>) {
 }
 
 async function updateTechnologies(id: number, technologies: string[]) {
-  // Delete existing technologies
   await db.work_experience_technologies.deleteMany({
     where: { work_experience: id },
   });
 
-  // Create new technologies
   for (let i = 0; i < technologies.length; i++) {
     const techName = technologies[i]?.trim();
     if (techName) {
@@ -113,12 +84,10 @@ async function updateTechnologies(id: number, technologies: string[]) {
 }
 
 async function updateAchievements(id: number, achievements: string[]) {
-  // Delete existing achievements
   await db.work_experience_achievements.deleteMany({
     where: { work_experience: id },
   });
 
-  // Create new achievements
   for (let i = 0; i < achievements.length; i++) {
     const description = achievements[i];
     if (description?.trim()) {

@@ -9,8 +9,9 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "@sveltejs/kit";
 import { db } from "$lib/server/db";
-import { verifyApiKey } from "$lib/server/auth/api-key";
 import { normalizeJobUrl } from "$lib/server/job/normalize-url";
+import { getProfileIdFromApiKey, findExistingJob } from "$lib/server/job/import-utils";
+import { getErrorMessage } from "$lib/server/utils/errors";
 import {
   type BatchJobImportResponse,
   formatValidationError,
@@ -20,48 +21,10 @@ import {
 } from "$lib/server/job/validation";
 
 /**
- * Get profile ID from API key
- */
-async function getProfileId(
-  request: Request,
-): Promise<{ profileId: number | null; error?: string }> {
-  const apiKey = request.headers.get("X-API-Key");
-  if (apiKey) {
-    const profileId = await verifyApiKey(apiKey);
-    if (profileId) {
-      return { profileId };
-    }
-    return { profileId: null, error: "Invalid API key" };
-  }
-
-  return { profileId: null, error: "API key required" };
-}
-
-/**
- * Check if a job with the same normalized URL exists
- */
-async function findExistingJob(
-  normalizedUrl: string,
-): Promise<{ id: number; job_description: string | null } | null> {
-  const existing = await db.jobs.findFirst({
-    where: {
-      source_url: normalizedUrl,
-    },
-    select: {
-      id: true,
-      job_description: true,
-    },
-  });
-
-  return existing;
-}
-
-/**
  * Import a single job and return the result
  */
 async function importSingleJob(
   jobData: JobImportRequest,
-  _profileId: number,
 ): Promise<JobImportResponse> {
   // Normalize URL for deduplication
   const normalizedUrl = normalizeJobUrl(jobData.sourceUrl);
@@ -153,14 +116,10 @@ async function importSingleJob(
       message: "Job imported successfully",
     };
   } catch (error) {
-    const errorMessage = error instanceof Error
-      ? error.message
-      : "Failed to create job";
-
     return {
       success: false,
       action: "skipped",
-      message: errorMessage,
+      message: getErrorMessage(error, "Failed to create job"),
     };
   }
 }
@@ -170,7 +129,7 @@ async function importSingleJob(
  */
 export const POST: RequestHandler = async (event) => {
   // Step 1: Authenticate
-  const { profileId, error: authError } = await getProfileId(event.request);
+  const { profileId, error: authError } = await getProfileIdFromApiKey(event.request);
 
   if (!profileId) {
     return json(
@@ -224,7 +183,7 @@ export const POST: RequestHandler = async (event) => {
 
   for (const jobData of jobs) {
     try {
-      const result = await importSingleJob(jobData, profileId);
+      const result = await importSingleJob(jobData);
       results.push(result);
 
       switch (result.action) {
@@ -243,13 +202,10 @@ export const POST: RequestHandler = async (event) => {
           break;
       }
     } catch (error) {
-      const errorMessage = error instanceof Error
-        ? error.message
-        : "Unknown error";
       results.push({
         success: false,
         action: "skipped",
-        message: errorMessage,
+        message: getErrorMessage(error),
       });
       failed++;
     }

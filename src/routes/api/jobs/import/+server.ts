@@ -9,8 +9,9 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "@sveltejs/kit";
 import { db } from "$lib/server/db";
-import { verifyApiKey } from "$lib/server/auth/api-key";
 import { normalizeJobUrl } from "$lib/server/job/normalize-url";
+import { getProfileIdFromApiKey, findExistingJob } from "$lib/server/job/import-utils";
+import { getErrorMessage } from "$lib/server/utils/errors";
 import {
   formatValidationError,
   type JobImportResponse,
@@ -18,51 +19,11 @@ import {
 } from "$lib/server/job/validation";
 
 /**
- * Get profile ID from API key
- */
-async function getProfileId(
-  request: Request,
-): Promise<{ profileId: number | null; error?: string }> {
-  const apiKey = request.headers.get("X-API-Key");
-  if (apiKey) {
-    const profileId = await verifyApiKey(apiKey);
-    if (profileId) {
-      return { profileId };
-    }
-    return { profileId: null, error: "Invalid API key" };
-  }
-
-  return { profileId: null, error: "API key required" };
-}
-
-/**
- * Check if a job with the same normalized URL exists for this profile
- */
-async function findExistingJob(
-  normalizedUrl: string,
-  _profileId: number,
-): Promise<{ id: number; job_description: string | null } | null> {
-  // Look for existing job by normalized source_url
-  // Note: Jobs are global (not profile-scoped) in the current schema
-  const existing = await db.jobs.findFirst({
-    where: {
-      source_url: normalizedUrl,
-    },
-    select: {
-      id: true,
-      job_description: true,
-    },
-  });
-
-  return existing;
-}
-
-/**
  * Import a single job
  */
 export const POST: RequestHandler = async (event) => {
   // Step 1: Authenticate
-  const { profileId, error: authError } = await getProfileId(event.request);
+  const { profileId, error: authError } = await getProfileIdFromApiKey(event.request);
 
   if (!profileId) {
     return json(
@@ -108,7 +69,7 @@ export const POST: RequestHandler = async (event) => {
   const normalizedUrl = normalizeJobUrl(jobData.sourceUrl);
 
   // Step 4: Check for existing job
-  const existing = await findExistingJob(normalizedUrl, profileId);
+  const existing = await findExistingJob(normalizedUrl);
 
   if (existing) {
     // Check if data has changed
@@ -200,15 +161,11 @@ export const POST: RequestHandler = async (event) => {
       } satisfies JobImportResponse,
     );
   } catch (error) {
-    const errorMessage = error instanceof Error
-      ? error.message
-      : "Failed to create job";
-
     return json(
       {
         success: false,
         action: "skipped",
-        message: errorMessage,
+        message: getErrorMessage(error, "Failed to create job"),
       } satisfies JobImportResponse,
       { status: 500 },
     );

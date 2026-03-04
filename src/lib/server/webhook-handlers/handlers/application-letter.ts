@@ -4,22 +4,14 @@
  */
 
 import { generateApplicationLetter } from "$lib/server/ai-chat/application-letter";
+import { parseWebhookIds, processBatchWebhook } from "../batch-utils";
 import type { WebhookHandler, WebhookHandlerResult } from "../types";
 
 export const applicationLetterHandler: WebhookHandler = {
   eventType: "application_letter.generate",
 
   async handle(data: Record<string, unknown>): Promise<WebhookHandlerResult> {
-    let letterIds: number[] = [];
-
-    if (Array.isArray(data.letterIds)) {
-      letterIds = (data.letterIds as unknown[])
-        .map((id) => {
-          const parsed = parseInt(String(id), 10);
-          return isNaN(parsed) ? null : parsed;
-        })
-        .filter((id): id is number => id !== null);
-    }
+    const letterIds = parseWebhookIds(data, "letterIds");
 
     if (letterIds.length === 0) {
       return {
@@ -33,57 +25,17 @@ export const applicationLetterHandler: WebhookHandler = {
       ? data.additionalContext
       : undefined;
 
-    // Try block contains ONLY the async operation
-    let results;
-    try {
-      results = await Promise.allSettled(
-        letterIds.map((letterId) =>
-          generateApplicationLetter(letterId, additionalContext)
-            .then((result) => ({
-              letterId,
-              success: result.success,
-              message: result.message,
-            }))
-            .catch((error) => ({
-              letterId,
-              success: false,
-              message: error instanceof Error ? error.message : "Unknown error",
-            }))
-        ),
-      );
-    } catch (error) {
-      const errorMessage = error instanceof Error
-        ? error.message
-        : "Unknown error";
-      console.error(
-        `[Webhook] application_letter.generate failed:`,
-        errorMessage,
-      );
-      return {
-        processed: false,
-        letterCount: letterIds.length,
-        error: errorMessage,
-      };
-    }
-
-    // Result processing outside try block
-    const successful = results.filter(
-      (r) => r.status === "fulfilled" && (r.value as any).success !== false,
-    );
-    const failed = results.filter(
-      (r) =>
-        r.status === "rejected" ||
-        (r.status === "fulfilled" && (r.value as any).success === false),
-    );
-
-    return {
-      processed: successful.length > 0,
-      letterCount: letterIds.length,
-      successCount: successful.length,
-      results: results.map((r) =>
-        r.status === "fulfilled" ? r.value : r.reason
-      ),
-      ...(failed.length > 0 && { failureCount: failed.length }),
-    };
+    return processBatchWebhook({
+      ids: letterIds,
+      idLabel: "letter",
+      eventType: "application_letter.generate",
+      processOne: (letterId) =>
+        generateApplicationLetter(letterId, additionalContext)
+          .then((result) => ({
+            letterId,
+            success: result.success,
+            message: result.message,
+          })),
+    });
   },
 };

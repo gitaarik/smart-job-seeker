@@ -1,17 +1,11 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { requireAuth, parseIntParam, buildUpdateData } from "$lib/server/utils/api-helpers";
 
 export const PATCH: RequestHandler = async ({ params, request, locals }) => {
-  const user = locals.user;
-  if (!user) {
-    error(401, "Not authenticated");
-  }
-
-  const projectId = parseInt(params.id, 10);
-  if (isNaN(projectId)) {
-    error(400, "Invalid project ID");
-  }
+  const user = requireAuth(locals);
+  const projectId = parseIntParam(params.id, "project");
 
   // Verify ownership through profile
   const project = await db.side_projects.findFirst({
@@ -44,39 +38,16 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 };
 
 async function updateBasicInfo(id: number, data: Record<string, unknown>) {
-  const updateData: Record<string, unknown> = {
-    date_updated: new Date(),
-  };
-
-  const allowedFields = [
-    "name",
-    "url",
-    "url_label",
-    "summary",
-    "stars",
-    "start_date",
-    "end_date",
-  ];
-
-  for (const field of allowedFields) {
-    if (data[field] !== undefined) {
-      if (field === "start_date" || field === "end_date") {
-        updateData[field] = data[field] ? new Date(data[field] as string) : null;
-      } else if (field === "stars") {
-        updateData[field] = data[field] ? parseInt(data[field] as string, 10) : null;
-      } else {
-        updateData[field] =
-          typeof data[field] === "string"
-            ? data[field].trim() || null
-            : data[field];
-      }
-    }
-  }
-
   // Validate required fields if provided
   if (data.name !== undefined && (!data.name || (data.name as string).trim().length === 0)) {
     error(400, "Project name is required");
   }
+
+  const updateData = buildUpdateData(
+    data,
+    ["name", "url", "url_label", "summary", "stars", "start_date", "end_date"],
+    { start_date: "date", end_date: "date", stars: "number" },
+  );
 
   await db.side_projects.update({
     where: { id },
@@ -87,12 +58,10 @@ async function updateBasicInfo(id: number, data: Record<string, unknown>) {
 }
 
 async function updateTechnologies(id: number, technologies: string[]) {
-  // Delete existing technologies
   await db.side_project_technologies.deleteMany({
     where: { side_project: id },
   });
 
-  // Create new technologies
   for (let i = 0; i < technologies.length; i++) {
     const techName = technologies[i]?.trim();
     if (techName) {
@@ -111,12 +80,10 @@ async function updateTechnologies(id: number, technologies: string[]) {
 }
 
 async function updateAchievements(id: number, achievements: string[]) {
-  // Delete existing achievements
   await db.side_project_achievements.deleteMany({
     where: { side_project: id },
   });
 
-  // Create new achievements
   for (let i = 0; i < achievements.length; i++) {
     const description = achievements[i]?.trim();
     if (description) {
