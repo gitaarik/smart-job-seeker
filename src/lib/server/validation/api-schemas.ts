@@ -211,6 +211,17 @@ export function parseBody<T>(schema: z.ZodSchema<T>, data: unknown): T {
   return result.data;
 }
 
+// --- AI generation schemas ---
+
+export const letterGenerateSchema = z.object({
+  additionalContext: z.string().trim().max(5000).optional(),
+});
+
+export const followupRequestSchema = z.object({
+  followupRequest: requiredTrimmedString("Follow-up request", 5000),
+  includeOriginalContext: z.boolean().optional().default(false),
+});
+
 /**
  * Format Zod error into a human-readable message.
  */

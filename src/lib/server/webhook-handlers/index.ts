@@ -1,17 +1,14 @@
 /**
  * Webhook handlers registry
  * Central registry for all webhook event handlers
+ *
+ * Note: AI generation handlers (letters, questions, followups, chat generation)
+ * have been migrated to direct API endpoints under /api/ai/.
+ * Only profile export and preview links remain as webhook handlers.
  */
 
 import type { WebhookHandler } from "./types";
 import { profileExportHandler } from "./handlers/profile-export";
-import { aiChatGeneratePromptHandler } from "./handlers/ai-chat-generate-prompt";
-import { aiChatGenerateResponseHandler } from "./handlers/ai-chat-generate-response";
-import { applicationQuestionHandler } from "./handlers/application-question";
-import { applicationLetterHandler } from "./handlers/application-letter";
-import { followupLetterHandler } from "./handlers/followup-letter";
-import { followupQuestionHandler } from "./handlers/followup-question";
-import { followupChatHandler } from "./handlers/followup-chat";
 import { profileVersionLinksHandler } from "./handlers/profile-version-links";
 
 /**
@@ -20,13 +17,6 @@ import { profileVersionLinksHandler } from "./handlers/profile-version-links";
  */
 const handlers: Map<string, WebhookHandler> = new Map([
   [profileExportHandler.eventType, profileExportHandler],
-  [aiChatGeneratePromptHandler.eventType, aiChatGeneratePromptHandler],
-  [aiChatGenerateResponseHandler.eventType, aiChatGenerateResponseHandler],
-  [applicationQuestionHandler.eventType, applicationQuestionHandler],
-  [applicationLetterHandler.eventType, applicationLetterHandler],
-  [followupLetterHandler.eventType, followupLetterHandler],
-  [followupQuestionHandler.eventType, followupQuestionHandler],
-  [followupChatHandler.eventType, followupChatHandler],
   [profileVersionLinksHandler.eventType, profileVersionLinksHandler],
 ]);
 

@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { ActionData, PageData } from "./$types";
   import { enhance } from "$app/forms";
-  import { goto } from "$app/navigation";
+  import { goto, invalidateAll } from "$app/navigation";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faCheck,
@@ -9,6 +9,8 @@
     faChevronUp,
     faEnvelope,
     faQuestionCircle,
+    faRobot,
+    faSpinner,
     faTimes,
     faTrash,
   } from "@fortawesome/free-solid-svg-icons";
@@ -33,6 +35,13 @@
   let editStatus = $state("");
   let editAnswer = $state("");
 
+  // AI generation states
+  let generatingIds = $state<Set<string>>(new Set());
+  let aiError = $state<string | null>(null);
+  let followupText = $state<Record<string, string>>({});
+  let followupIncludeContext = $state<Record<string, boolean>>({});
+  let showFollowup = $state<Record<string, boolean>>({});
+
   const typeFilters = [
     { value: "all", label: "All" },
     { value: "letters", label: "Cover Letters" },
@@ -48,6 +57,10 @@
 
   function getItemId(item: (typeof items)[0]): string {
     return `${item.itemType}-${item.id}`;
+  }
+
+  function isGenerating(itemId: string): boolean {
+    return generatingIds.has(itemId);
   }
 
   function formatDate(date: Date | string | null): string {
@@ -103,6 +116,76 @@
       }
     };
   }
+
+  async function generateAi(item: (typeof items)[0]) {
+    const itemId = getItemId(item);
+    const isLetter = item.itemType === "letter";
+    const url = isLetter
+      ? `/api/ai/letters/${item.id}/generate`
+      : `/api/ai/questions/${item.id}/generate`;
+
+    generatingIds.add(itemId);
+    generatingIds = new Set(generatingIds);
+    aiError = null;
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const result = await response.json();
+      if (!result.success) {
+        aiError = result.message || "Generation failed";
+        return;
+      }
+      await invalidateAll();
+    } catch {
+      aiError = "Network error. Please try again.";
+    } finally {
+      generatingIds.delete(itemId);
+      generatingIds = new Set(generatingIds);
+    }
+  }
+
+  async function sendFollowup(item: (typeof items)[0]) {
+    const itemId = getItemId(item);
+    const isLetter = item.itemType === "letter";
+    const text = followupText[itemId]?.trim();
+    if (!text) return;
+
+    const url = isLetter
+      ? `/api/ai/letters/${item.id}/followup`
+      : `/api/ai/questions/${item.id}/followup`;
+
+    generatingIds.add(itemId);
+    generatingIds = new Set(generatingIds);
+    aiError = null;
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          followupRequest: text,
+          includeOriginalContext: followupIncludeContext[itemId] || false,
+        }),
+      });
+      const result = await response.json();
+      if (!result.success) {
+        aiError = result.message || "Follow-up failed";
+        return;
+      }
+      followupText[itemId] = "";
+      showFollowup[itemId] = false;
+      await invalidateAll();
+    } catch {
+      aiError = "Network error. Please try again.";
+    } finally {
+      generatingIds.delete(itemId);
+      generatingIds = new Set(generatingIds);
+    }
+  }
 </script>
 
 <div class="space-y-6">
@@ -111,11 +194,11 @@
     icon={faEnvelope}
   />
 
-  {#if form?.error}
+  {#if form?.error || aiError}
     <div
       class="bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg p-4"
     >
-      <p class="text-[var(--dash-error)] text-sm">{form.error}</p>
+      <p class="text-[var(--dash-error)] text-sm">{form?.error || aiError}</p>
     </div>
   {/if}
 
@@ -153,6 +236,8 @@
       {#each items as item (getItemId(item))}
         {@const itemId = getItemId(item)}
         {@const isLetter = item.itemType === "letter"}
+        {@const hasAiChat = !!item.ai_chat}
+        {@const hasContent = isLetter ? !!item.content : !!item.answer}
         <div
           class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] overflow-hidden"
         >
@@ -375,6 +460,7 @@
                     {/if}
                   {/if}
 
+                  <!-- Action Buttons -->
                   <div
                     class="flex items-center justify-end gap-2 pt-2 border-t border-[var(--dash-border)]"
                   >
@@ -387,6 +473,28 @@
                     </button>
                     <button
                       type="button"
+                      onclick={() => generateAi(item)}
+                      disabled={isGenerating(itemId)}
+                      class="px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                    >
+                      <FontAwesomeIcon
+                        icon={isGenerating(itemId) ? faSpinner : faRobot}
+                        class="w-3.5 h-3.5 {isGenerating(itemId) ? 'animate-spin' : ''}"
+                      />
+                      {isGenerating(itemId) ? "Generating..." : hasAiChat ? "Regenerate" : "Generate"}
+                    </button>
+                    {#if hasAiChat}
+                      <button
+                        type="button"
+                        onclick={() => (showFollowup[itemId] = !showFollowup[itemId])}
+                        disabled={isGenerating(itemId)}
+                        class="px-3 py-1.5 text-sm border border-[var(--dash-border)] rounded-lg text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50"
+                      >
+                        Follow-up
+                      </button>
+                    {/if}
+                    <button
+                      type="button"
                       onclick={() => (deleteItem = {
                         id: item.id,
                         type: item.itemType,
@@ -397,6 +505,43 @@
                       <FontAwesomeIcon icon={faTrash} class="w-4 h-4" />
                     </button>
                   </div>
+
+                  <!-- Follow-up Section -->
+                  {#if showFollowup[itemId]}
+                    <div class="pt-2 space-y-2">
+                      <textarea
+                        bind:value={followupText[itemId]}
+                        placeholder="Ask AI to refine the {isLetter ? 'letter' : 'answer'}..."
+                        rows={3}
+                        disabled={isGenerating(itemId)}
+                        class="w-full px-3 py-2 border border-[var(--dash-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent text-sm resize-y disabled:opacity-50"
+                      ></textarea>
+                      <div class="flex items-center justify-between">
+                        <label class="flex items-center gap-2 text-sm text-[var(--dash-text-secondary)]">
+                          <input
+                            type="checkbox"
+                            bind:checked={followupIncludeContext[itemId]}
+                            disabled={isGenerating(itemId)}
+                            class="rounded"
+                          />
+                          Include original context
+                        </label>
+                        <button
+                          type="button"
+                          onclick={() => sendFollowup(item)}
+                          disabled={isGenerating(itemId) || !followupText[itemId]?.trim()}
+                          class="px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:bg-[var(--dash-primary-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                        >
+                          {#if isGenerating(itemId)}
+                            <FontAwesomeIcon icon={faSpinner} class="w-3.5 h-3.5 animate-spin" />
+                            Generating...
+                          {:else}
+                            Send Follow-up
+                          {/if}
+                        </button>
+                      </div>
+                    </div>
+                  {/if}
                 </div>
               {/if}
             </div>
