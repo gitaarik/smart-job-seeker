@@ -94,11 +94,10 @@ This starts:
 **Job Scraping Pipeline** (see [SCRAPING.md](docs/SCRAPING.md))
 
 - `scrapers/scraper.ts` - Login orchestration and CDP handoff
-- `scrapers/extraction.ts` - CDP element marking and LLM extraction
+- `scrapers/extraction/` - CDP element marking and LLM extraction
 - `scrapers/job-data.ts` - Job data processing and database operations
-- `browser-use-client.ts` - Browser-Use Python service client
-- `cdp-utils.ts` - Chrome DevTools Protocol utilities
-- `html-strip.ts` - Clean HTML for LLM processing
+- `browser/provider.ts` - Browser provider abstraction (Local, GoLogin)
+- `browser/cdp-utils.ts` - Chrome DevTools Protocol utilities
 - `scripts/scrape-job-sites.ts` - CLI script for running scrapes
 
 **AI Features**

@@ -1,18 +1,18 @@
 # Job Scraping Architecture
 
-This document describes the hybrid job scraping system that combines Browser-Use
-for authentication with Patchright for high-performance data extraction.
+This document describes the job scraping system that uses Playwright for
+browser automation and LLMs for structured data extraction.
 
 ## Overview
 
-The scraper uses a **hybrid approach**:
+The scraper uses a **provider-based approach**:
 
-1. **Browser-Use (Python)** - Handles login and authentication via AI agent
-2. **Patchright (TypeScript)** - Connects via CDP for fast job extraction
+1. **Browser Provider** - Manages the browser session (local Docker Chrome, GoLogin, etc.)
+2. **Playwright** - Connects via CDP for login, navigation, and extraction
 3. **LLM Extraction** - Groq/OpenAI extracts structured data from HTML
 
-This architecture provides the best of both worlds: Browser-Use's intelligent
-login handling with Patchright's reliable, fast extraction.
+The provider abstraction means the scraper code is the same regardless of
+where the browser runs — only the CDP URL changes.
 
 ## Architecture
 
@@ -23,51 +23,59 @@ login handling with Patchright's reliable, fast extraction.
 │                                                                         │
 │  ┌──────────────┐    CDP Port 9222    ┌──────────────────────────────┐ │
 │  │              │ ◄─────────────────► │                              │ │
-│  │  Browser-Use │                     │  Patchright (TypeScript)     │ │
-│  │   (Python)   │                     │                              │ │
-│  │              │                     │  ├─ CDP Element Marking      │ │
-│  │  ├─ Login    │                     │  ├─ HTML Capture             │ │
-│  │  ├─ CAPTCHA  │                     │  ├─ LLM Job Extraction       │ │
-│  │  └─ 2FA      │                     │  └─ Pagination Handling      │ │
-│  │              │                     │                              │ │
+│  │    Chrome    │                     │  Playwright (TypeScript)     │ │
+│  │  Container   │                     │                              │ │
+│  │              │                     │  ├─ Login (form detection)   │ │
+│  │  ├─ Xvfb    │                     │  ├─ CDP Element Marking      │ │
+│  │  ├─ VNC     │                     │  ├─ HTML Capture             │ │
+│  │  └─ socat   │                     │  ├─ LLM Job Extraction       │ │
+│  │              │                     │  └─ Pagination Handling      │ │
 │  └──────────────┘                     └──────────────────────────────┘ │
 │         │                                          │                    │
 │         ▼                                          ▼                    │
 │  ┌──────────────┐                     ┌──────────────────────────────┐ │
-│  │   Chrome     │                     │      PostgreSQL Database     │ │
-│  │  (Headless)  │                     │                              │ │
-│  │              │                     │  ├─ jobs                     │ │
-│  │  Port 9222   │                     │  ├─ job_searches             │ │
-│  │  noVNC 6080  │                     │  └─ job_platforms            │ │
+│  │   noVNC      │                     │      PostgreSQL Database     │ │
+│  │  Port 6080   │                     │                              │ │
+│  │  (manual     │                     │  ├─ jobs                     │ │
+│  │ intervention)│                     │  ├─ job_searches             │ │
+│  │              │                     │  └─ job_platforms            │ │
 │  └──────────────┘                     └──────────────────────────────┘ │
 │                                                                         │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
+
+## Browser Providers
+
+The scraper supports multiple browser providers. All converge at the same
+point: Playwright connects via a CDP URL.
+
+- **Local** (default) — Chrome runs in a Docker container (`chrome` service).
+  Playwright connects directly via CDP.
+- **GoLogin** — Cloud browser profiles with fingerprinting. GoLogin API
+  provides a CDP URL to connect to.
 
 ## Components
 
 ### Core Files
 
 ```
-src/lib/server/scrapers/
-├── scraper.ts          # Entry point, login orchestration, CDP handoff
-├── extraction.ts       # CDP marking, LLM extraction, pagination
+src/server/scrapers/
+├── scraper.ts          # Entry point, login, navigation, CDP handoff
+├── extraction/         # CDP marking, LLM extraction, pagination
 ├── job-data.ts         # Job data processing, DB operations
+├── intervention/       # Manual intervention handling (CAPTCHA, 2FA)
 ├── types.ts            # TypeScript interfaces
-└── utils.ts            # Helper functions (prompts, error handling)
+└── utils.ts            # Helper functions
 
-src/lib/server/
-├── browser-use-client.ts   # Browser-Use Python service client
-├── cdp-utils.ts            # Chrome DevTools Protocol utilities
-├── html-strip.ts           # Clean HTML for LLM processing
-├── scrape-filters.ts       # Job validation and stop conditions
-├── pagination-utils.ts     # Pagination detection and navigation
-└── page-wait-utils.ts      # SPA content loading detection
+src/server/browser/
+├── provider.ts         # Browser provider abstraction (Local, GoLogin)
+├── cdp-utils.ts        # Chrome DevTools Protocol utilities
+├── stealth-utils.ts    # Anti-detection scripts
+└── login.ts            # Login form detection and filling
 
-browser-use/                # Python service (Docker)
-├── browser_controller.py   # Browser-Use agent controller
-├── main.py                 # FastAPI endpoints
-└── Dockerfile
+chrome/                 # Docker container (local mode)
+├── Dockerfile          # Ubuntu + Chrome + Xvfb + VNC + socat
+└── entrypoint.sh       # Chrome launch with CDP flags
 ```
 
 ### Entry Points
@@ -75,11 +83,11 @@ browser-use/                # Python service (Docker)
 | File                                 | Purpose                        |
 | ------------------------------------ | ------------------------------ |
 | `scripts/scrape-job-sites.ts`        | CLI script for running scrapes |
-| `src/lib/server/scrapers/scraper.ts` | Main `scrapeJobs()` function   |
+| `src/server/scrapers/scraper.ts`     | Main `scrapeJobs()` function   |
 
 ## Login Flow
 
-The scraper handles authentication in several ways:
+The scraper handles authentication using Playwright directly:
 
 ### 1. Proactive Login (Recommended)
 
@@ -92,11 +100,11 @@ Platform config:
 └─ credentials (in job_platform_credentials)
 
 Flow:
-1. Browser-Use navigates to login_page_url
-2. AI agent fills credentials
-3. Handles CAPTCHA/2FA if needed
-4. Navigates to search URL
-5. CDP handoff to Patchright
+1. Playwright navigates to login_page_url
+2. LLM detects login form fields
+3. Fills credentials automatically
+4. Handles CAPTCHA/2FA via manual intervention if needed
+5. Navigates to search URL
 ```
 
 ### 2. Session Check Path
@@ -105,8 +113,8 @@ When no `login_page_url` is configured:
 
 ```
 Flow:
-1. Browser-Use checks if already logged in
-2. If logged in → CDP handoff
+1. Playwright checks if already logged in (URL-based)
+2. If logged in → proceed to extraction
 3. If not logged in:
    a. Has credentials → Auto-login attempt
    b. No credentials → Manual login via noVNC
@@ -126,12 +134,12 @@ Flow:
 
 ## Extraction Flow
 
-After successful login, Patchright takes over:
+After successful login:
 
 ### Phase 1: CDP Connection
 
 ```typescript
-// Connect to Browser-Use's Chrome instance
+// Connect to Chrome via CDP
 const browser = await chromium.connectOverCDP(`http://${cdpHost}:${cdpPort}`);
 const page = browser.contexts()[0].pages()[0];
 ```
@@ -214,15 +222,10 @@ Create searches in `job_searches`:
 ### Environment Variables
 
 ```bash
-# Browser-Use Service
-SJS_BROWSER_USE_TIMEOUT=120000               # Max time for Browser-Use tasks
-SJS_BROWSER_USE_VISION=true                  # Enable visual mode (screenshots) for LLM
-
 # CDP Connection
-SJS_CDP_HOST=localhost                       # Chrome host (browser-use in Docker)
+SJS_CDP_HOST=localhost                       # Chrome host (chrome in Docker)
 SJS_CDP_PORT=9222                            # Chrome debugging port
 SJS_LOGIN_TIMEOUT=120000                     # Max time for login
-SJS_HANDOFF_DELAY=1000                       # Delay before Patchright connects
 
 # Scraper Behavior
 SJS_SCRAPER_MAX_JOBS_PER_SEARCH=100          # Hard limit per search
@@ -264,13 +267,11 @@ npm run docker:scrape:jobs -- --job-id 123
 
 ### Options
 
-| Flag               | Description                    |
-| ------------------ | ------------------------------ |
-| `--search-id <id>` | Run specific search            |
-| `--job-id <id>`    | Re-scrape specific job         |
-| `--force`          | Ignore HTML change detection   |
-| `--screenshots`    | Enable Browser-Use screenshots |
-| `--no-screenshots` | Disable screenshots (default)  |
+| Flag               | Description                  |
+| ------------------ | ---------------------------- |
+| `--search-id <id>` | Run specific search          |
+| `--job-id <id>`    | Re-scrape specific job       |
+| `--force`          | Ignore HTML change detection |
 
 ## Debugging
 
@@ -295,8 +296,8 @@ Use noVNC when:
 # All containers
 docker compose logs -f
 
-# Browser-Use service only
-docker compose logs -f browser-use
+# Chrome container only
+docker compose logs -f chrome
 
 # App container only
 docker compose logs -f app
@@ -351,7 +352,7 @@ Screenshots saved to `debug-screenshots/` directory.
 
 - LLM may misclassify clickables
 - Check `data-xxx` attributes in HTML
-- Adjust prompts in `ai_chat_templates` collection
+- Adjust prompts in prompt-templates.ts
 
 **Pagination not working:**
 
@@ -364,21 +365,14 @@ Screenshots saved to `debug-screenshots/` directory.
 **CDP connection failed:**
 
 - Verify Chrome is running on port 9222
-- Check `SJS_CDP_HOST` (use `browser-use` in Docker)
-- Ensure Browser-Use started successfully
-
-**Browser-Use timeout:**
-
-- Increase `SJS_BROWSER_USE_TIMEOUT`
-- Check Browser-Use logs for errors
-- Verify LLM API key is set
+- Check `SJS_CDP_HOST` (use `chrome` in Docker)
+- Check chrome container logs: `docker compose logs chrome`
 
 ### Performance Issues
 
 **Scraping too slow:**
 
 - Reduce `SJS_SCRAPER_RATE_LIMIT_DELAY`
-- Disable screenshots (`--no-screenshots`)
 
 **Memory issues:**
 
@@ -387,15 +381,16 @@ Screenshots saved to `debug-screenshots/` directory.
 
 ## AI Prompts
 
-The scraper uses prompts from `ai_chat_templates` collection:
+The scraper uses prompts from `prompt-templates.ts`:
 
-| Request                         | Purpose                               |
+| Template                        | Purpose                               |
 | ------------------------------- | ------------------------------------- |
-| `browser_use_login_only`        | Login task for Browser-Use            |
 | `extract_jobs_from_search_page` | Extract job cards from search results |
 | `extract_job_data`              | Extract full job details              |
 | `classify_clickables`           | Classify clickable elements           |
 | `detect_pagination`             | Detect pagination mechanism           |
+| `detect_login_page`             | Detect if page is a login page        |
+| `detect_login_fields`           | Find login form field selectors       |
 
 ## Database Schema
 
@@ -435,8 +430,7 @@ The scraper uses prompts from `ai_chat_templates` collection:
 
 ## Technical Stack
 
-- **Browser Automation:** Patchright (Playwright fork with stealth)
-- **AI Login:** Browser-Use (Python)
+- **Browser Automation:** Playwright (via CDP connection)
+- **Chrome Container:** Ubuntu + Chrome + Xvfb + VNC + socat (local mode)
 - **LLM:** Groq API (Llama models) / OpenAI / Gemini
 - **Database:** PostgreSQL via Prisma
-- **Service Communication:** FastAPI (Python) <-> HTTP Client (TypeScript)

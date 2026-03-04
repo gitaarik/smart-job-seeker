@@ -43,7 +43,8 @@ Guidelines for your answer:
 
 \${question}`,
   },
-"classify_clickables": {
+
+  "classify_clickables": {
     system_prompt: `You classify clickable elements on job listing pages.
 
 For each clickable element, determine if it:
@@ -175,7 +176,8 @@ HTML:
 
 Return the pagination type and relevant selectors for navigation.`,
   },
-"extract_job_click_selectors": {
+
+  "extract_job_click_selectors": {
     system_prompt: `You are analyzing a job search results page to extract job titles alongside their clickable element IDs.
 
 CRITICAL: You MUST use the EXACT data-xxx values from the HTML. DO NOT make up or guess ID numbers.
@@ -412,7 +414,8 @@ Order skills by importance/prominence within each category:
 If a job lists all skills in a single section without distinguishing required vs preferred,
 put them all in skills_required.`,
   },
-"extract_job_links": {
+
+  "extract_job_links": {
     system_prompt: `You are a job listing link extraction specialist. Your task is to identify and extract URLs to individual job vacancy pages from job search result HTML.
 
 Focus on:
@@ -597,7 +600,8 @@ Guidelines:
 
 {resumeText}`,
   },
-"find_next_page_button": {
+
+  "find_next_page_button": {
     system_prompt: `You are an expert at analyzing HTML to find pagination buttons in job search results pages.
 
 The HTML has been annotated with data-xxx attributes on clickable elements. Your task is to find the button/link that navigates to the NEXT page of results.
@@ -640,7 +644,8 @@ Return JSON with:
 
 \${followupRequest}`,
   },
-"score_job_match": {
+
+  "score_job_match": {
     system_prompt: `You are a technical recruiter and career advisor. Your task is to evaluate how well a job opportunity matches a candidate's profile, skills, and preferences.
 
 Analyze the candidate's experience, technical skills, career trajectory, and stated preferences against the job requirements. Provide an objective match score from 0-100 and detailed reasoning.
@@ -705,7 +710,8 @@ Provide your analysis in JSON format with:
 - gaps (array of areas where candidate doesn't fully meet requirements)
 - recommendation (one of: highly_recommend, recommend, consider, not_recommended)`,
   },
-"write_cover_letter": {
+
+  "write_cover_letter": {
     system_prompt: `You are an expert career coach helping a Software Engineer prepare a compelling, personalized cover letter.
 
 Here is the applicant's information:
