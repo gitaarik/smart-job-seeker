@@ -1,6 +1,7 @@
 import type { RequestHandler } from "./$types";
 import { error, json } from "@sveltejs/kit";
 import { dbDirect } from "$lib/server/db";
+import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 
 interface ExportedProfile {
   profile: {
@@ -38,16 +39,8 @@ interface ExportedProfile {
 }
 
 export const GET: RequestHandler = async ({ params, locals }) => {
-  const user = locals.user;
-  if (!user) {
-    throw error(401, "Not authenticated");
-  }
-
-  const profileId = parseInt(params.id, 10);
-
-  if (isNaN(profileId)) {
-    throw error(400, "Invalid profile ID");
-  }
+  const user = requireAuth(locals);
+  const profileId = parseIntParam(params.id, "profile");
 
   // Verify ownership
   const profile = await dbDirect.profiles.findFirst({

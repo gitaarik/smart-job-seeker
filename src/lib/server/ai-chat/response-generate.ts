@@ -11,6 +11,7 @@ import {
   LLMQuotaExceededError,
   LLMRateLimitError,
 } from "$lib/server/llm";
+import { getErrorMessage } from "$lib/server/utils/errors";
 
 /**
  * Generate response for a single AI chat using LLM provider
@@ -72,12 +73,9 @@ export async function generateAiChatResponse(aiChatId: number): Promise<{
     }
 
     // Generic error handling
-    const errorMessage = error instanceof Error
-      ? error.message
-      : "Unknown error";
     return {
       success: false,
-      message: `Error generating response: ${errorMessage}`,
+      message: `Error generating response: ${getErrorMessage(error)}`,
     };
   }
 }

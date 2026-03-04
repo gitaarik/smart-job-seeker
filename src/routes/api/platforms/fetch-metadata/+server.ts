@@ -1,5 +1,7 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
+import { requireAuth } from "$lib/server/utils/api-helpers";
+import { getErrorMessage } from "$lib/server/utils/errors";
 
 /**
  * GET /api/platforms/fetch-metadata?url=...
@@ -7,10 +9,7 @@ import type { RequestHandler } from "./$types";
  * Fetch metadata (title, favicon) from a website URL.
  */
 export const GET: RequestHandler = async ({ locals, url }) => {
-  const user = locals.user;
-  if (!user) {
-    throw error(401, "Not authenticated");
-  }
+  requireAuth(locals);
 
   const targetUrl = url.searchParams.get("url");
   if (!targetUrl) {
@@ -157,7 +156,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
       suggestedName: fallbackName,
       suggestedKey: fallbackKey,
       fetchFailed: true,
-      error: err instanceof Error ? err.message : "Unknown error",
+      error: getErrorMessage(err),
     });
   }
 };

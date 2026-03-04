@@ -6,9 +6,7 @@ import { db } from "$lib/server/db";
 import { config } from "$lib/server/config";
 import {
   generateChatCompletion,
-  LLMAuthenticationError,
-  LLMQuotaExceededError,
-  LLMRateLimitError,
+  isFatalLLMError,
 } from "$lib/server/llm";
 import { getSchemaForPrompt } from "$lib/server/schemas/ai-prompt-schemas";
 import { promptTemplates } from "./prompt-templates";
@@ -323,11 +321,7 @@ export async function createAndGenerateAiChat(
     }
 
     // Re-throw fatal LLM errors so they can abort scraping
-    if (
-      error instanceof LLMRateLimitError ||
-      error instanceof LLMQuotaExceededError ||
-      error instanceof LLMAuthenticationError
-    ) {
+    if (isFatalLLMError(error)) {
       throw error;
     }
 

@@ -1,6 +1,7 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 
 /**
  * GET /api/job-searches/[id]/runs/[runId]/logs
@@ -9,17 +10,9 @@ import { dbDirect as db } from "$lib/server/db";
  * Supports pagination and filtering by timestamp for live updates.
  */
 export const GET: RequestHandler = async ({ params, locals, url }) => {
-  const user = locals.user;
-  if (!user) {
-    throw error(401, "Not authenticated");
-  }
-
-  const jobSearchId = parseInt(params.id);
-  const runId = parseInt(params.runId);
-
-  if (isNaN(jobSearchId) || isNaN(runId)) {
-    throw error(400, "Invalid job search ID or run ID");
-  }
+  const user = requireAuth(locals);
+  const jobSearchId = parseIntParam(params.id, "job search");
+  const runId = parseIntParam(params.runId, "run");
 
   // Get the run and verify ownership through job search
   const run = await db.job_search_runs.findFirst({

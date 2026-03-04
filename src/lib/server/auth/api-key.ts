@@ -5,6 +5,7 @@
 
 import crypto from "crypto";
 import { db } from "$lib/server/db";
+import { getErrorMessage } from "$lib/server/utils/errors";
 
 /**
  * API key prefix for identification
@@ -160,7 +161,7 @@ export async function verifyApiKeyDetailed(
   } catch (error) {
     return {
       valid: false,
-      error: error instanceof Error ? error.message : "Verification failed",
+      error: getErrorMessage(error, "Verification failed"),
     };
   }
 }

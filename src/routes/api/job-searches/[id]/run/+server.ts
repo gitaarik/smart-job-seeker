@@ -1,6 +1,7 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 import {
   addScrapeJob,
   getActiveJobForSearch,
@@ -26,15 +27,8 @@ const MAX_RUNS_PER_COOLDOWN = parseInt(process.env.SJS_SCRAPE_MAX_RUNS_PER_COOLD
  * - { status: 'rate_limited', recentRunCount, cooldownHours } - Too many recent runs
  */
 export const POST: RequestHandler = async ({ params, locals }) => {
-  const user = locals.user;
-  if (!user) {
-    throw error(401, "Not authenticated");
-  }
-
-  const jobSearchId = parseInt(params.id);
-  if (isNaN(jobSearchId)) {
-    throw error(400, "Invalid job search ID");
-  }
+  const user = requireAuth(locals);
+  const jobSearchId = parseIntParam(params.id, "job search");
 
   // Get the job search and verify ownership
   const jobSearch = await db.job_searches.findFirst({
@@ -164,15 +158,8 @@ export const POST: RequestHandler = async ({ params, locals }) => {
  * Cancel a running or queued scrape.
  */
 export const DELETE: RequestHandler = async ({ params, locals }) => {
-  const user = locals.user;
-  if (!user) {
-    throw error(401, "Not authenticated");
-  }
-
-  const jobSearchId = parseInt(params.id);
-  if (isNaN(jobSearchId)) {
-    throw error(400, "Invalid job search ID");
-  }
+  const user = requireAuth(locals);
+  const jobSearchId = parseIntParam(params.id, "job search");
 
   // Get the job search and verify ownership
   const jobSearch = await db.job_searches.findFirst({
@@ -289,15 +276,8 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
  * Get the current scrape status for polling
  */
 export const GET: RequestHandler = async ({ params, locals }) => {
-  const user = locals.user;
-  if (!user) {
-    throw error(401, "Not authenticated");
-  }
-
-  const jobSearchId = parseInt(params.id);
-  if (isNaN(jobSearchId)) {
-    throw error(400, "Invalid job search ID");
-  }
+  const user = requireAuth(locals);
+  const jobSearchId = parseIntParam(params.id, "job search");
 
   const jobSearch = await db.job_searches.findFirst({
     where: { id: jobSearchId },

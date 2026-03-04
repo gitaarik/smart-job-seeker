@@ -1,6 +1,7 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { requireAuth } from "$lib/server/utils/api-helpers";
 
 /**
  * POST /api/platforms/create
@@ -8,10 +9,7 @@ import { dbDirect as db } from "$lib/server/db";
  * Create a new platform (user-generated).
  */
 export const POST: RequestHandler = async ({ locals, request }) => {
-  const user = locals.user;
-  if (!user) {
-    throw error(401, "Not authenticated");
-  }
+  requireAuth(locals);
 
   const body = await request.json();
   const { url, name, loginPageUrl } = body;

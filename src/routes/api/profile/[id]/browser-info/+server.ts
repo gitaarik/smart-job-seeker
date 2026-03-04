@@ -1,6 +1,7 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 
 /**
  * PUT /api/profile/[id]/browser-info
@@ -10,15 +11,8 @@ import { dbDirect as db } from "$lib/server/db";
  * unless force=true is passed.
  */
 export const PUT: RequestHandler = async ({ params, request, locals }) => {
-  const user = locals.user;
-  if (!user) {
-    throw error(401, "Not authenticated");
-  }
-
-  const profileId = parseInt(params.id, 10);
-  if (isNaN(profileId)) {
-    throw error(400, "Invalid profile ID");
-  }
+  const user = requireAuth(locals);
+  const profileId = parseIntParam(params.id, "profile");
 
   const profile = await db.profiles.findFirst({
     where: { id: profileId, user_id: user.id },

@@ -1,11 +1,9 @@
 import { json, type RequestHandler } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { requireAuth } from "$lib/server/utils/api-helpers";
 
 export const PUT: RequestHandler = async ({ request, locals }) => {
-  const user = locals.user;
-  if (!user) {
-    return json({ error: "Not authenticated" }, { status: 401 });
-  }
+  const user = requireAuth(locals);
 
   const body = await request.json();
   const { profile_id, job_types, experience_levels, work_location, locations } = body;

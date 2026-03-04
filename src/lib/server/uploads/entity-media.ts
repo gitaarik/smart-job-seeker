@@ -8,6 +8,7 @@ import { dirname, join } from "node:path";
 import { v4 as uuidv4 } from "uuid";
 import sharp from "sharp";
 import { dbDirect } from "$lib/server/db";
+import { getErrorMessage } from "$lib/server/utils/errors";
 
 const UPLOADS_DIR = join(process.cwd(), "uploads");
 
@@ -195,7 +196,7 @@ export async function saveEntityMedia(
     console.error("Failed to save entity media:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Upload failed",
+      error: getErrorMessage(error, "Upload failed"),
     };
   }
 }
@@ -229,7 +230,7 @@ export async function deleteEntityMedia(
     console.error("Failed to delete entity media:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Delete failed",
+      error: getErrorMessage(error, "Delete failed"),
     };
   }
 }

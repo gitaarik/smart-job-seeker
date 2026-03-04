@@ -1,6 +1,7 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 
 /**
  * GET /api/job-searches/[id]/runs
@@ -8,15 +9,8 @@ import { dbDirect as db } from "$lib/server/db";
  * List all runs for a job search, ordered by most recent first.
  */
 export const GET: RequestHandler = async ({ params, locals, url }) => {
-  const user = locals.user;
-  if (!user) {
-    throw error(401, "Not authenticated");
-  }
-
-  const jobSearchId = parseInt(params.id);
-  if (isNaN(jobSearchId)) {
-    throw error(400, "Invalid job search ID");
-  }
+  const user = requireAuth(locals);
+  const jobSearchId = parseIntParam(params.id, "job search");
 
   // Get the job search and verify ownership
   const jobSearch = await db.job_searches.findFirst({

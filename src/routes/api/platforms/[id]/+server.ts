@@ -1,6 +1,7 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 
 /**
  * PATCH /api/platforms/[id]
@@ -10,15 +11,8 @@ import { dbDirect as db } from "$lib/server/db";
  * accounts reference this platform.
  */
 export const PATCH: RequestHandler = async ({ params, locals, request }) => {
-  const user = locals.user;
-  if (!user) {
-    throw error(401, "Not authenticated");
-  }
-
-  const platformId = parseInt(params.id);
-  if (isNaN(platformId)) {
-    throw error(400, "Invalid platform ID");
-  }
+  const user = requireAuth(locals);
+  const platformId = parseIntParam(params.id, "platform");
 
   const platform = await db.job_platforms.findFirst({
     where: { id: platformId },

@@ -38,8 +38,7 @@ describe("PUT /api/job-preferences", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("rejects unauthenticated", async () => {
-    const res = await PUT(createEvent({}, null));
-    expect(res.status).toBe(401);
+    await expect(PUT(createEvent({}, null))).rejects.toMatchObject({ status: 401 });
   });
 
   it("rejects missing profile_id", async () => {

@@ -1,6 +1,7 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 
 /**
  * PATCH /api/job-searches/[id]
@@ -8,15 +9,8 @@ import { dbDirect as db } from "$lib/server/db";
  * Update job search settings (e.g. max_jobs).
  */
 export const PATCH: RequestHandler = async ({ params, locals, request }) => {
-  const user = locals.user;
-  if (!user) {
-    throw error(401, "Not authenticated");
-  }
-
-  const jobSearchId = parseInt(params.id);
-  if (isNaN(jobSearchId)) {
-    throw error(400, "Invalid job search ID");
-  }
+  const user = requireAuth(locals);
+  const jobSearchId = parseIntParam(params.id, "job search");
 
   const jobSearch = await db.job_searches.findFirst({
     where: { id: jobSearchId },

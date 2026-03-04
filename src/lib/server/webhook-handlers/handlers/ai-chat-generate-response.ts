@@ -4,7 +4,8 @@
  */
 
 import { generateAiChatResponse } from "$lib/server/ai-chat/response-generate";
-import { LLMAuthenticationError, LLMQuotaExceededError } from "$lib/server/llm";
+import { isFatalLLMError } from "$lib/server/llm";
+import { getErrorMessage } from "$lib/server/utils/errors";
 import type { WebhookHandler, WebhookHandlerResult } from "../types";
 
 export const aiChatGenerateResponseHandler: WebhookHandler = {
@@ -71,14 +72,9 @@ export const aiChatGenerateResponseHandler: WebhookHandler = {
           }
         } catch (error) {
           // Check for fatal LLM errors
-          if (
-            error instanceof LLMQuotaExceededError ||
-            error instanceof LLMAuthenticationError
-          ) {
+          if (isFatalLLMError(error)) {
             fatalErrorEncountered = true;
-            const message = error instanceof Error
-              ? error.message
-              : "Unknown error";
+            const message = getErrorMessage(error);
             results.push({
               aiChatId,
               success: false,
@@ -91,7 +87,7 @@ export const aiChatGenerateResponseHandler: WebhookHandler = {
             results.push({
               aiChatId,
               success: false,
-              message: error instanceof Error ? error.message : "Unknown error",
+              message: getErrorMessage(error),
             });
           }
         }

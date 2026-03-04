@@ -42,8 +42,7 @@ describe("POST /api/interview-stories", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("rejects unauthenticated", async () => {
-    const res = await POST(createEvent("POST", {}, null));
-    expect(res.status).toBe(401);
+    await expect(POST(createEvent("POST", {}, null))).rejects.toMatchObject({ status: 401 });
   });
 
   it("rejects missing profile_id", async () => {
@@ -108,8 +107,7 @@ describe("PUT /api/interview-stories", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("rejects unauthenticated", async () => {
-    const res = await PUT(createEvent("PUT", {}, null));
-    expect(res.status).toBe(401);
+    await expect(PUT(createEvent("PUT", {}, null))).rejects.toMatchObject({ status: 401 });
   });
 
   it("rejects missing story ID", async () => {
@@ -150,8 +148,7 @@ describe("DELETE /api/interview-stories", () => {
   });
 
   it("rejects unauthenticated", async () => {
-    const res = await DELETE(createEvent("DELETE", {}, null));
-    expect(res.status).toBe(401);
+    await expect(DELETE(createEvent("DELETE", {}, null))).rejects.toMatchObject({ status: 401 });
   });
 
   it("rejects when story doesn't belong to profile", async () => {

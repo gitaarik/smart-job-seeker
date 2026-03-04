@@ -1,11 +1,9 @@
 import { json, type RequestHandler } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { requireAuth } from "$lib/server/utils/api-helpers";
 
 export const POST: RequestHandler = async ({ request, locals }) => {
-  const user = locals.user;
-  if (!user) {
-    return json({ error: "Not authenticated" }, { status: 401 });
-  }
+  const user = requireAuth(locals);
 
   const body = await request.json();
   const { profile_id, title, category, situation, task, action, result, reflection } = body;
@@ -52,10 +50,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 };
 
 export const PUT: RequestHandler = async ({ request, locals }) => {
-  const user = locals.user;
-  if (!user) {
-    return json({ error: "Not authenticated" }, { status: 401 });
-  }
+  const user = requireAuth(locals);
 
   const body = await request.json();
   const { profile_id, id, title, category, situation, task, action, result, reflection } = body;
@@ -108,10 +103,7 @@ export const PUT: RequestHandler = async ({ request, locals }) => {
 };
 
 export const DELETE: RequestHandler = async ({ request, locals }) => {
-  const user = locals.user;
-  if (!user) {
-    return json({ error: "Not authenticated" }, { status: 401 });
-  }
+  const user = requireAuth(locals);
 
   const body = await request.json();
   const { profile_id, id } = body;

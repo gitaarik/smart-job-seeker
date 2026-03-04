@@ -1,5 +1,6 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
+import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 import {
   validateEntityOwnership,
   validateEntityField,
@@ -8,17 +9,10 @@ import {
 } from "$lib/server/uploads/entity-media";
 
 export const POST: RequestHandler = async ({ params, request, locals }) => {
-  const user = locals.user;
-  if (!user) {
-    error(401, "Not authenticated");
-  }
+  const user = requireAuth(locals);
 
   const { entityType, entityId, field } = params;
-  const entityIdNum = parseInt(entityId, 10);
-
-  if (isNaN(entityIdNum)) {
-    error(400, "Invalid entity ID");
-  }
+  const entityIdNum = parseIntParam(entityId, "entity");
 
   // Validate entity type and field
   if (!validateEntityField(entityType, field)) {
@@ -54,17 +48,10 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 };
 
 export const DELETE: RequestHandler = async ({ params, locals }) => {
-  const user = locals.user;
-  if (!user) {
-    error(401, "Not authenticated");
-  }
+  const user = requireAuth(locals);
 
   const { entityType, entityId, field } = params;
-  const entityIdNum = parseInt(entityId, 10);
-
-  if (isNaN(entityIdNum)) {
-    error(400, "Invalid entity ID");
-  }
+  const entityIdNum = parseIntParam(entityId, "entity");
 
   // Validate entity type and field
   if (!validateEntityField(entityType, field)) {

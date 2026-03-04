@@ -1,6 +1,7 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { requireAuth } from "$lib/server/utils/api-helpers";
 
 /**
  * GET /api/platforms/search?url=...
@@ -9,10 +10,7 @@ import { dbDirect as db } from "$lib/server/db";
  * Returns matching platforms for autocomplete.
  */
 export const GET: RequestHandler = async ({ locals, url }) => {
-  const user = locals.user;
-  if (!user) {
-    throw error(401, "Not authenticated");
-  }
+  requireAuth(locals);
 
   const searchUrl = url.searchParams.get("url");
   if (!searchUrl) {

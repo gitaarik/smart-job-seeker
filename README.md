@@ -44,7 +44,7 @@ See [SCRAPING.md](docs/SCRAPING.md) for detailed scraping documentation.
 
 ### Technical Highlights
 
-- **Groq AI Integration** - Fast, context-aware content generation
+- **Multi-Provider LLM Integration** - Groq, Anthropic, OpenAI, and more
 - **Directus CMS** - Headless CMS for content management
 - **Webhook System** - Secure integration with Directus Flows
 - **JSON Resume** - Standard resume format with PDF export
@@ -53,7 +53,7 @@ See [SCRAPING.md](docs/SCRAPING.md) for detailed scraping documentation.
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 20+
 - Docker & Docker Compose
 
 ### Installation
@@ -85,7 +85,7 @@ This starts:
 - **Frontend**: SvelteKit 5, Svelte 5, TypeScript, Tailwind CSS
 - **Backend**: Node.js, SvelteKit Server Routes, Prisma ORM
 - **Database**: PostgreSQL with Directus CMS
-- **AI**: Groq API for LLM features
+- **AI**: Multi-provider LLM (Groq, Anthropic, OpenAI, Gemini, DeepSeek)
 - **Browser Automation**: Playwright (Chromium) with CDP
 - **DevOps**: Docker Compose, Vitest
 
@@ -153,12 +153,12 @@ See [DEVELOPMENT.md](docs/DEVELOPMENT.md) for complete development guide.
 ## Testing
 
 ```bash
-npm run test              # Run all tests (180 tests)
+npm run test              # Run all tests (593 tests)
 npm run test:watch       # Watch mode
 npm run test:ui          # Test UI dashboard
 ```
 
-- Test coverage for all core modules
+- Auth guards, API route handlers, scraper logic, DB layer, queue management
 - Mocked external dependencies
 - Unit and integration tests
 

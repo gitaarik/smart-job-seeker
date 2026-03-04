@@ -1,6 +1,7 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 
 /**
  * PUT /api/platforms/[id]/credentials
@@ -8,15 +9,8 @@ import { dbDirect as db } from "$lib/server/db";
  * Update or create credentials for a platform.
  */
 export const PUT: RequestHandler = async ({ params, locals, request }) => {
-  const user = locals.user;
-  if (!user) {
-    throw error(401, "Not authenticated");
-  }
-
-  const platformId = parseInt(params.id);
-  if (isNaN(platformId)) {
-    throw error(400, "Invalid platform ID");
-  }
+  const user = requireAuth(locals);
+  const platformId = parseIntParam(params.id, "platform");
 
   const body = await request.json();
   const { profileId, username, password } = body;
@@ -93,15 +87,8 @@ export const PUT: RequestHandler = async ({ params, locals, request }) => {
  * or just ?profileId=X to delete all credentials for that platform.
  */
 export const DELETE: RequestHandler = async ({ params, locals, url }) => {
-  const user = locals.user;
-  if (!user) {
-    throw error(401, "Not authenticated");
-  }
-
-  const platformId = parseInt(params.id);
-  if (isNaN(platformId)) {
-    throw error(400, "Invalid platform ID");
-  }
+  const user = requireAuth(locals);
+  const platformId = parseIntParam(params.id, "platform");
 
   const profileId = url.searchParams.get("profileId");
   if (!profileId) {

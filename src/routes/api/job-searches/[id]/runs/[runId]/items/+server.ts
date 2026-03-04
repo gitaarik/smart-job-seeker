@@ -8,19 +8,12 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 
 export const GET: RequestHandler = async ({ params, locals }) => {
-  const user = locals.user;
-  if (!user) {
-    throw error(401, "Not authenticated");
-  }
-
-  const jobSearchId = parseInt(params.id);
-  const runId = parseInt(params.runId);
-
-  if (isNaN(jobSearchId) || isNaN(runId)) {
-    throw error(400, "Invalid job search ID or run ID");
-  }
+  const user = requireAuth(locals);
+  const jobSearchId = parseIntParam(params.id, "job search");
+  const runId = parseIntParam(params.runId, "run");
 
   // Verify the run belongs to this job search and the user owns it
   const run = await db.job_search_runs.findFirst({

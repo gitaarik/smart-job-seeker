@@ -8,6 +8,7 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { db } from "$lib/server/db";
+import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
 import {
   addRescrapeJob,
   isJobRescraping,
@@ -17,15 +18,8 @@ import {
  * POST - Trigger rescrape for a job
  */
 export const POST: RequestHandler = async ({ params, locals }) => {
-  const user = locals.user;
-  if (!user) {
-    return json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const jobId = parseInt(params.id);
-  if (isNaN(jobId)) {
-    return json({ error: "Invalid job ID" }, { status: 400 });
-  }
+  const user = requireAuth(locals);
+  const jobId = parseIntParam(params.id, "job");
 
   // Get job from database, verify user has a match for it
   const job = await db.jobs.findFirst({
@@ -97,15 +91,8 @@ export const POST: RequestHandler = async ({ params, locals }) => {
  * GET - Check rescrape status
  */
 export const GET: RequestHandler = async ({ params, locals }) => {
-  const user = locals.user;
-  if (!user) {
-    return json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const jobId = parseInt(params.id);
-  if (isNaN(jobId)) {
-    return json({ error: "Invalid job ID" }, { status: 400 });
-  }
+  const user = requireAuth(locals);
+  const jobId = parseIntParam(params.id, "job");
 
   const job = await db.jobs.findFirst({
     where: {

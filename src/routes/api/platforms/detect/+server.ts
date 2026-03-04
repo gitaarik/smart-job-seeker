@@ -1,6 +1,7 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
+import { requireAuth } from "$lib/server/utils/api-helpers";
 
 /**
  * GET /api/platforms/detect?url=...&profileId=...
@@ -8,10 +9,7 @@ import { dbDirect as db } from "$lib/server/db";
  * Detect platform from URL and return existing credentials for that platform.
  */
 export const GET: RequestHandler = async ({ locals, url }) => {
-  const user = locals.user;
-  if (!user) {
-    throw error(401, "Not authenticated");
-  }
+  const user = requireAuth(locals);
 
   const targetUrl = url.searchParams.get("url");
   const profileId = url.searchParams.get("profileId");

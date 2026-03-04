@@ -1,14 +1,12 @@
 import type { RequestHandler } from "./$types";
 import { error } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
+import { requireAuth } from "$lib/server/utils/api-helpers";
 import { getSelectedProfileId } from "../../../profile/utils";
 import { getFileFromDirectus } from "$lib/server/directus/files";
 
 export const GET: RequestHandler = async ({ url, locals, cookies }) => {
-  const user = locals.user;
-  if (!user) {
-    error(401, "Not authenticated");
-  }
+  const user = requireAuth(locals);
 
   const profileId = await getSelectedProfileId(cookies, user.id);
   if (!profileId) {
