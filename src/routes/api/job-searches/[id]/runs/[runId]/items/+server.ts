@@ -22,11 +22,12 @@ export const GET: RequestHandler = async ({ params, locals }) => {
     throw error(400, "Invalid job search ID or run ID");
   }
 
-  // Verify the run belongs to this job search
+  // Verify the run belongs to this job search and the user owns it
   const run = await db.job_search_runs.findFirst({
     where: {
       id: runId,
       job_search_id: jobSearchId,
+      job_searches: { profiles: { user_id: user.id } },
     },
     select: { id: true },
   });

@@ -27,9 +27,12 @@ export const POST: RequestHandler = async ({ params, locals }) => {
     return json({ error: "Invalid job ID" }, { status: 400 });
   }
 
-  // Get job from database
-  const job = await db.jobs.findUnique({
-    where: { id: jobId },
+  // Get job from database, verify user has a match for it
+  const job = await db.jobs.findFirst({
+    where: {
+      id: jobId,
+      job_matches: { some: { profiles: { user_id: user.id } } },
+    },
     select: {
       id: true,
       source_url: true,
@@ -104,8 +107,11 @@ export const GET: RequestHandler = async ({ params, locals }) => {
     return json({ error: "Invalid job ID" }, { status: 400 });
   }
 
-  const job = await db.jobs.findUnique({
-    where: { id: jobId },
+  const job = await db.jobs.findFirst({
+    where: {
+      id: jobId,
+      job_matches: { some: { profiles: { user_id: user.id } } },
+    },
     select: {
       id: true,
       rescrape_status: true,

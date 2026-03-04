@@ -1,8 +1,17 @@
 import type { Handle } from "@sveltejs/kit";
+import { json } from "@sveltejs/kit";
 import { svelteKitHandler } from "better-auth/svelte-kit";
 import { auth } from "$lib/server/auth/better-auth";
 import type { User } from "$lib/server/auth/better-auth";
 import { config } from "$lib/server/config";
+
+// API routes that don't require session auth (they handle their own auth or are public)
+const PUBLIC_API_ROUTES = [
+  "/api/auth", // Better Auth handles its own auth
+  "/api/verify-turnstile", // Public CAPTCHA verification
+  "/api/webhook", // Uses webhook secret auth
+  "/api/jobs/import", // Uses API key auth
+];
 
 function getSystemTheme(request: Request): "light" | "dark" {
   // Try to detect system preference from headers
@@ -103,6 +112,17 @@ export const handle: Handle = async ({ event, resolve }) => {
     // Session error (e.g., stale token) - clear session cookie and continue
     event.locals.user = null;
     event.locals.session = null;
+  }
+
+  // Enforce authentication on all /api/* routes by default.
+  // New API routes are secure automatically — only routes in PUBLIC_API_ROUTES skip this.
+  const pathname = event.url.pathname;
+  if (
+    pathname.startsWith("/api/") &&
+    !PUBLIC_API_ROUTES.some((route) => pathname.startsWith(route)) &&
+    !event.locals.user
+  ) {
+    return json({ error: "Not authenticated" }, { status: 401 });
   }
 
   // Apply theme
