@@ -2,8 +2,8 @@
  * Browser utilities for Playwright
  * Provides Chrome detection and browser context creation
  *
- * Uses standard Playwright (not Patchright) since we now use persistent
- * sessions that look like a normal browser to anti-bot systems.
+ * Uses persistent browser sessions that look like a normal browser
+ * to anti-bot systems.
  */
 
 import { existsSync } from "fs";
