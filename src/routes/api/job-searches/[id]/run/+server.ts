@@ -9,10 +9,11 @@ import {
   removeWaitingJob,
   removeActiveJob,
 } from "$lib/server/queue";
+import { config } from "$lib/server/config";
 
 // Rate limiting: minimum hours between scrapes (per job search)
-const COOLDOWN_HOURS = parseInt(process.env.SJS_SCRAPE_COOLDOWN_HOURS || "6", 10);
-const MAX_RUNS_PER_COOLDOWN = parseInt(process.env.SJS_SCRAPE_MAX_RUNS_PER_COOLDOWN || "1", 10);
+const COOLDOWN_HOURS = config.scrapeCooldownHours;
+const MAX_RUNS_PER_COOLDOWN = config.scrapeMaxRunsPerCooldown;
 
 /**
  * POST /api/job-searches/[id]/run

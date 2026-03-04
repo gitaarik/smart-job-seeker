@@ -2,6 +2,7 @@ import type { PageServerLoad } from "./$types";
 import { error, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { getGeoConfig } from "$lib/server/browser/geo-utils";
+import { config } from "$lib/server/config";
 
 export const load: PageServerLoad = async ({ params, parent }) => {
   const layoutData = await parent();
@@ -88,7 +89,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     canEditPlatformUrls,
     browserCountryCode: jobSearch.browser_country_code || "",
     defaultCountryCode: profileData?.country_code || "",
-    browserProvider: process.env.SJS_BROWSER_PROVIDER || "local",
+    browserProvider: config.browserProvider,
     // Browser fingerprint: saved values + geo-derived defaults
     browserFingerprint: {
       userAgent: profileData?.browser_user_agent || "",

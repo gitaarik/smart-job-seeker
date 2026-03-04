@@ -86,7 +86,8 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 
     // For JSON array filters, we need to fetch more and filter in memory
     const hasJsonFilters = workLocation || jobType;
-    const fetchLimit = hasJsonFilters ? limit * 5 : limit; // Fetch extra for filtering
+    const maxJsonFilterRows = 1000; // Safety cap for in-memory filtering
+    const fetchLimit = hasJsonFilters ? maxJsonFilterRows : limit;
     const fetchOffset = hasJsonFilters ? 0 : offset;
 
     let allMatches = await db.job_matches.findMany({
@@ -104,7 +105,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
         },
       },
       orderBy,
-      take: hasJsonFilters ? undefined : fetchLimit,
+      take: fetchLimit,
       skip: fetchOffset,
     });
 
@@ -187,6 +188,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 
     // For JSON array filters, we need to fetch more and filter in memory
     const hasJsonFilters = workLocation || jobType;
+    const maxJsonFilterRows = 1000; // Safety cap for in-memory filtering
 
     let allJobs = await db.jobs.findMany({
       where,
@@ -199,7 +201,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
         },
       },
       orderBy: jobOrderBy,
-      take: hasJsonFilters ? undefined : limit,
+      take: hasJsonFilters ? maxJsonFilterRows : limit,
       skip: hasJsonFilters ? 0 : offset,
     });
 
