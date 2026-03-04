@@ -1,5 +1,6 @@
 <script lang="ts">
   import { page } from "$app/stores";
+  import { sidebarState } from "./sidebar-state.svelte";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faBars,
@@ -202,7 +203,7 @@
   ];
 
 
-  let mobileMenuOpen = $state(false);
+  let mobileMenuOpen = $derived(sidebarState.mobileOpen);
   let expandedSections = $state<Set<string>>(new Set());
 
   // Check if a child menu item should be considered active
@@ -309,14 +310,14 @@
   }
 
   function closeMobileMenu() {
-    mobileMenuOpen = false;
+    sidebarState.mobileOpen = false;
   }
 </script>
 
 <!-- Mobile menu button -->
 <button
   type="button"
-  onclick={() => (mobileMenuOpen = !mobileMenuOpen)}
+  onclick={() => (sidebarState.mobileOpen = !sidebarState.mobileOpen)}
   class="lg:hidden fixed bottom-4 right-4 z-50 w-14 h-14 bg-[var(--dash-primary)] text-white rounded-full shadow-lg flex items-center justify-center hover:bg-[var(--dash-primary-hover)] transition-colors"
   aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
 >
