@@ -755,6 +755,7 @@
         // Stop polling when scrape is complete
         if (!["running", "blocked", "queued"].includes(result.status)) {
           stopPolling();
+          showBrowser = false;
           liveUrl = null;
           // Invalidate so overview page shows fresh status on navigation
           invalidateAll();
