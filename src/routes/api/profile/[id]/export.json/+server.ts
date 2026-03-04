@@ -37,11 +37,26 @@ interface ExportedProfile {
   };
 }
 
-export const GET: RequestHandler = async ({ params }) => {
+export const GET: RequestHandler = async ({ params, locals }) => {
+  const user = locals.user;
+  if (!user) {
+    throw error(401, "Not authenticated");
+  }
+
   const profileId = parseInt(params.id, 10);
 
   if (isNaN(profileId)) {
     throw error(400, "Invalid profile ID");
+  }
+
+  // Verify ownership
+  const profile = await dbDirect.profiles.findFirst({
+    where: { id: profileId, user_id: user.id },
+    select: { id: true },
+  });
+
+  if (!profile) {
+    throw error(403, "Access denied");
   }
 
   // Fetch profile with all relations - same structure as export-profile-json.ts
