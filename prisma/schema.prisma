@@ -1340,6 +1340,7 @@ model users {
   updatedAt     DateTime?  @db.Timestamptz(6)
   is_admin      Boolean    @default(false)
   is_staff      Boolean    @default(false)
+  is_approved   Boolean    @default(false)
   accounts      accounts[]
   sessions      sessions[]
 }

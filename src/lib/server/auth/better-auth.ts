@@ -26,6 +26,10 @@ export const auth = betterAuth({
         type: "boolean",
         defaultValue: false,
       },
+      is_approved: {
+        type: "boolean",
+        defaultValue: false,
+      },
     },
   },
   account: { modelName: "accounts" },
@@ -53,6 +57,46 @@ export const auth = betterAuth({
     modelName: "sessions",
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // Update session age daily
+  },
+
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          const adminEmail = getEnv("SJS_ADMIN_EMAIL", "");
+          const appName = "Smart Job Seeker";
+
+          // Notify the new user
+          await sendEmail({
+            to: user.email,
+            subject: `Welcome to ${appName}`,
+            html: `
+              <h2>Thanks for joining ${appName}!</h2>
+              <p>Your account has been created and is pending approval.</p>
+              <p>You'll receive an email once your account has been activated.</p>
+            `,
+          }).catch((err) =>
+            console.error("[auth] Failed to send welcome email:", err)
+          );
+
+          // Notify admin
+          if (adminEmail) {
+            await sendEmail({
+              to: adminEmail,
+              subject: `[${appName}] New signup: ${user.email}`,
+              html: `
+                <h2>New user signup</h2>
+                <p><strong>Name:</strong> ${user.name || "(not provided)"}</p>
+                <p><strong>Email:</strong> ${user.email}</p>
+                <p>Log in to Directus to approve this user.</p>
+              `,
+            }).catch((err) =>
+              console.error("[auth] Failed to send admin notification:", err)
+            );
+          }
+        },
+      },
+    },
   },
 });
 

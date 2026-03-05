@@ -119,10 +119,14 @@ export const handle: Handle = async ({ event, resolve }) => {
   const pathname = event.url.pathname;
   if (
     pathname.startsWith("/api/") &&
-    !PUBLIC_API_ROUTES.some((route) => pathname.startsWith(route)) &&
-    !event.locals.user
+    !PUBLIC_API_ROUTES.some((route) => pathname.startsWith(route))
   ) {
-    return json({ error: "Not authenticated" }, { status: 401 });
+    if (!event.locals.user) {
+      return json({ error: "Not authenticated" }, { status: 401 });
+    }
+    if (!(event.locals.user as { is_approved?: boolean }).is_approved) {
+      return json({ error: "Account pending approval" }, { status: 403 });
+    }
   }
 
   // Apply theme
