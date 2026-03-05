@@ -1,6 +1,8 @@
 #!/bin/bash
+export PGUSER="${SJS_DB_USER:-postgres}"
 export PGHOST="${SJS_DB_HOST:-database}"
 export PGPASSWORD="${SJS_DB_PASSWORD:-postgres}"
+export PGDATABASE="${SJS_DB_DATABASE:-smartjobseeker}"
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$DIR/../db-dumps/" || exit
@@ -11,11 +13,11 @@ if [[ $REPLY =~ ^[Yy]$ ]]
 then
 
   # Drop & recreate the database (WITH FORCE terminates active connections)
-  psql -U postgres -c "DROP DATABASE IF EXISTS smartjobseeker WITH (FORCE)"
-  psql -U postgres -c "CREATE DATABASE smartjobseeker"
+  psql -c "DROP DATABASE IF EXISTS $PGDATABASE WITH (FORCE)"
+  psql -c "CREATE DATABASE $PGDATABASE"
 
   # Import the latest dump
-  psql -U postgres -d smartjobseeker < smart.sql
+  psql < smart.sql
 else
   echo "Aborted"
 fi

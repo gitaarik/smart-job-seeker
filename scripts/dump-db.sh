@@ -15,8 +15,10 @@
 
 set -e
 
+export PGUSER="${SJS_DB_USER:-postgres}"
 export PGHOST="${SJS_DB_HOST:-database}"
 export PGPASSWORD="${SJS_DB_PASSWORD:-postgres}"
+export PGDATABASE="${SJS_DB_DATABASE:-smartjobseeker}"
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OUTPUT_DIR="$DIR/../db-dumps"
@@ -32,7 +34,7 @@ echo ""
 # ============================================================================
 FULL_FILE="$OUTPUT_DIR/full.sql"
 echo "  [1/2] Creating full backup..."
-pg_dump -U postgres -d smartjobseeker > "$FULL_FILE"
+pg_dump > "$FULL_FILE"
 FULL_SIZE=$(du -h "$FULL_FILE" | cut -f1)
 echo "        ✓ Full backup: db-dumps/full.sql ($FULL_SIZE)"
 
@@ -45,7 +47,7 @@ echo "  [2/2] Creating smart backup..."
 
 # Step 1: Dump schema + data, excluding large tables
 echo "        - Dumping schema and core data..."
-pg_dump -U postgres -d smartjobseeker \
+pg_dump \
   --exclude-table-data=ai_chats \
   --exclude-table-data=jobs \
   --exclude-table-data=directus_activity \
@@ -59,7 +61,7 @@ sed -i '/^\\restrict/a\-- Disable FK constraint triggers for restore (tables ref
 
 # Step 2: Append last 25 ai_chats rows (using SELECT * for maintainability)
 echo "        - Appending last 25 ai_chats records..."
-psql -U postgres -d smartjobseeker -c "
+psql -c "
 COPY (SELECT * FROM ai_chats ORDER BY id DESC LIMIT 25) TO STDOUT WITH (FORMAT csv, HEADER false, NULL 'NULL_VALUE')
 " | {
   echo ""
@@ -71,7 +73,7 @@ COPY (SELECT * FROM ai_chats ORDER BY id DESC LIMIT 25) TO STDOUT WITH (FORMAT c
 
 # Step 3: Append last 25 jobs (using SELECT * for maintainability)
 echo "        - Appending last 25 jobs records..."
-psql -U postgres -d smartjobseeker -c "
+psql -c "
 COPY (SELECT * FROM jobs ORDER BY id DESC LIMIT 25) TO STDOUT WITH (FORMAT csv, HEADER false, NULL 'NULL_VALUE')
 " | {
   echo ""
