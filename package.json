@@ -25,7 +25,7 @@
     "docker:generate-profile-slugs": "docker compose exec app npm run host:generate-profile-slugs",
     "docker:clear-directus-cache": "docker compose exec app npm run host:clear-directus-cache",
     "docker:match:jobs": "docker compose exec app npm run container:match:jobs --",
-    "docker:db:cli": "docker compose exec database psql -U postgres -d smartjobseeker",
+    "docker:db:cli": "dotenvx run -- sh -c 'docker compose exec database psql -U ${SJS_DB_USER:-postgres} -d ${SJS_DB_DATABASE:-smartjobseeker}'",
     "docker:db:backup": "docker compose exec database ./scripts/dump-db.sh",
     "docker:db:restore": "docker compose exec database ./scripts/restore-last-db-dump.sh",
     "docker:db:create-dev-seed": "docker compose exec app npx vite-node scripts/create-dev-seed.ts",
