@@ -23,6 +23,8 @@ export async function sendEmail(options: {
 
   const fromEmail = getEnv("SJS_EMAIL_FROM", "noreply@example.com");
 
+  console.log(`[email] Sending "${options.subject}" to ${options.to}`);
+
   const response = await fetch(SMTP2GO_API_URL, {
     method: "POST",
     headers: {
@@ -39,8 +41,17 @@ export async function sendEmail(options: {
 
   if (!response.ok) {
     const body = await response.text();
+    console.error(`[email] SMTP2GO HTTP error (${response.status}):`, body);
     throw new Error(`SMTP2GO API error (${response.status}): ${body}`);
   }
 
-  return response.json();
+  const result = await response.json();
+
+  if (result.data?.failed > 0) {
+    console.error(`[email] SMTP2GO delivery failed:`, result.data.failures);
+    throw new Error(`SMTP2GO delivery failed: ${result.data.failures.join(", ")}`);
+  }
+
+  console.log(`[email] Sent successfully (id: ${result.data?.email_id || "n/a"})`);
+  return result;
 }
