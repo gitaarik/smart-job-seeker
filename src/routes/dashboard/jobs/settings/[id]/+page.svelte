@@ -105,6 +105,11 @@
   let isTypingText = $state(false);
   let typeTextMessage = $state<string | null>(null);
 
+  // Navigate-URL feature (for magic link login)
+  let navigateUrlValue = $state("");
+  let isNavigating = $state(false);
+  let navigateUrlMessage = $state<string | null>(null);
+
   // Runs history
   interface Run {
     id: number;
@@ -188,6 +193,7 @@
   let isQueued = $derived(jobSearch.status === "queued");
   let needsIntervention = $derived(isRunning || isBlocked);
   let isCloudMode = $derived(!!liveUrl);
+  let isMagicLink = $derived(isBlocked && jobSearch.status_message?.includes("login link"));
   let browserViewUrl = $derived(liveUrl || "/vnc/vnc.html?autoconnect=true&resize=scale");
 
   function formatDate(date: Date | string | null): string {
@@ -892,6 +898,37 @@
     }
   }
 
+  async function sendNavigateUrl() {
+    if (!currentRunId || !navigateUrlValue.trim()) return;
+
+    isNavigating = true;
+    navigateUrlMessage = null;
+
+    try {
+      const res = await fetch(`/api/job-searches/${jobSearch.id}/runs/${currentRunId}/navigate-url`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: navigateUrlValue }),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        navigateUrlMessage = result.message || "Failed to navigate";
+        return;
+      }
+
+      navigateUrlMessage = "Navigated successfully";
+      navigateUrlValue = "";
+      setTimeout(() => { navigateUrlMessage = null; }, 2000);
+    } catch (err) {
+      navigateUrlMessage = "Failed to navigate";
+      console.error(err);
+    } finally {
+      isNavigating = false;
+    }
+  }
+
   onMount(() => {
     // Load runs history
     loadRuns();
@@ -1049,7 +1086,11 @@
             <div class="flex-1">
               <p class="font-medium text-[var(--dash-warning)]">{jobSearch.status_message}</p>
               <p class="text-sm text-[var(--dash-text-secondary)]">
-                Complete the action in the browser view, then click Continue
+                {#if isMagicLink}
+                  Paste the login URL from your email below, then click Continue
+                {:else}
+                  Complete the action in the browser view, then click Continue
+                {/if}
               </p>
             </div>
             <div class="flex items-center gap-2">
@@ -1653,7 +1694,11 @@
         {#if isBlocked}
           <div class="flex items-center justify-between">
             <p class="text-sm text-[var(--dash-text-secondary)]">
-              Complete the required action (login, CAPTCHA, or verification) in the browser above, then click Continue.
+              {#if isMagicLink}
+                Paste the login link from your email below and click Navigate, then click Continue.
+              {:else}
+                Complete the required action (login, CAPTCHA, or verification) in the browser above, then click Continue.
+              {/if}
             </p>
             <div class="flex items-center gap-2 ml-4">
               <button
@@ -1689,6 +1734,32 @@
           </p>
         {/if}
         {#if isRunning || isBlocked}
+          <!-- Navigate URL (for magic link login) -->
+          <div class="flex items-center gap-2 mt-2 pt-2 border-t border-[var(--dash-border)]">
+            <input
+              type="url"
+              bind:value={navigateUrlValue}
+              placeholder="Paste login URL from email"
+              disabled={isNavigating}
+              onkeydown={(e) => { if (e.key === "Enter") sendNavigateUrl(); }}
+              class="flex-1 px-3 py-1.5 text-sm bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-1 focus:ring-[var(--dash-primary)] disabled:opacity-50 {isMagicLink ? 'ring-1 ring-[var(--dash-warning)]' : ''}"
+            />
+            <button
+              onclick={() => sendNavigateUrl()}
+              disabled={isNavigating || !navigateUrlValue.trim()}
+              class="px-3 py-1.5 text-sm {isMagicLink ? 'bg-[var(--dash-primary)] text-white' : 'bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)]'} rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Open URL in the scraper browser"
+            >
+              {#if isNavigating}
+                <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
+              {:else}
+                Navigate
+              {/if}
+            </button>
+            {#if navigateUrlMessage}
+              <span class="text-xs text-[var(--dash-text-muted)]">{navigateUrlMessage}</span>
+            {/if}
+          </div>
           <!-- Type text into browser (for 2FA codes on mobile) -->
           <div class="flex items-center gap-2 mt-2 pt-2 border-t border-[var(--dash-border)]">
             <input
