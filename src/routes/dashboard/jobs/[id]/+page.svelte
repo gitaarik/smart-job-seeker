@@ -13,6 +13,7 @@
     faGlobe,
     faMapMarkerAlt,
     faMoneyBillWave,
+    faSearch,
     faStar as faStarSolid,
     faSync,
     faTimes,
@@ -152,6 +153,18 @@
       month: "long",
       day: "numeric",
       year: "numeric",
+    });
+  }
+
+  function formatDateTime(date: Date | string | null): string {
+    if (!date) return "N/A";
+    const d = typeof date === "string" ? new Date(date) : date;
+    return d.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
     });
   }
 
@@ -321,94 +334,8 @@
             {/if}
           </div>
 
-          <!-- Rescrape + Re-match -->
-          {#if job.source_url || data.isStaff}
-            <div class="flex items-center gap-2">
-              {#if job.source_url}
-                <button
-                  type="button"
-                  onclick={triggerRescrape}
-                  disabled={isRescraping}
-                  class="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50"
-                  title={isRescraping ? rescrapeMessage : "Re-fetch job data from source"}
-                >
-                  <FontAwesomeIcon
-                    icon={faSync}
-                    class="w-4 h-4 {isRescraping ? 'animate-spin' : ''}"
-                  />
-                  {#if isRescraping}
-                    {rescrapeStatus === "queued" ? "Queued..." : "Scraping..."}
-                  {:else}
-                    Rescrape
-                  {/if}
-                </button>
-              {/if}
-
-              {#if data.isStaff}
-                <form
-                  method="POST"
-                  action="?/rematchJob"
-                  use:enhance={() => {
-                    isRematching = true;
-                    rematchError = "";
-                    return async ({ result, update }) => {
-                      if (result.type === "failure") {
-                        rematchError = (result.data as { error?: string })?.error || "Re-match failed";
-                        isRematching = false;
-                      } else {
-                        await update();
-                        isRematching = false;
-                      }
-                    };
-                  }}
-                >
-                  <button
-                    type="submit"
-                    disabled={isRematching}
-                    class="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50"
-                    title="Re-run AI matching for this job"
-                  >
-                    <FontAwesomeIcon
-                      icon={faSync}
-                      class="w-4 h-4 {isRematching ? 'animate-spin' : ''}"
-                    />
-                    {isRematching ? "Matching..." : "Re-match"}
-                  </button>
-                </form>
-              {/if}
-            </div>
-          {/if}
         </div>
 
-        <!-- Rescrape Status Message -->
-        {#if rescrapeStatus === "error" && rescrapeMessage}
-          <div class="mt-4 p-3 bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg">
-            <p class="text-sm text-[var(--dash-error)]">
-              <strong>Rescrape failed:</strong> {rescrapeMessage}
-            </p>
-          </div>
-        {:else if isRescraping && rescrapeMessage}
-          <div class="mt-4 p-3 bg-[var(--dash-primary-light)] border border-[var(--dash-primary)] rounded-lg">
-            <p class="text-sm text-[var(--dash-primary)] whitespace-pre-line">
-              {rescrapeMessage}
-            </p>
-          </div>
-        {:else if rescrapeStatus === "completed" && rescrapeMessage && rescrapeMessage.includes("Extracted data:")}
-          <div class="mt-4 p-3 bg-[var(--dash-success-light)] border border-[var(--dash-success)] rounded-lg">
-            <p class="text-sm text-[var(--dash-success)] whitespace-pre-line">
-              {rescrapeMessage}
-            </p>
-          </div>
-        {/if}
-
-        <!-- Re-match Error -->
-        {#if rematchError}
-          <div class="mt-4 p-3 bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg">
-            <p class="text-sm text-[var(--dash-error)]">
-              <strong>Re-match failed:</strong> {rematchError}
-            </p>
-          </div>
-        {/if}
       </div>
 
       <!-- Salary & Details -->
@@ -529,8 +456,129 @@
       {/if}
     </div>
 
-    <!-- Right Column - Match Analysis -->
+    <!-- Right Column -->
     <div class="space-y-6">
+      <!-- Staff: Metadata + Actions -->
+      {#if data.isStaff}
+        <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
+          <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">Staff Tools</h2>
+
+          <!-- Action buttons -->
+          <div class="flex flex-wrap gap-2 mb-4">
+            {#if job.source_url}
+              <button
+                type="button"
+                onclick={triggerRescrape}
+                disabled={isRescraping}
+                class="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50"
+                title={isRescraping ? rescrapeMessage : "Re-fetch job data from source"}
+              >
+                <FontAwesomeIcon
+                  icon={faSync}
+                  class="w-4 h-4 {isRescraping ? 'animate-spin' : ''}"
+                />
+                {#if isRescraping}
+                  {rescrapeStatus === "queued" ? "Queued..." : "Scraping..."}
+                {:else}
+                  Rescrape
+                {/if}
+              </button>
+            {/if}
+
+            <form
+              method="POST"
+              action="?/rematchJob"
+              use:enhance={() => {
+                isRematching = true;
+                rematchError = "";
+                return async ({ result, update }) => {
+                  if (result.type === "failure") {
+                    rematchError = (result.data as { error?: string })?.error || "Re-match failed";
+                    isRematching = false;
+                  } else {
+                    await update();
+                    isRematching = false;
+                  }
+                };
+              }}
+            >
+              <button
+                type="submit"
+                disabled={isRematching}
+                class="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50"
+                title={match?.reasoning ? "Re-run AI matching for this job" : "Run AI matching for this job"}
+              >
+                <FontAwesomeIcon
+                  icon={isRematching ? faSync : match?.reasoning ? faSync : faSearch}
+                  class="w-4 h-4 {isRematching ? 'animate-spin' : ''}"
+                />
+                {isRematching ? "Matching..." : match?.reasoning ? "Re-match" : "Check Match"}
+              </button>
+            </form>
+          </div>
+
+          <!-- Rescrape Status -->
+          {#if rescrapeStatus === "error" && rescrapeMessage}
+            <div class="mb-4 p-3 bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg">
+              <p class="text-sm text-[var(--dash-error)]">
+                <strong>Rescrape failed:</strong> {rescrapeMessage}
+              </p>
+            </div>
+          {:else if isRescraping && rescrapeMessage}
+            <div class="mb-4 p-3 bg-[var(--dash-primary-light)] border border-[var(--dash-primary)] rounded-lg">
+              <p class="text-sm text-[var(--dash-primary)] whitespace-pre-line">
+                {rescrapeMessage}
+              </p>
+            </div>
+          {:else if rescrapeStatus === "completed" && rescrapeMessage && rescrapeMessage.includes("Extracted data:")}
+            <div class="mb-4 p-3 bg-[var(--dash-success-light)] border border-[var(--dash-success)] rounded-lg">
+              <p class="text-sm text-[var(--dash-success)] whitespace-pre-line">
+                {rescrapeMessage}
+              </p>
+            </div>
+          {/if}
+
+          <!-- Re-match Error -->
+          {#if rematchError}
+            <div class="mb-4 p-3 bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg">
+              <p class="text-sm text-[var(--dash-error)]">
+                <strong>Re-match failed:</strong> {rematchError}
+              </p>
+            </div>
+          {/if}
+
+          <!-- Metadata -->
+          <dl class="space-y-2 text-sm">
+            <div class="flex justify-between">
+              <dt class="text-[var(--dash-text-secondary)]">Job ID</dt>
+              <dd class="text-[var(--dash-text)]">{job.id}</dd>
+            </div>
+            {#if job.source_id}
+              <div class="flex justify-between">
+                <dt class="text-[var(--dash-text-secondary)]">Source ID</dt>
+                <dd class="text-[var(--dash-text)] truncate max-w-32" title={job.source_id}>{job.source_id}</dd>
+              </div>
+            {/if}
+            <div class="flex justify-between">
+              <dt class="text-[var(--dash-text-secondary)]">Added</dt>
+              <dd class="text-[var(--dash-text)]">{formatDate(job.date_created)}</dd>
+            </div>
+          </dl>
+
+          <!-- Scrape History -->
+          {#if data.scrapeHistory.length > 0}
+            <div class="mt-4">
+              <p class="text-sm text-[var(--dash-text-secondary)] mb-2">Scrape History</p>
+              <ul class="space-y-1 text-sm text-[var(--dash-text)]">
+                {#each data.scrapeHistory as entry}
+                  <li>{formatDateTime(entry.processed_at)}</li>
+                {/each}
+              </ul>
+            </div>
+          {/if}
+        </div>
+      {/if}
+
       <!-- Match Analysis Card -->
       <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
         <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">Match Analysis</h2>
@@ -596,7 +644,7 @@
         {:else}
           <!-- Not yet matched -->
           <p class="text-sm text-[var(--dash-text-muted)]">
-            This job hasn't been matched against your profile yet. Use the Re-match button above to run the matcher.
+            This job hasn't been matched against your profile yet.
           </p>
         {/if}
       </div>
@@ -631,39 +679,6 @@
           </div>
         </div>
       {/if}
-
-      <!-- Metadata Card -->
-      <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
-        <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">Metadata</h2>
-        <dl class="space-y-2 text-sm">
-          <div class="flex justify-between">
-            <dt class="text-[var(--dash-text-secondary)]">Job ID</dt>
-            <dd class="text-[var(--dash-text)]">{job.id}</dd>
-          </div>
-          {#if job.source_id}
-            <div class="flex justify-between">
-              <dt class="text-[var(--dash-text-secondary)]">Source ID</dt>
-              <dd class="text-[var(--dash-text)] truncate max-w-32" title={job.source_id}>{job.source_id}</dd>
-            </div>
-          {/if}
-          <div class="flex justify-between">
-            <dt class="text-[var(--dash-text-secondary)]">Added</dt>
-            <dd class="text-[var(--dash-text)]">{formatDate(job.date_created)}</dd>
-          </div>
-          {#if job.last_scraped}
-            <div class="flex justify-between">
-              <dt class="text-[var(--dash-text-secondary)]">Last Scraped</dt>
-              <dd class="text-[var(--dash-text)]">{formatDate(job.last_scraped)}</dd>
-            </div>
-          {/if}
-          {#if job.scrape_count}
-            <div class="flex justify-between">
-              <dt class="text-[var(--dash-text-secondary)]">Scrape Count</dt>
-              <dd class="text-[var(--dash-text)]">{job.scrape_count}</dd>
-            </div>
-          {/if}
-        </dl>
-      </div>
     </div>
   </div>
 </div>

@@ -54,6 +54,19 @@ export const load: PageServerLoad = async ({ parent, params }) => {
   const user = layoutData.user;
   const isStaff = !!(user as { is_staff?: boolean })?.is_staff || !!(user as { is_admin?: boolean })?.is_admin;
 
+  // Load scrape history for staff (only if scraped more than once)
+  let scrapeHistory: { processed_at: Date }[] = [];
+  if (isStaff && job.scrape_count && job.scrape_count > 1) {
+    scrapeHistory = await db.job_search_run_items.findMany({
+      where: {
+        job_id: jobId,
+        processed_at: { not: null },
+      },
+      select: { processed_at: true },
+      orderBy: { processed_at: "desc" },
+    }) as { processed_at: Date }[];
+  }
+
   return {
     job,
     match,
@@ -61,6 +74,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
     jobCategory,
     profileSkillLevels,
     isStaff,
+    scrapeHistory,
   };
 };
 
