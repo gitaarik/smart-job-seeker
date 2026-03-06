@@ -192,6 +192,8 @@
         return "Consider";
       case "not_recommended":
         return "Not Recommended";
+      case "filtered_out":
+        return "Filtered Out";
       default:
         return rec || "Unknown";
     }
@@ -529,17 +531,33 @@
 
     <!-- Right Column - Match Analysis -->
     <div class="space-y-6">
-      {#if match && match.score > 0}
-        <!-- Match Score Card -->
-        <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
-          <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">Match Analysis</h2>
+      <!-- Match Analysis Card -->
+      <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
+        <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">Match Analysis</h2>
 
-          <!-- Recommendation -->
+        {#if match && match.reasoning && match.recommendation === "filtered_out"}
+          <!-- Filtered out - didn't pass eligibility -->
+          <p class="text-sm text-[var(--dash-text-secondary)] mb-3">
+            This job was filtered out before AI scoring because it doesn't match your profile preferences.
+          </p>
+
+          {#if match.gaps && Array.isArray(match.gaps) && match.gaps.length > 0}
+            <ul class="space-y-2">
+              {#each match.gaps as gap}
+                <li class="flex items-start gap-2 text-sm">
+                  <FontAwesomeIcon icon={faTimes} class="w-3 h-3 text-red-500 mt-1 flex-shrink-0" />
+                  <span class="text-[var(--dash-text)]">{gap}</span>
+                </li>
+              {/each}
+            </ul>
+          {/if}
+
+        {:else if match && match.reasoning}
+          <!-- AI-scored match -->
           <p class="font-medium text-[var(--dash-text)] mb-4">
             {getRecommendationLabel(match.recommendation)}
           </p>
 
-          <!-- Strengths -->
           {#if match.strengths && Array.isArray(match.strengths) && match.strengths.length > 0}
             <div class="mb-4">
               <p class="text-sm text-[var(--dash-text-secondary)] mb-2">Strengths</p>
@@ -554,7 +572,6 @@
             </div>
           {/if}
 
-          <!-- Gaps -->
           {#if match.gaps && Array.isArray(match.gaps) && match.gaps.length > 0}
             <div class="mb-4">
               <p class="text-sm text-[var(--dash-text-secondary)] mb-2">Gaps</p>
@@ -569,15 +586,20 @@
             </div>
           {/if}
 
-          <!-- Reasoning -->
           {#if match.reasoning}
             <div>
               <p class="text-sm text-[var(--dash-text-secondary)] mb-1">Analysis</p>
               <p class="text-sm text-[var(--dash-text)]">{match.reasoning}</p>
             </div>
           {/if}
-        </div>
-      {/if}
+
+        {:else}
+          <!-- Not yet matched -->
+          <p class="text-sm text-[var(--dash-text-muted)]">
+            This job hasn't been matched against your profile yet. Use the Re-match button above to run the matcher.
+          </p>
+        {/if}
+      </div>
 
       <!-- Status Card -->
       {#if match}

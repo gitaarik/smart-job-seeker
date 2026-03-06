@@ -56,7 +56,10 @@ export async function addMatchJob(
   data: MatchJobData,
   timeoutMs: number = 60_000,
 ): Promise<MatchJobResult> {
-  const jobId = `match-${data.profileId}-${data.jobId}`;
+  // Use a unique job ID with timestamp to avoid BullMQ deduplication.
+  // A fixed ID like "match-1-617" would silently return the old completed job
+  // instead of creating a new one (since removeOnComplete keeps them around).
+  const jobId = `match-${data.profileId}-${data.jobId}-${Date.now()}`;
   const job = await matchQueue.add("match", data, { jobId });
   const result = await job.waitUntilFinished(matchQueueEvents, timeoutMs);
   return result;
