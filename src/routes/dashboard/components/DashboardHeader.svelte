@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { navigating } from "$app/stores";
   import ProfileSwitcher from "./ProfileSwitcher.svelte";
   import UserMenu from "./UserMenu.svelte";
   import { sidebarState } from "./sidebar-state.svelte";
@@ -41,4 +42,9 @@
       <UserMenu {user} />
     </div>
   </div>
+  {#if $navigating}
+    <div class="h-0.5 bg-[var(--dash-chrome)]/50">
+      <div class="h-full bg-white/80 animate-[nav-progress_2s_ease-in-out_infinite]"></div>
+    </div>
+  {/if}
 </header>

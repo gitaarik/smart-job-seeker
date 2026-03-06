@@ -73,3 +73,10 @@
   --dash-purple: #c084fc;            /* purple-400 */
   --dash-purple-light: #3b0764;      /* purple-950 */
 }
+
+/* Navigation loading bar */
+@keyframes nav-progress {
+  0% { width: 0; }
+  50% { width: 70%; }
+  100% { width: 95%; }
+}
