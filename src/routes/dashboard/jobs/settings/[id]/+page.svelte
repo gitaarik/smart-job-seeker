@@ -187,6 +187,54 @@
   let logContainerRefs = $state<Record<number, HTMLElement | null>>({});
   let logAutoScroll = $state<Record<number, boolean>>({});
 
+  // Reset state when navigating between job searches
+  let prevJobSearchId = data.jobSearch.id;
+  $effect(() => {
+    if (data.jobSearch.id === prevJobSearchId) return;
+    prevJobSearchId = data.jobSearch.id;
+    // Re-sync all data-derived state
+    jobSearch = data.jobSearch;
+    platformCredentials = data.platformCredentials;
+    canEditPlatformUrls = data.canEditPlatformUrls;
+    maxJobsInput = (data.jobSearch as any).max_jobs?.toString() ?? "";
+    searchUrlInput = data.jobSearch.search_url ?? "";
+    loginUrlInput = data.jobSearch.job_platforms?.login_page_url ?? "";
+    browserCountryCode = data.browserCountryCode || "";
+    savedBrowserCountryCode = data.browserCountryCode || "";
+    browserLanguage = data.browserFingerprint.language;
+    savedBrowserLanguage = data.browserFingerprint.language;
+    browserTimezone = data.browserFingerprint.timezone;
+    savedBrowserTimezone = data.browserFingerprint.timezone;
+    browserUserAgent = data.browserFingerprint.userAgent;
+    savedBrowserUserAgent = data.browserFingerprint.userAgent;
+    defaultCountryCode = data.defaultCountryCode || "";
+    defaultBrowserLanguage = data.browserFingerprintDefaults.language;
+    defaultBrowserTimezone = data.browserFingerprintDefaults.timezone;
+    const credId = (data.jobSearch as any).platform_profile_id?.toString() ?? "none";
+    savedCredentialId = credId;
+    selectedCredentialId = credId;
+    // Reset transient input state
+    typeTextValue = "";
+    typeTextMessage = null;
+    navigateUrlValue = "";
+    navigateUrlMessage = null;
+    errorMessage = null;
+    rateLimitWarning = null;
+    showBrowser = false;
+    liveUrl = null;
+    currentRunId = null;
+    runs = [];
+    expandedRunId = null;
+    // Reload runs for the new job search
+    loadRuns();
+    // Restart polling if needed
+    stopPolling();
+    if (["running", "blocked", "queued"].includes(data.jobSearch.status ?? "")) {
+      showBrowser = true;
+      startPolling();
+    }
+  });
+
   // Computed states
   let isRunning = $derived(jobSearch.status === "running");
   let isBlocked = $derived(jobSearch.status === "blocked");
