@@ -1,13 +1,14 @@
 <script lang="ts">
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-  import { faBriefcase } from "@fortawesome/free-solid-svg-icons";
+  import { faClock, faTimesCircle } from "@fortawesome/free-regular-svg-icons";
 
   interface Props {
     score: number | null;
+    matched?: boolean;
     size?: "sm" | "lg";
   }
 
-  let { score = null, size = "lg" }: Props = $props();
+  let { score = null, matched = false, size = "lg" }: Props = $props();
 
   function getScoreGradient(score: number): { bg: string; text: string; glow: string | null } {
     // Gradient from blue (0) -> cyan (50) -> green (80+)
@@ -46,12 +47,13 @@
 
   const sizeClasses = $derived(
     size === "lg"
-      ? { box: "w-15 h-15", score: "text-2xl", label: "text-xs", icon: "w-6 h-6" }
-      : { box: "w-10 h-10", score: "text-lg", label: "text-[7px]", icon: "w-4 h-4" }
+      ? { box: "w-15 h-15", score: "text-2xl", label: "text-xs", icon: "w-5 h-5" }
+      : { box: "w-10 h-10", score: "text-lg", label: "text-[7px]", icon: "w-3.5 h-3.5" }
   );
 </script>
 
 {#if hasScore && colors}
+  <!-- Matched with score -->
   <div
     class="{sizeClasses.box} rounded-lg flex flex-col items-center justify-center"
     style="background-color: {colors.bg}; color: {colors.text};{colors.glow ? ` box-shadow: ${colors.glow};` : ''}"
@@ -59,10 +61,20 @@
     <span class="font-bold {sizeClasses.score} leading-none">{score}%</span>
     <span class="{sizeClasses.label} opacity-60 whitespace-nowrap">Match</span>
   </div>
-{:else}
+{:else if matched}
+  <!-- Matcher ran but no match -->
   <div
-    class="{sizeClasses.box} rounded-lg flex items-center justify-center bg-[var(--dash-bg)] text-[var(--dash-text-muted)]"
+    class="{sizeClasses.box} rounded-lg flex flex-col items-center justify-center bg-red-50 text-red-400 dark:bg-red-950/30 dark:text-red-400/70"
   >
-    <FontAwesomeIcon icon={faBriefcase} class={sizeClasses.icon} />
+    <FontAwesomeIcon icon={faTimesCircle} class={sizeClasses.icon} />
+    <span class="{sizeClasses.label} whitespace-nowrap mt-0.5">No Match</span>
+  </div>
+{:else}
+  <!-- Not yet matched -->
+  <div
+    class="{sizeClasses.box} rounded-lg flex flex-col items-center justify-center bg-amber-50 text-amber-500 dark:bg-amber-950/30 dark:text-amber-400/70"
+  >
+    <FontAwesomeIcon icon={faClock} class={sizeClasses.icon} />
+    <span class="{sizeClasses.label} whitespace-nowrap mt-0.5">New</span>
   </div>
 {/if}

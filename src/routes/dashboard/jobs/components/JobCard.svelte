@@ -47,6 +47,7 @@
   interface Props {
     job: Job;
     match?: Match | null;
+    matched?: boolean;
     profileSkillLevels?: Record<string, "strong" | "weak">;
     isSaved?: boolean;
     isRejected?: boolean;
@@ -65,6 +66,7 @@
   let {
     job,
     match = null,
+    matched = false,
     profileSkillLevels = {},
     isSaved = false,
     isRejected = false,
@@ -172,7 +174,7 @@
     <div class="flex items-start gap-3">
       <!-- Desktop: Score Badge on the left -->
       <div class="hidden md:flex flex-shrink-0">
-        <ScoreBadge score={match?.score ?? null} size="lg" />
+        <ScoreBadge score={match?.score ?? null} {matched} size="lg" />
       </div>
 
       <!-- Clickable area for expand/collapse -->
@@ -236,7 +238,7 @@
         onclick={() => onToggleExpand?.()}
         class="flex-shrink-0 md:hidden self-end"
       >
-        <ScoreBadge score={match?.score ?? null} size="lg" />
+        <ScoreBadge score={match?.score ?? null} {matched} size="lg" />
       </button>
     </div>
   </div>

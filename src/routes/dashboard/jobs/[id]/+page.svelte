@@ -248,7 +248,7 @@
             {/if}
           </div>
           <div class="flex-shrink-0">
-            <ScoreBadge score={match?.score ?? null} />
+            <ScoreBadge score={match?.score ?? null} matched={!!match?.reasoning} />
           </div>
         </div>
 

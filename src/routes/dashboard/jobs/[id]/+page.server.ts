@@ -2,6 +2,7 @@ import type { Actions, PageServerLoad } from "./$types";
 import { error, fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { getProfileSkillLevels } from "$lib/server/job/match-utils";
+import { addMatchJob } from "$lib/server/queue/match-queue";
 import { getSelectedProfileId } from "../../profile/utils";
 
 export const load: PageServerLoad = async ({ parent, params }) => {
@@ -217,17 +218,18 @@ export const actions: Actions = {
       return fail(400, { error: "Invalid job ID" });
     }
 
-    // Delete the existing match so the background matcher loop picks it up
-    const existingMatch = await db.job_matches.findFirst({
-      where: { profile: profileId, job: jobId },
-    });
-
-    if (existingMatch) {
-      await db.job_matches.delete({
-        where: { id: existingMatch.id },
+    // Enqueue a match job for the cloud worker and wait for result
+    try {
+      const result = await addMatchJob({
+        profileId,
+        jobId,
+        triggeredBy: "user",
+      });
+      return { success: true, action: "rematched", score: result.score };
+    } catch (err) {
+      return fail(500, {
+        error: `Re-match failed: ${err instanceof Error ? err.message : String(err)}`,
       });
     }
-
-    return { success: true, action: "rematched" };
   },
 };

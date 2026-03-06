@@ -147,6 +147,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
           skill_match_percentage: m.skill_match_percentage,
           matched_skills: m.matched_skills,
           match_summary: m.match_summary,
+          reasoning: m.reasoning,
           status: m.status,
         },
       ])
@@ -246,6 +247,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
         skill_match_percentage: true,
         matched_skills: true,
         match_summary: true,
+        reasoning: true,
         status: true,
       },
     });

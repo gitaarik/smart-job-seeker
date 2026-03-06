@@ -93,6 +93,11 @@
     };
   }
 
+  function isMatched(jobId: number): boolean {
+    const m = matchesByJobId[jobId];
+    return !!m?.reasoning;
+  }
+
   let profileSkillLevels = $derived(data.profileSkillLevels);
 
   function getSkillMatchStrength(jobId: number, skill: string): "strong" | "weak" | null {
@@ -486,6 +491,7 @@
         <JobCard
           {job}
           match={getMatch(job.id)}
+          matched={isMatched(job.id)}
           {profileSkillLevels}
           isSaved={isSaved(job.id)}
           isRejected={isRejected(job.id)}
