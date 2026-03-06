@@ -95,10 +95,6 @@ export const jobSearchUpdateSchema = z.object({
     z.number().int(),
     z.string().regex(/^\d+$/).transform(Number),
   ]).optional(),
-  browser_country_code: z.string().trim().toUpperCase()
-    .refine((val) => !val || /^[A-Z]{2}$/.test(val), {
-      message: "browser_country_code must be a 2-letter country code",
-    }).optional().nullable(),
 });
 
 // Platform update
@@ -132,6 +128,10 @@ export const profileUpdateSchema = z.object({
   browser_user_agent: optionalTrimmedString(500),
   browser_language: optionalTrimmedString(50),
   browser_timezone: optionalTrimmedString(100),
+  browser_country_code: z.string().trim().toUpperCase()
+    .refine((val) => !val || /^[A-Z]{2}$/.test(val), {
+      message: "browser_country_code must be a 2-letter country code",
+    }).optional().nullable(),
 });
 
 // Education update

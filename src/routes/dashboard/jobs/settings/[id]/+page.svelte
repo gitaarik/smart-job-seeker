@@ -603,7 +603,7 @@
     isSavingBrowserCountry = true;
     try {
       const code = browserCountryCode.trim().toUpperCase() || null;
-      await fetch(`/api/job-searches/${jobSearch.id}`, {
+      await fetch(`/api/profile/${data.profileId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ browser_country_code: code }),

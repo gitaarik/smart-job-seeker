@@ -57,7 +57,7 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
       "email_address", "phone_number", "personal_website", "location",
       "linkedin_profile", "github_profile", "stackoverflow_profile",
       "npm_profile", "pypi_profile", "country_code",
-      "browser_user_agent", "browser_language", "browser_timezone",
+      "browser_user_agent", "browser_language", "browser_timezone", "browser_country_code",
     ],
   );
 

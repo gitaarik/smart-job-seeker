@@ -28,11 +28,10 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
 
   const body = parseBody(jobSearchUpdateSchema, await request.json());
 
-  const data: { max_jobs?: number | null; platform_profile_id?: number | null; search_url?: string | null; browser_country_code?: string | null } = {};
+  const data: { max_jobs?: number | null; platform_profile_id?: number | null; search_url?: string | null } = {};
 
   if (body.search_url !== undefined) data.search_url = body.search_url || null;
   if (body.max_jobs !== undefined) data.max_jobs = body.max_jobs;
-  if (body.browser_country_code !== undefined) data.browser_country_code = body.browser_country_code || null;
 
   // Create new credential and assign it
   if (body.new_credential && jobSearch.platform) {

@@ -740,7 +740,6 @@ model job_searches {
   status_message         String?                  @db.VarChar(255)
   platform_profile_id    Int?
   max_jobs               Int?
-  browser_country_code   String?                  @db.VarChar(10)
   runs                   job_search_runs[]
   job_platforms          job_platforms?           @relation(fields: [platform], references: [id], onUpdate: NoAction, map: "job_searches_platform_foreign")
   platform_profiles      platform_profiles?       @relation(fields: [platform_profile_id], references: [id], onUpdate: NoAction)
@@ -995,6 +994,7 @@ model profiles {
   browser_language                                                  String?                 @db.VarChar(50)
   browser_timezone                                                  String?                 @db.VarChar(100)
   browser_profile_id                                                String?                 @db.VarChar(100)
+  browser_country_code                                              String?                 @db.VarChar(10)
   ai_chats                                                          ai_chats[]
   applications                                                      applications[]
   cheat_sheets                                                      cheat_sheets[]

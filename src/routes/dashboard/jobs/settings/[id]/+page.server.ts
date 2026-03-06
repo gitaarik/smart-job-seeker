@@ -71,6 +71,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     where: { id: layoutData.selectedProfile.id },
     select: {
       country_code: true,
+      browser_country_code: true,
       browser_user_agent: true,
       browser_language: true,
       browser_timezone: true,
@@ -78,7 +79,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   });
 
   // Compute geo-derived defaults from the effective country code
-  const effectiveCountryCode = jobSearch.browser_country_code || profileData?.country_code || "US";
+  const effectiveCountryCode = profileData?.browser_country_code || profileData?.country_code || "US";
   const geoDefaults = getGeoConfig(effectiveCountryCode);
 
   return {
@@ -87,7 +88,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     profileId: layoutData.selectedProfile.id,
     isStaff,
     canEditPlatformUrls,
-    browserCountryCode: jobSearch.browser_country_code || "",
+    browserCountryCode: profileData?.browser_country_code || "",
     defaultCountryCode: profileData?.country_code || "",
     browserProvider: config.browserProvider,
     // Browser fingerprint: saved values + geo-derived defaults
