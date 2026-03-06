@@ -69,6 +69,7 @@ export type JobsMinAggregateOutputType = {
   company: string | null
   rescrape_status: string | null
   rescrape_message: string | null
+  rescrape_live_url: string | null
 }
 
 export type JobsMaxAggregateOutputType = {
@@ -96,6 +97,7 @@ export type JobsMaxAggregateOutputType = {
   company: string | null
   rescrape_status: string | null
   rescrape_message: string | null
+  rescrape_live_url: string | null
 }
 
 export type JobsCountAggregateOutputType = {
@@ -130,6 +132,7 @@ export type JobsCountAggregateOutputType = {
   soft_skills: number
   rescrape_status: number
   rescrape_message: number
+  rescrape_live_url: number
   _all: number
 }
 
@@ -177,6 +180,7 @@ export type JobsMinAggregateInputType = {
   company?: true
   rescrape_status?: true
   rescrape_message?: true
+  rescrape_live_url?: true
 }
 
 export type JobsMaxAggregateInputType = {
@@ -204,6 +208,7 @@ export type JobsMaxAggregateInputType = {
   company?: true
   rescrape_status?: true
   rescrape_message?: true
+  rescrape_live_url?: true
 }
 
 export type JobsCountAggregateInputType = {
@@ -238,6 +243,7 @@ export type JobsCountAggregateInputType = {
   soft_skills?: true
   rescrape_status?: true
   rescrape_message?: true
+  rescrape_live_url?: true
   _all?: true
 }
 
@@ -359,6 +365,7 @@ export type JobsGroupByOutputType = {
   soft_skills: runtime.JsonValue | null
   rescrape_status: string | null
   rescrape_message: string | null
+  rescrape_live_url: string | null
   _count: JobsCountAggregateOutputType | null
   _avg: JobsAvgAggregateOutputType | null
   _sum: JobsSumAggregateOutputType | null
@@ -416,6 +423,7 @@ export type jobsWhereInput = {
   soft_skills?: Prisma.JsonNullableFilter<"jobs">
   rescrape_status?: Prisma.StringNullableFilter<"jobs"> | string | null
   rescrape_message?: Prisma.StringNullableFilter<"jobs"> | string | null
+  rescrape_live_url?: Prisma.StringNullableFilter<"jobs"> | string | null
   applications?: Prisma.ApplicationsListRelationFilter
   job_matches?: Prisma.Job_matchesListRelationFilter
   job_resources?: Prisma.Job_resourcesListRelationFilter
@@ -456,6 +464,7 @@ export type jobsOrderByWithRelationInput = {
   soft_skills?: Prisma.SortOrderInput | Prisma.SortOrder
   rescrape_status?: Prisma.SortOrderInput | Prisma.SortOrder
   rescrape_message?: Prisma.SortOrderInput | Prisma.SortOrder
+  rescrape_live_url?: Prisma.SortOrderInput | Prisma.SortOrder
   applications?: Prisma.applicationsOrderByRelationAggregateInput
   job_matches?: Prisma.job_matchesOrderByRelationAggregateInput
   job_resources?: Prisma.job_resourcesOrderByRelationAggregateInput
@@ -499,6 +508,7 @@ export type jobsWhereUniqueInput = Prisma.AtLeast<{
   soft_skills?: Prisma.JsonNullableFilter<"jobs">
   rescrape_status?: Prisma.StringNullableFilter<"jobs"> | string | null
   rescrape_message?: Prisma.StringNullableFilter<"jobs"> | string | null
+  rescrape_live_url?: Prisma.StringNullableFilter<"jobs"> | string | null
   applications?: Prisma.ApplicationsListRelationFilter
   job_matches?: Prisma.Job_matchesListRelationFilter
   job_resources?: Prisma.Job_resourcesListRelationFilter
@@ -539,6 +549,7 @@ export type jobsOrderByWithAggregationInput = {
   soft_skills?: Prisma.SortOrderInput | Prisma.SortOrder
   rescrape_status?: Prisma.SortOrderInput | Prisma.SortOrder
   rescrape_message?: Prisma.SortOrderInput | Prisma.SortOrder
+  rescrape_live_url?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.jobsCountOrderByAggregateInput
   _avg?: Prisma.jobsAvgOrderByAggregateInput
   _max?: Prisma.jobsMaxOrderByAggregateInput
@@ -581,6 +592,7 @@ export type jobsScalarWhereWithAggregatesInput = {
   soft_skills?: Prisma.JsonNullableWithAggregatesFilter<"jobs">
   rescrape_status?: Prisma.StringNullableWithAggregatesFilter<"jobs"> | string | null
   rescrape_message?: Prisma.StringNullableWithAggregatesFilter<"jobs"> | string | null
+  rescrape_live_url?: Prisma.StringNullableWithAggregatesFilter<"jobs"> | string | null
 }
 
 export type jobsCreateInput = {
@@ -612,6 +624,7 @@ export type jobsCreateInput = {
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rescrape_status?: string | null
   rescrape_message?: string | null
+  rescrape_live_url?: string | null
   applications?: Prisma.applicationsCreateNestedManyWithoutJobsInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutJobsInput
   job_resources?: Prisma.job_resourcesCreateNestedManyWithoutJobsInput
@@ -652,6 +665,7 @@ export type jobsUncheckedCreateInput = {
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rescrape_status?: string | null
   rescrape_message?: string | null
+  rescrape_live_url?: string | null
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutJobsInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutJobsInput
   job_resources?: Prisma.job_resourcesUncheckedCreateNestedManyWithoutJobsInput
@@ -687,6 +701,7 @@ export type jobsUpdateInput = {
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   applications?: Prisma.applicationsUpdateManyWithoutJobsNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutJobsNestedInput
   job_resources?: Prisma.job_resourcesUpdateManyWithoutJobsNestedInput
@@ -727,6 +742,7 @@ export type jobsUncheckedUpdateInput = {
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutJobsNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutJobsNestedInput
   job_resources?: Prisma.job_resourcesUncheckedUpdateManyWithoutJobsNestedInput
@@ -765,6 +781,7 @@ export type jobsCreateManyInput = {
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rescrape_status?: string | null
   rescrape_message?: string | null
+  rescrape_live_url?: string | null
 }
 
 export type jobsUpdateManyMutationInput = {
@@ -796,6 +813,7 @@ export type jobsUpdateManyMutationInput = {
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type jobsUncheckedUpdateManyInput = {
@@ -830,6 +848,7 @@ export type jobsUncheckedUpdateManyInput = {
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type JobsNullableScalarRelationFilter = {
@@ -884,6 +903,7 @@ export type jobsCountOrderByAggregateInput = {
   soft_skills?: Prisma.SortOrder
   rescrape_status?: Prisma.SortOrder
   rescrape_message?: Prisma.SortOrder
+  rescrape_live_url?: Prisma.SortOrder
 }
 
 export type jobsAvgOrderByAggregateInput = {
@@ -920,6 +940,7 @@ export type jobsMaxOrderByAggregateInput = {
   company?: Prisma.SortOrder
   rescrape_status?: Prisma.SortOrder
   rescrape_message?: Prisma.SortOrder
+  rescrape_live_url?: Prisma.SortOrder
 }
 
 export type jobsMinOrderByAggregateInput = {
@@ -947,6 +968,7 @@ export type jobsMinOrderByAggregateInput = {
   company?: Prisma.SortOrder
   rescrape_status?: Prisma.SortOrder
   rescrape_message?: Prisma.SortOrder
+  rescrape_live_url?: Prisma.SortOrder
 }
 
 export type jobsSumOrderByAggregateInput = {
@@ -1131,6 +1153,7 @@ export type jobsCreateWithoutApplicationsInput = {
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rescrape_status?: string | null
   rescrape_message?: string | null
+  rescrape_live_url?: string | null
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutJobsInput
   job_resources?: Prisma.job_resourcesCreateNestedManyWithoutJobsInput
   job_search_run_items?: Prisma.job_search_run_itemsCreateNestedManyWithoutJobsInput
@@ -1170,6 +1193,7 @@ export type jobsUncheckedCreateWithoutApplicationsInput = {
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rescrape_status?: string | null
   rescrape_message?: string | null
+  rescrape_live_url?: string | null
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutJobsInput
   job_resources?: Prisma.job_resourcesUncheckedCreateNestedManyWithoutJobsInput
   job_search_run_items?: Prisma.job_search_run_itemsUncheckedCreateNestedManyWithoutJobsInput
@@ -1220,6 +1244,7 @@ export type jobsUpdateWithoutApplicationsInput = {
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_matches?: Prisma.job_matchesUpdateManyWithoutJobsNestedInput
   job_resources?: Prisma.job_resourcesUpdateManyWithoutJobsNestedInput
   job_search_run_items?: Prisma.job_search_run_itemsUpdateManyWithoutJobsNestedInput
@@ -1259,6 +1284,7 @@ export type jobsUncheckedUpdateWithoutApplicationsInput = {
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutJobsNestedInput
   job_resources?: Prisma.job_resourcesUncheckedUpdateManyWithoutJobsNestedInput
   job_search_run_items?: Prisma.job_search_run_itemsUncheckedUpdateManyWithoutJobsNestedInput
@@ -1293,6 +1319,7 @@ export type jobsCreateWithoutJob_matchesInput = {
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rescrape_status?: string | null
   rescrape_message?: string | null
+  rescrape_live_url?: string | null
   applications?: Prisma.applicationsCreateNestedManyWithoutJobsInput
   job_resources?: Prisma.job_resourcesCreateNestedManyWithoutJobsInput
   job_search_run_items?: Prisma.job_search_run_itemsCreateNestedManyWithoutJobsInput
@@ -1332,6 +1359,7 @@ export type jobsUncheckedCreateWithoutJob_matchesInput = {
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rescrape_status?: string | null
   rescrape_message?: string | null
+  rescrape_live_url?: string | null
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutJobsInput
   job_resources?: Prisma.job_resourcesUncheckedCreateNestedManyWithoutJobsInput
   job_search_run_items?: Prisma.job_search_run_itemsUncheckedCreateNestedManyWithoutJobsInput
@@ -1382,6 +1410,7 @@ export type jobsUpdateWithoutJob_matchesInput = {
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   applications?: Prisma.applicationsUpdateManyWithoutJobsNestedInput
   job_resources?: Prisma.job_resourcesUpdateManyWithoutJobsNestedInput
   job_search_run_items?: Prisma.job_search_run_itemsUpdateManyWithoutJobsNestedInput
@@ -1421,6 +1450,7 @@ export type jobsUncheckedUpdateWithoutJob_matchesInput = {
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutJobsNestedInput
   job_resources?: Prisma.job_resourcesUncheckedUpdateManyWithoutJobsNestedInput
   job_search_run_items?: Prisma.job_search_run_itemsUncheckedUpdateManyWithoutJobsNestedInput
@@ -1455,6 +1485,7 @@ export type jobsCreateWithoutJob_platformsInput = {
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rescrape_status?: string | null
   rescrape_message?: string | null
+  rescrape_live_url?: string | null
   applications?: Prisma.applicationsCreateNestedManyWithoutJobsInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutJobsInput
   job_resources?: Prisma.job_resourcesCreateNestedManyWithoutJobsInput
@@ -1493,6 +1524,7 @@ export type jobsUncheckedCreateWithoutJob_platformsInput = {
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rescrape_status?: string | null
   rescrape_message?: string | null
+  rescrape_live_url?: string | null
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutJobsInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutJobsInput
   job_resources?: Prisma.job_resourcesUncheckedCreateNestedManyWithoutJobsInput
@@ -1560,6 +1592,7 @@ export type jobsScalarWhereInput = {
   soft_skills?: Prisma.JsonNullableFilter<"jobs">
   rescrape_status?: Prisma.StringNullableFilter<"jobs"> | string | null
   rescrape_message?: Prisma.StringNullableFilter<"jobs"> | string | null
+  rescrape_live_url?: Prisma.StringNullableFilter<"jobs"> | string | null
 }
 
 export type jobsCreateWithoutJob_resourcesInput = {
@@ -1591,6 +1624,7 @@ export type jobsCreateWithoutJob_resourcesInput = {
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rescrape_status?: string | null
   rescrape_message?: string | null
+  rescrape_live_url?: string | null
   applications?: Prisma.applicationsCreateNestedManyWithoutJobsInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutJobsInput
   job_search_run_items?: Prisma.job_search_run_itemsCreateNestedManyWithoutJobsInput
@@ -1630,6 +1664,7 @@ export type jobsUncheckedCreateWithoutJob_resourcesInput = {
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rescrape_status?: string | null
   rescrape_message?: string | null
+  rescrape_live_url?: string | null
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutJobsInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutJobsInput
   job_search_run_items?: Prisma.job_search_run_itemsUncheckedCreateNestedManyWithoutJobsInput
@@ -1680,6 +1715,7 @@ export type jobsUpdateWithoutJob_resourcesInput = {
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   applications?: Prisma.applicationsUpdateManyWithoutJobsNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutJobsNestedInput
   job_search_run_items?: Prisma.job_search_run_itemsUpdateManyWithoutJobsNestedInput
@@ -1719,6 +1755,7 @@ export type jobsUncheckedUpdateWithoutJob_resourcesInput = {
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutJobsNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutJobsNestedInput
   job_search_run_items?: Prisma.job_search_run_itemsUncheckedUpdateManyWithoutJobsNestedInput
@@ -1753,6 +1790,7 @@ export type jobsCreateWithoutAi_chatInput = {
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rescrape_status?: string | null
   rescrape_message?: string | null
+  rescrape_live_url?: string | null
   applications?: Prisma.applicationsCreateNestedManyWithoutJobsInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutJobsInput
   job_resources?: Prisma.job_resourcesCreateNestedManyWithoutJobsInput
@@ -1791,6 +1829,7 @@ export type jobsUncheckedCreateWithoutAi_chatInput = {
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rescrape_status?: string | null
   rescrape_message?: string | null
+  rescrape_live_url?: string | null
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutJobsInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutJobsInput
   job_resources?: Prisma.job_resourcesUncheckedCreateNestedManyWithoutJobsInput
@@ -1852,6 +1891,7 @@ export type jobsCreateWithoutJob_search_run_itemsInput = {
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rescrape_status?: string | null
   rescrape_message?: string | null
+  rescrape_live_url?: string | null
   applications?: Prisma.applicationsCreateNestedManyWithoutJobsInput
   job_matches?: Prisma.job_matchesCreateNestedManyWithoutJobsInput
   job_resources?: Prisma.job_resourcesCreateNestedManyWithoutJobsInput
@@ -1891,6 +1931,7 @@ export type jobsUncheckedCreateWithoutJob_search_run_itemsInput = {
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rescrape_status?: string | null
   rescrape_message?: string | null
+  rescrape_live_url?: string | null
   applications?: Prisma.applicationsUncheckedCreateNestedManyWithoutJobsInput
   job_matches?: Prisma.job_matchesUncheckedCreateNestedManyWithoutJobsInput
   job_resources?: Prisma.job_resourcesUncheckedCreateNestedManyWithoutJobsInput
@@ -1941,6 +1982,7 @@ export type jobsUpdateWithoutJob_search_run_itemsInput = {
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   applications?: Prisma.applicationsUpdateManyWithoutJobsNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutJobsNestedInput
   job_resources?: Prisma.job_resourcesUpdateManyWithoutJobsNestedInput
@@ -1980,6 +2022,7 @@ export type jobsUncheckedUpdateWithoutJob_search_run_itemsInput = {
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutJobsNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutJobsNestedInput
   job_resources?: Prisma.job_resourcesUncheckedUpdateManyWithoutJobsNestedInput
@@ -2016,6 +2059,7 @@ export type jobsCreateManyJob_platformsInput = {
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rescrape_status?: string | null
   rescrape_message?: string | null
+  rescrape_live_url?: string | null
 }
 
 export type jobsUpdateWithoutJob_platformsInput = {
@@ -2047,6 +2091,7 @@ export type jobsUpdateWithoutJob_platformsInput = {
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   applications?: Prisma.applicationsUpdateManyWithoutJobsNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutJobsNestedInput
   job_resources?: Prisma.job_resourcesUpdateManyWithoutJobsNestedInput
@@ -2085,6 +2130,7 @@ export type jobsUncheckedUpdateWithoutJob_platformsInput = {
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutJobsNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutJobsNestedInput
   job_resources?: Prisma.job_resourcesUncheckedUpdateManyWithoutJobsNestedInput
@@ -2122,6 +2168,7 @@ export type jobsUncheckedUpdateManyWithoutJob_platformsInput = {
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type jobsCreateManyAi_chatInput = {
@@ -2155,6 +2202,7 @@ export type jobsCreateManyAi_chatInput = {
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rescrape_status?: string | null
   rescrape_message?: string | null
+  rescrape_live_url?: string | null
 }
 
 export type jobsUpdateWithoutAi_chatInput = {
@@ -2186,6 +2234,7 @@ export type jobsUpdateWithoutAi_chatInput = {
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   applications?: Prisma.applicationsUpdateManyWithoutJobsNestedInput
   job_matches?: Prisma.job_matchesUpdateManyWithoutJobsNestedInput
   job_resources?: Prisma.job_resourcesUpdateManyWithoutJobsNestedInput
@@ -2224,6 +2273,7 @@ export type jobsUncheckedUpdateWithoutAi_chatInput = {
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   applications?: Prisma.applicationsUncheckedUpdateManyWithoutJobsNestedInput
   job_matches?: Prisma.job_matchesUncheckedUpdateManyWithoutJobsNestedInput
   job_resources?: Prisma.job_resourcesUncheckedUpdateManyWithoutJobsNestedInput
@@ -2261,6 +2311,7 @@ export type jobsUncheckedUpdateManyWithoutAi_chatInput = {
   soft_skills?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rescrape_status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rescrape_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rescrape_live_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 
@@ -2353,6 +2404,7 @@ export type jobsSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   soft_skills?: boolean
   rescrape_status?: boolean
   rescrape_message?: boolean
+  rescrape_live_url?: boolean
   applications?: boolean | Prisma.jobs$applicationsArgs<ExtArgs>
   job_matches?: boolean | Prisma.jobs$job_matchesArgs<ExtArgs>
   job_resources?: boolean | Prisma.jobs$job_resourcesArgs<ExtArgs>
@@ -2394,6 +2446,7 @@ export type jobsSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   soft_skills?: boolean
   rescrape_status?: boolean
   rescrape_message?: boolean
+  rescrape_live_url?: boolean
   ai_chat?: boolean | Prisma.jobs$ai_chatArgs<ExtArgs>
   job_platforms?: boolean | Prisma.jobs$job_platformsArgs<ExtArgs>
 }, ExtArgs["result"]["jobs"]>
@@ -2430,6 +2483,7 @@ export type jobsSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   soft_skills?: boolean
   rescrape_status?: boolean
   rescrape_message?: boolean
+  rescrape_live_url?: boolean
   ai_chat?: boolean | Prisma.jobs$ai_chatArgs<ExtArgs>
   job_platforms?: boolean | Prisma.jobs$job_platformsArgs<ExtArgs>
 }, ExtArgs["result"]["jobs"]>
@@ -2466,9 +2520,10 @@ export type jobsSelectScalar = {
   soft_skills?: boolean
   rescrape_status?: boolean
   rescrape_message?: boolean
+  rescrape_live_url?: boolean
 }
 
-export type jobsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "date_created" | "date_updated" | "source_url" | "title" | "job_description" | "job_poster" | "company_description" | "date_posted" | "salary_min" | "salary_max" | "salary_currency" | "salary_period" | "import_error" | "last_scraped" | "office_location" | "scrape_count" | "job_types" | "experience_levels" | "work_location" | "source_html_stripped" | "job_platform" | "ai_chat_extraction" | "company" | "skills_required" | "skills_preferred" | "responsibilities" | "soft_skills" | "rescrape_status" | "rescrape_message", ExtArgs["result"]["jobs"]>
+export type jobsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "status" | "date_created" | "date_updated" | "source_url" | "title" | "job_description" | "job_poster" | "company_description" | "date_posted" | "salary_min" | "salary_max" | "salary_currency" | "salary_period" | "import_error" | "last_scraped" | "office_location" | "scrape_count" | "job_types" | "experience_levels" | "work_location" | "source_html_stripped" | "job_platform" | "ai_chat_extraction" | "company" | "skills_required" | "skills_preferred" | "responsibilities" | "soft_skills" | "rescrape_status" | "rescrape_message" | "rescrape_live_url", ExtArgs["result"]["jobs"]>
 export type jobsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   applications?: boolean | Prisma.jobs$applicationsArgs<ExtArgs>
   job_matches?: boolean | Prisma.jobs$job_matchesArgs<ExtArgs>
@@ -2529,6 +2584,7 @@ export type $jobsPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     soft_skills: runtime.JsonValue | null
     rescrape_status: string | null
     rescrape_message: string | null
+    rescrape_live_url: string | null
   }, ExtArgs["result"]["jobs"]>
   composites: {}
 }
@@ -2989,6 +3045,7 @@ export interface jobsFieldRefs {
   readonly soft_skills: Prisma.FieldRef<"jobs", 'Json'>
   readonly rescrape_status: Prisma.FieldRef<"jobs", 'String'>
   readonly rescrape_message: Prisma.FieldRef<"jobs", 'String'>
+  readonly rescrape_live_url: Prisma.FieldRef<"jobs", 'String'>
 }
     
 

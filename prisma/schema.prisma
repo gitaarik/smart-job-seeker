@@ -818,6 +818,7 @@ model jobs {
   soft_skills          Json?
   rescrape_status      String?                @db.VarChar(50)
   rescrape_message     String?
+  rescrape_live_url    String?
   applications         applications[]
   job_matches          job_matches[]
   job_resources        job_resources[]

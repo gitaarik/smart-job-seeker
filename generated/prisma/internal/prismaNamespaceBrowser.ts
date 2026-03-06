@@ -937,7 +937,8 @@ export const JobsScalarFieldEnum = {
   responsibilities: 'responsibilities',
   soft_skills: 'soft_skills',
   rescrape_status: 'rescrape_status',
-  rescrape_message: 'rescrape_message'
+  rescrape_message: 'rescrape_message',
+  rescrape_live_url: 'rescrape_live_url'
 } as const
 
 export type JobsScalarFieldEnum = (typeof JobsScalarFieldEnum)[keyof typeof JobsScalarFieldEnum]

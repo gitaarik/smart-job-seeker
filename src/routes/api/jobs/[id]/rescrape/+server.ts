@@ -103,6 +103,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
       id: true,
       rescrape_status: true,
       rescrape_message: true,
+      rescrape_live_url: true,
       date_updated: true,
     },
   });
@@ -114,6 +115,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
   return json({
     status: job.rescrape_status || "idle",
     message: job.rescrape_message || null,
+    liveUrl: job.rescrape_live_url || null,
     lastUpdated: job.date_updated,
   });
 };

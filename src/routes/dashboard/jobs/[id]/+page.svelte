@@ -21,6 +21,7 @@
   import { faStar as faStarRegular } from "@fortawesome/free-regular-svg-icons";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import ScoreBadge from "../components/ScoreBadge.svelte";
+  import RescrapeMonitor from "../../components/RescrapeMonitor.svelte";
   import { formatJobType, formatJobStatus, formatWorkLocation } from "$lib/format";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -31,74 +32,8 @@
   let isRematching = $state(false);
   let rematchError = $state("");
 
-  // Rescrape state
-  let rescrapeStatus = $state(data.job.rescrape_status || "idle");
-  let rescrapeMessage = $state(data.job.rescrape_message || "");
-  let isRescraping = $derived(rescrapeStatus === "queued" || rescrapeStatus === "scraping");
-  let rescrapePollingInterval: ReturnType<typeof setInterval> | null = null;
-
-  // Start polling when rescraping
-  $effect(() => {
-    if (isRescraping && !rescrapePollingInterval) {
-      rescrapePollingInterval = setInterval(pollRescrapeStatus, 2000);
-    } else if (!isRescraping && rescrapePollingInterval) {
-      clearInterval(rescrapePollingInterval);
-      rescrapePollingInterval = null;
-    }
-
-    // Cleanup on unmount
-    return () => {
-      if (rescrapePollingInterval) {
-        clearInterval(rescrapePollingInterval);
-      }
-    };
-  });
-
-  async function pollRescrapeStatus() {
-    try {
-      const response = await fetch(`/api/jobs/${job.id}/rescrape`);
-      if (response.ok) {
-        const result = await response.json();
-        rescrapeStatus = result.status;
-        rescrapeMessage = result.message || "";
-
-        // If completed, refresh job data after a delay so user can see extraction summary
-        if (result.status === "completed") {
-          setTimeout(() => window.location.reload(), 5000);
-        }
-      }
-    } catch {
-      // Ignore polling errors
-    }
-  }
-
-  async function triggerRescrape() {
-    try {
-      rescrapeStatus = "queued";
-      rescrapeMessage = "Starting rescrape...";
-
-      const response = await fetch(`/api/jobs/${job.id}/rescrape`, {
-        method: "POST",
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        rescrapeStatus = "error";
-        rescrapeMessage = error.message || error.error || "Failed to start rescrape";
-        return;
-      }
-
-      const result = await response.json();
-      if (result.status === "already_queued") {
-        rescrapeMessage = "Already queued for rescrape";
-      } else {
-        rescrapeMessage = "Queued for rescrape...";
-      }
-    } catch (error) {
-      rescrapeStatus = "error";
-      rescrapeMessage = error instanceof Error ? error.message : "Failed to start rescrape";
-    }
-  }
+  // Rescrape monitor modal
+  let showRescrapeMonitor = $state(false);
 
   // Update match when form action completes
   $effect(() => {
@@ -468,20 +403,12 @@
             {#if job.source_url}
               <button
                 type="button"
-                onclick={triggerRescrape}
-                disabled={isRescraping}
-                class="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50"
-                title={isRescraping ? rescrapeMessage : "Re-fetch job data from source"}
+                onclick={() => (showRescrapeMonitor = true)}
+                class="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors"
+                title="Re-fetch job data from source"
               >
-                <FontAwesomeIcon
-                  icon={faSync}
-                  class="w-4 h-4 {isRescraping ? 'animate-spin' : ''}"
-                />
-                {#if isRescraping}
-                  {rescrapeStatus === "queued" ? "Queued..." : "Scraping..."}
-                {:else}
-                  Rescrape
-                {/if}
+                <FontAwesomeIcon icon={faSync} class="w-4 h-4" />
+                Rescrape
               </button>
             {/if}
 
@@ -516,27 +443,6 @@
               </button>
             </form>
           </div>
-
-          <!-- Rescrape Status -->
-          {#if rescrapeStatus === "error" && rescrapeMessage}
-            <div class="mb-4 p-3 bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg">
-              <p class="text-sm text-[var(--dash-error)]">
-                <strong>Rescrape failed:</strong> {rescrapeMessage}
-              </p>
-            </div>
-          {:else if isRescraping && rescrapeMessage}
-            <div class="mb-4 p-3 bg-[var(--dash-primary-light)] border border-[var(--dash-primary)] rounded-lg">
-              <p class="text-sm text-[var(--dash-primary)] whitespace-pre-line">
-                {rescrapeMessage}
-              </p>
-            </div>
-          {:else if rescrapeStatus === "completed" && rescrapeMessage && rescrapeMessage.includes("Extracted data:")}
-            <div class="mb-4 p-3 bg-[var(--dash-success-light)] border border-[var(--dash-success)] rounded-lg">
-              <p class="text-sm text-[var(--dash-success)] whitespace-pre-line">
-                {rescrapeMessage}
-              </p>
-            </div>
-          {/if}
 
           <!-- Re-match Error -->
           {#if rematchError}
@@ -682,3 +588,11 @@
     </div>
   </div>
 </div>
+
+{#if showRescrapeMonitor}
+  <RescrapeMonitor
+    jobId={job.id}
+    onclose={() => (showRescrapeMonitor = false)}
+    oncomplete={() => window.location.reload()}
+  />
+{/if}
