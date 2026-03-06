@@ -5,18 +5,19 @@
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import {
     faArrowLeft,
-    faBookmark as faBookmarkSolid,
     faBriefcase,
     faBuilding,
     faCalendar,
     faCheck,
     faExternalLinkAlt,
+    faGlobe,
     faMapMarkerAlt,
     faMoneyBillWave,
+    faStar as faStarSolid,
     faSync,
     faTimes,
   } from "@fortawesome/free-solid-svg-icons";
-  import { faBookmark as faBookmarkRegular } from "@fortawesome/free-regular-svg-icons";
+  import { faStar as faStarRegular } from "@fortawesome/free-regular-svg-icons";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import ScoreBadge from "../components/ScoreBadge.svelte";
 
@@ -199,13 +200,13 @@
 <div class="space-y-6">
   <!-- Header with Back Button -->
   <div class="flex items-center gap-4">
-    <a
-      href="/dashboard/jobs"
+    <button
+      onclick={() => history.back()}
       class="p-2 rounded-lg border border-[var(--dash-border)] text-[var(--dash-text-secondary)] hover:bg-[var(--dash-bg)] transition-colors"
       aria-label="Back to jobs"
     >
       <FontAwesomeIcon icon={faArrowLeft} class="w-4 h-4" />
-    </a>
+    </button>
     <SectionHeader
       title={isSaved ? "Saved Job" : match ? "Job Match" : "Job Details"}
       icon={faBriefcase}
@@ -218,11 +219,14 @@
     <div class="lg:col-span-2 space-y-6">
       <!-- Job Header Card -->
       <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
-        <div>
-          <h1 class="text-2xl font-bold text-[var(--dash-text)]">
-            {job.title || "Untitled Job"}
-          </h1>
-          <div class="flex items-center gap-4 mt-2 text-[var(--dash-text-secondary)] flex-wrap">
+        <!-- Title -->
+        <h1 class="text-2xl font-bold text-[var(--dash-text)]">
+          {job.title || "Untitled Job"}
+        </h1>
+
+        <!-- Company, location, score -->
+        <div class="flex items-center justify-between gap-4 mt-2">
+          <div class="flex items-center gap-4 text-[var(--dash-text-secondary)] flex-wrap">
             {#if job.company}
               <span class="flex items-center gap-1">
                 <FontAwesomeIcon icon={faBuilding} class="w-4 h-4" />
@@ -236,15 +240,42 @@
               </span>
             {/if}
             {#if job.job_platforms}
-              <span class="text-[var(--dash-text-muted)]">
-                via {job.job_platforms.name}
+              <span class="flex items-center gap-1">
+                <FontAwesomeIcon icon={faGlobe} class="w-4 h-4" />
+                {job.job_platforms.name}
               </span>
             {/if}
           </div>
+          <div class="flex-shrink-0">
+            <ScoreBadge score={match?.score ?? null} />
+          </div>
+        </div>
 
-          <!-- Action Buttons -->
-          <div class="flex items-center gap-2 mt-4 flex-wrap">
-            <!-- Save Button -->
+        <!-- Tags (status, job types, work location) -->
+        <div class="flex flex-wrap gap-2 mt-3">
+          <span class="text-xs px-3 py-1 rounded-full {job.status === 'published' ? 'bg-[var(--dash-success-light)] text-[var(--dash-success)]' : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)]'}">
+            {job.status}
+          </span>
+          {#if job.job_types && Array.isArray(job.job_types)}
+            {#each job.job_types as type}
+              <span class="text-xs px-3 py-1 rounded-full bg-[var(--dash-bg)] text-[var(--dash-text)]">
+                {type}
+              </span>
+            {/each}
+          {/if}
+          {#if job.work_location && Array.isArray(job.work_location)}
+            {#each job.work_location as loc}
+              <span class="text-xs px-3 py-1 rounded-full bg-[var(--dash-primary-light)] text-[var(--dash-primary)]">
+                {loc}
+              </span>
+            {/each}
+          {/if}
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-col gap-2 mt-4 items-start">
+          <!-- Save + Source -->
+          <div class="flex items-center gap-2">
             <form
               method="POST"
               action={isSaved ? "?/unsaveJob" : "?/saveJob"}
@@ -259,74 +290,19 @@
               <button
                 type="submit"
                 disabled={isSaving}
-                class="p-2 rounded-lg border transition-colors {isSaved
+                class="flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors {isSaved
                   ? 'bg-[var(--dash-primary)] text-white border-[var(--dash-primary)]'
                   : 'border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)]'} disabled:opacity-50"
                 title={isSaved ? "Unsave job" : "Save job"}
               >
                 <FontAwesomeIcon
-                  icon={isSaved ? faBookmarkSolid : faBookmarkRegular}
-                  class="w-5 h-5"
+                  icon={isSaved ? faStarSolid : faStarRegular}
+                  class="w-4 h-4"
                 />
+                {isSaved ? "Saved" : "Save"}
               </button>
             </form>
 
-            <!-- Rescrape Button -->
-            {#if job.source_url}
-              <button
-                type="button"
-                onclick={triggerRescrape}
-                disabled={isRescraping}
-                class="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50"
-                title={isRescraping ? rescrapeMessage : "Re-fetch job data from source"}
-              >
-                <FontAwesomeIcon
-                  icon={faSync}
-                  class="w-4 h-4 {isRescraping ? 'animate-spin' : ''}"
-                />
-                {#if isRescraping}
-                  {rescrapeStatus === "queued" ? "Queued..." : "Scraping..."}
-                {:else}
-                  Rescrape
-                {/if}
-              </button>
-            {/if}
-
-            <!-- Re-match Button (staff only) -->
-            {#if data.isStaff}
-              <form
-                method="POST"
-                action="?/rematchJob"
-                use:enhance={() => {
-                  isRematching = true;
-                  rematchError = "";
-                  return async ({ result, update }) => {
-                    if (result.type === "failure") {
-                      rematchError = (result.data as { error?: string })?.error || "Re-match failed";
-                      isRematching = false;
-                    } else {
-                      await update();
-                      isRematching = false;
-                    }
-                  };
-                }}
-              >
-                <button
-                  type="submit"
-                  disabled={isRematching}
-                  class="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50"
-                  title="Re-run AI matching for this job"
-                >
-                  <FontAwesomeIcon
-                    icon={faSync}
-                    class="w-4 h-4 {isRematching ? 'animate-spin' : ''}"
-                  />
-                  {isRematching ? "Matching..." : "Re-match"}
-                </button>
-              </form>
-            {/if}
-
-            <!-- External Link -->
             {#if job.source_url}
               <a
                 href={job.source_url}
@@ -335,10 +311,68 @@
                 class="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--dash-primary)] text-white hover:bg-[var(--dash-primary-hover)] transition-colors"
               >
                 <FontAwesomeIcon icon={faExternalLinkAlt} class="w-4 h-4" />
-                View Original
+                Source
               </a>
             {/if}
           </div>
+
+          <!-- Rescrape + Re-match -->
+          {#if job.source_url || data.isStaff}
+            <div class="flex items-center gap-2">
+              {#if job.source_url}
+                <button
+                  type="button"
+                  onclick={triggerRescrape}
+                  disabled={isRescraping}
+                  class="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50"
+                  title={isRescraping ? rescrapeMessage : "Re-fetch job data from source"}
+                >
+                  <FontAwesomeIcon
+                    icon={faSync}
+                    class="w-4 h-4 {isRescraping ? 'animate-spin' : ''}"
+                  />
+                  {#if isRescraping}
+                    {rescrapeStatus === "queued" ? "Queued..." : "Scraping..."}
+                  {:else}
+                    Rescrape
+                  {/if}
+                </button>
+              {/if}
+
+              {#if data.isStaff}
+                <form
+                  method="POST"
+                  action="?/rematchJob"
+                  use:enhance={() => {
+                    isRematching = true;
+                    rematchError = "";
+                    return async ({ result, update }) => {
+                      if (result.type === "failure") {
+                        rematchError = (result.data as { error?: string })?.error || "Re-match failed";
+                        isRematching = false;
+                      } else {
+                        await update();
+                        isRematching = false;
+                      }
+                    };
+                  }}
+                >
+                  <button
+                    type="submit"
+                    disabled={isRematching}
+                    class="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50"
+                    title="Re-run AI matching for this job"
+                  >
+                    <FontAwesomeIcon
+                      icon={faSync}
+                      class="w-4 h-4 {isRematching ? 'animate-spin' : ''}"
+                    />
+                    {isRematching ? "Matching..." : "Re-match"}
+                  </button>
+                </form>
+              {/if}
+            </div>
+          {/if}
         </div>
 
         <!-- Rescrape Status Message -->
@@ -370,27 +404,6 @@
             </p>
           </div>
         {/if}
-
-        <!-- Tags -->
-        <div class="flex flex-wrap gap-2 mt-4">
-          <span class="text-xs px-3 py-1 rounded-full {job.status === 'published' ? 'bg-[var(--dash-success-light)] text-[var(--dash-success)]' : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)]'}">
-            {job.status}
-          </span>
-          {#if job.job_types && Array.isArray(job.job_types)}
-            {#each job.job_types as type}
-              <span class="text-xs px-3 py-1 rounded-full bg-[var(--dash-bg)] text-[var(--dash-text)]">
-                {type}
-              </span>
-            {/each}
-          {/if}
-          {#if job.work_location && Array.isArray(job.work_location)}
-            {#each job.work_location as loc}
-              <span class="text-xs px-3 py-1 rounded-full bg-[var(--dash-primary-light)] text-[var(--dash-primary)]">
-                {loc}
-              </span>
-            {/each}
-          {/if}
-        </div>
       </div>
 
       <!-- Salary & Details -->
@@ -518,20 +531,10 @@
         <div class="bg-[var(--dash-card)] rounded-lg border border-[var(--dash-border)] p-6">
           <h2 class="text-lg font-semibold text-[var(--dash-text)] mb-4">Match Analysis</h2>
 
-          <!-- Score -->
-          <div class="flex items-center gap-4 mb-4">
-            <ScoreBadge score={match.score} />
-            <div>
-              <p class="font-medium text-[var(--dash-text)]">
-                {getRecommendationLabel(match.recommendation)}
-              </p>
-              {#if match.skill_match_percentage}
-                <p class="text-sm text-[var(--dash-text-secondary)]">
-                  {match.skill_match_percentage}% skill match
-                </p>
-              {/if}
-            </div>
-          </div>
+          <!-- Recommendation -->
+          <p class="font-medium text-[var(--dash-text)] mb-4">
+            {getRecommendationLabel(match.recommendation)}
+          </p>
 
           <!-- Strengths -->
           {#if match.strengths && Array.isArray(match.strengths) && match.strengths.length > 0}
