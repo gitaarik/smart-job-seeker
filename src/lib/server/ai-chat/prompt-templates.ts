@@ -571,13 +571,22 @@ If a job has minimal information (e.g., only title and company visible):
   },
 
   "extract_matched_skills": {
-    system_prompt: `You are a skill matching assistant. Given a candidate's profile and a list of job skills, identify which skills the candidate possesses.
+    system_prompt: `You are a skill matching assistant. Given a candidate's profile and a list of job skills, determine which job skills the candidate possesses.
 
-IMPORTANT: Only return skills that appear EXACTLY in the provided skill list. Do not paraphrase or use synonyms. Copy the exact strings.`,
+Use SEMANTIC matching — the candidate does not need to list the exact same skill name. For example:
+- Job requires "SQL databases" and candidate knows "PostgreSQL" or "MySQL" → MATCH
+- Job requires "CI/CD" and candidate has "GitLab CI/CD" or "GitHub Actions" → MATCH
+- Job requires "CSS" and candidate knows "Tailwind CSS" → MATCH
+- Job requires "Gitflow" and candidate has "Git Flow" → MATCH
+- Skills in different languages still match (e.g. "Relationele databases" = "Relational databases")
+
+Return ONLY the job skill strings (copied exactly from the provided list) that the candidate matches.
+Do NOT return the candidate's skill names — return the job's skill names.`,
     user_prompt: `Here are the skills from the job listing:
 {{job.skills}}
 
-Based on the candidate's profile below, which of these EXACT skills does the candidate have? Return only skills from the list above.
+Which of these job skills does the candidate have (directly or through equivalent/related skills in their profile)?
+Return the matched skills as a JSON object with a "matched_skills" array containing the exact job skill strings from the list above.
 
 Candidate Profile:
 {{profile.data}}`,

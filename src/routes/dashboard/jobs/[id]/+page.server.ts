@@ -2,6 +2,7 @@ import type { Actions, PageServerLoad } from "./$types";
 import { error, fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { getProfileSkillLevels } from "$lib/server/job/match-utils";
+import { calculateMatch, getMatchingConfig, upsertJobMatch } from "$lib/server/job/matcher";
 import { getSelectedProfileId } from "../../profile/utils";
 
 export const load: PageServerLoad = async ({ parent, params }) => {
@@ -49,12 +50,17 @@ export const load: PageServerLoad = async ({ parent, params }) => {
   // Load user's skill proficiency levels for highlighting
   const profileSkillLevels = await getProfileSkillLevels(profileId);
 
+  // Check staff status
+  const user = layoutData.user;
+  const isStaff = !!(user as { is_staff?: boolean })?.is_staff || !!(user as { is_admin?: boolean })?.is_admin;
+
   return {
     job,
     match,
     profileId,
     jobCategory,
     profileSkillLevels,
+    isStaff,
   };
 };
 
@@ -188,5 +194,48 @@ export const actions: Actions = {
     });
 
     return { success: true, status };
+  },
+
+  rematchJob: async ({ locals, cookies, params }) => {
+    const user = locals.user;
+    if (!user) {
+      return fail(401, { error: "Not authenticated" });
+    }
+
+    // Staff-only action
+    const isStaff = !!(user as { is_staff?: boolean }).is_staff || !!(user as { is_admin?: boolean }).is_admin;
+    if (!isStaff) {
+      return fail(403, { error: "Staff access required" });
+    }
+
+    const profileId = await getSelectedProfileId(cookies, user.id);
+    if (!profileId) {
+      return fail(400, { error: "No profile selected" });
+    }
+
+    const jobId = parseInt(params.id);
+    if (isNaN(jobId)) {
+      return fail(400, { error: "Invalid job ID" });
+    }
+
+    const job = await db.jobs.findUnique({ where: { id: jobId } });
+    if (!job) {
+      return fail(404, { error: "Job not found" });
+    }
+
+    const config = await getMatchingConfig(profileId);
+    if (!config) {
+      return fail(400, { error: "No matching config found for profile" });
+    }
+
+    try {
+      const matchResult = await calculateMatch(profileId, job, config);
+      await upsertJobMatch(matchResult);
+      return { success: true, action: "rematched" };
+    } catch (err) {
+      return fail(500, {
+        error: `Re-match failed: ${err instanceof Error ? err.message : String(err)}`,
+      });
+    }
   },
 };

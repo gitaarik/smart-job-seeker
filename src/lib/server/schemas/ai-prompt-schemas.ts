@@ -234,20 +234,14 @@ export const classifyClickablesSchema = z.object({
 
 /**
  * Schema for extract_matched_skills prompt
- * Extracts which job skills the candidate has - simple focused request
- * Accepts either array format or object format (skill names as keys with boolean values)
+ * Extracts which job skills the candidate has via semantic matching
+ * Returns job skill strings (not candidate skill names) that the candidate matches
  */
-export const extractMatchedSkillsSchema = z.union([
-  // Preferred format: array of skill names
-  z.object({
-    matched_skills: z
-      .array(z.string())
-      .describe("Skills from the provided list that the candidate possesses. Use EXACT strings from the list."),
-  }),
-  // Alternative format: object with skill names as keys and boolean/array values
-  // We'll extract keys where value is truthy
-  z.record(z.string(), z.union([z.boolean(), z.array(z.any()), z.any()])),
-]);
+export const extractMatchedSkillsSchema = z.object({
+  matched_skills: z
+    .array(z.string())
+    .describe("Job skills from the provided list that the candidate possesses (exact job skill strings)."),
+});
 
 /**
  * Schema registry mapping request identifiers to Zod schemas

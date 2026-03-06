@@ -240,25 +240,16 @@ export async function calculateMatch(
   if (allJobSkills.length > 0) {
     try {
       const skillsResult = await createJobMatchingAiChat<
-        { matched_skills: string[] } | Record<string, boolean | unknown[]>
+        { matched_skills: string[] }
       >(profileId, "extract_matched_skills", {
         "job.skills": allJobSkills.join("\n"),
         "profile.data": collectedData.data || "",
       });
 
       if (skillsResult.success && skillsResult.response) {
-        let rawSkills: string[] = [];
-
-        // Handle array format: { matched_skills: ["Python", "React"] }
-        if ("matched_skills" in skillsResult.response && Array.isArray(skillsResult.response.matched_skills)) {
-          rawSkills = skillsResult.response.matched_skills;
-        }
-        // Handle object format: { "Python": true, "React": true, "Go": false }
-        else if (typeof skillsResult.response === "object") {
-          rawSkills = Object.entries(skillsResult.response)
-            .filter(([, value]) => value === true || (Array.isArray(value) && value.length > 0))
-            .map(([skill]) => skill);
-        }
+        const rawSkills = Array.isArray(skillsResult.response.matched_skills)
+          ? skillsResult.response.matched_skills
+          : [];
 
         // Validate: only keep skills that actually exist in the job's skill lists
         validatedMatchedSkills = rawSkills

@@ -24,6 +24,8 @@
   let job = $state(data.job);
   let match = $state(data.match);
   let isSaving = $state(false);
+  let isRematching = $state(false);
+  let rematchError = $state("");
 
   // Rescrape state
   let rescrapeStatus = $state(data.job.rescrape_status || "idle");
@@ -106,6 +108,9 @@
         } else if (currentMatch) {
           match = { ...currentMatch, status: "new" };
         }
+      } else if (form.action === "rematched") {
+        // Reload the page to get fresh match data from the server
+        window.location.reload();
       } else if (form.status) {
         match = { ...currentMatch, status: form.status } as typeof match;
       }
@@ -292,6 +297,40 @@
               </button>
             {/if}
 
+            <!-- Re-match Button (staff only) -->
+            {#if data.isStaff}
+              <form
+                method="POST"
+                action="?/rematchJob"
+                use:enhance={() => {
+                  isRematching = true;
+                  rematchError = "";
+                  return async ({ result, update }) => {
+                    if (result.type === "failure") {
+                      rematchError = (result.data as { error?: string })?.error || "Re-match failed";
+                      isRematching = false;
+                    } else {
+                      await update();
+                      isRematching = false;
+                    }
+                  };
+                }}
+              >
+                <button
+                  type="submit"
+                  disabled={isRematching}
+                  class="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--dash-border)] text-[var(--dash-text)] hover:bg-[var(--dash-bg)] transition-colors disabled:opacity-50"
+                  title="Re-run AI matching for this job"
+                >
+                  <FontAwesomeIcon
+                    icon={faSync}
+                    class="w-4 h-4 {isRematching ? 'animate-spin' : ''}"
+                  />
+                  {isRematching ? "Matching..." : "Re-match"}
+                </button>
+              </form>
+            {/if}
+
             <!-- External Link -->
             {#if job.source_url}
               <a
@@ -324,6 +363,15 @@
           <div class="mt-4 p-3 bg-[var(--dash-success-light)] border border-[var(--dash-success)] rounded-lg">
             <p class="text-sm text-[var(--dash-success)] whitespace-pre-line">
               {rescrapeMessage}
+            </p>
+          </div>
+        {/if}
+
+        <!-- Re-match Error -->
+        {#if rematchError}
+          <div class="mt-4 p-3 bg-[var(--dash-error-light)] border border-[var(--dash-error)] rounded-lg">
+            <p class="text-sm text-[var(--dash-error)]">
+              <strong>Re-match failed:</strong> {rematchError}
             </p>
           </div>
         {/if}
