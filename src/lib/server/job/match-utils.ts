@@ -74,6 +74,32 @@ export async function getProfileSkillLevels(
 }
 
 /**
+ * Normalize a skill name for deterministic comparison.
+ * Lowercases, strips special characters (except +#), and collapses whitespace.
+ * e.g. "Git Flow" and "Gitflow" both become "gitflow",
+ *      "CI/CD" becomes "cicd", "C++" stays "c++", "C#" stays "c#"
+ */
+export function normalizeSkill(skill: string): string {
+  return skill
+    .toLowerCase()
+    .replace(/[^a-z0-9+#]/g, "")  // keep letters, digits, +, #
+    .trim();
+}
+
+/**
+ * Find deterministic exact matches between profile skills and job skills.
+ * Uses normalized comparison so "Git Flow" matches "Gitflow", "Python" matches "python", etc.
+ * Returns the original job skill strings for matched skills.
+ */
+export function findExactSkillMatches(
+  profileSkills: string[],
+  jobSkills: string[],
+): string[] {
+  const profileNormalized = new Set(profileSkills.map(normalizeSkill));
+  return jobSkills.filter(jobSkill => profileNormalized.has(normalizeSkill(jobSkill)));
+}
+
+/**
  * Check if two arrays have any overlapping elements
  * @param arr1 - First array
  * @param arr2 - Second array

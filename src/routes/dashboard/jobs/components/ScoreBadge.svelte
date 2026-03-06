@@ -56,8 +56,8 @@
     class="{sizeClasses.box} rounded-lg flex flex-col items-center justify-center"
     style="background-color: {colors.bg}; color: {colors.text};{colors.glow ? ` box-shadow: ${colors.glow};` : ''}"
   >
-    <span class="font-bold {sizeClasses.score} leading-none">{score}</span>
-    <span class="{sizeClasses.label} opacity-60 whitespace-nowrap">AI Score</span>
+    <span class="font-bold {sizeClasses.score} leading-none">{score}%</span>
+    <span class="{sizeClasses.label} opacity-60 whitespace-nowrap">Match</span>
   </div>
 {:else}
   <div

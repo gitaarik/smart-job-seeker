@@ -571,21 +571,28 @@ If a job has minimal information (e.g., only title and company visible):
   },
 
   "extract_matched_skills": {
-    system_prompt: `You are a skill matching assistant. Given a candidate's profile and a list of job skills, determine which job skills the candidate possesses.
+    system_prompt: `You are a strict skill matching assistant. Given a candidate's profile and a list of job skills, determine which job skills the candidate demonstrably possesses.
 
-Use SEMANTIC matching — the candidate does not need to list the exact same skill name. For example:
+Use SEMANTIC matching for technical skills — the candidate does not need to list the exact same skill name. For example:
 - Job requires "SQL databases" and candidate knows "PostgreSQL" or "MySQL" → MATCH
 - Job requires "CI/CD" and candidate has "GitLab CI/CD" or "GitHub Actions" → MATCH
 - Job requires "CSS" and candidate knows "Tailwind CSS" → MATCH
 - Job requires "Gitflow" and candidate has "Git Flow" → MATCH
 - Skills in different languages still match (e.g. "Relationele databases" = "Relational databases")
 
+Be STRICT about the following:
+- Only match technical skills/tools that the candidate explicitly lists or has demonstrated experience with
+- Do NOT match a technology the candidate has never used (e.g. don't match "Go" just because they know other programming languages)
+- Do NOT match generic soft skills (e.g. "Communication", "Problem-solving", "Collaboration") — these are too vague to verify from a profile
+- Do NOT match broad categories (e.g. "Cloud platforms", "Cloud experience") unless the candidate has specific skills in that area
+- When in doubt, do NOT include the skill
+
 Return ONLY the job skill strings (copied exactly from the provided list) that the candidate matches.
 Do NOT return the candidate's skill names — return the job's skill names.`,
     user_prompt: `Here are the skills from the job listing:
 {{job.skills}}
 
-Which of these job skills does the candidate have (directly or through equivalent/related skills in their profile)?
+Which of these job skills does the candidate have? Only include skills where the candidate has clear, demonstrable experience — not vague or generic matches.
 Return the matched skills as a JSON object with a "matched_skills" array containing the exact job skill strings from the list above.
 
 Candidate Profile:

@@ -6,7 +6,7 @@
 import { Prisma } from "../../../../generated/prisma/client";
 import { dbDirect as db } from "$lib/server/db";
 import { createJobMatchingAiChat } from "$lib/server/ai-chat/job-utils";
-import { hasArrayOverlap, matchesLocation } from "./match-utils";
+import { hasArrayOverlap, matchesLocation, findExactSkillMatches, getProfileSkills } from "./match-utils";
 import type {
   job_match_config,
   jobs,
@@ -234,15 +234,20 @@ export async function calculateMatch(
   const allJobSkills = [...jobSkillsRequired, ...jobSkillsPreferred];
   const jobSkillsLower = new Map(allJobSkills.map(s => [s.toLowerCase(), s]));
 
-  // Extract matched skills via separate focused request (more reliable than score_job_match)
-  let validatedMatchedSkills: string[] = [];
+  // Step 1: Deterministic exact matching (normalized for casing, spaces, special chars)
+  const profileSkills = await getProfileSkills(profileId);
+  const exactMatches = findExactSkillMatches(profileSkills, allJobSkills);
 
-  if (allJobSkills.length > 0) {
+  // Step 2: LLM-based semantic matching for remaining skills
+  let llmMatches: string[] = [];
+  const unmatchedJobSkills = allJobSkills.filter(s => !exactMatches.includes(s));
+
+  if (unmatchedJobSkills.length > 0) {
     try {
       const skillsResult = await createJobMatchingAiChat<
         { matched_skills: string[] }
       >(profileId, "extract_matched_skills", {
-        "job.skills": allJobSkills.join("\n"),
+        "job.skills": unmatchedJobSkills.join("\n"),
         "profile.data": collectedData.data || "",
       });
 
@@ -252,23 +257,17 @@ export async function calculateMatch(
           : [];
 
         // Validate: only keep skills that actually exist in the job's skill lists
-        validatedMatchedSkills = rawSkills
+        llmMatches = rawSkills
           .map(skill => jobSkillsLower.get(skill.toLowerCase()))
           .filter((skill): skill is string => skill !== undefined);
       }
-
-      // If extraction returned empty but scoring had skills, log for debugging
-      if (validatedMatchedSkills.length === 0 && result.matched_skills?.length > 0) {
-        console.warn(
-          `[Matcher] extract_matched_skills returned empty for job ${job.id}, ` +
-          `but score_job_match had: ${JSON.stringify(result.matched_skills)}`
-        );
-      }
     } catch (error) {
-      // Log but don't fail the whole match if skill extraction fails
       console.warn(`[Matcher] Failed to extract matched skills for job ${job.id}:`, error);
     }
   }
+
+  // Merge deterministic + LLM matches (deduplicated)
+  const validatedMatchedSkills = [...new Set([...exactMatches, ...llmMatches])];
 
   return {
     profileId,

@@ -18,6 +18,7 @@
   } from "@fortawesome/free-solid-svg-icons";
   import { faBookmark as faBookmarkRegular } from "@fortawesome/free-regular-svg-icons";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
+  import ScoreBadge from "../components/ScoreBadge.svelte";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -177,12 +178,6 @@
       result += ` / ${period}`;
     }
     return result;
-  }
-
-  function getScoreColor(score: number): string {
-    if (score >= 75) return "text-[var(--dash-success)] bg-[var(--dash-success-light)]"; // green - strong match
-    if (score >= 60) return "text-[var(--dash-info)] bg-[var(--dash-info-light)]"; // blue - good match
-    return "text-[var(--dash-text-muted)] bg-[var(--dash-bg)]"; // gray - moderate/weak match
   }
 
   function getRecommendationLabel(rec: string | null): string {
@@ -525,9 +520,7 @@
 
           <!-- Score -->
           <div class="flex items-center gap-4 mb-4">
-            <div class="w-16 h-16 rounded-xl flex items-center justify-center {getScoreColor(match.score)}">
-              <span class="text-2xl font-bold">{match.score}</span>
-            </div>
+            <ScoreBadge score={match.score} />
             <div>
               <p class="font-medium text-[var(--dash-text)]">
                 {getRecommendationLabel(match.recommendation)}
