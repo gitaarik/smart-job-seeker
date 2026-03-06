@@ -17,16 +17,29 @@ import {
 /**
  * POST - Trigger rescrape for a job
  */
-export const POST: RequestHandler = async ({ params, locals }) => {
+export const POST: RequestHandler = async ({ params, locals, request }) => {
   const user = requireAuth(locals);
   const jobId = parseIntParam(params.id, "job");
 
-  // Get job from database, verify user has a match for it
-  const job = await db.jobs.findFirst({
-    where: {
-      id: jobId,
-      job_matches: { some: { profiles: { user_id: user.id } } },
-    },
+  // Parse optional browser session overrides from request body
+  let browserOverrides: {
+    countryCode?: string;
+    browserLanguage?: string;
+    browserTimezone?: string;
+    browserUserAgent?: string;
+  } = {};
+  try {
+    const body = await request.json();
+    if (body.countryCode) browserOverrides.countryCode = body.countryCode;
+    if (body.browserLanguage) browserOverrides.browserLanguage = body.browserLanguage;
+    if (body.browserTimezone) browserOverrides.browserTimezone = body.browserTimezone;
+    if (body.browserUserAgent) browserOverrides.browserUserAgent = body.browserUserAgent;
+  } catch {
+    // No body or invalid JSON — that's fine, all fields are optional
+  }
+
+  const job = await db.jobs.findUnique({
+    where: { id: jobId },
     select: {
       id: true,
       source_url: true,
@@ -78,6 +91,7 @@ export const POST: RequestHandler = async ({ params, locals }) => {
     sourceUrl: job.source_url,
     platformId: job.job_platform,
     triggeredBy: "user",
+    ...browserOverrides,
   });
 
   return json({
@@ -94,11 +108,8 @@ export const GET: RequestHandler = async ({ params, locals }) => {
   const user = requireAuth(locals);
   const jobId = parseIntParam(params.id, "job");
 
-  const job = await db.jobs.findFirst({
-    where: {
-      id: jobId,
-      job_matches: { some: { profiles: { user_id: user.id } } },
-    },
+  const job = await db.jobs.findUnique({
+    where: { id: jobId },
     select: {
       id: true,
       rescrape_status: true,

@@ -994,6 +994,7 @@ model profiles {
   browser_user_agent                                                String?                 @db.VarChar(500)
   browser_language                                                  String?                 @db.VarChar(50)
   browser_timezone                                                  String?                 @db.VarChar(100)
+  browser_profile_id                                                String?                 @db.VarChar(100)
   ai_chats                                                          ai_chats[]
   applications                                                      applications[]
   cheat_sheets                                                      cheat_sheets[]

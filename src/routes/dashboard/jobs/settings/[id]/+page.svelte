@@ -100,6 +100,11 @@
   let pollInterval: ReturnType<typeof setInterval> | null = null;
   let currentRunId = $state<number | null>(null);
 
+  // Type-text feature (for 2FA codes on mobile)
+  let typeTextValue = $state("");
+  let isTypingText = $state(false);
+  let typeTextMessage = $state<string | null>(null);
+
   // Runs history
   interface Run {
     id: number;
@@ -852,6 +857,38 @@
       console.error(err);
     } finally {
       isSendingFeedback = false;
+    }
+  }
+
+  async function sendTypeText(submit = false) {
+    if (!currentRunId || !typeTextValue.trim()) return;
+
+    isTypingText = true;
+    typeTextMessage = null;
+
+    try {
+      const res = await fetch(`/api/job-searches/${jobSearch.id}/runs/${currentRunId}/type-text`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: typeTextValue, submit }),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        typeTextMessage = result.message || "Failed to type text";
+        return;
+      }
+
+      typeTextMessage = submit ? "Typed and submitted" : "Typed successfully";
+      typeTextValue = "";
+      // Clear success message after a moment
+      setTimeout(() => { typeTextMessage = null; }, 2000);
+    } catch (err) {
+      typeTextMessage = "Failed to type text";
+      console.error(err);
+    } finally {
+      isTypingText = false;
     }
   }
 
@@ -1650,6 +1687,42 @@
           <p class="text-sm text-[var(--dash-text-secondary)]">
             Browser session view. Start a scrape to see activity.
           </p>
+        {/if}
+        {#if isRunning || isBlocked}
+          <!-- Type text into browser (for 2FA codes on mobile) -->
+          <div class="flex items-center gap-2 mt-2 pt-2 border-t border-[var(--dash-border)]">
+            <input
+              type="text"
+              bind:value={typeTextValue}
+              placeholder="Type text into browser (2FA code, etc.)"
+              disabled={isTypingText}
+              onkeydown={(e) => { if (e.key === "Enter") sendTypeText(true); }}
+              class="flex-1 px-3 py-1.5 text-sm bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg focus:outline-none focus:ring-1 focus:ring-[var(--dash-primary)] disabled:opacity-50"
+            />
+            <button
+              onclick={() => sendTypeText(false)}
+              disabled={isTypingText || !typeTextValue.trim()}
+              class="px-3 py-1.5 text-sm bg-[var(--dash-card)] text-[var(--dash-text)] border border-[var(--dash-border)] rounded-lg hover:bg-[var(--dash-border)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Type text without submitting"
+            >
+              {#if isTypingText}
+                <FontAwesomeIcon icon={faSpinner} class="w-3 h-3 animate-spin" />
+              {:else}
+                Type
+              {/if}
+            </button>
+            <button
+              onclick={() => sendTypeText(true)}
+              disabled={isTypingText || !typeTextValue.trim()}
+              class="px-3 py-1.5 text-sm bg-[var(--dash-primary)] text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Type text and press Enter"
+            >
+              Send
+            </button>
+            {#if typeTextMessage}
+              <span class="text-xs text-[var(--dash-text-muted)]">{typeTextMessage}</span>
+            {/if}
+          </div>
         {/if}
       </div>
     </div>

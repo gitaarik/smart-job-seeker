@@ -7259,7 +7259,8 @@ export const ProfilesScalarFieldEnum = {
   profile_photo_path: 'profile_photo_path',
   browser_user_agent: 'browser_user_agent',
   browser_language: 'browser_language',
-  browser_timezone: 'browser_timezone'
+  browser_timezone: 'browser_timezone',
+  browser_profile_id: 'browser_profile_id'
 } as const
 
 export type ProfilesScalarFieldEnum = (typeof ProfilesScalarFieldEnum)[keyof typeof ProfilesScalarFieldEnum]

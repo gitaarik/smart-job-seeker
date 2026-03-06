@@ -4,6 +4,7 @@ import { dbDirect as db } from "$lib/server/db";
 import { getProfileSkillLevels } from "$lib/server/job/match-utils";
 import { addMatchJob } from "$lib/server/queue/match-queue";
 import { getSelectedProfileId } from "../../profile/utils";
+import { getGeoConfig } from "$lib/server/browser/geo-utils";
 
 export const load: PageServerLoad = async ({ parent, params }) => {
   const layoutData = await parent();
@@ -67,6 +68,47 @@ export const load: PageServerLoad = async ({ parent, params }) => {
     }) as { processed_at: Date }[];
   }
 
+  // Load rescrape config data: credentials, country, and browser fingerprint defaults
+  let rescrapeConfig: {
+    credentials: { username: string | null }[];
+    defaultCountryCode: string;
+    browserFingerprint: { language: string; timezone: string; userAgent: string };
+    browserFingerprintDefaults: { language: string; timezone: string };
+  } | null = null;
+  if (isStaff && job.job_platform) {
+    const platformProfile = await db.platform_profiles.findFirst({
+      where: { profile: profileId, platform: job.job_platform },
+      select: { username: true },
+    });
+
+    const profile = await db.profiles.findUnique({
+      where: { id: profileId },
+      select: {
+        country_code: true,
+        browser_user_agent: true,
+        browser_language: true,
+        browser_timezone: true,
+      },
+    });
+
+    const defaultCountryCode = profile?.country_code || "";
+    const geoDefaults = getGeoConfig(defaultCountryCode || "US");
+
+    rescrapeConfig = {
+      credentials: platformProfile ? [{ username: platformProfile.username }] : [],
+      defaultCountryCode,
+      browserFingerprint: {
+        language: profile?.browser_language || "",
+        timezone: profile?.browser_timezone || "",
+        userAgent: profile?.browser_user_agent || "",
+      },
+      browserFingerprintDefaults: {
+        language: geoDefaults.language,
+        timezone: geoDefaults.timezone,
+      },
+    };
+  }
+
   return {
     job,
     match,
@@ -75,6 +117,7 @@ export const load: PageServerLoad = async ({ parent, params }) => {
     profileSkillLevels,
     isStaff,
     scrapeHistory,
+    rescrapeConfig,
   };
 };
 

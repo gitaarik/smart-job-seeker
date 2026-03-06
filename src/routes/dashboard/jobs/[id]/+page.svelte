@@ -32,8 +32,9 @@
   let isRematching = $state(false);
   let rematchError = $state("");
 
-  // Rescrape monitor modal
-  let showRescrapeMonitor = $state(false);
+  // Rescrape monitor modal — auto-show if a rescrape is in progress
+  let rescrapeActive = ["queued", "scraping"].includes(job.rescrape_status ?? "");
+  let showRescrapeMonitor = $state(rescrapeActive);
 
   // Update match when form action completes
   $effect(() => {
@@ -592,6 +593,13 @@
 {#if showRescrapeMonitor}
   <RescrapeMonitor
     jobId={job.id}
+    sourceUrl={job.source_url}
+    platformName={job.job_platforms?.name ?? null}
+    credentials={data.rescrapeConfig?.credentials ?? []}
+    defaultCountryCode={data.rescrapeConfig?.defaultCountryCode ?? ""}
+    browserFingerprint={data.rescrapeConfig?.browserFingerprint ?? { language: "", timezone: "", userAgent: "" }}
+    browserFingerprintDefaults={data.rescrapeConfig?.browserFingerprintDefaults ?? { language: "en-US,en", timezone: "America/New_York" }}
+    initialStatus={job.rescrape_status ?? undefined}
     onclose={() => (showRescrapeMonitor = false)}
     oncomplete={() => window.location.reload()}
   />

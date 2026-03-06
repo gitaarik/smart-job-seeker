@@ -216,60 +216,59 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
     return json({ status: "removed_from_queue" });
   }
 
-  // Check if it's currently running
-  const activeJob = await getActiveJobForSearch(jobSearchId);
-  if (activeJob) {
-    // Force-fail the BullMQ job so it doesn't block future runs
-    await removeActiveJob(jobSearchId);
+  // Find the running/blocked run in the database
+  const runningRun = await db.job_search_runs.findFirst({
+    where: {
+      job_search_id: jobSearchId,
+      status: { in: ["running", "blocked"] },
+    },
+    orderBy: { started_at: "desc" },
+  });
 
-    // Find the running run and mark as cancelled
-    const runningRun = await db.job_search_runs.findFirst({
-      where: {
-        job_search_id: jobSearchId,
-        status: { in: ["running", "blocked"] },
-      },
-      orderBy: { started_at: "desc" },
-    });
-
-    if (runningRun) {
-      await db.job_search_runs.update({
-        where: { id: runningRun.id },
-        data: {
-          status: "cancelled",
-          error_message: "Cancelled by user",
-          finished_at: new Date(),
-          live_url: null,
-        },
-      });
-
-      // Mark any in-progress or pending run items as cancelled
-      await db.job_search_run_items.updateMany({
-        where: {
-          run_id: runningRun.id,
-          status: { in: ["processing", "pending"] },
-        },
-        data: {
-          status: "cancelled",
-          status_message: "Cancelled by user",
-        },
-      });
-    }
-
-    await db.job_searches.update({
-      where: { id: jobSearchId },
-      data: {
-        status: "idle",
-        status_message: "Cancelled by user",
-        date_updated: new Date(),
-        live_url: null,
-      },
-    });
-
-    console.log(`[API] Cancelled running search ${jobSearchId}`);
-    return json({ status: "cancelled" });
+  if (!runningRun) {
+    return json({ status: "not_found" });
   }
 
-  return json({ status: "not_found" });
+  // Try to force-fail the BullMQ job (best-effort — it may not be found
+  // if the worker restarted or BullMQ state diverged, but that's OK)
+  await removeActiveJob(jobSearchId);
+
+  // Mark the run as cancelled in the database — this is what the worker
+  // checks via isRunCancelled() to stop the scraping process
+  await db.job_search_runs.update({
+    where: { id: runningRun.id },
+    data: {
+      status: "cancelled",
+      error_message: "Cancelled by user",
+      finished_at: new Date(),
+      live_url: null,
+    },
+  });
+
+  // Mark any in-progress or pending run items as cancelled
+  await db.job_search_run_items.updateMany({
+    where: {
+      run_id: runningRun.id,
+      status: { in: ["processing", "pending"] },
+    },
+    data: {
+      status: "cancelled",
+      status_message: "Cancelled by user",
+    },
+  });
+
+  await db.job_searches.update({
+    where: { id: jobSearchId },
+    data: {
+      status: "idle",
+      status_message: "Cancelled by user",
+      date_updated: new Date(),
+      live_url: null,
+    },
+  });
+
+  console.log(`[API] Cancelled running search ${jobSearchId}`);
+  return json({ status: "cancelled" });
 };
 
 /**

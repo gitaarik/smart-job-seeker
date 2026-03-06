@@ -67,11 +67,13 @@
     value = $bindable(""),
     placeholder = "",
     fallback = "",
+    disabled = false,
   }: {
     value: string;
     placeholder?: string;
     /** Country code to display when value is empty (e.g., from profile location) */
     fallback?: string;
+    disabled?: boolean;
   } = $props();
 
   let searchText = $state("");
@@ -179,10 +181,11 @@
       searchText = (e.target as HTMLInputElement).value;
       if (!isOpen) open();
     }}
-    onfocus={open}
+    onfocus={() => { if (!disabled) open(); }}
     onkeydown={handleKeydown}
     placeholder={placeholder || "Select country..."}
-    class="w-full px-3 py-2 pr-8 text-sm rounded-md border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent"
+    {disabled}
+    class="w-full px-3 py-2 pr-8 text-sm rounded-md border border-[var(--dash-border)] bg-[var(--dash-bg)] text-[var(--dash-text)] placeholder-[var(--dash-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-primary)] focus:border-transparent disabled:opacity-50"
   />
 
   {#if value && !isOpen}

@@ -17,6 +17,11 @@ export interface RescrapeJobData {
   sourceUrl: string;
   platformId: number;
   triggeredBy: "user";
+  /** Browser session overrides (same fields as normal scraper) */
+  countryCode?: string;
+  browserLanguage?: string;
+  browserTimezone?: string;
+  browserUserAgent?: string;
 }
 
 export interface RescrapeJobResult {
