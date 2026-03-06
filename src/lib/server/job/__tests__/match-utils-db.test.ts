@@ -4,19 +4,17 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockFindMany, mockFindFirst } = vi.hoisted(() => ({
+const { mockFindMany } = vi.hoisted(() => ({
   mockFindMany: vi.fn(),
-  mockFindFirst: vi.fn(),
 }));
 
 vi.mock("$lib/server/db", () => ({
   dbDirect: {
     tech_skills: { findMany: mockFindMany },
-    job_matches: { findFirst: mockFindFirst },
   },
 }));
 
-import { getProfileSkills, getProfileSkillLevels, needsRematching } from "../match-utils";
+import { getProfileSkills, getProfileSkillLevels } from "../match-utils";
 
 describe("getProfileSkills", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -147,69 +145,5 @@ describe("getProfileSkillLevels", () => {
     mockFindMany.mockResolvedValueOnce([]);
     const levels = await getProfileSkillLevels(1);
     expect(levels).toEqual({});
-  });
-});
-
-describe("needsRematching", () => {
-  beforeEach(() => vi.clearAllMocks());
-
-  it("returns true when no existing match", async () => {
-    mockFindFirst.mockResolvedValueOnce(null);
-    const result = await needsRematching(1, 100, { date_updated: new Date() } as any);
-    expect(result).toBe(true);
-  });
-
-  it("returns true when existing match has no timestamp", async () => {
-    mockFindFirst.mockResolvedValueOnce({
-      job_date_updated_when_matched: null,
-    });
-    const result = await needsRematching(1, 100, { date_updated: new Date() } as any);
-    expect(result).toBe(true);
-  });
-
-  it("returns true when job has no date_updated", async () => {
-    mockFindFirst.mockResolvedValueOnce({
-      job_date_updated_when_matched: new Date("2025-01-01"),
-    });
-    const result = await needsRematching(1, 100, { date_updated: null } as any);
-    expect(result).toBe(true);
-  });
-
-  it("returns true when job was updated after matching", async () => {
-    mockFindFirst.mockResolvedValueOnce({
-      job_date_updated_when_matched: new Date("2025-01-01"),
-    });
-    const result = await needsRematching(1, 100, {
-      date_updated: new Date("2025-06-01"),
-    } as any);
-    expect(result).toBe(true);
-  });
-
-  it("returns false when job hasn't been updated since matching", async () => {
-    mockFindFirst.mockResolvedValueOnce({
-      job_date_updated_when_matched: new Date("2025-06-01"),
-    });
-    const result = await needsRematching(1, 100, {
-      date_updated: new Date("2025-01-01"),
-    } as any);
-    expect(result).toBe(false);
-  });
-
-  it("returns false when timestamps are equal", async () => {
-    const ts = new Date("2025-03-15");
-    mockFindFirst.mockResolvedValueOnce({
-      job_date_updated_when_matched: ts,
-    });
-    const result = await needsRematching(1, 100, { date_updated: ts } as any);
-    expect(result).toBe(false);
-  });
-
-  it("queries with correct profile and job IDs", async () => {
-    mockFindFirst.mockResolvedValueOnce(null);
-    await needsRematching(42, 99, { date_updated: null } as any);
-    expect(mockFindFirst).toHaveBeenCalledWith({
-      where: { profile: 42, job: 99 },
-      select: { job_date_updated_when_matched: true },
-    });
   });
 });

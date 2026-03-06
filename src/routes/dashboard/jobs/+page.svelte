@@ -24,6 +24,7 @@
   import SectionHeader from "../profile/components/SectionHeader.svelte";
   import EmptyState from "../profile/components/EmptyState.svelte";
   import JobCard from "./components/JobCard.svelte";
+  import { formatJobType, formatWorkLocation } from "$lib/format";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -527,7 +528,7 @@
                     Job Type
                   </p>
                   <p class="font-medium text-[var(--dash-text)]">
-                    {job.job_types.join(", ")}
+                    {job.job_types.map(formatJobType).join(", ")}
                   </p>
                 </div>
               {/if}
@@ -539,7 +540,7 @@
                     Work Location
                   </p>
                   <p class="font-medium text-[var(--dash-text)]">
-                    {job.work_location.join(", ")}
+                    {job.work_location.map(formatWorkLocation).join(", ")}
                   </p>
                 </div>
               {/if}

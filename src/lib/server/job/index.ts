@@ -2,22 +2,10 @@
  * Job module - re-exports all job-related functionality
  */
 
-// Job matching
-export {
-  calculateMatch,
-  filterEligibleJobs,
-  getMatchingConfig,
-  type JobMatchConfig,
-  type MatchResult,
-  upsertJobMatch,
-} from "./matcher";
-
-// Job match utilities
+// Job profile skill utilities
 export {
   getProfileSkills,
-  hasArrayOverlap,
-  matchesLocation,
-  needsRematching,
+  getProfileSkillLevels,
 } from "./match-utils";
 
 // Job site configurations

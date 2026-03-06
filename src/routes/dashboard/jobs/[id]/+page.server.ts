@@ -2,7 +2,6 @@ import type { Actions, PageServerLoad } from "./$types";
 import { error, fail, redirect } from "@sveltejs/kit";
 import { dbDirect as db } from "$lib/server/db";
 import { getProfileSkillLevels } from "$lib/server/job/match-utils";
-import { calculateMatch, getMatchingConfig, upsertJobMatch } from "$lib/server/job/matcher";
 import { getSelectedProfileId } from "../../profile/utils";
 
 export const load: PageServerLoad = async ({ parent, params }) => {
@@ -218,24 +217,17 @@ export const actions: Actions = {
       return fail(400, { error: "Invalid job ID" });
     }
 
-    const job = await db.jobs.findUnique({ where: { id: jobId } });
-    if (!job) {
-      return fail(404, { error: "Job not found" });
-    }
+    // Delete the existing match so the background matcher loop picks it up
+    const existingMatch = await db.job_matches.findFirst({
+      where: { profile: profileId, job: jobId },
+    });
 
-    const config = await getMatchingConfig(profileId);
-    if (!config) {
-      return fail(400, { error: "No matching config found for profile" });
-    }
-
-    try {
-      const matchResult = await calculateMatch(profileId, job, config);
-      await upsertJobMatch(matchResult);
-      return { success: true, action: "rematched" };
-    } catch (err) {
-      return fail(500, {
-        error: `Re-match failed: ${err instanceof Error ? err.message : String(err)}`,
+    if (existingMatch) {
+      await db.job_matches.delete({
+        where: { id: existingMatch.id },
       });
     }
+
+    return { success: true, action: "rematched" };
   },
 };

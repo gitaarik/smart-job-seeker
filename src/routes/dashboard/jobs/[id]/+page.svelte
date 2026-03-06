@@ -20,6 +20,7 @@
   import { faStar as faStarRegular } from "@fortawesome/free-regular-svg-icons";
   import SectionHeader from "../../profile/components/SectionHeader.svelte";
   import ScoreBadge from "../components/ScoreBadge.svelte";
+  import { formatJobType, formatJobStatus, formatWorkLocation } from "$lib/format";
 
   let { data, form }: { data: PageData; form: ActionData } = $props();
 
@@ -226,7 +227,7 @@
 
         <!-- Company, location, score -->
         <div class="flex items-center justify-between gap-4 mt-2">
-          <div class="flex items-center gap-4 text-[var(--dash-text-secondary)] flex-wrap">
+          <div class="flex items-center gap-3 text-[var(--dash-text-secondary)] flex-wrap">
             {#if job.company}
               <span class="flex items-center gap-1">
                 <FontAwesomeIcon icon={faBuilding} class="w-4 h-4" />
@@ -253,20 +254,22 @@
 
         <!-- Tags (status, job types, work location) -->
         <div class="flex flex-wrap gap-2 mt-3">
-          <span class="text-xs px-3 py-1 rounded-full {job.status === 'published' ? 'bg-[var(--dash-success-light)] text-[var(--dash-success)]' : 'bg-[var(--dash-bg)] text-[var(--dash-text-muted)]'}">
-            {job.status}
-          </span>
+          {#if job.status !== "hiring"}
+            <span class="text-xs px-3 py-1 rounded-full bg-[var(--dash-bg)] text-[var(--dash-text-muted)]">
+              {formatJobStatus(job.status)}
+            </span>
+          {/if}
           {#if job.job_types && Array.isArray(job.job_types)}
             {#each job.job_types as type}
               <span class="text-xs px-3 py-1 rounded-full bg-[var(--dash-bg)] text-[var(--dash-text)]">
-                {type}
+                {formatJobType(type)}
               </span>
             {/each}
           {/if}
           {#if job.work_location && Array.isArray(job.work_location)}
             {#each job.work_location as loc}
               <span class="text-xs px-3 py-1 rounded-full bg-[var(--dash-primary-light)] text-[var(--dash-primary)]">
-                {loc}
+                {formatWorkLocation(loc)}
               </span>
             {/each}
           {/if}

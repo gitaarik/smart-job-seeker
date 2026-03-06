@@ -4,6 +4,7 @@
   import { invalidateAll } from "$app/navigation";
   import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
   import CountrySelect from "../../components/CountrySelect.svelte";
+  import { formatJobType, formatWorkLocation } from "$lib/format";
   import {
     faArrowLeft,
     faBuilding,
@@ -1893,7 +1894,7 @@
                                           Job Type
                                         </p>
                                         <p class="font-medium text-[var(--dash-text)]">
-                                          {job.job_types.join(", ")}
+                                          {job.job_types.map(formatJobType).join(", ")}
                                         </p>
                                       </div>
                                     {/if}
@@ -1903,7 +1904,7 @@
                                           Work Location
                                         </p>
                                         <p class="font-medium text-[var(--dash-text)]">
-                                          {job.work_location.join(", ")}
+                                          {job.work_location.map(formatWorkLocation).join(", ")}
                                         </p>
                                       </div>
                                     {/if}
