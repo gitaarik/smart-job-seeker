@@ -138,7 +138,7 @@
     "langchain": "^1.2.7",
     "mammoth": "^1.11.0",
     "pdf-parse": "^1.1.1",
-    "playwright": "^1.52.0",
+    "patchright": "^1.58.0",
     "remove-markdown": "^0.6.2",
     "sharp": "^0.34.5",
     "tsx": "^4.20.6",

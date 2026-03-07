@@ -7,7 +7,7 @@
  */
 
 import { existsSync } from "fs";
-import { type BrowserContext, chromium } from "playwright";
+import { type BrowserContext, chromium } from "patchright";
 import { config } from "$lib/server/config";
 
 // Chrome installation paths to check (Linux)

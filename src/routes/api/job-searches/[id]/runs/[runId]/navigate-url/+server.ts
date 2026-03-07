@@ -2,7 +2,7 @@ import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { dbDirect as db } from "$lib/server/db";
 import { requireAuth, parseIntParam } from "$lib/server/utils/api-helpers";
-import { chromium } from "playwright";
+import { chromium } from "patchright";
 
 const CLOUD_BROWSER_BASE = "wss://cloudbrowser.gologin.com";
 

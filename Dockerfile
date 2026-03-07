@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Playwright Chromium + system dependencies for PDF generation
-RUN npx playwright install --with-deps chromium
+# Install Patchright Chromium + system dependencies for PDF generation
+RUN npx patchright install --with-deps chromium
 
 WORKDIR /app
