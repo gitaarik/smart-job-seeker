@@ -6,6 +6,7 @@
     faBars,
     faBookmark,
     faBriefcase,
+    faChartBar,
     faChevronDown,
     faChevronRight,
     faCode,
@@ -65,6 +66,11 @@
           label: "Match Config",
           href: "/dashboard/jobs/match-config",
           icon: faSliders,
+        },
+        {
+          label: "Match Progress",
+          href: "/dashboard/jobs/match-progress",
+          icon: faChartBar,
         },
         {
           label: "Job Matches",
